@@ -168,7 +168,9 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
         minutes (int): minutes.
         seconds (int): seconds.
     """
-    month, day, hours, minutes, seconds = structure.date_time
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time_elements_tuple is None.
+    month, day, hours, minutes, seconds = time_elements_tuple
 
     month = timelib.MONTH_DICT.get(month.lower(), 0)
 
@@ -187,7 +189,9 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    _, month, day, hours, minutes, seconds, year = structure.date_time
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time_elements_tuple is None.
+    _, month, day, hours, minutes, seconds, year = time_elements_tuple
 
     month = timelib.MONTH_DICT.get(month.lower(), 0)
 
@@ -199,24 +203,26 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     self._last_month = month
 
     event_data = XChatLogEventData()
 
-    if structure.log_action[0] == 'BEGIN':
+    log_action = self._GetValueFromStructure(
+        structure, 'log_action', default_value=[])
+    if log_action[0] == 'BEGIN':
       self._xchat_year = year
       event_data.text = 'XChat start logging'
 
-    elif structure.log_action[0] == 'END':
+    elif log_action[0] == 'END':
       self._xchat_year = None
       event_data.text = 'XChat end logging'
 
     else:
       logger.debug('Unknown log action: {0:s}.'.format(
-          ' '.join(structure.log_action)))
+          ' '.join(log_action)))
       return
 
     event = time_events.DateTimeValuesEvent(

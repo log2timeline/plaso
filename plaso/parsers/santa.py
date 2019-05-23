@@ -317,74 +317,83 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+    date_time_string = self._GetValueFromStructure(structure, 'date')
+
     try:
-      date_time.CopyFromStringISO8601(structure.date)
+      date_time.CopyFromStringISO8601(date_time_string)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0:s}'.format(structure.date))
+          'invalid date time value: {0!s}'.format(date_time_string))
       return
 
     if key == 'execution_line':
       event_data = SantaExecutionEventData()
-      event_data.action = structure.action
-      event_data.decision = structure.decision
-      event_data.reason = structure.reason
-      event_data.process_hash = structure.sha256
-      event_data.certificate_hash = structure.get('cert_sha256', None)
-      event_data.certificate_common_name = structure.get('cert_cn', None)
-      event_data.quarantine_url = structure.get('quarantine_url', None)
-      event_data.pid = structure.pid
-      event_data.ppid = structure.ppid
-      event_data.uid = structure.uid
-      event_data.user = structure.user
-      event_data.gid = structure.gid
-      event_data.group = structure.group
-      event_data.mode = structure.mode
-      event_data.process_path = structure.path
-      event_data.process_arguments = structure.get('args', None)
+      event_data.action = self._GetValueFromStructure(structure, 'action')
+      event_data.decision = self._GetValueFromStructure(structure, 'decision')
+      event_data.reason = self._GetValueFromStructure(structure, 'reason')
+      event_data.process_hash = self._GetValueFromStructure(structure, 'sha256')
+      event_data.certificate_hash = self._GetValueFromStructure(
+          structure, 'cert_sha256')
+      event_data.certificate_common_name = self._GetValueFromStructure(
+          structure, 'cert_cn')
+      event_data.quarantine_url = self._GetValueFromStructure(
+          structure, 'quarantine_url')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.ppid = self._GetValueFromStructure(structure, 'ppid')
+      event_data.uid = self._GetValueFromStructure(structure, 'uid')
+      event_data.user = self._GetValueFromStructure(structure, 'user')
+      event_data.gid = self._GetValueFromStructure(structure, 'gid')
+      event_data.group = self._GetValueFromStructure(structure, 'group')
+      event_data.mode = self._GetValueFromStructure(structure, 'mode')
+      event_data.process_path = self._GetValueFromStructure(structure, 'path')
+      event_data.process_arguments = self._GetValueFromStructure(
+          structure, 'args')
 
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
 
-    if key == 'file_system_event_line':
+    elif key == 'file_system_event_line':
       event_data = SantaFileSystemEventData()
-      event_data.action = structure.action
-      event_data.file_path = structure.path
-      event_data.file_new_path = structure.get('newpath', None)
-      event_data.pid = structure.pid
-      event_data.ppid = structure.ppid
-      event_data.process = structure.process
-      event_data.process_path = structure.processpath
-      event_data.uid = structure.uid
-      event_data.user = structure.user
-      event_data.gid = structure.gid
-      event_data.group = structure.group
+      event_data.action = self._GetValueFromStructure(structure, 'action')
+      event_data.file_path = self._GetValueFromStructure(structure, 'path')
+      event_data.file_new_path = self._GetValueFromStructure(
+          structure, 'newpath')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.ppid = self._GetValueFromStructure(structure, 'ppid')
+      event_data.process = self._GetValueFromStructure(structure, 'process')
+      event_data.process_path = self._GetValueFromStructure(
+          structure, 'processpath')
+      event_data.uid = self._GetValueFromStructure(structure, 'uid')
+      event_data.user = self._GetValueFromStructure(structure, 'user')
+      event_data.gid = self._GetValueFromStructure(structure, 'gid')
+      event_data.group = self._GetValueFromStructure(structure, 'group')
 
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    if key == 'umount_line':
+    elif key == 'umount_line':
       event_data = SantaMountEventData()
-      event_data.action = structure.action
-      event_data.mount = structure.mount
-      event_data.volume = structure.volume
-      event_data.bsd_name = structure.bsd_name
+      event_data.action = self._GetValueFromStructure(structure, 'action')
+      event_data.mount = self._GetValueFromStructure(structure, 'mount')
+      event_data.volume = self._GetValueFromStructure(structure, 'volume')
+      event_data.bsd_name = self._GetValueFromStructure(structure, 'bsd_name')
 
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    if key == 'mount_line':
+    elif key == 'mount_line':
       event_data = SantaMountEventData()
-      event_data.action = structure.action
-      event_data.mount = structure.mount
-      event_data.volume = structure.volume
-      event_data.bsd_name = structure.bsd_name
-      event_data.fs = structure.fs
-      event_data.model = structure.model
-      event_data.serial = structure.serial
-      event_data.bus = structure.bus
-      event_data.dmg_path = structure.dmg_path
-      event_data.appearance = structure.appearance
+      event_data.action = self._GetValueFromStructure(structure, 'action')
+      event_data.mount = self._GetValueFromStructure(structure, 'mount')
+      event_data.volume = self._GetValueFromStructure(structure, 'volume')
+      event_data.bsd_name = self._GetValueFromStructure(structure, 'bsd_name')
+      event_data.fs = self._GetValueFromStructure(structure, 'fs')
+      event_data.model = self._GetValueFromStructure(structure, 'model')
+      event_data.serial = self._GetValueFromStructure(structure, 'serial')
+      event_data.bus = self._GetValueFromStructure(structure, 'bus')
+      event_data.dmg_path = self._GetValueFromStructure(structure, 'dmg_path')
+      event_data.appearance = self._GetValueFromStructure(
+          structure, 'appearance')
 
       if event_data.appearance:
         new_date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
