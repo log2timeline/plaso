@@ -57,4 +57,4 @@ class EventObjectFilter(interface.FilterObject):
     copy_of_event.tag = event_tag
     # TODO: end refactor
 
-    return self._matcher.Matches(copy_of_event)
+    return self._event_filter.Matches(copy_of_event)
