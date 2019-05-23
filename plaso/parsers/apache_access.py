@@ -23,14 +23,14 @@ class ApacheAccessEventData(events.EventData):
   """Apache access event data.
 
   Attributes:
+    http_request_referer (str): http request referer header information.
+    http_request (str): first line of http request.
+    http_request_user_agent (str): http request user agent header information.
+    http_response_bytes (int): http response bytes size without headers.
+    http_response_code (int): http response code from server.
     ip_address (str): IPv4 or IPv6 addresses.
     remote_name (str): remote logname (from identd, if supplied).
     user_name (str): logged user name.
-    http_request (str): first line of http request.
-    http_response_code (int): http response code from server.
-    http_response_bytes (int): http response bytes size without headers.
-    http_request_referer (str): http request referer header information.
-    http_request_user_agent (str): http request user agent header information.
   """
 
   DATA_TYPE = 'apache:access'
@@ -38,14 +38,14 @@ class ApacheAccessEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(ApacheAccessEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.http_request = None
+    self.http_request_referer = None
+    self.http_request_user_agent = None
+    self.http_response_bytes = None
+    self.http_response_code = None
     self.ip_address = None
     self.remote_name = None
     self.user_name = None
-    self.http_request = None
-    self.http_response_code = None
-    self.http_response_bytes = None
-    self.http_request_referer = None
-    self.http_request_user_agent = None
 
 
 class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
@@ -54,24 +54,10 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'apache_access'
   DESCRIPTION = 'Apache access Parser'
 
-  _PYPARSING_COMPONENTS = {
-      'ip': text_parser.PyparsingConstants.IP_ADDRESS.setResultsName(
-          'ip_address'),
-      'remote_name': (pyparsing.Word(pyparsing.alphanums) |
-                      pyparsing.Literal('-')).setResultsName('remote_name'),
-      'user_name': (pyparsing.Word(pyparsing.alphanums) |
-                    pyparsing.Literal('-')).setResultsName('user_name'),
-      'http_request': pyparsing.SkipTo('"').setResultsName('http_request'),
-      'response_code': text_parser.PyparsingConstants.INTEGER.setResultsName(
-          'response_code'),
-      'response_bytes':  text_parser.PyparsingConstants.INTEGER.setResultsName(
-          'response_bytes'),
-      'referer': pyparsing.SkipTo('"').setResultsName('referer'),
-      'user_agent': pyparsing.SkipTo('"').setResultsName('user_agent')
-  }
+  MAX_LINE_LENGTH = 2048
 
-  # date format [18/Sep/2011:19:18:28 -0400]
-  _PYPARSING_COMPONENTS['date'] = pyparsing.Group(
+  # Date format [18/Sep/2011:19:18:28 -0400]
+  _DATE_TIME = pyparsing.Group(
       pyparsing.Suppress('[') +
       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day') +
       pyparsing.Suppress('/') +
@@ -90,30 +76,58 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
               pyparsing.nums, exact=4)).setResultsName('time_offset') +
       pyparsing.Suppress(']')).setResultsName('date_time')
 
-  _SKIP_SEP = pyparsing.Suppress('"')
+  _HTTP_REQUEST = (
+      pyparsing.Suppress('"') +
+      pyparsing.SkipTo('"').setResultsName('http_request') +
+      pyparsing.Suppress('"'))
+
+  _REMOTE_NAME = (
+      pyparsing.Word(pyparsing.alphanums) |
+      pyparsing.Literal('-')).setResultsName('remote_name')
+
+  _RESPONSE_BYTES = (
+      pyparsing.Literal('-') |
+      text_parser.PyparsingConstants.INTEGER).setResultsName('response_bytes')
+
+  _REFERER = (
+      pyparsing.Suppress('"') +
+      pyparsing.SkipTo('"').setResultsName('referer') +
+      pyparsing.Suppress('"'))
+
+  _USER_AGENT = (
+      pyparsing.Suppress('"') +
+      pyparsing.SkipTo('"').setResultsName('user_agent') +
+      pyparsing.Suppress('"'))
+
+  _USER_NAME = (
+      pyparsing.Word(pyparsing.alphanums) |
+      pyparsing.Literal('-')).setResultsName('user_name')
 
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b"
-  _COMMON_LOG_FORMAT = (
-      _PYPARSING_COMPONENTS['ip'] +
-      _PYPARSING_COMPONENTS['remote_name'] +
-      _PYPARSING_COMPONENTS['user_name'] +
-      _PYPARSING_COMPONENTS['date'] +
-      _SKIP_SEP + _PYPARSING_COMPONENTS['http_request'] + _SKIP_SEP +
-      _PYPARSING_COMPONENTS['response_code'] +
-      _PYPARSING_COMPONENTS['response_bytes']
-  )
+  _COMMON_LOG_FORMAT_LINE = (
+      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
+      _REMOTE_NAME +
+      _USER_NAME +
+      _DATE_TIME +
+      _HTTP_REQUEST +
+      text_parser.PyparsingConstants.INTEGER.setResultsName('response_code') +
+      _RESPONSE_BYTES +
+      pyparsing.lineEnd())
 
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
-  _COMBINED_LOG_FORMAT = (
-      _COMMON_LOG_FORMAT +
-      _SKIP_SEP + _PYPARSING_COMPONENTS['referer'] + _SKIP_SEP +
-      _SKIP_SEP + _PYPARSING_COMPONENTS['user_agent'] + _SKIP_SEP
-  )
-
-  _COMMON_LOG_FORMAT_LINE = _COMMON_LOG_FORMAT + pyparsing.lineEnd
-  _COMBINED_LOG_FORMAT_LINE = _COMBINED_LOG_FORMAT + pyparsing.lineEnd
+  _COMBINED_LOG_FORMAT_LINE = (
+      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
+      _REMOTE_NAME +
+      _USER_NAME +
+      _DATE_TIME +
+      _HTTP_REQUEST +
+      text_parser.PyparsingConstants.INTEGER.setResultsName('response_code') +
+      _RESPONSE_BYTES +
+      _REFERER +
+      _USER_AGENT +
+      pyparsing.lineEnd())
 
   LINE_STRUCTURES = [
       ('combined_log_format', _COMBINED_LOG_FORMAT_LINE),

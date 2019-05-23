@@ -22,15 +22,15 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     parser = apache_access.ApacheAccessParser()
     storage_writer = self._ParseFile(['access.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_events, 7)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # Test combined log format event.
-    event = events[0]
+    event = events[2]
     self.CheckTimestamp(event.timestamp, '2016-01-13 17:31:20.000000')
 
     self.assertEqual(event.ip_address, '192.168.0.2')
@@ -64,7 +64,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Test common log format parser event.
-    event = events[1]
+    event = events[3]
     self.CheckTimestamp(event.timestamp, '2016-01-13 19:31:16.000000')
 
     self.assertEqual(event.ip_address, '10.0.0.1')
@@ -89,6 +89,15 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     )
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+    # Test the extraction warning.
+    warnings = list(storage_writer.GetWarnings())
+    warning = warnings[0]
+
+    self.assertEqual(warning.message, (
+        'unable to parse log line: "46.118.127.106 - - [20/May/2015:12:05:17 '
+        '+0000] "GET /scripts/grok-py-test/co..." at offset: 1589'))
+    self.assertEqual(warning.parser_chain, 'apache_access')
 
 
 if __name__ == '__main__':
