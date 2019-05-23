@@ -10,7 +10,7 @@ Plaso supports the following methods of targeted collection:
 * Using filter files
 
 **Note that at the moment the different collection filters cannot be used
-simultaneous.**
+simultaneously.**
 
 ## Using Forensic Artifacts definitions
 
