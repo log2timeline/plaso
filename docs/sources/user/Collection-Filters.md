@@ -14,7 +14,7 @@ simultaneously.**
 
 ## Using Forensic Artifacts definitions
 
-Forensic Artifacts definitions provide a more analyst centric approach to
+[Forensic Artifacts](https://github.com/ForensicArtifacts/artifacts) definitions provide a more analyst centric approach to
 collection filters.
 
 For example based on the definition:
