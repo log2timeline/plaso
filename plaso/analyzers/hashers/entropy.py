@@ -15,6 +15,7 @@ class EntropyHasher(interface.BaseHasher):
   """Calculates the byte entropy of input files."""
 
   NAME = 'entropy'
+  ATTRIBUTE_NAME = 'entropy'
   DESCRIPTION = 'Calculates the byte entropy of input data.'
 
   def __init__(self):
@@ -22,15 +23,6 @@ class EntropyHasher(interface.BaseHasher):
     super(EntropyHasher, self).__init__()
     self._byte_frequency_counter = collections.Counter()
     self._file_length = 0
-
-  @classmethod
-  def GetAttributeName(cls):
-    """The attribute name for the result.
-
-    Returns:
-      str: name of the attribute to set.
-    """
-    return 'file_entropy'
 
   def GetStringDigest(self):
     """Calculates the byte entropy value.

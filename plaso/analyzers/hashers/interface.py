@@ -10,16 +10,9 @@ class BaseHasher(object):
   """Base class for objects that calculate hashes."""
 
   NAME = 'base_hasher'
+  ATTRIBUTE_NAME = 'hash'
   DESCRIPTION = 'Calculates a digest hash over input data.'
 
-  @classmethod
-  def GetAttributeName(cls):
-    """Determines the attribute name for the hash result.
-
-    Returns:
-      str: name of the attribute to set.
-    """
-    return '{0:s}_hash'.format(cls.NAME)
 
   # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
