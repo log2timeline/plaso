@@ -1,39 +1,144 @@
 # Collection Filters
 
-**This page is still being worked on.**
+When you know beforehand which files are relevant for your analysis and which
+files not, you can use collection filters to instruct Plaso to only collect
+events from these files. This is also referred to as targeted collection.
 
-*n.b. collections filters will soon be replaced by [artifacts](https://github.com/ForensicArtifacts/artifacts)*
+Plaso supports the following methods of targeted collection:
 
-The idea behind collection filters is simple. If the user of the tool knows beforehand where files of potential interest lie there is no need to go through each and ever file in the filesystem. A filter file can be created that describes the location of each file the collector should look for to include in the parsing and no other file should be included.
+* Using Forensic Artifacts definitions
+* Using filter files
 
-The filter file itself is a simple entry per line where each line in the filter file describes a single location to include. The format is essentially:
+**Note that at the moment the different collection filters cannot be used
+simultaneously.**
 
-FIELD 1 | SEPARATOR | FIELD 2 | SEPARATOR | FIELD 3 | ...
+## Using Forensic Artifacts definitions
 
-The separator is a forward slash '/' and each field represents a directory up until the last one, which denotes the files to include. A field can be one of the following three options:
+[Forensic Artifacts](https://github.com/ForensicArtifacts/artifacts) definitions provide a more analyst centric approach to
+collection filters.
 
- + A string representing the exact directory name, case insensitive.
- + A regular expression denoting the name of the directory or file.
- + A name of an attribute collected during the preprocessing stage, denoted by a curly bracket `{attribute_name}`.
-
-This can lead to a line similar to this:
-
-```
-{sysregistry}/.+evt
-```
-
-Or
+For example based on the definition:
 
 ```
+name: WindowsEventLogSystem
+doc: System Windows Event Log.
+sources:
+- type: FILE
+  attributes:
+    paths: ['%%environ_systemroot%%\System32\winevt\Logs\SysEvent.evt']
+    separator: '\'
+conditions: [os_major_version < 6]
+labels: [Logs]
+supported_os: [Windows]
+urls: ['http://www.forensicswiki.org/wiki/Windows_Event_Log_(EVT)']
+```
+
+'WindowsEventLogSystem' refers to the path '%SystemRoot%\System32\winevt\Logs\SysEvent.evt'.
+
+To use:
+
+`log2timeline.py --artifact-filters WindowsEventLogSystem name.plaso source.raw`
+
+**Note that for convenience the Forensic Artifacts definition names can also
+be stored in a file.**
+
+## Using filter files
+
+Due a limitations in the original text-based filter file format the YAML-based
+filter format was introduced. We recommend using the YAML-based format.
+
+A YAML-based filter can be used to describe the path of each file or
+directory Plaso should include or exclude from parsing.
+
+* Inclusion filters are applied before exclusion filters.
+* Specifying the path of a directory will include or exclude its files and subdirectories.
+
+Path filters are case sensitive when compared to a case sensitive file system
+and case insensitive when compared to a case insensitive file system.
+
+To use:
+
+`log2timeline.py --file-filter windows.yaml name.plaso source.raw`
+
+### Text-based filter file format
+
+A text-based filter can be used to describe the path of each file or
+directory Plaso should include in parsing.
+
+**Note that the text-based filter file does not support exclusion filters (or
+blacklisting). If you need this functionality use the YAML-based filter file
+instead.**
+
+The text-based filter file itself contains a path filter per line or a line
+starting `#` for comment.
+
+```
+# This is comment.
+/ segment1 / segment2 / segment3 / ...
+{systemroot} / segment2 / segment3 / ...
+```
+
+The path segment separator is a forward slash '/'.
+
+A path segment can be defined as
+
+* a string representing the exact name of the directory or file;
+* a regular expression representing the name of the directory or file;
+* a path expansion variable, denoted by a curly bracket, such as `{systemroot}`.
+
+The path must be an absolute path, meaning that is should start with '/' or
+with path expansion variable that Plaso was able to resolve during
+preprocessing. Plaso will ignore path filters it does not consider valid.
+
+For example:
+
+```
+{systemroot}/System32/config/.+[.]evt
 /(Users|Documents And Settings)/.+/AppData/Roaming/Mozilla/Firefox/Profiles/.+/places.sqlite
 ```
 
-The first filter line uses an attribute called "*sysregistry*" that is discovered during the preprocessing stage and denotes the folder location that stores the system registry files. It will then include all files that end with the three letters "*evt*" in the collection. 
+The first line defines a path filter that uses the "systemroot" path expansion
+variable that is discovered during preprocessing and denotes the Windows
+SytemRoot folder. It will then process the directories and files with a name
+that endswith ".evt".
 
-The second line however uses both regular expressions and regular strings to denote the location of Firefox history files.
+The second line defines a path filter using both regular expressions and
+strings to denote the location of Firefox history files.
 
-Each one of these files may produce more than one directory, and each directory can contain more than a single file, resulting in a single line in the filter file perhaps discovering several files in different directories on the system.
+### YAML-based filter file format
 
-These files can be used to limit the collection of data from a machine and target the parsing, thus both reducing the amount of irrelevant events in the timeline and reduce the time it takes to parse an image using the tool.
+A YAML-based filter can be used to describe the path of each file or
+directory Plaso should include or exclude from parsing.
 
-An important caveat is that collection filters do not offer the option of blacklisting, that is to say every file in a folder except files that match pattern *foo*. Another important caveat is that there is no support for recursion, which means that something like `/Users/.+/AppData/**` or something like that would not search the AppData folder and every subfolder under that. These feature requests are being tracked [here](https://github.com/log2timeline/plaso/issues/103)
+Include filters have precedence above exclude filters.
+
+A path filter is defined as a set of attributes:
+
+* "description"; optional description of the purpose of the path filter;
+* "paths": one or more paths to filter defined as a regular expression;
+* "path_separator"; optional path segment separator, which is '/' by default;
+* "type"; required filter type either "include" or "exclude";
+
+For example:
+
+```
+description: Windows Event Log files.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\System32\\config\\.+[.]evt'
+---
+description: Exclude Linux binaries.
+type: exclude
+paths:
+- '/usr/bin'
+```
+
+**Note that if you use \ as a path segment separator it must be escaped as part
+of the regular expression.**
+
+## References
+
+* [Forensic artifacts](https://github.com/ForensicArtifacts/artifacts)
+* [Targeted Timeline Collection](http://blog.kiddaland.net/2013/02/targeted-timelines-part-i.html)
+
