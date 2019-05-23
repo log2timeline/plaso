@@ -8,8 +8,6 @@ import logging
 import re
 
 from plaso.filters import helpers
-from plaso.formatters import manager as formatters_manager
-from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.lib import py2to3
 
@@ -186,50 +184,6 @@ class GenericBinaryOperator(BinaryOperator):
       bool: True if the values match according to the operator, False otherwise.
     """
 
-  def _GetMessage(self, event):
-    """Retrieves a formatted message string.
-
-    Args:
-      event (EventObject): event.
-
-    Returns:
-      str: formatted message string.
-    """
-    # TODO: move this somewhere where the mediator can be instantiated once.
-    formatter_mediator = formatters_mediator.FormatterMediator()
-
-    result = ''
-    try:
-      result, _ = formatters_manager.FormattersManager.GetMessageStrings(
-          formatter_mediator, event)
-    except KeyError as exception:
-      logging.warning(
-          'Unable to correctly assemble event with error: {0!s}'.format(
-              exception))
-
-    return result
-
-  def _GetSources(self, event):
-    """Retrieves a formatted source strings.
-
-    Args:
-      event (EventObject): event.
-
-    Returns:
-      tuple(str, str): short and long source string.
-    """
-    try:
-      # TODO: refactor to pass event and event_data as separate arguments.
-      source_short, source_long = (
-          formatters_manager.FormattersManager.GetSourceStrings(
-              event, event))
-    except KeyError as exception:
-      logging.warning(
-          'Unable to correctly assemble event with error: {0!s}'.format(
-              exception))
-
-    return source_short, source_long
-
   def _GetValue(self, event, attribute_name):
     """Retrieves the value of a specific event attribute.
 
@@ -240,16 +194,11 @@ class GenericBinaryOperator(BinaryOperator):
     Returns:
       object: attribute value or None if not available.
     """
-    if attribute_name == 'message':
-      return self._GetMessage(event)
-
-    if attribute_name in ('source', 'source_short'):
-      source_short, _ = self._GetSources(event)
-      return source_short
-
-    if attribute_name in ('source_long', 'sourcetype'):
-      _, source_long = self._GetSources(event)
-      return source_long
+    if attribute_name in (
+        'message', 'source', 'source_long', 'source_short', 'sourcetype'):
+      logging.warning(
+          'Expansion of {0:s} in event filter no longer supported'.format(
+              attribute_name))
 
     attribute_value = getattr(event, attribute_name, None)
     if attribute_value:
