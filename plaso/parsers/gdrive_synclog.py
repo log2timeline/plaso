@@ -104,7 +104,8 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ValueError: if the structure cannot be converted into a date time string.
     """
-    time_zone_offset = structure.time_zone_offset
+    time_zone_offset = self._GetValueFromStructure(
+        structure, 'time_zone_offset')
 
     try:
       time_zone_offset_hours = int(time_zone_offset[1:3], 10)
@@ -114,15 +115,22 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
           'unable to parse time zone offset with error: {0!s}.'.format(
               exception))
 
+    year = self._GetValueFromStructure(structure, 'year')
+    month = self._GetValueFromStructure(structure, 'month')
+    day_of_month = self._GetValueFromStructure(structure, 'day')
+    hours = self._GetValueFromStructure(structure, 'hours')
+    minutes = self._GetValueFromStructure(structure, 'minutes')
+    seconds = self._GetValueFromStructure(structure, 'seconds')
+    microseconds = self._GetValueFromStructure(structure, 'microseconds')
+
     try:
       iso8601 = (
           '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}'
           '{7:s}{8:02d}:{9:02d}').format(
-              structure.year, structure.month, structure.day,
-              structure.hours, structure.minutes, structure.seconds,
-              structure.microseconds, time_zone_offset[0],
-              time_zone_offset_hours, time_zone_offset_minutes)
-    except ValueError as exception:
+              year, month, day_of_month, hours, minutes, seconds, microseconds,
+              time_zone_offset[0], time_zone_offset_hours,
+              time_zone_offset_minutes)
+    except (TypeError, ValueError) as exception:
       raise ValueError(
           'unable to format date time string with error: {0!s}.'.format(
               exception))
@@ -140,21 +148,27 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     """
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
 
+    date_time_string = self._GetValueFromStructure(structure, 'date_time')
     try:
-      datetime_iso8601 = self._GetISO8601String(structure.date_time)
+      datetime_iso8601 = self._GetISO8601String(date_time_string)
       date_time.CopyFromStringISO8601(datetime_iso8601)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(date_time_string))
       return
 
-    event_data = GoogleDriveSyncLogEventData()
-    event_data.log_level = structure.log_level
-    event_data.pid = structure.pid
-    event_data.thread = structure.thread
-    event_data.source_code = structure.source_code
     # Replace newlines with spaces in structure.message to preserve output.
-    event_data.message = structure.message.replace('\n', ' ')
+    message = self._GetValueFromStructure(structure, 'message')
+    if message:
+      message = message.replace('\n', ' ')
+
+    event_data = GoogleDriveSyncLogEventData()
+    event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
+    event_data.pid = self._GetValueFromStructure(structure, 'pid')
+    event_data.thread = self._GetValueFromStructure(structure, 'thread')
+    event_data.source_code = self._GetValueFromStructure(
+        structure, 'source_code')
+    event_data.message = message
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED)
@@ -199,13 +213,14 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
 
+    date_time_string = self._GetValueFromStructure(structure, 'date_time')
     try:
-      datetime_iso8601 = self._GetISO8601String(structure.date_time)
+      datetime_iso8601 = self._GetISO8601String(date_time_string)
       date_time.CopyFromStringISO8601(datetime_iso8601)
     except ValueError as exception:
       logger.debug((
           'Not a Google Drive Sync log file, invalid date/time: {0!s} '
-          'with error: {1!s}').format(structure.date_time, exception))
+          'with error: {1!s}').format(date_time_string, exception))
       return False
 
     return True

@@ -139,14 +139,16 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ValueError: if the structure cannot be converted into a date time string.
     """
-    fraction_of_second_length = len(structure.fraction_of_second)
+    fraction_of_second = self._GetValueFromStructure(
+        structure, 'fraction_of_second')
+    fraction_of_second_length = len(fraction_of_second)
     if fraction_of_second_length not in (3, 6, 7):
       raise ValueError(
           'unsupported time fraction of second length: {0:d}'.format(
               fraction_of_second_length))
 
     try:
-      fraction_of_second = int(structure.fraction_of_second, 10)
+      fraction_of_second = int(fraction_of_second, 10)
     except (TypeError, ValueError) as exception:
       raise ValueError(
           'unable to determine fraction of second with error: {0!s}'.format(
@@ -156,15 +158,22 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     if fraction_of_second_length == 7:
       fraction_of_second, _ = divmod(fraction_of_second, 10)
 
+    year = self._GetValueFromStructure(structure, 'year')
+    month = self._GetValueFromStructure(structure, 'month')
+    day_of_month = self._GetValueFromStructure(structure, 'day')
+    hours = self._GetValueFromStructure(structure, 'hour')
+    minutes = self._GetValueFromStructure(structure, 'minute')
+    seconds = self._GetValueFromStructure(structure, 'second')
+
     date_time_string = '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}'.format(
-        structure.year, structure.month, structure.day, structure.hour,
-        structure.minute, structure.second)
+        year, month, day_of_month, hours, minutes, seconds)
 
     if fraction_of_second_length > 0:
       date_time_string = '{0:s}.{1:d}'.format(
           date_time_string, fraction_of_second)
 
-    utc_offset_minutes = structure.get('utc_offset_minutes', None)
+    utc_offset_minutes = self._GetValueFromStructure(
+        structure, 'utc_offset_minutes')
     if utc_offset_minutes is not None:
       try:
         time_zone_offset = int(utc_offset_minutes[1:], 10)
@@ -206,7 +215,9 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
           'unable to determine date time string with error: {0!s}'.format(
               exception))
 
-    fraction_of_second_length = len(structure.fraction_of_second)
+    fraction_of_second = self._GetValueFromStructure(
+        structure, 'fraction_of_second')
+    fraction_of_second_length = len(fraction_of_second)
     if fraction_of_second_length == 3:
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
     elif fraction_of_second_length in (6, 7):
@@ -221,10 +232,10 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       return
 
     event_data = SCCMLogEventData()
-    event_data.component = structure.component
+    event_data.component = self._GetValueFromStructure(structure, 'component')
     # TODO: pass line number to offset or remove.
     event_data.offset = 0
-    event_data.text = structure.text
+    event_data.text = self._GetValueFromStructure(structure, 'text')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
