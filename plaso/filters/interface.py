@@ -55,13 +55,15 @@ class FilterObject(object):
     """
 
   # pylint: disable=unused-argument
-  def Match(self, event):
+  def Match(self, event, event_data, event_tag):
     """Determines if an event matches the filter.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
 
     Returns:
-      bool: True if the there is a match.
+      bool: True if the event matches the filter.
     """
     return False
