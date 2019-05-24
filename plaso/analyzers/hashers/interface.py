@@ -13,7 +13,6 @@ class BaseHasher(object):
   ATTRIBUTE_NAME = 'hash'
   DESCRIPTION = 'Calculates a digest hash over input data.'
 
-
   # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def GetStringDigest(self):
