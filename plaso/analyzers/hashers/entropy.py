@@ -15,7 +15,7 @@ class EntropyHasher(interface.BaseHasher):
   """Calculates the byte entropy of input files."""
 
   NAME = 'entropy'
-  ATTRIBUTE_NAME = 'entropy'
+  ATTRIBUTE_NAME = 'file_entropy'
   DESCRIPTION = 'Calculates the byte entropy of input data.'
 
   def __init__(self):
