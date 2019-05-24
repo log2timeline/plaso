@@ -13,6 +13,7 @@ class MD5Hasher(interface.BaseHasher):
   """This class provides MD5 hashing functionality."""
 
   NAME = 'md5'
+  ATTRIBUTE_NAME = 'md5_hash'
   DESCRIPTION = 'Calculates an MD5 digest hash over input data.'
 
   def __init__(self):
