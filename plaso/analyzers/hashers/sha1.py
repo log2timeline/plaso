@@ -13,6 +13,7 @@ class SHA1Hasher(interface.BaseHasher):
   """This class provides SHA-1 hashing functionality."""
 
   NAME = 'sha1'
+  ATTRIBUTE_NAME = 'sha1_hash'
   DESCRIPTION = 'Calculates a SHA-1 digest hash over input data.'
 
   def __init__(self):

@@ -16,6 +16,7 @@ class TestHasher(interface.BaseHasher):
   """Test hasher."""
 
   NAME = 'testhash'
+  ATTRIBUTE_NAME = 'testhash_hash'
 
   def GetStringDigest(self):
     """Retrieves the digest of the hash function expressed as a Unicode string.

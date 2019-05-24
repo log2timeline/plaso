@@ -10,6 +10,7 @@ class BaseHasher(object):
   """Base class for objects that calculate hashes."""
 
   NAME = 'base_hasher'
+  ATTRIBUTE_NAME = 'hash'
   DESCRIPTION = 'Calculates a digest hash over input data.'
 
   # pylint: disable=redundant-returns-doc

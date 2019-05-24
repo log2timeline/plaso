@@ -12,7 +12,11 @@ from plaso.lib import definitions
 
 
 class HashingAnalyzer(interface.BaseAnalyzer):
-  """This class contains code for calculating file hashes of input files."""
+  """This class contains code for calculating file hashes of input files.
+
+  In Plaso, hashers are classes that map arbitrarily sized file content to a
+  fixed size value. See: https://en.wikipedia.org/wiki/Hash_function
+  """
 
   NAME = 'hashing'
   DESCRIPTION = 'Calculates hashes of file content.'
@@ -50,7 +54,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
       logger.debug('Processing results for hasher {0:s}'.format(hasher.NAME))
       result = analyzer_result.AnalyzerResult()
       result.analyzer_name = self.NAME
-      result.attribute_name = '{0:s}_hash'.format(hasher.NAME)
+      result.attribute_name = hasher.ATTRIBUTE_NAME
       result.attribute_value = hasher.GetStringDigest()
       results.append(result)
     return results

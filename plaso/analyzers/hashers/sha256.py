@@ -13,6 +13,7 @@ class SHA256Hasher(interface.BaseHasher):
   """This class provides SHA-256 hashing functionality."""
 
   NAME = 'sha256'
+  ATTRIBUTE_NAME = 'sha256_hash'
   DESCRIPTION = 'Calculates a SHA-256 digest hash over input data.'
 
   def __init__(self):
