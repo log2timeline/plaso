@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import copy
 import os
 
 from plaso.analysis import interface
@@ -93,16 +92,12 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
             'no events will be tagged.')
         return
 
-    # TODO: refactor to separately filter event and event data
-    copy_of_event = copy.deepcopy(event)
-    if event_data:
-      for attribute_name, attribute_value in event_data.GetAttributes():
-        setattr(copy_of_event, attribute_name, attribute_value)
-
     matched_label_names = []
     for label_name, filter_objects in iter(self._tagging_rules.items()):
       for filter_object in filter_objects:
-        if filter_object.Match(copy_of_event):
+        # Note that tagging events based on existing labels is currently
+        # not supported.
+        if filter_object.Match(event, event_data, None):
           matched_label_names.append(label_name)
           break
 
