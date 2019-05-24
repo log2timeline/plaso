@@ -32,13 +32,12 @@ class EntropyHasher(interface.BaseHasher):
 
     Returns:
       str: byte entropy formatted as a floating point number with 6 decimal
-          places calculated over the data blocks passed to
-          Update().
+          places calculated over the data blocks passed to Update().
     """
     if self._file_length == 0:
       return '0.000000'
 
-    entropy = 0
+    entropy = 0.0
     for byte_frequency in self._byte_frequency_counter.values():
       byte_probability = byte_frequency / self._file_length
       if byte_probability:
@@ -55,7 +54,8 @@ class EntropyHasher(interface.BaseHasher):
       data(bytes): block of data with which to update the context of the entropy
           calculator.
     """
-    # Increment counts for each byte value.
+    # The call to update() determines the number of occurrences of a byte value
+    # within data.
     self._byte_frequency_counter.update(data)
     self._file_length += len(data)
 
