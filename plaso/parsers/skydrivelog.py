@@ -144,20 +144,27 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
+    time_elements_tuple = self._GetValueFromStructure(
+        structure, 'header_date_time')
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=structure.header_date_time)
+          time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.header_date_time))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
+
+    details = self._GetValueFromStructure(structure, 'details')
+    local_time_string = self._GetValueFromStructure(
+        structure, 'local_time_string')
+    log_start = self._GetValueFromStructure(structure, 'log_start')
+    version_number = self._GetValueFromStructure(structure, 'version_number')
+    version_string = self._GetValueFromStructure(structure, 'version_string')
 
     event_data = SkyDriveLogEventData()
     # TODO: refactor detail to individual event data attributes.
-    event_data.detail = '{0:s} {1:s} {2:s} {3:s} {4:s}'.format(
-        structure.log_start, structure.version_string,
-        structure.version_number, structure.local_time_string,
-        structure.details)
+    event_data.detail = '{0!s} {1!s} {2!s} {3!s} {4!s}'.format(
+        log_start, version_string, version_number, local_time_string, details)
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED)
@@ -172,9 +179,11 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time elements tuple is None.
     # TODO: Verify if date and time value is locale dependent.
     month, day_of_month, year, hours, minutes, seconds, milliseconds = (
-        structure.date_time)
+        time_elements_tuple)
 
     year += 2000
     time_elements_tuple = (
@@ -185,16 +194,21 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
-    event_data = SkyDriveLogEventData()
     # Replace newlines with spaces in structure.detail to preserve output.
     # TODO: refactor detail to individual event data attributes.
-    event_data.detail = structure.detail.replace('\n', ' ')
-    event_data.log_level = structure.log_level
-    event_data.module = structure.module
-    event_data.source_code = structure.source_code
+    detail = self._GetValueFromStructure(structure, 'detail')
+    if detail:
+      detail = detail.replace('\n', ' ')
+
+    event_data = SkyDriveLogEventData()
+    event_data.detail = detail
+    event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
+    event_data.module = self._GetValueFromStructure(structure, 'module')
+    event_data.source_code = self._GetValueFromStructure(
+        structure, 'source_code')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED)
@@ -240,13 +254,15 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       logger.debug('Not a SkyDrive log file')
       return False
 
+    time_elements_tuple = self._GetValueFromStructure(
+        structure, 'header_date_time')
     try:
       dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=structure.header_date_time)
+          time_elements_tuple=time_elements_tuple)
     except ValueError:
       logger.debug(
           'Not a SkyDrive log file, invalid date and time: {0!s}'.format(
-              structure.header_date_time))
+              time_elements_tuple))
       return False
 
     return True
@@ -324,9 +340,11 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time elements tuple is None.
     # TODO: Verify if date and time value is locale dependent.
     month, day_of_month, year, hours, minutes, seconds, milliseconds = (
-        structure.date_time)
+        time_elements_tuple)
 
     time_elements_tuple = (
         year, month, day_of_month, hours, minutes, seconds, milliseconds)
@@ -336,14 +354,15 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     event_data = SkyDriveOldLogEventData()
-    event_data.log_level = structure.log_level
+    event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
     event_data.offset = self.offset
-    event_data.source_code = structure.source_code
-    event_data.text = structure.text
+    event_data.source_code = self._GetValueFromStructure(
+        structure, 'source_code')
+    event_data.text = self._GetValueFromStructure(structure, 'text')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED)
@@ -367,7 +386,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
 
     event_data = SkyDriveOldLogEventData()
     event_data.offset = self._last_event_data.offset
-    event_data.text = structure.text
+    event_data.text = self._GetValueFromStructure(structure, 'text')
 
     event = time_events.DateTimeValuesEvent(
         self._last_date_time, definitions.TIME_DESCRIPTION_ADDED)
@@ -417,8 +436,10 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       logger.debug('Not a SkyDrive old log file')
       return False
 
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time elements tuple is None.
     day_of_month, month, year, hours, minutes, seconds, milliseconds = (
-        structure.date_time)
+        time_elements_tuple)
 
     time_elements_tuple = (
         year, month, day_of_month, hours, minutes, seconds, milliseconds)
@@ -429,7 +450,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     except ValueError:
       logger.debug(
           'Not a SkyDrive old log file, invalid date and time: {0!s}'.format(
-              structure.date_time))
+              time_elements_tuple))
       return False
 
     return True
