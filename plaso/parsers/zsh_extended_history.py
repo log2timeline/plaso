@@ -81,11 +81,12 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     event_data = ZshHistoryEventData()
-    event_data.command = structure['command']
-    event_data.elapsed_seconds = structure['elapsed_seconds']
+    event_data.command = self._GetValueFromStructure(structure, 'command')
+    event_data.elapsed_seconds = self._GetValueFromStructure(
+        structure, 'elapsed_seconds')
 
-    date_time = dfdatetime_posix_time.PosixTime(
-        timestamp=structure['timestamp'])
+    timestamp = self._GetValueFromStructure(structure, 'timestamp')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
