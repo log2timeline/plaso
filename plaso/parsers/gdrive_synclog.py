@@ -96,7 +96,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       structure (pyparsing.ParseResults): structure of tokens derived from a
-          line of a text file.
+          line of a text file, that contains the time elements.
 
     Returns:
       str: ISO 8601 date time string.
@@ -148,13 +148,14 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     """
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
 
-    date_time_string = self._GetValueFromStructure(structure, 'date_time')
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
     try:
-      datetime_iso8601 = self._GetISO8601String(date_time_string)
+      datetime_iso8601 = self._GetISO8601String(time_elements_structure)
       date_time.CopyFromStringISO8601(datetime_iso8601)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(date_time_string))
+          'invalid date time value: {0!s}'.format(time_elements_structure))
       return
 
     # Replace newlines with spaces in structure.message to preserve output.
