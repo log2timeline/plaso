@@ -26,24 +26,23 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # Check the first page visited entry.
+    # Check the first note.
     event = events[0]
     self.CheckTimestamp(event.timestamp, '2014-02-11 02:38:27.097813')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.title, 'building 4th brandy gibs')
-    expected_message = (
-        '   building 4th brandy gibs\n'
-        '      microsoft office\n'
-        '   body soul and peace\n'
-        '    example.com\n'
-        '        3015555555: plumbing and heating\n'
-        '    claim#123456\n'
-        '        Small business\n            ')
-    expected_short_message = (
-        'title:building 4th brandy gibs')
-    self.assertEqual(event.zhtmlstring, expected_message)
+    expected_title = 'building 4th brandy gibs'
+    self.assertEqual(event.title, expected_title)
+    expected_text = (
+        'building 4th brandy gibs microsoft office body soul and peace '
+        'example.com 3015555555: plumbing and heating claim#123456 Small '
+        'business ')
+    self.assertEqual(event.text, expected_text)
+
+    expected_short_message = 'title:{0:s}'.format(expected_title)
+    expected_message = 'title:{0:s} note_text:{1:s}'.format(
+        expected_title, expected_text)
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

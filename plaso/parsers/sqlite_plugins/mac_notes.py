@@ -1,42 +1,82 @@
 # -*- coding: utf-8 -*-
 """Parser for mac notes database.
+
 SQLite database path: test_data/NotesV7.storedata
 SQLite database Name: NotesV7.storedata
 """
 
 from __future__ import unicode_literals
-import re
-from bs4 import BeautifulSoup
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
+# pylint: disable=import-error
+if py2to3.PY_2:
+  import HTMLParser
+else:
+  import html.parser as HTMLParser
 
-class MacNotesZhtmlstringEventData(events.EventData):
-  """Mac Notes zhtmlstring event data.
+
+class _ZHTMLStringTextExtractor(HTMLParser.HTMLParser):
+  """HTML parser for extracting text from a mac notes zhtmlstring."""
+
+  # This method is part of the HTMLParser interface.
+  # pylint: disable=invalid-name
+  def handle_data(self, data):
+    """Called to handle arbitrary data processed by the parser.
+
+    Args:
+      data(str): arbitrry data processed by the parser, such as text nodes and
+          the content of <script>...</script> and <style>...</style>.
+    """
+    # Not defined in init due to Python2/Python3 complications.
+    # pylint: disable=attribute-defined-outside-init
+    self._text.append(data)
+
+  def ExtractText(self, zhtmlstring):
+    """Extracts text from a Mac notes ZHTMLString.
+
+    Args:
+      zhtmlstring (str): zhtmlstring from a Mac notes database.
+
+    Returns:
+      str: the text of the note, with HTML removed.
+    """
+    # Not defined in init due to Python2/Python3 complications.
+    # pylint: disable=attribute-defined-outside-init
+    self._text = []
+    self.feed(zhtmlstring)
+    self.close()
+    self._text = [line.strip() for line in self._text]
+    return ' '.join(self._text)
+
+
+class MacNotesEventData(events.EventData):
+  """Mac Notes event data.
 
   Attributes:
-    zhtmlstring (str): note html string.
+    text (str): note text.
     title (str): note title.
   """
 
-  DATA_TYPE = 'mac:notes:zhtmlstring'
+  DATA_TYPE = 'mac:notes:note'
 
   def __init__(self):
     """Initializes event data."""
-    super(MacNotesZhtmlstringEventData, self).__init__(
+    super(MacNotesEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.zhtmlstring = None
+    self.text = None
     self.title = None
 
 
 class MacNotesPlugin(interface.SQLitePlugin):
-  """Parser for Mac OS Notes."""
+  """Plugin for the Mac OS Notes database."""
 
   NAME = 'mac_notes'
   DESCRIPTION = 'Parser for Mac Notes'
@@ -115,9 +155,14 @@ class MacNotesPlugin(interface.SQLitePlugin):
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
     query_hash = hash(query)
-    event_data = MacNotesZhtmlstringEventData()
+    event_data = MacNotesEventData()
 
-    event_data.zhtmlstring = self._GetRowValue(query_hash, row, 'zhtmlstring')
+    zhtmlstring = self._GetRowValue(query_hash, row, 'zhtmlstring')
+
+    text_extractor = _ZHTMLStringTextExtractor()
+    text = text_extractor.ExtractText(zhtmlstring)
+    event_data.text = text
+
     event_data.title = self._GetRowValue(query_hash, row, 'title')
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
 

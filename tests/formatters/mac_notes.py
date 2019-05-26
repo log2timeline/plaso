@@ -22,7 +22,7 @@ class MacNotesZhtmlstringFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = mac_notes.MacNotesNotesFormatter()
 
-    expected_attribute_names = ['zhtmlstring', 'title']
+    expected_attribute_names = ['text', 'title']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
