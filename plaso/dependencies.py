@@ -190,8 +190,9 @@ def _CheckLZMA(verbose_output=True):
 
     module_object = _ImportPythonModule(module_name)
     if not module_object:
-      print('[FAILURE]\tmissing: lzma and backports.lzma.')
-      return False
+      if verbose_output:
+        print('[OPTIONAL]\tmissing: lzma and backports.lzma.')
+      return True
 
   if verbose_output:
     # Note that the Python 3 lzma module had no __version__ attribute.
