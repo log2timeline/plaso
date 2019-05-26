@@ -14,6 +14,7 @@ from plaso.lib import timelib
 from plaso.output import l2t_csv
 
 from tests.cli import test_lib as cli_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
@@ -58,13 +59,15 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
   def testFormatHostname(self):
     """Tests the _FormatHostname function."""
-    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     hostname_string = self._formatter._FormatHostname(event_data)
     self.assertEqual(hostname_string, 'ubuntu')
 
   def testFormatUsername(self):
     """Tests the _FormatUsername function."""
-    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     username_string = self._formatter._FormatUsername(event_data)
     self.assertEqual(username_string, '-')
 
@@ -94,7 +97,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         '-',
         'my_number: 123; some_additional_foo: True']
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     output_values = self._formatter._GetOutputValues(event, event_data, None)
     self.assertEqual(len(output_values), 17)
     self.assertEqual(output_values, expected_output_values)
@@ -116,7 +120,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         L2TTestEventFormatter)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
 
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])

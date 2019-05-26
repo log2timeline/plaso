@@ -71,6 +71,19 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
        'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
       '/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
 
+  _MACOS_TEST_EVENTS = [
+      {'data_type': 'fs:stat',
+       'filename': path,
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
+      for path in _MACOS_PATHS]
+
+  _MACOS_USERS = [
+      {'name': 'root', 'path': '/var/root', 'sid': '0'},
+      {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
+      {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
+      {'name': 'dude', 'path': '/Users/dude', 'sid': '1123'}]
+
   _WINDOWS_PATHS = [
       'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
       ('C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
@@ -83,11 +96,12 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       'C:\\Windows\\System32',
       'C:\\Stuff/with path separator\\Folder']
 
-  _MACOS_USERS = [
-      {'name': 'root', 'path': '/var/root', 'sid': '0'},
-      {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
-      {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
-      {'name': 'dude', 'path': '/Users/dude', 'sid': '1123'}]
+  _WINDOWS_TEST_EVENTS = [
+      {'data_type': 'fs:stat',
+       'filename': path,
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
+      for path in _WINDOWS_PATHS]
 
   _WINDOWS_USERS = [
       {'name': 'dude', 'path': 'C:\\Users\\dude', 'sid': 'S-1'},
@@ -109,20 +123,9 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportMacOSPaths(self):
     """Tests the ExamineEvent and CompileReport functions on MacOS paths."""
-    test_events = []
-    for path in self._MACOS_PATHS:
-      event_values = {
-          'data_type': 'fs:stat',
-          'filename': path,
-          'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
-          'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
-
-      event, event_data = self._CreateTestEvent(event_values)
-      test_events.append((event, event_data))
-
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        test_events, plugin, knowledge_base_values={
+        self._MACOS_TEST_EVENTS, plugin, knowledge_base_values={
             'users': self._MACOS_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
@@ -149,20 +152,9 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
-    test_events = []
-    for path in self._WINDOWS_PATHS:
-      event_values = {
-          'data_type': 'fs:stat',
-          'filename': path,
-          'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
-          'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
-
-      event, event_data = self._CreateTestEvent(event_values)
-      test_events.append((event, event_data))
-
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        test_events, plugin, knowledge_base_values={
+        self._WINDOWS_TEST_EVENTS, plugin, knowledge_base_values={
             'users': self._WINDOWS_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)

@@ -3,9 +3,9 @@
 
 from __future__ import unicode_literals
 
-import unittest
-
 from plaso.formatters import interface
+
+from tests import test_lib as shared_test_lib
 
 
 class TestEventFormatter(interface.EventFormatter):
@@ -18,7 +18,7 @@ class TestEventFormatter(interface.EventFormatter):
   SOURCE_LONG = 'Weird Log File'
 
 
-class EventFormatterTestCase(unittest.TestCase):
+class EventFormatterTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an event formatter."""
 
   def _TestGetFormatStringAttributeNames(

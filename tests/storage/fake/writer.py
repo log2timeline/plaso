@@ -15,6 +15,7 @@ from plaso.lib import definitions
 from plaso.storage.fake import writer as fake_writer
 
 from tests.storage import test_lib
+from tests.containers import test_lib as containers_test_lib
 
 
 class FakeStorageWriterTest(test_lib.StorageTestCase):
@@ -39,17 +40,21 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   def testAddEvent(self):
     """Tests the AddEvent function."""
     session = sessions.Session()
-    test_events = self._CreateTestEvents()
 
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     event = None
-    for event in test_events:
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      storage_writer.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
 
     storage_writer.Close()
 
+    # Test writing an event twice.
     with self.assertRaises(IOError):
       storage_writer.AddEvent(event)
 
@@ -75,9 +80,15 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    test_events = self._CreateTestEvents()
-    for event in test_events:
+    test_events = []
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      storage_writer.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
+
+      test_events.append(event)
 
     event_tag = None
     test_event_tags = self._CreateTestEventTags(test_events)
@@ -86,6 +97,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
     storage_writer.Close()
 
+    # Test writing an event tag twice.
     with self.assertRaises(IOError):
       storage_writer.AddEventTag(event_tag)
 
@@ -133,16 +145,19 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   def testGetEvents(self):
     """Tests the GetEvents function."""
     session = sessions.Session()
-    test_events = self._CreateTestEvents()
 
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    for event in test_events:
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      storage_writer.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
 
-    events = list(storage_writer.GetEvents())
-    self.assertEqual(len(events), len(test_events))
+    test_events = list(storage_writer.GetEvents())
+    self.assertEqual(len(test_events), 4)
 
     storage_writer.Close()
 
@@ -154,16 +169,19 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
     session = sessions.Session()
-    test_events = self._CreateTestEvents()
 
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    for event in test_events:
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      storage_writer.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
 
-    events = list(storage_writer.GetSortedEvents())
-    self.assertEqual(len(events), len(test_events))
+    test_events = list(storage_writer.GetSortedEvents())
+    self.assertEqual(len(test_events), 4)
 
     storage_writer.Close()
 

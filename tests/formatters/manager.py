@@ -9,6 +9,8 @@ import unittest
 from plaso.formatters import manager
 from plaso.formatters import mediator
 from plaso.formatters import winreg  # pylint: disable=unused-import
+from plaso.lib import definitions
+from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
@@ -17,6 +19,73 @@ from tests.formatters import test_lib
 
 class FormattersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the event formatters manager."""
+
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'filename': 'c:/Users/joesmith/NTUSER.DAT',
+       'hostname': 'MYHOSTNAME',
+       'text': '',
+       'timestamp': 0,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
+       'username': 'joesmith'},
+      {'data_type': 'windows:registry:key_value',
+       'hostname': 'MYHOSTNAME',
+       'key_path': 'MY AutoRun key',
+       'regvalue': {'Value': 'c:/Temp/evil.exe'},
+       'timestamp': timelib.Timestamp.CopyFromString(
+           '2012-04-20 22:38:46.929596'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+      {'data_type': 'windows:registry:key_value',
+       'hostname': 'MYHOSTNAME',
+       'key_path': 'HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key',
+       'regvalue': {'Value': 'send all the exes to the other world'},
+       'timestamp': timelib.Timestamp.CopyFromString(
+           '2012-04-20 23:56:46.929596'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+      {'data_type': 'windows:registry:key_value',
+       'hostname': 'MYHOSTNAME',
+       'key_path': 'HKEY_CURRENT_USER\\Windows\\Normal',
+       'regvalue': {'Value': 'run all the benign stuff'},
+       'timestamp': timelib.Timestamp.CopyFromString('2012-04-20 16:44:46'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+      {'data_type': 'test:event',
+       'filename': 'c:/Temp/evil.exe',
+       'hostname': 'MYHOSTNAME',
+       'text': 'This log line reads ohh so much.',
+       'timestamp': timelib.Timestamp.CopyFromString(
+           '2012-04-30 10:29:47.929596'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'filename': 'c:/Temp/evil.exe',
+       'hostname': 'MYHOSTNAME',
+       'text': 'Nothing of interest here, move on.',
+       'timestamp': timelib.Timestamp.CopyFromString(
+           '2012-04-30 10:29:47.929596'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'filename': 'c:/Temp/evil.exe',
+       'hostname': 'MYHOSTNAME',
+       'text': 'Mr. Evil just logged into the machine and got root.',
+       'timestamp': timelib.Timestamp.CopyFromString(
+           '2012-04-30 13:06:47.939596'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'body': (
+          'This is a line by someone not reading the log line properly. And '
+          'since this log line exceeds the accepted 80 chars it will be '
+          'shortened.'),
+       'data_type': 'text:entry',
+       'filename': 'c:/Temp/evil.exe',
+       'hostname': 'nomachine',
+       'offset': 12,
+       # TODO: fix missing body attribute
+       'text': (
+           'This is a line by someone not reading the log line properly. And '
+           'since this log line exceeds the accepted 80 chars it will be '
+           'shortened.'),
+       'timestamp': timelib.Timestamp.CopyFromString(
+           '2012-06-05 22:14:19.000000'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+       'username': 'johndoe'}]
 
   def testFormatterRegistration(self):
     """Tests the RegisterFormatter and DeregisterFormatter functions."""
@@ -46,7 +115,8 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
     text_message = None
     text_message_short = None
 
-    for event, event_data in containers_test_lib.CreateTestEvents():
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
       message, message_short = manager.FormattersManager.GetMessageStrings(
           formatter_mediator, event_data)
       source_short, source_long = manager.FormattersManager.GetSourceStrings(

@@ -35,15 +35,10 @@ class SessionizeAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
   def testTagAndCompileReport(self):
     """Tests the Sessionize plugin."""
-    test_events = []
-    for event_values in self._TEST_EVENTS:
-      event, event_data = self._CreateTestEvent(event_values)
-      test_events.append((event, event_data))
-
     plugin = sessionize.SessionizeAnalysisPlugin()
     plugin.SetMaximumPause(10)
 
-    storage_writer = self._AnalyzeEvents(test_events, plugin)
+    storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
     self.assertEqual(storage_writer.number_of_event_tags, 5)

@@ -16,6 +16,7 @@ from plaso.lib import timelib
 from plaso.output import rawpy
 
 from tests.cli import test_lib as cli_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
@@ -48,7 +49,8 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
     output_module = rawpy.NativePythonOutputModule(output_mediator)
     output_module.SetOutputWriter(output_writer)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     output_module.WriteEventBody(event, event_data, None)
 
     if sys.platform.startswith('win'):
