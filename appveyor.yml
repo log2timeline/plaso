@@ -6,16 +6,12 @@ environment:
   - TARGET: windows_python27
     MACHINE_TYPE: "amd64"
     PYTHON: "C:\\Python27-x64"
-  - TARGET: windows_python36
+  - TARGET: windows_python37
     MACHINE_TYPE: "x86"
-    PYTHON: "C:\\Python36"
-  - TARGET: windows_python36
+    PYTHON: "C:\\Python37"
+  - TARGET: windows_python37
     MACHINE_TYPE: "amd64"
-    PYTHON: "C:\\Python36-x64"
-
-matrix:
-  allow_failures:
-  - TARGET: python36
+    PYTHON: "C:\\Python37-x64"
 
 install:
 - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
@@ -41,7 +37,7 @@ install:
     mkdir dependencies &&
     set PYTHONPATH=..\l2tdevtools &&
     "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type %MACHINE_TYPE% --msi-targetdir "%PYTHON%" --track dev PyYAML XlsxWriter artifacts bencode biplist certifi chardet dateutil dfdatetime dfvfs dfwinreg dtfabric elasticsearch-py funcsigs future idna libbde libesedb libevt libevtx libewf libfsapfs libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lz4 mock pbr pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python )
-- cmd: if [%TARGET%]==[windows_python36] (
+- cmd: if [%TARGET%]==[windows_python37] (
     mkdir dependencies &&
     set PYTHONPATH=..\l2tdevtools &&
     "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type %MACHINE_TYPE% --msi-targetdir "%PYTHON%" --track dev PyYAML XlsxWriter artifacts bencode biplist certifi chardet dateutil dfdatetime dfvfs dfwinreg dtfabric elasticsearch-py future idna libbde libesedb libevt libevtx libewf libfsapfs libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lz4 mock pbr pefile psutil pycrypto pyparsing pytsk3 pytz pyzmq requests six urllib3 yara-python )
