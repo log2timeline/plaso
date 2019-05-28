@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import os
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -181,6 +183,10 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       expected_message (str): expected message string.
       expected_short_message (str): expected short message string.
     """
+    formatters_file_path = os.path.join(self._DATA_PATH, 'formatters.yaml')
+    formatters_manager.FormattersManager.ReadFormattersFromFile(
+        formatters_file_path)
+
     formatter_mediator = formatters_mediator.FormatterMediator(
         data_location=self._DATA_PATH)
     message, message_short = (

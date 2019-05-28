@@ -88,22 +88,24 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
 
   def testReadFromFileObject(self):
     """Tests the _ReadFromFileObject function."""
-    test_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
-    self._SkipIfPathNotExists(test_path)
+    test_file_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
 
     test_formatters_file = yaml_formatters_file.YAMLFormattersFile()
-    with io.open(test_path, 'r', encoding='utf-8') as file_object:
+
+    with io.open(test_file_path, 'r', encoding='utf-8') as file_object:
       formatters = list(test_formatters_file._ReadFromFileObject(file_object))
 
     self.assertEqual(len(formatters), 1)
 
   def testReadFromFile(self):
     """Tests the ReadFromFile function."""
-    test_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
-    self._SkipIfPathNotExists(test_path)
+    test_file_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
 
     test_formatters_file = yaml_formatters_file.YAMLFormattersFile()
-    formatters = test_formatters_file.ReadFromFile(test_path)
+
+    formatters = test_formatters_file.ReadFromFile(test_file_path)
 
     self.assertEqual(len(formatters), 1)
 

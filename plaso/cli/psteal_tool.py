@@ -23,6 +23,7 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.engine import single_process as single_process_engine
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import psort
@@ -83,6 +84,8 @@ class PstealTool(
       'And that is how you build a timeline using psteal...',
       '']))
 
+  _FORMATTERS_FILE_NAME = 'formatters.yaml'
+
   _SOURCE_TYPES_TO_PREPROCESS = frozenset([
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -103,6 +106,7 @@ class PstealTool(
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
+    self._formatters_file = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
@@ -172,6 +176,26 @@ class PstealTool(
       table_view.AddRow(['String', analysis_report.GetString()])
 
       table_view.Write(self._output_writer)
+
+  def _ReadEventFormattersFromFile(self):
+    """Reads the event formatters the formatters.yaml file.
+
+    Raises:
+      BadConfigOption: if the event formatters file cannot be read.
+    """
+    self._formatters_file = os.path.join(
+        self._data_location, self._FORMATTERS_FILE_NAME)
+    if not os.path.isfile(self._formatters_file):
+      raise errors.BadConfigOption(
+          'No such event formatters file: {0:s}.'.format(self._formatters_file))
+
+    try:
+      formatters_manager.FormattersManager.ReadFormattersFromFile(
+          self._formatters_file)
+    except KeyError as exception:
+      raise errors.BadConfigOption(
+          'Unable to read event formatters from file with error: {0!s}'.format(
+              exception))
 
   def AnalyzeEvents(self):
     """Analyzes events from a plaso storage file and generate a report.
@@ -452,6 +476,7 @@ class PstealTool(
         options, self, names=['data_location'])
 
     self._ReadParserPresetsFromFile()
+    self._ReadEventFormattersFromFile()
 
     # The output modules options are dependent on the preferred language
     # and preferred time zone options.

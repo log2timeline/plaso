@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from plaso.formatters import default
 from plaso.formatters import logger
 from plaso.lib import definitions
+from plaso.formatters import yaml_formatters_file
 
 
 class FormattersManager(object):
@@ -14,6 +15,9 @@ class FormattersManager(object):
   _formatter_classes = {}
   _formatter_objects = {}
   _unformatted_attributes = {}
+
+  # Work-around to prevent the tests re-reading the formatters file.
+  _file_was_read = False
 
   @classmethod
   def DeregisterFormatter(cls, formatter_class):
@@ -29,9 +33,8 @@ class FormattersManager(object):
     """
     formatter_data_type = formatter_class.DATA_TYPE.lower()
     if formatter_data_type not in cls._formatter_classes:
-      raise KeyError(
-          'Formatter class not set for data type: {0:s}.'.format(
-              formatter_class.DATA_TYPE))
+      raise KeyError('Formatter class not set for data type: {0:s}.'.format(
+          formatter_class.DATA_TYPE))
 
     del cls._formatter_classes[formatter_data_type]
 
@@ -57,8 +60,8 @@ class FormattersManager(object):
         formatter_object = formatter_class()
 
       if not formatter_object:
-        logger.warning(
-            'Using default formatter for data type: {0:s}'.format(data_type))
+        logger.warning('Using default formatter for data type: {0:s}'.format(
+            data_type))
         formatter_object = default.DefaultFormatter()
 
       cls._formatter_objects[data_type] = formatter_object
@@ -125,6 +128,28 @@ class FormattersManager(object):
     return unformatted_attributes
 
   @classmethod
+  def ReadFormattersFromFile(cls, path):
+    """Reads formatters from a file.
+
+    Args:
+      path (str): path of file that contains the formatters configuration.
+
+    Raises:
+      KeyError: if formatter class is already set for the corresponding
+          data type.
+    """
+    if not cls._file_was_read:
+      formatters_file = yaml_formatters_file.YAMLFormattersFile()
+      for formatter in formatters_file.ReadFromFile(path):
+        # TODO: refactor RegisterFormatter to only use formatter objects.
+        cls.RegisterFormatter(formatter)
+
+        data_type = formatter.DATA_TYPE.lower()
+        cls._formatter_objects[data_type] = formatter
+
+      cls._file_was_read = True
+
+  @classmethod
   def RegisterFormatter(cls, formatter_class):
     """Registers a formatter class.
 
@@ -139,9 +164,8 @@ class FormattersManager(object):
     """
     formatter_data_type = formatter_class.DATA_TYPE.lower()
     if formatter_data_type in cls._formatter_classes:
-      raise KeyError((
-          'Formatter class already set for data type: {0:s}.').format(
-              formatter_class.DATA_TYPE))
+      raise KeyError('Formatter class already set for data type: {0:s}.'.format(
+          formatter_class.DATA_TYPE))
 
     cls._formatter_classes[formatter_data_type] = formatter_class
 
