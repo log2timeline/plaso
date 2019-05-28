@@ -433,10 +433,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
   # TODO: add test for _StopAnalysisProcesses.
   # TODO: add test for _UpdateProcessingStatus.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testAnalyzeEvents(self):
     """Tests the AnalyzeEvents function."""
-    storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
 
     session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -460,7 +460,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      shutil.copyfile(storage_file_path, temp_file)
+      shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
@@ -476,7 +476,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      shutil.copyfile(storage_file_path, temp_file)
+      shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
@@ -490,10 +490,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     # TODO: add bogus data location test.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testExportEvents(self):
     """Tests the ExportEvents function."""
-    storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_writer = cli_test_lib.TestBinaryOutputWriter()
@@ -510,7 +510,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        storage_file_path)
+        test_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
     test_engine.ExportEvents(

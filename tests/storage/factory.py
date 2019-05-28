@@ -11,31 +11,31 @@ from plaso.storage import factory
 from plaso.storage.sqlite import reader as sqlite_reader
 from plaso.storage.sqlite import writer as sqlite_writer
 
-from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
 class StorageFactoryTest(test_lib.StorageTestCase):
   """Tests for the storage factory."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCreateStorageReaderForFile(self):
     """Test the CreateStorageReaderForFile function."""
-    test_file = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
 
     storage_reader = factory.StorageFactory.CreateStorageReaderForFile(
-        test_file)
+        test_file_path)
     self.assertIsInstance(
         storage_reader, sqlite_reader.SQLiteStorageFileReader)
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCreateStorageWriterForFile(self):
     """Test the CreateStorageWriterForFile function."""
     session = sessions.Session()
-    test_file = self._GetTestFilePath(['psort_test.plaso'])
+
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
 
     storage_reader = factory.StorageFactory.CreateStorageWriterForFile(
-        session, test_file)
+        session, test_file_path)
     self.assertIsInstance(
         storage_reader, sqlite_writer.SQLiteStorageFileWriter)
 

@@ -43,24 +43,24 @@ class YAMLFilterFileTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(errors.ParseError):
       test_filter_file._ReadFilterDefinition({'bogus': 'error'})
 
-  @shared_test_lib.skipUnlessHasTestFile(['filter_files', 'format_test.yaml'])
   def testReadFromFileObject(self):
     """Tests the _ReadFromFileObject function."""
-    test_filter_file = yaml_filter_file.YAMLFilterFile()
+    test_file_path = self._GetTestFilePath(['filter_files', 'format_test.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
 
-    test_path = self._GetTestFilePath(['filter_files', 'format_test.yaml'])
-    with io.open(test_path, 'r', encoding='utf-8') as file_object:
+    test_filter_file = yaml_filter_file.YAMLFilterFile()
+    with io.open(test_file_path, 'r', encoding='utf-8') as file_object:
       path_filters = list(test_filter_file._ReadFromFileObject(file_object))
 
     self.assertEqual(len(path_filters), 3)
 
-  @shared_test_lib.skipUnlessHasTestFile(['filter_files', 'format_test.yaml'])
   def testReadFromFile(self):
     """Tests the ReadFromFile function."""
-    test_filter_file = yaml_filter_file.YAMLFilterFile()
+    test_file_path = self._GetTestFilePath(['filter_files', 'format_test.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
 
-    test_path = self._GetTestFilePath(['filter_files', 'format_test.yaml'])
-    path_filters = test_filter_file.ReadFromFile(test_path)
+    test_filter_file = yaml_filter_file.YAMLFilterFile()
+    path_filters = test_filter_file.ReadFromFile(test_file_path)
 
     self.assertEqual(len(path_filters), 3)
 

@@ -80,14 +80,14 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     return find_specs
 
-  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testCalculateNTFSTimeHash(self):
     """Tests the _CalculateNTFSTimeHash function."""
     # Note that the source file is a RAW (VMDK flat) image.
-    test_file = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    self._SkipIfPathNotExists(test_file_path)
 
     image_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
     p1_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
@@ -122,20 +122,28 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
   # TODO: add test for _ExtractPathSpecsFromFile
   # TODO: add test for _ExtractPathSpecsFromFileSystem
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog.bz2'])
-  @shared_test_lib.skipUnlessHasTestFile(['syslog.tgz'])
-  @shared_test_lib.skipUnlessHasTestFile(['syslog.zip'])
-  @shared_test_lib.skipUnlessHasTestFile(['wtmp.1'])
   def testExtractPathSpecsFileSystem(self):
     """Tests the ExtractPathSpecs function on the file system."""
-    test_files = [
-        self._GetTestFilePath(['syslog.bz2']),
-        self._GetTestFilePath(['syslog.tgz']),
-        self._GetTestFilePath(['syslog.zip']),
-        self._GetTestFilePath(['wtmp.1'])]
+    test_file_paths = []
+
+    test_file_path = self._GetTestFilePath(['syslog.bz2'])
+    self._SkipIfPathNotExists(test_file_path)
+    test_file_paths.append(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['syslog.tgz'])
+    self._SkipIfPathNotExists(test_file_path)
+    test_file_paths.append(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['syslog.zip'])
+    self._SkipIfPathNotExists(test_file_path)
+    test_file_paths.append(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['wtmp.1'])
+    self._SkipIfPathNotExists(test_file_path)
+    test_file_paths.append(test_file_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      for a_file in test_files:
+      for a_file in test_file_paths:
         shutil.copy(a_file, temp_directory)
 
       source_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -148,11 +156,17 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
       self.assertEqual(len(path_specs), 4)
 
-  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testExtractPathSpecsFileSystemWithFindSpecs(self):
     """Tests the ExtractPathSpecs function with find specifications."""
+    test_file_path = self._GetTestFilePath(['System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
     location_expressions = [
         '/test_data/testdir/filter_.+.txt',
         '/test_data/.+evtx',
@@ -191,11 +205,9 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         current_directory, 'test_data', 'testdir', 'filter_3.txt')
     self.assertTrue(expected_path in paths)
 
-    expected_path = os.path.join(
-        current_directory, 'AUTHORS')
+    expected_path = os.path.join(current_directory, 'AUTHORS')
     self.assertTrue(expected_path in paths)
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog_image.dd'])
   def testExtractPathSpecsStorageMediaImage(self):
     """Tests the ExtractPathSpecs function an image file.
 
@@ -216,10 +228,11 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     This means that the collection script should collect 6 files in total.
     """
-    test_file = self._GetTestFilePath(['syslog_image.dd'])
+    test_file_path = self._GetTestFilePath(['syslog_image.dd'])
+    self._SkipIfPathNotExists(test_file_path)
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=volume_path_spec)
@@ -231,7 +244,6 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(path_specs), 3)
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractPathSpecsStorageMediaImageWithFilter(self):
     """Tests the ExtractPathSpecs function on an image file with a filter."""
     location_expressions = [
@@ -239,10 +251,11 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         '/a_directory/another.+',
         '/passwords.txt']
 
-    test_file = self._GetTestFilePath(['ímynd.dd'])
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=volume_path_spec)
@@ -273,7 +286,6 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     # image_offset: 0
     self.assertEqual(paths[1], '/passwords.txt')
 
-  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testExtractPathSpecsStorageMediaImageWithPartitions(self):
     """Tests the ExtractPathSpecs function an image file with partitions.
 
@@ -281,10 +293,11 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     file systems.
     """
     # Note that the source file is a RAW (VMDK flat) image.
-    test_file = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    self._SkipIfPathNotExists(test_file_path)
 
     image_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
     p1_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',

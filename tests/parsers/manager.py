@@ -197,7 +197,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     self.assertIn('winreg', parsers_names)
 
-  @shared_test_lib.skipUnlessHasTestFile(['presets.yaml'])
   def testGetParserAndPluginNames(self):
     """Tests the GetParserAndPluginNames function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
@@ -232,8 +231,10 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParser)
 
     # Test with a preset name.
-    test_path = self._GetTestFilePath(['presets.yaml'])
-    manager.ParsersManager.ReadPresetsFromFile(test_path)
+    test_file_path = self._GetTestFilePath(['presets.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    manager.ParsersManager.ReadPresetsFromFile(test_file_path)
 
     parser_names = manager.ParsersManager.GetParserAndPluginNames(
         parser_filter_expression='win_gen')
@@ -302,7 +303,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
 
-  @shared_test_lib.skipUnlessHasTestFile(['presets.yaml'])
   def testGetParsers(self):
     """Tests the GetParsers function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
@@ -340,8 +340,10 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParser)
 
     # Test with a preset name.
-    test_path = self._GetTestFilePath(['presets.yaml'])
-    manager.ParsersManager.ReadPresetsFromFile(test_path)
+    test_file_path = self._GetTestFilePath(['presets.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    manager.ParsersManager.ReadPresetsFromFile(test_file_path)
 
     expected_parser_names = [
         'bencode', 'binary_cookies', 'chrome_cache', 'chrome_preferences',
@@ -373,8 +375,10 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
   def testGetPresetsInformation(self):
     """Tests the GetPresetsInformation function."""
-    presets_file = self._GetTestFilePath(['presets.yaml'])
-    manager.ParsersManager.ReadPresetsFromFile(presets_file)
+    test_file_path = self._GetTestFilePath(['presets.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    manager.ParsersManager.ReadPresetsFromFile(test_file_path)
 
     parser_presets_information = manager.ParsersManager.GetPresetsInformation()
     self.assertGreaterEqual(len(parser_presets_information), 1)

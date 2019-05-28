@@ -10,14 +10,12 @@ from plaso.formatters import java_idx as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import java_idx
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class IDXTest(test_lib.ParserTestCase):
   """Tests for Java Cache IDX file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['java_602.idx'])
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""
     parser = java_idx.JavaIDXParser()
@@ -53,7 +51,6 @@ class IDXTest(test_lib.ParserTestCase):
     description_expected = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event.timestamp_desc, description_expected)
 
-  @shared_test_lib.skipUnlessHasTestFile(['java.idx'])
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
     parser = java_idx.JavaIDXParser()
