@@ -143,6 +143,7 @@ class SQLiteDatabase(object):
     self._temp_wal_file_path = ''
 
     self.schema = {}
+    self.table_columns = {}
 
   @property
   def tables(self):
@@ -272,6 +273,13 @@ class SQLiteDatabase(object):
       self.schema = {
           table_name: ' '.join(query.split())
           for table_name, query in sql_results}
+
+      for table in self.schema.keys():
+        self.table_columns.setdefault(table, [])
+        pragma_results = cursor.execute('PRAGMA table_info({})'.format(table))
+
+        for column in pragma_results:
+          self.table_columns[table].append(column[1])
 
     except sqlite3.DatabaseError as exception:
       self._database.close()
@@ -416,6 +424,20 @@ class SQLiteParser(interface.FileEntryParser):
 
       for plugin in self._plugins:
         if not plugin.REQUIRED_TABLES.issubset(table_names):
+          continue
+
+        columns_match = True
+        for required_table, required_columns in plugin.REQUIRED_COLUMNS.items():
+          if required_table not in table_names:
+            columns_match = False
+            continue
+
+          if not frozenset(required_columns).issubset(
+              database.table_columns.get(required_table)):
+            columns_match = False
+            continue
+
+        if not columns_match:
           continue
 
         schema_match = plugin.CheckSchema(database)

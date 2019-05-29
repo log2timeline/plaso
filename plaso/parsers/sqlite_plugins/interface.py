@@ -27,6 +27,13 @@ class SQLitePlugin(plugins.BasePlugin):
   # List of tables that should be present in the database, for verification.
   REQUIRED_TABLES = frozenset([])
 
+  # Dictionary of lists containing the columns in tables that must be
+  # present in the database for the plugin to run.
+  # This generally should only include tables/columns that are used in SQL
+  # queries by the plugin and not include extraneous tables/columns to better
+  # accommodate future application database versions.
+  REQUIRED_COLUMNS = {}
+
   # Database schemas this plugin was originally designed for.
   # Should be a list of dictionaries with {table_name: SQLCommand} format.
   SCHEMAS = []
