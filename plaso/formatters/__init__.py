@@ -57,6 +57,7 @@ from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
 from plaso.formatters import mrulistex
 from plaso.formatters import msie_webcache
+from plaso.formatters import msie_zones
 from plaso.formatters import msiecf
 from plaso.formatters import network_drives
 from plaso.formatters import officemru
