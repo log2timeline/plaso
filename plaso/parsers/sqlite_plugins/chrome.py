@@ -193,11 +193,20 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         'AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER '
         'BY visits.visit_time'), 'ParseLastVisitedRow'),
       (('SELECT id, full_path, url, start_time, received_bytes, '
-        'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
+        'total_bytes FROM downloads'), 'ParseFileDownloadedRow')]
 
   REQUIRED_TABLES = frozenset([
-      'downloads', 'keyword_search_terms', 'meta', 'urls', 'visits',
-      'visit_source', 'presentation'])
+      'downloads', 'urls', 'visits'])
+
+  REQUIRED_COLUMNS = {
+      'downloads': frozenset([
+          'id', 'full_path', 'received_bytes', 'total_bytes', 'url',
+          'start_time']),
+      'urls': frozenset([
+          'id', 'url', 'title', 'visit_count', 'typed_count',
+          'last_visit_time', 'hidden']),
+      'visits': frozenset([
+          'visit_time', 'from_visit', 'transition', 'id'])}
 
   _SCHEMA_8 = {
       'downloads': (
@@ -397,8 +406,18 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         'downloads_url_chains.id'), 'ParseFileDownloadedRow')]
 
   REQUIRED_TABLES = frozenset([
-      'downloads', 'downloads_url_chains', 'keyword_search_terms', 'meta',
-      'urls', 'visits', 'visit_source'])
+      'downloads', 'downloads_url_chains', 'urls', 'visits'])
+
+  REQUIRED_COLUMNS = {
+      'downloads': frozenset([
+          'id', 'target_path', 'received_bytes', 'total_bytes', 'start_time']),
+      'downloads_url_chains': frozenset([
+          'id', 'url']),
+      'urls': frozenset([
+          'id', 'url', 'title', 'visit_count', 'typed_count',
+          'last_visit_time', 'hidden']),
+      'visits': frozenset([
+          'visit_time', 'from_visit', 'transition', 'id'])}
 
   _SCHEMA_27 = {
       'downloads': (

@@ -46,9 +46,14 @@ class ChromeAutofillPlugin(interface.SQLitePlugin):
   QUERIES = [
       (('SELECT autofill.date_created, autofill.date_last_used, autofill.name, '
         'autofill.value, autofill.count FROM autofill ORDER BY date_created'),
-       'ParseAutofillRow')]
+        'ParseAutofillRow')]
 
   REQUIRED_TABLES = frozenset(['autofill'])
+
+  REQUIRED_COLUMNS = {
+      'autofill': frozenset(['date_created', 'date_last_used', 'name',
+                             'value', 'count'])
+  }
 
   SCHEMAS = [{
       'autofill': (
