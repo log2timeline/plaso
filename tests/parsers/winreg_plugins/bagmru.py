@@ -71,6 +71,7 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:registry:bagmru')
     self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.

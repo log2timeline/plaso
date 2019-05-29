@@ -5,14 +5,31 @@ from __future__ import unicode_literals
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers.shared import shell_items
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
+
+
+class BagMRUEventData(events.EventData):
+  """BagMRU event data attribute container.
+
+  Attributes:
+    entries (str): most recently used (MRU) entries.
+    key_path (str): Windows Registry key path.
+  """
+
+  DATA_TYPE = 'windows:registry:bagmru'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(BagMRUEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.entries = None
+    self.key_path = None
 
 
 class BagMRUWindowsRegistryPlugin(
@@ -41,17 +58,11 @@ class BagMRUWindowsRegistryPlugin(
           'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
           'ShellNoRoam\\BagMRU')])
 
-  URLS = [
-      ('https://github.com/libyal/winreg-kb/blob/master/documentation/'
-       'MRU%20keys.asciidoc#bagmru-key')]
-
   _DEFINITION_FILE = 'mru.yaml'
 
-  _SOURCE_APPEND = ': BagMRU'
-
   def _ParseMRUListExEntryValue(
-      self, parser_mediator, registry_key, entry_index, entry_number,
-      values_dict, value_strings, parent_path_segments, codepage='cp1252'):
+      self, parser_mediator, registry_key, entry_number, parent_path_segments,
+      codepage='cp1252'):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -59,48 +70,40 @@ class BagMRUWindowsRegistryPlugin(
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
            the MRUListEx value.
-      entry_index (int): MRUListEx entry index.
       entry_number (int): entry number.
-      values_dict (dict[str, object]): values of the key.
-      value_strings (dict[str, str]): value names and strings.
       parent_path_segments (list[str]): parent shell item path segments.
       codepage (Optional[str]): extended ASCII string codepage.
 
     Returns:
-      str: path segment of the shell item.
+      tuple[str, str]: path and upper path segment of the shell item or
+          None, None if not available.
     """
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
-    path_segment = 'N/A'
-    value_string = ''
     if value is None:
       parser_mediator.ProduceExtractionWarning(
           'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
+      return None, None
 
-    elif not value.DataIsBinaryData():
+    if not value.DataIsBinaryData():
       parser_mediator.ProduceExtractionWarning(
           'Non-binary MRUListEx entry value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
+      return None, None
 
-    elif value.data:
+    path = None
+    upper_path_segment = None
+
+    if value.data:
       shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
       shell_items_parser.ParseByteStream(
           parser_mediator, value.data,
           parent_path_segments=parent_path_segments, codepage=codepage)
 
-      path_segment = shell_items_parser.GetUpperPathSegment()
-      value_string = shell_items_parser.CopyToPath()
+      path = shell_items_parser.CopyToPath()
+      upper_path_segment = shell_items_parser.GetUpperPathSegment()
 
-      value_strings[entry_number] = value_string
-
-      value_string = 'Shell item path: {0:s}'.format(value_string)
-
-    value_text = 'Index: {0:d} [MRU Value {1:d}]'.format(
-        entry_index + 1, entry_number)
-
-    values_dict[value_text] = value_string
-
-    return path_segment
+    return path, upper_path_segment
 
   def _ParseMRUListExValue(self, registry_key):
     """Parses the MRUListEx value in a given Registry key.
@@ -148,12 +151,11 @@ class BagMRUWindowsRegistryPlugin(
     if not mrulistex:
       return
 
+    entries = []
     entry_numbers = {}
-    values_dict = {}
-    value_strings = {}
 
     found_terminator = False
-    for index, entry_number in enumerate(mrulistex):
+    for entry_index, entry_number in enumerate(mrulistex):
       # The MRU list is terminated with -1 (0xffffffff).
       if entry_number == -1:
         continue
@@ -166,18 +168,19 @@ class BagMRUWindowsRegistryPlugin(
         # Only create one parser error per terminator.
         found_terminator = False
 
-      path_segment = self._ParseMRUListExEntryValue(
-          parser_mediator, registry_key, index, entry_number, values_dict,
-          value_strings, parent_path_segments, codepage=codepage)
+      path, upper_path_segment = self._ParseMRUListExEntryValue(
+          parser_mediator, registry_key, entry_number, parent_path_segments,
+          codepage=codepage)
 
-      entry_numbers[entry_number] = path_segment
+      entry_numbers[entry_number] = upper_path_segment
 
-    event_data = windows_events.WindowsRegistryEventData()
+      entry = 'Index: {0:d} [MRU Value {1:d}]: Shell item path: {2:s}'.format(
+          entry_index + 1, entry_number, path)
+      entries.append(entry)
+
+    event_data = BagMRUEventData()
+    event_data.entries = ' '.join(entries)
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
-    event_data.source_append = self._SOURCE_APPEND
-    event_data.urls = self.URLS
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
