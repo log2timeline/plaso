@@ -52,15 +52,18 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mount_points2')
     self.CheckTimestamp(event.timestamp, '2011-08-23 17:10:14.960961')
 
-    regvalue = event.regvalue
-    self.assertEqual(regvalue.get('Share_Name'), '\\home\\nfury')
+    self.assertEqual(event.share_name, '\\home\\nfury')
 
     expected_message = (
-        '[{0:s}] Label: Home Drive Remote_Server: controller Share_Name: '
-        '\\home\\nfury Type: Remote Drive Volume: '
-        '##controller#home#nfury').format(key_path)
+        '[{0:s}] '
+        'Label: Home Drive '
+        'Remote_Server: controller '
+        'Share_Name: \\home\\nfury '
+        'Type: Remote Drive '
+        'Volume: ##controller#home#nfury').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
