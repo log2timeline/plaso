@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""This file contains a MRUList Registry plugin."""
+"""This file contains a MRUList Registry plugin.
+
+Also see:
+  https://github.com/libyal/winreg-kb/wiki/MRU-keys
+"""
 
 from __future__ import unicode_literals
 
@@ -7,8 +11,8 @@ import abc
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import logger
@@ -16,6 +20,23 @@ from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
+
+
+class MRUListEventData(events.EventData):
+  """MRUList event data attribute container.
+
+  Attributes:
+    entries (str): most recently used (MRU) entries.
+    key_path (str): Windows Registry key path.
+  """
+
+  DATA_TYPE = 'windows:registry:mrulist'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(MRUListEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.entries = None
+    self.key_path = None
 
 
 class MRUListStringRegistryKeyFilter(
@@ -52,8 +73,6 @@ class MRUListStringRegistryKeyFilter(
 class BaseMRUListWindowsRegistryPlugin(
     dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Class for common MRUList Windows Registry plugin functionality."""
-
-  _SOURCE_APPEND = ': MRU List'
 
   _DEFINITION_FILE = 'mru.yaml'
 
@@ -117,7 +136,7 @@ class BaseMRUListWindowsRegistryPlugin(
     if not mrulist:
       return
 
-    values_dict = {}
+    entries = []
     found_terminator = False
     for entry_index, entry_letter in enumerate(mrulist):
       # The MRU list is terminated with '\0' (0x0000).
@@ -138,16 +157,14 @@ class BaseMRUListWindowsRegistryPlugin(
           parser_mediator, registry_key, entry_index, entry_letter,
           codepage=codepage)
 
-      value_text = 'Index: {0:d} [MRU Value {1:s}]'.format(
-          entry_index + 1, entry_letter)
+      value_text = 'Index: {0:d} [MRU Value {1:s}]: {2:s}'.format(
+          entry_index + 1, entry_letter, value_string)
 
-      values_dict[value_text] = value_string
+      entries.append(value_text)
 
-    event_data = windows_events.WindowsRegistryEventData()
+    event_data = MRUListEventData()
+    event_data.entries = ' '.join(entries)
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
-    event_data.source_append = self._SOURCE_APPEND
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -161,8 +178,6 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
   DESCRIPTION = 'Parser for Most Recently Used (MRU) Registry data.'
 
   FILTERS = frozenset([MRUListStringRegistryKeyFilter()])
-
-  URLS = ['http://forensicartifacts.com/tag/mru/']
 
   def _ParseMRUListEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_letter, **kwargs):
@@ -234,8 +249,6 @@ class MRUListShellItemListWindowsRegistryPlugin(
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\DesktopStreamMRU')])
-
-  URLS = ['https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
   # pylint: disable=arguments-differ
   def _ParseMRUListEntryValue(
