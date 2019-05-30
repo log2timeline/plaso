@@ -92,6 +92,7 @@ from plaso.formatters import tango_android
 from plaso.formatters import task_scheduler
 from plaso.formatters import terminal_server
 from plaso.formatters import text
+from plaso.formatters import timezone
 from plaso.formatters import trendmicroav
 from plaso.formatters import twitter_android
 from plaso.formatters import twitter_ios
