@@ -31,6 +31,8 @@ class CLITool(object):
     list_timezones (bool): True if the time zones should be listed.
     preferred_encoding (str): preferred encoding of single-byte or multi-byte
         character strings, sometimes referred to as extended ASCII.
+    show_troubleshooting (bool): True if troubleshooting information should
+        be shown.
   """
   # The maximum number of characters of a line written to the output writer.
   _LINE_LENGTH = 80
@@ -74,6 +76,7 @@ class CLITool(object):
 
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
+    self.show_troubleshooting = False
 
   def _CanEnforceProcessMemoryLimit(self):
     """Determines if a process memory limit can be enforced.

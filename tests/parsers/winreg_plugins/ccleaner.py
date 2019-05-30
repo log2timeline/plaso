@@ -16,6 +16,8 @@ from tests.parsers.winreg_plugins import test_lib
 class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the CCleaner Windows Registry plugin."""
 
+  # TODO: add tests for _ParseUpdateKeyValue
+
   def testFilters(self):
     """Tests the FILTERS class attribute."""
     plugin = ccleaner.CCleanerPlugin()
@@ -44,6 +46,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.assertEqual(event.data_type, 'ccleaner:update')
     self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
@@ -52,34 +55,33 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.CheckTimestamp(event.timestamp, '2013-07-13 10:03:14.000000')
 
     expected_message = 'Origin: {0:s}'.format(key_path)
+
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
     event = events[1]
 
+    self.assertEqual(event.data_type, 'ccleaner:configuration')
     self.CheckTimestamp(event.timestamp, '2013-07-13 14:03:26.861688')
-
-    regvalue_identifier = '(App)Delete Index.dat files'
-    expected_value = 'True'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
         '[{0:s}] '
-        '(App)Cookies: True '
-        '(App)Delete Index.dat files: True '
-        '(App)History: True '
-        '(App)Last Download Location: True '
-        '(App)Other Explorer MRUs: True '
-        '(App)Recent Documents: True '
-        '(App)Recently Typed URLs: True '
-        '(App)Run (in Start Menu): True '
-        '(App)Temporary Internet Files: True '
-        '(App)Thumbnail Cache: True '
         'CookiesToSave: *.piriform.com '
-        'WINDOW_HEIGHT: 524 '
+        '(App)Delete Index.dat files: True '
+        '(App)Last Download Location: True '
+        '(App)Recently Typed URLs: True '
+        '(App)Cookies: True '
+        '(App)History: True '
+        '(App)Temporary Internet Files: True '
+        '(App)Recent Documents: True '
+        '(App)Run (in Start Menu): True '
+        '(App)Other Explorer MRUs: True '
+        '(App)Thumbnail Cache: True '
         'WINDOW_LEFT: 146 '
-        'WINDOW_MAX: 0 '
         'WINDOW_TOP: 102 '
-        'WINDOW_WIDTH: 733').format(key_path)
+        'WINDOW_WIDTH: 733 '
+        'WINDOW_HEIGHT: 524 '
+        'WINDOW_MAX: 0').format(key_path)
+
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)

@@ -17,6 +17,7 @@ from plaso.lib import timelib
 from plaso.output import xlsx
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
@@ -131,7 +132,8 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       output_module.Open()
       output_module.WriteHeader()
 
-      event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+      event, event_data = containers_test_lib.CreateEventFromValues(
+          self._TEST_EVENTS[0])
       output_module.WriteEvent(event, event_data, None)
 
       output_module.WriteFooter()

@@ -116,10 +116,16 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     Returns:
       FakeStorageWriter: storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
-    path = self._GetTestFilePath(path_segments)
+    test_file_path = self._GetTestFilePath(path_segments)
+    self._SkipIfPathNotExists(test_file_path)
+
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     return self._ParseFileByPathSpec(
         path_spec, parser, collection_filters_helper=collection_filters_helper,
         knowledge_base_values=knowledge_base_values, timezone=timezone)

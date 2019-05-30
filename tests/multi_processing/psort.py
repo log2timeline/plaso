@@ -27,6 +27,7 @@ from plaso.storage import factory as storage_factory
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.filters import test_lib as filters_test_lib
 from tests.multi_processing import test_lib
 
@@ -159,7 +160,8 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     """Tests the _GetEventIdentifiers function."""
     event_heap = psort.PsortEventHeap()
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     macb_group_identifier, content_identifier = (
         event_heap._GetEventIdentifiers(event, event_data))
 
@@ -178,11 +180,9 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     test_event = event_heap.PopEvent()
     self.assertIsNone(test_event)
 
-    event1, event_data1 = self._CreateTestEvent(self._TEST_EVENTS[0])
-    event_heap.PushEvent(event1, event_data1)
-
-    event2, event_data2 = self._CreateTestEvent(self._TEST_EVENTS[1])
-    event_heap.PushEvent(event2, event_data2)
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      event_heap.PushEvent(event, event_data)
 
     self.assertEqual(len(event_heap._heap), 2)
 
@@ -200,11 +200,9 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     test_events = list(event_heap.PopEvents())
     self.assertEqual(len(test_events), 0)
 
-    event1, event_data1 = self._CreateTestEvent(self._TEST_EVENTS[0])
-    event_heap.PushEvent(event1, event_data1)
-
-    event2, event_data2 = self._CreateTestEvent(self._TEST_EVENTS[1])
-    event_heap.PushEvent(event2, event_data2)
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      event_heap.PushEvent(event, event_data)
 
     self.assertEqual(len(event_heap._heap), 2)
 
@@ -219,7 +217,8 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
     self.assertEqual(len(event_heap._heap), 0)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     event_heap.PushEvent(event, event_data)
 
     self.assertEqual(len(event_heap._heap), 1)
@@ -298,8 +297,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     # TODO: add preprocessing information.
 
-    for event_values in self._TEST_EVENTS:
-      event, event_data = self._CreateTestEvent(event_values)
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
       storage_file.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
@@ -433,10 +432,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
   # TODO: add test for _StopAnalysisProcesses.
   # TODO: add test for _UpdateProcessingStatus.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testAnalyzeEvents(self):
     """Tests the AnalyzeEvents function."""
-    storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
 
     session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -460,7 +459,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      shutil.copyfile(storage_file_path, temp_file)
+      shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
@@ -476,7 +475,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      shutil.copyfile(storage_file_path, temp_file)
+      shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
@@ -490,10 +489,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     # TODO: add bogus data location test.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testExportEvents(self):
     """Tests the ExportEvents function."""
-    storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_writer = cli_test_lib.TestBinaryOutputWriter()
@@ -510,7 +509,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        storage_file_path)
+        test_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
     test_engine.ExportEvents(

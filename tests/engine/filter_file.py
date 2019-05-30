@@ -17,24 +17,24 @@ class FilterFileTestCase(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['filter_files', 'format_test.txt'])
   def testReadFromFileObject(self):
     """Tests the _ReadFromFileObject function."""
-    test_filter_file = filter_file.FilterFile()
+    test_file_path = self._GetTestFilePath(['filter_files', 'format_test.txt'])
+    self._SkipIfPathNotExists(test_file_path)
 
-    test_path = self._GetTestFilePath(['filter_files', 'format_test.txt'])
-    with io.open(test_path, 'r', encoding='utf-8') as file_object:
+    test_filter_file = filter_file.FilterFile()
+    with io.open(test_file_path, 'r', encoding='utf-8') as file_object:
       path_filters = list(test_filter_file._ReadFromFileObject(file_object))
 
     self.assertEqual(len(path_filters), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['filter_files', 'format_test.txt'])
   def testReadFromFile(self):
     """Tests the ReadFromFile function."""
-    test_filter_file = filter_file.FilterFile()
+    test_file_path = self._GetTestFilePath(['filter_files', 'format_test.txt'])
+    self._SkipIfPathNotExists(test_file_path)
 
-    test_path = self._GetTestFilePath(['filter_files', 'format_test.txt'])
-    path_filters = test_filter_file.ReadFromFile(test_path)
+    test_filter_file = filter_file.FilterFile()
+    path_filters = test_filter_file.ReadFromFile(test_file_path)
 
     self.assertEqual(len(path_filters), 1)
 

@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import iis as _  # pylint: disable=unused-import
 from plaso.parsers import iis
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinIISUnitTest(test_lib.ParserTestCase):
   """Tests for the Windows IIS parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['iis.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = iis.WinIISParser()
@@ -75,7 +73,6 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     expected_query_string = 'ID=ERROR[`cat%20passwd|echo`]'
     self.assertEqual(expected_query_string, event.cs_uri_query)
 
-  @shared_test_lib.skipUnlessHasTestFile(['iis_without_date.log'])
   def testParseWithoutDate(self):
     """Tests the Parse function with logs without a date column."""
     parser = iis.WinIISParser()

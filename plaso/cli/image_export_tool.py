@@ -747,13 +747,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
+    self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
+
     # Check the list options first otherwise required options will raise.
     signature_identifiers = self.ParseStringOption(
         options, 'signature_identifiers')
     if signature_identifiers == 'list':
       self.list_signature_identifiers = True
 
-    if self.list_signature_identifiers:
+    if self.list_signature_identifiers or self.show_troubleshooting:
       return
 
     self._ParseInformationalOptions(options)

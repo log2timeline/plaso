@@ -454,9 +454,12 @@ class PstealTool(
     self.list_language_identifiers = self._preferred_language == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
+    self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
+
     # Check the list options first otherwise required options will raise.
     if (self.list_hashers or self.list_language_identifiers or
-        self.list_parsers_and_plugins or self.list_timezones):
+        self.list_parsers_and_plugins or self.list_timezones or
+        self.show_troubleshooting):
       return
 
     # Check output modules after the other listable options, otherwise
