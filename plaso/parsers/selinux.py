@@ -123,16 +123,16 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    msg_value = structure.get('msg')
+    msg_value = self._GetValueFromStructure(structure, 'msg')
     if not msg_value:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'missing msg value: {0!s}'.format(structure))
       return
 
     try:
       seconds = int(msg_value[0], 10)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported number of seconds in msg value: {0!s}'.format(
               structure))
       return
@@ -140,7 +140,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     try:
       milliseconds = int(msg_value[1], 10)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported number of milliseconds in msg value: {0!s}'.format(
               structure))
       return
@@ -151,14 +151,14 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     try:
       # Try to parse the body text as key value pairs. Note that not
       # all log lines will be properly formatted key value pairs.
-      key_value_dict = self._SELINUX_KEY_VALUE_DICT.parseString(body_text)
+      body_structure = self._SELINUX_KEY_VALUE_DICT.parseString(body_text)
     except pyparsing.ParseException:
-      key_value_dict = {}
+      body_structure = pyparsing.ParseResults()
 
     event_data = SELinuxLogEventData()
-    event_data.audit_type = structure.get('type', None)
+    event_data.audit_type = self._GetValueFromStructure(structure, 'type')
     event_data.body = body_text
-    event_data.pid = key_value_dict.get('pid', None)
+    event_data.pid = self._GetValueFromStructure(body_structure, 'pid')
     # TODO: pass line number to offset or remove.
     event_data.offset = 0
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Linux preprocess plug-ins."""
 
@@ -11,7 +11,6 @@ from dfvfs.path import fake_path_spec
 
 from plaso.preprocessors import linux
 
-from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -156,11 +155,12 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     self.assertEqual(knowledge_base.timezone.zone, 'Europe/Zurich')
 
-  @shared_test_lib.skipUnlessHasTestFile(['localtime.tzif'])
   def testParseFileEntryWithTZif(self):
     """Tests the _ParseFileEntry function on a timezone information file."""
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath(['localtime.tzif'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFileReadData('/etc/localtime', test_file_path)
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
@@ -171,11 +171,12 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     self.assertEqual(knowledge_base.timezone.zone, 'CET')
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog'])
   def testParseFileEntryWithBogusTZif(self):
     """Tests the _ParseFileEntry function on a bogus TZif file."""
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath(['syslog'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFileReadData('/etc/localtime', test_file_path)
 
     mount_point = fake_path_spec.FakePathSpec(location='/')

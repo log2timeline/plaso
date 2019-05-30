@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for Tango on Android plugins."""
 
@@ -23,9 +23,9 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_profile.db'], plugin)
 
-    # We should have 115 tango profile events in total with no errors.
+    # We should have 115 tango profile events in total with no warnings.
     self.assertEqual(115, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_errors)
+    self.assertEqual(0, storage_writer.number_of_warnings)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -81,9 +81,9 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_tc.db'], plugin)
 
-    # We should have 43 tango tc events in total with no errors.
+    # We should have 43 tango tc events in total with no warnings.
     self.assertEqual(43, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_errors)
+    self.assertEqual(0, storage_writer.number_of_warnings)
 
     events = list(storage_writer.GetSortedEvents())
 

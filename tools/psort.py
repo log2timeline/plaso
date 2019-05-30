@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Psort (Plaso Síar Og Raðar Þessu) - Makes output from Plaso Storage files.
 
@@ -13,8 +13,10 @@ from __future__ import unicode_literals
 
 import multiprocessing
 import logging
+import os
 import sys
 
+from plaso import dependencies
 from plaso.cli import tools as cli_tools
 from plaso.cli import psort_tool
 from plaso.lib import errors
@@ -29,6 +31,19 @@ def Main():
 
   if not tool.ParseArguments():
     return False
+
+  if tool.show_troubleshooting:
+    print('Using Python version {0!s}'.format(sys.version))
+    print()
+    print('Path: {0:s}'.format(os.path.abspath(__file__)))
+    print()
+    print(tool.GetVersionInformation())
+    print()
+    dependencies.CheckDependencies(verbose_output=True)
+
+    print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
+          'Troubleshooting.html')
+    return True
 
   have_list_option = False
   if tool.list_analysis_plugins:

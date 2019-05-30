@@ -37,56 +37,56 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Windows Shortcut'
   SOURCE_SHORT = 'LNK'
 
-  def _GetLinkedPath(self, event):
+  def _GetLinkedPath(self, event_data):
     """Determines the linked path.
 
     Args:
-      event (EventObject): event that contains a linked path.
+      event_data (EventData): event_data data.
 
     Returns:
       str: linked path.
     """
-    if hasattr(event, 'local_path'):
-      return event.local_path
+    if hasattr(event_data, 'local_path'):
+      return event_data.local_path
 
-    if hasattr(event, 'network_path'):
-      return event.network_path
+    if hasattr(event_data, 'network_path'):
+      return event_data.network_path
 
-    if hasattr(event, 'relative_path'):
+    if hasattr(event_data, 'relative_path'):
       paths = []
-      if hasattr(event, 'working_directory'):
-        paths.append(event.working_directory)
-      paths.append(event.relative_path)
+      if hasattr(event_data, 'working_directory'):
+        paths.append(event_data.working_directory)
+      paths.append(event_data.relative_path)
 
       return '\\'.join(paths)
 
     return 'Unknown'
 
   # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for the event data.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event data cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+          event_data.data_type))
 
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
     if 'description' not in event_values:
       event_values['description'] = 'Empty description'
 
-    event_values['linked_path'] = self._GetLinkedPath(event)
+    event_values['linked_path'] = self._GetLinkedPath(event_data)
 
     return self._ConditionalFormatMessages(event_values)
 

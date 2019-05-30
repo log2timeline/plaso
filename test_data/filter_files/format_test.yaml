@@ -1,0 +1,18 @@
+# YAML-based filter file for testing format features.
+
+description: Include filter with Linux paths.
+type: include
+paths:
+- '/usr/bin'
+---
+description: Include filter with Windows paths.
+type: include
+path_separator: '\'
+paths:
+- '\\Windows\\System32'
+---
+description: Exlcude filter with Windows paths.
+type: exclude
+path_separator: '\'
+paths:
+- '\\Windows\\WinSxS'

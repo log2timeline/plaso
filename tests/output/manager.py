@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the output manager."""
 
@@ -17,11 +17,13 @@ class TestOutput(interface.OutputModule):
   DESCRIPTION = 'This is a test output module.'
 
   # pylint: disable=unused-argument
-  def WriteEventBody(self, event):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
-      event (EventObject): event that contains the event values.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     return
 

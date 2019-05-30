@@ -1,5 +1,5 @@
 include ACKNOWLEDGEMENTS AUTHORS LICENSE README
-include dependencies.ini run_tests.py utils/dependencies.py
+include dependencies.ini run_tests.py utils/__init__.py utils/dependencies.py
 include utils/check_dependencies.py
 recursive-include config *
 recursive-include data *
@@ -7,6 +7,7 @@ recursive-include doc *
 recursive-include test_data *
 exclude .gitignore
 exclude *.pyc
+recursive-include plaso *.yaml
 recursive-exclude plaso *.pyc
 # The test scripts are not required in a binary distribution package they 
 # are considered source distribution files and excluded in find_package()

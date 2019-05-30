@@ -147,10 +147,10 @@ class MultiProcessEngine(engine.BaseEngine):
                 process.name, pid, rpc_port))
 
         processing_status_string = 'RPC error'
-        status_indicator = definitions.PROCESSING_STATUS_RUNNING
+        status_indicator = definitions.STATUS_INDICATOR_RUNNING
       else:
         processing_status_string = 'killed'
-        status_indicator = definitions.PROCESSING_STATUS_KILLED
+        status_indicator = definitions.STATUS_INDICATOR_KILLED
 
       process_status = {
           'processing_status': processing_status_string}
@@ -164,24 +164,27 @@ class MultiProcessEngine(engine.BaseEngine):
         status_indicator = worker_status.status
         break
 
-    if status_indicator in definitions.PROCESSING_ERROR_STATUS:
+    if status_indicator in definitions.ERROR_STATUS_INDICATORS:
       logger.error((
           'Process {0:s} (PID: {1:d}) is not functioning correctly. '
           'Status code: {2!s}.').format(process.name, pid, status_indicator))
 
       self._TerminateProcessByPid(pid)
 
-      logger.info('Starting replacement worker process for {0:s}'.format(
-          process.name))
-      replacement_process_attempts = 0
       replacement_process = None
-      while replacement_process_attempts < self._MAXIMUM_REPLACEMENT_RETRIES:
-        replacement_process_attempts += 1
+      for replacement_process_attempt in range(
+          self._MAXIMUM_REPLACEMENT_RETRIES):
+        logger.info((
+            'Attempt: {0:d} to start replacement worker process for '
+            '{1:s}').format(replacement_process_attempt + 1, process.name))
+
         replacement_process = self._StartWorkerProcess(
             process.name, self._storage_writer)
-        if not replacement_process:
-          time.sleep(self._REPLACEMENT_WORKER_RETRY_DELAY)
+        if replacement_process:
           break
+
+        time.sleep(self._REPLACEMENT_WORKER_RETRY_DELAY)
+
       if not replacement_process:
         logger.error(
             'Unable to create replacement worker process for: {0:s}'.format(

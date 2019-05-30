@@ -24,12 +24,14 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
   """Parser test case."""
 
   def _CreateParserMediator(
-      self, storage_writer, file_entry=None, knowledge_base_values=None,
-      parser_chain=None, timezone='UTC'):
+      self, storage_writer, collection_filters_helper=None, file_entry=None,
+      knowledge_base_values=None, parser_chain=None, timezone='UTC'):
     """Creates a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.
+      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
+          filters helper.
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
       knowledge_base_values (Optional[dict]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
@@ -49,7 +51,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     knowledge_base_object.SetTimeZone(timezone)
 
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        storage_writer, knowledge_base_object,
+        collection_filters_helper=collection_filters_helper)
 
     if file_entry:
       parser_mediator.SetFileEntry(file_entry)
@@ -70,6 +73,19 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer.Open()
     return storage_writer
 
+  def _GetEventDataOfEvent(self, storage_writer, event):
+    """Retrieves the event data of an event.
+
+    Args:
+      storage_writer (FakeStorageWriter): storage writer.
+      event (EventObject): event.
+
+    Return:
+      EventData: event data corresponding to the event.
+    """
+    event_data_identifier = event.GetEventDataIdentifier()
+    return storage_writer.GetEventDataByIdentifier(event_data_identifier)
+
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.
 
@@ -86,33 +102,44 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     return message_string
 
   def _ParseFile(
-      self, path_segments, parser, knowledge_base_values=None,
-      timezone='UTC'):
+      self, path_segments, parser, collection_filters_helper=None,
+      knowledge_base_values=None, timezone='UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
+      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
+          filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
       timezone (str): timezone.
 
     Returns:
       FakeStorageWriter: storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
-    path = self._GetTestFilePath(path_segments)
+    test_file_path = self._GetTestFilePath(path_segments)
+    self._SkipIfPathNotExists(test_file_path)
+
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     return self._ParseFileByPathSpec(
-        path_spec, parser, knowledge_base_values=knowledge_base_values,
-        timezone=timezone)
+        path_spec, parser, collection_filters_helper=collection_filters_helper,
+        knowledge_base_values=knowledge_base_values, timezone=timezone)
 
   def _ParseFileByPathSpec(
-      self, path_spec, parser, knowledge_base_values=None, timezone='UTC'):
+      self, path_spec, parser, collection_filters_helper=None,
+      knowledge_base_values=None, timezone='UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
       parser (BaseParser): parser.
+      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
+          filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
       timezone (str): timezone.
 
@@ -122,8 +149,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer = self._CreateStorageWriter()
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator = self._CreateParserMediator(
-        storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values,
+        storage_writer, collection_filters_helper=collection_filters_helper,
+        file_entry=file_entry, knowledge_base_values=knowledge_base_values,
         timezone=timezone)
 
     if isinstance(parser, interface.FileEntryParser):
@@ -163,7 +190,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(message_short, expected_short_message)
 
   def _TestGetSourceStrings(
-      self, event, expected_source, expected_source_short):
+      self, event, event_data, expected_source, expected_source_short):
     """Tests the formatting of the source strings.
 
     This function invokes the GetSourceStrings function of the event
@@ -172,13 +199,15 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
       expected_source (str): expected source string.
       expected_source_short (str): expected short source string.
     """
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
     source_short, source = (
-        formatters_manager.FormattersManager.GetSourceStrings(event))
+        formatters_manager.FormattersManager.GetSourceStrings(
+            event, event_data))
     self.assertEqual(source, expected_source)
     self.assertEqual(source_short, expected_source_short)
 

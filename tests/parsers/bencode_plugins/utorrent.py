@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the bencode parser plugin for uTorrent files."""
 
@@ -25,7 +25,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     parser = bencode_parser.BencodeParser()
     storage_writer = self._ParseFile(['bencode_utorrent'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     # The order in which BencodeParser generates events is nondeterministic

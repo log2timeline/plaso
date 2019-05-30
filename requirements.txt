@@ -1,18 +1,17 @@
 pip >= 7.0.0
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
-artifacts >= 20170818
+artifacts >= 20190305
 backports.lzma ; python_version < '3.0'
 bencode.py
 biplist >= 1.0.3
 certifi >= 2016.9.26
 chardet >= 2.0.1
 dfdatetime >= 20180704
-dfvfs >= 20181209
+dfvfs >= 20190511
 dfwinreg >= 20180712
 dtfabric >= 20181128
 elasticsearch >= 6.0
-elasticsearch5 >= 5.4.0
 future >= 0.16.0
 idna >= 2.5
 libbde-python >= 20140531

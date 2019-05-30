@@ -186,12 +186,14 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
         seconds (int): seconds.
         milliseconds (int): milliseconds.
     """
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time_elements_tuple is None.
     if key == 'turned_over_header':
-      month, day, hours, minutes, seconds = structure.date_time
+      month, day, hours, minutes, seconds = time_elements_tuple
 
       milliseconds = 0
     else:
-      _, month, day, hours, minutes, seconds, milliseconds = structure.date_time
+      _, month, day, hours, minutes, seconds, milliseconds = time_elements_tuple
 
     # Note that dfdatetime_time_elements.TimeElements will raise ValueError
     # for an invalid month.
@@ -219,18 +221,22 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+      parser_mediator.ProduceExtractionWarning(
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     self._last_month = time_elements_tuple[1]
 
+    function = self._GetValueFromStructure(structure, 'function')
+    if function:
+      # Due to the use of CharsNotIn the function value can contain leading
+      # or trailing whitespace.
+      function = function.strip()
+
     event_data = MacWifiLogEventData()
-    event_data.agent = structure.agent
-    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
-    # that need to be removed.
-    event_data.function = structure.function.strip()
-    event_data.text = structure.text
+    event_data.agent = self._GetValueFromStructure(structure, 'agent')
+    event_data.function = function
+    event_data.text = self._GetValueFromStructure(structure, 'text')
 
     if key == 'known_function_logline':
       event_data.action = self._GetAction(
@@ -300,7 +306,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     except ValueError:
       logger.debug(
           'Not a Mac Wifi log file, invalid date and time: {0!s}'.format(
-              structure.date_time))
+              time_elements_tuple))
       return False
 
     self._last_month = time_elements_tuple[1]

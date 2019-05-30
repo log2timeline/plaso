@@ -147,7 +147,7 @@ class DependencyHelper(object):
       dependency (DependencyDefinition): dependency definition.
 
     Returns:
-      tuple: consists:
+      tuple: containing:
 
         bool: True if the Python module is available and conforms to
             the minimum required version, False otherwise.
@@ -178,7 +178,7 @@ class DependencyHelper(object):
       maximum_version (str): maximum version.
 
     Returns:
-      tuple: consists:
+      tuple: containing:
 
         bool: True if the Python module is available and conforms to
             the minimum required version, False otherwise.
@@ -252,11 +252,43 @@ class DependencyHelper(object):
     status_message = '{0:s} version: {1!s}'.format(module_name, module_version)
     return True, status_message
 
+  def _CheckLZMA(self):
+    """Checks the availability of lzma.
+
+    Returns:
+      tuple: containing:
+
+        bool: True if the Python module is available and conforms to
+            the minimum required version, False otherwise.
+        str: status message.
+    """
+    # For Python 2 lzma can be both provided as lzma and backports.lzma.
+    module_name = 'lzma'
+
+    module_object = self._ImportPythonModule(module_name)
+    if not module_object:
+      module_name = 'backports.lzma'
+
+      module_object = self._ImportPythonModule(module_name)
+      if not module_object:
+        status_message = 'missing: lzma and backports.lzma.'
+        return False, status_message
+
+    # Note that the Python 3 lzma module had no __version__ attribute.
+    module_version = getattr(module_object, '__version__', None)
+    if module_version:
+      status_message = '{0:s} version: {1!s}'.format(
+          module_name, module_version)
+    else:
+      status_message = '{0:s}'.format(module_name)
+
+    return True, status_message
+
   def _CheckSQLite3(self):
     """Checks the availability of sqlite3.
 
     Returns:
-      tuple: consists:
+      tuple: containing:
 
         bool: True if the Python module is available and conforms to
             the minimum required version, False otherwise.
@@ -274,10 +306,10 @@ class DependencyHelper(object):
     if not module_object:
       module_name = 'sqlite3'
 
-    module_object = self._ImportPythonModule(module_name)
-    if not module_object:
-      status_message = 'missing: {0:s}.'.format(module_name)
-      return False, status_message
+      module_object = self._ImportPythonModule(module_name)
+      if not module_object:
+        status_message = 'missing: pysqlite2.dbapi2 and sqlite3.'
+        return False, status_message
 
     return self._CheckPythonModuleVersion(
         module_name, module_object, 'sqlite_version', minimum_version, None)
@@ -338,13 +370,12 @@ class DependencyHelper(object):
     check_result = True
 
     for module_name, dependency in sorted(self.dependencies.items()):
-      if module_name == 'sqlite3':
+      if module_name == 'lzma':
+        result, status_message = self._CheckLZMA()
+
+      elif module_name == 'sqlite3':
         result, status_message = self._CheckSQLite3()
       else:
-        result, status_message = self._CheckPythonModule(dependency)
-
-      if not result and module_name == 'lzma':
-        dependency.name = 'backports.lzma'
         result, status_message = self._CheckPythonModule(dependency)
 
       if not result and not dependency.is_optional:

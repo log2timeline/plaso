@@ -306,7 +306,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
           file_offset = self._ParseRecord(
               parser_mediator, file_object, file_offset)
         except errors.ParseError as exception:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse record with error: {0!s}'.format(exception))
           return
 
@@ -314,7 +314,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
           break
 
       if last_log_entry_offset != file_header.last_log_entry_offset:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'last log entry offset does not match value in file header.')
 
 

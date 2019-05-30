@@ -88,7 +88,7 @@ class DSVParser(interface.FileObjectParser):
         row[key] = value.decode(self._encoding)
       except UnicodeDecodeError:
         replaced_value = value.decode(self._encoding, errors='replace')
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'error decoding DSV value: {0:s} as {1:s}, characters have been '
             'replaced in {2:s}'.format(key, self._encoding, replaced_value))
         row[key] = replaced_value

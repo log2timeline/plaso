@@ -70,13 +70,14 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     self._number_of_event_tags = 0
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
-  def ExamineEvent(self, mediator, event):
+  def ExamineEvent(self, mediator, event, event_data):
     """Analyzes an EventObject and tags it according to rules in the tag file.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
+      event_data (EventData): event data.
     """
     if self._tagging_rules is None:
       if self._autodetect_tag_file_attempt:
@@ -94,7 +95,9 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     matched_label_names = []
     for label_name, filter_objects in iter(self._tagging_rules.items()):
       for filter_object in filter_objects:
-        if filter_object.Match(event):
+        # Note that tagging events based on existing labels is currently
+        # not supported.
+        if filter_object.Match(event, event_data, None):
           matched_label_names.append(label_name)
           break
 

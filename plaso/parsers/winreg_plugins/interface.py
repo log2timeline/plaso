@@ -143,7 +143,7 @@ class WindowsRegistryKeyPathPrefixFilter(BaseWindowsRegistryKeyFilter):
     Returns:
       bool: True if the keys match.
     """
-    return registry_key.path.startsswith(self._key_path_prefix)
+    return registry_key.path.startswith(self._key_path_prefix)
 
 
 class WindowsRegistryKeyPathSuffixFilter(BaseWindowsRegistryKeyFilter):

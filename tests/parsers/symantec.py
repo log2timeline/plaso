@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Symantec AV Log parser."""
 
@@ -36,7 +36,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     parser = symantec.SymantecParser()
     storage_writer = self._ParseFile(['Symantec.Log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
     # The order in which DSVParser generates events is nondeterministic

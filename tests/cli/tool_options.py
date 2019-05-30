@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the CLI tool options mix-ins."""
 
@@ -9,7 +9,6 @@ import unittest
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.output import manager as output_manager
-from plaso.parsers import manager as parsers_manager
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
@@ -178,86 +177,6 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(number_of_tables, expected_number_of_tables)
     expected_line = 'rawpy : "raw" (or native) Python output.'
-    self.assertIn(expected_line, lines)
-
-
-class TestToolWithParsersOptions(
-    tools.CLITool, tool_options.ParsersOptions):
-  """Tool to test the parsers options."""
-
-
-@shared_test_lib.skipUnlessHasTestFile(['presets.yaml'])
-class ParsersOptionsTest(test_lib.CLIToolTestCase):
-  """Tests for the parsers options."""
-
-  # pylint: disable=protected-access
-
-  def testGetParserPresetsInformation(self):
-    """Tests the _GetParserPresetsInformation function."""
-    test_tool = TestToolWithParsersOptions()
-
-    presets_file = self._GetTestFilePath(['presets.yaml'])
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
-
-    parser_presets_information = test_tool._GetParserPresetsInformation()
-    self.assertGreaterEqual(len(parser_presets_information), 1)
-
-    available_parser_names = [name for name, _ in parser_presets_information]
-    self.assertIn('linux', available_parser_names)
-
-  def testListParsersAndPlugins(self):
-    """Tests the ListParsersAndPlugins function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = TestToolWithParsersOptions(output_writer=output_writer)
-
-    presets_file = self._GetTestFilePath(['presets.yaml'])
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
-
-    test_tool.ListParsersAndPlugins()
-
-    output = output_writer.ReadOutput()
-
-    number_of_tables = 0
-    lines = []
-    for line in output.split('\n'):
-      line = line.strip()
-      lines.append(line)
-
-      if line.startswith('*****') and line.endswith('*****'):
-        number_of_tables += 1
-
-    self.assertIn('Parsers', lines[1])
-
-    lines = frozenset(lines)
-
-    self.assertEqual(number_of_tables, 10)
-
-    expected_line = 'filestat : Parser for file system stat information.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = 'bencode_utorrent : Parser for uTorrent bencoded files.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = (
-        'msie_webcache : Parser for MSIE WebCache ESE database files.')
-    self.assertIn(expected_line, lines)
-
-    expected_line = 'olecf_default : Parser for a generic OLECF item.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = 'plist_default : Parser for plist files.'
-    self.assertIn(expected_line, lines)
-
-    # Note that the expected line is truncated by the cell wrapping in
-    # the table.
-    expected_line = (
-        'chrome_27_history : Parser for Google Chrome 27 and up history SQLite')
-    self.assertIn(expected_line, lines)
-
-    expected_line = 'ssh : Parser for SSH syslog entries.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = 'winreg_default : Parser for Registry data.'
     self.assertIn(expected_line, lines)
 
 

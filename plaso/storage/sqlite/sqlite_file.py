@@ -8,12 +8,12 @@ import sqlite3
 import zlib
 
 from plaso.containers import artifacts
-from plaso.containers import errors
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import event_heaps
 from plaso.storage import identifiers
@@ -30,7 +30,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     storage_type (str): storage type.
   """
 
-  _FORMAT_VERSION = 20180101
+  _FORMAT_VERSION = 20190309
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
@@ -41,17 +41,19 @@ class SQLiteStorageFile(interface.BaseStorageFile):
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_ERROR = errors.ExtractionError.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_ERROR = warnings.ExtractionError.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
   _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
       artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
 
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_ANALYSIS_REPORT,
       _CONTAINER_TYPE_EXTRACTION_ERROR,
+      _CONTAINER_TYPE_EXTRACTION_WARNING,
       _CONTAINER_TYPE_EVENT,
       _CONTAINER_TYPE_EVENT_DATA,
       _CONTAINER_TYPE_EVENT_SOURCE,
@@ -174,11 +176,14 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self._WriteSerializedAttributeContainerList(self._CONTAINER_TYPE_EVENT)
 
   @classmethod
-  def _CheckStorageMetadata(cls, metadata_values):
+  def _CheckStorageMetadata(cls, metadata_values, check_readable_only=False):
     """Checks the storage metadata.
 
     Args:
       metadata_values (dict[str, str]): metadata values per key.
+      check_readable_only (Optional[bool]): whether the store should only be
+          checked to see if it can be read. If False, the store will be checked
+          to see if it can be read and written to.
 
     Raises:
       IOError: if the format version or the serializer format is not supported.
@@ -193,6 +198,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       format_version = int(format_version, 10)
     except (TypeError, ValueError):
       raise IOError('Invalid format version: {0!s}.'.format(format_version))
+
+    if not check_readable_only and format_version != cls._FORMAT_VERSION:
+      raise IOError('Format version: {0:d} is not supported.'.format(
+          format_version))
 
     if format_version < cls._COMPATIBLE_FORMAT_VERSION:
       raise IOError(
@@ -237,7 +246,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       raise ValueError('Attribute container type {0:s} is not supported'.format(
           container_type))
 
-    if not self._HasTable(self._CONTAINER_TYPE_ANALYSIS_REPORT):
+    if not self._HasTable(container_type):
       return 0
 
     # Note that this is SQLite specific, and will give inaccurate results if
@@ -392,14 +401,21 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self._cursor.execute(query)
     return bool(self._cursor.fetchone())
 
-  def _ReadStorageMetadata(self):
-    """Reads the storage metadata."""
+  def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
+    """Reads storage metadata and checks that the values are valid.
+
+    Args:
+      check_readable_only (Optional[bool]): whether the store should only be
+          checked to see if it can be read. If False, the store will be checked
+          to see if it can be read and written to.
+    """
     query = 'SELECT key, value FROM metadata'
     self._cursor.execute(query)
 
     metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
 
-    SQLiteStorageFile._CheckStorageMetadata(metadata_values)
+    self._CheckStorageMetadata(
+        metadata_values, check_readable_only=check_readable_only)
 
     self.format_version = metadata_values['format_version']
     self.compression_format = metadata_values['compression_format']
@@ -540,11 +556,11 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     self._WriteAttributeContainer(analysis_report)
 
-  def AddError(self, error):
-    """Adds an error.
+  def AddWarning(self, warning):
+    """Adds an warning.
 
     Args:
-      error (ExtractionError): error.
+      warning (ExtractionWarning): warning.
 
     Raises:
       IOError: when the storage file is closed or read-only.
@@ -552,7 +568,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EXTRACTION_ERROR, error)
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING, warning)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -650,11 +667,14 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self.AddEventTag(event_tag)
 
   @classmethod
-  def CheckSupportedFormat(cls, path):
+  def CheckSupportedFormat(cls, path, check_readable_only=False):
     """Checks if the storage file format is supported.
 
     Args:
       path (str): path to the storage file.
+      check_readable_only (Optional[bool]): whether the store should only be
+          checked to see if it can be read. If False, the store will be checked
+          to see if it can be read and written to.
 
     Returns:
       bool: True if the format is supported.
@@ -670,7 +690,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
       metadata_values = {row[0]: row[1] for row in cursor.fetchall()}
 
-      cls._CheckStorageMetadata(metadata_values)
+      cls._CheckStorageMetadata(
+          metadata_values, check_readable_only=check_readable_only)
 
       connection.close()
       result = True
@@ -699,7 +720,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EVENT_TAG)
       self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_EXTRACTION_ERROR)
+          self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
     if self._connection:
       # We need to run commit or not all data is stored in the database.
@@ -719,13 +740,35 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-  def GetErrors(self):
-    """Retrieves the errors.
+  def GetWarnings(self):
+    """Retrieves the warnings.
 
     Returns:
-      generator(ExtractionError): error generator.
+      generator(ExtractionWarning): warning generator.
     """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR)
+    # For backwards compatibility with pre-20190309 stores.
+    # Note that stores cannot contain both ExtractionErrors and
+    # ExtractionWarnings
+    if self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR):
+      return self._GetExtractionErrorsAsWarnings()
+
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
+
+  def _GetExtractionErrorsAsWarnings(self):
+    """Retrieves errors from from the store, and converts them to warnings.
+
+    This method is for backwards compatibility with pre-20190309 storage format
+    stores which used ExtractionError attribute containers.
+
+    Yields:
+      ExtractionWarning: extraction warnings.
+    """
+    for extraction_error in self._GetAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_ERROR):
+      error_attributes = extraction_error.CopyToDict()
+      warning = warnings.ExtractionWarning()
+      warning.CopyFromDict(error_attributes)
+      yield warning
 
   def GetEvents(self):
     """Retrieves the events.
@@ -848,12 +891,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       Session: session attribute container.
 
     Raises:
-      IOError: if a stream is missing or there is a mismatch in session
-          identifiers between the session start and completion attribute
-          containers.
-      OSError: if a stream is missing or there is a mismatch in session
-          identifiers between the session start and completion attribute
-          containers.
+      IOError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
+      OSError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
     """
     session_start_generator = self._GetAttributeContainers(
         self._CONTAINER_TYPE_SESSION_START)
@@ -922,13 +963,20 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     """
     return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-  def HasErrors(self):
-    """Determines if a store contains extraction errors.
+  def HasWarnings(self):
+    """Determines if a store contains extraction warnings.
 
     Returns:
-      bool: True if the store contains extraction errors.
+      bool: True if the store contains extraction warnings.
     """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR)
+    # To support older storage versions, check for the now deprecated
+    # extraction errors.
+    has_errors = self._HasAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_ERROR)
+    if has_errors:
+      return True
+
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def HasEventTags(self):
     """Determines if a store contains event tags.
@@ -975,7 +1023,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self._read_only = read_only
 
     if read_only:
-      self._ReadStorageMetadata()
+      self._ReadAndCheckStorageMetadata(check_readable_only=True)
     else:
       # self._cursor.execute('PRAGMA journal_mode=MEMORY')
 
@@ -985,7 +1033,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       if not self._HasTable('metadata'):
         self._WriteStorageMetadata()
       else:
-        self._ReadStorageMetadata()
+        self._ReadAndCheckStorageMetadata()
 
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
         data_column_type = 'BLOB'

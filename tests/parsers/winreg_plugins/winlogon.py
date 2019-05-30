@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Winlogon Windows Registry plugin."""
 
@@ -288,7 +288,7 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     plugin = winlogon.WinlogonPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
 
     events = list(storage_writer.GetSortedEvents())

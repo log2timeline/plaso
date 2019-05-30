@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the psteal CLI tool."""
 
@@ -99,6 +99,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.write = os.path.join(temp_directory, 'output.txt')
 
       with open(options.write, 'w') as file_object:
@@ -144,6 +145,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ParseOptions(options)
 
     with shared_test_lib.TempDirectory() as temp_directory:
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.source = self._GetTestFilePath(['testdir'])
       options.write = os.path.join(temp_directory, 'dynamic.out')
 
@@ -188,8 +190,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath(['testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, 'unused_output.txt')
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
 
@@ -228,8 +231,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.status_view_mode = 'none'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, 'unused_output.txt')
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
 
@@ -263,8 +267,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath(['ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, 'unused_output.txt')
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
 
@@ -300,8 +305,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath(['multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, 'unused_output.txt')
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
 
@@ -337,8 +343,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.vss_stores = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, 'unused_output.txt')
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
 
@@ -353,9 +360,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           'Processing started.',
           'Processing completed.',
           '',
-          'Number of errors encountered while extracting events: 3.',
+          'Number of warnings generated while extracting events: 3.',
           '',
-          'Use pinfo to inspect errors in more detail.',
+          'Use pinfo to inspect warnings in more detail.',
           '',
           '']
 
@@ -376,8 +383,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath(['System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, 'unused_output.txt')
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
 
@@ -411,6 +419,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
+      options.log_file = os.path.join(temp_directory, 'output.log')
       options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
@@ -430,7 +439,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       self.assertEqual(expected_output, result_output)
 
     output = output_writer.ReadOutput()
-    self.assertIn('Events processed : 38', output)
+    self.assertIn('Processing completed.', output)
 
 
 if __name__ == '__main__':

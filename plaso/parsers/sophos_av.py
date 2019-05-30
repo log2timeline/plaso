@@ -74,18 +74,19 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
     try:
       date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=structure.date_time)
+          time_elements_tuple=time_elements_tuple)
       # TODO: check if date and time values are local time or in UTC.
       date_time.is_local_time = True
     except ValueError:
-      parser_mediator.ProduceExtractionError(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+      parser_mediator.ProduceExtractionWarning(
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     event_data = SophosAVLogEventData()
-    event_data.text = structure.text
+    event_data.text = self._GetValueFromStructure(structure, 'text')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED,
@@ -133,13 +134,14 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
       logger.debug('Not a Sophos Anti-Virus log file')
       return False
 
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
     try:
       dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=structure.date_time)
+          time_elements_tuple=time_elements_tuple)
     except ValueError:
       logger.debug((
           'Not a Sophos Anti-Virus log file, invalid date and time: '
-          '{0!s}').format(structure.date_time))
+          '{0!s}').format(time_elements_tuple))
       return False
 
     return True

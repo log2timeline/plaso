@@ -7,6 +7,18 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
+class CCleanerConfigurationEventFormatter(interface.EventFormatter):
+  """Formatter for a CCleaner configuration event."""
+
+  DATA_TYPE = 'ccleaner:configuration'
+
+  FORMAT_STRING = '[{key_path}] {configuration}'
+  FORMAT_STRING_ALTERNATIVE = '{configuration}'
+
+  SOURCE_LONG = 'Registry Key : CCleaner Registry key'
+  SOURCE_SHORT = 'REG'
+
+
 class CCleanerUpdateEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a CCleaner update event."""
 
@@ -22,5 +34,6 @@ class CCleanerUpdateEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-manager.FormattersManager.RegisterFormatter(
-    CCleanerUpdateEventFormatter)
+manager.FormattersManager.RegisterFormatters([
+    CCleanerConfigurationEventFormatter,
+    CCleanerUpdateEventFormatter])

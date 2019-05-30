@@ -8,7 +8,7 @@
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
-DEPENDENCIES="PyYAML XlsxWriter artifacts backports.lzma bencode biplist certifi chardet dateutil dfdatetime dfvfs dfwinreg dtfabric elasticsearch-py elasticsearch5-py future idna libbde libesedb libevt libevtx libewf libfsapfs libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm pefile psutil pycrypto pyparsing pysqlite python-lz4 pytsk3 pytz pyzmq requests six urllib3 yara-python";
+DEPENDENCIES="PyYAML XlsxWriter artifacts backports.lzma bencode biplist certifi chardet dateutil dfdatetime dfvfs dfwinreg dtfabric elasticsearch-py future idna libbde libesedb libevt libevtx libewf libfsapfs libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm pefile psutil pycrypto pyparsing pysqlite python-lz4 pytsk3 pytz pyzmq requests six urllib3 yara-python";
 
 MACOS_VERSION=`sw_vers -productVersion | awk -F '.' '{print $1 "." $2}'`;
 
@@ -51,6 +51,9 @@ cp AUTHORS ACKNOWLEDGEMENTS LICENSE tmp/usr/local/share/doc/plaso
 
 for PY_FILE in tmp/usr/local/bin/*.py;
 do
+  # Rewrite the shebang of the Python script since MacOS uses Python 2.7
+  sed -i ${PY_FILE} 's?#!/usr/bin/env python3?#!/usr/bin/env python?';
+
   SH_FILE=${PY_FILE/.py/.sh};
   cat > ${SH_FILE} << EOT
 #!/bin/sh

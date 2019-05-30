@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Sophos Anti-Virus log (SAV.txt) parser."""
 
@@ -22,7 +22,7 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
     parser = sophos_av.SophosAVLogParser()
     storage_writer = self._ParseFile(['sav.txt'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
 
     events = list(storage_writer.GetEvents())

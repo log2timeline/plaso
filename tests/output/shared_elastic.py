@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the shared code for Elasticsearch based output modules."""
 
@@ -16,32 +16,8 @@ from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import shared_elastic
 
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
-
-
-class TestEvent(events.EventObject):
-  """Event for testing."""
-
-  DATA_TYPE = 'syslog:line'
-
-  def __init__(self, timestamp):
-    """Initializes an event.
-
-    Args:
-      timestamp (int): timestamp, which contains the number of microseconds
-          since January 1, 1970, 00:00:00 UTC.
-    """
-    super(TestEvent, self).__init__()
-    self.display_name = 'log/syslog.1'
-    self.filename = 'log/syslog.1'
-    self.hostname = 'ubuntu'
-    self.my_number = 123
-    self.some_additional_foo = True
-    self.text = (
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-        'closed for user root)')
-    self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
-    self.timestamp = timestamp
 
 
 class TestElasticsearchOutputModule(
@@ -59,21 +35,19 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   # pylint: disable=protected-access
 
-  def _CreateTestEvent(self):
-    """Creates an event for testing.
-
-    Returns:
-      EventObject: event.
-    """
-    event_tag = events.EventTag()
-    event_tag.AddLabel('Test')
-
-    event_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-06-27 18:17:01+00:00')
-    event = TestEvent(event_timestamp)
-    event.tag = event_tag
-
-    return event
+  _TEST_EVENTS = [
+      {'data_type': 'syslog:line',
+       'display_name': 'log/syslog.1',
+       'filename': 'log/syslog.1',
+       'hostname': 'ubuntu',
+       'my_number': 123,
+       'some_additional_foo': True,
+       'text': (
+           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+           'closed for user root)'),
+       'timestamp': timelib.Timestamp.CopyFromString(
+           '2012-06-27 18:17:01+00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
   def testConnect(self):
     """Tests the _Connect function."""
@@ -102,8 +76,9 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module._Connect()
     output_module._CreateIndexIfNotExists('test', {})
 
-    event = self._CreateTestEvent()
-    output_module._InsertEvent(event)
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+    output_module._InsertEvent(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
@@ -118,8 +93,14 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
-    event = self._CreateTestEvent()
-    event_values = output_module._GetSanitizedEventValues(event)
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
+    event_tag = events.EventTag()
+    event_tag.AddLabel('Test')
+
+    event_values = output_module._GetSanitizedEventValues(
+        event, event_data, event_tag)
 
     expected_event_values = {
         'data_type': 'syslog:line',
@@ -144,7 +125,8 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testInsertEvent(self):
     """Tests the _InsertEvent function."""
-    event = self._CreateTestEvent()
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
 
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
@@ -155,17 +137,17 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-    output_module._InsertEvent(event)
+    output_module._InsertEvent(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
 
-    output_module._InsertEvent(event)
+    output_module._InsertEvent(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 4)
     self.assertEqual(output_module._number_of_buffered_events, 2)
 
-    output_module._InsertEvent(event, force_flush=True)
+    output_module._FlushEvents()
 
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
@@ -255,8 +237,6 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    event = self._CreateTestEvent()
-
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
@@ -266,7 +246,9 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-    output_module.WriteEventBody(event)
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+    output_module.WriteEventBody(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the tagging analysis plugin."""
 
@@ -7,26 +7,11 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.analysis import tagging
+from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.containers import events
 
 from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
-
-
-class TestPrefetchEvent(events.EventObject):
-  """A test event type for the tagging analysis plugin."""
-  DATA_TYPE = 'windows:prefetch'
-
-
-class TestChromeDownloadEvent(events.EventObject):
-  """A test event type for the tagging analysis plugin."""
-  DATA_TYPE = 'chrome:history:file_downloaded'
-
-
-class TestEvtRecordEvent(events.EventObject):
-  """A test event type for the tagging analysis plugin."""
-  DATA_TYPE = 'windows:evt:record'
 
 
 class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
@@ -35,71 +20,35 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'event_type': 'prefetch',
+      {'data_type': 'windows:prefetch',
        'timestamp': timelib.Timestamp.CopyFromString('2015-05-01 15:12:00'),
-       'attributes': {}
-      },
-      {'event_type': 'chrome_download',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'chrome:history:file_downloaded',
        'timestamp': timelib.Timestamp.CopyFromString('2015-05-01 05:06:00'),
-       'attributes': {}
-      },
-      {'event_type': 'something_else',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'something_else',
        'timestamp': timelib.Timestamp.CopyFromString('2015-02-19 08:00:01'),
-       'attributes': {}
-      },
-      {'event_type': 'evt',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'windows:evt:record',
+       'event_identifier': 538,
+       'source_name': 'Security',
        'timestamp': timelib.Timestamp.CopyFromString('2016-05-25 13:00:06'),
-       'attributes': {
-           'source_name': 'Security',
-           'event_identifier': 538}
-      },
-      {'event_type': 'evt',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'body': 'this is a message',
+       'data_type': 'windows:evt:record',
+       'event_identifier': 16,
        'timestamp': timelib.Timestamp.CopyFromString('2016-05-25 13:00:06'),
-       'attributes': {
-           'source_name': 'Messaging',
-           'event_identifier': 16,
-           'body': 'this is a message'}
-      },
-  ]
-
-  # pylint: disable=arguments-differ
-  def _CreateTestEventObject(self, event_attributes):
-    """Create a test event with a set of attributes.
-
-    Args:
-      event_attributes (dict[str, str]): attributes of an event to add to the
-          queue.
-
-    Returns:
-      EventObject: event with the appropriate attributes for testing.
-    """
-    if event_attributes['event_type'] == 'prefetch':
-      event = TestPrefetchEvent()
-    elif event_attributes['event_type'] == 'chrome_download':
-      event = TestChromeDownloadEvent()
-    elif event_attributes['event_type'] == 'evt':
-      event = TestEvtRecordEvent()
-    else:
-      event = events.EventObject()
-
-    event.timestamp = event_attributes['timestamp']
-    for key, value in iter(event_attributes['attributes'].items()):
-      setattr(event, key, value)
-    return event
+       'source_name': 'Messaging',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    test_events = []
-    for event_dictionary in self._TEST_EVENTS:
-      event = self._CreateTestEventObject(event_dictionary)
-      test_events.append(event)
-
     test_file = self._GetTestFilePath(['tagging_file', 'valid.txt'])
     plugin = tagging.TaggingAnalysisPlugin()
     plugin.SetAndLoadTagFile(test_file)
 
-    storage_writer = self._AnalyzeEvents(test_events, plugin)
+    storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
     self.assertEqual(storage_writer.number_of_event_tags, 4)

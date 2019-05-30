@@ -17,21 +17,23 @@ class BadConfigOption(Error):
 
 
 class ConnectionError(Error):  # pylint: disable=redefined-builtin
-  """Class that defines errors encountered connecting to a service."""
+  """Error connecting to a service."""
 
 
 class InvalidEvent(Error):
   """Error indicating an event is malformed."""
 
+
 class InvalidFilter(Error):
   """Error indicating an invalid filter was specified."""
 
+
+class InvalidNumberOfOperands(Error):
+  """The number of operands provided to an objectfilter operator is wrong."""
+
+
 class MalformedPresetError(Error):
   """Raised when a parser preset definition is malformed."""
-
-
-class MalformedQueryError(Error):
-  """Raised when an objectfilter query is malformed."""
 
 
 class MaximumRecursionDepth(Error):

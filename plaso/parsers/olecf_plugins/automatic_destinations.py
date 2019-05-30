@@ -117,7 +117,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
     elif header.format_version in (3, 4):
       entry_map = self._GetDataTypeMap('dest_list_entry_v3')
     else:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported format version: {0:d}.'.format(header.format_version))
       return
 
@@ -138,7 +138,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
 
       except (TypeError, ValueError) as exception:
         droid_volume_identifier = ''
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to read droid volume identifier with error: {0!s}'.format(
                 exception))
 
@@ -148,7 +148,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
 
       except (TypeError, ValueError) as exception:
         droid_file_identifier = ''
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to read droid file identifier with error: {0!s}'.format(
                 exception))
 
@@ -160,7 +160,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
 
       except (TypeError, ValueError) as exception:
         birth_droid_volume_identifier = ''
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to read birth droid volume identifier with error: '
             '{0:s}').format(
                 exception))
@@ -171,7 +171,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
 
       except (TypeError, ValueError) as exception:
         birth_droid_file_identifier = ''
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to read birth droid file identifier with error: '
             '{0:s}').format(
                 exception))

@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-from artifacts import definitions as artifact_types
 from dfwinreg import errors as dfwinreg_errors
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
@@ -136,7 +135,7 @@ class WinRegistryParser(interface.FileObjectParser):
     try:
       plugin.UpdateChainAndProcess(parser_mediator, registry_key)
     except (IOError, dfwinreg_errors.WinRegistryValueError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'in key: {0:s} error: {1!s}'.format(registry_key.path, exception))
 
   def _NormalizeKeyPath(self, key_path):
@@ -226,7 +225,7 @@ class WinRegistryParser(interface.FileObjectParser):
     try:
       registry_file = win_registry_reader.Open(file_object)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open Windows Registry file with error: {0!s}'.format(
               exception))
       return
@@ -239,37 +238,30 @@ class WinRegistryParser(interface.FileObjectParser):
     if not root_key:
       return
 
-    find_specs = parser_mediator.knowledge_base.GetValue(
-        artifact_filters.ArtifactDefinitionsFilterHelper.KNOWLEDGE_BASE_VALUE)
+    registry_find_specs = getattr(
+        parser_mediator.collection_filters_helper, 'registry_find_specs', None)
 
-    registry_find_specs = None
-    if find_specs:
-      registry_find_specs = find_specs.get(
-          artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY)
-
-    key_path_compatible = (
-        artifact_filters.ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(
-            key_path_prefix))
-
-    if registry_find_specs and key_path_compatible:
-      try:
-        win_registry.MapFile(key_path_prefix, registry_file)
-        self._ParseKeysFromFindSpecs(
-            parser_mediator, win_registry, registry_find_specs)
-      except IOError as exception:
-        parser_mediator.ProduceExtractionError('{0!s}'.format(exception))
-
-    else:
-      if registry_find_specs and not key_path_compatible:
-        logger.warning((
-            'Artifacts Registry Filters are not supported for '
-            'the registry prefix {0:s}. Parsing entire file.').format(
-                key_path_prefix))
-
+    if not registry_find_specs:
       try:
         self._ParseRecurseKeys(parser_mediator, root_key)
       except IOError as exception:
-        parser_mediator.ProduceExtractionError('{0!s}'.format(exception))
+        parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
+
+    else:
+      artifacts_filters_helper = (
+          artifact_filters.ArtifactDefinitionsFiltersHelper)
+      if not artifacts_filters_helper.CheckKeyCompatibility(key_path_prefix):
+        logger.warning((
+            'Artifacts filters are not supported for Windows Registry file '
+            'with key path prefix: "{0:s}".').format(key_path_prefix))
+
+      else:
+        try:
+          win_registry.MapFile(key_path_prefix, registry_file)
+          self._ParseKeysFromFindSpecs(
+              parser_mediator, win_registry, registry_find_specs)
+        except IOError as exception:
+          parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
 
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)

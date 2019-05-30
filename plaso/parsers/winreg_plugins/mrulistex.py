@@ -121,7 +121,7 @@ class BaseMRUListExWindowsRegistryPlugin(
     try:
       mrulistex = self._ParseMRUListExValue(registry_key)
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to parse MRUListEx value with error: {0!s}'.format(exception))
       return
 
@@ -136,7 +136,7 @@ class BaseMRUListExWindowsRegistryPlugin(
         break
 
       if found_terminator:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'found additional MRUListEx entries after terminator in key: '
             '{0:s}.').format(registry_key.path))
 
@@ -195,7 +195,7 @@ class MRUListExStringWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'missing MRUListEx value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
 
@@ -209,7 +209,7 @@ class MRUListExStringWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
         value_string = self._ReadStructureFromByteStream(
             value.data, 0, utf16le_string_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse MRUListEx entry value: {0:d} with error: '
             '{1!s}').format(entry_number, exception))
 
@@ -268,7 +268,7 @@ class MRUListExShellItemListWindowsRegistryPlugin(
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'missing MRUListEx value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
 
@@ -342,7 +342,7 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'missing MRUListEx value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
 
@@ -360,7 +360,7 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
         path = self._ReadStructureFromByteStream(
             value.data, 0, utf16le_string_map, context=context)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse MRUListEx entry value: {0:d} with error: '
             '{1!s}').format(entry_number, exception))
         return value_string
@@ -370,7 +370,7 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
       shell_item_data = value.data[context.byte_size:]
 
       if not shell_item_data:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'missing shell item in MRUListEx value: {0:d} in key: '
             '{1:s}.').format(entry_number, registry_key.path))
         value_string = 'Path: {0:s}'.format(path)
@@ -439,7 +439,7 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'missing MRUListEx value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
 
@@ -457,7 +457,7 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
         path = self._ReadStructureFromByteStream(
             value.data, 0, utf16le_string_map, context=context)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse MRUListEx entry value: {0:d} with error: '
             '{1!s}').format(entry_number, exception))
         return value_string
@@ -467,7 +467,7 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
       shell_item_list_data = value.data[context.byte_size:]
 
       if not shell_item_list_data:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'missing shell item in MRUListEx value: {0:d} in key: '
             '{1:s}.').format(entry_number, registry_key.path))
         value_string = 'Path: {0:s}'.format(path)

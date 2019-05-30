@@ -197,7 +197,7 @@ winlogon | Parser for winlogon Registry data.
 winrar_mru | Parser for WinRAR History Registry data.
 winreg_default | Parser for Registry data.
 
-### Parser presets
+### Parser presets (data/presets.yaml)
 
 Name | Parsers and plugins
 --- | ---

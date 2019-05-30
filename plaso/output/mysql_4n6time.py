@@ -261,16 +261,18 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
     self._host = server
     self._port = port
 
-  def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+  def WriteEventBody(self, event, event_data, event_tag):
+    """Writes event values to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     if not hasattr(event, 'timestamp'):
       return
 
-    row = self._GetSanitizedEventValues(event)
+    row = self._GetSanitizedEventValues(event, event_data, event_tag)
     try:
       self._cursor.execute(self._INSERT_QUERY, row)
     except MySQLdb.Error as exception:

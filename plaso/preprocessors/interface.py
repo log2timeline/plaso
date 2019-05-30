@@ -45,7 +45,7 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
       path_separator (str): path segment separator.
 
     Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      PreProcessFail: if the preprocessing fails.
     """
 
   def Collect(
@@ -60,7 +60,7 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
       file_system (dfvfs.FileSystem): file system to be preprocessed.
 
     Raises:
-      PreProcessFail: if the Windows Registry key or value cannot be read.
+      PreProcessFail: if the preprocessing fails.
     """
     for source in artifact_definition.sources:
       if source.type_indicator not in (
@@ -99,7 +99,7 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
           value data.
 
     Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      PreProcessFail: if the preprocessing fails.
     """
 
   def _ParsePathSpecification(
@@ -117,7 +117,7 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
       path_separator (str): path segment separator.
 
     Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      PreProcessFail: if the preprocessing fails.
     """
     try:
       file_entry = searcher.GetFileEntryByPathSpec(path_specification)
@@ -132,7 +132,8 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
           'Unable to retrieve file entry: {0:s} with error: '
           '{1!s}').format(relative_path, exception))
 
-    self._ParseFileEntry(knowledge_base, file_entry)
+    if file_entry:
+      self._ParseFileEntry(knowledge_base, file_entry)
 
 
 class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
@@ -152,7 +153,7 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
           value data.
 
     Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      PreProcessFail: if the preprocessing fails.
     """
 
   def _ParseFileEntry(self, knowledge_base, file_entry):
@@ -164,7 +165,7 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
           value data.
 
     Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      PreProcessFail: if the preprocessing fails.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -190,7 +191,7 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
       value_name (str): name of the Windows Registry value.
 
     Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      PreProcessFail: if the preprocessing fails.
     """
 
   def Collect(
@@ -261,7 +262,7 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
       value_name (str): name of the Windows Registry value.
 
     Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      PreProcessFail: if the preprocessing fails.
     """
     try:
       registry_value = registry_key.GetValueByName(value_name)
@@ -285,5 +286,24 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
       value_data (object): Windows Registry value data.
 
     Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      PreProcessFail: if the preprocessing fails.
+    """
+
+
+class KnowledgeBasePreprocessorPlugin(object):
+  """The knowledge base preprocessor plugin interface.
+
+  The knowledge base preprocessor determines preprocessing attributes based on
+  other values in the knowledge base.
+  """
+
+  @abc.abstractmethod
+  def Collect(self, knowledge_base):
+    """Collects values from the knowledge base.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+
+    Raises:
+      PreProcessFail: if the preprocessing fails.
     """

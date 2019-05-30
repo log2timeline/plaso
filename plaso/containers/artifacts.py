@@ -155,7 +155,7 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
 
     if 'windows' in product_lower_case:
       segment_index = product_lower_case.index('windows') + 1
-      if product_lower_case[segment_index] in ('(r)', 'server'):
+      if product_lower_case[segment_index] in ('(r)', 'server', 'web'):
         segment_index += 1
 
       # Check if the version has a suffix.
@@ -275,7 +275,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
 
   def __init__(
       self, full_name=None, group_identifier=None, identifier=None,
-      user_directory=None, username=None):
+      path_separator='/', user_directory=None, username=None):
     """Initializes an user artifact.
 
     Args:
@@ -283,17 +283,30 @@ class UserAccountArtifact(ArtifactAttributeContainer):
       group_identifier (Optional[str]): identifier of the primary group
           the user is part of.
       identifier (Optional[str]): user identifier.
+      path_separator (Optional[str]): path segment separator.
       user_directory (Optional[str]): path of the user (or home or profile)
           directory.
       username (Optional[str]): name uniquely identifying the user.
     """
     super(UserAccountArtifact, self).__init__()
+    self._path_separator = path_separator
     self.full_name = full_name
     self.group_identifier = group_identifier
     self.identifier = identifier
     # TODO: add shell.
     self.user_directory = user_directory
     self.username = username
+
+  def GetUserDirectoryPathSegments(self):
+    """Retrieves the path segments of the user directory.
+
+    Returns:
+      list[str]: path segments of the user directory or an empty list if no
+        user directory is set.
+    """
+    if not self.user_directory:
+      return []
+    return self.user_directory.split(self._path_separator)
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the hasher manager."""
 
@@ -16,17 +16,7 @@ class TestHasher(interface.BaseHasher):
   """Test hasher."""
 
   NAME = 'testhash'
-
-  def GetBinaryDigest(self):
-    """Retrieves the digest of the hash function as a binary string.
-
-    Returns:
-      bytes: binary string hash digest calculated over the data blocks passed to
-          Update().
-    """
-    # Chosen by fair dice roll. Guaranteed to be random.
-    # Compliant with RFC 1149.4. See http://xkcd.com/221/.
-    return b'4'
+  ATTRIBUTE_NAME = 'testhash_hash'
 
   def GetStringDigest(self):
     """Retrieves the digest of the hash function expressed as a Unicode string.

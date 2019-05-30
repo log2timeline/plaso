@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import artifacts
-from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.parsers import interface as parsers_interface
@@ -13,17 +12,18 @@ from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 
 
 class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an analysis plugin."""
 
   def _AnalyzeEvents(
-      self, event_objects, plugin, knowledge_base_values=None):
+      self, event_values_list, plugin, knowledge_base_values=None):
     """Analyzes events using the analysis plugin.
 
     Args:
-      event_objects (list[EventObject]]): events to analyze.
+      event_values_list (list[dict[str, str]]): list of event values.
       plugin (AnalysisPlugin): plugin.
       knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 
@@ -36,32 +36,27 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
-    for event in event_objects:
+
+    test_events = []
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        event_values_list):
+      storage_writer.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
+
+      test_events.append((event, event_data))
 
     mediator = analysis_mediator.AnalysisMediator(
         storage_writer, knowledge_base_object)
 
-    for event in event_objects:
-      plugin.ExamineEvent(mediator, event)
+    for event, event_data in test_events:
+      plugin.ExamineEvent(mediator, event, event_data)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
 
     return storage_writer
-
-  def _CreateTestEventObject(self, event_dictionary):
-    """Create a test event with a set of attributes.
-
-    Args:
-      event_dictionary (dict[str, str]): contains attributes of an event.
-
-    Returns:
-      EventObject: event with the appropriate attributes for testing.
-    """
-    event = events.EventObject()
-    event.CopyFromDict(event_dictionary)
-    return event
 
   def _ParseAndAnalyzeFile(
       self, path_segments, parser, plugin, knowledge_base_values=None):
@@ -86,7 +81,13 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         storage_writer, knowledge_base_object)
 
     for event in storage_writer.GetSortedEvents():
-      plugin.ExamineEvent(mediator, event)
+      event_data = None
+      event_data_identifier = event.GetEventDataIdentifier()
+      if event_data_identifier:
+        event_data = storage_writer.GetEventDataByIdentifier(
+            event_data_identifier)
+
+      plugin.ExamineEvent(mediator, event, event_data)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
@@ -125,8 +126,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         file_object.close()
 
     else:
-      self.fail(
-          'Got unexpected parser type: {0:s}'.format(type(parser)))
+      self.fail('Got unexpected parser type: {0:s}'.format(type(parser)))
 
     return storage_writer
 

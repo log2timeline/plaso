@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows Registry file parser."""
 
@@ -74,7 +74,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg.WinRegistryParser()
     storage_writer = self._ParseFile(['ntuser.dat.LOG'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
 
   @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
@@ -115,22 +115,21 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg.WinRegistryParser()
     knowledge_base = knowledge_base_engine.KnowledgeBase()
 
-    artifacts_filters = ['TestRegistryKey', 'TestRegistryValue']
+    artifact_filter_names = ['TestRegistryKey', 'TestRegistryValue']
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
     registry.ReadFromDirectory(reader, self._GetTestFilePath(['artifacts']))
 
-    test_filter_file = artifact_filters.ArtifactDefinitionsFilterHelper(
-        registry, artifacts_filters, knowledge_base)
+    artifacts_filters_helper = (
+        artifact_filters.ArtifactDefinitionsFiltersHelper(
+            registry, knowledge_base))
 
-    test_filter_file.BuildFindSpecs(environment_variables=None)
+    artifacts_filters_helper.BuildFindSpecs(
+        artifact_filter_names, environment_variables=None)
 
-    find_specs = {
-        test_filter_file.KNOWLEDGE_BASE_VALUE : knowledge_base.GetValue(
-            test_filter_file.KNOWLEDGE_BASE_VALUE)}
     storage_writer = self._ParseFile(
-        ['SYSTEM'], parser, knowledge_base_values=find_specs)
+        ['SYSTEM'], parser, collection_filters_helper=artifacts_filters_helper)
 
     events = list(storage_writer.GetEvents())
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline CLI tool."""
 
@@ -404,9 +404,9 @@ optional arguments:
           'Processing started.',
           'Processing completed.',
           '',
-          'Number of errors encountered while extracting events: 3.',
+          'Number of warnings generated while extracting events: 3.',
           '',
-          'Use pinfo to inspect errors in more detail.',
+          'Use pinfo to inspect warnings in more detail.',
           '',
           '']
 

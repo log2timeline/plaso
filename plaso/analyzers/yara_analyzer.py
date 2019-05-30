@@ -20,7 +20,7 @@ class YaraAnalyzer(interface.BaseAnalyzer):
   NAME = 'yara'
   DESCRIPTION = 'Matches Yara rules over input data.'
 
-  PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_YARA_SCAN
+  PROCESSING_STATUS_HINT = definitions.STATUS_INDICATOR_YARA_SCAN
 
   INCREMENTAL_ANALYZER = False
 

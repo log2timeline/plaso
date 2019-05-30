@@ -184,7 +184,7 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
             cookie_data=event_data.cookie_value, url=event_data.url)
 
       except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
                 plugin.NAME, exception))
 
@@ -251,7 +251,7 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
 
       page_data = file_object.read(page_size)
       if len(page_data) != page_size:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to read page: {0:d}'.format(page_number))
         break
 

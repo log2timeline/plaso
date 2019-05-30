@@ -93,7 +93,7 @@ class ShutdownWindowsRegistryPlugin(
     try:
       date_time = self._ParseFiletime(shutdown_value.data)
     except errors.ParseError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to determine shutdown timestamp with error: {0!s}'.format(
               exception))
       return

@@ -232,13 +232,14 @@ class CLITabularTableView(BaseTableView):
       in_bold (Optional[bool]): True if the row should be written in bold.
     """
     row_strings = []
-    for value_index, value_string in enumerate(values):
-      padding_size = self._column_sizes[value_index] - len(value_string)
-      padding_string = ' ' * padding_size
+    if self._column_sizes:
+      for value_index, value_string in enumerate(values):
+        padding_size = self._column_sizes[value_index] - len(value_string)
+        padding_string = ' ' * padding_size
 
-      row_strings.extend([value_string, padding_string])
+        row_strings.extend([value_string, padding_string])
 
-    row_strings.pop()
+      row_strings.pop()
 
     row_strings = ''.join(row_strings)
 

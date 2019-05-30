@@ -148,7 +148,7 @@ class MSIECFParser(interface.FileObjectParser):
       cache_directories.append(cache_directory_name)
 
     if decode_error:
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to decode cache directory names. Characters that cannot '
           'be decoded will be replaced with "?" or "\\ufffd".'))
 
@@ -166,7 +166,7 @@ class MSIECFParser(interface.FileObjectParser):
               parser_mediator, format_version, cache_directories, msiecf_item)
 
       except IOError as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'Unable to parse item: {0:d} with error: {1!s}'.format(
                 item_index, exception))
 
@@ -186,7 +186,7 @@ class MSIECFParser(interface.FileObjectParser):
               recovered=True)
 
       except IOError as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'Unable to parse recovered item: {0:d} with error: {1!s}'.format(
                 item_index, exception))
 
@@ -285,7 +285,7 @@ class MSIECFParser(interface.FileObjectParser):
           try:
             http_headers = msiecf_item.data[:-1].decode('ascii')
           except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionError((
+            parser_mediator.ProduceExtractionWarning((
                 'unable to decode HTTP headers of URL record at offset: '
                 '0x{0:08x}. Characters that cannot be decoded will be '
                 'replaced with "?" or "\\ufffd".').format(msiecf_item.offset))
@@ -378,7 +378,7 @@ class MSIECFParser(interface.FileObjectParser):
     try:
       msiecf_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open file with error: {0!s}'.format(exception))
       return
 

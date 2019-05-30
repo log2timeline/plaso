@@ -13,7 +13,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
-from plaso.containers import errors as error_containers
+from plaso.containers import warnings
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import zeromq_queue
@@ -115,27 +115,26 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     """
     super(TaskMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
-    self._filter_find_specs = None
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
     self._merge_task_on_hold = None
-    self._number_of_consumed_errors = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
-    self._number_of_produced_errors = 0
+    self._number_of_consumed_warnings = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
+    self._number_of_produced_warnings = 0
     self._number_of_worker_processes = 0
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._processing_configuration = None
     self._resolver_context = context.Context()
     self._session_identifier = None
-    self._status = definitions.PROCESSING_STATUS_IDLE
+    self._status = definitions.STATUS_INDICATOR_IDLE
     self._storage_merge_reader = None
     self._storage_merge_reader_on_hold = None
     self._task_queue = None
@@ -230,7 +229,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Limit the number of attribute containers from a single task-based
     # storage file that are merged per loop to keep tasks flowing.
     if task or self._storage_merge_reader:
-      self._status = definitions.PROCESSING_STATUS_MERGING
+      self._status = definitions.STATUS_INDICATOR_MERGING
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming('merge')
@@ -290,41 +289,43 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._task_manager.SampleTaskStatus(
               self._merge_task, 'merge_resumed')
 
-      self._status = definitions.PROCESSING_STATUS_RUNNING
-      self._number_of_produced_errors = storage_writer.number_of_errors
+      self._status = definitions.STATUS_INDICATOR_RUNNING
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
+      self._number_of_produced_warnings = storage_writer.number_of_warnings
 
   def _ProcessSources(
-      self, source_path_specs, storage_writer, filter_find_specs=None):
+      self, source_path_specs, storage_writer):
     """Processes the sources.
 
     Args:
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
-      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction. If set, path specifications
-          that match the find specification will be processed.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
 
-    self._status = definitions.PROCESSING_STATUS_COLLECTING
-    self._number_of_consumed_errors = 0
+    self._status = definitions.STATUS_INDICATOR_COLLECTING
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
-    self._number_of_produced_errors = 0
+    self._number_of_consumed_warnings = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
+    self._number_of_produced_warnings = 0
+
+    find_specs = None
+    if self.collection_filters_helper:
+      find_specs = (
+          self.collection_filters_helper.included_file_system_find_specs)
 
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=filter_find_specs,
-        recurse_file_system=False, resolver_context=self._resolver_context)
+        source_path_specs, find_specs=find_specs, recurse_file_system=False,
+        resolver_context=self._resolver_context)
 
     for path_spec in path_spec_generator:
       if self._abort:
@@ -346,13 +347,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._ScheduleTasks(storage_writer)
 
     if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
+      self._status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
 
-    self._number_of_produced_errors = storage_writer.number_of_errors
     self._number_of_produced_events = storage_writer.number_of_events
     self._number_of_produced_sources = storage_writer.number_of_event_sources
+    self._number_of_produced_warnings = storage_writer.number_of_warnings
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_sources')
@@ -402,7 +403,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     """
     logger.debug('Task scheduler started')
 
-    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self._status = definitions.STATUS_INDICATOR_RUNNING
 
     # TODO: make tasks persistent.
 
@@ -465,13 +466,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._status_update_callback(self._processing_status)
 
     for task in self._task_manager.GetFailedTasks():
-      error = error_containers.ExtractionError(
+      warning = warnings.ExtractionWarning(
           message='Worker failed to process path specification',
           path_spec=task.path_spec)
-      self._storage_writer.AddError(error)
+      self._storage_writer.AddWarning(warning)
       self._processing_status.error_path_specs.append(task.path_spec)
 
-    self._status = definitions.PROCESSING_STATUS_IDLE
+    self._status = definitions.STATUS_INDICATOR_IDLE
 
     if self._abort:
       logger.debug('Task scheduler aborted')
@@ -503,8 +504,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task_queue = self._task_queue
 
     process = worker_process.WorkerProcess(
-        task_queue, storage_writer, self.knowledge_base,
-        self._session_identifier, self._processing_configuration,
+        task_queue, storage_writer, self.collection_filters_helper,
+        self.knowledge_base, self._session_identifier,
+        self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging
@@ -615,9 +617,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._number_of_consumed_sources, self._number_of_produced_sources,
         self._number_of_consumed_events, self._number_of_produced_events,
         self._number_of_consumed_event_tags,
-        self._number_of_produced_event_tags,
-        self._number_of_consumed_errors, self._number_of_produced_errors,
-        self._number_of_consumed_reports, self._number_of_produced_reports)
+        self._number_of_produced_event_tags, self._number_of_consumed_reports,
+        self._number_of_produced_reports, self._number_of_consumed_warnings,
+        self._number_of_produced_warnings)
 
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
@@ -643,10 +645,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._RaiseIfNotMonitored(pid)
 
     display_name = process_status.get('display_name', '')
-    number_of_consumed_errors = process_status.get(
-        'number_of_consumed_errors', None)
-    number_of_produced_errors = process_status.get(
-        'number_of_produced_errors', None)
 
     number_of_consumed_event_tags = process_status.get(
         'number_of_consumed_event_tags', None)
@@ -668,7 +666,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     number_of_produced_sources = process_status.get(
         'number_of_produced_sources', None)
 
-    if processing_status != definitions.PROCESSING_STATUS_IDLE:
+    number_of_consumed_warnings = process_status.get(
+        'number_of_consumed_warnings', None)
+    number_of_produced_warnings = process_status.get(
+        'number_of_produced_warnings', None)
+
+    if processing_status != definitions.STATUS_INDICATOR_IDLE:
       last_activity_timestamp = process_status.get(
           'last_activity_timestamp', 0.0)
 
@@ -680,15 +683,15 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           logger.error((
               'Process {0:s} (PID: {1:d}) has not reported activity within '
               'the timeout period.').format(process.name, pid))
-          processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
+          processing_status = definitions.STATUS_INDICATOR_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_errors, number_of_produced_errors,
-        number_of_consumed_reports, number_of_produced_reports)
+        number_of_consumed_reports, number_of_produced_reports,
+        number_of_consumed_warnings, number_of_produced_warnings)
 
     task_identifier = process_status.get('task_identifier', '')
     if not task_identifier:
@@ -705,8 +708,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
-      filter_find_specs=None, number_of_worker_processes=0,
-      status_update_callback=None, worker_memory_limit=None):
+      number_of_worker_processes=0, status_update_callback=None,
+      worker_memory_limit=None):
     """Processes the sources and extract events.
 
     Args:
@@ -718,8 +721,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           configuration.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
-      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction.
       number_of_worker_processes (Optional[int]): number of worker processes.
       status_update_callback (Optional[function]): callback function for status
           updates.
@@ -767,7 +768,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._processing_configuration = processing_configuration
 
     self._debug_output = processing_configuration.debug_output
-    self._filter_find_specs = filter_find_specs
     self._log_filename = processing_configuration.log_filename
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
@@ -823,9 +823,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
-        self._ProcessSources(
-            source_path_specs, storage_writer,
-            filter_find_specs=filter_find_specs)
+        self._ProcessSources(source_path_specs, storage_writer)
 
       finally:
         storage_writer.WriteSessionCompletion(aborted=self._abort)
@@ -885,7 +883,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._processing_configuration = None
 
-    self._filter_find_specs = None
     self._session_identifier = None
     self._status_update_callback = None
     self._storage_writer = None

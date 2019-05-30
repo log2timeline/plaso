@@ -192,27 +192,30 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     """
     # Required fields are <mru> and <atime> and we are not interested in
     # log lines without <mru>.
-    if not structure.mru:
+    mru = self._GetValueFromStructure(structure, 'mru')
+    if not mru:
       return
 
     event_data = PopularityContestEventData()
-    event_data.mru = structure.mru
-    event_data.package = structure.package
-    event_data.record_tag = structure.tag
+    event_data.mru = mru
+    event_data.package = self._GetValueFromStructure(structure, 'package')
+    event_data.record_tag = self._GetValueFromStructure(structure, 'tag')
 
     # The <atime> field (as <ctime>) is always present but could be 0.
     # In case of <atime> equal to 0, we are in <NOFILES> case, safely return
     # without logging.
-    if structure.atime:
+    access_time = self._GetValueFromStructure(structure, 'atime')
+    if access_time:
       # TODO: not doing any check on <tag> fields, even if only informative
       # probably it could be better to check for the expected values.
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.atime)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=access_time)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if structure.ctime:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.ctime)
+    change_time = self._GetValueFromStructure(structure, 'ctime')
+    if change_time:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=change_time)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -239,23 +242,27 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       self._ParseLogLine(parser_mediator, structure)
 
     else:
-      if not structure.timestamp:
+      timestamp = self._GetValueFromStructure(structure, 'timestamp')
+      if timestamp is None:
         logger.debug('[{0:s}] {1:s} with invalid timestamp.'.format(
             self.NAME, key))
         return
 
+      session = self._GetValueFromStructure(structure, 'session')
+
       event_data = PopularityContestSessionEventData()
-      event_data.session = '{0!s}'.format(structure.session)
+      # TODO: determine why session is formatted as a string.
+      event_data.session = '{0!s}'.format(session)
 
       if key == 'header':
-        event_data.details = structure.details
-        event_data.hostid = structure.id
+        event_data.details = self._GetValueFromStructure(structure, 'details')
+        event_data.hostid = self._GetValueFromStructure(structure, 'id')
         event_data.status = 'start'
 
       elif key == 'footer':
         event_data.status = 'end'
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)

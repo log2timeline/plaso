@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the event formatters interface classes."""
 
@@ -8,6 +8,7 @@ import unittest
 
 from plaso.formatters import interface
 from plaso.formatters import mediator
+from plaso.lib import definitions
 
 from tests.containers import test_lib as containers_test_lib
 from tests.formatters import test_lib
@@ -20,11 +21,6 @@ class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_SHORT = 'LOG'
   SOURCE_LONG = 'Some Text File.'
-
-
-class ConditionalTestEvent(containers_test_lib.TestEvent):
-  """An event object for testing the conditional event formatter."""
-  DATA_TYPE = 'test:event:conditional'
 
 
 class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
@@ -50,12 +46,8 @@ class WrongEventFormatter(interface.EventFormatter):
   SOURCE_LONG = 'Weird Log File'
 
 
-class EventFormatterTest(unittest.TestCase):
+class EventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the event formatter."""
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._event_objects = containers_test_lib.CreateTestEvents()
 
   def testInitialization(self):
     """Tests the initialization."""
@@ -75,16 +67,16 @@ class EventFormatterTest(unittest.TestCase):
   # TODO: add test for GetSources.
 
 
-class ConditionalEventFormatterTest(unittest.TestCase):
+class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the conditional event formatter."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    event_attributes = {
-        'numeric': 12, 'description': 'this is beyond words',
-        'text': 'but we\'re still trying to say something about the event'}
-    self._event_object = ConditionalTestEvent(
-        1335791207939596, attributes=event_attributes)
+  _TEST_EVENTS = [
+      {'data_type': 'test:event:conditional',
+       'description': 'this is beyond words',
+       'numeric': 12,
+       'text': 'but we\'re still trying to say something about the event',
+       'timestamp': 1335791207939596,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   def testInitialization(self):
     """Tests the initialization."""
@@ -92,7 +84,7 @@ class ConditionalEventFormatterTest(unittest.TestCase):
     self.assertIsNotNone(event_formatter)
 
     with self.assertRaises(RuntimeError):
-      _ = BrokenConditionalEventFormatter()
+      BrokenConditionalEventFormatter()
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -109,12 +101,14 @@ class ConditionalEventFormatterTest(unittest.TestCase):
     formatter_mediator = mediator.FormatterMediator()
     event_formatter = ConditionalTestEventFormatter()
 
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
     expected_message = (
         'Description: this is beyond words Comment Value: 0x0c '
         'Text: but we\'re still trying to say something about the event')
 
-    message, _ = event_formatter.GetMessages(
-        formatter_mediator, self._event_object)
+    message, _ = event_formatter.GetMessages(formatter_mediator, event_data)
     self.assertEqual(message, expected_message)
 
   # TODO: add test for GetSources.

@@ -107,7 +107,7 @@ class SAMUsersWindowsRegistryPlugin(
       username = descriptor_data.decode('utf-16-le')
     except (UnicodeDecodeError, UnicodeEncodeError) as exception:
       username = descriptor_data.decode('utf-16-le', errors='replace')
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to decode V value string with error: {0!s}. Characters '
           'that cannot be decoded will be replaced with "?" or '
           '"\\ufffd".').format(exception))
@@ -124,7 +124,7 @@ class SAMUsersWindowsRegistryPlugin(
     """
     names_key = registry_key.GetSubkeyByName('Names')
     if not names_key:
-      parser_mediator.ProduceExtractionError('missing subkey: Names.')
+      parser_mediator.ProduceExtractionWarning('missing subkey: Names.')
       return
 
     last_written_time_per_username = {
@@ -138,13 +138,13 @@ class SAMUsersWindowsRegistryPlugin(
       try:
         f_value = self._ParseFValue(subkey)
       except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse F value with error: {0!s}'.format(exception))
         continue
 
       registry_value = subkey.GetValueByName('V')
       if not registry_value:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'missing Registry value: "V" in subkey: {0:s}.'.format(
                 subkey.name))
         continue
@@ -155,7 +155,7 @@ class SAMUsersWindowsRegistryPlugin(
         v_value = self._ReadStructureFromByteStream(
             registry_value.data, 0, v_value_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse V value with error: {0!s}'.format(exception))
         continue
 
