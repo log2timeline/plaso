@@ -18,6 +18,7 @@ from plaso.lib import timelib
 from plaso.output import json_line
 
 from tests.cli import test_lib as cli_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
@@ -67,7 +68,8 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         test_lib.TestEventFormatter)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     self._output_module.WriteEventBody(event, event_data, None)
 
     formatters_manager.FormattersManager.DeregisterFormatter(

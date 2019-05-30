@@ -14,6 +14,7 @@ from plaso.lib import timelib
 from plaso.output import dynamic
 
 from tests.cli import test_lib as cli_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
@@ -46,7 +47,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     date_string = dynamic_fields_helper._FormatDate(event, event_data)
     self.assertEqual(date_string, '2012-06-27')
 
@@ -59,7 +61,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     date_time_string = dynamic_fields_helper._FormatDateTime(event, event_data)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01+00:00')
 
@@ -72,7 +75,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     hostname_string = dynamic_fields_helper._FormatHostname(event, event_data)
     self.assertEqual(hostname_string, 'ubuntu')
 
@@ -81,7 +85,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     inode_string = dynamic_fields_helper._FormatInode(event, event_data)
     self.assertEqual(inode_string, '-')
 
@@ -90,7 +95,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     macb_string = dynamic_fields_helper._FormatMACB(event, event_data)
     self.assertEqual(macb_string, '..C.')
 
@@ -102,7 +108,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     message_string = dynamic_fields_helper._FormatMessage(event, event_data)
     expected_message_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
@@ -120,7 +127,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     message_short_string = dynamic_fields_helper._FormatMessageShort(
         event, event_data)
     expected_message_short_string = (
@@ -136,7 +144,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     source_string = dynamic_fields_helper._FormatSource(event, event_data)
     self.assertEqual(source_string, 'Syslog')
 
@@ -145,7 +154,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     source_short_string = dynamic_fields_helper._FormatSourceShort(
         event, event_data)
     self.assertEqual(source_short_string, 'LOG')
@@ -170,7 +180,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     time_string = dynamic_fields_helper._FormatTime(event, event_data)
     self.assertEqual(time_string, '18:17:01')
 
@@ -183,7 +194,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     timestamp_description_string = (
         dynamic_fields_helper._FormatTimestampDescription(event, event_data))
     self.assertEqual(timestamp_description_string, 'Metadata Modification Time')
@@ -193,7 +205,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     username_string = dynamic_fields_helper._FormatUsername(event, event_data)
     self.assertEqual(username_string, '-')
 
@@ -202,7 +215,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     zone_string = dynamic_fields_helper._FormatZone(event, event_data)
     self.assertEqual(zone_string, 'UTC')
 
@@ -213,7 +227,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     zone_string = dynamic_fields_helper.GetFormattedField(
         event, event_data, None, 'zone')
     self.assertEqual(zone_string, 'UTC')
@@ -259,7 +274,8 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     output_module.WriteEventBody(event, event_data, None)
     expected_event_body = (
         '2012-06-27,18:17:01,UTC,..C.,LOG,Syslog,Metadata Modification Time,-,'
@@ -286,7 +302,8 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         '2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
         ' (pam_unix(cron:session): session closed for user root)\n')
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     output_module.WriteEventBody(event, event_data, None)
     event_body = output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)

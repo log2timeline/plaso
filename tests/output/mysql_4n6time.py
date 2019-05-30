@@ -11,6 +11,7 @@ from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import mysql_4n6time
 
+from tests.containers import test_lib as containers_test_lib
 from tests.output import fake_mysqldb
 from tests.output import test_lib
 
@@ -106,7 +107,8 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
         'user': '-'
     }
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     event_dict = output_module._GetSanitizedEventValues(event, event_data, None)
 
     self.assertIsInstance(event_dict, dict)
@@ -182,7 +184,8 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module._count = 0
     output_module._cursor = fake_cursor
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     output_module.WriteEventBody(event, event_data, None)
 
 

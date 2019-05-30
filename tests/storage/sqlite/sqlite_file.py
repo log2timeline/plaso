@@ -17,6 +17,7 @@ from plaso.lib import definitions
 from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
 
@@ -261,14 +262,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testAddEvent(self):
     """Tests the AddEvent function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
 
       storage_file.Close()
@@ -301,15 +304,20 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      test_events = []
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
+
+        test_events.append(event)
 
       test_event_tags = self._CreateTestEventTags(test_events)
       for event_tag in test_event_tags:
@@ -408,14 +416,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testGetEvents(self):
     """Tests the GetEvents function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
 
       storage_file.Close()
@@ -453,15 +463,20 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testGetEventTags(self):
     """Tests the GetEventTags function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      test_events = []
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
+
+        test_events.append(event)
 
       test_event_tags = self._CreateTestEventTags(test_events)
       for event_tag in test_event_tags:
@@ -484,14 +499,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
 
       storage_file.Close()

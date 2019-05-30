@@ -3,12 +3,6 @@
 
 from __future__ import unicode_literals
 
-import os
-
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as path_spec_factory
-
-from plaso.containers import events
 from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import mediator as formatters_mediator
@@ -21,31 +15,6 @@ from tests import test_lib as shared_test_lib
 
 class TestConfig(object):
   """Test configuration."""
-
-
-class TestEventObject(events.EventObject):
-  """Test event."""
-  DATA_TYPE = 'test:output'
-
-  def __init__(self):
-    """Initialize a test event."""
-    super(TestEventObject, self).__init__()
-    self.timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01')
-    self.hostname = 'ubuntu'
-    self.display_name = 'OS: /var/log/syslog.1'
-    self.inode = 12345678
-    self.text = (
-        'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\n '
-        'closed for user root)')
-    self.username = 'root'
-
-    os_location = '{0:s}{1:s}'.format(
-        os.path.sep, os.path.join('cases', 'image.dd'))
-    os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=os_location)
-    self.pathspec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
-        location='/var/log/syslog.1', parent=os_path_spec)
 
 
 class TestEventFormatter(formatters_interface.EventFormatter):
@@ -120,32 +89,3 @@ class OutputModuleTestCase(shared_test_lib.BaseTestCase):
         knowledge_base_object, formatter_mediator)
 
     return output_mediator
-
-  def _CreateTestEvent(self, event_values):
-    """Create a test event and event data.
-
-    Args:
-      event_values (dict[str, str]): event values.
-
-    Returns:
-      tuple[EventObject, WindowsRegistryServiceEventData]: event and event
-          data for testing.
-    """
-    copy_of_event_values = dict(event_values)
-
-    timestamp = copy_of_event_values.get('timestamp', None)
-    if 'timestamp' in copy_of_event_values:
-      del copy_of_event_values['timestamp']
-
-    timestamp_desc = copy_of_event_values.get('timestamp_desc', None)
-    if 'timestamp_desc' in copy_of_event_values:
-      del copy_of_event_values['timestamp_desc']
-
-    event = events.EventObject()
-    event.timestamp = timestamp
-    event.timestamp_desc = timestamp_desc
-
-    event_data = events.EventData()
-    event_data.CopyFromDict(copy_of_event_values)
-
-    return event, event_data

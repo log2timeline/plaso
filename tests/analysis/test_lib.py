@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import artifacts
-from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.parsers import interface as parsers_interface
@@ -13,16 +12,18 @@ from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 
 
 class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an analysis plugin."""
 
-  def _AnalyzeEvents(self, test_events, plugin, knowledge_base_values=None):
+  def _AnalyzeEvents(
+      self, event_values_list, plugin, knowledge_base_values=None):
     """Analyzes events using the analysis plugin.
 
     Args:
-      test_events (list[tuple[EventObject, EventData]]]): events to analyze.
+      event_values_list (list[dict[str, str]]): list of event values.
       plugin (AnalysisPlugin): plugin.
       knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 
@@ -35,11 +36,16 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
-    for event, event_data in test_events:
+
+    test_events = []
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        event_values_list):
       storage_writer.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
+
+      test_events.append((event, event_data))
 
     mediator = analysis_mediator.AnalysisMediator(
         storage_writer, knowledge_base_object)
@@ -51,35 +57,6 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     storage_writer.AddAnalysisReport(analysis_report)
 
     return storage_writer
-
-  def _CreateTestEvent(self, event_values):
-    """Create a test event and event data.
-
-    Args:
-      event_values (dict[str, str]): event values.
-
-    Returns:
-      tuple[EventObject, WindowsRegistryServiceEventData]: event and event
-          data for testing.
-    """
-    copy_of_event_values = dict(event_values)
-
-    timestamp = copy_of_event_values.get('timestamp', None)
-    if 'timestamp' in copy_of_event_values:
-      del copy_of_event_values['timestamp']
-
-    timestamp_desc = copy_of_event_values.get('timestamp_desc', None)
-    if 'timestamp_desc' in copy_of_event_values:
-      del copy_of_event_values['timestamp_desc']
-
-    event = events.EventObject()
-    event.timestamp = timestamp
-    event.timestamp_desc = timestamp_desc
-
-    event_data = events.EventData()
-    event_data.CopyFromDict(copy_of_event_values)
-
-    return event, event_data
 
   def _ParseAndAnalyzeFile(
       self, path_segments, parser, plugin, knowledge_base_values=None):

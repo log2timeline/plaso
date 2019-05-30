@@ -13,6 +13,7 @@ from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import mediator
 
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
@@ -50,7 +51,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         TestEventFormatter)
 
-    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     event_formatter = self._output_mediator.GetEventFormatter(event_data)
     self.assertIsInstance(event_formatter, TestEventFormatter)
 
@@ -66,7 +68,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         'Reporter <CRON> PID: 8442'
         ' (pam_unix(cron:session): session closed for user root)')
 
-    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     message, message_short = self._output_mediator.GetFormattedMessages(
         event_data)
     self.assertEqual(message, expected_message)
@@ -80,7 +83,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         TestEventFormatter)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     source_short, source = self._output_mediator.GetFormattedSources(
         event, event_data)
     self.assertEqual(source, 'Syslog')
@@ -96,7 +100,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
     expected_attribute_names = set(['text'])
 
-    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     attribute_names = self._output_mediator.GetFormatStringAttributeNames(
         event_data)
     self.assertEqual(attribute_names, expected_attribute_names)
@@ -106,13 +111,15 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetHostname(self):
     """Tests the GetHostname function."""
-    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     hostname = self._output_mediator.GetHostname(event_data)
     self.assertEqual(hostname, 'ubuntu')
 
   def testGetMACBRepresentation(self):
     """Tests the GetMACBRepresentation function."""
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     macb_representation = self._output_mediator.GetMACBRepresentation(
         event, event_data)
     self.assertEqual(macb_representation, '..C.')
@@ -124,7 +131,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetUsername(self):
     """Tests the GetUsername function."""
-    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     username = self._output_mediator.GetUsername(event_data)
     self.assertEqual(username, 'root')
 

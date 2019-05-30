@@ -16,6 +16,7 @@ from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import shared_elastic
 
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
@@ -75,7 +76,8 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module._Connect()
     output_module._CreateIndexIfNotExists('test', {})
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     output_module._InsertEvent(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
@@ -91,7 +93,8 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
 
     event_tag = events.EventTag()
     event_tag.AddLabel('Test')
@@ -122,7 +125,8 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testInsertEvent(self):
     """Tests the _InsertEvent function."""
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
 
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
@@ -242,7 +246,8 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     output_module.WriteEventBody(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
