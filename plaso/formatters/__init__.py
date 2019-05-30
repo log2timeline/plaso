@@ -68,6 +68,7 @@ from plaso.formatters import plist
 from plaso.formatters import pls_recall
 from plaso.formatters import popcontest
 from plaso.formatters import recycler
+from plaso.formatters import run
 from plaso.formatters import safari
 from plaso.formatters import safari_cookies
 from plaso.formatters import sam_users
