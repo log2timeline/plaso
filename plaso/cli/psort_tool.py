@@ -151,6 +151,9 @@ class PsortTool(
 
     Args:
       options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
     """
     # Get a list of all available plugins.
     analysis_plugin_info = self._analysis_manager.GetAllPluginInformation()
@@ -431,8 +434,11 @@ class PsortTool(
     self.list_language_identifiers = self._preferred_language == 'list'
     self.list_profilers = self._profilers == 'list'
 
+    self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
+
     if (self.list_analysis_plugins or self.list_language_identifiers or
-        self.list_profilers or self.list_timezones):
+        self.list_profilers or self.list_timezones or
+        self.show_troubleshooting):
       return
 
     # Check output modules after the other listable options, otherwise
