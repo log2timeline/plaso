@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import syslog as _  # pylint: disable=unused-import
 from plaso.parsers import syslog
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class SyslogParserTest(test_lib.ParserTestCase):
   """Tests for the syslog parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog_rsyslog'])
   def testParseRsyslog(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""
     parser = syslog.SyslogParser()
@@ -28,7 +26,6 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog_osx'])
   def testParseDarwin(self):
     """Tests the Parse function on an Darwin-style syslog file"""
     parser = syslog.SyslogParser()
@@ -40,7 +37,6 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog_chromeos'])
   def testParseChromeOS(self):
     """Tests the Parse function."""
     parser = syslog.SyslogParser()
@@ -103,7 +99,6 @@ class SyslogParserTest(test_lib.ParserTestCase):
         'message that sc...')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog'])
   def testParse(self):
     """Tests the Parse function."""
     parser = syslog.SyslogParser()

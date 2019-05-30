@@ -10,14 +10,12 @@ from plaso.formatters import file_history as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.esedb_plugins import file_history
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.esedb_plugins import test_lib
 
 
 class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
   """Tests for the File History ESE database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Catalog1.edb'])
   def testProcess(self):
     """Tests the Process function."""
     plugin = file_history.FileHistoryESEDBPlugin()

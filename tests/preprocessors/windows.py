@@ -14,7 +14,6 @@ from plaso.containers import artifacts
 from plaso.engine import knowledge_base
 from plaso.preprocessors import windows
 
-from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -76,9 +75,11 @@ class WindowsAllUsersProfileEnvironmentVariablePluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the %AllUsersProfile% environment variable plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = (
         windows.WindowsAllUsersProfileEnvironmentVariablePlugin())
     knowledge_base_object = (
@@ -145,9 +146,11 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
 class WindowsCodepagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Windows codepage plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = windows.WindowsCodepagePlugin()
     knowledge_base_object = (
         self._RunPreprocessorPluginOnWindowsRegistryValueSystem(plugin))
@@ -158,9 +161,11 @@ class WindowsCodepagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
 class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Windows hostname plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = windows.WindowsHostnamePlugin()
     knowledge_base_object = (
         self._RunPreprocessorPluginOnWindowsRegistryValueSystem(plugin))
@@ -172,9 +177,11 @@ class WindowsProgramDataEnvironmentVariablePluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the %ProgramData% environment variable plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = (
         windows.WindowsProgramDataEnvironmentVariablePlugin())
     knowledge_base_object = (
@@ -243,9 +250,11 @@ class WindowsProgramFilesEnvironmentVariablePluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the %ProgramFiles% environment variable plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = (
         windows.WindowsProgramFilesEnvironmentVariablePlugin())
     knowledge_base_object = (
@@ -261,9 +270,11 @@ class WindowsProgramFilesX86EnvironmentVariablePluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the %ProgramFilesX86% environment variable plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = (
         windows.WindowsProgramFilesX86EnvironmentVariablePlugin())
     knowledge_base_object = (
@@ -306,9 +317,11 @@ class WindowsSystemProductPluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the system product information plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = windows.WindowsSystemProductPlugin()
     knowledge_base_object = (
         self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(plugin))
@@ -321,9 +334,11 @@ class WindowsSystemVersionPluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the system version information plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = windows.WindowsSystemVersionPlugin()
     knowledge_base_object = (
         self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(plugin))
@@ -335,9 +350,11 @@ class WindowsSystemVersionPluginTest(
 class WindowsTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the time zone plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = windows.WindowsTimeZonePlugin()
     knowledge_base_object = (
         self._RunPreprocessorPluginOnWindowsRegistryValueSystem(plugin))
@@ -351,9 +368,11 @@ class WindowsUserAccountsPluginTest(
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testParseKey(self):
     """Tests the _ParseKey function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = windows.WindowsUserAccountsPlugin()
     knowledge_base_object = (
         self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(plugin))
