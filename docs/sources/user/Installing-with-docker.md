@@ -63,7 +63,7 @@ This way your plaso file will also be stored on the host filesystem.
 Next step is to run analysis with psort:
 
 ```
-$ docker run -v /data/:/data log2timeline/plaso psort /data/evidences.plaso
+$ docker run -v /data/:/data log2timeline/plaso psort -w /data/timeline.log /data/evidences.plaso
 Datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 ....
 Processing completed.
