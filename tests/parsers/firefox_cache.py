@@ -10,14 +10,12 @@ from plaso.formatters import firefox_cache as _  # pylint: disable=unused-import
 from plaso.lib import errors
 from plaso.parsers import firefox_cache
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class FirefoxCacheParserTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCacheParser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['firefox_cache', 'invalid_file'])
   def testParseCache_InvalidFile(self):
     """Verify that parser do not accept small, invalid files."""
     parser = firefox_cache.FirefoxCacheParser()
@@ -26,8 +24,6 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(path_segments, parser)
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'firefox28', '_CACHE_001_'])
   def testParseCache_001(self):
     """Test Firefox 28 cache file _CACHE_001_ parsing."""
     parser = firefox_cache.FirefoxCacheParser()
@@ -60,8 +56,6 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     for event in events:
       self.assertEqual(event.version, "1.19")
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'firefox28', '_CACHE_002_'])
   def testParseCache_002(self):
     """Test Firefox 28 cache file _CACHE_002_ parsing."""
     parser = firefox_cache.FirefoxCacheParser()
@@ -94,8 +88,6 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     for event in events:
       self.assertEqual(event.version, "1.19")
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'firefox28', '_CACHE_003_'])
   def testParseCache_003(self):
     """Test Firefox 28 cache file _CACHE_003_ parsing."""
     parser = firefox_cache.FirefoxCacheParser()
@@ -118,8 +110,6 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     for event in events:
       self.assertEqual(event.version, "1.19")
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'firefox28', 'E8D65m01'])
   def testParseAlternativeFilename(self):
     """Test Firefox 28 cache 003 file with alternative filename."""
     parser = firefox_cache.FirefoxCacheParser()
@@ -129,8 +119,6 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'firefox3', '_CACHE_001_'])
   def testParseLegacyCache_001(self):
     """Test Firefox 3 cache file _CACHE_001_ parsing."""
     parser = firefox_cache.FirefoxCacheParser()
@@ -157,8 +145,6 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'firefox3', '_CACHE_002_'])
   def testParseLegacyCache_002(self):
     """Test Firefox 3 cache file _CACHE_002_ parsing."""
     parser = firefox_cache.FirefoxCacheParser()
@@ -174,8 +160,6 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2014-05-02 14:25:55.000000')
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'firefox3', '_CACHE_003_'])
   def testParseLegacyCache_003(self):
     """Test Firefox 3 cache file _CACHE_003_ parsing."""
     parser = firefox_cache.FirefoxCacheParser()
@@ -195,8 +179,6 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 class FirefoxCache2ParserTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCache2Parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'cache2', '1F4B3A4FC81FB19C530758231FA54313BE8F6FA2'])
   def testParseCache2Entry(self):
     """Test Firefox cache2 file parsing."""
     parser = firefox_cache.FirefoxCache2Parser()
@@ -231,8 +213,6 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2016-05-01 15:35:31.000000')
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'firefox_cache', 'cache2', 'C966EB70794E44E7E3E8A260106D0C72439AF65B'])
   def testParseInvalidCache2Entry(self):
     """Test file with valid filename and invalid content."""
     parser = firefox_cache.FirefoxCache2Parser()

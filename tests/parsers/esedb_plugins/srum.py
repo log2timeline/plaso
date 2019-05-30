@@ -11,14 +11,12 @@ from plaso.formatters import srum as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.esedb_plugins import srum
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.esedb_plugins import test_lib
 
 
 class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
   """Tests for the System Resource Usage Monitor (SRUM) ESE database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SRUDB.dat'])
   def testProcess(self):
     """Tests the Process function."""
     plugin = srum.SystemResourceUsageMonitorESEDBPlugin()

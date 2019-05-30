@@ -8,14 +8,12 @@ import unittest
 
 from plaso.parsers import dpkg
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class DpkgParserTest(test_lib.ParserTestCase):
   """Tests for the Dpkg Log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['dpkg.log'])
   def testParse(self):
     """Tests for the Parse method."""
     parser = dpkg.DpkgParser()

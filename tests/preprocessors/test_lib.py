@@ -19,18 +19,17 @@ from plaso.preprocessors import manager
 from tests import test_lib as shared_test_lib
 
 
-@shared_test_lib.skipUnlessHasTestFile(['artifacts'])
 class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
   """Artifact preprocessor plugin test case."""
 
   @classmethod
   def setUpClass(cls):
     """Makes preparations before running any of the tests."""
+    artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
     cls._artifacts_registry = artifacts_registry.ArtifactDefinitionsRegistry()
 
     reader = artifacts_reader.YamlArtifactsReader()
-    path = shared_test_lib.GetTestFilePath(['artifacts'])
-    cls._artifacts_registry.ReadFromDirectory(reader, path)
+    cls._artifacts_registry.ReadFromDirectory(reader, artifacts_path)
 
   def _RunPreprocessorPluginOnFileSystem(
       self, file_system, mount_point, plugin):

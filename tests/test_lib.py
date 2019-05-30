@@ -72,10 +72,16 @@ class BaseTestCase(unittest.TestCase):
 
     Returns:
       dfvfs.FileEntry: file entry.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
-    path = self._GetTestFilePath(path_segments)
+    test_file_path = self._GetTestFilePath(path_segments)
+    self._SkipIfPathNotExists(test_file_path)
+
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def _GetTestFilePath(self, path_segments):
@@ -104,6 +110,19 @@ class BaseTestCase(unittest.TestCase):
     path = self._GetTestFilePath(path_segments)
     return path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+
+  def _SkipIfPathNotExists(self, path):
+    """Skips the test if the path does not exist.
+
+    Args:
+      path (str): path of a test file.
+
+    Raises:
+      SkipTest: if the path does not exist and the test should be skipped.
+    """
+    if not os.path.exists(path):
+      filename = os.path.basename(path)
+      raise unittest.SkipTest('missing test file: {0:s}'.format(filename))
 
 
 class ImportCheckTestCase(BaseTestCase):
