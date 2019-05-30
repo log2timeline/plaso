@@ -49,13 +49,8 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    test_events = []
-    for event_values in self._TEST_EVENTS:
-      event, event_data = self._CreateTestEvent(event_values)
-      test_events.append((event, event_data))
-
     plugin = file_hashes.FileHashesPlugin()
-    storage_writer = self._AnalyzeEvents(test_events, plugin)
+    storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 

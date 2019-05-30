@@ -12,6 +12,7 @@ from plaso.storage import identifiers
 from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
 
@@ -29,9 +30,15 @@ class EventTagIndexTest(test_lib.StorageTestCase):
     storage_file = sqlite_file.SQLiteStorageFile()
     storage_file.Open(path=path, read_only=False)
 
-    test_events = self._CreateTestEvents()
-    for event in test_events:
+    test_events = []
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      storage_file.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_file.AddEvent(event)
+
+      test_events.append(event)
 
     test_event_tags = self._CreateTestEventTags(test_events)
     storage_file.AddEventTags(test_event_tags[:-1])

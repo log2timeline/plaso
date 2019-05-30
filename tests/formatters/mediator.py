@@ -8,8 +8,10 @@ import unittest
 
 from plaso.formatters import mediator
 
+from tests import test_lib as shared_test_lib
 
-class FormatterMediatorTest(unittest.TestCase):
+
+class FormatterMediatorTest(shared_test_lib.BaseTestCase):
   """Tests for the formatter mediator object."""
 
   def testInitialization(self):

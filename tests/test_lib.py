@@ -133,6 +133,7 @@ class ImportCheckTestCase(BaseTestCase):
         import_expression = re.compile(r' import {0:s}\b'.format(module_name))
 
         # pylint: disable=deprecated-method
+        # TODO: replace by assertRegex once Python 2 support is removed.
         self.assertRegexpMatches(
             init_content, import_expression,
             '{0:s} not imported in {1:s}'.format(module_name, init_path))

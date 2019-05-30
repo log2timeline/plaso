@@ -11,6 +11,7 @@ from plaso.lib import timelib
 from plaso.output import manager
 
 from tests.cli import test_lib as cli_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
@@ -44,7 +45,8 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.WriteHeader()
 
     for event_values in self._TEST_EVENTS:
-      event, event_data = self._CreateTestEvent(event_values)
+      event, event_data = containers_test_lib.CreateEventFromValues(
+          event_values)
       output_module.WriteEvent(event, event_data, None)
 
     output_module.WriteFooter()

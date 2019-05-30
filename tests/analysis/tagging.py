@@ -44,16 +44,11 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    test_events = []
-    for event_values in self._TEST_EVENTS:
-      event, event_data = self._CreateTestEvent(event_values)
-      test_events.append((event, event_data))
-
     test_file = self._GetTestFilePath(['tagging_file', 'valid.txt'])
     plugin = tagging.TaggingAnalysisPlugin()
     plugin.SetAndLoadTagFile(test_file)
 
-    storage_writer = self._AnalyzeEvents(test_events, plugin)
+    storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
     self.assertEqual(storage_writer.number_of_event_tags, 4)
