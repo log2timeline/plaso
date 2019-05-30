@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the MacOS Knowledge C db."""
 
@@ -14,57 +14,59 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
-  """Tests for the MacOS Knowledge C db."""
+  """Tests for the MacOS KnowledgeC database."""
 
-  def testProcess(self):
-    """Tests the Process function on a MacOS KnowledgeC db."""
-
+  def testProcessHighSierra(self):
+    """Tests the Process function on a MacOS High Sierra database."""
     plugin = mac_knowledgec.MacKnowledgeCPlugin()
-    storage_writer_10_13 = self._ParseDatabaseFileWithPlugin(
+    storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_knowledgec-10.13.db'], plugin)
-    storage_writer_10_14 = self._ParseDatabaseFileWithPlugin(
-        ['mac_knowledgec-10.14.db'], plugin)
 
-    # Mac oS 10.13 version
-    self.assertEqual(51, storage_writer_10_13.number_of_events)
-    events = list(storage_writer_10_13.GetEvents())
+    self.assertEqual(0, storage_writer.number_of_warnings)
+    self.assertEqual(51, storage_writer.number_of_events)
+    events = list(storage_writer.GetEvents())
     event = events[0]
     self.CheckTimestamp(event.timestamp, '2019-02-10 16:59:58.860665')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.action, '/app/inFocus')
-    self.assertEqual(event.bundle_id, 'com.apple.Installer-Progress')
+    self.assertEqual(event.bundle_identifier, 'com.apple.Installer-Progress')
+
     expected_message = (
-        'Application {} executed during {} seconds'.format(
-            event.bundle_id, event.usage_in_seconds))
-    expected_short_message = ('Application {}'.format(event.bundle_id))
+      'Application com.apple.Installer-Progress executed for 1 seconds')
+    expected_short_message = 'Application com.apple.Installer-Progress'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    # Mac oS 10.14 version
-    self.assertEqual(231, storage_writer_10_14.number_of_events)
-    events = list(storage_writer_10_14.GetEvents())
+  def testProcessMojave(self):
+    """Tests the Process function on a MacOS High Sierra database."""
+    plugin = mac_knowledgec.MacKnowledgeCPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        ['mac_knowledgec-10.14.db'], plugin)
+
+    self.assertEqual(0, storage_writer.number_of_warnings)
+    self.assertEqual(231, storage_writer.number_of_events)
+    events = list(storage_writer.GetEvents())
 
     event = events[225]
     self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:30.668998')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.action, '/app/usage')
-    self.assertEqual(event.bundle_id, 'com.apple.Terminal')
+    self.assertEqual(event.bundle_identifier, 'com.apple.Terminal')
+
     expected_message = (
-        'Application {} executed during {} seconds'.format(
-            event.bundle_id, event.usage_in_seconds))
-    expected_short_message = ('Application {}'.format(event.bundle_id))
+        'Application com.apple.Terminal executed for 1041 seconds')
+    expected_short_message = 'Application com.apple.Terminal'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[212]
     self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:20.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_END)
-    self.assertEqual(event.uri, 'https://www.instagram.com/')
-    self.assertEqual(event.uri_title, 'Instagram')
+    self.assertEqual(event.url, 'https://www.instagram.com/')
+    self.assertEqual(event.title, 'Instagram')
+
     expected_message = (
-        'Safari open uri {} with title {} and was visited during {} seconds'.format(
-            event.uri, event.uri_title, event.usage_in_seconds))
-    expected_short_message = ('Safari open uri {}'.format(event.uri))
+        'Visited: https://www.instagram.com/ (Instagram) Duration: 0')
+    expected_short_message = 'Safari: https://www.instagram.com/'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 

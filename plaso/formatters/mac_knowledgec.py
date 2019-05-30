@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The MacOS Document Versions files event formatter."""
+"""The MacOS KnowledgeC datbase event formatters."""
 
 from __future__ import unicode_literals
 
@@ -13,13 +13,13 @@ class MacKnowledgeCApplicationFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'mac:knowledgec:application'
 
   FORMAT_STRING_PIECES = [
-      'Application {bundle_id} executed',
-      'during {usage_in_seconds} seconds']
+      'Application {bundle_identifier} executed',
+      'for {duration} seconds']
 
-  FORMAT_STRING_SHORT_PIECES = ['Application {bundle_id}']
+  FORMAT_STRING_SHORT_PIECES = ['Application {bundle_identifier}']
 
   SOURCE_LONG = 'KnowledgeC Application'
-  SOURCE_SHORT = 'HISTORY'
+  SOURCE_SHORT = 'LOG'
 
 
 class MacKnowledgeCSafariFormatter(interface.ConditionalEventFormatter):
@@ -28,11 +28,12 @@ class MacKnowledgeCSafariFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'mac:knowledgec:safari'
 
   FORMAT_STRING_PIECES = [
-      'Safari open uri {uri}',
-      'with title {uri_title}',
-      'and was visited during {usage_in_seconds} seconds']
+      'Visited: {url}',
+      '({title})',
+      'Duration: {duration}'
+    ]
 
-  FORMAT_STRING_SHORT_PIECES = ['Safari open uri {uri}']
+  FORMAT_STRING_SHORT_PIECES = ['Safari: {url}']
 
   SOURCE_LONG = 'KnowledgeC Safari'
   SOURCE_SHORT = 'WEBHIST'
