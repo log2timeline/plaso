@@ -788,6 +788,10 @@ class PinfoTool(
 
     self._verbose = getattr(options, 'verbose', False)
 
+    self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
+    if self.show_troubleshooting:
+      return
+
     self._output_filename = getattr(options, 'write', None)
 
     argument_helper_names = ['process_resources', 'storage_file']
