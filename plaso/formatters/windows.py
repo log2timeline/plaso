@@ -65,7 +65,7 @@ class WindowsRegistryListEventFormatter(interface.ConditionalEventFormatter):
 
 
 class WindowsRegistryNetworkEventFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Windows network event."""
+  """Formatter for a Windows NetworkList event formatter."""
 
   DATA_TYPE = 'windows:registry:network'
 
