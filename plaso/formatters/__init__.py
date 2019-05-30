@@ -52,6 +52,7 @@ from plaso.formatters import mac_wifi
 from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
+from plaso.formatters import mrulistex
 from plaso.formatters import msie_webcache
 from plaso.formatters import msiecf
 from plaso.formatters import network_drives
