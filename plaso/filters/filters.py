@@ -33,14 +33,16 @@ class Filter(object):
     self.args = arguments or []
 
   @abc.abstractmethod
-  def Matches(self, event):
-    """Determines if the event matches the filter.
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
-      bool: True if the event matches the filter, False otherwise.
+      bool: True if the event, data and tag match the filter, False otherwise.
     """
 
 
@@ -50,17 +52,19 @@ class AndFilter(Filter):
   Note that if no conditions are passed, all objects will pass.
   """
 
-  def Matches(self, event):
-    """Determines if the event matches the filter.
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
-      bool: True if the event matches the filter, False otherwise.
+      bool: True if the event, data and tag match the filter, False otherwise.
     """
     for sub_filter in self.args:
-      if not sub_filter.Matches(event):
+      if not sub_filter.Matches(event, event_data, event_tag):
         return False
     return True
 
@@ -71,20 +75,22 @@ class OrFilter(Filter):
   Note that if no conditions are passed, all objects will pass.
   """
 
-  def Matches(self, event):
-    """Determines if the event matches the filter.
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
-      bool: True if the event matches the filter, False otherwise.
+      bool: True if the event, data and tag match the filter, False otherwise.
     """
     if not self.args:
       return True
 
     for sub_filter in self.args:
-      if sub_filter.Matches(event):
+      if sub_filter.Matches(event, event_data, event_tag):
         return True
     return False
 
@@ -93,28 +99,32 @@ class Operator(Filter):
   """Interface for filters that represent operators."""
 
   @abc.abstractmethod
-  def Matches(self, event):
-    """Determines if the event matches the filter.
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
-      bool: True if the event matches the filter, False otherwise.
+      bool: True if the event, data and tag match the filter, False otherwise.
     """
 
 
 class IdentityFilter(Operator):
   """A filter which always evaluates to True."""
 
-  def Matches(self, event):
-    """Determines if the event matches the filter.
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
-      bool: True if the event matches the filter, False otherwise.
+      bool: True if the event, data and tag match the filter, False otherwise.
     """
     return True
 
@@ -131,7 +141,7 @@ class BinaryOperator(Operator):
     """Initializes a binary operator.
 
     Args:
-      arguments (Optional[object]): operands of the filter.
+      arguments (Optional[list[str, object]]): operands of the filter.
 
     Raises:
       InvalidNumberOfOperands: if the number of operands provided is not
@@ -147,19 +157,27 @@ class BinaryOperator(Operator):
     self.right_operand = arguments[1]
 
   @abc.abstractmethod
-  def Matches(self, event):
-    """Determines if the event matches the filter.
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
-      bool: True if the event matches the filter, False otherwise.
+      bool: True if the event, data and tag match the filter, False otherwise.
     """
 
 
 class GenericBinaryOperator(BinaryOperator):
   """Shared functionality for common binary operators."""
+
+  _DEPRECATED_ATTRIBUTE_NAMES = frozenset([
+      'message', 'source', 'source_long', 'source_short', 'sourcetype'])
+
+  # Attributes that are stored in the event attribute container.
+  _EVENT_ATTRIBUTE_NAMES = frozenset(['timestamp', 'timestamp_desc'])
 
   _OBJECT_PATH_SEPARATOR = '.'
 
@@ -167,7 +185,7 @@ class GenericBinaryOperator(BinaryOperator):
     """Initializes a generic binary operator.
 
     Args:
-      arguments (Optional[object]): operands of the filter.
+      arguments (Optional[list[str, object]]): operands of the filter.
     """
     super(GenericBinaryOperator, self).__init__(arguments=arguments, **kwargs)
     self._bool_value = True
@@ -184,42 +202,47 @@ class GenericBinaryOperator(BinaryOperator):
       bool: True if the values match according to the operator, False otherwise.
     """
 
-  def _GetValue(self, event, attribute_name):
-    """Retrieves the value of a specific event attribute.
+  def _GetValue(self, attribute_name, event, event_data, event_tag):
+    """Retrieves the value of a specific event, data or tag attribute.
 
     Args:
-      event (EventObject): event to retrieve the value from.
       attribute_name (str): name of the attribute to retrieve the value from.
+      event (EventObject): event to retrieve the value from.
+      event_data (EventData): event data to retrieve the value from.
+      event_tag (EventTag): event tag to retrieve the value from.
 
     Returns:
       object: attribute value or None if not available.
     """
-    if attribute_name in (
-        'message', 'source', 'source_long', 'source_short', 'sourcetype'):
+    if attribute_name in self._DEPRECATED_ATTRIBUTE_NAMES:
       logging.warning(
           'Expansion of {0:s} in event filter no longer supported'.format(
               attribute_name))
 
-    attribute_value = getattr(event, attribute_name, None)
-    if attribute_value:
-      if attribute_name == 'tag':
-        return attribute_value.labels
+    if attribute_name in self._EVENT_ATTRIBUTE_NAMES:
+      attribute_value = getattr(event, attribute_name, None)
+    elif attribute_name == 'tag':
+      attribute_value = getattr(event_tag, 'labels', None)
+    else:
+      attribute_value = getattr(event_data, attribute_name, None)
 
-      if isinstance(attribute_value, dict):
-        return helpers.DictObject(attribute_value)
+    if attribute_value and isinstance(attribute_value, dict):
+      return helpers.DictObject(attribute_value)
 
     return attribute_value
 
-  def _GetValueByPath(self, event, path):
-    """Retrieves the value of a specific event attribute given an object path.
+  def _GetValueByPath(self, path, event, event_data, event_tag):
+    """Retrieves the value of a specific event attribute given a specific path.
 
-    Given an object path such as ["pathspec", "inode"] it returns the value
-    event.pathspec.inode.
+    Given a path such as ["pathspec", "inode"] it returns the value
+    event_data.pathspec.inode.
 
     Args:
-      event (EventObject): event to retrieve the value from.
       path (list[str]): object path to traverse, that contains the attribute
           names.
+      event (EventObject): event to retrieve the value from.
+      event_data (EventData): event data to retrieve the value from.
+      event_tag (EventTag): event tag to retrieve the value from.
 
     Returns:
       object: attribute value or None if not available.
@@ -228,7 +251,8 @@ class GenericBinaryOperator(BinaryOperator):
       path = path.split(self._OBJECT_PATH_SEPARATOR)
 
     attribute_name = path[0].lower()
-    attribute_value = self._GetValue(event, attribute_name)
+    attribute_value = self._GetValue(
+        attribute_name, event, event_data, event_tag)
 
     if attribute_value is None:
       return None
@@ -236,24 +260,26 @@ class GenericBinaryOperator(BinaryOperator):
     if len(path) == 1 or isinstance(attribute_value, dict):
       return attribute_value
 
-    return self._GetValueByPath(attribute_value, path[1:])
+    return self._GetValueByPath(path[1:], None, attribute_value, None)
 
   def FlipBool(self):
     """Negates the internal boolean value attribute."""
     logging.debug('Negative matching.')
     self._bool_value = not self._bool_value
 
-  def Matches(self, event):
-    """Determines if the event matches the filter.
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
-      bool: True if the event matches the filter, False otherwise.
+      bool: True if the event, data and tag match the filter, False otherwise.
     """
-    object_path = self.left_operand.split('.')
-    value = self._GetValueByPath(event, object_path)
+    path = self.left_operand.split('.')
+    value = self._GetValueByPath(path, event, event_data, event_tag)
 
     if value and self._CompareValue(value, self.right_operand):
       return self._bool_value

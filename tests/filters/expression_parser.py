@@ -16,7 +16,7 @@ from plaso.lib import errors
 from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
-from tests.filters import test_lib
+from tests.containers import test_lib as containers_test_lib
 
 
 class PfilterFakeFormatter(formatters_interface.EventFormatter):
@@ -77,19 +77,38 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def _CheckFilterEvent(self, event, expression, expected_result):
-    """Check if the expression filters the event.
+  _TEST_EVENTS = [
+      {'data_type': 'Weirdo:Made up Source:Last Written',
+       'display_name': (
+           'unknown:/My Documents/goodfella/Documents/Hideout/myfile.txt'),
+       'filename': '/My Documents/goodfella/Documents/Hideout/myfile.txt',
+       'hostname': 'Agrabah',
+       'inode': 1245,
+       'mydict': {
+           'value': 134, 'another': 'value', 'A Key (with stuff)': 'Here'},
+       'parser': 'Weirdo',
+       'text': (
+           'User did a very bad thing, bad, bad thing that awoke Dr. Evil.'),
+       'text_short': 'This description is different than the long one.',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-11-18 01:15:43'),
+       'timestamp_desc': 'Last Written'}]
+
+  def _CheckIfExpressionMatches(
+      self, expression, event, event_data, event_tag, expected_result):
+    """Checks if the event filter expression matches the event values.
 
     Args:
-      event (EventObject): event.
       expression (str): event filter expression.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
       expected_result (bool): expected result.
     """
     parser = expression_parser.EventFilterExpressionParser()
     expression = parser.Parse(expression)
     event_filter = expression.Compile()
 
-    result = event_filter.Matches(event)
+    result = event_filter.Matches(event, event_data, event_tag)
     self.assertEqual(expected_result, result)
 
   def testAddBinaryOperator(self):
@@ -306,11 +325,11 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(errors.ParseError):
       parser.Parse('something == red')
 
-    # Can't start with AND.
+    # Test expression starting with AND.
     with self.assertRaises(errors.ParseError):
       parser.Parse('and something is \'Blue\'')
 
-    # Test negative filters.
+    # Test incorrect usage of NOT.
     with self.assertRaises(errors.ParseError):
       parser.Parse('attribute not == \'dancer\'')
 
@@ -322,6 +341,10 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
     with self.assertRaises(errors.ParseError):
       parser.Parse('attribute not > 23')
+
+    # Test double negative matching.
+    with self.assertRaises(errors.ParseError):
+      parser.Parse('filename not not contains \'GoodFella\'')
 
   def testParseWithBraces(self):
     """Tests the Parse function with braces."""
@@ -379,228 +402,74 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
   def testParseWithEvents(self):
     """Tests the Parse function with events."""
-    event = events.EventObject()
-    event.timestamp = timelib.Timestamp.CopyFromString(
-        '2015-11-18 01:15:43')
-    event.timestamp_desc = 'Last Written'
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
 
-    # TODO: refactor to event data
-    event.data_type = 'Weirdo:Made up Source:Last Written'
-    event.display_name = (
-        'unknown:/My Documents/goodfella/Documents/Hideout/myfile.txt')
-    event.filename = '/My Documents/goodfella/Documents/Hideout/myfile.txt'
-    event.hostname = 'Agrabah'
-    event.inode = 1245
-    event.mydict = {
-        'value': 134, 'another': 'value', 'A Key (with stuff)': 'Here'}
-    event.parser = 'Weirdo'
-    event.text = (
-        'User did a very bad thing, bad, bad thing that awoke Dr. Evil.')
-    event.text_short = (
-        'This description is different than the long one.')
+    event_tag = events.EventTag(comment='comment')
+    event_tag.AddLabel('browser_search')
 
-    event.tag = events.EventTag(comment='comment')
-    event.tag.AddLabel('browser_search')
-
-    # Series of tests.
-    query = 'filename contains \'GoodFella\''
-    self._CheckFilterEvent(event, query, True)
-
-    # Double negative matching -> should be the same
-    # as a positive one.
-    parser = expression_parser.EventFilterExpressionParser()
-
-    query = 'filename not not contains \'GoodFella\''
-    with self.assertRaises(errors.ParseError):
-      parser.Parse(query)
+    self._CheckIfExpressionMatches(
+        'filename contains \'GoodFella\'', event, event_data, event_tag, True)
 
     # Test date filtering.
-    query = 'date >= \'2015-11-18\''
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'date >= \'2015-11-18\'', event, event_data, event_tag, True)
 
-    query = 'date < \'2015-11-19\''
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'date < \'2015-11-19\'', event, event_data, event_tag, True)
 
-    # 2015-11-18T01:15:43
-    query = (
+    self._CheckIfExpressionMatches((
         'date < \'2015-11-18T01:15:44.341\' and '
-        'date > \'2015-11-18 01:15:42\'')
-    self._CheckFilterEvent(event, query, True)
+        'date > \'2015-11-18 01:15:42\''), event, event_data, event_tag, True)
 
-    query = 'date > \'2015-11-19\''
-    self._CheckFilterEvent(event, query, False)
+    self._CheckIfExpressionMatches(
+        'date > \'2015-11-19\'', event, event_data, event_tag, False)
 
     # Perform few attribute tests.
-    query = 'filename not contains \'sometext\''
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'filename not contains \'sometext\'', event, event_data, event_tag,
+        True)
 
-    query = (
+    self._CheckIfExpressionMatches((
         'timestamp_desc CONTAINS \'written\' AND date > \'2015-11-18\' AND '
-        'date < \'2015-11-25 12:56:21\'')
-    self._CheckFilterEvent(event, query, True)
+        'date < \'2015-11-25 12:56:21\''), event, event_data, event_tag, True)
 
-    query = 'parser is not \'Made\''
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'parser is not \'Made\'', event, event_data, event_tag, True)
 
-    query = 'parser is not \'Weirdo\''
-    self._CheckFilterEvent(event, query, False)
+    self._CheckIfExpressionMatches(
+        'parser is not \'Weirdo\'', event, event_data, event_tag, False)
 
-    query = 'mydict.value is 123'
-    self._CheckFilterEvent(event, query, False)
+    self._CheckIfExpressionMatches(
+        'mydict.value is 123', event, event_data, event_tag, False)
 
-    query = 'mydict.akeywithstuff contains "ere"'
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'mydict.akeywithstuff contains "ere"', event, event_data, event_tag,
+        True)
 
-    query = 'mydict.value is 134'
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'mydict.value is 134', event, event_data, event_tag, True)
 
-    query = 'mydict.value < 200'
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'mydict.value < 200', event, event_data, event_tag, True)
 
-    query = 'mydict.another contains "val"'
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'mydict.another contains "val"', event, event_data, event_tag, True)
 
-    query = 'mydict.notthere is 123'
-    self._CheckFilterEvent(event, query, False)
+    self._CheckIfExpressionMatches(
+        'mydict.notthere is 123', event, event_data, event_tag, False)
 
-    query = 'tag contains \'browser_search\''
-    self._CheckFilterEvent(event, query, True)
+    self._CheckIfExpressionMatches(
+        'tag contains \'browser_search\'', event, event_data, event_tag, True)
 
-    # Multiple attributes.
-    query = 'description_long regexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\''
-    self._CheckFilterEvent(event, query, False)
+    # Test multiple attributes.
+    self._CheckIfExpressionMatches(
+        'description_long regexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'',
+        event, event_data, event_tag, False)
 
-    query = 'text iregexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\''
-    self._CheckFilterEvent(event, query, True)
-
-
-# pylint: disable=missing-docstring
-
-
-class ObjectFilterTest(unittest.TestCase):
-
-  _OPERATOR_TESTS = {
-      filters.LessThanOperator: [
-          (True, ['size', 1000]),
-          (True, ['size', 11]),
-          (False, ['size', 10]),
-          (False, ['size', 0]),
-          (False, ['float', 1.0]),
-          (True, ['float', 123.9824])],
-      filters.LessEqualOperator: [
-          (True, ['size', 1000]),
-          (True, ['size', 11]),
-          (True, ['size', 10]),
-          (False, ['size', 9]),
-          (False, ['float', 1.0]),
-          (True, ['float', 123.9823])],
-      filters.GreaterThanOperator: [
-          (True, ['size', 1]),
-          (True, ['size', 9.23]),
-          (False, ['size', 10]),
-          (False, ['size', 1000]),
-          (True, ['float', 122]),
-          (True, ['float', 1.0])],
-      filters.GreaterEqualOperator: [
-          (False, ['size', 1000]),
-          (False, ['size', 11]),
-          (True, ['size', 10]),
-          (True, ['size', 0]),
-          # Floats work fine too.
-          (True, ['float', 122]),
-          (True, ['float', 123.9823]),
-          # Comparisons works with strings, although it might be a bit silly.
-          (True, ['name', 'aoot.ini'])],
-      filters.Contains: [
-          # Contains works with strings.
-          (True, ['name', 'boot.ini']),
-          (True, ['name', 'boot']),
-          (False, ['name', 'meh']),
-          # But not with numbers.
-          (False, ['name', 12]),
-          (False, ['size', 12])],
-      filters.EqualsOperator: [
-          (True, ['name', 'boot.ini']),
-          (False, ['name', 'foobar']),
-          (True, ['float', 123.9823])],
-      filters.NotEqualsOperator: [
-          (False, ['name', 'boot.ini']),
-          (True, ['name', 'foobar']),
-          (True, ['float', 25])],
-      filters.InSet: [
-          (True, ['name', ['boot.ini', 'autoexec.bat']]),
-          (True, ['name', 'boot.ini']),
-          (False, ['name', 'NOPE']),
-          # All values of attributes are within these.
-          (True, ['attributes', ['Archive', 'Backup', 'Nonexisting']]),
-          # Not all values of attributes are within these.
-          (False, ['attributes', ['Executable', 'Sparse']])],
-      filters.Regexp: [
-          (True, ['name', '^boot.ini$']),
-          (True, ['name', 'boot.ini']),
-          (False, ['name', '^$']),
-          (True, ['attributes', 'Archive']),
-          # One can regexp numbers if he's inclined to.
-          (True, ['size', 0])],
-      }
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self.file = test_lib.DummyFile()
-
-  def testBinaryOperators(self):
-    for operator, test_data in self._OPERATOR_TESTS.items():
-      for test_unit in test_data:
-        ops = operator(arguments=test_unit[1])
-        self.assertEqual(
-            test_unit[0], ops.Matches(self.file),
-            'test case {0!s} failed'.format(test_unit))
-        if hasattr(ops, 'FlipBool'):
-          ops.FlipBool()
-          self.assertEqual(not test_unit[0], ops.Matches(self.file))
-
-  def testGenericBinaryOperator(self):
-    # Test a common binary operator.
-    tbo = TestBinaryOperator(arguments=['whatever', 0])
-    self.assertEqual(tbo.right_operand, 0)
-    self.assertEqual(tbo.args[0], 'whatever')
-    tbo.Matches(test_lib.DummyObject('whatever', 'id'))
-    tbo.Matches(test_lib.DummyObject('whatever', 'id2'))
-    tbo.Matches(test_lib.DummyObject('whatever', 'bg'))
-    tbo.Matches(test_lib.DummyObject('whatever', 'bg2'))
-    self.assertListEqual(tbo.values, ['id', 'id2', 'bg', 'bg2'])
-
-  def testRegexpRaises(self):
-    with self.assertRaises(ValueError):
-      filters.Regexp(arguments=['name', 'I [dont compile'])
-
-  def testCompile(self):
-    obj = test_lib.DummyObject('something', 'Blue')
-    parser = expression_parser.EventFilterExpressionParser()
-    expression = parser.Parse('something == \'Blue\'')
-    event_filter = expression.Compile()
-    self.assertEqual(event_filter.Matches(obj), True)
-
-    expression = parser.Parse('something == \'Red\'')
-    event_filter = expression.Compile()
-    self.assertEqual(event_filter.Matches(obj), False)
-
-    expression = parser.Parse('something == "Red"')
-    event_filter = expression.Compile()
-    self.assertEqual(event_filter.Matches(obj), False)
-
-    obj = test_lib.DummyObject('size', 4)
-    expression = parser.Parse('size < 3')
-    event_filter = expression.Compile()
-    self.assertEqual(event_filter.Matches(obj), False)
-
-    expression = parser.Parse('size == 4')
-    event_filter = expression.Compile()
-    self.assertEqual(event_filter.Matches(obj), True)
-
-    expression = parser.Parse('something is \'Blue\' and size not contains 3')
-    event_filter = expression.Compile()
-    self.assertEqual(event_filter.Matches(obj), False)
+    self._CheckIfExpressionMatches(
+        'text iregexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'', event,
+        event_data, event_tag, True)
 
 
 if __name__ == "__main__":
