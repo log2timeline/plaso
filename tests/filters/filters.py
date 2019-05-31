@@ -6,44 +6,206 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.containers import events
 from plaso.filters import filters
+from plaso.lib import definitions
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 
 
-# TODO: add tests for Filter
+class FalseFilter(filters.Operator):
+  """A filter which always evaluates to False for testing."""
+
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
+
+    Args:
+      event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
+
+    Returns:
+      bool: True if the event, data and tag match the filter, False otherwise.
+    """
+    return False
+
+
+class TrueFilter(filters.Operator):
+  """A filter which always evaluates to True for testing."""
+
+  def Matches(self, event, event_data, event_tag):
+    """Determines if the event, data and tag match the filter.
+
+    Args:
+      event (EventObject): event to compare against the filter.
+      event_data (EventData): event data to compare against the filter.
+      event_tag (EventTag): event tag to compare against the filter.
+
+    Returns:
+      bool: True if the event, data and tag match the filter, False otherwise.
+    """
+    return True
+
+
+class FilterTest(shared_test_lib.BaseTestCase):
+  """Tests the filter."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    filter_object = filters.Filter()
+    self.assertIsNotNone(filter_object)
 
 
 class AndFilterTest(shared_test_lib.BaseTestCase):
   """Tests the boolean AND filter."""
 
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'test_value': 1,
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
+
   def testMatches(self):
     """Tests the Matches function."""
-    filter_object = filters.AndFilter()
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
 
-    result = filter_object.Matches(1)
+    false_filter_object = FalseFilter()
+    true_filter_object = TrueFilter()
+
+    filter_object = filters.AndFilter(arguments=[
+        true_filter_object, true_filter_object])
+
+    result = filter_object.Matches(event, event_data, None)
     self.assertTrue(result)
 
-    # TODO: add tests for filter with arguments.
+    filter_object = filters.AndFilter(arguments=[
+        false_filter_object, true_filter_object])
+
+    result = filter_object.Matches(event, event_data, None)
+    self.assertFalse(result)
 
 
 class OrFilterTest(shared_test_lib.BaseTestCase):
   """Tests the boolean OR filter."""
 
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'test_value': 1,
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
+
   def testMatches(self):
     """Tests the Matches function."""
-    filter_object = filters.OrFilter()
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
 
-    result = filter_object.Matches(1)
+    false_filter_object = FalseFilter()
+    true_filter_object = TrueFilter()
+
+    filter_object = filters.OrFilter(arguments=[
+        false_filter_object, true_filter_object])
+
+    result = filter_object.Matches(event, event_data, None)
     self.assertTrue(result)
 
-    # TODO: add tests for filter with arguments.
+    filter_object = filters.OrFilter(arguments=[
+        false_filter_object, false_filter_object])
+
+    result = filter_object.Matches(event, event_data, None)
+    self.assertFalse(result)
 
 
-# TODO: add tests for Operator
-# TODO: add tests for IdentityFilter
-# TODO: add tests for BinaryOperator
-# TODO: add tests for GenericBinaryOperator
+class IdentityFilterTest(shared_test_lib.BaseTestCase):
+  """Tests the filter which always evaluates to True."""
+
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'test_value': 1,
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
+
+  def testMatches(self):
+    """Tests the Matches function."""
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
+    filter_object = filters.IdentityFilter()
+
+    result = filter_object.Matches(event, event_data, None)
+    self.assertTrue(result)
+
+
+class BinaryOperatorTest(shared_test_lib.BaseTestCase):
+  """Tests the binary operators interface."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    filter_object = filters.BinaryOperator(arguments=['test_value', 1])
+    self.assertIsNotNone(filter_object)
+
+
+class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
+  """Tests the shared functionality for common binary operators."""
+
+  # pylint: disable=protected-access
+
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'test_value': 1,
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    filter_object = filters.GenericBinaryOperator(arguments=['test_value', 1])
+    self.assertIsNotNone(filter_object)
+
+  def testGetValue(self):
+    """Tests the _GetValue function."""
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
+    event_tag = events.EventTag(comment='comment')
+    event_tag.AddLabel('browser_search')
+
+    filter_object = filters.GenericBinaryOperator(arguments=['test_value', 1])
+
+    test_value = filter_object._GetValue(
+        'test_value', event, event_data, event_tag)
+    self.assertEqual(test_value, 1)
+
+    test_value = filter_object._GetValue(
+        'timestamp', event, event_data, event_tag)
+    self.assertEqual(test_value, 5134324321)
+
+    test_value = filter_object._GetValue('tag', event, event_data, event_tag)
+    self.assertEqual(test_value, ['browser_search'])
+
+  def testGetValueByPath(self):
+    """Tests the _GetValueByPath function."""
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
+    event_tag = events.EventTag(comment='comment')
+    event_tag.AddLabel('browser_search')
+
+    filter_object = filters.GenericBinaryOperator(arguments=['test_value', 1])
+
+    test_value = filter_object._GetValueByPath(
+        ['test_value'], event, event_data, event_tag)
+    self.assertEqual(test_value, 1)
+
+    test_value = filter_object._GetValueByPath(
+        ['timestamp'], event, event_data, event_tag)
+    self.assertEqual(test_value, 5134324321)
+
+    test_value = filter_object._GetValueByPath(
+        ['tag'], event, event_data, event_tag)
+    self.assertEqual(test_value, ['browser_search'])
+
+  # TODO: add tests for FlipBool function
 
 
 class EqualsOperatorTest(shared_test_lib.BaseTestCase):

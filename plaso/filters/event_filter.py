@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import copy
-
 from plaso.filters import expression_parser
 from plaso.filters import interface
 
@@ -44,17 +42,9 @@ class EventObjectFilter(interface.FilterObject):
       event_tag (EventTag): event tag.
 
     Returns:
-      bool: True if the event matches the filter.
+      bool: True if the event matches the filter, False otherwise.
     """
     if not self._event_filter:
       return True
 
-    # TODO: refactor to separately filter event, event data and event tag.
-    copy_of_event = copy.deepcopy(event)
-    for attribute_name, attribute_value in event_data.GetAttributes():
-      setattr(copy_of_event, attribute_name, attribute_value)
-
-    copy_of_event.tag = event_tag
-    # TODO: end refactor
-
-    return self._event_filter.Matches(copy_of_event)
+    return self._event_filter.Matches(event, event_data, event_tag)
