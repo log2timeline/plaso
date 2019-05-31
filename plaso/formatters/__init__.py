@@ -11,6 +11,7 @@ from plaso.formatters import apache_access
 from plaso.formatters import appcompatcache
 from plaso.formatters import appusage
 from plaso.formatters import asl
+from plaso.formatters import bagmru
 from plaso.formatters import bash_history
 from plaso.formatters import bencode_parser
 from plaso.formatters import bsm
@@ -46,14 +47,17 @@ from plaso.formatters import mac_appfirewall
 from plaso.formatters import mac_document_versions
 from plaso.formatters import mac_keychain
 from plaso.formatters import mac_knowledgec
+from plaso.formatters import mac_notes
 from plaso.formatters import mac_notificationcenter
 from plaso.formatters import mac_securityd
 from plaso.formatters import mac_wifi
 from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
+from plaso.formatters import mrulistex
 from plaso.formatters import msie_webcache
 from plaso.formatters import msiecf
+from plaso.formatters import network_drives
 from plaso.formatters import officemru
 from plaso.formatters import olecf
 from plaso.formatters import opera

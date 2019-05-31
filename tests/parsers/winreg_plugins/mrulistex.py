@@ -120,6 +120,7 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulistex')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
@@ -180,6 +181,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulistex')
     self.CheckTimestamp(event.timestamp, '2011-08-28 22:48:28.159309')
 
     expected_message = (
@@ -196,6 +198,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     # A shell item event.
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:shell_item:file_entry')
     self.CheckTimestamp(event.timestamp, '2012-03-08 22:16:02.000000')
 
     expected_message = (
@@ -256,12 +259,30 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulistex')
     self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:39.113742')
 
     expected_message = (
         '[{0:s}] '
         'Index: 1 [MRU Value 17]: Path: The SHIELD, '
         'Shell item: [The SHIELD.lnk] '
+        'Index: 2 [MRU Value 18]: '
+        'Path: captain_america_shield_by_almogrem-d48x9x8.jpg, '
+        'Shell item: [captain_america_shield_by_almogrem-d48x9x8.lnk] '
+        'Index: 3 [MRU Value 16]: Path: captain-america-shield-front.jpg, '
+        'Shell item: [captain-america-shield-front.lnk] '
+        'Index: 4 [MRU Value 12]: Path: Leadership, '
+        'Shell item: [Leadership.lnk] '
+        'Index: 5 [MRU Value 15]: Path: followership.pdf, '
+        'Shell item: [followership.lnk] '
+        'Index: 6 [MRU Value 14]: Path: leaderqualities.pdf, '
+        'Shell item: [leaderqualities.lnk] '
+        'Index: 7 [MRU Value 13]: Path: htlhtl.pdf, '
+        'Shell item: [htlhtl.lnk] '
+        'Index: 8 [MRU Value 8]: Path: StarFury, '
+        'Shell item: [StarFury (2).lnk] '
+        'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, '
+        'Shell item: [Earth_SA-26_Thunderbolt.lnk] '
         'Index: 10 [MRU Value 11]: Path: 5031RR_BalancedLeadership.pdf, '
         'Shell item: [5031RR_BalancedLeadership.lnk] '
         'Index: 11 [MRU Value 10]: '
@@ -282,24 +303,7 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
         'Index: 18 [MRU Value 1]: Path: Downloads, '
         'Shell item: [Downloads.lnk] '
         'Index: 19 [MRU Value 0]: Path: wallpaper_medium.jpg, '
-        'Shell item: [wallpaper_medium.lnk] '
-        'Index: 2 [MRU Value 18]: '
-        'Path: captain_america_shield_by_almogrem-d48x9x8.jpg, '
-        'Shell item: [captain_america_shield_by_almogrem-d48x9x8.lnk] '
-        'Index: 3 [MRU Value 16]: Path: captain-america-shield-front.jpg, '
-        'Shell item: [captain-america-shield-front.lnk] '
-        'Index: 4 [MRU Value 12]: Path: Leadership, '
-        'Shell item: [Leadership.lnk] '
-        'Index: 5 [MRU Value 15]: Path: followership.pdf, '
-        'Shell item: [followership.lnk] '
-        'Index: 6 [MRU Value 14]: Path: leaderqualities.pdf, '
-        'Shell item: [leaderqualities.lnk] '
-        'Index: 7 [MRU Value 13]: Path: htlhtl.pdf, '
-        'Shell item: [htlhtl.lnk] '
-        'Index: 8 [MRU Value 8]: Path: StarFury, '
-        'Shell item: [StarFury (2).lnk] '
-        'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, '
-        'Shell item: [Earth_SA-26_Thunderbolt.lnk]').format(key_path)
+        'Shell item: [wallpaper_medium.lnk]').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -348,6 +352,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulistex')
     self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:38.966290')
 
     expected_message = (
