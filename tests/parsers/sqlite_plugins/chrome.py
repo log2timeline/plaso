@@ -269,7 +269,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59_added-fake-column'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 2 events (1 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 2)
 
