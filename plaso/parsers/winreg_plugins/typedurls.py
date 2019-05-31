@@ -5,11 +5,28 @@ from __future__ import unicode_literals
 
 import re
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
+
+
+class TypedURLsEventData(events.EventData):
+  """Typed URLs event data attribute container.
+
+  Attributes:
+    entries (str): typed URLs or paths entries.
+    key_path (str): Windows Registry key path.
+  """
+
+  DATA_TYPE = 'windows:registry:typedurls'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(TypedURLsEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.entries = None
+    self.key_path = None
 
 
 class TypedURLsPlugin(interface.WindowsRegistryPlugin):
@@ -27,7 +44,6 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
           'Explorer\\TypedPaths')])
 
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
-  _SOURCE_APPEND = ': Typed URLs'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -37,23 +53,24 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = {}
-    for value in registry_key.GetValues():
+    entries = []
+    for registry_value in registry_key.GetValues():
+      value_name = registry_value.name
+
       # Ignore any value not in the form: 'url[0-9]+'.
-      if not value.name or not self._RE_VALUE_NAME.search(value.name):
+      if not value_name or not self._RE_VALUE_NAME.search(value_name):
         continue
 
       # Ignore any value that is empty or that does not contain a string.
-      if not value.data or not value.DataIsString():
+      if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      values_dict[value.name] = value.GetDataAsObject()
+      value_string = registry_value.GetDataAsObject()
+      entries.append('{0:s}: {1:s}'.format(value_name, value_string))
 
-    event_data = windows_events.WindowsRegistryEventData()
+    event_data = TypedURLsEventData()
+    event_data.entries = ' '.join(entries) or None
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
-    event_data.source_append = self._SOURCE_APPEND
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
