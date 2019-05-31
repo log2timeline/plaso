@@ -9,7 +9,6 @@ import unittest
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import mac_knowledgec
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
@@ -32,7 +31,7 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event.bundle_identifier, 'com.apple.Installer-Progress')
 
     expected_message = (
-      'Application com.apple.Installer-Progress executed for 1 seconds')
+        'Application com.apple.Installer-Progress executed for 1 seconds')
     expected_short_message = 'Application com.apple.Installer-Progress'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
