@@ -29,7 +29,6 @@ class UserAssistWindowsRegistryEventData(events.EventData):
     entry_index (int): entry index.
     key_path (str): Windows Registry key path.
     number_of_executions (int): nubmer of executions.
-    regvalue (dict[str, str]): UserAssist values.
     value_name (str): name of the Windows Registry value.
   """
 
@@ -66,7 +65,13 @@ class UserAssistWindowsRegistryKeyPathFilter(
 
 
 class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
-  """Plugin that parses an UserAssist key."""
+  """Plugin that parses an UserAssist key.
+
+  Also see:
+    http://blog.didierstevens.com/programs/userassist/
+    https://code.google.com/p/winreg-kb/wiki/UserAssistKeys
+    http://intotheboxes.files.wordpress.com/2010/04/intotheboxes_2010_q1.pdf
+  """
 
   NAME = 'userassist'
   DESCRIPTION = 'Parser for User Assist Registry data.'
@@ -96,12 +101,6 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
           '0D6D4F41-2994-4BA0-8FEF-620E43CD2812'),
       UserAssistWindowsRegistryKeyPathFilter(
           'BCB48336-4DDD-48FF-BB0B-D3190DACB3E2')])
-
-  URLS = [
-      'http://blog.didierstevens.com/programs/userassist/',
-      'https://code.google.com/p/winreg-kb/wiki/UserAssistKeys',
-      'http://intotheboxes.files.wordpress.com/2010/04'
-      '/intotheboxes_2010_q1.pdf']
 
   _DEFINITION_FILE = 'userassist.yaml'
 
