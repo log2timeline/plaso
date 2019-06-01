@@ -217,6 +217,10 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   def _GetValuesFromKey(self, registry_key):
     """Retrieves the values from a Windows Registry key.
 
+    Binary data values are represented as "(binary)".
+
+    An empty multi value string value is represented as "[]".
+
     Args:
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
@@ -227,13 +231,16 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     values_dict = {}
     for registry_value in registry_key.GetValues():
       value_name = registry_value.name or '(default)'
-      value_object = registry_value.GetDataAsObject()
 
+      value_object = registry_value.GetDataAsObject()
       if registry_value.DataIsMultiString():
         if value_object:
           value_object = ''.join(value_object)
         else:
           value_object = '[]'
+
+      elif registry_value.DataIsBinaryData():
+        value_object = '(binary)'
 
       values_dict[value_name] = value_object
 

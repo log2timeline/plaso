@@ -46,30 +46,6 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
     self.uuid = '{0!s}'.format(uuid)
 
 
-class WindowsRegistryInstallationEventData(events.EventData):
-  """Windows installation event data attribute container.
-
-  Attributes:
-    key_path (str): Windows Registry key path.
-    owner (str): owner.
-    product_name (str): product name.
-    service_pack (str): service pack.
-    version (str): version.
-  """
-
-  DATA_TYPE = 'windows:registry:installation'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(WindowsRegistryInstallationEventData, self).__init__(
-        data_type=self.DATA_TYPE)
-    self.key_path = None
-    self.owner = None
-    self.product_name = None
-    self.service_pack = None
-    self.version = None
-
-
 class WindowsRegistryEventData(events.EventData):
   """Windows Registry event data attribute container.
 
