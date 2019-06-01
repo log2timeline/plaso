@@ -9,14 +9,12 @@ import unittest
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import mac_notificationcenter
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacOS Notification Center plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['mac_notificationcenter.db'])
   def testProcess(self):
     """Tests the Process function on a MacOS Notification Center db."""
 

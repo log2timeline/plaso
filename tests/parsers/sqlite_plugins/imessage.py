@@ -10,14 +10,12 @@ from plaso.formatters import imessage as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import imessage
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class IMessageTest(test_lib.SQLitePluginTestCase):
   """Tests for the iMessage database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['imessage_chat.db'])
   def testProcess(self):
     """Test the Process function on a iMessage chat.db file."""
     plugin = imessage.IMessagePlugin()

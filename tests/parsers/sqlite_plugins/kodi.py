@@ -10,14 +10,12 @@ from plaso.formatters import kodi as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import kodi
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class KodiVideosTest(test_lib.SQLitePluginTestCase):
   """Tests for the Kodi videos database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['MyVideos107.db'])
   def testProcess(self):
     """Test the Process function on a Kodi Videos database."""
     plugin = kodi.KodiMyVideosPlugin()

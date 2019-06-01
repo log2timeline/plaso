@@ -30,6 +30,10 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
 
     Returns:
       FakeStorageWriter: storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
