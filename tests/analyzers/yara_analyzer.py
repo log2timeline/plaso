@@ -12,41 +12,51 @@ from plaso.analyzers import yara_analyzer
 from tests import test_lib as shared_test_lib
 
 
-@shared_test_lib.skipUnlessHasTestFile(['yara.rules'])
 class YaraAnalyzerTest(shared_test_lib.BaseTestCase):
   """Test the Yara analyzer."""
 
   # pylint: disable=protected-access
 
-  _RULE_FILE = ['yara.rules']
+  def _ReadTestRuleFile(self):
+    """Reads the test Yara rules file.
+
+    Returns:
+      str: contents of the test Yara rules file.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
+    """
+    yara_rules_path = self._GetTestFilePath(['yara.rules'])
+    self._SkipIfPathNotExists(yara_rules_path)
+
+    with open(yara_rules_path, 'r') as file_object:
+      return file_object.read()
 
   def testFileRuleParse(self):
     """Tests that the Yara analyzer can read rules."""
+    test_yara_rules = self._ReadTestRuleFile()
+
     analyzer = yara_analyzer.YaraAnalyzer()
-    rule_path = self._GetTestFilePath(self._RULE_FILE)
+    analyzer.SetRules(test_yara_rules)
 
-    with open(rule_path, 'r') as rules_file:
-      rules = rules_file.read()
-
-    analyzer.SetRules(rules)
     self.assertIsNotNone(analyzer._rules)
 
-  @shared_test_lib.skipUnlessHasTestFile(['test_pe.exe'])
   def testMatchFile(self):
     """Tests that the Yara analyzer correctly matches a file."""
+    test_yara_rules = self._ReadTestRuleFile()
+
+    test_file_path = self._GetTestFilePath(['test_pe.exe'])
+    self._SkipIfPathNotExists(test_file_path)
+
     analyzer = yara_analyzer.YaraAnalyzer()
-    rule_path = self._GetTestFilePath(self._RULE_FILE)
+    analyzer.SetRules(test_yara_rules)
 
-    with open(rule_path, 'r') as rule_file:
-      rule_string = rule_file.read()
+    with open(test_file_path, 'rb') as file_object:
+      test_data = file_object.read()
 
-    analyzer.SetRules(rule_string)
-    target_path = self._GetTestFilePath(['test_pe.exe'])
+    analyzer.Analyze(test_data)
 
-    with open(target_path, 'rb') as target_file:
-      target_data = target_file.read()
-
-    analyzer.Analyze(target_data)
     results = analyzer.GetResults()
     self.assertIsInstance(results, list)
 

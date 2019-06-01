@@ -47,6 +47,10 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
       path_segments (list[str]): components of a path to a test file, relative
           to the test_data directory.
       digest (str): digest the hasher should return.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     file_entry = self._GetTestFileEntry(path_segments)
     self._AssertFileEntryStringDigestMatch(hasher, file_entry, digest)
