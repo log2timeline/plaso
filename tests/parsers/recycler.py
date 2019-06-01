@@ -10,14 +10,12 @@ from plaso.formatters import recycler as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import recycler
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinRecycleBinParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycle Bin parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['$II3DF3L.zip'])
   def testParseVista(self):
     """Tests the Parse function on a Windows Vista RecycleBin file."""
     parser = recycler.WinRecycleBinParser()
@@ -41,7 +39,6 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     expected_short_message = 'Deleted file: {0:s}'.format(expected_filename)
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['$I103S5F.jpg'])
   def testParseWindows10(self):
     """Tests the Parse function on a Windows 10 RecycleBin file."""
     parser = recycler.WinRecycleBinParser()
@@ -69,7 +66,6 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycler INFO2 parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['INFO2'])
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
     parser = recycler.WinRecyclerInfo2Parser()

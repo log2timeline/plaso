@@ -8,17 +8,12 @@ import unittest
 
 from plaso.parsers import docker
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class DockerJSONUnitTest(test_lib.ParserTestCase):
   """Tests for the Docker JSON parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'docker', 'containers',
-      'e7d0b7ea5ccf08366e2b0c8afa2318674e8aefe802315378125d2bb83fe3110c',
-      'container-json.log'])
   def testParseContainerLog(self):
     """Tests the _ParseContainerLogJSON function."""
     container_identifier = (
@@ -70,10 +65,6 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
       self._TestGetMessageStrings(
           event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'docker', 'containers',
-      'e7d0b7ea5ccf08366e2b0c8afa2318674e8aefe802315378125d2bb83fe3110c',
-      'container-json.log'])
   def testParseContainerConfig(self):
     """Tests the _ParseContainerConfigJSON function."""
     container_identifier = (
@@ -105,10 +96,6 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
     self.assertEqual(event.container_id, container_identifier)
     self.assertEqual(event.container_name, 'e7d0b7ea5ccf')
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'docker', 'graph',
-      '3c9a9d7cc6a235eb2de58ca9ef3551c67ae42a991933ba4958d207b29142902b',
-      'json'])
   def testParseLayerConfig(self):
     """Tests the _ParseLayerConfigJSON function."""
     layer_identifier = (

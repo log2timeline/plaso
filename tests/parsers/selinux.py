@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import selinux as _  # pylint: disable=unused-import
 from plaso.parsers import selinux
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class SELinuxUnitTest(test_lib.ParserTestCase):
   """Tests for the selinux log file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['selinux.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = selinux.SELinuxParser()

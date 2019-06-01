@@ -11,7 +11,6 @@ from plaso.parsers import plist
 # Register all plugins.
 from plaso.parsers import plist_plugins  # pylint: disable=unused-import
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -30,7 +29,6 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertNotEqual(parser._plugins, [])
     self.assertEqual(len(parser._plugins), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['plist_binary'])
   def testParse(self):
     """Tests the Parse function."""
     parser = plist.PlistParser()
@@ -69,7 +67,6 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertTrue(expected_keys == set(keys))
     self.assertEqual(3, len(set(keys)))
 
-  @shared_test_lib.skipUnlessHasTestFile(['truncated.plist'])
   def testParseWithTruncatedFile(self):
     """Tests the Parse function on a truncated plist file."""
     parser = plist.PlistParser()

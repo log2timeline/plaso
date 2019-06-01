@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import sophos_av as _  # pylint: disable=unused-import
 from plaso.parsers import sophos_av
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class SophosAVLogParserTest(test_lib.ParserTestCase):
   """Tests for the Sophos Anti-Virus log (SAV.txt) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['sav.txt'])
   def testParse(self):
     """Tests the Parse function."""
     parser = sophos_av.SophosAVLogParser()

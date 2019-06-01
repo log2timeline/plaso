@@ -15,7 +15,6 @@ from plaso.parsers import winreg
 # Register all plugins.
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -53,7 +52,6 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     self.assertNotEqual(parser._plugins, [])
     self.assertEqual(len(parser._plugins), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
     parser = winreg.WinRegistryParser()
@@ -68,7 +66,6 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(parser_chains[expected_parser_chain], 14)
 
-  @shared_test_lib.skipUnlessHasTestFile(['ntuser.dat.LOG'])
   def testParseNoRootKey(self):
     """Test the parse function on a Registry file with no root key."""
     parser = winreg.WinRegistryParser()
@@ -77,7 +74,6 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
 
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
     parser = winreg.WinRegistryParser()
@@ -108,10 +104,11 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser_chain = self._PluginNameToParserChain('windows_services')
     self.assertEqual(parser_chains.get(parser_chain, 0), 831)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testParseSystemWithArtifactFilters(self):
     """Tests the Parse function on a SYSTEM file with artifact filters."""
+    artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(artifacts_path)
+
     parser = winreg.WinRegistryParser()
     knowledge_base = knowledge_base_engine.KnowledgeBase()
 
@@ -119,7 +116,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
-    registry.ReadFromDirectory(reader, self._GetTestFilePath(['artifacts']))
+    registry.ReadFromDirectory(reader, artifacts_path)
 
     artifacts_filters_helper = (
         artifact_filters.ArtifactDefinitionsFiltersHelper(

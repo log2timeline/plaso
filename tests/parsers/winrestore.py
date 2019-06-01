@@ -10,14 +10,12 @@ from plaso.formatters import winrestore as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import winrestore
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class RestorePointLogParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Restore Point (rp.log) file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['rp.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = winrestore.RestorePointLogParser()

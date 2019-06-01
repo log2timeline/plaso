@@ -10,14 +10,12 @@ from plaso.formatters import winlnk as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import winlnk
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinLnkParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Shortcut (LNK) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['example.lnk'])
   def testParse(self):
     """Tests the Parse function."""
     parser = winlnk.WinLnkParser()
@@ -99,7 +97,6 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.uuid, expected_uuid)
     self.assertEqual(event.mac_address, '00:1d:09:fa:5a:1c')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NeroInfoTool.lnk'])
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
     parser = winlnk.WinLnkParser()

@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import utmp as _  # pylint: disable=unused-import
 from plaso.parsers import utmp
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class UtmpParserTest(test_lib.ParserTestCase):
   """The unit test for utmp parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['utmp'])
   def testParseUtmpFile(self):
     """Tests the Parse function on a utmp file."""
     parser = utmp.UtmpParser()
@@ -88,7 +86,6 @@ class UtmpParserTest(test_lib.ParserTestCase):
         'Status: USER_PROCESS')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['wtmp.1'])
   def testParseWtmpFile(self):
     """Tests the Parse function on a wtmp file."""
     parser = utmp.UtmpParser()
