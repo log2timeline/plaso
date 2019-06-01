@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import softwareupdate
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
 class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
   """Tests for the SoftwareUpdate plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['com.apple.SoftwareUpdate.plist'])
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'com.apple.SoftwareUpdate.plist'

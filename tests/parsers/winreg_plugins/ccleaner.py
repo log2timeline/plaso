@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import ccleaner
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -27,7 +26,6 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-CCLEANER.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     plugin = ccleaner.CCleanerPlugin()

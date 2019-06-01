@@ -11,7 +11,6 @@ from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import officemru
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -64,7 +63,6 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
