@@ -26,8 +26,6 @@ from plaso.lib import errors
 
 def Main():
   """The main function."""
-  multiprocessing.freeze_support()
-
   tool = psteal_tool.PstealTool()
   if not tool.ParseArguments():
     return False
@@ -90,6 +88,10 @@ def Main():
 
 
 if __name__ == '__main__':
+  # For PyInstaller sake we need to define this directly after "__main__".
+  # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+  multiprocessing.freeze_support()
+
   if not Main():
     sys.exit(1)
   else:
