@@ -16,7 +16,6 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-
 import re
 import os
 import sys
@@ -26,8 +25,6 @@ from mock import Mock as MagicMock
 from sphinx.ext import apidoc
 
 from docutils import nodes, transforms
-# from recommonmark.parser import CommonMarkParser
-# from recommonmark.transform import AutoStructify
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
