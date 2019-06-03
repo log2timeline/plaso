@@ -86,6 +86,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mstsc:connection')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
@@ -97,12 +98,11 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
-    expected_message = (
-        '[{0:s}] '
-        'myserver.com: DOMAIN\\username').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+    self.assertEqual(event.data_type, 'windows:registry:key_value')
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    expected_message = '[{0:s}] '.format(key_path)
+    self._TestGetMessageStrings(event, expected_message, expected_message)
 
 
 class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
@@ -160,6 +160,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mstsc:mru')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
