@@ -9,7 +9,7 @@ from plaso.parsers import plugins
 
 
 class BaseWindowsRegistryKeyFilter(object):
-  """Class that defines the Windows Registry key filter interface."""
+  """The Windows Registry key filter interface."""
 
   @property
   def key_paths(self):
@@ -213,6 +213,31 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   # URLS should contain a list of URLs with additional information about this
   # key or value.
   URLS = []
+
+  def _GetValuesFromKey(self, registry_key):
+    """Retrieves the values from a Windows Registry key.
+
+    Args:
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+
+    Returns:
+      dict[str, object]: names and data of the values in the key. The default
+          value is named "(default)".
+    """
+    values_dict = {}
+    for registry_value in registry_key.GetValues():
+      value_name = registry_value.name or '(default)'
+      value_object = registry_value.GetDataAsObject()
+
+      if registry_value.DataIsMultiString():
+        if value_object:
+          value_object = ''.join(value_object)
+        else:
+          value_object = '[]'
+
+      values_dict[value_name] = value_object
+
+    return values_dict
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod

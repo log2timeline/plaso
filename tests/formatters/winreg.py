@@ -25,7 +25,7 @@ class WinRegistryGenericFormatterTest(test_lib.EventFormatterTestCase):
 
     expected_attribute_names = [
         'key_path',
-        'text']
+        'values']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
