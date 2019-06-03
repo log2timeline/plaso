@@ -1,18 +1,35 @@
 # -*- coding: utf-8 -*-
-"""This file contains a Windows Registry plugin for WinRAR Registry key."""
+"""This file contains a WinRAR history Windows Registry plugin."""
 
 from __future__ import unicode_literals
 
 import re
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
+class WinRARHistoryEventData(events.EventData):
+  """WinRAR history event data attribute container.
+
+  Attributes:
+    entries (str): archive history entries.
+    key_path (str): Windows Registry key path.
+  """
+
+  DATA_TYPE = 'winrar:history'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(WinRARHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.entries = None
+    self.key_path = None
+
+
+class WinRARHistoryPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing WinRAR History keys."""
 
   NAME = 'winrar_mru'
@@ -27,7 +44,6 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
           'HKEY_CURRENT_USER\\Software\\WinRAR\\DialogEditHistory\\ExtrPath')])
 
   _RE_VALUE_NAME = re.compile(r'^[0-9]+$', re.I)
-  _SOURCE_APPEND = ': WinRAR History'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -37,7 +53,7 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = {}
+    entries = []
     for registry_value in registry_key.GetValues():
       # Ignore any value not in the form: '[0-9]+'.
       if (not registry_value.name or
@@ -48,17 +64,16 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
       if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      values_dict[registry_value.name] = registry_value.GetDataAsObject()
+      value_string = registry_value.GetDataAsObject()
+      entries.append('{0:s}: {1:s}'.format(registry_value.name, value_string))
 
-    event_data = windows_events.WindowsRegistryEventData()
+    event_data = WinRARHistoryEventData()
+    event_data.entries = ' '.join(entries) or None
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
-    event_data.source_append = self._SOURCE_APPEND
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(WinRarHistoryPlugin)
+winreg.WinRegistryParser.RegisterPlugin(WinRARHistoryPlugin)
