@@ -1,7 +1,5 @@
 # Using log2timeline.py
 
-**This page is still a work in progress and will most likely change significantly**
-
 # Usage
 
 **log2timeline** is a command line tool to extract [events](Scribbles-about-events.md#what-is-an-event) from individual files, recursing a directory (e.g. mount point) or storage media image or device. log2timeline creates a plaso storage file which can be analyzed with the pinfo and psort tools.

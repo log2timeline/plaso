@@ -2,7 +2,7 @@
 
 ### How to get started
 
-First determine which version of plaso is must suitable to your needs, for more information see [Releases and roadmap](Releases-and-roadmap.md)
+First determine which version of Plaso is must suitable to your needs, for more information see [Releases and roadmap](Releases-and-roadmap.md)
 
 ### Installing the packaged release
 
@@ -20,7 +20,7 @@ If you run into problems installing, check out the [installation troubleshooting
 
 Please report all discovered bugs on the [issue tracker](https://github.com/log2timeline/plaso/issues).
 
-To follow announcements from the plaso team or send in generic inquiries or discuss the tool:
+To follow announcements from the Plaso team or send in generic inquiries or discuss the tool:
 
 * subscribe to the [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss) mailing list.
 * join the plaso channel part of the [open-source-dfir Slack community](https://open-source-dfir.slack.com/), more information can be found [here](https://github.com/open-source-dfir/slack).

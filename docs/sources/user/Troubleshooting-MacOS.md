@@ -1,8 +1,8 @@
 # Troubleshooting MacOS
 
-## How do I remove a plaso installation
+## How do I remove a Plaso installation
 
-If you installed plaso via the installer script in the .dmg, the Mac OS X package manager can be used to remove a plaso installation. For more information about using the Mac OS X package manager see:
+If you installed Plaso via the installer script in the .dmg, the Mac OS X package manager can be used to remove a Plaso installation. For more information about using the Mac OS X package manager see:
 
 * http://superuser.com/questions/36567/how-do-i-uninstall-any-apple-pkg-package-file
 

@@ -4,6 +4,6 @@
 
 To determine the origin of an installed package
 
-```
+```bash
 apt-cache showpkg <package name>
 ```

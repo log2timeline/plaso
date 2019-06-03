@@ -51,14 +51,14 @@ First start the extraction with log2timeline. Should your evidence files/images
 should be present on the host, and not in the container (which is the default
 scenario), you'll have to set up a bridge between the two.
 For example, if you store your current evidences to analyse in
-/data/evidences/, you could tell log2timeline to generate the plaso storage
+/data/evidences/, you could tell log2timeline to generate the Plaso storage
 file as /data/evidences.plaso this way:
 
 ```
 $ docker run -v /data/:/data log2timeline/plaso log2timeline /data/evidences.plaso /data/evidences
 ```
 
-This way your plaso file will also be stored on the host filesystem.
+This way your Plaso file will also be stored on the host filesystem.
 
 Next step is to run analysis with psort:
 

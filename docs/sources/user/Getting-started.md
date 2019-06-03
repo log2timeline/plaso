@@ -2,9 +2,9 @@
 
 Getting started with Plaso can be challenging at first. This page describes some of the steps we recommend taking.
 
-## I just want to run plaso log2timeline
+## I just want to run Plaso log2timeline
 
-If you just want to run plaso we recommend to use a [packaged release](Releases-and-roadmap.md) unless you are the adventurous type.
+If you just want to run Plaso we recommend to use a [packaged release](Releases-and-roadmap.md) unless you are the adventurous type.
 
 To get started have a look at the [User Guide](Users-Guide.md).
 
@@ -12,7 +12,7 @@ If you have questions, suggestions and want to discuss them join the general dis
 
 ## I want to develop Plaso 
 
-There are various ways to develop with plaso. We expect the more common use case that you would like to extend plaso by adding a parser or plugin or equivalent.
+There are various ways to develop with Plaso. We expect the more common use case that you would like to extend Plaso by adding a parser or plugin or equivalent.
 
 For this you'll need to use a [development release](Releases-and-roadmap.md).
 
