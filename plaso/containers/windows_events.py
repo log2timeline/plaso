@@ -72,30 +72,6 @@ class WindowsRegistryEventData(events.EventData):
     self.values = None
 
 
-class WindowsRegistryListEventData(events.EventData):
-  """Windows Registry list event data attribute container.
-
-  Windows Registry list event data is used to store a MRU.
-
-  Attributes:
-    key_path (str): Windows Registry key path.
-    known_folder_identifier (str): known folder identifier.
-    list_name (str): name of the list.
-    list_values (str): values in the list.
-    value_name (str): Windows Registry value name.
-  """
-  DATA_TYPE = 'windows:registry:list'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(WindowsRegistryListEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.key_path = None
-    self.known_folder_identifier = None
-    self.list_name = None
-    self.list_values = None
-    self.value_name = None
-
-
 class WindowsVolumeEventData(events.EventData):
   """Windows volume event data attribute container.
 

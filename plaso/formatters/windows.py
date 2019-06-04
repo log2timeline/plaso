@@ -26,21 +26,6 @@ class WindowsDistributedLinkTrackingCreationEventFormatter(
   SOURCE_SHORT = 'LOG'
 
 
-class WindowsRegistryListEventFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Windows list event e.g. MRU or Jump list."""
-
-  DATA_TYPE = 'windows:registry:list'
-
-  FORMAT_STRING_PIECES = [
-      'Key: {key_path}',
-      'Value: {value_name}',
-      'List: {list_name}',
-      '[{list_values}]']
-
-  SOURCE_LONG = 'System'
-  SOURCE_SHORT = 'LOG'
-
-
 class WindowsRegistryNetworkEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows NetworkList event formatter."""
 
@@ -77,6 +62,5 @@ class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
 
 manager.FormattersManager.RegisterFormatters([
     WindowsDistributedLinkTrackingCreationEventFormatter,
-    WindowsRegistryListEventFormatter,
     WindowsRegistryNetworkEventFormatter,
     WindowsVolumeCreationEventFormatter])
