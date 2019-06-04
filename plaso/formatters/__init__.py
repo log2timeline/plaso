@@ -74,6 +74,7 @@ from plaso.formatters import sam_users
 from plaso.formatters import santa
 from plaso.formatters import sccm
 from plaso.formatters import selinux
+from plaso.formatters import services
 from plaso.formatters import shell_items
 from plaso.formatters import shutdown
 from plaso.formatters import skydrivelog
@@ -104,7 +105,6 @@ from plaso.formatters import winjob
 from plaso.formatters import winlnk
 from plaso.formatters import winprefetch
 from plaso.formatters import winreg
-from plaso.formatters import winregservice
 from plaso.formatters import winrestore
 from plaso.formatters import xchatlog
 from plaso.formatters import xchatscrollback
