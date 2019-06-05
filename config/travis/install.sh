@@ -28,29 +28,7 @@ RPM_PYTHON3_TEST_DEPENDENCIES="python3-mock python3-pbr python3-setuptools";
 # Exit on error.
 set -e;
 
-if test ${TRAVIS_OS_NAME} = "osx";
-then
-	git clone https://github.com/log2timeline/l2tbinaries.git -b dev;
-
-	mv l2tbinaries ../;
-
-	for PACKAGE in ${L2TBINARIES_DEPENDENCIES};
-	do
-		echo "Installing: ${PACKAGE}";
-		sudo /usr/bin/hdiutil attach ../l2tbinaries/macos/${PACKAGE}-*.dmg;
-		sudo /usr/sbin/installer -target / -pkg /Volumes/${PACKAGE}-*.pkg/${PACKAGE}-*.pkg;
-		sudo /usr/bin/hdiutil detach /Volumes/${PACKAGE}-*.pkg
-	done
-
-	for PACKAGE in ${L2TBINARIES_TEST_DEPENDENCIES};
-	do
-		echo "Installing: ${PACKAGE}";
-		sudo /usr/bin/hdiutil attach ../l2tbinaries/macos/${PACKAGE}-*.dmg;
-		sudo /usr/sbin/installer -target / -pkg /Volumes/${PACKAGE}-*.pkg/${PACKAGE}-*.pkg;
-		sudo /usr/bin/hdiutil detach /Volumes/${PACKAGE}-*.pkg
-	done
-
-elif test -n "${FEDORA_VERSION}";
+if test -n "${FEDORA_VERSION}";
 then
 	CONTAINER_NAME="fedora${FEDORA_VERSION}";
 
@@ -134,14 +112,39 @@ then
 		then
 			DPKG_PACKAGES="${DPKG_PACKAGES} python3-distutils pylint";
 		fi
-		if test ${TRAVIS_PYTHON_VERSION} = "2.7";
+		if test "${TARGET}" != "jenkins2" && test "${TARGET}" != "jenkins3";
 		then
-			DPKG_PACKAGES="${DPKG_PACKAGES} python ${DPKG_PYTHON2_DEPENDENCIES} ${DPKG_PYTHON2_TEST_DEPENDENCIES}";
-		else
-			DPKG_PACKAGES="${DPKG_PACKAGES} python3 ${DPKG_PYTHON3_DEPENDENCIES} ${DPKG_PYTHON3_TEST_DEPENDENCIES}";
+			if test ${TRAVIS_PYTHON_VERSION} = "2.7";
+			then
+				DPKG_PACKAGES="${DPKG_PACKAGES} python ${DPKG_PYTHON2_DEPENDENCIES} ${DPKG_PYTHON2_TEST_DEPENDENCIES}";
+			else
+				DPKG_PACKAGES="${DPKG_PACKAGES} python3 ${DPKG_PYTHON3_DEPENDENCIES} ${DPKG_PYTHON3_TEST_DEPENDENCIES}";
+			fi
 		fi
 	fi
 	docker exec -e "DEBIAN_FRONTEND=noninteractive" ${CONTAINER_NAME} sh -c "apt-get install -y ${DPKG_PACKAGES}";
 
 	docker cp ../plaso ${CONTAINER_NAME}:/
+
+elif test ${TRAVIS_OS_NAME} = "osx";
+then
+	git clone https://github.com/log2timeline/l2tbinaries.git -b dev;
+
+	mv l2tbinaries ../;
+
+	for PACKAGE in ${L2TBINARIES_DEPENDENCIES};
+	do
+		echo "Installing: ${PACKAGE}";
+		sudo /usr/bin/hdiutil attach ../l2tbinaries/macos/${PACKAGE}-*.dmg;
+		sudo /usr/sbin/installer -target / -pkg /Volumes/${PACKAGE}-*.pkg/${PACKAGE}-*.pkg;
+		sudo /usr/bin/hdiutil detach /Volumes/${PACKAGE}-*.pkg
+	done
+
+	for PACKAGE in ${L2TBINARIES_TEST_DEPENDENCIES};
+	do
+		echo "Installing: ${PACKAGE}";
+		sudo /usr/bin/hdiutil attach ../l2tbinaries/macos/${PACKAGE}-*.dmg;
+		sudo /usr/sbin/installer -target / -pkg /Volumes/${PACKAGE}-*.pkg/${PACKAGE}-*.pkg;
+		sudo /usr/bin/hdiutil detach /Volumes/${PACKAGE}-*.pkg
+	done
 fi

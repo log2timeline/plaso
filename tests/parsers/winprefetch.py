@@ -244,6 +244,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.executable, 'TASKHOST.EXE')
     self.assertEqual(event.prefetch_hash, 0x3ae259fc)
+    self.assertEqual(event.run_count, 4)
 
     # The prefetch previous last run event.
     event = events[2]
@@ -345,13 +346,12 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:prefetch:execution')
     self.assertEqual(event.version, 30)
 
-    self.assertEqual(event.data_type, 'windows:prefetch:execution')
-
     self.CheckTimestamp(event.timestamp, '2015-05-14 22:11:58.091134')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
     self.assertEqual(event.executable, 'BYTECODEGENERATOR.EXE')
     self.assertEqual(event.prefetch_hash, 0xc1e9bce6)
+    self.assertEqual(event.run_count, 7)
 
     # The prefetch previous last run event.
     event = events[2]
@@ -369,6 +369,48 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:volume:creation')
 
     self.CheckTimestamp(event.timestamp, '2015-05-15 06:54:55.139294')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+
+  def testParse30Variant2Compressed(self):
+    """Tests the Parse function on a compressed version 30 variant 2 file."""
+    parser = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile(['NOTEPAD.EXE-D8414F97.pf'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 3)
+
+    events = list(storage_writer.GetEvents())
+
+    # The prefetch last run event.
+    event = events[1]
+
+    self.assertEqual(event.data_type, 'windows:prefetch:execution')
+    self.assertEqual(event.version, 30)
+
+    self.CheckTimestamp(event.timestamp, '2019-06-05 19:55:04.877779')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
+    self.assertEqual(event.executable, 'NOTEPAD.EXE')
+    self.assertEqual(event.prefetch_hash, 0xd8414f97)
+    self.assertEqual(event.run_count, 2)
+
+    # The prefetch previous last run event.
+    event = events[2]
+
+    self.CheckTimestamp(event.timestamp, '2019-06-05 19:23:00.815705')
+    expected_timestamp_desc = 'Previous {0:s}'.format(
+        definitions.TIME_DESCRIPTION_LAST_RUN)
+    self.assertEqual(event.timestamp_desc, expected_timestamp_desc)
+
+    self.assertEqual(len(event.mapped_files), 56)
+
+    # The volume creation event.
+    event = events[0]
+
+    self.assertEqual(event.data_type, 'windows:volume:creation')
+
+    self.CheckTimestamp(event.timestamp, '2017-07-30 19:40:03.548784')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
