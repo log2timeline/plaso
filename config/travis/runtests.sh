@@ -8,22 +8,7 @@
 # Exit on error.
 set -e;
 
-if test "${TRAVIS_OS_NAME}" = "osx";
-then
-	PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py;
-
-	python ./setup.py build
-
-	python ./setup.py sdist
-
-	python ./setup.py bdist
-
-	if test -f tests/end-to-end.py;
-	then
-		PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
-	fi
-
-elif test -n "${FEDORA_VERSION}";
+if test -n "${FEDORA_VERSION}";
 then
 	CONTAINER_NAME="fedora${FEDORA_VERSION}";
 	CONTAINER_OPTIONS="-e LANG=en_US.UTF-8";
@@ -86,4 +71,19 @@ then
 	fi
 	# Note that exec options need to be defined before the container name.
 	docker exec ${CONTAINER_OPTIONS} ${CONTAINER_NAME} sh -c "cd plaso && ${TEST_COMMAND}";
+
+elif test "${TRAVIS_OS_NAME}" = "osx";
+then
+	PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py;
+
+	python ./setup.py build
+
+	python ./setup.py sdist
+
+	python ./setup.py bdist
+
+	if test -f tests/end-to-end.py;
+	then
+		PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
+	fi
 fi
