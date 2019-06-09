@@ -11,7 +11,7 @@ import logging
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.lib import definitions
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.output import interface
@@ -105,11 +105,12 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       logger.error('Unable to output event without timestamp.')
       return None
 
+    data_type = getattr(event_data, 'data_type', 'UNKNOWN')
+
     # TODO: add function to pass event_values to GetFormattedMessages.
     message, message_short = self._output_mediator.GetFormattedMessages(
         event_data)
     if message is None or message_short is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
@@ -117,7 +118,6 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     source_short, source = self._output_mediator.GetFormattedSources(
         event, event_data)
     if source is None or source_short is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
@@ -126,33 +126,30 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=event.timestamp)
 
-    format_variables = self._output_mediator.GetFormatStringAttributeNames(
-        event_data)
-    if format_variables is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
+    unformatted_attributes = (
+        formatters_manager.FormattersManager.GetUnformattedAttributes(
+            event_data))
+    if unformatted_attributes is None:
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     extra_attributes = []
     for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
-      if (attribute_name in definitions.RESERVED_VARIABLE_NAMES or
-          attribute_name in format_variables):
-        continue
+      if attribute_name in unformatted_attributes:
+        # TODO: some pyparsing based parsers can generate empty bytes values
+        # in Python 3.
+        if (isinstance(attribute_value, py2to3.BYTES_TYPE) and
+            attribute_value == b''):
+          logging.debug((
+              'attribute: {0:s} of data type: {1:s} contains an empty bytes '
+              'value').format(attribute_name, event_data.data_type))
+          attribute_value = ''
 
-      # TODO: some pyparsing based parsers can generate empty bytes values
-      # in Python 3.
-      if (isinstance(attribute_value, py2to3.BYTES_TYPE) and
-          attribute_value == b''):
-        logging.debug((
-            'attribute: {0:s} of data type: {1:s} contains an empty bytes '
-            'value').format(attribute_name, event_data.data_type))
-        attribute_value = ''
-
-      # With ! in {1!s} we force a string conversion since some of
-      # the extra attributes values can be integer, float point or
-      # boolean values.
-      extra_attributes.append(
-          '{0:s}: {1!s}'.format(attribute_name, attribute_value))
+        # With ! in {1!s} we force a string conversion since some of
+        # the extra attributes values can be integer, float point or
+        # boolean values.
+        extra_attributes.append('{0:s}: {1!s}'.format(
+            attribute_name, attribute_value))
 
     extra_attributes = '; '.join(extra_attributes)
     extra_attributes = extra_attributes.replace('\n', '-').replace('\r', '')

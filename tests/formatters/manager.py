@@ -24,6 +24,7 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
       {'data_type': 'test:event',
        'filename': 'c:/Users/joesmith/NTUSER.DAT',
        'hostname': 'MYHOSTNAME',
+       'random': 'random',
        'text': '',
        'timestamp': 0,
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
@@ -162,6 +163,19 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
         'This is a line by someone not reading the log line properly. '
         'And since this l...')
     self.assertEqual(text_message_short, expected_text_message_short)
+
+    manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
+
+  def testGetUnformattedAttributes(self):
+    """Tests the GetUnformattedAttributes function."""
+    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
+
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
+    unformatted_attributes = manager.FormattersManager.GetUnformattedAttributes(
+        event_data)
+    self.assertEqual(unformatted_attributes, ['random'])
 
     manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 
