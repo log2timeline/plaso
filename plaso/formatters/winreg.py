@@ -52,7 +52,7 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
       event_values['values'] = values
 
     if not values:
-      event_values['values'] = 'No values stored in key.'
+      event_values['values'] = '(empty)'
 
     if 'key_path' in event_values:
       format_string = self.FORMAT_STRING

@@ -121,9 +121,9 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'Start: Auto Start (2) '
         'Image path: C:\\Dell\\testdriver.sys '
         'Error control: Normal (1) '
-        'DisplayName: Test Driver '
-        'DriverPackageId: testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
-        'Group: Pnp Filter').format(key_path)
+        'DisplayName: [REG_SZ] Test Driver '
+        'DriverPackageId: [REG_SZ] testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
+        'Group: [REG_SZ] Pnp Filter').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -187,7 +187,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.data_type, 'windows:registry:service')
 
     self.assertEqual(event.service_type, 0x10)
-    self.assertTrue('DisplayName: McAfee Task Manager' in event.values)
+    self.assertTrue('DisplayName: [REG_SZ] McAfee Task Manager' in event.values)
 
     # Test the RdpVideoMiniport subkey events.
     self.assertEqual(len(rdp_video_miniport_events), 1)

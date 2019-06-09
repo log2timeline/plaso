@@ -141,14 +141,14 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = (
         '[{0:s}] '
-        'CriticalSectionTimeout: 2592000 '
-        'ExcludeFromKnownDlls: [] '
-        'GlobalFlag: 0 '
-        'HeapDeCommitFreeBlockThreshold: 0 '
-        'HeapDeCommitTotalFreeThreshold: 0 '
-        'HeapSegmentCommit: 0 '
-        'HeapSegmentReserve: 0 '
-        'NumberOfInitialSessions: 2').format(key_path)
+        'CriticalSectionTimeout: [REG_SZ] 2592000 '
+        'ExcludeFromKnownDlls: [REG_MULTI_SZ] [] '
+        'GlobalFlag: [REG_SZ] 0 '
+        'HeapDeCommitFreeBlockThreshold: [REG_SZ] 0 '
+        'HeapDeCommitTotalFreeThreshold: [REG_SZ] 0 '
+        'HeapSegmentCommit: [REG_SZ] 0 '
+        'HeapSegmentReserve: [REG_SZ] 0 '
+        'NumberOfInitialSessions: [REG_SZ] 2').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)

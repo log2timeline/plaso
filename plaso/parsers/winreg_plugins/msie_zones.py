@@ -174,42 +174,6 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
   }
 
-  # TODO: merge with interface._GetValuesFromKey and remove the data types.
-  def _GetValuesFromKey(self, registry_key):
-    """Retrieves the values from a Windows Registry key.
-
-    Args:
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-
-    Returns:
-      dict[str, object]: names and data of the values in the key. The default
-          value is named "(default)".
-    """
-    values_dict = {}
-
-    for registry_value in registry_key.GetValues():
-      value_name = registry_value.name or '(default)'
-
-      if registry_value.DataIsString():
-        value_string = '[{0:s}] {1:s}'.format(
-            registry_value.data_type_string, registry_value.GetDataAsObject())
-
-      elif registry_value.DataIsInteger():
-        value_string = '[{0:s}] {1:d}'.format(
-            registry_value.data_type_string, registry_value.GetDataAsObject())
-
-      elif registry_value.DataIsMultiString():
-        value_string = '[{0:s}] {1:s}'.format(
-            registry_value.data_type_string, ''.join(
-                registry_value.GetDataAsObject()))
-
-      else:
-        value_string = '[{0:s}]'.format(registry_value.data_type_string)
-
-      values_dict[value_name] = value_string
-
-    return values_dict
-
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
