@@ -5,9 +5,10 @@ from __future__ import unicode_literals
 
 import abc
 
+from dfwinreg import registry_searcher
+
 from artifacts import definitions as artifact_definitions
 from dfvfs.helpers import file_system_searcher
-from dfwinreg import registry_searcher
 
 from plaso.lib import errors
 
@@ -69,12 +70,9 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
         continue
 
       for path in source.paths:
-        # Make sure the path separators used in the artifact definition
-        # correspond to those used by the file system.
-        path_segments = path.split(source.separator)
-
         find_spec = file_system_searcher.FindSpec(
-            location_glob=path_segments[1:], case_sensitive=False)
+            case_sensitive=False, location_glob=path,
+            location_separator=source.separator)
 
         for path_specification in searcher.Find(find_specs=[find_spec]):
           self._ParsePathSpecification(
