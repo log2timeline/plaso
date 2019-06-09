@@ -90,20 +90,16 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:office_mru_list')
     self.CheckTimestamp(event.timestamp, '2012-03-13 18:27:15.089802')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    regvalue_identifier = 'Item 1'
-    expected_value_string = (
-        '[F00000000][T01CD0146EA1EADB0][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
-        'SA-23E Mitchell-Hyundyne Starfury.docx')
-    self._TestRegvalue(event, regvalue_identifier, expected_value_string)
-
     expected_message = (
         '[{0:s}] '
-        '{1:s}: {2:s} '
+        'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*'
+        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
+        'SA-23E Mitchell-Hyundyne Starfury.docx '
         'Item 2: [F00000000][T01CD00921FC127F0][O00000000]*'
         'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\Earthforce SA-26 '
         'Thunderbolt Star Fury.docx '
@@ -113,7 +109,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         'C:\\Users\\nfury\\Documents\\VIBRANIUM.docx '
         'Item 5: [F00000000][T01CCFCBA595DFC30][O00000000]*'
         'C:\\Users\\nfury\\Documents\\ADAMANTIUM-Background.docx').format(
-            key_path, regvalue_identifier, expected_value_string)
+            key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -121,15 +117,19 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     # Test OfficeMRUWindowsRegistryEvent.
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:registry:office_mru')
     self.CheckTimestamp(event.timestamp, '2012-03-13 18:27:15.083000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    self.assertEqual(event.value_string, expected_value_string)
-
-    expected_message = '[{0:s}] Value: {1:s}'.format(
-        key_path, expected_value_string)
-    expected_short_message = '{0:s}...'.format(expected_value_string[:77])
+    expected_message = (
+        '[{0:s}] '
+        'Value: [F00000000][T01CD0146EA1EADB0][O00000000]*'
+        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
+        'SA-23E Mitchell-Hyundyne Starfury.docx').format(key_path)
+    expected_short_message = (
+        '[F00000000][T01CD0146EA1EADB0][O00000000]*'
+        'C:\\Users\\nfury\\Documents\\StarFury\\S...')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

@@ -10,7 +10,6 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
@@ -31,6 +30,23 @@ class OfficeMRUWindowsRegistryEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.key_path = None
     self.value_string = None
+
+
+class OfficeMRUListWindowsRegistryEventData(events.EventData):
+  """Microsoft Office MRU list Windows Registry event data.
+
+  Attributes:
+    entries (str): most recently used (MRU) entries.
+    key_path (str): Windows Registry key path.
+  """
+  DATA_TYPE = 'windows:registry:office_mru_list'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(OfficeMRUListWindowsRegistryEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.entries = None
+    self.key_path = None
 
 
 class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
@@ -74,8 +90,6 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
-  _SOURCE_APPEND = ': Microsoft Office MRU'
-
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
@@ -85,7 +99,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     # TODO: Test other Office versions to make sure this plugin is applicable.
-    values_dict = {}
+    entries = []
     for registry_value in registry_key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.
       if not registry_value.name or not self._RE_VALUE_NAME.search(
@@ -113,11 +127,10 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
 
       event_data = OfficeMRUWindowsRegistryEventData()
       event_data.key_path = registry_key.path
-      event_data.offset = registry_value.offset
       # TODO: split value string in individual values.
       event_data.value_string = value_string
 
-      values_dict[registry_value.name] = value_string
+      entries.append('{0:s}: {1:s}'.format(registry_value.name, value_string))
 
       if not timestamp:
         date_time = dfdatetime_semantic_time.SemanticTime('Not set')
@@ -129,10 +142,9 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
           date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    event_data = windows_events.WindowsRegistryEventData()
+    event_data = OfficeMRUListWindowsRegistryEventData()
+    event_data.entries = ' '.join([value for value in entries]) or None
     event_data.key_path = registry_key.path
-    event_data.regvalue = values_dict
-    event_data.source_append = self._SOURCE_APPEND
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
