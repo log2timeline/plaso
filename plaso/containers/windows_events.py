@@ -51,9 +51,6 @@ class WindowsRegistryEventData(events.EventData):
 
   Attributes:
     key_path (str): Windows Registry key path.
-    regvalue (dict[str, object]): values in the key.
-    source_append (str): text to append to the source_long of the event.
-    urls (list[str]): URLs.
     values (str): names and data of the values in the key.
   """
 
@@ -63,12 +60,6 @@ class WindowsRegistryEventData(events.EventData):
     """Initializes event data."""
     super(WindowsRegistryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.key_path = None
-    # TODO: deprecate regvalue.
-    self.regvalue = None
-    # TODO: deprecate source_append.
-    self.source_append = None
-    # TODO: deprecate urls.
-    self.urls = None
     self.values = None
 
 

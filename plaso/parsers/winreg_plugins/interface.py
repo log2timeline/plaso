@@ -210,10 +210,6 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   # parse the Windows Registry key or its values.
   FILTERS = frozenset()
 
-  # URLS should contain a list of URLs with additional information about this
-  # key or value.
-  URLS = []
-
   def _GetValuesFromKey(self, registry_key):
     """Retrieves the values from a Windows Registry key.
 
