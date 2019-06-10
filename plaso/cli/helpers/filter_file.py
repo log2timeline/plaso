@@ -29,8 +29,9 @@ class FilterFileArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        '-f', '--file_filter', '--file-filter', dest='file_filter',
-        action='store', type=str, default=None, help=(
+        '-f', '--filter-file', '--filter_file', '--file-filter',
+        '--file_filter', dest='file_filter', action='store', type=str,
+        default=None, help=(
             'List of files to include for targeted collection of files to '
             'parse, one line per file path, setup is /path|file - where each '
             'element can contain either a variable set in the preprocessing '
