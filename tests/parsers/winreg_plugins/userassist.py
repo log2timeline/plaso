@@ -10,7 +10,6 @@ from plaso.formatters import userassist as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import userassist
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -43,7 +42,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testProcessOnWinXP(self):
     """Tests the Process function on a Windows XP Registry file."""
     test_file_entry = self._GetTestFileEntry(['NTUSER.DAT'])
@@ -86,7 +84,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])

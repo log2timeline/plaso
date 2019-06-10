@@ -13,7 +13,6 @@ from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import interface
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
@@ -99,14 +98,11 @@ class TestSQLitePlugin(interface.SQLitePlugin):
 class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
   """Tests for the SQLite plugin interface."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['wal_database.db'])
-  @shared_test_lib.skipUnlessHasTestFile(['wal_database.db-wal'])
   def testProcessWithWAL(self):
     """Tests the Process function on a database with WAL file."""
     plugin = TestSQLitePlugin()
-    wal_file = self._GetTestFilePath(['wal_database.db-wal'])
     self._ParseDatabaseFileWithPlugin(
-        ['wal_database.db'], plugin, wal_path=wal_file)
+        ['wal_database.db'], plugin, wal_path_segments=['wal_database.db-wal'])
 
     expected_results = [
         ('Committed Text 1', 1, None),
@@ -123,7 +119,6 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(plugin.results, expected_results)
 
-  @shared_test_lib.skipUnlessHasTestFile(['wal_database.db'])
   def testProcessWithoutWAL(self):
     """Tests the Process function on a database without WAL file."""
     plugin = TestSQLitePlugin()
@@ -143,8 +138,6 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(plugin.results, expected_results)
 
-  @shared_test_lib.skipUnlessHasTestFile(['wal_database.db'])
-  @shared_test_lib.skipUnlessHasTestFile(['wal_database.db-wal'])
   def testCheckSchema(self):
     """Tests the CheckSchema function."""
     plugin = TestSQLitePlugin()
@@ -156,9 +149,8 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
     self.assertTrue(schema_match)
 
     # Test schema change with WAL.
-    wal_file = self._GetTestFilePath(['wal_database.db-wal'])
     _, database = self._OpenDatabaseFile(
-        ['wal_database.db'], wal_path=wal_file)
+        ['wal_database.db'], wal_path_segments=['wal_database.db-wal'])
 
     schema_match = plugin.CheckSchema(database)
     self.assertFalse(schema_match)

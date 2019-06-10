@@ -10,14 +10,12 @@ from plaso.formatters import ipod as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.plist_plugins import ipod
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
 class TestIPodPlugin(test_lib.PlistPluginTestCase):
   """Tests for the iPod plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['com.apple.iPod.plist'])
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'com.apple.iPod.plist'

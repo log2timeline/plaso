@@ -8,14 +8,12 @@ import unittest
 
 from plaso.parsers import zsh_extended_history
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ZshExtendedHistoryTest(test_lib.ParserTestCase):
   """Tests for the Zsh extended_history parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['zsh_extended_history.txt'])
   def testParse(self):
     """Tests for the Parse method."""
     parser = zsh_extended_history.ZshExtendedHistoryParser()

@@ -9,15 +9,12 @@ import unittest
 from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import airport
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
 class AirportPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the airport plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'com.apple.airport.preferences.plist'])
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'com.apple.airport.preferences.plist'

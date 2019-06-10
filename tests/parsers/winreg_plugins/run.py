@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import run
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -57,7 +56,6 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-RunTests.DAT'])
   def testProcessNtuserRun(self):
     """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-RunTests.DAT'])
@@ -93,7 +91,6 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-RunTests.DAT'])
   def testProcessNtuserRunOnce(self):
     """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-RunTests.DAT'])
@@ -129,7 +126,6 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE-RunTests'])
   def testProcessSoftwareRun(self):
     """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntry(['SOFTWARE-RunTests'])
@@ -169,7 +165,6 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE-RunTests'])
   def testProcessSoftwareRunOnce(self):
     """Tests the Process function on a RunOnce key."""
     test_file_entry = self._GetTestFileEntry(['SOFTWARE-RunTests'])

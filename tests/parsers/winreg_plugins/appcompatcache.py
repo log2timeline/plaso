@@ -14,7 +14,6 @@ from dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import appcompatcache
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -371,7 +370,6 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     # TODO: implement 64 bit
 
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcessWindows7(self):
     """Tests the Process function for Windows 7 AppCompatCache data."""
     test_file_entry = self._GetTestFileEntry(['SYSTEM'])
