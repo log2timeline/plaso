@@ -89,6 +89,7 @@ from plaso.formatters import text
 from plaso.formatters import trendmicroav
 from plaso.formatters import twitter_android
 from plaso.formatters import twitter_ios
+from plaso.formatters import usbstor
 from plaso.formatters import userassist
 from plaso.formatters import utmp
 from plaso.formatters import utmpx
