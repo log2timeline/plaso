@@ -13,7 +13,6 @@ from dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import timezone as winreg_timezone
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -151,7 +150,6 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcessFile(self):
     """Tests the Process function on registry file."""
     test_file_entry = self._GetTestFileEntry(['SYSTEM'])

@@ -28,6 +28,10 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
 
     Returns:
       FakeStorageWriter: a storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     file_entry = self._GetTestFileEntry(path_segments)
     file_object = file_entry.GetFileObject()

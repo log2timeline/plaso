@@ -15,7 +15,6 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import cups_ipp
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -294,7 +293,6 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['mac_cups_ipp'])
   def testParse(self):
     """Tests the Parse function."""
     # TODO: only tested against MacOS Cups IPP (Version 2.0)
