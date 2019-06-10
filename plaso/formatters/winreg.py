@@ -13,8 +13,8 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
   DATA_TYPE = 'windows:registry:key_value'
 
-  FORMAT_STRING = '[{key_path}] {text}'
-  FORMAT_STRING_ALTERNATIVE = '{text}'
+  FORMAT_STRING = '[{key_path}] {values}'
+  FORMAT_STRING_ALTERNATIVE = '{values}'
 
   SOURCE_LONG = 'Registry Key'
   SOURCE_SHORT = 'REG'
@@ -41,12 +41,16 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
     event_values = event_data.CopyToDict()
 
-    regvalue = event_values.get('regvalue', {})
-    string_parts = []
-    for key, value in sorted(regvalue.items()):
-      string_parts.append('{0:s}: {1!s}'.format(key, value))
-    event_values['text'] = ' '.join(string_parts)
+    values = event_values.get('values', None)
+    if values is None:
+      # TODO: remove regvalue.
+      regvalue = event_values.get('regvalue', {})
+      string_parts = []
+      for key, value in sorted(regvalue.items()):
+        string_parts.append('{0:s}: {1!s}'.format(key, value))
+      event_values['values'] = ' '.join(string_parts)
 
+    # TODO: remove urls.
     urls = event_values.get('urls', [])
     if urls:
       event_values['urls'] = ' - '.join(urls)

@@ -78,6 +78,7 @@ class WindowsRegistryEventData(events.EventData):
     regvalue (dict[str, object]): values in the key.
     source_append (str): text to append to the source_long of the event.
     urls (list[str]): URLs.
+    values (str): names and data of the values in the key.
   """
 
   DATA_TYPE = 'windows:registry:key_value'
@@ -92,6 +93,7 @@ class WindowsRegistryEventData(events.EventData):
     self.source_append = None
     # TODO: deprecate urls.
     self.urls = None
+    self.values = None
 
 
 class WindowsRegistryListEventData(events.EventData):
