@@ -8,6 +8,7 @@ pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
 from __future__ import unicode_literals
 
 import logging
+import multiprocessing
 import os
 import sys
 
@@ -51,6 +52,10 @@ def Main():
 
 
 if __name__ == '__main__':
+  # For PyInstaller sake we need to define this directly after "__main__".
+  # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+  multiprocessing.freeze_support()
+
   if not Main():
     sys.exit(1)
   else:

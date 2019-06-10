@@ -8,6 +8,10 @@ Param (
 	[string]$PythonPath = ""
 )
 
+If ( $Architecture -eq "x86" )
+{
+	$Architecture = "win32"
+}
 If ( -not $PythonPath )
 {
 	If ( $Architecture -eq "win32" )
@@ -54,165 +58,223 @@ If (-Not (Test-Path $PyInstaller))
 	}
 }
 
-$Version = & Invoke-Expression -Command "git describe --tags --abbrev=0"
+$Version = & Invoke-Expression -Command "git describe --tags --abbrev=0 2>&1"
 
 # Build the binaries for each tool
 If (Test-Path "dist")
 {
-    rm -Force -Recurse "dist"
+    Remove-Item -Force -Recurse "dist"
 }
 
 $Arguments = "--hidden-import artifacts --onedir tools\image_export.py"
 
 If ( $Python -ne "" )
 {
-	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+	$Output = Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments} 2>&1"
 }
 Else
 {
-	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+	$Output = Invoke-Expression -Command "${PyInstaller} ${Arguments} 2>&1"
 }
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\image_export.py." -foreground Red
+    Write-Host ${Output} -foreground Red
     Exit 1
-}
-
-$Arguments = "--hidden-import artifacts --hidden-import future --hidden-import requests --onedir tools\log2timeline.py"
-
-If ( $Python -ne "" )
-{
-	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
 }
 Else
 {
-	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+	Write-Host ${Output}
+}
+
+$Arguments = "--hidden-import artifacts --hidden-import future --hidden-import pysigscan --hidden-import requests --hidden-import yara --onedir tools\log2timeline.py"
+
+If ( $Python -ne "" )
+{
+	$Output = Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments} 2>&1"
+}
+Else
+{
+	$Output = Invoke-Expression -Command "${PyInstaller} ${Arguments} 2>&1"
 }
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\log2timeline.py." -foreground Red
+    Write-Host ${Output} -foreground Red
     Exit 1
+}
+Else
+{
+	Write-Host ${Output}
 }
 
 $Arguments = "--hidden-import artifacts --onedir tools\pinfo.py"
 
 If ( $Python -ne "" )
 {
-	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+	$Output = Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments} 2>&1"
 }
 Else
 {
-	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+	$Output = Invoke-Expression -Command "${PyInstaller} ${Arguments} 2>&1"
 }
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\pinfo.py." -foreground Red
+    Write-Host ${Output} -foreground Red
     Exit 1
+}
+Else
+{
+	Write-Host ${Output}
 }
 
 $Arguments = "--hidden-import artifacts --hidden-import requests --onedir tools\psort.py"
 
 If ( $Python -ne "" )
 {
-	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+	$Output = Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments} 2>&1"
 }
 Else
 {
-	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+	$Output = Invoke-Expression -Command "${PyInstaller} ${Arguments} 2>&1"
 }
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\psort.py." -foreground Red
+    Write-Host ${Output} -foreground Red
     Exit 1
-}
-
-$Arguments = "--hidden-import artifacts --hidden-import future --hidden-import requests --onedir tools\psteal.py"
-
-If ( $Python -ne "" )
-{
-	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
 }
 Else
 {
-	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+	Write-Host ${Output}
+}
+
+$Arguments = "--hidden-import artifacts --hidden-import future --hidden-import pysigscan --hidden-import requests --hidden-import yara --onedir tools\psteal.py"
+
+If ( $Python -ne "" )
+{
+	$Output = Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments} 2>&1"
+}
+Else
+{
+	$Output = Invoke-Expression -Command "${PyInstaller} ${Arguments} 2>&1"
 }
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\psteal.py." -foreground Red
+    Write-Host ${Output} -foreground Red
     Exit 1
+}
+Else
+{
+	Write-Host ${Output}
 }
 
 # Set up distribution package path
-If (Test-Path "dist\plaso")
+$DistPath = "dist\plaso"
+
+If (Test-Path "${DistPath}")
 {
-    rm -Force -Recurse "dist\plaso"
+    Remove-Item -Force -Recurse "${DistPath}"
 }
-mkdir dist\plaso
-mkdir dist\plaso\data
-mkdir dist\plaso\licenses
+New-Item -ItemType "directory" -Path "${DistPath}"
+New-Item -ItemType "directory" -Path "${DistPath}\data"
+New-Item -ItemType "directory" -Path "${DistPath}\licenses"
 
-xcopy /q /y ACKNOWLEDGEMENTS dist\plaso
-xcopy /q /y AUTHORS dist\plaso
-xcopy /q /y LICENSE dist\plaso
-xcopy /q /y README dist\plaso
+Copy-Item -Force ACKNOWLEDGEMENTS "${DistPath}"
+Copy-Item -Force AUTHORS "${DistPath}"
+Copy-Item -Force LICENSE "${DistPath}"
+Copy-Item -Force README "${DistPath}"
 
-xcopy /q /y /s dist\image_export\* dist\plaso
-xcopy /q /y /s dist\log2timeline\* dist\plaso
-xcopy /q /y /s dist\pinfo\* dist\plaso
-xcopy /q /y /s dist\psort\* dist\plaso
-xcopy /q /y /s dist\psteal\* dist\plaso
-xcopy /q /y data\* dist\plaso\data
-xcopy /q /y "${PythonPath}\Lib\site-packages\zmq\libzmq.pyd" dist\plaso
+Copy-Item -Force -Recurse "dist\image_export\*" "${DistPath}"
+Copy-Item -Force -Recurse "dist\log2timeline\*" "${DistPath}"
+Copy-Item -Force -Recurse "dist\pinfo\*" "${DistPath}"
+Copy-Item -Force -Recurse "dist\psort\*" "${DistPath}"
+Copy-Item -Force -Recurse "dist\psteal\*" "${DistPath}"
+
+Copy-Item -Force "data\*" "${DistPath}\data"
 
 # Copy the license files of the dependencies
-git.exe clone https://github.com/log2timeline/l2tdevtools dist\l2tdevtools
+$Output = Invoke-Expression -Command "git.exe clone https://github.com/log2timeline/l2tdevtools dist\l2tdevtools 2>&1"
 
 $dep = Get-Content dist\l2tdevtools\data\presets.ini | Select-String -pattern '\[plaso\]' -context 0,1
 Foreach ($d in $dep.context.DisplayPostContext.split(': ')[2].split(',')) {
-    cp "dist\l2tdevtools\data\licenses\LICENSE.$($d)" dist\plaso\licenses
+    Copy-Item -Force "dist\l2tdevtools\data\licenses\LICENSE.$($d)" ${DistPath}\licenses
 }
 
 # Remove debug, test and yet unused dependencies.
-rm -Force dist\plaso\licenses\LICENSE.guppy
-rm -Force dist\plaso\licenses\LICENSE.libexe
-rm -Force dist\plaso\licenses\LICENSE.libwrc
-rm -Force dist\plaso\licenses\LICENSE.mock
-rm -Force dist\plaso\licenses\LICENSE.pbr
+Remove-Item -Force ${DistPath}\licenses\LICENSE.guppy
+Remove-Item -Force ${DistPath}\licenses\LICENSE.libexe
+Remove-Item -Force ${DistPath}\licenses\LICENSE.libwrc
+Remove-Item -Force ${DistPath}\licenses\LICENSE.mock
+Remove-Item -Force ${DistPath}\licenses\LICENSE.pbr
 
 # Copy the artifacts yaml files
-git.exe clone https://github.com/ForensicArtifacts/artifacts.git dist\artifacts
-cd dist\artifacts
-$latest_tag=git.exe describe --tags $(git.exe rev-list --tags --max-count=1)
-git.exe checkout $latest_tag
-cd ..\..
-mkdir dist\plaso\artifacts
-xcopy /q /y dist\artifacts\data\*.yaml dist\plaso\artifacts
+$Output = Invoke-Expression -Command "git.exe clone https://github.com/ForensicArtifacts/artifacts.git dist\artifacts 2>&1"
+
+Push-Location "dist\artifacts"
+
+Try
+{
+	$LatestTag = Invoke-Expression -Command "git.exe describe --tags $(git.exe rev-list --tags --max-count=1) 2>&1"
+
+	$Output = Invoke-Expression -Command "git.exe checkout ${LatestTag} 2>&1"
+}
+Finally
+{
+	Pop-Location
+}
+New-Item -ItemType "directory" -Path "${DistPath}\artifacts"
+
+Copy-Item -Force "dist\artifacts\data\*.yaml" "${DistPath}\artifacts"
 
 # Copy the dfVFS yaml (dtFabric definition) files
-git.exe clone https://github.com/log2timeline/dfvfs.git dist\dfvfs
-cd dist\dfvfs
-$latest_tag=git.exe describe --tags $(git.exe rev-list --tags --max-count=1)
-git.exe checkout $latest_tag
-cd ..\..
-mkdir dist\plaso\dfvfs\lib
-xcopy /q /y dist\dfvfs\dfvfs\lib\*.yaml dist\plaso\dfvfs\lib
+$Output = Invoke-Expression -Command "git.exe clone https://github.com/log2timeline/dfvfs.git dist\dfvfs 2>&1"
+
+Push-Location "dist\dfvfs"
+
+Try
+{
+	$LatestTag = Invoke-Expression -Command "git.exe describe --tags $(git.exe rev-list --tags --max-count=1) 2>&1"
+
+	$Output = Invoke-Expression -Command "git.exe checkout ${LatestTag} 2>&1"
+}
+Finally
+{
+	Pop-Location
+}
+New-Item -ItemType "directory" -Path "${DistPath}\dfvfs\lib"
+
+Copy-Item -Force "dist\dfvfs\dfvfs\lib\*.yaml" "${DistPath}\dfvfs\lib"
 
 # Copy the dfWinReg yaml (dtFabric definition) files
-git.exe clone https://github.com/log2timeline/dfwinreg.git dist\dfwinreg
-cd dist\dfwinreg
-$latest_tag=git.exe describe --tags $(git.exe rev-list --tags --max-count=1)
-git.exe checkout $latest_tag
-cd ..\..
-mkdir dist\plaso\dfwinreg
-xcopy /q /y dist\dfwinreg\dfwinreg\*.yaml dist\plaso\dfwinreg
+$Output = Invoke-Expression -Command "git.exe clone https://github.com/log2timeline/dfwinreg.git dist\dfwinreg 2>&1"
+
+Push-Location "dist\dfwinreg"
+
+Try
+{
+	$LatestTag = Invoke-Expression -Command "git.exe describe --tags $(git.exe rev-list --tags --max-count=1) 2>&1"
+
+	$Output = Invoke-Expression -Command "git.exe checkout ${LatestTag} 2>&1"
+}
+Finally
+{
+	Pop-Location
+}
+New-Item -ItemType "directory" -Path "${DistPath}\dfwinreg"
+
+Copy-Item -Force "dist\dfwinreg\dfwinreg\*.yaml" "${DistPath}\dfwinreg"
 
 # Copy the plaso yaml (dtFabric definition) files
-mkdir dist\plaso\plaso\parsers
-mkdir dist\plaso\plaso\parsers\esedb_plugins
-mkdir dist\plaso\plaso\parsers\olecf_plugins
-mkdir dist\plaso\plaso\parsers\plist_plugins
-mkdir dist\plaso\plaso\parsers\winreg_plugins
-xcopy /q /y plaso\parsers\*.yaml dist\plaso\plaso\parsers
-xcopy /q /y plaso\parsers\esedb_plugins\*.yaml dist\plaso\plaso\parsers\esedb_plugins
-xcopy /q /y plaso\parsers\olecf_plugins\*.yaml dist\plaso\plaso\parsers\olecf_plugins
-xcopy /q /y plaso\parsers\plist_plugins\*.yaml dist\plaso\plaso\parsers\plist_plugins
-xcopy /q /y plaso\parsers\winreg_plugins\*.yaml dist\plaso\plaso\parsers\winreg_plugins
+New-Item -ItemType "directory" -Path "${DistPath}\plaso\parsers"
+New-Item -ItemType "directory" -Path "${DistPath}\plaso\parsers\esedb_plugins"
+New-Item -ItemType "directory" -Path "${DistPath}\plaso\parsers\olecf_plugins"
+New-Item -ItemType "directory" -Path "${DistPath}\plaso\parsers\plist_plugins"
+New-Item -ItemType "directory" -Path "${DistPath}\plaso\parsers\winreg_plugins"
 
-# Makes plaso-<version>-<architecture>.zip
+Copy-Item -Force "plaso\parsers\*.yaml" "${DistPath}\plaso\parsers"
+Copy-Item -Force "plaso\parsers\esedb_plugins\*.yaml" "${DistPath}\plaso\parsers\esedb_plugins"
+Copy-Item -Force "plaso\parsers\olecf_plugins\*.yaml" "${DistPath}\plaso\parsers\olecf_plugins"
+Copy-Item -Force "plaso\parsers\plist_plugins\*.yaml" "${DistPath}\plaso\parsers\plist_plugins"
+Copy-Item -Force "plaso\parsers\winreg_plugins\*.yaml" "${DistPath}\plaso\parsers\winreg_plugins"
+
+# Make plaso-<version>-<architecture>.zip
 Add-Type -assembly "system.io.compression.filesystem"
-[io.compression.zipfile]::CreateFromDirectory("$(pwd | % Path)\dist\plaso", "$(pwd| % Path)\plaso-${Version}-${Architecture}.zip")
+[io.compression.zipfile]::CreateFromDirectory("$(pwd | % Path)\${DistPath}", "$(pwd| % Path)\plaso-${Version}-${Architecture}.zip")
