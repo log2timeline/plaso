@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class ShutdownWindowsRegistryEventFormatter(
@@ -23,36 +22,6 @@ class ShutdownWindowsRegistryEventFormatter(
 
   SOURCE_LONG = 'Registry Key Shutdown Entry'
   SOURCE_SHORT = 'REG'
-
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
-
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    regvalue = event_values.get('regvalue', {})
-    string_parts = []
-    for key, value in sorted(regvalue.items()):
-      string_parts.append('{0:s}: {1!s}'.format(key, value))
-    event_values['text'] = ' '.join(string_parts)
-
-    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(
