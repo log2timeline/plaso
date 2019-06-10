@@ -359,12 +359,19 @@ texinfo_documents = [(
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
 
-def RunSphinxAPIDoc(_):
-  """Runs sphinx-apidoc to auto-generate documentation."""
+# This function is a Sphinx core event callback, the format of which is detailed
+# here: https://www.sphinx-doc.org/en/master/extdev/appapi.html#events
+def RunSphinxAPIDoc(unused_app):
+  """Runs sphinx-apidoc to auto-generate documentation.
+
+  Args:
+    unused_app (sphinx.application.Sphinx): Sphinx application. Required by the
+      the Sphinx event callback API.
+  """
   current_directory = os.path.abspath(os.path.dirname(__file__))
-  module = os.path.join(current_directory, '..', 'plaso')
+  module_path = os.path.join(current_directory, '..', 'plaso')
   api_directory = os.path.join(current_directory, 'sources', 'api')
-  apidoc.main(['-o', api_directory, module, '--force'])
+  apidoc.main(['-o', api_directory, module_path, '--force'])
 
 class L2TDocsLinkFixer(transforms.Transform):
   """Transform definition to parse .md references to internal pages."""
@@ -375,13 +382,14 @@ class L2TDocsLinkFixer(transforms.Transform):
       r'(?P<uri>[a-zA-Z0-9-./]+?).md#(?P<anchor>[a-zA-Z0-9-]+)')
 
   def _FixLinks(self, node):
-    """Correct links to .md files hosted on l2tdocs.
+    """Corrects links to .md files hosted on l2tdocs.
 
     Args:
-        node(node): docutils node.
+      node (docutils.nodes.Node): docutils node.
 
     Returns:
-      node: docutils node.
+      docutils.nodes.Node: docutils node, with URIs point to l2tdocs
+          corrected.
     """
     if isinstance(node, nodes.reference) and 'refuri' in node:
       reference_uri = node['refuri']
@@ -390,18 +398,18 @@ class L2TDocsLinkFixer(transforms.Transform):
           reference_uri.startswith(l2tdocs_prefix) and
           not reference_uri.endswith('.asciidoc')):
         node['refuri'] = reference_uri + '.md'
-        print('{0:s} -> {1:s}'.format(reference_uri, node['refuri']))
     return node
 
   def _Traverse(self, node):
-    """Traverse the document tree rooted at node.
+    """Traverses the document tree rooted at node.
 
-    node(node): docutils node.
+    Args:
+      node (docutils.nodes.Node): docutils node.
     """
     self._FixLinks(node)
 
-    for c in node.children:
-      self._Traverse(c)
+    for child_node in node.children:
+      self._Traverse(child_node)
 
   # pylint: disable=arguments-differ
   def apply(self):
@@ -409,7 +417,11 @@ class L2TDocsLinkFixer(transforms.Transform):
     self._Traverse(self.document)
 
 def setup(app):
-  """Called at Sphinx initialization."""
+  """Called at Sphinx initialization.
+
+  Args:
+    app (sphinx.application.Sphinx): Sphinx application.
+  """
   # Triggers sphinx-apidoc to generate API documentation.
   app.connect('builder-inited', RunSphinxAPIDoc)
   app.add_config_value(
