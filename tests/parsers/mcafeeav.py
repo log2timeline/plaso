@@ -9,19 +9,16 @@ import unittest
 from plaso.formatters import mcafeeav as _  # pylint: disable=unused-import
 from plaso.parsers import mcafeeav
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
   """Tests for the McAfee AV Log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['AccessProtectionLog.txt'])
   def testParse(self):
     """Tests the Parse function."""
     parser = mcafeeav.McafeeAccessProtectionParser()
-    storage_writer = self._ParseFile(
-        ['AccessProtectionLog.txt'], parser)
+    storage_writer = self._ParseFile(['AccessProtectionLog.txt'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)

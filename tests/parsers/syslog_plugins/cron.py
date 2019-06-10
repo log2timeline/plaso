@@ -6,14 +6,12 @@ from __future__ import unicode_literals
 
 import unittest
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib
 
 
 class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
   """Tests for the cron syslog plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog_cron.log'])
   def testParse(self):
     """Tests the parsing functionality on a sample file."""
     knowledge_base_values = {'year': 2015}

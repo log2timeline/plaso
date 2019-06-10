@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import mac_appfirewall as _  # pylint: disable=unused-import
 from plaso.parsers import mac_appfirewall
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacAppFirewallUnitTest(test_lib.ParserTestCase):
   """Tests for Mac AppFirewall log file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['appfirewall.log'])
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""
     parser = mac_appfirewall.MacAppFirewallParser()

@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import asl as _  # pylint: disable=unused-import
 from plaso.parsers import asl
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ASLParserTest(test_lib.ParserTestCase):
   """Tests for Apple System Log file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['applesystemlog.asl'])
   def testParse(self):
     """Tests the Parse function."""
     parser = asl.ASLParser()

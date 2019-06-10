@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import chrome_cache as _  # pylint: disable=unused-import
 from plaso.parsers import chrome_cache
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ChromeCacheParserTest(test_lib.ParserTestCase):
   """Tests for the Chrome Cache files parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['chrome_cache', 'index'])
   def testParse(self):
     """Tests the Parse function."""
     parser = chrome_cache.ChromeCacheParser()

@@ -10,14 +10,12 @@ from plaso.lib import definitions
 from plaso.parsers import olecf
 from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class OLECFParserTest(test_lib.ParserTestCase):
   """Tests for the OLE Compound Files (OLECF) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Document.doc'])
   def testParse(self):
     """Tests the Parse function."""
     parser = olecf.OLECFParser()

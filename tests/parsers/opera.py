@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import opera as _  # pylint: disable=unused-import
 from plaso.parsers import opera
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class OperaTypedParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Typed History parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['typed_history.xml'])
   def testParse(self):
     """Tests the Parse function."""
     parser = opera.OperaTypedHistoryParser()
@@ -51,7 +49,6 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 class OperaGlobalParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Global History parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['global_history.dat'])
   def testParseFile(self):
     """Read a history file and run a few tests."""
     parser = opera.OperaGlobalHistoryParser()

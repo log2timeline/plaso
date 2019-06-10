@@ -6,14 +6,12 @@ from __future__ import unicode_literals
 
 import unittest
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib
 
 
 class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
   """Tests for the SSH syslog plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog_ssh.log'])
   def testParse(self):
     """Tests the Parse function."""
     knowledge_base_values = {'year': 2016}
