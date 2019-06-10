@@ -10,14 +10,12 @@ from plaso.formatters import msiecf as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import msiecf
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MSIECFParserTest(test_lib.ParserTestCase):
   """Tests for the MSIE Cache Files (MSIECF) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['index.dat'])
   def testParse(self):
     """Tests the Parse function."""
     parser = msiecf.MSIECFParser()
@@ -88,7 +86,6 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['nfury_index.dat'])
   def testParseLeakAndRedirect(self):
     """Tests the Parse function with leak and redirected records."""
     parser = msiecf.MSIECFParser()

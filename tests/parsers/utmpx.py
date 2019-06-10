@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import utmpx as _  # pylint: disable=unused-import
 from plaso.parsers import utmpx
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class UtmpxParserTest(test_lib.ParserTestCase):
   """Tests for utmpx file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['utmpx_mac'])
   def testParse(self):
     """Tests the Parse function."""
     parser = utmpx.UtmpxParser()

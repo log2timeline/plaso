@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import gdrive_synclog as _  # pylint: disable=unused-import
 from plaso.parsers import gdrive_synclog
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
   """Tests for the Google Drive Sync log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['sync_log.log'])
   def testParseLog(self):
     """Tests the Parse function on normal log."""
     parser = gdrive_synclog.GoogleDriveSyncLogParser()
@@ -77,7 +75,6 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'last):   F...')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['sync_log-osx.log'])
   def testOSXParseLog(self):
     """Tests the Parse function on OS X log.
 

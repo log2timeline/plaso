@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import skydrivelog as _  # pylint: disable=unused-import
 from plaso.parsers import skydrivelog
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class SkyDriveLogUnitTest(test_lib.ParserTestCase):
   """Tests for the SkyDrive log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['skydriveerr.log'])
   def testParseErrorLog(self):
     """Tests the Parse function or error log."""
     parser = skydrivelog.SkyDriveLogParser()
@@ -63,12 +61,10 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
         '<ping-res...')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['skydriveerr-unicode.log'])
   def testParseErrorLogUnicode(self):
     """Tests the Parse function on Unicode error log."""
     parser = skydrivelog.SkyDriveLogParser()
-    storage_writer = self._ParseFile(
-        ['skydriveerr-unicode.log'], parser)
+    storage_writer = self._ParseFile(['skydriveerr-unicode.log'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 19)
@@ -83,7 +79,6 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
         'No node found named Passport-Jméno-člena, no user name available,')
     self.assertEqual(event.detail, expected_detail)
 
-  @shared_test_lib.skipUnlessHasTestFile(['skydrive.log'])
   def testParseLog(self):
     """Tests the Parse function on normal log."""
     parser = skydrivelog.SkyDriveLogParser()
@@ -150,7 +145,6 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
   """Tests for the SkyDrive old log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['skydrive_old.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = skydrivelog.SkyDriveOldLogParser()

@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import trendmicroav as _  # pylint: disable=unused-import
 from plaso.parsers import trendmicroav
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class TrendMicroUnitTest(test_lib.ParserTestCase):
   """Tests for the Trend Micro AV Log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['pccnt35.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = trendmicroav.OfficeScanVirusDetectionParser()
@@ -49,7 +47,6 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['OfcUrlf.log'])
   def testWebReputationParse(self):
     """Tests the Parse function."""
     parser = trendmicroav.OfficeScanWebReputationParser()

@@ -10,14 +10,12 @@ from plaso.formatters import popcontest as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import popcontest
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class PopularityContestUnitTest(test_lib.ParserTestCase):
   """Tests for the popcontest parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['popcontest1.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = popcontest.PopularityContestParser()

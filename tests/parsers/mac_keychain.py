@@ -10,14 +10,12 @@ from plaso.formatters import mac_keychain as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import mac_keychain
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacKeychainParserTest(test_lib.ParserTestCase):
   """Tests for keychain file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['login.keychain'])
   def testParse(self):
     """Tests the Parse function."""
     parser = mac_keychain.KeychainParser()
