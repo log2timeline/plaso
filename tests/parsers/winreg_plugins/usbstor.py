@@ -49,27 +49,26 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:usbstor')
     self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.640871')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    expected_value = 'Disk&Ven_HP&Prod_v100w&Rev_1024'
-    self._TestRegvalue(event, 'subkey_name', expected_value)
-
-    self._TestRegvalue(event, 'device_type', 'Disk')
-    self._TestRegvalue(event, 'vendor', 'Ven_HP')
-    self._TestRegvalue(event, 'product', 'Prod_v100w')
-    self._TestRegvalue(event, 'revision', 'Rev_1024')
+    self.assertEqual(event.subkey_name, 'Disk&Ven_HP&Prod_v100w&Rev_1024')
+    self.assertEqual(event.device_type, 'Disk')
+    self.assertEqual(event.vendor, 'Ven_HP')
+    self.assertEqual(event.product, 'Prod_v100w')
+    self.assertEqual(event.revision, 'Rev_1024')
 
     expected_message = (
         '[{0:s}] '
-        'device_type: Disk '
-        'friendly_name: HP v100w USB Device '
-        'product: Prod_v100w '
-        'revision: Rev_1024 '
-        'serial: AA951D0000007252&0 '
-        'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
-        'vendor: Ven_HP').format(key_path)
+        'Device type: Disk '
+        'Display name: HP v100w USB Device '
+        'Product: Prod_v100w '
+        'Revision: Rev_1024 '
+        'Serial: AA951D0000007252&0 '
+        'Subkey name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
+        'Vendor: Ven_HP').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
