@@ -7,7 +7,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import winreg
@@ -54,8 +53,6 @@ class SAMUsersWindowsRegistryPlugin(
   _DEFINITION_FILE = 'sam_users.yaml'
 
   _V_VALUE_STRINGS_OFFSET = 0xcc
-
-  _SOURCE_APPEND = ': User Account Information'
 
   def _ParseFValue(self, registry_key):
     """Parses an F value.
@@ -172,27 +169,6 @@ class SAMUsersWindowsRegistryPlugin(
 
       # TODO: check if subkey.name == f_value.rid
 
-      if last_written_time:
-        values_dict = {
-            'account_rid': f_value.rid,
-            'login_count': f_value.number_of_logons}
-
-        if username:
-          values_dict['username'] = username
-        if fullname:
-          values_dict['full_name'] = fullname
-        if comments:
-          values_dict['comments'] = comments
-
-        event_data = windows_events.WindowsRegistryEventData()
-        event_data.key_path = registry_key.path
-        event_data.regvalue = values_dict
-        event_data.source_append = self._SOURCE_APPEND
-
-        event = time_events.DateTimeValuesEvent(
-            last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
       event_data = SAMUsersWindowsRegistryEventData()
       event_data.account_rid = f_value.rid
       event_data.comments = comments
@@ -200,6 +176,10 @@ class SAMUsersWindowsRegistryPlugin(
       event_data.key_path = registry_key.path
       event_data.login_count = f_value.number_of_logons
       event_data.username = username
+
+      event = time_events.DateTimeValuesEvent(
+          last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if f_value.last_login_time != 0:
         date_time = dfdatetime_filetime.Filetime(
