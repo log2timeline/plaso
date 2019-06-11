@@ -48,19 +48,19 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_value = 'VID_0E0F&PID_0002'
-    self._TestRegvalue(event, 'subkey_name', expected_value)
-    self._TestRegvalue(event, 'vendor', 'VID_0E0F')
-    self._TestRegvalue(event, 'product', 'PID_0002')
-
+    self.assertEqual(event.data_type, 'windows:registry:usb')
     self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.625247')
+
+    self.assertEqual(event.subkey_name, 'VID_0E0F&PID_0002')
+    self.assertEqual(event.vendor, 'VID_0E0F')
+    self.assertEqual(event.product, 'PID_0002')
 
     expected_message = (
         '[{0:s}] '
-        'product: PID_0002 '
-        'serial: 6&2ab01149&0&2 '
-        'subkey_name: VID_0E0F&PID_0002 '
-        'vendor: VID_0E0F').format(key_path)
+        'Product: PID_0002 '
+        'Serial: 6&2ab01149&0&2 '
+        'Subkey name: VID_0E0F&PID_0002 '
+        'Vendor: VID_0E0F').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
