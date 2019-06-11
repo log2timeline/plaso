@@ -64,6 +64,7 @@ from plaso.formatters import network_drives
 from plaso.formatters import officemru
 from plaso.formatters import olecf
 from plaso.formatters import opera
+from plaso.formatters import outlook
 from plaso.formatters import oxml
 from plaso.formatters import pe
 from plaso.formatters import plist

@@ -84,6 +84,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:outlook_search_mru')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (

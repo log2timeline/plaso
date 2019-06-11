@@ -1,13 +1,30 @@
 # -*- coding: utf-8 -*-
-"""This file contains an Outlook Registry parser."""
+"""This file contains an Outlook search MRU Registry parser."""
 
 from __future__ import unicode_literals
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
+
+
+class OutlookSearchMRUEventData(events.EventData):
+  """Outlook search MRU event data attribute container.
+
+  Attributes:
+    entries (str): most recently used (MRU) entries.
+    key_path (str): Windows Registry key path.
+  """
+
+  DATA_TYPE = 'windows:registry:outlook_search_mru'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(OutlookSearchMRUEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.entries = None
+    self.key_path = None
 
 
 class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
@@ -39,8 +56,6 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   #     'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
   #     'Search\\Catalog'
 
-  _SOURCE_APPEND = ': PST Paths'
-
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
@@ -49,7 +64,7 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = {}
+    entries = []
     for registry_value in registry_key.GetValues():
       # Ignore the default value.
       if not registry_value.name:
@@ -62,13 +77,14 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
       # TODO: change this 32-bit integer into something meaningful, for now
       # the value name is the most interesting part.
       value_integer = registry_value.GetDataAsObject()
-      values_dict[registry_value.name] = '0x{0:08x}'.format(value_integer)
+      value_string = '{0:s}: 0x{1:08x}'.format(
+          registry_value.name, value_integer)
 
-    event_data = windows_events.WindowsRegistryEventData()
+      entries.append(value_string)
+
+    event_data = OutlookSearchMRUEventData()
+    event_data.entries = ' '.join(entries) or None
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
-    event_data.source_append = self._SOURCE_APPEND
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
