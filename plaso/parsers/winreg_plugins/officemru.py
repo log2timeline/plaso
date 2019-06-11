@@ -131,7 +131,6 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
 
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
     event_data.regvalue = values_dict
     event_data.source_append = self._SOURCE_APPEND
 
