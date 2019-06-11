@@ -82,6 +82,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:run')
     self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
 
     expected_message = (
@@ -117,6 +118,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:run')
     self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
 
     expected_message = (
@@ -151,6 +153,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:run')
     self.CheckTimestamp(event.timestamp, '2011-09-16 20:57:09.067576')
 
     expected_message = (
@@ -191,6 +194,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:run')
     self.CheckTimestamp(event.timestamp, '2012-04-06 14:07:27.750000')
 
     expected_message = (
