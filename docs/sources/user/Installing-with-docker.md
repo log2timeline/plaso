@@ -83,9 +83,8 @@ It understands the following commands, and runs the appropriate programs:
 
 * log2timeline or log2timeline.py
 * pinfo or pinfo.py
-* preg  or preg.py
 * psort or psort.py
-
+* psteal  or psteal.py
 
 If you're not interested in running any of these, and just want to drop to a
 prompt inside your Plaso container, you can run:
