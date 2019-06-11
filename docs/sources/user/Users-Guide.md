@@ -36,8 +36,8 @@ Though plaso initially was created in mind to replace the Perl version of log2ti
 * [image_export](Using-image_export.md)
 * [log2timeline](Using-log2timeline.md)
 * [pinfo](Using-pinfo.md)
-* [preg](Using-preg.md)
 * [psort](Using-psort.md)
+* [psteal](Using-psteal.md)
 
 Note that each tool can be invoked with the `-h` or `--help` command line flag to display basic usage and command line option information.
 
@@ -55,10 +55,11 @@ The plaso storage file contains the extracted events and various metadata about 
 
 **pinfo** is a command line tool to provide information about the contents of a plaso storage file. 
 
-### preg
-
-**preg** is a command line tool to analyze Windows Registry files. It allows you to plaso's Windows Registry plugins on individual Windows Registry files and interactively analyze the results. For more information see: [Using preg](Using-preg.md)
-
 ### psort
 
 **psort** is a command line tool to post-process plaso storage files. It allows you to filter, sort and run automatic analysis on the contents of plaso storage files.
+
+### psteal
+
+**psteal** is a command line tool that combines the functionality of log2timeline and psort.
+
