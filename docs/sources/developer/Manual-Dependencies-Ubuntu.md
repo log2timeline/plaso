@@ -1,20 +1,6 @@
-# Building and Installing Dependencies on Ubuntu
+# Manually Building and Installing Dependencies on Ubuntu
 
-This page contains detailed instructions on how to build and install dependencies on Ubuntu. Some of these instructions should also work on Ubuntu like systems like Debian or Linux Mint.
-
-There are multiple ways to install the dependencies on Ubuntu:
-
-* Using the GIFT PPA to install prepackaged versions of the dependencies;
-* Using the [log2timeline devtools](https://github.com/log2timeline/devtools) to batch build most of the dependencies;
-* Manual build of the dependencies.
-
-## Prepackaged dependencies
-
-[Moved](Dependencies.md#ubuntu)
-
-## Batch build
-
-[Moved](Dependencies.md#batch-build)
+This page contains detailed instructions on how to manually build and install dependencies on Ubuntu. Some of these instructions should also work on Ubuntu like systems like Debian or Linux Mint.
 
 ## Manual build
 It is impossible for us to support all flavors of Ubuntu out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.
@@ -24,19 +10,19 @@ For ease of maintenance the following instructions use as much deb package files
 Alternative installation methods like installing directly from source, using easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) because when not maintained correctly they can mess up your setup more easily than using deb packages.
 
 First create a build root directory:
-```
+```bash
 mkdir plaso-build/
 ```
 
 Next make sure your installation is up to date:
-```
+```bash
 sudo apt-get update
 sudo apt-get upgrade
 ```
 
 ### Build essentials
 Make sure the necessary building tools and development packages are installed on the system:
-```
+```bash
 sudo apt-get install build-essential autotools-dev libsqlite3-dev python-dev debhelper devscripts fakeroot quilt git mercurial python-setuptools libtool automake
 ```
 
@@ -60,28 +46,28 @@ six | https://pypi.python.org/pypi/six#downloads | |
 yara-python | https://github.com/VirusTotal/yara-python | | 
 
 Some of these Python modules can be directly installed via apt-get:
-```
+```bash
 sudo apt-get install python-yaml
 ```
 
 #### Building a deb
 First extract the package:
-```
+```bash
 tar zxvf package-1.0.0.tar.gz
 ```
 
 Next change into the package source directory:
-```
+```bash
 cd package-1.0.0\
 ```
 
 Some of the Python modules come with dpkg files stored in ```config/dpkg```. For those Python modules copy the dpkg files to a debian sub directory:
-```
+```bash
 cp -rf config/dpkg debian
 ```
 
 For those that don't come with dpkg files you can use [dpkg-generate.py](https://github.com/log2timeline/l2tdevtools/blob/master/tools/dpkg-generate.py) to generate them e.g.:
-```
+```bash
 PYTHONPATH=l2tdevtools l2tdevtools/tools/dpkg-generate.py --source-directory=. package
 mv dpkg debian
 ```
@@ -118,7 +104,7 @@ cd ...
 ```
 
 This will create the following files in the build root directory:
-```
+```bash
 python-dfvfs_20140219-1_all.deb
 ```
 
@@ -154,7 +140,7 @@ libvmdk | https://github.com/libyal/libvmdk | | libfuse, zlib
 libvshadow | https://github.com/libyal/libvshadow | | libfuse
 
 Install the following dependencies for building libyal:
-```
+```bash
 sudo apt-get install bzip2-dev libfuse-dev libssl-dev zlib1g-dev
 ```
 
@@ -166,7 +152,7 @@ Note that there is also a script to batch build the libyal dependencies more inf
 Download the latest source package from: https://github.com/libyal/libevt/releases
 
 To build deb files run the following command from the build root directory:
-```
+```bash
 tar xfv libevt-alpha-20150105.tar.gz
 cd libevt-20130923
 cp -rf dpkg debian
@@ -175,7 +161,7 @@ cd ..
 ```
 
 This will create the following files in the build root directory:
-```
+```bash
 libevt_20150105-1_amd64.deb
 libevt-dbg_20150105-1_amd64.deb
 libevt-dev_20150105-1_amd64.deb
@@ -185,13 +171,13 @@ libevt-tools_20150105-1_amd64.deb
 ```
 
 To install the required deb files run:
-```
+```bash
 sudo dpkg -i libevt_20150105-1_amd64.deb libevt-python_20150105-1_amd64.deb
 ```
 
 ### Libyaml and Python-bindings
 To install libyaml and Python-bindings run:
-```
+```bash
 sudo apt-get install libyaml-0-2 python-yaml
 ```
 
@@ -200,13 +186,13 @@ sudo apt-get install libyaml-0-2 python-yaml
 
 ### psutil
 To install psutil run:
-```
+```bash
 sudo apt-get install python-psutil
 ```
 
 ### PySQLite
 Install the following dependencies for building PySQLite:
-```
+```bash
 sudo apt-get install libsqlite3-dev
 ```
 
@@ -230,7 +216,7 @@ Download the latest source package from: https://github.com/jmcnamara/XlsxWriter
 **TODO describe obtaining packing files**
 
 To build deb files run the following command from the build root directory:
-```
+```bash
 tar xvf XlsxWriter-RELEASE_0.7.7.tar.gz
 cd XlsxWriter-RELEASE_0.7.7
 cp -rf config/dpkg debian
@@ -238,12 +224,12 @@ dpkg-buildpackage -rfakeroot
 cd ..
 ```
 
-This will create the following files in the build root directory:
+This will create the following file in the build root directory:
 ```
 python-xlsxwriter-0.7.7-1_all.deb
 ```
 
-To install the required deb files run:
-```
+To install the required deb file run:
+```bash
 sudo dpkg -i python-xlsxwriter-0.7.7-1_all.deb
 ```

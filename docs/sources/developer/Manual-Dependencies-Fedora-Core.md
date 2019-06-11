@@ -1,28 +1,28 @@
-# Building and Installing Dependencies on Fedora Core 
+# Manually Building and Installing Dependencies on Fedora Core 
 
 ## Manual build
 
-It is impossible for us to support all flavors of Fedora Core out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.
+It is impossible for us to support all flavors of Fedora Core out there, so if 
+you want smooth sailing, we recommend sticking with the supported version or 
+live with the fact that a manual build of the dependencies can be a tedious 
+task.
 
-For ease of maintenance the following instructions use as much rpm package files as possible. Note that the resulting rpm files are not intended for public redistribution.
+For ease of maintenance the following instructions use as much rpm package
+files as possible. Note that the resulting rpm files are not intended for 
+public redistribution.
 
-Alternative installation methods like installing directly from source, using easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) because when not maintained correctly they can mess up your setup more easily than using rpm packages.
+Alternative installation methods like installing directly from source, using 
+easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) 
+because when not maintained correctly they can mess up your setup more easily 
+than using rpm packages.
 
-First create a build root directory:
-
-```
-mkdir plaso-build/
-```
-
-Next make sure your installation is up to date:
-
-```
-sudo dnf update
-```
+1. First create a build root directory: `mkdir plaso-build/`
+1. Next make sure your installation is up to date: `sudo dnf update`
 
 ### Build essentials
 
-Make sure the necessary building tools and development packages are installed on the system:
+Make sure the necessary building tools and development packages are installed 
+on the system:
 ```
 sudo dnf groupinstall "Development Tools"
 sudo dnf install gcc-c++ python-devel python-setuptools rpm-build git mercurial
@@ -31,7 +31,6 @@ sudo dnf install gcc-c++ python-devel python-setuptools rpm-build git mercurial
 **TODO: move to libyal section.**
 
 For some of the dependent packages you also require:
-
 ```
 sudo dnf install flex byacc zlib-devel bzip2-devel openssl-devel fuse-devel
 ```
@@ -62,9 +61,12 @@ sudo dnf install libyaml pyparsing python-dateutil python-requests python-six Py
 
 #### Building a RPM
 
-Setup.py allows you to easily build a RPM in most cases. This paragraph contains a generic description of building a RPM so we do not have to repeat this for every dependency.
+Setup.py allows you to easily build a RPM in most cases. This paragraph contains
+ a generic description of building a RPM so we do not have to repeat this for 
+ every dependency.
 
-To build a RPM file from package-1.0.0.tar.gz run the following commands from the build root directory.
+To build a RPM file from package-1.0.0.tar.gz run the following commands from 
+the build root directory.
 
 First extract the package:
 ```
@@ -91,12 +93,16 @@ sudo dnf install /package-1.0.0/dist/package-1.0.0-1.noarch.rpm
 
 ### dfVFS
 
-The dfVFS build instructions can be found [here](https://github.com/log2timeline/dfvfs/wiki/Building). Note that for dfVFS to function correctly several dependencies, like pytsk, mentioned later in a section of this page, are required.
+The dfVFS build instructions can be found 
+[here](https://github.com/log2timeline/dfvfs/wiki/Building). Note that for 
+dfVFS to function correctly several dependencies, like pytsk, mentioned later 
+in a section of this page, are required.
 
-Download the latest source package from: https://github.com/log2timeline/dfvfs/releases
+Download the latest source package from the 
+[dfVFS release page](https://github.com/log2timeline/dfvfs/releases).
 
 To build rpm files run the following command from the build root directory:
-```
+```bash
 tar xvf dfvfs-20140219.tar.gz 
 cd dfvfs-20140219/
 python setup.py bdist_rpm
@@ -104,7 +110,7 @@ cd ..
 ```
 
 To install the required rpm files run:
-```
+```bash
 sudo rpm -ivh dfvfs-20140219/dist/dfvfs-20140219-1.noarch.rpm
 ```
 
@@ -137,7 +143,7 @@ libvshadow | https://github.com/libyal/libvshadow | | libfuse
 
 Install the following dependencies for building libyal:
 
-```
+```bash
 sudo dnf install bzip2-devel libfuse-devel openssl-devel zlib-devel
 ```
 
@@ -147,20 +153,22 @@ Note that there is also a script to batch build the libyal dependencies more inf
 
 #### Example: libevt and Python-bindings
 
-Download the latest source package from: https://github.com/libyal/libevt/releases
+Download the latest source package from the 
+[libevt release page](https://github.com/libyal/libevt/releases).
 
 mv libevt-alpha-20130923.tar.gz libevt-20130923.tar.gz
-```
+```bash
 rpmbuild -ta libevt-20130923.tar.gz
 ```
 
-On a 64-bit version or Fedora 18 this will create the rpm files in the directory:
-```
+On a 64-bit version or Fedora 18 this will create the rpm files in the 
+directory:
+```bash
 ~/rpmbuild/RPMS/x86_64/
 ```
 
 To install the required rpm files run:
-```
+```bash
 sudo rpm -ivh ~/rpmbuild/RPMS/x86_64/libevt-20130923-1.x86_64.rpm ~/rpmbuild/RPMS/x86_64/libevt-python-20130923-1.x86_64.rpm
 ```
 
@@ -170,10 +178,11 @@ sudo rpm -ivh ~/rpmbuild/RPMS/x86_64/libevt-20130923-1.x86_64.rpm ~/rpmbuild/RPM
 
 ### Psutil
 
-Download the latest source package from: https://pypi.python.org/pypi/psutil
+Download the latest source package from the 
+[pypi](https://pypi.python.org/pypi/psutil).
 
 To build rpm files run the following command from the build root directory:
-```
+```bash
 tar xvf psutil-1.2.1.tar.gz 
 cd psutil-1.2.1/
 python setup.py bdist_rpm
@@ -181,7 +190,7 @@ cd ..
 ```
 
 To install the required rpm files run:
-```
+```bash
 sudo dnf install psutil-1.2.1/dist/psutil-1.2.1.x86_64.rpm
 ```
 
@@ -193,16 +202,18 @@ The build and install Pytsk see:
 
 ### Optional dependencies for output modules
 #### elasticsearch-py
-Download the latest source package from: https://github.com/elastic/elasticsearch-py
+Download the latest source package from 
+[the elasticsearch github page](https://github.com/elastic/elasticsearch-py)
 
 **TODO: describe**
 
 #### XlsxWriter
 
-Download the latest source package from: https://github.com/jmcnamara/XlsxWriter/releases
+Download the latest source package from the 
+[XlsxWriter github page](https://github.com/jmcnamara/XlsxWriter/releases).
 
 To build rpm files run the following command from the build root directory:
-```
+```bash
 tar xvf XlsxWriter-RELEASE_0.7.3.tar.gz
 cd XlsxWriter-RELEASE_0.7.3/
 python setup.py bdist_rpm
@@ -210,6 +221,6 @@ cd ..
 ```
 
 To install the required rpm files run:
-```
+```bash
 sudo dnf install XlsxWriter-RELEASE_0.7.3.tar.gz/dist/XlsxWriter-0.7.3-1.noarch.rpm
 ```

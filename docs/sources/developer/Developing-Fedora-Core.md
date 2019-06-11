@@ -10,9 +10,14 @@ Checkout the plaso source from the git repo:
 git clone https://github.com/log2timeline/plaso.git
 ```
 
-To be able to run the plaso [development release](Releases-and-roadmap.md) on Fedora Core or equivalent you'll have to have installed the [dependencies](Dependencies.md).
+## Dependencies
 
-Check if you have all the dependencies installed and have the right minimum version:
+Install the dependencies, using either:
+* A [virtualenv](Developing-Virtualenv.html#Fedora%20Core)
+* The [pre-packaged dependencies](Dependencies.html#Fedora%20Core).
+
+Check if you have all the dependencies installed and have the right minimum 
+versions:
 ```
 python utils/check_dependencies.py
 ```
@@ -20,7 +25,7 @@ python utils/check_dependencies.py
 **Note that some dependencies are actively under development and can be frequently updated, therefore we recommend checking the status of the dependencies regularly.**
 
 ## Development tools
-If you intend to do development on plaso you'll also need to install some development tools:
+If you intend to do development on Plaso you'll also need to install some development tools:
 
 * PyLint 1.7.x
 * Python Mock

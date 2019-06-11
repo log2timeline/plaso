@@ -18,14 +18,14 @@ The unit tests are also run automatically on [Travis-CI](https://travis-ci.org/)
 
 ## End-to-end tests
 
-The end-to-end tests are intended to test the plaso tools as a user would run them. To run the end-to-end tests you'll need:
+The end-to-end tests are intended to test the Plaso tools as a user would run them. To run the end-to-end tests you'll need:
 
 * test runner, which is `tests/end-to-end.py`
 * end-to-end tests configuration, e.g. `config/end-to-end.ini`
 * test data
 * reference data, to compare test output against
 
-E.g. to run the predefined end-to-end tests:
+For example, to run the predefined end-to-end tests:
 
 ```
 PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini

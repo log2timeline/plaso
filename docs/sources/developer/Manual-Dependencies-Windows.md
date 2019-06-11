@@ -1,22 +1,4 @@
-# Building and Installing Dependencies on Windows 
-
-This page contains detailed instructions on how to build and install dependencies on Windows.
-
-There are multiple ways to install the dependencies on Windows:
-
-* Prepackaged dependencies;
-* Using the [log2timeline devtools](https://github.com/log2timeline/devtools) to batch build most of the dependencies;
-* Manual build of the dependencies.
-
-## Prepackaged dependencies
-
-[Moved](Dependencies.md#windows)
-
-## Batch build
-
-[Moved](Dependencies.md#batch-build)
-
-## Manual build
+# Manually Building and Installing Dependencies on Windows 
 
 For ease of maintenance the following instructions use as much MSI package files as possible via "Programs and Features". Note that the resulting MSI files are not intended for public redistribution.
 
@@ -35,7 +17,7 @@ Make sure the necessary building tools and development packages are installed on
 * [Microsoft Visual Studio C++ Compiler](https://wiki.python.org/moin/WindowsCompilers)
 * Cython
 
-**Note that plaso itself is platform independent but if you use a 64-bit version of Python all of the dependencies should be compiled as 64-bit.**
+**Note that Plaso itself is platform independent but if you use a 64-bit version of Python all of the dependencies should be compiled as 64-bit.**
 
 First create a build root directory:
 ```

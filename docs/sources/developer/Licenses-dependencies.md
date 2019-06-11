@@ -1,6 +1,6 @@
 ## Dependency licenses
 
-Although plaso is licensed under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0), binary builds of plaso include third party code that have been made available under various licenses.
+Although Plaso is licensed under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0), binary builds of Plaso include third party code that have been made available under various licenses.
 
 ### Core dependencies
 
@@ -74,4 +74,4 @@ Dependencies not mentioned explicitly yet:
 * zlib (used in libqcow and libewf)
 * openssl (used in libqcow and libewf)
 * bzip2 (or part of python)
-* Visual studio runtime dlls
+* Visual studio runtime DLLs
