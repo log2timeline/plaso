@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -10,12 +11,32 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
-  """Windows Registry plugin for parsing the MSIE Zones settings.
+class MSIEZoneSettingsEventData(events.EventData):
+  """MSIE zone settings event data attribute container.
 
-    The MSIE Feature controls are stored in the Zone specific subkeys in:
-      Internet Settings\\Zones key
-      Internet Settings\\Lockdown_Zones key
+  Attributes:
+    key_path (str): Windows Registry key path.
+    settings (str): MSIE zone settings.
+  """
+
+  DATA_TYPE = 'windows:registry:msie_zone_settings'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(MSIEZoneSettingsEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.key_path = None
+    self.settings = None
+
+
+class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
+  """Windows Registry plugin for parsing the MSIE zone settings.
+
+  The MSIE Feature controls are stored in the Zone specific subkeys in:
+    Internet Settings\\Zones key
+    Internet Settings\\Lockdown_Zones key
+
+  Also see:
+    http://support.microsoft.com/kb/182569
   """
 
   NAME = 'msie_zone'
@@ -34,8 +55,6 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Internet Settings\\Zones')])
-
-  URLS = ['http://support.microsoft.com/kb/182569']
 
   _ZONE_NAMES = {
       '0': '0 (My Computer)',
@@ -155,6 +174,42 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
   }
 
+  # TODO: merge with interface._GetValuesFromKey and remove the data types.
+  def _GetValuesFromKey(self, registry_key):
+    """Retrieves the values from a Windows Registry key.
+
+    Args:
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+
+    Returns:
+      dict[str, object]: names and data of the values in the key. The default
+          value is named "(default)".
+    """
+    values_dict = {}
+
+    for registry_value in registry_key.GetValues():
+      value_name = registry_value.name or '(default)'
+
+      if registry_value.DataIsString():
+        value_string = '[{0:s}] {1:s}'.format(
+            registry_value.data_type_string, registry_value.GetDataAsObject())
+
+      elif registry_value.DataIsInteger():
+        value_string = '[{0:s}] {1:d}'.format(
+            registry_value.data_type_string, registry_value.GetDataAsObject())
+
+      elif registry_value.DataIsMultiString():
+        value_string = '[{0:s}] {1:s}'.format(
+            registry_value.data_type_string, ''.join(
+                registry_value.GetDataAsObject()))
+
+      else:
+        value_string = '[{0:s}]'.format(registry_value.data_type_string)
+
+      values_dict[value_name] = value_string
+
+    return values_dict
+
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
@@ -163,36 +218,14 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = {}
+    values_dict = self._GetValuesFromKey(registry_key)
 
-    if registry_key.number_of_values > 0:
-      for registry_value in registry_key.GetValues():
-        value_name = registry_value.name or '(default)'
-
-        if registry_value.DataIsString():
-          value_string = '[{0:s}] {1:s}'.format(
-              registry_value.data_type_string, registry_value.GetDataAsObject())
-
-        elif registry_value.DataIsInteger():
-          value_string = '[{0:s}] {1:d}'.format(
-              registry_value.data_type_string, registry_value.GetDataAsObject())
-
-        elif registry_value.DataIsMultiString():
-          value_string = '[{0:s}] {1:s}'.format(
-              registry_value.data_type_string, ''.join(
-                  registry_value.GetDataAsObject()))
-
-        else:
-          value_string = '[{0:s}]'.format(registry_value.data_type_string)
-
-        values_dict[value_name] = value_string
-
-    # Generate at least one event object for the key.
+    # Generate an event for the key.
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
-    event_data.urls = self.URLS
+    event_data.values = ' '.join([
+        '{0:s}: {1!s}'.format(name, value)
+        for name, value in sorted(values_dict.items())]) or None
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -210,7 +243,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       path = '{0:s}\\{1:s}'.format(
           registry_key.path, self._ZONE_NAMES[zone_key.name])
 
-      values_dict = {}
+      settings = []
 
       # TODO: this plugin currently just dumps the values and does not
       # distinguish between what is a feature control or not.
@@ -248,22 +281,20 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
           value_description = self._FEATURE_CONTROLS.get(value.name, '')
 
         if value_description:
-          feature_control = '[{0:s}] {1:s}'.format(
-              value.name, value_description)
+          feature_control = '[{0:s}] {1:s}: {2:s}'.format(
+              value.name, value_description, value_string)
         else:
-          feature_control = '[{0:s}]'.format(value.name)
+          feature_control = '[{0:s}]: {1:s}'.format(value.name, value_string)
 
-        values_dict[feature_control] = value_string
+        settings.append(feature_control)
 
-      event_data = windows_events.WindowsRegistryEventData()
+      event_data = MSIEZoneSettingsEventData()
       event_data.key_path = path
-      event_data.offset = zone_key.offset
-      event_data.regvalue = values_dict
-      event_data.urls = self.URLS
+      event_data.settings = ' '.join(sorted(settings))
 
       event = time_events.DateTimeValuesEvent(
           zone_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(MsieZoneSettingsPlugin)
+winreg.WinRegistryParser.RegisterPlugin(MSIEZoneSettingsPlugin)
