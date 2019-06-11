@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the NetworkList registry plugin."""
+"""This file contains the NetworkList Registry plugin."""
 
 from __future__ import unicode_literals
 
@@ -14,8 +14,8 @@ from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
-class WindowsRegistryNetworkEventData(events.EventData):
-  """Windows network event data.
+class WindowsRegistryNetworkListEventData(events.EventData):
+  """Windows NetworkList event data.
 
   Attributes:
     connection_type (str): type of connection.
@@ -29,7 +29,7 @@ class WindowsRegistryNetworkEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsRegistryNetworkEventData, self).__init__(
+    super(WindowsRegistryNetworkListEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.connection_type = None
     self.default_gateway_mac = None
@@ -156,7 +156,7 @@ class NetworksWindowsRegistryPlugin(
       default_gateway_mac, dns_suffix = network_info.get(
           subkey.name, (None, None))
 
-      event_data = WindowsRegistryNetworkEventData()
+      event_data = WindowsRegistryNetworkListEventData()
       event_data.default_gateway_mac = default_gateway_mac
       event_data.dns_suffix = dns_suffix
 
