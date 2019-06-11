@@ -72,6 +72,10 @@ then
 	# Note that exec options need to be defined before the container name.
 	docker exec ${CONTAINER_OPTIONS} ${CONTAINER_NAME} sh -c "cd plaso && ${TEST_COMMAND}";
 
+elif test "${TARGET}" = "dockerfile";
+then
+	cd config/docker && docker build --build-arg PPA_TRACK="dev" -f Dockerfile .
+
 elif test "${TRAVIS_OS_NAME}" = "osx";
 then
 	PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py;
