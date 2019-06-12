@@ -366,7 +366,7 @@ def RunSphinxAPIDoc(unused_app):
 
   Args:
     unused_app (sphinx.application.Sphinx): Sphinx application. Required by the
-      the Sphinx event callback API.
+        the Sphinx event callback API.
   """
   current_directory = os.path.abspath(os.path.dirname(__file__))
   module_path = os.path.join(current_directory, '..', 'plaso')
