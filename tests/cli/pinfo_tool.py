@@ -12,7 +12,6 @@ from plaso.cli import pinfo_tool
 from plaso.lib import errors
 from plaso.lib import timelib
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -32,19 +31,20 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   # TODO: add test for _PrintTasksInformation.
   # TODO: add test for _PrintStorageInformationAsText.
 
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCompareStores(self):
     """Tests the CompareStores function."""
+    test_file_path1 = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path1)
+
+    test_file_path2 = self._GetTestFilePath(['pinfo_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path2)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    test_file1 = self._GetTestFilePath(['psort_test.plaso'])
-    test_file2 = self._GetTestFilePath(['pinfo_test.plaso'])
-
     options = test_lib.TestOptions()
-    options.compare_storage_file = test_file1
-    options.storage_file = test_file1
+    options.compare_storage_file = test_file_path1
+    options.storage_file = test_file_path1
 
     test_tool.ParseOptions(options)
 
@@ -54,8 +54,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(output, 'Storage files are identical.\n')
 
     options = test_lib.TestOptions()
-    options.compare_storage_file = test_file1
-    options.storage_file = test_file2
+    options.compare_storage_file = test_file_path1
+    options.storage_file = test_file_path2
 
     test_tool.ParseOptions(options)
 
@@ -90,14 +90,16 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # TODO: check output.
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
+    test_file_path = self._GetTestFilePath(['pinfo_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath(['pinfo_test.plaso'])
+    options.storage_file = test_file_path
 
     test_tool.ParseOptions(options)
 
@@ -108,12 +110,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsText(self):
     """Tests the _PrintStorageInformationAsText function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-
     test_filename = 'pinfo_test.plaso'
     format_version = '20190309'
     plaso_version = '20190429'
@@ -179,6 +177,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
         'winreg/winreg_default', 'xchatlog', 'xchatscrollback',
         'zsh_extended_history'])
 
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+
     table_view = cli_views.ViewsFactory.GetTableView(
         cli_views.ViewsFactory.FORMAT_TYPE_CLI,
         title='Plaso Storage Information')
@@ -225,12 +225,14 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
         'No analysis reports stored.\n'
         '\n').format(expected_output)
 
-    test_file = self._GetTestFilePath([test_filename])
+    test_file_path = self._GetTestFilePath([test_filename])
+    self._SkipIfPathNotExists(test_file_path)
 
     options = test_lib.TestOptions()
-    options.storage_file = test_file
+    options.storage_file = test_file_path
     options.output_format = 'text'
 
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_tool.ParseOptions(options)
 
     test_tool.PrintStorageInformation()
@@ -241,21 +243,22 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # differences.
     self.assertEqual(output.split('\n'), expected_output.split('\n'))
 
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = 'pinfo_test.plaso'
     session_identifier = '35242873b9394a86a6ff08c2fdadb946'
     session_start_time = timelib.Timestamp.CopyFromString(
         '2019-05-05 11:52:23.388630')
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_file = self._GetTestFilePath([test_filename])
+
+    test_file_path = self._GetTestFilePath([test_filename])
+    self._SkipIfPathNotExists(test_file_path)
 
     options = test_lib.TestOptions()
-    options.storage_file = test_file
+    options.storage_file = test_file_path
     options.output_format = 'json'
 
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_tool.ParseOptions(options)
 
     test_tool.PrintStorageInformation()

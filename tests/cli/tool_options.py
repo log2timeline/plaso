@@ -10,7 +10,6 @@ from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.output import manager as output_manager
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -37,14 +36,16 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testCreateAnalysisPlugins(self):
     """Tests the _CreateAnalysisPlugins function."""
+    test_file_path = self._GetTestFilePath(['tagging_file', 'valid.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithAnalysisPluginOptions(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.tagging_file = self._GetTestFilePath(['tagging_file', 'valid.txt'])
+    options.tagging_file = test_file_path
 
     test_tool._analysis_plugins = 'tagging'
     plugins = test_tool._CreateAnalysisPlugins(options)

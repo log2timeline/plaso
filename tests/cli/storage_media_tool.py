@@ -26,7 +26,6 @@ from plaso.cli import storage_media_tool
 from plaso.cli import tools
 from plaso.lib import errors
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -344,14 +343,15 @@ optional arguments:
   # TODO: add test for _GetTSKPartitionIdentifiers.
   # TODO: add test for _GetVSSStoreIdentifiers.
 
-  @shared_test_lib.skipUnlessHasTestFile(['tsk_volume_system.raw'])
   def testNormalizedVolumeIdentifiersPartitionedImage(self):
     """Tests the _NormalizedVolumeIdentifiers function."""
     test_tool = storage_media_tool.StorageMediaTool()
 
-    test_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
     test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -378,14 +378,15 @@ optional arguments:
       test_tool._NormalizedVolumeIdentifiers(
           volume_system, ['p3'], prefix='p')
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testNormalizedVolumeIdentifiersVSS(self):
     """Tests the _NormalizedVolumeIdentifiers function on a VSS."""
     test_tool = storage_media_tool.StorageMediaTool()
 
-    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=test_os_path_spec)
     test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -417,9 +418,11 @@ optional arguments:
 
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testParseSourcePathOption(self):
     """Tests the _ParseSourcePathOption function."""
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_tool = storage_media_tool.StorageMediaTool()
 
     options = test_lib.TestOptions()
@@ -427,18 +430,20 @@ optional arguments:
     with self.assertRaises(errors.BadConfigOption):
       test_tool._ParseSourcePathOption(options)
 
-    options.source = self._GetTestFilePath(['ímynd.dd'])
+    options.source = test_file_path
 
     test_tool._ParseSourcePathOption(options)
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testParseStorageMediaOptions(self):
     """Tests the _ParseStorageMediaOptions function."""
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_tool = storage_media_tool.StorageMediaTool()
 
     options = test_lib.TestOptions()
     options.partitions = 'all'
-    options.source = self._GetTestFilePath(['ímynd.dd'])
+    options.source = test_file_path
 
     test_tool._ParseStorageMediaImageOptions(options)
 
@@ -497,12 +502,13 @@ optional arguments:
 
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs.dmg'])
   def testPrintAPFSVolumeIdentifiersOverview(self):
     """Tests the _PrintAPFSVolumeIdentifiersOverview function."""
-    test_path = self._GetTestFilePath(['apfs.dmg'])
+    test_file_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
     test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -541,12 +547,13 @@ optional arguments:
 
     self.assertEqual(output_data.split(b'\n'), expected_output_data)
 
-  @shared_test_lib.skipUnlessHasTestFile(['tsk_volume_system.raw'])
   def testPrintTSKPartitionIdentifiersOverview(self):
     """Tests the _PrintTSKPartitionIdentifiersOverview function."""
-    test_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
     test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -584,12 +591,13 @@ optional arguments:
 
     self.assertEqual(output_data.split(b'\n'), expected_output_data)
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testPrintVSSStoreIdentifiersOverview(self):
     """Tests the _PrintVSSStoreIdentifiersOverview function."""
-    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=test_os_path_spec)
     test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -625,12 +633,13 @@ optional arguments:
 
     self.assertEqual(output_data.split(b'\n'), expected_output_data)
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs.dmg'])
   def testPromptUserForAPFSVolumeIdentifiers(self):
     """Tests the _PromptUserForAPFSVolumeIdentifiers function."""
-    test_path = self._GetTestFilePath(['apfs.dmg'])
+    test_file_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
     test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -720,12 +729,13 @@ optional arguments:
 
   # TODO: add test for _PromptUserForEncryptedVolumeCredential.
 
-  @shared_test_lib.skipUnlessHasTestFile(['tsk_volume_system.raw'])
   def testPromptUserForPartitionIdentifiers(self):
     """Tests the _PromptUserForPartitionIdentifiers function."""
-    test_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
     test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -805,12 +815,13 @@ optional arguments:
 
   # TODO: add test for _PromptUserForVSSCurrentVolume.
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testPromptUserForVSSStoreIdentifiers(self):
     """Tests the _PromptUserForVSSStoreIdentifiers function."""
-    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=test_os_path_spec)
     test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -916,17 +927,18 @@ optional arguments:
     with self.assertRaises(errors.SourceScannerError):
       test_tool._ScanEncryptedVolume(scan_context, scan_node)
 
-  @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testScanEncryptedVolumeOnBDE(self):
     """Tests the _ScanEncryptedVolume function on a BDE image."""
+    test_file_path = self._GetTestFilePath(['bdetogo.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
     resolver.Resolver.key_chain.Empty()
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._credentials = [('password', self._BDE_PASSWORD)]
 
-    test_path = self._GetTestFilePath(['bdetogo.raw'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -935,17 +947,18 @@ optional arguments:
 
     test_tool._ScanEncryptedVolume(scan_context, bde_scan_node)
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs_encrypted.dmg'])
   def testScanEncryptedVolumeOnEncryptedAPFS(self):
     """Tests the _ScanEncryptedVolume function on an encrypted APFS image."""
+    test_file_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
     resolver.Resolver.key_chain.Empty()
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._credentials = [('password', self._APFS_PASSWORD)]
 
-    test_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -970,16 +983,17 @@ optional arguments:
     with self.assertRaises(errors.SourceScannerError):
       test_tool._ScanVolume(scan_context, scan_node, [])
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs.dmg'])
   def testScanVolumeOnAPFS(self):
     """Tests the _ScanVolume function on an APFS image."""
+    test_file_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
     resolver.Resolver.key_chain.Empty()
 
     test_tool = storage_media_tool.StorageMediaTool()
 
-    test_path = self._GetTestFilePath(['apfs.dmg'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -998,17 +1012,18 @@ optional arguments:
         scan_context, apfs_container_scan_node.sub_nodes[0], base_path_specs)
     self.assertEqual(len(base_path_specs), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testScanVolumeOnBDE(self):
     """Tests the _ScanVolume function on a BDE image."""
+    test_file_path = self._GetTestFilePath(['bdetogo.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
     resolver.Resolver.key_chain.Empty()
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._credentials = [('password', self._BDE_PASSWORD)]
 
-    test_path = self._GetTestFilePath(['bdetogo.raw'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -1019,17 +1034,18 @@ optional arguments:
     test_tool._ScanVolume(scan_context, bde_scan_node, base_path_specs)
     self.assertEqual(len(base_path_specs), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs_encrypted.dmg'])
   def testScanVolumeOnEncryptedAPFS(self):
     """Tests the _ScanVolume function on an encrypted APFS image."""
+    test_file_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
     resolver.Resolver.key_chain.Empty()
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._credentials = [('password', self._APFS_PASSWORD)]
 
-    test_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -1048,14 +1064,15 @@ optional arguments:
         scan_context, apfs_container_scan_node.sub_nodes[0], base_path_specs)
     self.assertEqual(len(base_path_specs), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testScanVolumeOnRAW(self):
     """Tests the _ScanVolume function on a RAW image."""
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_tool = storage_media_tool.StorageMediaTool()
 
-    test_path = self._GetTestFilePath(['ímynd.dd'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = scan_context.GetRootScanNode()
@@ -1064,17 +1081,18 @@ optional arguments:
     test_tool._ScanVolume(scan_context, scan_node, base_path_specs)
     self.assertEqual(len(base_path_specs), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testScanVolumeOnVSS(self):
     """Tests the _ScanVolume function on VSS."""
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._process_vss = True
     test_tool._vss_only = False
     test_tool._vss_stores = 'all'
 
-    test_path = self._GetTestFilePath(['vsstest.qcow2'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -1106,16 +1124,17 @@ optional arguments:
     with self.assertRaises(errors.SourceScannerError):
       test_tool._ScanVolumeSystemRoot(scan_context, scan_node, [])
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs.dmg'])
   def testScanVolumeSystemRootOnAPFS(self):
     """Tests the _ScanVolumeSystemRoot function on an APFS image."""
+    test_file_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
     resolver.Resolver.key_chain.Empty()
 
     test_tool = storage_media_tool.StorageMediaTool()
 
-    test_path = self._GetTestFilePath(['apfs.dmg'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -1132,14 +1151,15 @@ optional arguments:
       test_tool._ScanVolumeSystemRoot(
           scan_context, apfs_container_scan_node.sub_nodes[0], base_path_specs)
 
-  @shared_test_lib.skipUnlessHasTestFile(['tsk_volume_system.raw'])
   def testScanVolumeSystemRootOnPartitionedImage(self):
     """Tests the _ScanVolumeSystemRoot function on a partitioned image."""
+    test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_tool = storage_media_tool.StorageMediaTool()
 
-    test_path = self._GetTestFilePath(['tsk_volume_system.raw'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -1148,17 +1168,18 @@ optional arguments:
     with self.assertRaises(errors.SourceScannerError):
       test_tool._ScanVolumeSystemRoot(scan_context, scan_node, [])
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testScanVolumeSystemRootOnVSS(self):
     """Tests the _ScanVolumeSystemRoot function on VSS."""
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._process_vss = True
     test_tool._vss_only = False
     test_tool._vss_stores = 'all'
 
-    test_path = self._GetTestFilePath(['vsstest.qcow2'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -1170,15 +1191,16 @@ optional arguments:
         scan_context, vss_scan_node, base_path_specs)
     self.assertEqual(len(base_path_specs), 2)
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testScanVolumeSystemRootOnVSSDisabled(self):
     """Tests the _ScanVolumeSystemRoot function on VSS with VSS turned off."""
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._process_vss = False
 
-    test_path = self._GetTestFilePath(['vsstest.qcow2'])
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_path)
+    scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
     scan_node = self._GetTestScanNode(scan_context)
@@ -1229,66 +1251,76 @@ optional arguments:
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs.dmg'])
   def testScanSourceAPFS(self):
     """Tests the ScanSource function on an APFS image."""
     source_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourceAPFSImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs_encrypted.dmg'])
   def testScanSourceEncryptedAPFS(self):
     """Tests the ScanSource function on an encrypted APFS image."""
     resolver.Resolver.key_chain.Empty()
 
     source_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourceAPFSImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['tsk_volume_system.raw'])
   def testScanSourcePartitionedImage(self):
     """Tests the ScanSource function on a partitioned image."""
     source_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourcePartitionedImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['image-split.E01'])
   def testScanSourceSplitEWF(self):
     """Tests the ScanSource function on a split EWF image."""
     source_path = self._GetTestFilePath(['image-split.E01'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourcePartitionedImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['image.E01'])
   def testScanSourceEWF(self):
     """Tests the ScanSource function on an EWF image."""
     source_path = self._GetTestFilePath(['image.E01'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourceImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testScanSourceQCOW(self):
     """Tests the ScanSource function on a QCOW image."""
     source_path = self._GetTestFilePath(['image.qcow2'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourceImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testScanSourceVSS(self):
     """Tests the ScanSource function on a VSS."""
     source_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourceVSSImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['text_parser'])
   def testScanSourceTextDirectory(self):
     """Tests the ScanSource function on a directory."""
     source_path = self._GetTestFilePath(['text_parser'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourceDirectory(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['image.vhd'])
   def testScanSourceVHDI(self):
     """Tests the ScanSource function on a VHD image."""
     source_path = self._GetTestFilePath(['image.vhd'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourceImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile(['image.vmdk'])
   def testScanSourceVMDK(self):
     """Tests the ScanSource function on a VMDK image."""
     source_path = self._GetTestFilePath(['image.vmdk'])
+    self._SkipIfPathNotExists(source_path)
+
     self._TestScanSourceImage(source_path)
 
   def testScanSourceNonExisitingFile(self):

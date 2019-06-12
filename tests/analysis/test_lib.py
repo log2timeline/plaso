@@ -70,6 +70,10 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     Returns:
       FakeStorageWriter: storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     knowledge_base_object = self._SetUpKnowledgeBase(
         knowledge_base_values=knowledge_base_values)
@@ -104,6 +108,10 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     Returns:
       FakeStorageWriter: storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)

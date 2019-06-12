@@ -11,7 +11,6 @@ from plaso.cli import tools
 from plaso.cli.helpers import artifact_definitions
 from plaso.lib import errors
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 
 
@@ -52,13 +51,15 @@ optional arguments:
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
+    test_file_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_tool = tools.CLITool()
 
     options = cli_test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_file_path
 
     artifact_definitions.ArtifactDefinitionsArgumentsHelper.ParseOptions(
         options, test_tool)

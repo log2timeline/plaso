@@ -97,20 +97,6 @@ class BaseTestCase(unittest.TestCase):
     # and not a list.
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
-  def _GetTestFilePathSpec(self, path_segments):
-    """Retrieves a path specification of a test file in the test data directory.
-
-    Args:
-      path_segments (list[str]): components of a path to a test file, relative
-          to the test_data directory.
-
-    Returns:
-      dfvfs.PathSpec: path specification.
-    """
-    path = self._GetTestFilePath(path_segments)
-    return path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
-
   def _SkipIfPathNotExists(self, path):
     """Skips the test if the path does not exist.
 
