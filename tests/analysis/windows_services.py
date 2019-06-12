@@ -20,23 +20,29 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [
       {'data_type': 'windows:registry:service',
+       'image_path': 'C:\\Dell\\testdriver.sys',
        'key_path': '\\ControlSet001\\services\\TestbDriver',
+       'name': 'TestbDriver',
+       'object_name': None,
        'pathspec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\SYSTEM'),
-       'regvalue': {
-           'ImagePath': 'C:\\Dell\\testdriver.sys', 'Type': 2, 'Start': 2,
-           'ObjectName': ''},
+       'service_dll': None,
+       'service_type': 2,
+       'start_type': 2,
        'timestamp': 1346145829002031,
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
       # This is almost the same, but different timestamp and source, so that
       # we can test the service de-duplication.
       {'data_type': 'windows:registry:service',
+       'image_path': 'C:\\Dell\\testdriver.sys',
        'key_path': '\\ControlSet003\\services\\TestbDriver',
+       'name': 'TestbDriver',
+       'object_name': None,
        'pathspec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\SYSTEM'),
-       'regvalue': {
-           'ImagePath': 'C:\\Dell\\testdriver.sys', 'Type': 2, 'Start': 2,
-           'ObjectName': ''},
+       'service_dll': None,
+       'service_type': 2,
+       'start_type': 2,
        'timestamp': 1346145839002031,
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
