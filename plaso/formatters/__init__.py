@@ -107,6 +107,7 @@ from plaso.formatters import winevtx
 from plaso.formatters import winfirewall
 from plaso.formatters import winjob
 from plaso.formatters import winlnk
+from plaso.formatters import winlogon
 from plaso.formatters import winprefetch
 from plaso.formatters import winrar
 from plaso.formatters import winreg
