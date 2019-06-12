@@ -161,16 +161,10 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     hostname = self._FormatHostname(event_data)
     username = self._FormatUsername(event_data)
 
-    notes = []
-    note_string = getattr(event_data, 'notes', None)
-    if note_string:
-      notes.append(note_string)
-
     if event_tag:
-      notes.extend(event_tag.labels)
-
-    if not notes:
-      notes.append('-')
+      notes = ' '.join(event_tag.labels) or '-'
+    else:
+      notes = '-'
 
     year, month, day_of_month = date_time.GetDate()
     hours, minutes, seconds = date_time.GetTimeOfDay()
@@ -200,7 +194,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
         '2',
         getattr(event_data, 'display_name', '-'),
         '{0!s}'.format(inode),
-        ' '.join(notes),
+        notes,
         getattr(event_data, 'parser', '-'),
         extra_attributes]
 
