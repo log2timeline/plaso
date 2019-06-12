@@ -36,6 +36,14 @@ plaso.lib.errors module
     :undoc-members:
     :show-inheritance:
 
+plaso.lib.lexer module
+----------------------
+
+.. automodule:: plaso.lib.lexer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.lib.line\_reader\_file module
 -----------------------------------
 
@@ -48,6 +56,22 @@ plaso.lib.loggers module
 ------------------------
 
 .. automodule:: plaso.lib.loggers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.lib.objectfilter module
+-----------------------------
+
+.. automodule:: plaso.lib.objectfilter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.lib.pfilter module
+------------------------
+
+.. automodule:: plaso.lib.pfilter
     :members:
     :undoc-members:
     :show-inheritance:

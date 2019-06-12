@@ -4,14 +4,6 @@ plaso.analyzers.hashers package
 Submodules
 ----------
 
-plaso.analyzers.hashers.entropy module
---------------------------------------
-
-.. automodule:: plaso.analyzers.hashers.entropy
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.analyzers.hashers.interface module
 ----------------------------------------
 

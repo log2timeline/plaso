@@ -20,6 +20,14 @@ plaso.containers.artifacts module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.errors module
+------------------------------
+
+.. automodule:: plaso.containers.errors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.event\_sources module
 --------------------------------------
 
@@ -104,14 +112,6 @@ plaso.containers.time\_events module
 ------------------------------------
 
 .. automodule:: plaso.containers.time_events
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.containers.warnings module
---------------------------------
-
-.. automodule:: plaso.containers.warnings
     :members:
     :undoc-members:
     :show-inheritance:

@@ -44,14 +44,6 @@ plaso.engine.filter\_file module
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.filters\_helper module
------------------------------------
-
-.. automodule:: plaso.engine.filters_helper
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.engine.knowledge\_base module
 -----------------------------------
 
@@ -64,14 +56,6 @@ plaso.engine.logger module
 --------------------------
 
 .. automodule:: plaso.engine.logger
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.engine.path\_filters module
----------------------------------
-
-.. automodule:: plaso.engine.path_filters
     :members:
     :undoc-members:
     :show-inheritance:
@@ -136,14 +120,6 @@ plaso.engine.worker module
 --------------------------
 
 .. automodule:: plaso.engine.worker
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.engine.yaml\_filter\_file module
---------------------------------------
-
-.. automodule:: plaso.engine.yaml_filter_file
     :members:
     :undoc-members:
     :show-inheritance:

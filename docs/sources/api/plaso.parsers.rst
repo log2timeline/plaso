@@ -188,6 +188,14 @@ plaso.parsers.gdrive\_synclog module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.hachoir module
+----------------------------
+
+.. automodule:: plaso.parsers.hachoir
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.iis module
 ------------------------
 
