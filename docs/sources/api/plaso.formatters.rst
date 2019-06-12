@@ -84,6 +84,14 @@ plaso.formatters.asl module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.bagmru module
+------------------------------
+
+.. automodule:: plaso.formatters.bagmru
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.bash\_history module
 -------------------------------------
 
@@ -276,14 +284,6 @@ plaso.formatters.gdrive\_synclog module
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.hachoir module
--------------------------------
-
-.. automodule:: plaso.formatters.hachoir
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.formatters.hangouts\_messages module
 ------------------------------------------
 
@@ -348,6 +348,14 @@ plaso.formatters.kodi module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.lfu module
+---------------------------
+
+.. automodule:: plaso.formatters.lfu
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.logger module
 ------------------------------
 
@@ -384,6 +392,22 @@ plaso.formatters.mac\_keychain module
 -------------------------------------
 
 .. automodule:: plaso.formatters.mac_keychain
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.mac\_knowledgec module
+---------------------------------------
+
+.. automodule:: plaso.formatters.mac_knowledgec
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.mac\_notes module
+----------------------------------
+
+.. automodule:: plaso.formatters.mac_notes
     :members:
     :undoc-members:
     :show-inheritance:
@@ -452,6 +476,22 @@ plaso.formatters.mediator module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.mountpoints module
+-----------------------------------
+
+.. automodule:: plaso.formatters.mountpoints
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.mrulistex module
+---------------------------------
+
+.. automodule:: plaso.formatters.mrulistex
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.msie\_webcache module
 --------------------------------------
 
@@ -460,10 +500,26 @@ plaso.formatters.msie\_webcache module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.msie\_zones module
+-----------------------------------
+
+.. automodule:: plaso.formatters.msie_zones
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.msiecf module
 ------------------------------
 
 .. automodule:: plaso.formatters.msiecf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.network\_drives module
+---------------------------------------
+
+.. automodule:: plaso.formatters.network_drives
     :members:
     :undoc-members:
     :show-inheritance:
@@ -488,6 +544,14 @@ plaso.formatters.opera module
 -----------------------------
 
 .. automodule:: plaso.formatters.opera
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.outlook module
+-------------------------------
+
+.. automodule:: plaso.formatters.outlook
     :members:
     :undoc-members:
     :show-inheritance:
@@ -536,6 +600,14 @@ plaso.formatters.recycler module
 --------------------------------
 
 .. automodule:: plaso.formatters.recycler
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.run module
+---------------------------
+
+.. automodule:: plaso.formatters.run
     :members:
     :undoc-members:
     :show-inheritance:
@@ -684,6 +756,14 @@ plaso.formatters.task\_scheduler module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.terminal\_server module
+----------------------------------------
+
+.. automodule:: plaso.formatters.terminal_server
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.text module
 ----------------------------
 
@@ -712,6 +792,22 @@ plaso.formatters.twitter\_ios module
 ------------------------------------
 
 .. automodule:: plaso.formatters.twitter_ios
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.usb module
+---------------------------
+
+.. automodule:: plaso.formatters.usb
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.usbstor module
+-------------------------------
+
+.. automodule:: plaso.formatters.usbstor
     :members:
     :undoc-members:
     :show-inheritance:

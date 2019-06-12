@@ -7,7 +7,7 @@ Plaso comes in 2 different forms of releases:
 
 **Note that the development release is for development, expect frequent updates and potential breakage.**
 
-If you do not plan to develop or live on the edge, regarding Plaso, we highly recommend sticking with the packaged release. We will try to provide two packaged releases per year, a "summer" and "winter" release (depending on your location), but occasionally we will also do preview and release candidate packaged releases.
+If you do not plan to develop or live on the edge, regarding plaso, we highly recommend sticking with the packaged release. We will try to provide two packaged releases per year, a "summer" and "winter" release (depending on your location), but occasionally we will also do preview and release candidate packaged releases.
 
 ## Roadmap
 The following sections contain a rough outline of the larger items on the roadmap. For more detailed information see: [enhancements](https://github.com/log2timeline/plaso/labels/enhancement)
@@ -41,7 +41,7 @@ The following sections contain a rough outline of the larger items on the roadma
   * Plaso as a module; Clean up and rewrite of the engine code (the parts that were not touched previously); Stabilize an API
   * Sandboxing the workers
   * Plaso as a service
-  * Cross-system distributed Plaso workers (RPC)
+  * Cross-system distributed plaso workers (RPC)
   * [storage redesign](https://github.com/log2timeline/plaso/issues/102)
 * [Windows Registry support improvements](https://github.com/log2timeline/plaso/issues/145)
 * Handling recovered (deleted) data

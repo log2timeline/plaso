@@ -19,11 +19,13 @@ Some dependencies for Plaso are optional:
 
 ### Fedora Core
 
-**Note that these instructions assume you are running on Fedora Core 26, 27 or 28. 
-Installing packages from the copr on other versions and/or distributions is not recommended.**
+**Note that these instructions assume you are running on Fedora Core 26, 27 
+or 28. Installing packages from the copr on other versions and/or distributions 
+is not recommended.**
 
 The [GIFT copr](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) contains
- the necessary packages for running plaso. GIFT copr provides the following tracks:
+the necessary packages for running plaso. GIFT copr provides the following 
+tracks:
 
 * stable; track intended for the "packaged release" of Plaso and dependencies;
 * dev; track intended for development of Plaso;
@@ -59,7 +61,9 @@ provides the following branches:
 * dev; branch intended for development of Plaso;
 * testing; branch intended for testing newly created packages.
 
-The l2tdevtools project provides [an update script](https://github.com/log2timeline/l2tdevtools/wiki/Update-script) to ease the process of keeping the dependencies up to date.
+The l2tdevtools project provides 
+[an update script](https://github.com/log2timeline/l2tdevtools/wiki/Update-script)
+ to ease the process of keeping the dependencies up to date.
 
 #### Development track
 
@@ -71,8 +75,9 @@ PYTHONPATH=. python tools/update.py --preset plaso --track dev
 
 ### Ubuntu
 
-**Note that the instructions in this page assume you are running on Ubuntu 18.04.
-Installing packages from the PPA on other versions and/or distributions is not recommended.**
+**Note that the instructions in this page assume you are running on 
+Ubuntu 18.04. Installing packages from the PPA on other versions and/or 
+distributions is not recommended.**
 
 The [GIFT PPA](https://launchpad.net/~gift) contains the necessary packages for 
 running Plaso. The GIFT PPA provides the following tracks:
@@ -103,7 +108,8 @@ To install the dependencies run:
 ./config/linux/gift_ppa_install.sh include-development include-test
 ```
 
-For troubleshooting crashes it is recommended to install the following debug symbol packages as well:
+For troubleshooting crashes it is recommended to install the following debug
+symbol packages as well:
 
 ```bash
 ./config/linux/gift_ppa_install.sh include-debug
@@ -119,7 +125,9 @@ provides the following branches:
 * dev; branch intended for the development of Plaso;
 * testing; branch intended for testing newly created packages.
 
-The l2tdevtools project provides [an update script](https://github.com/log2timeline/l2tdevtools/wiki/Update-script) to ease the process of keeping the dependencies up to date.
+The l2tdevtools project provides 
+[an update script](https://github.com/log2timeline/l2tdevtools/wiki/Update-script)
+ to ease the process of keeping the dependencies up to date.
 
 The script requires [pywin32](https://github.com/mhammond/pywin32/releases) and [Python WMI](https://pypi.python.org/pypi/WMI/).
 

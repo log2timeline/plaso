@@ -40,7 +40,7 @@ Dependency | License
 Dependency | License
 --- | ---
 [bencode](https://pypi.python.org/pypi/bencode) | [BitTorrent Open Source License](http://web.archive.org/web/20080213154112/http://www.bittorrent.com/bittorrent-open-source-license)
-[biplist](docs/sources/developer/Licenses-dependencies.md) | [BSD 3-clause license](http://opensource.org/licenses/BSD-3-Clause)
+[biplist](https://bitbucket.org/wooster/biplist/) | [BSD 3-clause license](http://opensource.org/licenses/BSD-3-Clause)
 [Libesedb and Python-bindings](https://github.com/libyal/libesedb/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libevt and Python-bindings](https://github.com/libyal/libevt/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libevtx and Python-bindings](https://github.com/libyal/libevtx/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)

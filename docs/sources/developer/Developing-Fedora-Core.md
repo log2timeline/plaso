@@ -22,10 +22,13 @@ versions:
 python utils/check_dependencies.py
 ```
 
-**Note that some dependencies are actively under development and can be frequently updated, therefore we recommend checking the status of the dependencies regularly.**
+**Note that some dependencies are actively under development and can be 
+frequently updated, therefore we recommend checking the status of the 
+dependencies regularly.**
 
 ## Development tools
-If you intend to do development on Plaso you'll also need to install some development tools:
+If you intend to do development on Plaso you'll also need to install some 
+development tools:
 
-* PyLint 1.7.x
+* PyLint 1.9.x
 * Python Mock

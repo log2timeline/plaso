@@ -8,7 +8,8 @@
 
 ## Setting up and maintaining your development environment
 
-The first challenge you will encounter is setting up and maintaining your development environment.
+The first challenge you will encounter is setting up and maintaining your 
+development environment.
 
 Start by preparing a development environment:
 
@@ -37,11 +38,13 @@ Overview of the general architecture of Plaso:
 
 A high level roadmap can be found [here](../user/Releases-and-roadmap.md). 
 Individual features are tracked as a github issue and labeled as "enhancement".
- A list of features we'd already like to add can be found [here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
+A list of features we'd already like to add can be found 
+[here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
 
 ## Contributing Code
 
-Want to add a parser to Plaso and you are ready to go? Start by checking [here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement) 
+Want to add a parser to Plaso and you are ready to go? Start by checking 
+[here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement) 
 if someone is already working on it. If you don't see anything there you can 
 just go ahead and [create an issue on the github site](https://github.com/log2timeline/plaso/issues) 
 and mark it as "enhancement". Assign the issue to yourself so that we can keep 
@@ -62,13 +65,14 @@ If your code requires adding a new dependency please check out these instruction
 
 ### Before you submit your first code review
 
-1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev), we recommend using the same account as step 1
-2. Install the required development tools like pylint, python-mock, sphinx
-3. Make sure to run all the tests inside the Plaso and the dfVFS codebase, and
- that they successfully complete on your development system
-4. Make sure your development system is set up correctly so that you can develop
+1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev),
+we recommend using the same account as step 1
+1. Install the required development tools like pylint, python-mock, sphinx
+1. Make sure to run all the tests inside the Plaso and the dfVFS codebase, and
+that they successfully complete on your development system
+1. Make sure your development system is set up correctly so that you can develop
  and test correctly.
-5. Make sure your email address and name are correctly set in git. You can use 
+1. Make sure your email address and name are correctly set in git. You can use 
 the following commands:
 ```
 git config --global user.name "Full Name"
@@ -85,15 +89,17 @@ In those cases we ask that contributors first create a short design doc
 explaining the rationale behind the change. The design doc needs to contain:
 
 1. A description of the problem you are facing
-2. A list of the objectives of the change
-3. A discussion of what's in scope and what's not
-4. A descripton of your proposed the solution
+1. A list of the objectives of the change
+1. A discussion of what's in scope and what's not
+1. A descripton of your proposed the solution
 
 The preferred way of creating these design docs is to use Google Docs and send
 the link to the development mailing list so that it can be discussed further 
 **before** starting to implement the code.
 
-The current design docs are [stored here](https://drive.google.com/folderview?id=0B3fBvzttpiiSQW16cFhNTUtXVGM&usp=sharing). You may not have access to that folder, so you may need to request access to it.
+The current design docs are 
+[stored here](https://drive.google.com/folderview?id=0B3fBvzttpiiSQW16cFhNTUtXVGM&usp=sharing). 
+You may not have access to that folder, so you may need to request access to it.
 
 ### Tests
 

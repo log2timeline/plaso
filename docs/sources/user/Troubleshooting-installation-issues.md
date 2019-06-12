@@ -2,9 +2,9 @@
 
 ## Ubuntu
 
-Installing Plaso on Ubuntu should be a breeze if you follow the instructions [here](Ubuntu-Packaged-Release.md), however sometimes there can be conflicting packages installed that cause Plaso not to run properly. Most often this is caused by either some unsupported versions of packages being installed or if for some reason some of the dependencies was installed from source at some point and those dependencies are out of date.
+Installing the plaso on Ubuntu should be a breeze if you follow the instructions [here](Ubuntu-Packaged-Release.md), however sometimes there can be conflicting packages installed that cause plaso not to run properly. Most often this is caused by either some unsupported versions of packages being installed or if for some reason some of the dependencies was installed from source at some point and those dependencies are out of date.
 
-If you are having trouble getting Plaso to run on your computer after following the installation instructions one of the best first steps is to check if all dependencies are met. One way of doing that is to download the check dependency script and run it.
+If you are having trouble getting plaso to run on your computer after following the installation instructions one of the best first steps is to check if all dependencies are met. One way of doing that is to download the check dependency script and run it.
 
 ```bash
 $ wget https://raw.githubusercontent.com/log2timeline/plaso/master/utils/check_dependencies.py

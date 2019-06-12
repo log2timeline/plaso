@@ -1,12 +1,12 @@
 # Troubleshooting
 
-This page contains instructions that can be used to assist you in debugging potential issues with the Plaso and its dependencies.
+This page contains instructions that can be used to assist you in debugging potential issues with the plaso and its dependencies.
 
 ## Quick list
 
 1. Check the [commit history](https://github.com/log2timeline/plaso/commits/master) and [issue tracker](https://github.com/log2timeline/plaso/issues?q=is%3Aissue) if the bug has already been fixed;
-2. If you are running the development release make sure Plaso and dependencies are up to date, see: [Developers Guide](/developer/Developers-Guide.md)
-3. If you are experiencing an issue that cannot directly be attributed to some broken code e.g. the test are getting killed, check your system logs it might be a problem with resources available to Plaso;
+2. If you are running the development release make sure plaso and dependencies are up to date, see: [Developers Guide](/developer/Developers-Guide.md)
+3. If you are experiencing an issue that cannot directly be attributed to some broken code e.g. the test are getting killed, check your system logs it might be a problem with resources available to plaso;
 4. Try to isolate the error, see below.
 
 If everything fails create a new issue on the [issue tracker](https://github.com/log2timeline/plaso/issues). Please provide as much detailed information as possible, keep in mind that:
@@ -22,8 +22,8 @@ Hence please provide us with the following details:
   * What do you see instead?
 * The output of `log2timeline.py --troubles`, which provide:
   * The Python version including operating system and architecture
-  * The path to Plaso/log2timeline
-  * The version of Plaso/log2timeline
+  * The path to plaso/log2timeline
+  * The version of plaso/log2timeline
   * Information about dependencies
 * Are you processing a storage media image, if so which format, a directory or on an individual file?
 * Were you able to isolate the error to a specific file? Is it possible to share the file with the developer?

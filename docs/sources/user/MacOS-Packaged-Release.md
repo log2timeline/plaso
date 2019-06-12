@@ -1,6 +1,6 @@
 # MacOS Packaged Release
 
-To install the MacOS packaged release of Plaso you need to download the latest version from https://github.com/log2timeline/plaso/releases
+To install the MacOS packaged release of plaso you need to download the latest version from https://github.com/log2timeline/plaso/releases
 
 Attached to the most recent release (as of this time version 20190131) is a DMG file.
 

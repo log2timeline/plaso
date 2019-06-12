@@ -6,7 +6,7 @@ Notes on how to use the viper analysis plugin.
 
 The Viper project maintains installation instructions here: https://viper-framework.readthedocs.io/en/latest/installation/index.html
 
-## Running Plaso
+## Running plaso
 
 First run log2timeline to extract events:
 ```

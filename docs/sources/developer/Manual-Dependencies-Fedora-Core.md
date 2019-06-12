@@ -65,7 +65,7 @@ Setup.py allows you to easily build a RPM in most cases. This paragraph contains
  a generic description of building a RPM so we do not have to repeat this for 
  every dependency.
 
-To build a RPM file from package-1.0.0.tar.gz run the following commands from 
+To build a RPM file from `package-1.0.0.tar.gz` run the following commands from 
 the build root directory.
 
 First extract the package:

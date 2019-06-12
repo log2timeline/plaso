@@ -2,7 +2,7 @@
 
 **pinfo** is a command line tool to provide information about the contents of a plaso storage file. 
 
-A Plaso storage file contains information about:
+The plaso storage file contains information about:
 
  + When and how the tool was run
  + Information gathered during the pre-processing stage
@@ -61,7 +61,7 @@ Parser counter information:
 
 This produces the basic information the storage file stores. To get more verbose output, for instance to see the information collected during the pre-processing stage or content of analysis reports use the verbose switch, ``-v``
 
-```bash
+```
 $ pinfo.py -v test.plaso
 ...
 Preprocessing information:
@@ -97,7 +97,7 @@ Preprocessing information:
 
 If analysis plugins have been run the reports are also displayed:
 
-```bash
+```
 Report generated from: browser_search
 Generated on: 2015-07-17T02:52:07+00:00
 
@@ -109,7 +109,7 @@ Report text:
 
 Same if there are any tags stored in the storage file.
 
-```bash
+```
 Parser counter information:
         Counter: Total Tags = 146
         Counter: Application Execution = 144
@@ -118,7 +118,7 @@ Parser counter information:
 
 There is also an option to compare two storage files, for instance if you run the tool against a storage media file, then later re-run the tool and you want to quickly determine if there is a difference between the two storage files (does not go into content, only counters).
 
-```bash
+```
 $ pinfo.py --compare older_test.plaso test.plaso 
 
 collection_information.version value mismatch 1.3.0_20150716 != 1.3.0_20150713.

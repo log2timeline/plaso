@@ -22,12 +22,12 @@ task_schedule
 ## Running plaso
 
 First run log2timeline to extract events:
-```bash
+```
 log2timeline.py timeline.plaso image.raw
 ```
 
 Next run psort to tag events:
-```bash
+```
 psort.py --analysis tagging --tagging-file tagging-file.txt timeline.plaso
 ```
 

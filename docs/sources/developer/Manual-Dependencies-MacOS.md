@@ -10,7 +10,8 @@ as possible. Note that the resulting pkg packages are not intended for public
 redistribution.
 
 Alternative installation methods like installing directly from source, 
-using easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) because when not maintained correctly they can mess up your setup more easily than using rpm packages.
+using easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) 
+because when not maintained correctly they can mess up your setup more easily than using rpm packages.
 
 First create a build root directory:
 ```bash
@@ -296,7 +297,7 @@ alias log2timeline.py="PYTHONPATH=/Library/Python/2.7/site-packages/ log2timelin
 To be able to remove the files you'll have to disable System Integrity Protection (SIP or rootless).
 
 ### Psutil
-Download the latest source package from: https://pypi.python.org/pypi/psutil/#downloads
+Download the latest source package from: [PyPi](https://pypi.python.org/pypi/psutil/#downloads)
 
 To build pkg files run the following command from the build root directory:
 ```bash
@@ -322,12 +323,12 @@ The build and install Pytsk see:
 
 ### Optional dependencies for output modules
 #### elasticsearch-py
-Download the latest source package from: https://github.com/elastic/elasticsearch-py
+Download the latest source package from [GitHub](https://github.com/elastic/elasticsearch-py)
 
 **TODO: describe**
 
 #### XlsxWriter
-Download the latest source package from: https://github.com/jmcnamara/XlsxWriter/releases
+Download the latest source package from: [GitHub](https://github.com/jmcnamara/XlsxWriter/releases)
 
 To build pkg files run the following command from the build root directory:
 ```bash

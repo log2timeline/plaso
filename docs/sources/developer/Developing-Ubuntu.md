@@ -34,7 +34,9 @@ To update the Plaso source code, run:
 git pull origin master
 ```
 
-If you are using a github fork your origin is pointing to your fork not, and not the main Plaso git repository. When you run `git remote -v` You might see something like:
+If you are using a github fork your origin is pointing to your fork not, and not
+ the main Plaso git repository. When you run `git remote -v` You might see 
+ something like:
 ```
 origin	https://github.com/Onager/plaso (fetch)
 origin	https://github.com/Onager/plaso (push)
@@ -46,10 +48,13 @@ git remote add upstream https://github.com/log2timeline/plaso.git
 git pull --rebase upstream master
 ```
 
-We provide packaged versions of the dependencies via the [l2tbinaries project](https://github.com/log2timeline/l2tbinaries/blob/master/README.md). However it is possible that the dependencies are not fully up to date therefore we also provide a build script as part of [l2tdevtools project](https://github.com/log2timeline/l2tdevtools) to do unattended bulk builds.
+We provide packaged versions of the dependencies via the [
+l2tbinaries project](https://github.com/log2timeline/l2tbinaries/blob/master/README.md). 
+However it is possible that the dependencies are not fully up to date therefore we also provide a build script as part of [l2tdevtools project](https://github.com/log2timeline/l2tdevtools) to do unattended bulk builds.
 
 ## Development tools
-If you intend to do development on Plaso you'll also need to install some development tools:
+If you intend to do development on Plaso you'll also need to install some 
+development tools:
 
 * PyLint
 * Python Mock
@@ -63,10 +68,10 @@ sudo apt-get remove pylint
 ```
 
 For pylint 1.9.x the following additional dependencies are required:
-* https://pypi.python.org/pypi/astroid
-* https://pypi.python.org/pypi/lazy-object-proxy
-* https://pypi.python.org/pypi/logilab-common
-* https://pypi.python.org/pypi/wrapt
+* [astroid](https://pypi.python.org/pypi/astroid)
+* [lazy-object-proxy](https://pypi.python.org/pypi/lazy-object-proxy)
+* [logilab-common](https://pypi.python.org/pypi/logilab-common)
+* [wrapt](https://pypi.python.org/pypi/wrapt)
 
 Download and build the python-wrapt Debian package:
 **TODO describe**
@@ -75,7 +80,7 @@ Download and build the python-lazy-object-proxy Debian package:
 **TODO describe**
 
 Download and build the python-logilab-common Debian package:
-```
+```bash
 hg clone http://hg.logilab.org/logilab/common
 cd common
 dpkg-buildpackage -rfakeroot
@@ -102,7 +107,8 @@ dpkg-buildpackage -rfakeroot
 cd ..
 ```
 
-Install the python-wrapt, python-lazy-object-proxy, python-logilab-common, python-astroid and pylint Debian packages:
+Install the python-wrapt, python-lazy-object-proxy, python-logilab-common, 
+python-astroid and pylint Debian packages:
 ```bash
 sudo dpkg -i python-wrapt python-lazy-object-proxy python-logilab-common_0.60.0-1_all.deb python-astroid_1.0.1-1_all.deb pylint_1.6.5-1_all.deb
 ```

@@ -1,12 +1,12 @@
 # How to write an analysis plugin
 
 ## Create file and class
-* Plugin file in plaso/analysis/
-  * Create an empty subclass of plaso.analysis.interface.AnalysisPlugin
+* Plugin file in `plaso/analysis/`
+  * Create an empty subclass of [AnalysisPlugin](../api/plaso.analysis.html#plaso.analysis.interface.AnalysisPlugin)
   * Register it with the analysis plugin by calling
-   AnalysisPluginManager.RegisterPlugin
-* Test file in tests/analysis/
-  * Create an empty subclass of tests.analysis.test_lib.AnalysisPluginTestCase
+   [AnalysisPluginManager.RegisterPlugin](../api/plaso.analysis.html#plaso.analysis.manager.AnalysisPluginManager.RegisterPlugin)
+* Test file in `tests/analysis/`
+  * Create an empty subclass of `tests.analysis.test_lib.AnalysisPluginTestCase`
 
 ## Write minimal tests
 * Write a test that loads your plugin
@@ -14,7 +14,7 @@
 plugin gives you a quick way to see if your code is doing what you expect.
 
 ## Develop plugin
-* Implement your subclass of plaso.analysis.interface.AnalysisPlugin
+* Implement your subclass of [AnalysisPlugin](../api/plaso.analysis.html#plaso.analysis.interface.AnalysisPlugin)
 * You'll need to define/override:
   * NAME
   * ExamineEvent()

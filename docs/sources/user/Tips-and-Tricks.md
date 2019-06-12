@@ -1,8 +1,8 @@
 # Tips and Tricks
 
-This is a collection of few tips and tricks that can be used with **Plaso**
+This is a collection of few tips and tricks that can be used with **plaso**
 
-## analyzeMFT and Plaso
+## analyzeMFT and plaso
 
 Plaso can parse the output of analyzeMFT in bodyfile (or mactime) output.
 

@@ -1,12 +1,12 @@
 ## Plaso Overview
 
-Plaso (Plaso Langar Að Safna Öllu) is a Python-based backend engine for the tool log2timeline. 
+plaso (Plaso Langar Að Safna Öllu) is a Python-based backend engine for the tool log2timeline. 
 
 log2timeline is a tool designed to extract timestamps from various files found on a typical computer system(s) and aggregate them.
 
-The initial purpose of Plaso was to have the timestamps in a single place for computer forensic analysis (aka Super Timeline).
+The initial purpose of plaso was to have the timestamps in a single place for computer forensic analysis (aka Super Timeline).
 
-However Plaso has become a framework that supports:
+However plaso has become a framework that supports:
 * adding new parsers or parsing plug-ins;
 * adding new analysis plug-ins;
 * writing one-off scripts to automate repetitive tasks in computer forensic analysis or equivalent.

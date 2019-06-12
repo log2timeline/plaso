@@ -7,7 +7,7 @@ To install the Windows Packaged Release plaso you need to download the latest ve
 The name of the ZIP file indicates:
 
 * the architecture of the binaries in the ZIP, which are "win32" or "amd64"
-* the Python version of binaries in the ZIP, which is "py2.7" or "py3.7"
+* the Python version of binaries in the ZIP, which are "py2.7" or "py3.6"
 
 Since the binaries were build using Visual Studio you will need to install the corresponding version of the Visual C++ Redistributable package.
 

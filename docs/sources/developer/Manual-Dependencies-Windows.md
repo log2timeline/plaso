@@ -26,7 +26,7 @@ C:\plaso-build\
 
 #### Cython
 
-Download the latest source package from: http://cython.org/#download
+Download the latest source package from: [Cython](http://cython.org/#download)
 
 To build the MSI file run the following commands from the build root directory:
 ```
@@ -71,16 +71,20 @@ XlsxWriter | https://github.com/jmcnamara/XlsxWriter/releases | |
 
 #### Building a MSI
 
-Setup.py allows you to easily build a MSI in most cases. This paragraph contains a generic description of building a MSI so we do not have to repeat this for every dependency.
+Setup.py allows you to easily build a MSI in most cases. This paragraph contains
+ a generic description of building a MSI so we do not have to repeat this for 
+ every dependency.
 
-To build a MSI file from package-1.0.0.tar.gz run the following commands from the build root directory.
+To build a MSI file from package-1.0.0.tar.gz run the following commands from 
+the build root directory.
 
 First extract the package:
 ```
 tar zxvf package-1.0.0.tar.gz
 ```
 
-If you are not familiar with extracting tar files on Windows see: [How to unpack a tar file in Windows](https://wiki.haskell.org/How_to_unpack_a_tar_file_in_Windows)
+If you are not familiar with extracting tar files on Windows see: 
+[How to unpack a tar file in Windows](https://wiki.haskell.org/How_to_unpack_a_tar_file_in_Windows)
 
 Next change into the package source directory and have setup.py build a MSI:
 ```
@@ -134,13 +138,16 @@ Install the following dependencies for building libyal:
 
 **TODO: describe building dependencies.**
 
-Since the build process for the libyal libraries is very similar, the following paragraph provides building libevt as an example. For more details see the build instructions of the individual projects e.g. https://github.com/libyal/libevt/wiki/Building.
+Since the build process for the libyal libraries is very similar, the following 
+paragraph provides building libevt as an example. For more details see the build
+ instructions of the individual projects e.g. https://github.com/libyal/libevt/wiki/Building.
 
-Note that there is also a script to batch build the libyal dependencies more information here: https://github.com/log2timeline/l2tdevtools/wiki/Build-script
+Note that there is also a script to batch build the libyal dependencies more 
+information here: https://github.com/log2timeline/l2tdevtools/wiki/Build-script
 
 #### Example: libevt and Python-bindings
 
-Download the latest source package from: https://github.com/libyal/libevt/releases
+Download the latest source package from: [GitHub](https://github.com/libyal/libevt/releases)
 
 Extract the source package:
 ```
@@ -162,13 +169,15 @@ Install the MSI.
 
 ### pysqlite
 
-By default Python 2.7 comes with pysqlite 2.6.0 which works fine in combination with sqlite3 version 3.7.8.
+By default Python 2.7 comes with pysqlite 2.6.0 which works fine in combination 
+with sqlite3 version 3.7.8.
 
 Follow the instructions below if you wish to update pysqlite to a newer version.
 
 Download the latest source package from: https://pypi.python.org/pypi/pysqlite
 
-**TODO: describe what changes are necessary to get this working, DLL import and find the sqlite3.h include header.**
+**TODO: describe what changes are necessary to get this working, DLL import and 
+find the sqlite3.h include header.**
 
 To build the MSI file run the following commands from the build root directory:
 ```
@@ -202,13 +211,14 @@ C:\Python27\Lib\site-package\pysqlite2\
 
 ### pywin32
 
-Download the latest installer from: http://sourceforge.net/projects/pywin32/files/pywin32/
+Download the latest installer from: [Sourceforge](http://sourceforge.net/projects/pywin32/files/pywin32/)
 
 ### SQLite
 
-Plaso requires at least sqlite3 version 3.7.8. By default Python 2.7 comes with a far older version that cannot handle newer FireFox sqlite3 database files.
+Plaso requires at least sqlite3 version 3.7.8. By default Python 2.7 comes with
+a far older version that cannot handle newer FireFox sqlite3 database files.
 
-Download the latest source package from: http://www.sqlite.org/download.html
+Download the latest source package from: [SQLite](http://www.sqlite.org/download.html)
 
 E.g. sqlite-amalgamation-3080100.zip
 
@@ -216,7 +226,8 @@ Extract the source package in the build root directory.
 
 Download the [sqlite3 Visual Studio 2008 solution files](https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/3rd%20party/build-files/sqlite3-vs2008.zip).
 
-Extract the sqlite3 Visual Studio 2008 solution files in the sqlite-amalgamation source directory.
+Extract the sqlite3 Visual Studio 2008 solution files in the sqlite-amalgamation
+ source directory.
 
 Open the Microsoft Visual Studio 2008 solution file:
 ```
@@ -232,6 +243,6 @@ copy C:\plaso-build\sqlite-amalgamation-3080100\msvscpp\Release\sqlite3.dll C:\P
 
 ### Optional dependencies for output modules
 #### elasticsearch-py
-Download the latest source package from: https://github.com/elastic/elasticsearch-py
+Download the latest source package from [GitHub](https://github.com/jmcnamara/XlsxWriter/releases)
 
 **TODO: describe**

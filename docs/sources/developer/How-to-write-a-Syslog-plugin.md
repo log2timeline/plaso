@@ -5,19 +5,20 @@
 
 ## Create empty files and classes
 * plugin file in plaso/parsers/syslog_plugins
-  * Create an empty subclass of plaso.parsers.syslog_plugins.interface.SyslogPlugin
-  * Register it with the syslog parser by calling SyslogParser.RegisterPlugin
-  * Create an empty subclass of SyslogLineEventData
+  * Create an empty subclass of [SyslogPlugin](../api/plaso.parsers.syslog_plugins.html#module-plaso.parsers.syslog_plugins.interface)
+  * Register it with the syslog parser by calling SyslogParser.RegisterPlugin()
+  * Create an empty subclass of [SyslogLineEventData](../api/plaso.parsers.html#plaso.parsers.syslog.SyslogLineEventData)
     * Choose an appropriate DATA_TYPE value, starting with 'syslog:'
-* plugin test file in tests/parsers/syslog_plugins
-* formatter file in plaso/formatters
-  * Create an empty subclass of ConditionalEventFormatter
+* plugin test file in `tests/parsers/syslog_plugins`
+* formatter file in `plaso/formatters`
+  * Create an empty subclass of [ConditionalEventFormatter](../api/plaso.formatters.htm#plaso.formatters.interface.ConditionalEventFormatter)
   * Define the DATA_TYPE value to be the same as for your EventData class
-* formatter test file in tests/formatters
+* formatter test file in `tests/formatters`
 
 ## Write event data class
 
-* Create a subclass of SyslogLineEventData in the plugin file.
+* Create a subclass of [SyslogLineEventData](../api/plaso.parsers.html#plaso.parsers.syslog.SyslogLineEventData)
+ in the plugin file.
 * Define the attributes events produced by your plugin will have.
 
 ## Write minimal tests
@@ -25,7 +26,7 @@
 * It will fail initially, but running the test while you're developing your 
 plugin gives you a quick way to see if your code is doing what you expect.
 ## Develop plugin
-* Implement your subclass of plaso.parsers.syslog_plugins.interface.SyslogPlugin
+* Implement your subclass of [SyslogPlugin](../api/plaso.parsers.syslog_plugins.html#module-plaso.parsers.syslog_plugins.interface)
 * You'll need to define/overwrite:
   * NAME
   * DESCRIPTION

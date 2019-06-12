@@ -1,13 +1,22 @@
 # Manually Building and Installing Dependencies on Ubuntu
 
-This page contains detailed instructions on how to manually build and install dependencies on Ubuntu. Some of these instructions should also work on Ubuntu like systems like Debian or Linux Mint.
+This page contains detailed instructions on how to manually build and install
+ dependencies on Ubuntu. Some of these instructions should also work on Ubuntu 
+ like systems like Debian or Linux Mint.
 
 ## Manual build
-It is impossible for us to support all flavors of Ubuntu out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.
+It is impossible for us to support all flavors of Ubuntu out there, so if you 
+want smooth sailing, we recommend sticking with the supported version or live 
+with the fact that a manual build of the dependencies can be a tedious task.
 
-For ease of maintenance the following instructions use as much deb package files as possible. Note that the resulting deb files are not intended for public redistribution.
+For ease of maintenance the following instructions use as much deb package 
+files as possible. Note that the resulting deb files are not intended for public
+ redistribution.
 
-Alternative installation methods like installing directly from source, using easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) because when not maintained correctly they can mess up your setup more easily than using deb packages.
+Alternative installation methods like installing directly from source, using
+easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) 
+because when not maintained correctly they can mess up your setup more easily 
+than using deb packages.
 
 First create a build root directory:
 ```bash
@@ -21,7 +30,8 @@ sudo apt-get upgrade
 ```
 
 ### Build essentials
-Make sure the necessary building tools and development packages are installed on the system:
+Make sure the necessary building tools and development packages are installed on
+the system:
 ```bash
 sudo apt-get install build-essential autotools-dev libsqlite3-dev python-dev debhelper devscripts fakeroot quilt git mercurial python-setuptools libtool automake
 ```
@@ -61,12 +71,14 @@ Next change into the package source directory:
 cd package-1.0.0\
 ```
 
-Some of the Python modules come with dpkg files stored in ```config/dpkg```. For those Python modules copy the dpkg files to a debian sub directory:
+Some of the Python modules come with dpkg files stored in ```config/dpkg```. 
+For those Python modules copy the dpkg files to a debian sub directory:
 ```bash
 cp -rf config/dpkg debian
 ```
 
-For those that don't come with dpkg files you can use [dpkg-generate.py](https://github.com/log2timeline/l2tdevtools/blob/master/tools/dpkg-generate.py) to generate them e.g.:
+For those that don't come with dpkg files you can use [dpkg-generate.py](https://github.com/log2timeline/l2tdevtools/blob/master/tools/dpkg-generate.py) 
+to generate them e.g.:
 ```bash
 PYTHONPATH=l2tdevtools l2tdevtools/tools/dpkg-generate.py --source-directory=. package
 mv dpkg debian
@@ -90,9 +102,11 @@ sudo dpkg -i python-package-1.0.0-1_all.deb
 ```
 
 ### dfVFS
-The dfVFS build instructions can be found [here](https://github.com/log2timeline/dfvfs/wiki/Building). Note that for dfVFS to function correctly several dependencies, like pytsk, mentioned later in a section of this page, are required.
+The dfVFS build instructions can be found [here](https://github.com/log2timeline/dfvfs/wiki/Building).
+Note that for dfVFS to function correctly several dependencies, like pytsk, 
+mentioned later in a section of this page, are required.
 
-Download the latest source package from: https://github.com/log2timeline/dfvfs/releases
+Download the latest source package from: [GitHub](https://github.com/log2timeline/dfvfs/releases)
 
 To build deb files run the following command from the build root directory:
 ```bash
@@ -144,12 +158,16 @@ Install the following dependencies for building libyal:
 sudo apt-get install bzip2-dev libfuse-dev libssl-dev zlib1g-dev
 ```
 
-Since the build process for the libyal libraries is very similar, the following paragraph provides building libevt as an example. For more details see the build instructions of the individual projects e.g. https://github.com/libyal/libevt/wiki/Building.
+Since the build process for the libyal libraries is very similar, the following
+paragraph provides building libevt as an example. For more details see the 
+build instructions of the individual projects e.g. 
+https://github.com/libyal/libevt/wiki/Building.
 
-Note that there is also a script to batch build the libyal dependencies more information here: https://github.com/log2timeline/l2tdevtools/wiki/Build-script
+Note that there is also a script to batch build the libyal dependencies more 
+information here: https://github.com/log2timeline/l2tdevtools/wiki/Build-script
 
 #### Example: libevt and Python-bindings
-Download the latest source package from: https://github.com/libyal/libevt/releases
+Download the latest source package from: [GitHub](https://github.com/libyal/libevt/releases)
 
 To build deb files run the following command from the build root directory:
 ```bash
@@ -206,12 +224,12 @@ The build and install Pytsk see:
 
 ### Optional dependencies for output modules
 #### elasticsearch-py
-Download the latest source package from: https://github.com/elastic/elasticsearch-py
+Download the latest source package from [GitHub](https://github.com/elastic/elasticsearch-py)
 
 **TODO: describe**
 
 #### XlsxWriter
-Download the latest source package from: https://github.com/jmcnamara/XlsxWriter/releases
+Download the latest source package from: [GitHub](https://github.com/jmcnamara/XlsxWriter/releases)
 
 **TODO describe obtaining packing files**
 

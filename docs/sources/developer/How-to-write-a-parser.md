@@ -16,7 +16,8 @@ Python and use of git.
 
 Before you can write a binary file parser you will need to have a good 
 understanding of the file format. A description of the 
-Safari Cookies.binarycookies format can be found [here](https://github.com/libyal/assorted/blob/master/documentation/Safari%20Cookies.asciidoc).
+Safari Cookies.binarycookies format can be found 
+[here](https://github.com/libyal/assorted/blob/master/documentation/Safari%20Cookies.asciidoc).
 
 ## Parsers vs. Plugins
 Before starting work on a parser, check if Plaso already has a parser that 
@@ -50,14 +51,14 @@ material.**
 
 ## Parsers, formatters, events and event data
 
-* parser; subclass of plaso.parsers.interface.FileObjectParser, that extracts
- events from the content of a file.
-* formatter (or event formatter); subclass of 
-plaso.formatters.interface.EventFormatter, that generates a human readable 
+* parser; a subclass of [FileObjectParser](../api/plaso.parsers.html#plaso.parsers.interface.FileObjectParser)
+ that extracts events from the content of a file.
+* formatter (or event formatter); a subclass of 
+[EventFormatter](../api/plaso.formatters.html#plaso.formatters.interface.EventFormatter) which generates a human readable 
 description of the event data. 
-* event; subclass of plaso.containers.events.EventObject, that represents 
+* event; a subclass of [EventObject](../api/plaso.containers.html#plaso.containers.events.EventObject) which represents 
 [an event](Scribbles-about-events.md#what-is-an-event)
-* event data; subclass of plaso.containers.events.EventData, that represents 
+* event data; a subclass of [EventData](../api/plaso.containers.html#plaso.containers.events.EventData) which represents 
 data related to the event.
 
 ### Writing the parser

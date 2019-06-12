@@ -12,12 +12,10 @@ Plaso follows the [log2timeline style guide](https://github.com/log2timeline/l2t
  else to do it.
 * Use `self.CheckTimestamp` for testing timestamp values.
 
-Common test code should be stored in "test library" files, e.g. the parser test 
-library:
+Common test code should be stored in "test library" files, for example. the parser test 
+library is `tests/parsers/test_lib.py`.
 
-    tests/parsers/test_lib.py
-
-We do this for various reasons:
+We do this for a few reasons:
 
 * to remove code duplication in "boiler plate" test code;
 * to make the tests more uniform in both look-and-feel but also what is tested;

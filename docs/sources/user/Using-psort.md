@@ -1,6 +1,6 @@
 # Using psort.py (Plaso Síar Og Raðar Þessu)
 
-**psort** is a command line tool to post-process Plaso storage files. It allows you to filter, sort and run automatic analysis on the contents of Plaso storage files.
+**psort** is a command line tool to post-process plaso storage files. It allows you to filter, sort and run automatic analysis on the contents of plaso storage files.
 
 Looking for [tips and tricks](Using-psort.md#how-do-i)?
 
@@ -10,7 +10,7 @@ To see a list of all available parameters you can pass to psort use ``-h`` or ``
 
 The simplest way to run the tool is simply provide it with a storage file.
 
-```bash
+```
 $ psort.py -w test.log test.plaso
 ```
 
@@ -18,7 +18,7 @@ This will use the default output module and print out to STDOUT a list of all ex
 
 The generic options are:
 
-```bash
+```
 $ psort.py [-a] [-o FORMAT] [-w OUTPUTFILE] [-z TIMEZONE] STORAGE_FILE FILTER
 ```
 
@@ -150,7 +150,7 @@ $ psort.py -q -w output.csv test.plaso
 
 ### Automatic Analysis
 
-Plaso defines a concept called an analysis plugin. Essentially that means that you can write a plugin that gets a copy of every event that is extracted and is not filtered out to inspect and potentially extract meaning or context out of. This information can be used to create tags and attach them back to the events or to create reports.
+plaso defines a concept called an analysis plugin. Essentially that means that you can write a plugin that gets a copy of every event that is extracted and is not filtered out to inspect and potentially extract meaning or context out of. This information can be used to create tags and attach them back to the events or to create reports.
 
 As of now the analysis plugins are only exposed to the post-processing layer, as in exposed to **psort** although there are efforts underway to expose them to the extraction stage as well. That way you can use them to create tags that are immediately available in post processing.
 
@@ -283,7 +283,7 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 
 By default the tool chooses 5 minutes prior and after the timestamp in question. To configure that use the ``--slice_size SLICE_SIZE`` parameter.
 
-```bash
+```
 $ psort.py -q --slice "2004-09-20 16:13:02" --slice_size 100 test.plaso
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 2004-09-20T15:18:38+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: :2004082520040826: Mr. Evil@http://www.yahoo.com Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/MSHist012004082520040826/index.dat,-,1,143624
@@ -324,7 +324,7 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 ...
 ```
 
-Here the filter `cached_file_size is 43` is applied to the output searching for all IE cache files that are 43 bytes in size. If we wanted to gather some context surrounding these events we can supply the `--slicer` flag, for example:
+Here the filter ``cached_file_size is 43``` is applied to the output searching for all IE cache files that are 43 bytes in size. If we wanted to gather some context surrounding these events we can supply the ``--slicer`` flag, for example:
 
 ```
 $ psort.py --slicer -q test.plaso "cached_file_size is 43"
@@ -349,7 +349,7 @@ $ psort.py --slice_size 15 --slicer -q test.plaso "cached_file_size is 43"
 
 The [data](https://github.com/log2timeline/plaso/tree/master/data) folder was [previously mentioned](Using-psort.md#automatic-analysis). The location of this folder is automatically determined, depending on how the tool got installed on the system and the OS platform. This data path is used by **psort** to find the location of filter files, Event Log message database, etc.
 
-This data path can be changed from the default location, for instance if you have your own *winevt-rc.db* database or set of filter files. This can be achieved using the `--data PATH` parameter, for example:
+This data path can be changed from the default location, for instance if you have your own *winevt-rc.db* database or set of filter files. This can be achieved using the ``--data PATH`` parameter, for example:
 
 ```
 $ psort.py --data /where/my/data/is/stored test.plaso

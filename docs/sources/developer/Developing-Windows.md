@@ -47,7 +47,8 @@ C:\Python27\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py test.plaso
 ```
 
 ## Development tools
-If you intend to do development on plaso you'll also need to install some development tools:
+If you intend to do development on plaso you'll also need to install some 
+development tools:
 
 * PyLint
 * Python Mock
@@ -58,10 +59,10 @@ At the moment Plaso development requires PyLint 1.9.x.
 **TODO: describe building pylint 1.9.x**
 
 For pylint 1.9.x the following additional dependencies are required:
-* https://pypi.python.org/pypi/astroid
-* https://pypi.python.org/pypi/lazy-object-proxy
-* https://pypi.python.org/pypi/logilab-common
-* https://pypi.python.org/pypi/wrapt
+* [astroid](https://pypi.python.org/pypi/astroid)
+* [lazy-object-proxy](https://pypi.python.org/pypi/lazy-object-proxy)
+* [logilab-common](https://pypi.python.org/pypi/logilab-common)
+* [wrapt](https://pypi.python.org/pypi/wrapt)
 
 ### Python Mock
 Download the latest source package from: https://pypi.python.org/pypi/mock

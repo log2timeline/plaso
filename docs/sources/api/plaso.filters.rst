@@ -4,18 +4,26 @@ plaso.filters package
 Submodules
 ----------
 
-plaso.filters.dynamic\_filter module
-------------------------------------
-
-.. automodule:: plaso.filters.dynamic_filter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.filters.event\_filter module
 ----------------------------------
 
 .. automodule:: plaso.filters.event_filter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.filters.expression\_parser module
+---------------------------------------
+
+.. automodule:: plaso.filters.expression_parser
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.filters.expressions module
+--------------------------------
+
+.. automodule:: plaso.filters.expressions
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,10 +36,18 @@ plaso.filters.file\_entry module
     :undoc-members:
     :show-inheritance:
 
-plaso.filters.filter\_list module
----------------------------------
+plaso.filters.filters module
+----------------------------
 
-.. automodule:: plaso.filters.filter_list
+.. automodule:: plaso.filters.filters
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.filters.helpers module
+----------------------------
+
+.. automodule:: plaso.filters.helpers
     :members:
     :undoc-members:
     :show-inheritance:
@@ -40,14 +56,6 @@ plaso.filters.interface module
 ------------------------------
 
 .. automodule:: plaso.filters.interface
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.filters.manager module
-----------------------------
-
-.. automodule:: plaso.filters.manager
     :members:
     :undoc-members:
     :show-inheritance:
