@@ -51,27 +51,33 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'task_scheduler:task_cache:entry')
     self.CheckTimestamp(event.timestamp, '2009-07-14 04:53:25.811618')
 
-    regvalue_identifier = 'Task: SynchronizeTime'
-    expected_value = '[ID: {044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}]'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
+    self.assertEqual(event.task_name, 'SynchronizeTime')
+    self.assertEqual(
+        event.task_identifier, '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}')
 
-    expected_message = '[{0:s}] {1:s}: {2:s}'.format(
-        key_path, regvalue_identifier, expected_value)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+    expected_message = (
+        '[{0:s}] '
+        'Task: SynchronizeTime '
+        '[Identifier: {{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}}]').format(
+            key_path)
+    expected_short_message = (
+        'Task: SynchronizeTime')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[1]
 
+    self.assertEqual(event.data_type, 'task_scheduler:task_cache:entry')
     self.CheckTimestamp(event.timestamp, '2009-07-14 05:08:50.811627')
 
-    regvalue_identifier = 'Task: SynchronizeTime'
-
     expected_message = (
+        '[{0:s}] '
         'Task: SynchronizeTime '
-        '[Identifier: {044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}]')
+        '[Identifier: {{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}}]').format(
+            key_path)
     expected_short_message = (
         'Task: SynchronizeTime')
 
