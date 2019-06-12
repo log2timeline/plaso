@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
-from plaso.containers import windows_events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -19,6 +18,7 @@ class TaskCacheEventData(events.EventData):
   """Task Cache event data.
 
   Attributes:
+    key_path (str): Windows Registry key path.
     task_name (str): name of the task.
     task_identifier (str): identifier of the task.
   """
@@ -28,6 +28,7 @@ class TaskCacheEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(TaskCacheEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.key_path = None
     self.task_name = None
     self.task_identifier = None
 
@@ -43,10 +44,6 @@ class TaskCacheWindowsRegistryPlugin(
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
           'CurrentVersion\\Schedule\\TaskCache')])
-
-  URLS = [(
-      'https://github.com/libyal/winreg-kb/blob/master/documentation/'
-      'Task%20Scheduler%20Keys.asciidoc')]
 
   _DEFINITION_FILE = 'task_scheduler.yaml'
 
@@ -139,22 +136,14 @@ class TaskCacheWindowsRegistryPlugin(
 
       name = task_guids.get(sub_key.name, sub_key.name)
 
-      values_dict = {}
-      values_dict['Task: {0:s}'.format(name)] = '[ID: {0:s}]'.format(
-          sub_key.name)
-
-      event_data = windows_events.WindowsRegistryEventData()
+      event_data = TaskCacheEventData()
       event_data.key_path = registry_key.path
-      event_data.offset = registry_key.offset
-      event_data.regvalue = values_dict
+      event_data.task_name = name
+      event_data.task_identifier = sub_key.name
 
       event = time_events.DateTimeValuesEvent(
           registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      event_data = TaskCacheEventData()
-      event_data.task_name = name
-      event_data.task_identifier = sub_key.name
 
       last_registered_time = dynamic_info_record.last_registered_time
       if last_registered_time:

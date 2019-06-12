@@ -13,6 +13,7 @@ class TaskCacheEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'task_scheduler:task_cache:entry'
 
   FORMAT_STRING_PIECES = [
+      '[{key_path}]',
       'Task: {task_name}',
       '[Identifier: {task_identifier}]']
 
