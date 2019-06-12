@@ -10,7 +10,6 @@ from plaso.analysis import tagging
 from plaso.lib import definitions
 from plaso.lib import timelib
 
-from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
 
 
@@ -41,12 +40,13 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
        'source_name': 'Messaging',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    test_file = self._GetTestFilePath(['tagging_file', 'valid.txt'])
+    test_file_path = self._GetTestFilePath(['tagging_file', 'valid.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = tagging.TaggingAnalysisPlugin()
-    plugin.SetAndLoadTagFile(test_file)
+    plugin.SetAndLoadTagFile(test_file_path)
 
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 

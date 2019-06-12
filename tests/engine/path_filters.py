@@ -73,11 +73,17 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
       '- \'/test_data/testdir/filter_.+.txt\'',
       ''])
 
-  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testBuildFindSpecs(self):
     """Tests the BuildFindSpecs function."""
+    test_file_path = self._GetTestFilePath(['System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_filter_file = filter_file.FilterFile()
     test_path_filters = test_filter_file._ReadFromFileObject(
         io.StringIO(self._FILTER_FILE_DATA))
@@ -109,11 +115,17 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
     # total 6 path specifications.
     self.assertEqual(len(path_specs), 6)
 
-  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testBuildFindSpecsWithYAMLFilterFile(self):
     """Tests the BuildFindSpecs function with YAML filter file."""
+    test_file_path = self._GetTestFilePath(['System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
     test_filter_file = yaml_filter_file.YAMLFilterFile()
     test_path_filters = test_filter_file._ReadFromFileObject(
         io.StringIO(self._YAML_FILTER_FILE_DATA))

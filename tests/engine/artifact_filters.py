@@ -40,11 +40,17 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     Returns:
       ArtifactDefinitionsFiltersHelper: artifact definitions filters helper.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
     registry.ReadFromDirectory(reader, test_artifacts_path)
 
     return artifact_filters.ArtifactDefinitionsFiltersHelper(
@@ -74,12 +80,17 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     return knowledge_base
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testBuildFindSpecsWithFileSystem(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
+    test_file_path = self._GetTestFilePath(['System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
     knowledge_base = self._CreateTestKnowledgeBaseWindows()
 
     artifact_filter_names = ['TestFiles', 'TestFiles2']
@@ -123,12 +134,17 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     file_system.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testBuildFindSpecsWithFileSystemAndGroup(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
+    test_file_path = self._GetTestFilePath(['System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
     knowledge_base = self._CreateTestKnowledgeBaseWindows()
 
     artifact_filter_names = ['TestGroupExtract']
@@ -165,8 +181,6 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     file_system.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testBuildFindSpecsWithRegistry(self):
     """Tests the BuildFindSpecs function on Windows Registry sources."""
     knowledge_base = knowledge_base_engine.KnowledgeBase()

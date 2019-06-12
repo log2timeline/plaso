@@ -22,11 +22,12 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     """Sets up the needed objects used throughout the test."""
     self._resolver_context = context.Context()
 
-  @shared_test_lib.skipUnlessHasTestFile(['another_file'])
   def testReadline(self):
     """Test the readline() function."""
-    test_file = self._GetTestFilePath(['another_file'])
-    test_path_spec = os_path_spec.OSPathSpec(location=test_file)
+    test_file_path = self._GetTestFilePath(['another_file'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
 
     file_object = os_file_io.OSFile(self._resolver_context)
     file_object.open(test_path_spec)
@@ -48,11 +49,12 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 
     file_object.close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testReadlineMultipleLines(self):
     """Test the readline() function on multiple lines."""
-    test_file = self._GetTestFilePath(['password.csv'])
-    test_path_spec = os_path_spec.OSPathSpec(location=test_file)
+    test_file_path = self._GetTestFilePath(['password.csv'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
 
     file_object = os_file_io.OSFile(self._resolver_context)
     file_object.open(test_path_spec)
@@ -84,11 +86,12 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 
     file_object.close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testReadlines(self):
     """Test the readlines() function."""
-    test_file = self._GetTestFilePath(['password.csv'])
-    test_path_spec = os_path_spec.OSPathSpec(location=test_file)
+    test_file_path = self._GetTestFilePath(['password.csv'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
 
     file_object = os_file_io.OSFile(self._resolver_context)
     file_object.open(test_path_spec)
@@ -105,11 +108,12 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 
     file_object.close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testReadlinesWithSizeHint(self):
     """Test the readlines() function."""
-    test_file = self._GetTestFilePath(['password.csv'])
-    test_path_spec = os_path_spec.OSPathSpec(location=test_file)
+    test_file_path = self._GetTestFilePath(['password.csv'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
 
     file_object = os_file_io.OSFile(self._resolver_context)
     file_object.open(test_path_spec)
@@ -124,11 +128,12 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 
     file_object.close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['mactime.body'])
   def testReadlinesWithFileWithoutNewLineAtEnd(self):
     """Test reading lines from a file without a new line char at the end."""
-    test_file = self._GetTestFilePath(['mactime.body'])
-    test_file_path_spec = os_path_spec.OSPathSpec(location=test_file)
+    test_file_path = self._GetTestFilePath(['mactime.body'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
 
     file_object = os_file_io.OSFile(self._resolver_context)
     file_object.open(test_file_path_spec)
@@ -138,11 +143,12 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(lines), 17)
 
-  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testIterator(self):
     """Test the iterator functionality."""
-    test_file = self._GetTestFilePath(['password.csv'])
-    test_path_spec = os_path_spec.OSPathSpec(location=test_file)
+    test_file_path = self._GetTestFilePath(['password.csv'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
 
     file_object = os_file_io.OSFile(self._resolver_context)
     file_object.open(test_path_spec)
@@ -170,11 +176,12 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 class BinaryDSVReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the binary delimited separated values reader."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testIterator(self):
     """Tests the iterator functionality."""
-    test_file = self._GetTestFilePath(['password.csv'])
-    test_path_spec = os_path_spec.OSPathSpec(location=test_file)
+    test_file_path = self._GetTestFilePath(['password.csv'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
 
     resolver_context = context.Context()
     file_object = os_file_io.OSFile(resolver_context)

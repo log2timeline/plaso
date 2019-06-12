@@ -107,9 +107,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       {'name': 'dude', 'path': 'C:\\Users\\dude', 'sid': 'S-1'},
       {'name': 'frank', 'path': 'C:\\Users\\frank', 'sid': 'S-2'}]
 
-  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testGetPathSegmentSeparator(self):
     """Tests the _GetPathSegmentSeparator function."""
+    test_file_path = self._GetTestFilePath(['chrome_extensions'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = MockChromeExtensionPlugin()
 
     for path in self._MACOS_PATHS:
@@ -120,9 +122,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       path_segment_separator = plugin._GetPathSegmentSeparator(path)
       self.assertEqual(path_segment_separator, '\\')
 
-  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportMacOSPaths(self):
     """Tests the ExamineEvent and CompileReport functions on MacOS paths."""
+    test_file_path = self._GetTestFilePath(['chrome_extensions'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
         self._MACOS_TEST_EVENTS, plugin, knowledge_base_values={
@@ -149,9 +153,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     expected_keys = set(['frank', 'dude'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
-  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
+    test_file_path = self._GetTestFilePath(['chrome_extensions'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
         self._WINDOWS_TEST_EVENTS, plugin, knowledge_base_values={

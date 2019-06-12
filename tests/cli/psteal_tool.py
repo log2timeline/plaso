@@ -86,16 +86,20 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     # pylint: disable=deprecated-method
     self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testFailWhenOutputAlreadyExists(self):
     """Test to make sure the tool raises when the output file already exists."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
+    options.artifact_definitions_path = test_artifacts_path
+    options.storage_file = test_file_path
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -114,14 +118,19 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
-  @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['testdir'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_artifacts_path
     options.source = 'source'
     # Test when the output file is missing.
     expected_error = 'Output format: dynamic requires an output file'
@@ -146,7 +155,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
-      options.source = self._GetTestFilePath(['testdir'])
+      options.source = test_file_path
       options.write = os.path.join(temp_directory, 'dynamic.out')
 
       # Test when both source and output are specified.
@@ -176,18 +185,22 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     expected_error = 'ERROR: Output format: dynamic requires an output file'
     self.assertIn(expected_error, output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testExtractEventsFromSourceDirectory(self):
     """Tests the ExtractEventsFromSources function on a directory."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['testdir'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_artifacts_path
     options.quiet = True
     options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['testdir'])
+    options.source = test_file_path
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
@@ -214,20 +227,24 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
   # TODO: Fix test https://github.com/log2timeline/plaso/issues/2253.
   @unittest.skip('failing on Windows')
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testExtractEventsFromSourceBDEImage(self):
     """Tests the ExtractEventsFromSources function on an image with BDE."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['bdetogo.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
     dfvfs_resolver.Resolver.key_chain.Empty()
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_artifacts_path
     options.credentials = ['password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
-    options.source = self._GetTestFilePath(['bdetogo.raw'])
+    options.source = test_file_path
     options.status_view_mode = 'none'
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -253,18 +270,22 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on a single partition."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_artifacts_path
     options.quiet = True
     options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['ímynd.dd'])
+    options.source = test_file_path
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
@@ -289,20 +310,24 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testExtractEventsFromSourcePartitionedImage(self):
     """Tests the ExtractEventsFromSources function on a partitioned image."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    # Note that the source file is a RAW (VMDK flat) image.
+    test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_artifacts_path
     options.partitions = 'all'
     options.quiet = True
     options.status_view_mode = 'none'
-    # Note that the source file is a RAW (VMDK flat) image.
-    options.source = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    options.source = test_file_path
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
@@ -327,19 +352,23 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testExtractEventsFromSourceVSSImage(self):
     """Tests the ExtractEventsFromSources function on an image with VSS."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_artifacts_path
     options.quiet = True
     options.single_process = True
     options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['vsstest.qcow2'])
+    options.source = test_file_path
     options.vss_stores = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -369,18 +398,22 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   def testExtractEventsFromSourceSingleFile(self):
     """Tests the ExtractEventsFromSources function on a single file."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_artifacts_path
     options.quiet = True
     options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['System.evtx'])
+    options.source = test_file_path
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
@@ -405,17 +438,24 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['end_to_end', 'dynamic.log'])
   def testProcessStorage(self):
     """Test the AnalyzeEvents function"""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    expected_output_file_path = self._GetTestFilePath(
+        ['end_to_end', 'dynamic.log'])
+    self._SkipIfPathNotExists(expected_output_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
+    options.artifact_definitions_path = test_artifacts_path
+    options.storage_file = test_file_path
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -425,10 +465,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ParseOptions(options)
       test_tool.AnalyzeEvents()
 
-      expected_output_file_name = self._GetTestFilePath(
-          ['end_to_end', 'dynamic.log'])
       with io.open(
-          expected_output_file_name, 'rt', encoding='utf-8') as file_object:
+          expected_output_file_path, 'rt', encoding='utf-8') as file_object:
         expected_output = file_object.read()
 
       with io.open(options.write, 'rt', encoding='utf-8') as file_object:
