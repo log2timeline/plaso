@@ -17,7 +17,9 @@ class ApacheAccessFormatter(interface.ConditionalEventFormatter):
       'from: {ip_address}',
       'code: {http_response_code}',
       'referer: {http_request_referer}',
-      'user_agent: {http_request_user_agent}'
+      'user_agent: {http_request_user_agent}',
+      'server_name: {server_name}',
+      'port: {port_number}'
   ]
 
   FORMAT_STRING_SHORT_PIECES = [
