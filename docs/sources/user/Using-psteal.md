@@ -1,6 +1,6 @@
 # Using psteal.py
 
-**psteal** is a command line tool which uses [log2timeline](Using-log2timeline.md) and [psort](Using-psort.md) engines to extract and process [events](Scribbles-about-events.md#what-is-an-event) in one go.
+**psteal** (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk) is a command line tool which uses [log2timeline](Using-log2timeline.md) and [psort](Using-psort.md) engines to extract and process [events](Scribbles-about-events.md#what-is-an-event) in one go.
 
 It is a quick shortcut to the "*kitchen sink*" approach and only supports a very limited subset of options the above tools provide.
 
