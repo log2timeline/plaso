@@ -108,22 +108,6 @@ class OutputMediator(object):
 
     return event_formatter.GetSources(event, event_data)
 
-  def GetFormatStringAttributeNames(self, event_data):
-    """Retrieves the attribute names in the format string.
-
-    Args:
-      event_data (EventData): event data.
-
-    Returns:
-      list[str]: list containing the attribute names. If no event formatter to
-          match the event can be found the function returns None.
-    """
-    event_formatter = self.GetEventFormatter(event_data)
-    if not event_formatter:
-      return None
-
-    return event_formatter.GetFormatStringAttributeNames()
-
   def GetHostname(self, event_data, default_hostname='-'):
     """Retrieves the hostname related to the event.
 
