@@ -48,7 +48,11 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
       string_parts = []
       for key, value in sorted(regvalue.items()):
         string_parts.append('{0:s}: {1!s}'.format(key, value))
-      event_values['values'] = ' '.join(string_parts)
+      values = ' '.join(string_parts)
+      event_values['values'] = values
+
+    if not values:
+      event_values['values'] = 'No values stored in key.'
 
     # TODO: remove urls.
     urls = event_values.get('urls', [])
