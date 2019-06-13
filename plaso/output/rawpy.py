@@ -62,15 +62,16 @@ class NativePythonFormatterHelper(object):
             'value').format(attribute_name, event_data.data_type))
         attribute_value = ''
 
-      if attribute_name not in definitions.RESERVED_VARIABLE_NAMES:
-        attribute_string = '  {{{0!s}}} {1!s}'.format(
-            attribute_name, attribute_value)
-        additional_attributes.append(attribute_string)
+      if attribute_name == 'pathspec':
+        continue
 
-      elif attribute_name != 'pathspec':
-        attribute_string = '  {{{0!s}}} {1!s}'.format(
-            attribute_name, attribute_value)
+      attribute_string = '  {{{0!s}}} {1!s}'.format(
+          attribute_name, attribute_value)
+
+      if attribute_name in definitions.RESERVED_VARIABLE_NAMES:
         reserved_attributes.append(attribute_string)
+      else:
+        additional_attributes.append(attribute_string)
 
     lines_of_text.extend(reserved_attributes)
     lines_of_text.extend(additional_attributes)
