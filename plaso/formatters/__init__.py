@@ -96,6 +96,7 @@ from plaso.formatters import text
 from plaso.formatters import trendmicroav
 from plaso.formatters import twitter_android
 from plaso.formatters import twitter_ios
+from plaso.formatters import typedurls
 from plaso.formatters import usb
 from plaso.formatters import usbstor
 from plaso.formatters import userassist
