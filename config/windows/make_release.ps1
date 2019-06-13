@@ -65,7 +65,19 @@ If (Test-Path "dist")
 {
     Remove-Item -Force -Recurse "dist"
 }
-
+If ( $Python -ne "" )
+{
+	# Note that the double quotes in the Python command are escaped by using double quotes
+	$PythonVersion = & Invoke-Expression -Command "& '${Python}' -c ""from __future__ import print_function; import sys; print('{0:d}.{1:d}'.format(sys.version_info[0], sys.version_info[1]))"" "
+}
+Else
+{
+	$PythonVersion = ""
+}
+If ( $PythonVersion -ne "" )
+{
+	$PythonVersion = "-py${PythonVersion}"
+}
 $Arguments = "--hidden-import artifacts --onedir tools\image_export.py"
 
 If ( $Python -ne "" )
@@ -275,6 +287,6 @@ Copy-Item -Force "plaso\parsers\olecf_plugins\*.yaml" "${DistPath}\plaso\parsers
 Copy-Item -Force "plaso\parsers\plist_plugins\*.yaml" "${DistPath}\plaso\parsers\plist_plugins"
 Copy-Item -Force "plaso\parsers\winreg_plugins\*.yaml" "${DistPath}\plaso\parsers\winreg_plugins"
 
-# Make plaso-<version>-<architecture>.zip
+# Makes plaso-<version><python_version>-<architecture>.zip
 Add-Type -assembly "system.io.compression.filesystem"
-[io.compression.zipfile]::CreateFromDirectory("$(pwd | % Path)\${DistPath}", "$(pwd| % Path)\plaso-${Version}-${Architecture}.zip")
+[io.compression.zipfile]::CreateFromDirectory("$(pwd | % Path)\dist\plaso", "$(pwd| % Path)\plaso-${Version}${PythonVersion}-${Architecture}.zip")
