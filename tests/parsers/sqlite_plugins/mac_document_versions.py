@@ -10,14 +10,12 @@ from plaso.formatters import mac_document_versions as _  # pylint: disable=unuse
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import mac_document_versions
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacOS Document Versions plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['document_versions.sql'])
   def testProcess(self):
     """Tests the Process function on a MacOS Document Versions file."""
     plugin = mac_document_versions.MacDocumentVersionsPlugin()

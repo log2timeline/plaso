@@ -10,14 +10,12 @@ from plaso.formatters import olecf  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.olecf_plugins import default
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
 class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
   """Tests for the OLECF default plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Document.doc'])
   def testProcess(self):
     """Tests the Process function."""
     plugin = default.DefaultOLECFPlugin()

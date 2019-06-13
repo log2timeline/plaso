@@ -12,7 +12,6 @@ from plaso.parsers.cookie_plugins import ganalytics  # pylint: disable=unused-im
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import firefox_cookies
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib as sqlite_plugins_test_lib
 
 
@@ -31,7 +30,6 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         cookies.append(event)
     return cookies
 
-  @shared_test_lib.skipUnlessHasTestFile(['firefox_cookies.sqlite'])
   def testParsingFirefox29CookieDatabase(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
     plugin = firefox_cookies.FirefoxCookiePlugin()
@@ -62,7 +60,6 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['cookies.db'])
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
     plugin = chrome_cookies.ChromeCookiePlugin()

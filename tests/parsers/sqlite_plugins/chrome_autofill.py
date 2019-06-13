@@ -10,14 +10,12 @@ from plaso.formatters import chrome_autofill as _  # pylint: disable=unused-impo
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import chrome_autofill
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class ChromeAutofillPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome autofill entries database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Web Data'])
   def testProcess(self):
     """Tests the Process function on a Chrome autofill entries database."""
     plugin = chrome_autofill.ChromeAutofillPlugin()

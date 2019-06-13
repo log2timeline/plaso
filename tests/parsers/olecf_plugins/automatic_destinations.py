@@ -10,15 +10,12 @@ from plaso.formatters import olecf  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.olecf_plugins import automatic_destinations
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
 class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
   """Tests for the .automaticDestinations-ms OLECF parser plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      '1b4dd67f29cb1962.automaticDestinations-ms'])
   def testProcessVersion1(self):
     """Tests the Process function on version 1 .automaticDestinations-ms."""
     plugin = automatic_destinations.AutomaticDestinationsOLECFPlugin()
@@ -110,8 +107,6 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      '9d1f905ce5044aee.automaticDestinations-ms'])
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
     plugin = automatic_destinations.AutomaticDestinationsOLECFPlugin()

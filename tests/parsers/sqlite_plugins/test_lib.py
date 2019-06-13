@@ -27,6 +27,10 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       tuple: containing:
           file_entry (dfvfs.FileEntry): file entry of the SQLite database file.
           SQLiteDatabase: SQLite database file.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     file_entry = self._GetTestFileEntry(path_segments)
 
@@ -69,6 +73,10 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
 
     Returns:
       FakeStorageWriter: storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)

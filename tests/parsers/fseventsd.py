@@ -13,14 +13,12 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.formatters import fseventsd as _  # pylint: disable=unused-import
 from plaso.parsers import fseventsd
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class FSEventsdParserTest(test_lib.ParserTestCase):
   """Tests for the fseventsd parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['fsevents-0000000002d89b58'])
   def testParseV1(self):
     """Tests the Parse function on a version 1 file."""
     parser = fseventsd.FseventsdParser()
@@ -60,7 +58,6 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
         '.Spotlight-V100/Store-V1 DirectoryCreated, IsDirectory')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['fsevents-00000000001a0b79'])
   def testParseV2(self):
     """Tests the Parse function on a version 2 file."""
     parser = fseventsd.FseventsdParser()
