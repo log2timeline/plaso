@@ -63,22 +63,22 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = (
         '[{0:s}] '
-        'CookiesToSave: *.piriform.com '
-        '(App)Delete Index.dat files: True '
-        '(App)Last Download Location: True '
-        '(App)Recently Typed URLs: True '
         '(App)Cookies: True '
+        '(App)Delete Index.dat files: True '
         '(App)History: True '
-        '(App)Temporary Internet Files: True '
-        '(App)Recent Documents: True '
-        '(App)Run (in Start Menu): True '
+        '(App)Last Download Location: True '
         '(App)Other Explorer MRUs: True '
+        '(App)Recent Documents: True '
+        '(App)Recently Typed URLs: True '
+        '(App)Run (in Start Menu): True '
+        '(App)Temporary Internet Files: True '
         '(App)Thumbnail Cache: True '
-        'WINDOW_LEFT: 146 '
-        'WINDOW_TOP: 102 '
-        'WINDOW_WIDTH: 733 '
+        'CookiesToSave: *.piriform.com '
         'WINDOW_HEIGHT: 524 '
-        'WINDOW_MAX: 0').format(key_path)
+        'WINDOW_LEFT: 146 '
+        'WINDOW_MAX: 0 '
+        'WINDOW_TOP: 102 '
+        'WINDOW_WIDTH: 733').format(key_path)
 
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
