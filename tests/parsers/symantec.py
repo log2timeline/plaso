@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import symantec as _  # pylint: disable=unused-import
 from plaso.parsers import symantec
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -30,7 +29,6 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     time_elements_tuple = parser._GetTimeElementsTuple('2A0A1E0A2F1D')
     self.assertEqual(time_elements_tuple, expected_time_elements_tuple)
 
-  @shared_test_lib.skipUnlessHasTestFile(['Symantec.Log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = symantec.SymantecParser()

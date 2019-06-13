@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import mackeeper_cache as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import mackeeper_cache
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacKeeper Cache database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['mackeeper_cache.db'])
   def testProcess(self):
     """Tests the Process function on a MacKeeper Cache database file."""
     plugin = mackeeper_cache.MacKeeperCachePlugin()

@@ -10,14 +10,12 @@ from plaso.formatters import winevt as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import winevt
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinEvtParserTest(test_lib.ParserTestCase):
   """Tests for the Windows EventLog (EVT) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['SysEvent.Evt'])
   def testParse(self):
     """Tests the Parse function."""
     parser = winevt.WinEvtParser()

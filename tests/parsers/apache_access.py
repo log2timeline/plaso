@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import apache_access as _  # pylint: disable=unused-import
 from plaso.parsers import apache_access
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ApacheAccessUnitTest(test_lib.ParserTestCase):
   """Tests for apache access log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['access.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = apache_access.ApacheAccessParser()

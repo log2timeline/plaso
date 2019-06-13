@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import appusage as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import appusage
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacOS application usage activity database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['application_usage.sqlite'])
   def testProcess(self):
     """Tests the Process function."""
     plugin = appusage.ApplicationUsagePlugin()
