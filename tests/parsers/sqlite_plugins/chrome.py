@@ -260,7 +260,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         expected_full_path)
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['History-59_added-fake-column'])
   def testProcess59ExtraColumn(self):
     """Tests the Process function on a Google Chrome 59 History database,
     manually modified to have an unexpected column.
