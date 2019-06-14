@@ -143,7 +143,7 @@ class SQLiteDatabase(object):
     self._temp_wal_file_path = ''
 
     self.schema = {}
-    self.table_columns = {}
+    self.columns_per_table = {}
 
   @property
   def tables(self):
@@ -274,12 +274,13 @@ class SQLiteDatabase(object):
           table_name: ' '.join(query.split())
           for table_name, query in sql_results}
 
-      for table in self.schema.keys():
-        self.table_columns.setdefault(table, [])
-        pragma_results = cursor.execute('PRAGMA table_info({})'.format(table))
+      for table_name in self.schema.keys():
+        self.columns_per_table.setdefault(table_name, [])
+        pragma_results = cursor.execute('PRAGMA table_info({0:s})'
+                                        .format(table_name))
 
-        for column in pragma_results:
-          self.table_columns[table].append(column[1])
+        for pragma_result in pragma_results:
+          self.columns_per_table[table_name].append(pragma_result['name'])
 
     except sqlite3.DatabaseError as exception:
       self._database.close()
@@ -322,6 +323,32 @@ class SQLiteParser(interface.FileEntryParser):
   DESCRIPTION = 'Parser for SQLite database files.'
 
   _plugin_classes = {}
+
+  def _CheckRequiredTablesAndColumns(self, database, plugin):
+    """Check if the database has the minimal structure required by the plugin.
+
+    Args:
+      database (SQLiteDatabase): the database who's structure is being checked.
+      plugin (SQLitePlugin): the plugin providing the structure requirements.
+
+    Returns:
+      bool: True if the database has the minimum tables and columns defined by
+          the plugin, or False if it does not. The database can have more tables
+          and/or columns than specified by the plugin and still return True.
+    """
+
+    has_required_structure = True
+    for required_table, required_columns in plugin.REQUIRED_STRUCTURE.items():
+      if required_table not in database.tables:
+        has_required_structure = False
+        break
+
+      if not frozenset(required_columns).issubset(
+          database.columns_per_table.get(required_table)):
+        has_required_structure = False
+        break
+
+    return has_required_structure
 
   def _OpenDatabaseWithWAL(
       self, parser_mediator, database_file_entry, database_file_object,
@@ -420,24 +447,11 @@ class SQLiteParser(interface.FileEntryParser):
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
     try:
-      table_names = frozenset(database.tables)
-
       for plugin in self._plugins:
-        if not plugin.REQUIRED_TABLES.issubset(table_names):
-          continue
+        required_tables_and_column_exist = self._CheckRequiredTablesAndColumns(
+            database, plugin)
 
-        columns_match = True
-        for required_table, required_columns in plugin.REQUIRED_COLUMNS.items():
-          if required_table not in table_names:
-            columns_match = False
-            continue
-
-          if not frozenset(required_columns).issubset(
-              database.table_columns.get(required_table)):
-            columns_match = False
-            continue
-
-        if not columns_match:
+        if not required_tables_and_column_exist:
           continue
 
         schema_match = plugin.CheckSchema(database)
