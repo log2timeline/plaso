@@ -50,7 +50,17 @@ class IMessagePlugin(interface.SQLitePlugin):
   DESCRIPTION = (
       'Parser for the iMessage and SMS SQLite databases on OSX and iOS.')
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'message': frozenset([
+          'date', 'ROWID', 'is_read', 'is_from_me', 'service', 'text',
+          'handle_id']),
+      'handle': frozenset([
+          'id', 'ROWID']),
+      'attachment': frozenset([
+          'filename', 'ROWID']),
+      'message_attachment_join': frozenset([
+          'message_id', 'attachment_id'])}
+
   QUERIES = [
       ('SELECT m.date, m.ROWID, h.id AS imessage_id, m.is_read AS '
        'read_receipt, m.is_from_me AS message_type, m.service, a.filename AS'
@@ -58,10 +68,6 @@ class IMessagePlugin(interface.SQLitePlugin):
        'h.ROWID = m.handle_id LEFT OUTER JOIN message_attachment_join AS maj '
        'ON m.ROWID = maj.message_id LEFT OUTER JOIN attachment AS a ON '
        'maj.attachment_id = a.ROWID', 'ParseMessageRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset([
-      'message', 'handle', 'attachment', 'message_attachment_join'])
 
   SCHEMAS = [{
       '_SqliteDatabaseProperties': (

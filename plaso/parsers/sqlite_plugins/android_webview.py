@@ -49,7 +49,10 @@ class WebViewPlugin(interface.SQLitePlugin):
   NAME = 'android_webview'
   DESCRIPTION = 'Parser for Android WebView databases'
 
-  REQUIRED_TABLES = frozenset(['android_metadata', 'cookies'])
+  REQUIRED_STRUCTURE = {
+      'android_metadata': frozenset([]),
+      'cookies': frozenset([
+          '_id', 'name', 'value', 'domain', 'expires', 'path', 'secure'])}
 
   QUERIES = frozenset([
       ('SELECT _id, name, value, domain, expires, path, secure FROM cookies',

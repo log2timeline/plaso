@@ -64,7 +64,17 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
   NAME = 'google_drive'
   DESCRIPTION = 'Parser for Google Drive SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'cloud_entry': frozenset([
+          'resource_id', 'filename', 'modified', 'created', 'size', 'doc_type',
+          'shared', 'checksum', 'url']),
+      'cloud_relations': frozenset([
+          'parent_resource_id', 'parent', 'child_resource_id']),
+      'local_entry': frozenset([
+          'inode_number', 'filename', 'modified', 'checksum', 'size']),
+      'local_relations': frozenset([
+          'child_inode_number', 'parent_inode_number'])}
+
   QUERIES = [
       (('SELECT cloud_entry.resource_id, cloud_entry.filename, '
         'cloud_entry.modified, cloud_entry.created, cloud_entry.size, '
@@ -77,11 +87,6 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       (('SELECT inode_number, filename, modified, checksum, size '
         'FROM local_entry WHERE modified IS NOT NULL;'),
        'ParseLocalEntryRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset([
-      'cloud_entry', 'cloud_relations', 'local_entry', 'local_relations',
-      'mapping', 'overlay_status'])
 
   SCHEMAS = [{
       'cloud_entry': (

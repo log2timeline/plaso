@@ -45,15 +45,17 @@ class KikIOSPlugin(interface.SQLitePlugin):
   NAME = 'kik_messenger'
   DESCRIPTION = 'Parser for iOS Kik messenger SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'ZKIKMESSAGE': frozenset([
+          'Z_PK', 'ZRECEIVEDTIMESTAMP', 'ZSTATE', 'ZTYPE', 'ZBODY', 'ZUSER']),
+      'ZKIKUSER': frozenset([
+          'ZUSERNAME', 'ZDISPLAYNAME', 'ZEXTRA'])}
+
   QUERIES = [
       ('SELECT a.Z_PK AS id, b.ZUSERNAME, b.ZDISPLAYNAME,'
        'a.ZRECEIVEDTIMESTAMP, a.ZSTATE, a.ZTYPE, a.ZBODY '
        'FROM ZKIKMESSAGE a JOIN ZKIKUSER b ON b.ZEXTRA = a.ZUSER',
        'ParseMessageRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['ZKIKMESSAGE', 'ZKIKUSER'])
 
   SCHEMAS = [{
       'Z_3MESSAGES': (

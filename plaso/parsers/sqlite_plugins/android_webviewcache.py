@@ -35,7 +35,10 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
   NAME = 'android_webviewcache'
   DESCRIPTION = 'Parser for Android WebViewCache databases'
 
-  REQUIRED_TABLES = frozenset(['android_metadata', 'cache'])
+  REQUIRED_STRUCTURE = {
+      'android_metadata': frozenset([]),
+      'cache': frozenset([
+          'url', 'contentlength', 'expires', 'lastmodify'])}
 
   QUERIES = frozenset([
       ('SELECT url, contentlength, expires, lastmodify FROM cache',

@@ -98,6 +98,16 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
   NAME = 'twitter_android'
   DESCRIPTION = 'Parser for Twitter on android database'
 
+  REQUIRED_STRUCTURE = {
+      'search_queries': frozenset([
+          'name', 'query', 'time']),
+      'statuses': frozenset([
+          '_id', 'author_id', 'content', 'created', 'favorited', 'retweeted']),
+      'users': frozenset([
+          'username', 'user_id', '_id', 'name', 'profile_created',
+          'description', 'web_url', 'location', 'followers', 'friends',
+          'statuses', 'image_url', 'updated', 'friendship_time'])}
+
   QUERIES = [
       ('SELECT name, query, time FROM search_queries', 'ParseSearchRow'),
       (('SELECT statuses._id AS _id, statuses.author_id AS author_id, '
@@ -108,8 +118,6 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
       (('SELECT _id, user_id, username, name, profile_created, description, '
         'web_url, location, followers, friends, statuses, image_url, updated, '
         'friendship_time FROM users'), 'ParseContactRow')]
-
-  REQUIRED_TABLES = frozenset(['search_queries', 'statuses', 'users'])
 
   SCHEMAS = [{
       'activities': (

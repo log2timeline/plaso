@@ -42,18 +42,14 @@ class ChromeAutofillPlugin(interface.SQLitePlugin):
   NAME = 'chrome_autofill'
   DESCRIPTION = 'Parser for Chrome autofill SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'autofill': frozenset([
+          'date_created', 'date_last_used', 'name', 'value', 'count'])}
+
   QUERIES = [
       (('SELECT autofill.date_created, autofill.date_last_used, autofill.name, '
         'autofill.value, autofill.count FROM autofill ORDER BY date_created'),
        'ParseAutofillRow')]
-
-  REQUIRED_TABLES = frozenset(['autofill'])
-
-  REQUIRED_COLUMNS = {
-      'autofill': frozenset(['date_created', 'date_last_used', 'name',
-                             'value', 'count'])
-  }
 
   SCHEMAS = [{
       'autofill': (

@@ -54,15 +54,16 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
   NAME = 'chrome_extension_activity'
   DESCRIPTION = 'Parser for Chrome extension activity SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'activitylog_compressed': frozenset([
+          'time', 'extension_id', 'action_type', 'api_name', 'args', 'page_url',
+          'page_title', 'arg_url', 'other', 'activity_id'])}
+
   QUERIES = [
       (('SELECT time, extension_id, action_type, api_name, args, page_url, '
         'page_title, arg_url, other, activity_id '
         'FROM activitylog_uncompressed ORDER BY time'),
        'ParseActivityLogUncompressedRow')]
-
-  REQUIRED_TABLES = frozenset([
-      'activitylog_compressed', 'string_ids', 'url_ids'])
 
   SCHEMAS = [{
       'activitylog_compressed': (

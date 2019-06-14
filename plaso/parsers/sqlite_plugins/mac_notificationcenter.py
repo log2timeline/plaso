@@ -61,14 +61,18 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
   NAME = 'mac_notificationcenter'
   DESCRIPTION = 'Parser for the Notification Center SQLite database'
 
+  REQUIRED_STRUCTURE = {
+      'app': frozenset([
+          'identifier', 'app_id']),
+      'record': frozenset([
+          'data', 'delivered_date', 'presented', 'app_id'])}
+
   QUERIES = [
       ('SELECT a.identifier AS bundle_name, '
        'r.data AS dataBlob, r.delivered_date AS timestamp,'
        'r.presented AS presented '
        'FROM app a, record r '
        'WHERE a.app_id = r.app_id', 'ParseNotificationcenterRow')]
-
-  REQUIRED_TABLES = frozenset(['app', 'record'])
 
   SCHEMAS = [{
       'app': (

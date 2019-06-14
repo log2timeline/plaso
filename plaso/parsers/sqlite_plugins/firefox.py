@@ -154,7 +154,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
   NAME = 'firefox_history'
   DESCRIPTION = 'Parser for Firefox history SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'moz_places': frozenset([
+          'url', 'title', 'visit_count', 'rev_host', 'hidden', 'typed', 'id']),
+      'moz_historyvisits': frozenset([
+          'id', 'visit_date', 'from_visit', 'visit_type', 'place_id']),
+      'moz_bookmarks': frozenset([
+          'type', 'title', 'dateAdded', 'lastModified', 'id', 'fk']),
+      'moz_items_annos': frozenset([
+          'content', 'dateAdded', 'lastModified', 'id', 'item_id'])}
+
   QUERIES = [
       (('SELECT moz_historyvisits.id, moz_places.url, moz_places.title, '
         'moz_places.visit_count, moz_historyvisits.visit_date, '
@@ -181,11 +190,6 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         'moz_bookmarks.dateAdded, moz_bookmarks.lastModified '
         'FROM moz_bookmarks WHERE moz_bookmarks.type = 2'),
        'ParseBookmarkFolderRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset([
-      'moz_places', 'moz_historyvisits', 'moz_bookmarks',
-      'moz_items_annos'])
 
   _SCHEMA_V24 = {
       'moz_anno_attributes': (
@@ -527,7 +531,11 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   NAME = 'firefox_downloads'
   DESCRIPTION = 'Parser for Firefox downloads SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'moz_downloads': frozenset([
+          'id', 'name', 'source', 'target', 'tempPath', 'startTime', 'endTime',
+          'state', 'referrer', 'currBytes', 'maxBytes', 'mimeType'])}
+
   QUERIES = [
       (('SELECT moz_downloads.id, moz_downloads.name, moz_downloads.source, '
         'moz_downloads.target, moz_downloads.tempPath, '
@@ -545,9 +553,6 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
        'INTEGER NOT NULL DEFAULT 0, maxBytes INTEGER NOT NULL DEFAULT -1, '
        'mimeType TEXT, preferredApplication TEXT, preferredAction INTEGER '
        'NOT NULL DEFAULT 0, autoResume INTEGER NOT NULL DEFAULT 0)'}]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['moz_downloads'])
 
   def ParseDownloadsRow(
       self, parser_mediator, query, row, **unused_kwargs):

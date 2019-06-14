@@ -79,6 +79,15 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
   NAME = 'twitter_ios'
   DESCRIPTION = 'Parser for Twitter on iOS 8+ database'
 
+  REQUIRED_STRUCTURE = {
+      'Users': frozenset([
+          'createdDate', 'updatedAt', 'screenName', 'name', 'profileImageUrl',
+          'location', 'description', 'url', 'following', 'followersCount',
+          'followingCount', 'id']),
+      'Statuses': frozenset([
+          'date', 'text', 'userId', 'retweetCount', 'favoriteCount',
+          'favorited', 'updatedAt'])}
+
   QUERIES = [
       (('SELECT createdDate, updatedAt, screenName, name, profileImageUrl,'
         'location, description, url, following, followersCount, followingCount'
@@ -89,10 +98,6 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
         'Statuses.favorited AS favorited, Statuses.updatedAt AS updatedAt '
         'FROM Statuses LEFT join Users ON Statuses.userId = Users.id ORDER '
         'BY date'), 'ParseStatusRow')]
-
-  REQUIRED_TABLES = frozenset([
-      'Lists', 'MyRetweets', 'StatusesShadow', 'UsersShadow',
-      'ListsShadow', 'Statuses', 'Users'])
 
   SCHEMAS = [{
       'Lists': (

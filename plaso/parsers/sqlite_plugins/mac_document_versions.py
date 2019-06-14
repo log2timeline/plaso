@@ -42,6 +42,12 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   NAME = 'mac_document_versions'
   DESCRIPTION = 'Parser for document revisions SQLite database files.'
 
+  REQUIRED_STRUCTURE = {
+      'files': frozenset([
+          'file_name', 'file_path', 'file_last_seen', 'file_storage_id']),
+      'generations': frozenset([
+          'generation_path', 'generation_add_time', 'generation_storage_id'])}
+
   # Define the needed queries.
   # name: name from the original file.
   # path: path from the original file (include the file)
@@ -54,9 +60,6 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
         'g.generation_add_time AS version_time FROM files f, generations g '
         'WHERE f.file_storage_id = g.generation_storage_id;'),
        'DocumentVersionsRow')]
-
-  # The required tables for the query.
-  REQUIRED_TABLES = frozenset(['files', 'generations'])
 
   SCHEMAS = [{
       'files': (

@@ -126,6 +126,27 @@ class SkypePlugin(interface.SQLitePlugin):
   NAME = 'skype'
   DESCRIPTION = 'Parser for Skype SQLite database files.'
 
+  REQUIRED_STRUCTURE = {
+      'Accounts': frozenset([
+          'id', 'fullname', 'given_displayname', 'emails', 'country',
+          'profile_timestamp', 'authreq_timestamp', 'lastonline_timestamp',
+          'mood_timestamp', 'sent_authrequest_time']),
+      'Calls': frozenset([
+          'id', 'is_incoming', 'begin_timestamp']),
+      'CallMembers': frozenset([
+          'guid', 'call_db_id', 'videostatus', 'start_timestamp',
+          'call_duration']),
+      'Chats': frozenset([
+          'id', 'participants', 'friendlyname', 'dialog_partner', 'name']),
+      'Messages': frozenset([
+          'author', 'from_dispname', 'body_xml', 'timestamp', 'chatname']),
+      'SMSes': frozenset([
+          'id', 'target_numbers', 'timestamp', 'body']),
+      'Transfers': frozenset([
+          'parent_id', 'partner_handle', 'partner_dispname', 'pk_id', 'id',
+          'offer_send_list', 'starttime', 'accepttime', 'finishtime',
+          'filepath', 'filename', 'filesize', 'status'])}
+
   # Queries for building cache.
   QUERY_DEST_FROM_TRANSFER = (
       'SELECT parent_id, partner_handle AS skypeid, '
@@ -153,10 +174,6 @@ class SkypePlugin(interface.SQLitePlugin):
         'cm.start_timestamp AS accept_call, cm.call_duration '
         'FROM Calls c, CallMembers cm '
         'WHERE c.id = cm.call_db_id;'), 'ParseCall')]
-
-  REQUIRED_TABLES = frozenset([
-      'Chats', 'Accounts', 'Conversations', 'Contacts', 'SMSes',
-      'Transfers', 'CallMembers', 'Calls'])
 
   SCHEMAS = [{
       'Accounts': (

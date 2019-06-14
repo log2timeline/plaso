@@ -50,14 +50,15 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
   NAME = 'firefox_cookies'
   DESCRIPTION = 'Parser for Firefox cookies SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'moz_cookies': frozenset([
+          'id', 'baseDomain', 'name', 'value', 'host', 'path', 'expiry',
+          'lastAccessed', 'creationTime', 'isSecure', 'isHttpOnly'])}
+
   QUERIES = [
       (('SELECT id, baseDomain, name, value, host, path, expiry, '
         'lastAccessed, creationTime, isSecure, isHttpOnly FROM moz_cookies'),
        'ParseCookieRow')]
-
-  # The required tables common to Archived History and History.
-  REQUIRED_TABLES = frozenset(['moz_cookies'])
 
   SCHEMAS = [{
       'moz_cookies': (
