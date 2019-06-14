@@ -19,8 +19,8 @@ Some dependencies for Plaso are optional:
 
 ### Fedora Core
 
-**Note that these instructions assume you are running on Fedora Core 26, 27 
-or 28. Installing packages from the copr on other versions and/or distributions 
+**Note that these instructions assume you are running on Fedora Core 28, 29 
+or 30. Installing packages from the copr on other versions and/or distributions 
 is not recommended.**
 
 The [GIFT copr](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) contains
@@ -57,7 +57,7 @@ The [l2tbinaries](https://github.com/log2timeline/l2tbinaries)
 repository contains the necessary packages for running Plaso. l2tbinaries 
 provides the following branches:
 
-* master; branch intended for the "packaged release" of Pplaso and dependencies;
+* master; branch intended for the "packaged release" of Plaso and dependencies;
 * dev; branch intended for development of Plaso;
 * testing; branch intended for testing newly created packages.
 

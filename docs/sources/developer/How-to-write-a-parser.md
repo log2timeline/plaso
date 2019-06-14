@@ -84,7 +84,7 @@ The parser class `BinaryCookieParser` is registered using
 plaso/parsers/safari_cookies.py
 ```
 
-~~~~
+~~~~python
 # -*- coding: utf-8 -*-
 """Parser for Safari Binary Cookie files."""
 
