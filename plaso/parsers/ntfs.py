@@ -170,7 +170,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       try:
         creation_time = mft_attribute.get_creation_time_as_integer()
       except OverflowError as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to read the creation timestamp from MFT attribute: '
             '0x{0:08x} with error: {1!s}').format(
                 mft_attribute.attribute_type, exception))
@@ -185,7 +185,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       try:
         modification_time = mft_attribute.get_modification_time_as_integer()
       except OverflowError as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to read the modification timestamp from MFT attribute: '
             '0x{0:08x} with error: {1!s}').format(
                 mft_attribute.attribute_type, exception))
@@ -200,7 +200,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       try:
         access_time = mft_attribute.get_access_time_as_integer()
       except OverflowError as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to read the access timestamp from MFT attribute: '
             '0x{0:08x} with error: {1!s}').format(
                 exception, mft_attribute.attribute_type))
@@ -216,7 +216,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         entry_modification_time = (
             mft_attribute.get_entry_modification_time_as_integer())
       except OverflowError as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to read the entry modification timestamp from MFT '
             'attribute: 0x{0:08x} with error: {1!s}').format(
                 mft_attribute.attribute_type, exception))
@@ -240,7 +240,7 @@ class NTFSMFTParser(interface.FileObjectParser):
               display_name)
 
         except (TypeError, ValueError) as exception:
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'unable to read droid file identifier from attribute: 0x{0:08x} '
               'with error: {1!s}').format(
                   mft_attribute.attribute_type, exception))
@@ -252,7 +252,7 @@ class NTFSMFTParser(interface.FileObjectParser):
               display_name)
 
         except (TypeError, ValueError) as exception:
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'unable to read birth droid file identifier from attribute: '
               '0x{0:08x} with error: {1!s}').format(
                   mft_attribute.attribute_type, exception))
@@ -271,7 +271,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         self._ParseMFTAttribute(parser_mediator, mft_entry, mft_attribute)
 
       except IOError as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
                 attribute_index, exception))
 
@@ -288,7 +288,7 @@ class NTFSMFTParser(interface.FileObjectParser):
     try:
       mft_metadata_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open file with error: {0!s}'.format(exception))
 
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
@@ -297,7 +297,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         self._ParseMFTEntry(parser_mediator, mft_entry)
 
       except IOError as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse MFT entry: {0:d} with error: {1!s}').format(
                 entry_index, exception))
 
@@ -353,7 +353,7 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
         name_string = utf16_stream.decode('utf-16-le')
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
         name_string = utf16_stream.decode('utf-16-le', errors='replace')
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to decode USN record name string with error: '
             '{0:s}. Characters that cannot be decoded will be replaced '
             'with "?" or "\\ufffd".').format(exception))
@@ -392,7 +392,7 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
     try:
       volume.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open NTFS volume with error: {0!s}'.format(exception))
 
     try:

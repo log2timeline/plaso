@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Less Frequently Used (LFU) Windows Registry plugin."""
 
@@ -16,7 +16,7 @@ from plaso.parsers.winreg_plugins import lfu
 from tests.parsers.winreg_plugins import test_lib
 
 
-class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
+class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the LFU BootExecute Windows Registry plugin."""
 
   def _CreateTestKey(self, key_path, time_string):
@@ -111,7 +111,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     plugin = lfu.BootExecutePlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())
@@ -122,15 +122,22 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:boot_execute')
+
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
 
     expected_message = (
-        '[{0:s}] BootExecute: autocheck autochk *').format(key_path)
+        '[{0:s}] '
+        'BootExecute: autocheck autochk *').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[1]
+
+    self.assertEqual(event.data_type, 'windows:registry:key_value')
+
+    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
 
     expected_message = (
         '[{0:s}] '
@@ -147,7 +154,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
-class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
+class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the LFU BootVerification Windows Registry plugin."""
 
   def _CreateTestKey(self, key_path, time_string):
@@ -195,7 +202,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     plugin = lfu.BootVerificationPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -205,6 +212,8 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
+
+    self.assertEqual(event.data_type, 'windows:registry:boot_verification')
 
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
 

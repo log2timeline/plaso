@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests the for mactime parser."""
 
@@ -10,14 +10,12 @@ from plaso.formatters import mactime as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import mactime
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MactimeTest(test_lib.ParserTestCase):
   """Tests the for mactime parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['mactime.body'])
   def testParse(self):
     """Tests the Parse function."""
     parser = mactime.MactimeParser()
@@ -28,7 +26,7 @@ class MactimeTest(test_lib.ParserTestCase):
     # timestamp value and are omitted.
     # Total entries: 11 * 3 + 2 * 4 = 41
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 41)
 
     # The order in which DSVParser generates events is nondeterministic

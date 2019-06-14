@@ -168,7 +168,9 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
         minutes (int): minutes.
         seconds (int): seconds.
     """
-    month, day, hours, minutes, seconds = structure.date_time
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time_elements_tuple is None.
+    month, day, hours, minutes, seconds = time_elements_tuple
 
     month = timelib.MONTH_DICT.get(month.lower(), 0)
 
@@ -187,7 +189,9 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    _, month, day, hours, minutes, seconds, year = structure.date_time
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time_elements_tuple is None.
+    _, month, day, hours, minutes, seconds, year = time_elements_tuple
 
     month = timelib.MONTH_DICT.get(month.lower(), 0)
 
@@ -198,25 +202,27 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
     except ValueError:
-      parser_mediator.ProduceExtractionError(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+      parser_mediator.ProduceExtractionWarning(
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     self._last_month = month
 
     event_data = XChatLogEventData()
 
-    if structure.log_action[0] == 'BEGIN':
+    log_action = self._GetValueFromStructure(
+        structure, 'log_action', default_value=[])
+    if log_action[0] == 'BEGIN':
       self._xchat_year = year
       event_data.text = 'XChat start logging'
 
-    elif structure.log_action[0] == 'END':
+    elif log_action[0] == 'END':
       self._xchat_year = None
       event_data.text = 'XChat end logging'
 
     else:
       logger.debug('Unknown log action: {0:s}.'.format(
-          ' '.join(structure.log_action)))
+          ' '.join(log_action)))
       return
 
     event = time_events.DateTimeValuesEvent(
@@ -243,17 +249,20 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
     except ValueError:
-      parser_mediator.ProduceExtractionError(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+      parser_mediator.ProduceExtractionWarning(
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     self._last_month = time_elements_tuple[1]
 
-    event_data = XChatLogEventData()
-    event_data.nickname = structure.nickname
+    text = self._GetValueFromStructure(structure, 'text')
     # The text string contains multiple unnecessary whitespaces that need to
     # be removed, thus the split and re-join.
-    event_data.text = ' '.join(structure.text.split())
+    text = ' '.join(text.split())
+
+    event_data = XChatLogEventData()
+    event_data.nickname = self._GetValueFromStructure(structure, 'nickname')
+    event_data.text = text
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED,
@@ -309,7 +318,13 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       logger.debug('Not a XChat log file')
       return False
 
-    _, month, day, hours, minutes, seconds, year = structure.date_time
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    try:
+      _, month, day, hours, minutes, seconds, year = time_elements_tuple
+    except TypeError:
+      logger.debug('Not a XChat log file, invalid date and time: {0!s}'.format(
+          time_elements_tuple))
+      return False
 
     month = timelib.MONTH_DICT.get(month.lower(), 0)
 
@@ -320,7 +335,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       logger.debug('Not a XChat log file, invalid date and time: {0!s}'.format(
-          structure.date_time))
+          time_elements_tuple))
       return False
 
     return True

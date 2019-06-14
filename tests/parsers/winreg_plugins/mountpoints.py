@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the MountPoints2 Windows Registry plugin."""
 
@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import mountpoints
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -27,7 +26,6 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -42,7 +40,7 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())
@@ -54,15 +52,18 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mount_points2')
     self.CheckTimestamp(event.timestamp, '2011-08-23 17:10:14.960961')
 
-    regvalue = event.regvalue
-    self.assertEqual(regvalue.get('Share_Name'), '\\home\\nfury')
+    self.assertEqual(event.share_name, '\\home\\nfury')
 
     expected_message = (
-        '[{0:s}] Label: Home Drive Remote_Server: controller Share_Name: '
-        '\\home\\nfury Type: Remote Drive Volume: '
-        '##controller#home#nfury').format(key_path)
+        '[{0:s}] '
+        'Label: Home Drive '
+        'Remote_Server: controller '
+        'Share_Name: \\home\\nfury '
+        'Type: Remote Drive '
+        'Volume: ##controller#home#nfury').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)

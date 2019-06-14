@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the tagging analysis plugin CLI arguments helper."""
 
@@ -11,7 +11,6 @@ from plaso.analysis import tagging
 from plaso.lib import errors
 from plaso.cli.helpers import tagging_analysis
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
@@ -45,15 +44,13 @@ optional arguments:
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'tagging_file', 'invalid_encoding.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'invalid_syntax.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
+    test_file_path = self._GetTestFilePath(['tagging_file', 'valid.txt'])
+    self._SkipIfPathNotExists(test_file_path)
 
-    options.tagging_file = self._GetTestFilePath(['tagging_file', 'valid.txt'])
+    options = cli_test_lib.TestOptions()
+    options.tagging_file = test_file_path
 
     analysis_plugin = tagging.TaggingAnalysisPlugin()
     tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
@@ -69,8 +66,11 @@ optional arguments:
       tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
           options, analysis_plugin)
 
-    options.tagging_file = self._GetTestFilePath([
+    test_file_path = self._GetTestFilePath([
         'tagging_file', 'invalid_syntax.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options.tagging_file = test_file_path
 
     with self.assertRaises(errors.BadConfigOption):
       tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(

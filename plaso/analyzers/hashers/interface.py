@@ -10,17 +10,8 @@ class BaseHasher(object):
   """Base class for objects that calculate hashes."""
 
   NAME = 'base_hasher'
+  ATTRIBUTE_NAME = 'hash'
   DESCRIPTION = 'Calculates a digest hash over input data.'
-
-  # pylint: disable=redundant-returns-doc
-  @abc.abstractmethod
-  def GetBinaryDigest(self):
-    """Retrieves the digest of the hash function as a binary string.
-
-    Returns:
-      bytes: binary hash digest calculated over the data blocks passed to
-          Update().
-    """
 
   # pylint: disable=redundant-returns-doc
   @abc.abstractmethod

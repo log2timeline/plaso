@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for PL-SQL recall file parser."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import pls_recall as _  # pylint: disable=unused-import
 from plaso.parsers import pls_recall
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class PlsRecallTest(test_lib.ParserTestCase):
   """Tests for PL-SQL recall file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['PLSRecall_Test.dat'])
   def testParse(self):
     """Tests the Parse function."""
     parser = pls_recall.PlsRecallParser()
     storage_writer = self._ParseFile(['PLSRecall_Test.dat'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())

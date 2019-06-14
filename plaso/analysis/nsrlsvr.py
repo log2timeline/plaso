@@ -66,7 +66,12 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     Returns:
       bool: True if the hash was found, False if not or None on error.
     """
-    query = 'QUERY {0:s}\n'.format(digest)
+    try:
+      query = 'QUERY {0:s}\n'.format(digest).encode('ascii')
+    except UnicodeDecodeError:
+      logger.error('Unable to encode digest: {0!s} to ASCII.'.format(digest))
+      return False
+
     response = None
 
     try:
@@ -74,8 +79,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       response = nsrl_socket.recv(self._RECEIVE_BUFFER_SIZE)
 
     except socket.error as exception:
-      logger.error(
-          'Unable to query nsrlsvr with error: {0!s}.'.format(exception))
+      logger.error('Unable to query nsrlsvr with error: {0!s}.'.format(
+          exception))
 
     if not response:
       return False

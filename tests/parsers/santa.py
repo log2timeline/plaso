@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import santa as _  # pylint: disable=unused-import
 from plaso.parsers import santa
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class SantaUnitTest(test_lib.ParserTestCase):
   """Tests for santa log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['santa.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = santa.SantaParser()
@@ -26,7 +24,7 @@ class SantaUnitTest(test_lib.ParserTestCase):
     # - 3 lines should be skipped in the results.
     # - 17 new events should be added from existing lines.
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 208)
 
     # The order in which DSVParser generates events is nondeterministic

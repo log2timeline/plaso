@@ -13,11 +13,6 @@ try:
 except ImportError:
   elasticsearch = None
 
-try:
-  import elasticsearch5
-except ImportError:
-  elasticsearch5 = None
-
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
@@ -27,11 +22,6 @@ from plaso.output import logger
 if elasticsearch:
   elastic_logger = logging.getLogger('elasticsearch.trace')
   elastic_logger.setLevel(logging.WARNING)
-
-# Configure the Elasticsearch 5 logger.
-if elasticsearch5:
-  elastic5_logger = logging.getLogger('elasticsearch.trace')
-  elastic5_logger.setLevel(logging.WARNING)
 
 
 class SharedElasticsearchOutputModule(interface.OutputModule):
@@ -134,7 +124,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._event_documents = []
     self._number_of_buffered_events = 0
 
-  def _GetSanitizedEventValues(self, event):
+  def _GetSanitizedEventValues(self, event, event_data, event_tag):
     """Sanitizes the event for use in Elasticsearch.
 
     The event values need to be sanitized to prevent certain values from
@@ -144,16 +134,18 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
 
     Returns:
       dict[str, object]: sanitized event values.
 
     Raises:
       NoFormatterFound: if no event formatter can be found to match the data
-          type in the event.
+          type in the event data.
     """
     event_values = {}
-    for attribute_name, attribute_value in event.GetAttributes():
+    for attribute_name, attribute_value in event_data.GetAttributes():
       # Ignore the regvalue attribute as it cause issues when indexing.
       if attribute_name == 'regvalue':
         continue
@@ -179,24 +171,31 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
         attribute_value, timezone=self._output_mediator.timezone)
     event_values['datetime'] = attribute_value
 
-    message, _ = self._output_mediator.GetFormattedMessages(event)
+    event_values['timestamp'] = event.timestamp
+    event_values['timestamp_desc'] = event.timestamp_desc
+
+    message, _ = self._output_mediator.GetFormattedMessages(event_data)
     if message is None:
-      data_type = getattr(event, 'data_type', 'UNKNOWN')
+      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     event_values['message'] = message
 
     # Tags needs to be a list for Elasticsearch to index correctly.
-    try:
-      labels = list(event_values['tag'].labels)
-    except (KeyError, AttributeError):
-      labels = []
+    labels = []
+    if event_tag:
+      try:
+        labels = list(event_tag.labels)
+      except (AttributeError, KeyError):
+        pass
+
     event_values['tag'] = labels
 
-    source_short, source = self._output_mediator.GetFormattedSources(event)
+    source_short, source = self._output_mediator.GetFormattedSources(
+        event, event_data)
     if source is None or source_short is None:
-      data_type = getattr(event, 'data_type', 'UNKNOWN')
+      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
@@ -205,28 +204,26 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     return event_values
 
-  def _InsertEvent(self, event, force_flush=False):
+  def _InsertEvent(self, event, event_data, event_tag):
     """Inserts an event.
 
     Events are buffered in the form of documents and inserted to Elasticsearch
-    when either forced to flush or when the flush interval (threshold) has been
-    reached.
+    when the flush interval (threshold) has been reached.
 
     Args:
       event (EventObject): event.
-      force_flush (bool): True if buffered event documents should be inserted
-          into Elasticsearch.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
-    if event:
-      event_document = {'index': {
-          '_index': self._index_name, '_type': self._document_type}}
-      event_values = self._GetSanitizedEventValues(event)
+    event_document = {'index': {
+        '_index': self._index_name, '_type': self._document_type}}
+    event_values = self._GetSanitizedEventValues(event, event_data, event_tag)
 
-      self._event_documents.append(event_document)
-      self._event_documents.append(event_values)
-      self._number_of_buffered_events += 1
+    self._event_documents.append(event_document)
+    self._event_documents.append(event_values)
+    self._number_of_buffered_events += 1
 
-    if force_flush or self._number_of_buffered_events > self._flush_interval:
+    if self._number_of_buffered_events > self._flush_interval:
       self._FlushEvents()
 
   def Close(self):
@@ -234,7 +231,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     Inserts any remaining buffered event documents.
     """
-    self._InsertEvent(None, force_flush=True)
+    self._FlushEvents()
 
     self._client = None
 
@@ -334,51 +331,12 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._url_prefix = url_prefix
     logger.debug('Elasticsearch URL prefix: {0!s}')
 
-
-  def WriteEventBody(self, event):
-    """Writes an event to the output.
+  def WriteEventBody(self, event, event_data, event_tag):
+    """Writes event values to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
-    self._InsertEvent(event)
-
-
-class SharedElasticsearch5OutputModule(SharedElasticsearchOutputModule):
-  """Shared output module for Elasticsearch 5."""
-
-  def _Connect(self):
-    """Connects to an Elasticsearch server."""
-    elastic_hosts = [{'host': self._host, 'port': self._port}]
-
-    elastic_http_auth = None
-    if self._username is not None:
-      elastic_http_auth = (self._username, self._password)
-
-    self._client = elasticsearch5.Elasticsearch(
-        elastic_hosts,
-        http_auth=elastic_http_auth,
-        use_ssl=self._use_ssl,
-        ca_certs=self._ca_certs
-    )
-
-    logger.debug('Connected to Elasticsearch server: {0:s} port: {1:d}.'.format(
-        self._host, self._port))
-
-  def _CreateIndexIfNotExists(self, index_name, mappings):
-    """Creates an Elasticsearch index if it not already exists.
-
-    Args:
-      index_name (str): mame of the index.
-      mappings (dict[str, object]): mappings of the index.
-
-    Raises:
-      RuntimeError: if the Elasticsearch index cannot be created.
-    """
-    try:
-      super(SharedElasticsearch5OutputModule, self)._CreateIndexIfNotExists(
-          index_name, mappings)
-    except elasticsearch5.exceptions.ConnectionError as exception:
-      raise RuntimeError(
-          'Unable to create Elasticsearch index with error: {0!s}'.format(
-              exception))
+    self._InsertEvent(event, event_data, event_tag)

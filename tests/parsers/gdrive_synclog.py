@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Google Drive Sync log log parser."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import gdrive_synclog as _  # pylint: disable=unused-import
 from plaso.parsers import gdrive_synclog
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
   """Tests for the Google Drive Sync log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['sync_log.log'])
   def testParseLog(self):
     """Tests the Parse function on normal log."""
     parser = gdrive_synclog.GoogleDriveSyncLogParser()
     storage_writer = self._ParseFile(['sync_log.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2190)
 
     events = list(storage_writer.GetEvents())
@@ -77,7 +75,6 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'last):   F...')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['sync_log-osx.log'])
   def testOSXParseLog(self):
     """Tests the Parse function on OS X log.
 
@@ -86,7 +83,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     parser = gdrive_synclog.GoogleDriveSyncLogParser()
     storage_writer = self._ParseFile(['sync_log-osx.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2338)
 
     events = list(storage_writer.GetEvents())

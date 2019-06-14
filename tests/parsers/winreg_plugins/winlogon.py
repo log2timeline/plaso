@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Winlogon Windows Registry plugin."""
 
@@ -288,13 +288,14 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     plugin = winlogon.WinlogonPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[3]
+    event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:registry:winlogon')
     self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
     expected_message = (
@@ -307,8 +308,9 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event = events[2]
+    event = events[13]
 
+    self.assertEqual(event.data_type, 'windows:registry:winlogon')
     self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
     expected_message = (

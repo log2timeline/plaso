@@ -45,7 +45,6 @@ PYTHON2_DEPENDENCIES="libbde-python2
                       python2-dfwinreg
                       python2-dtfabric
                       python2-elasticsearch
-                      python2-elasticsearch5
                       python2-future
                       python2-idna
                       python2-lz4
@@ -65,7 +64,8 @@ PYTHON2_DEPENDENCIES="libbde-python2
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python2-funcsigs
                    python2-mock
-                   python2-pbr";
+                   python2-pbr
+                   python2-setuptools";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
@@ -135,4 +135,3 @@ fi
 if [[ "$*" =~ "include-test" ]]; then
     sudo dnf install -y ${TEST_DEPENDENCIES}
 fi
-

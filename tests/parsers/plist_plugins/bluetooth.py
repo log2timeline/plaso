@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Bluetooth plist plugin."""
 
@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import bluetooth
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
 class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
   """Tests for the Bluetooth plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['plist_binary'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_name = 'plist_binary'
@@ -26,7 +24,7 @@ class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [test_file_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
 
     # The order in which PlistParser generates events is nondeterministic

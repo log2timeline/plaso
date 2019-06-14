@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the OXML plugin."""
 
@@ -11,7 +11,6 @@ from plaso.lib import definitions
 from plaso.parsers import czip
 from plaso.parsers.czip_plugins import oxml
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.czip_plugins import test_lib
 
 
@@ -94,7 +93,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         parser_mediator, event_data, properties, 'modified',
         definitions.TIME_DESCRIPTION_MODIFICATION, 'modification time')
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # Test parsing a date and time string in intervals of 100 ns.
@@ -102,16 +101,15 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         parser_mediator, event_data, properties, 'created',
         definitions.TIME_DESCRIPTION_CREATION, 'creation time')
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
-  @shared_test_lib.skipUnlessHasTestFile(['Document.docx'])
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
     parser = czip.CompoundZIPParser()
     storage_writer = self._ParseFile(['Document.docx'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())

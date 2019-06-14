@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Explorer ProgramsCache Windows Registry plugin."""
 
@@ -10,7 +10,6 @@ from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import programscache
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -34,7 +33,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testProcessStartPage(self):
     """Tests the Process function on a StartPage key."""
     test_file_entry = self._GetTestFileEntry(['NTUSER.DAT'])
@@ -49,7 +47,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 77)
 
     events = list(storage_writer.GetEvents())
@@ -134,7 +132,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     expected_data_type = 'windows:registry:key_value'
     self.assertEqual(event.data_type, expected_data_type)
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -149,7 +146,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 118)
 
     events = list(storage_writer.GetEvents())

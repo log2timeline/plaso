@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import sys
-
 from plaso.cli import status_view
 from plaso.cli import tools
 from plaso.cli.helpers import interface
@@ -17,13 +15,6 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
 
   NAME = 'status_view'
   DESCRIPTION = 'Status view command line arguments.'
-
-  # The window status-view mode has an annoying flicker on Windows,
-  # hence we default to linear status-view mode instead.
-  if sys.platform.startswith('win'):
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
-  else:
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -39,7 +30,7 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         '--status_view', '--status-view', dest='status_view_mode',
         choices=['linear', 'none', 'window'], action='store',
-        metavar='TYPE', default=cls._DEFAULT_STATUS_VIEW_MODE, help=(
+        metavar='TYPE', default=status_view.StatusView.MODE_WINDOW, help=(
             'The processing status view mode: "linear", "none" or "window".'))
 
   @classmethod
@@ -60,7 +51,7 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
 
     status_view_mode = cls._ParseStringOption(
         options, 'status_view_mode',
-        default_value=cls._DEFAULT_STATUS_VIEW_MODE)
+        default_value=status_view.StatusView.MODE_WINDOW)
 
     setattr(configuration_object, '_status_view_mode', status_view_mode)
 

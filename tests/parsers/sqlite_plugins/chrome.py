@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome History database plugin."""
 
@@ -10,21 +10,19 @@ from plaso.formatters import chrome as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import chrome
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome 8 history SQLite database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['History'])
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
     plugin = chrome.GoogleChrome8HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 71 events (69 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 71)
 
@@ -80,14 +78,13 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
 class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome 27 history SQLite database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['History-57.0.2987.133'])
   def testProcess57(self):
     """Tests the Process function on a Google Chrome 57 History database."""
     plugin = chrome.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-57.0.2987.133'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 2 events (1 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 2)
 
@@ -140,14 +137,13 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         expected_full_path)
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['History-58.0.3029.96'])
   def testProcess58(self):
     """Tests the Process function on a Google Chrome 58 History database."""
     plugin = chrome.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-58.0.3029.96'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 2 events (1 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 2)
 
@@ -200,14 +196,13 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         expected_full_path)
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['History-59.0.3071.86'])
   def testProcess59(self):
     """Tests the Process function on a Google Chrome 59 History database."""
     plugin = chrome.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59.0.3071.86'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 2 events (1 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 2)
 

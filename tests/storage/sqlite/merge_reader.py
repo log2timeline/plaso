@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the merge reader for SQLite storage files."""
 
@@ -14,6 +14,7 @@ from plaso.storage.sqlite import merge_reader
 from plaso.storage.sqlite import writer
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
 
@@ -31,14 +32,16 @@ class SQLiteStorageMergeReaderTest(test_lib.StorageTestCase):
     """
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_events = self._CreateTestEvents()
-
     storage_file = writer.SQLiteStorageFileWriter(
         session, path, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
     storage_file.Open()
 
-    for event in test_events:
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      storage_file.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_file.AddEvent(event)
 
     storage_file.Close()

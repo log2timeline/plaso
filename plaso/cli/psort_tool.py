@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import argparse
 import collections
 import os
-import sys
 import time
 
 # The following import makes sure the filters are registered.
@@ -62,13 +61,6 @@ class PsortTool(
       'Application to read, filter and process output from a plaso storage '
       'file.')
 
-  # The window status-view mode has an annoying flicker on Windows,
-  # hence we default to linear status-view mode instead.
-  if sys.platform.startswith('win'):
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
-  else:
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
-
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -91,7 +83,7 @@ class PsortTool(
     self._number_of_analysis_reports = 0
     self._preferred_language = 'en-US'
     self._process_memory_limit = None
-    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
@@ -159,6 +151,9 @@ class PsortTool(
 
     Args:
       options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
     """
     # Get a list of all available plugins.
     analysis_plugin_info = self._analysis_manager.GetAllPluginInformation()
@@ -439,8 +434,11 @@ class PsortTool(
     self.list_language_identifiers = self._preferred_language == 'list'
     self.list_profilers = self._profilers == 'list'
 
+    self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
+
     if (self.list_analysis_plugins or self.list_language_identifiers or
-        self.list_profilers or self.list_timezones):
+        self.list_profilers or self.list_timezones or
+        self.show_troubleshooting):
       return
 
     # Check output modules after the other listable options, otherwise
@@ -548,7 +546,6 @@ class PsortTool(
       for item, value in iter(session.analysis_reports_counter.items()):
         analysis_counter[item] = value
 
-    events_counter = None
     if self._output_format != 'null':
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(
@@ -558,7 +555,7 @@ class PsortTool(
       analysis_engine = psort.PsortMultiProcessEngine(
           use_zeromq=self._use_zeromq)
 
-      events_counter = analysis_engine.ExportEvents(
+      analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
           configuration, deduplicate_events=self._deduplicate_events,
           event_filter=self._event_filter,
@@ -578,13 +575,6 @@ class PsortTool(
           table_view.AddRow([element, count])
 
       table_view.AddRow(['Total', analysis_counter['total']])
-      table_view.Write(self._output_writer)
-
-    if events_counter:
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title='Export results')
-      for element, count in events_counter.most_common():
-        table_view.AddRow([element, count])
       table_view.Write(self._output_writer)
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(

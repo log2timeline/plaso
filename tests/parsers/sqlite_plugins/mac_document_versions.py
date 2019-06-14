@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the MacOS Document Versions plugin."""
 
@@ -10,21 +10,19 @@ from plaso.formatters import mac_document_versions as _  # pylint: disable=unuse
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import mac_document_versions
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacOS Document Versions plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['document_versions.sql'])
   def testProcess(self):
     """Tests the Process function on a MacOS Document Versions file."""
     plugin = mac_document_versions.MacDocumentVersionsPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['document_versions.sql'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())

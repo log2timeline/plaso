@@ -29,7 +29,6 @@ class UserAssistWindowsRegistryEventData(events.EventData):
     entry_index (int): entry index.
     key_path (str): Windows Registry key path.
     number_of_executions (int): nubmer of executions.
-    regvalue (dict[str, str]): UserAssist values.
     value_name (str): name of the Windows Registry value.
   """
 
@@ -66,7 +65,13 @@ class UserAssistWindowsRegistryKeyPathFilter(
 
 
 class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
-  """Plugin that parses an UserAssist key."""
+  """Plugin that parses an UserAssist key.
+
+  Also see:
+    http://blog.didierstevens.com/programs/userassist/
+    https://code.google.com/p/winreg-kb/wiki/UserAssistKeys
+    http://intotheboxes.files.wordpress.com/2010/04/intotheboxes_2010_q1.pdf
+  """
 
   NAME = 'userassist'
   DESCRIPTION = 'Parser for User Assist Registry data.'
@@ -97,12 +102,6 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
       UserAssistWindowsRegistryKeyPathFilter(
           'BCB48336-4DDD-48FF-BB0B-D3190DACB3E2')])
 
-  URLS = [
-      'http://blog.didierstevens.com/programs/userassist/',
-      'https://code.google.com/p/winreg-kb/wiki/UserAssistKeys',
-      'http://intotheboxes.files.wordpress.com/2010/04'
-      '/intotheboxes_2010_q1.pdf']
-
   _DEFINITION_FILE = 'userassist.yaml'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
@@ -117,22 +116,22 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
     count_subkey = registry_key.GetSubkeyByName('Count')
 
     if not version_value:
-      parser_mediator.ProduceExtractionError('missing version value')
+      parser_mediator.ProduceExtractionWarning('missing version value')
       return
 
     if not version_value.DataIsInteger():
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported version value data type')
       return
 
     format_version = version_value.GetDataAsObject()
     if format_version not in (3, 5):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported format version: {0:d}'.format(format_version))
       return
 
     if not count_subkey:
-      parser_mediator.ProduceExtractionError('missing count subkey')
+      parser_mediator.ProduceExtractionWarning('missing count subkey')
       return
 
     userassist_entry_index = 0
@@ -186,12 +185,12 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
       elif format_version == 5:
         entry_map = self._GetDataTypeMap('user_assist_entry_v5')
       else:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unsupported format version: {0:d}'.format(format_version))
         continue
 
       if not registry_value.DataIsBinaryData():
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unsupported value data type: {0:s}'.format(
                 registry_value.data_type_string))
         continue
@@ -199,7 +198,7 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
       entry_data_size = entry_map.GetByteSize()
       value_data_size = len(registry_value.data)
       if entry_data_size != value_data_size:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unsupported value data size: {0:d}'.format(value_data_size))
         continue
 
@@ -207,7 +206,7 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
         user_assist_entry = self._ReadStructureFromByteStream(
             registry_value.data, 0, entry_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse UserAssist entry value with error: {0!s}'.format(
                 exception))
         continue

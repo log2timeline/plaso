@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import argparse
-import os
 import sys
 import time
 import textwrap
@@ -75,13 +74,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       'And that is how you build a timeline using log2timeline...',
       '']))
 
-  # The window status-view mode has an annoying flicker on Windows,
-  # hence we default to linear status-view mode instead.
-  if sys.platform.startswith('win'):
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
-  else:
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
-
   _SOURCE_TYPES_TO_PREPROCESS = frozenset([
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -104,7 +96,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
-    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
     self._worker_memory_limit = None
@@ -131,7 +123,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     parsers_information = parsers_manager.ParsersManager.GetParsersInformation()
     plugins_information = (
         parsers_manager.ParsersManager.GetParserPluginsInformation())
-    presets_information = self._GetParserPresetsInformation()
+    presets_information = parsers_manager.ParsersManager.GetPresetsInformation()
 
     return_dict['Hashers'] = hashers_information
     return_dict['Parsers'] = parsers_information
@@ -294,12 +286,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    presets_file = os.path.join(self._data_location, 'presets.yaml')
-    if not os.path.isfile(presets_file):
-      raise errors.BadConfigOption(
-          'No such parser presets file: {0:s}.'.format(presets_file))
-
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
+    self._ReadParserPresetsFromFile()
 
     # Check the list options first otherwise required options will raise.
     argument_helper_names = ['hashers', 'parsers', 'profiling']
@@ -313,6 +300,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.list_profilers = self._profilers == 'list'
 
     self.show_info = getattr(options, 'show_info', False)
+    self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
 
     if getattr(options, 'use_markdown', False):
       self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
@@ -320,7 +308,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.dependencies_check = getattr(options, 'dependencies_check', True)
 
     if (self.list_hashers or self.list_parsers_and_plugins or
-        self.list_profilers or self.list_timezones or self.show_info):
+        self.list_profilers or self.list_timezones or self.show_info or
+        self.show_troubleshooting):
       return
 
     self._ParseInformationalOptions(options)
@@ -368,7 +357,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     Raises:
       BadConfigOption: if the storage file path is invalid or the storage
-          format not supported or an invalid filter was specified.
+          format not supported or an invalid collection filter was specified.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -429,13 +418,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     try:
-      filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
+      extraction_engine.BuildCollectionFilters(
           self._artifact_definitions_path, self._custom_artifacts_path,
           extraction_engine.knowledge_base, self._artifact_filters,
           self._filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(
-          'Unable to build filter specification: {0!s}'.format(exception))
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
 
     processing_status = None
     if single_process_mode:
@@ -443,8 +433,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
       processing_status = extraction_engine.ProcessSources(
           self._source_path_specs, storage_writer, self._resolver_context,
-          configuration, filter_find_specs=filter_find_specs,
-          status_update_callback=status_update_callback)
+          configuration, status_update_callback=status_update_callback)
 
     else:
       logger.debug('Starting extraction in multi process mode.')
@@ -452,7 +441,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       processing_status = extraction_engine.ProcessSources(
           session.identifier, self._source_path_specs, storage_writer,
           configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
-          filter_find_specs=filter_find_specs,
           number_of_worker_processes=self._number_of_extraction_workers,
           status_update_callback=status_update_callback,
           worker_memory_limit=self._worker_memory_limit)

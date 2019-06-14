@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import os
+
 from dfvfs.resolver import context as dfvfs_context
 
 # The following import makes sure the analyzers are registered.
@@ -14,6 +16,7 @@ from plaso import parsers  # pylint: disable=unused-import
 from plaso.cli import logger
 from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
+from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
@@ -25,7 +28,6 @@ from plaso.parsers import manager as parsers_manager
 class ExtractionTool(
     storage_media_tool.StorageMediaTool,
     tool_options.HashersOptions,
-    tool_options.ParsersOptions,
     tool_options.ProfilingOptions,
     tool_options.StorageFileOptions):
   """Extraction CLI tool."""
@@ -34,6 +36,8 @@ class ExtractionTool(
   _DEFAULT_QUEUE_SIZE = 125000
 
   _BYTES_IN_A_MIB = 1024 * 1024
+
+  _PRESETS_FILE_NAME = 'presets.yaml'
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes an CLI tool.
@@ -50,7 +54,9 @@ class ExtractionTool(
     self._buffer_size = 0
     self._mount_path = None
     self._operating_system = None
+    self._parser_filter_expression = None
     self._preferred_year = None
+    self._presets_file = None
     self._process_archives = False
     self._process_compressed_streams = True
     self._process_memory_limit = None
@@ -186,6 +192,25 @@ class ExtractionTool(
 
     logger.debug('Preprocessing done.')
 
+  def _ReadParserPresetsFromFile(self):
+    """Reads the parser presets from the presets.yaml file.
+
+    Raises:
+      BadConfigOption: if the parser presets file cannot be read.
+    """
+    self._presets_file = os.path.join(
+        self._data_location, self._PRESETS_FILE_NAME)
+    if not os.path.isfile(self._presets_file):
+      raise errors.BadConfigOption(
+          'No such parser presets file: {0:s}.'.format(self._presets_file))
+
+    try:
+      parsers_manager.ParsersManager.ReadPresetsFromFile(self._presets_file)
+    except errors.MalformedPresetError as exception:
+      raise errors.BadConfigOption(
+          'Unable to read presets from file with error: {0!s}'.format(
+              exception))
+
   def _SetExtractionParsersAndPlugins(self, configuration, session):
     """Sets the parsers and plugins before extraction.
 
@@ -250,3 +275,49 @@ class ExtractionTool(
       argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, names=argument_helper_names)
+
+  def ListParsersAndPlugins(self):
+    """Lists information about the available parsers and plugins."""
+    parsers_information = parsers_manager.ParsersManager.GetParsersInformation()
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Parsers')
+
+    for name, description in sorted(parsers_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+    parser_names = parsers_manager.ParsersManager.GetNamesOfParsersWithPlugins()
+    for parser_name in parser_names:
+      plugins_information = (
+          parsers_manager.ParsersManager.GetParserPluginsInformation(
+              parser_filter_expression=parser_name))
+
+      table_title = 'Parser plugins: {0:s}'.format(parser_name)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, column_names=['Name', 'Description'],
+          title=table_title)
+      for name, description in sorted(plugins_information):
+        table_view.AddRow([name, description])
+      table_view.Write(self._output_writer)
+
+    title = 'Parser presets'
+    if self._presets_file:
+      source_path = os.path.dirname(os.path.dirname(os.path.dirname(
+          os.path.abspath(__file__))))
+
+      presets_file = self._presets_file
+      if presets_file.startswith(source_path):
+        presets_file = presets_file[len(source_path) + 1:]
+
+      title = '{0:s} ({1:s})'.format(title, presets_file)
+
+    presets_information = parsers_manager.ParsersManager.GetPresetsInformation()
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Name', 'Parsers and plugins'],
+        title=title)
+    for name, description in sorted(presets_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)

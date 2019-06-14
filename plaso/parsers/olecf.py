@@ -55,7 +55,7 @@ class OLECFParser(interface.FileObjectParser):
     try:
       olecf_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open file with error: {0!s}'.format(exception))
       return
 
@@ -85,7 +85,7 @@ class OLECFParser(interface.FileObjectParser):
           plugin.UpdateChainAndProcess(parser_mediator, root_item=root_item)
 
         except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse OLECF file with error: '
               '{1!s}').format(plugin.NAME, exception))
 
@@ -95,7 +95,7 @@ class OLECFParser(interface.FileObjectParser):
               parser_mediator, root_item=root_item)
 
         except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse OLECF file with error: '
               '{1!s}').format(self._default_plugin.NAME, exception))
 

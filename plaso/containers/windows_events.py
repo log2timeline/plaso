@@ -78,6 +78,7 @@ class WindowsRegistryEventData(events.EventData):
     regvalue (dict[str, object]): values in the key.
     source_append (str): text to append to the source_long of the event.
     urls (list[str]): URLs.
+    values (str): names and data of the values in the key.
   """
 
   DATA_TYPE = 'windows:registry:key_value'
@@ -92,6 +93,7 @@ class WindowsRegistryEventData(events.EventData):
     self.source_append = None
     # TODO: deprecate urls.
     self.urls = None
+    self.values = None
 
 
 class WindowsRegistryListEventData(events.EventData):
@@ -116,31 +118,6 @@ class WindowsRegistryListEventData(events.EventData):
     self.list_name = None
     self.list_values = None
     self.value_name = None
-
-
-class WindowsRegistryServiceEventData(events.EventData):
-  """Windows Registry service event data attribute container.
-
-  Attributes:
-    key_path (str): Windows Registry key path.
-    offset (int): data offset of the Windows Registry key or value.
-    regvalue (dict[str, str]): values of a key.
-    urls (Optional[list[str]]): URLs.
-  """
-
-  DATA_TYPE = 'windows:registry:service'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(WindowsRegistryServiceEventData, self).__init__(
-        data_type=self.DATA_TYPE)
-    self.key_path = None
-    # TODO: deprecate regvalue.
-    self.regvalue = None
-    # TODO: deprecate source_append.
-    self.source_append = None
-    # TODO: deprecate urls.
-    self.urls = None
 
 
 class WindowsVolumeEventData(events.EventData):

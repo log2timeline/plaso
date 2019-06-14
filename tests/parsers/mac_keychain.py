@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for Keychain password database parser."""
 
@@ -10,20 +10,18 @@ from plaso.formatters import mac_keychain as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import mac_keychain
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacKeychainParserTest(test_lib.ParserTestCase):
   """Tests for keychain file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['login.keychain'])
   def testParse(self):
     """Tests the Parse function."""
     parser = mac_keychain.KeychainParser()
     storage_writer = self._ParseFile(['login.keychain'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
     events = list(storage_writer.GetEvents())

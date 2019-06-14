@@ -7,37 +7,12 @@ import io
 import os
 import shutil
 import re
-import sys
 import tempfile
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
-
-
-def skipUnlessHasTestFile(path_segments):  # pylint: disable=invalid-name
-  """Decorator to skip a test if the test file does not exist.
-
-  Args:
-    path_segments (list[str]): path segments inside the test data directory.
-
-  Returns:
-    function: to invoke.
-  """
-  fail_unless_has_test_file = getattr(
-      unittest, 'fail_unless_has_test_file', False)
-
-  path = os.path.join('test_data', *path_segments)
-  if fail_unless_has_test_file or os.path.exists(path):
-    return lambda function: function
-
-  if sys.version_info[0] < 3:
-    path = path.encode('utf-8')
-
-  # Note that the message should be of type str which is different for
-  # different versions of Python.
-  return unittest.skip('missing test file: {0:s}'.format(path))
 
 
 def GetTestFilePath(path_segments):
@@ -72,10 +47,16 @@ class BaseTestCase(unittest.TestCase):
 
     Returns:
       dfvfs.FileEntry: file entry.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
-    path = self._GetTestFilePath(path_segments)
+    test_file_path = self._GetTestFilePath(path_segments)
+    self._SkipIfPathNotExists(test_file_path)
+
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def _GetTestFilePath(self, path_segments):
@@ -91,19 +72,18 @@ class BaseTestCase(unittest.TestCase):
     # and not a list.
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
-  def _GetTestFilePathSpec(self, path_segments):
-    """Retrieves a path specification of a test file in the test data directory.
+  def _SkipIfPathNotExists(self, path):
+    """Skips the test if the path does not exist.
 
     Args:
-      path_segments (list[str]): components of a path to a test file, relative
-          to the test_data directory.
+      path (str): path of a test file.
 
-    Returns:
-      dfvfs.PathSpec: path specification.
+    Raises:
+      SkipTest: if the path does not exist and the test should be skipped.
     """
-    path = self._GetTestFilePath(path_segments)
-    return path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+    if not os.path.exists(path):
+      filename = os.path.basename(path)
+      raise unittest.SkipTest('missing test file: {0:s}'.format(filename))
 
 
 class ImportCheckTestCase(BaseTestCase):
@@ -133,6 +113,7 @@ class ImportCheckTestCase(BaseTestCase):
         import_expression = re.compile(r' import {0:s}\b'.format(module_name))
 
         # pylint: disable=deprecated-method
+        # TODO: replace by assertRegex once Python 2 support is removed.
         self.assertRegexpMatches(
             init_content, import_expression,
             '{0:s} not imported in {1:s}'.format(module_name, init_path))

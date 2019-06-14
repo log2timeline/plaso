@@ -7,7 +7,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import winreg
@@ -54,8 +53,6 @@ class SAMUsersWindowsRegistryPlugin(
   _DEFINITION_FILE = 'sam_users.yaml'
 
   _V_VALUE_STRINGS_OFFSET = 0xcc
-
-  _SOURCE_APPEND = ': User Account Information'
 
   def _ParseFValue(self, registry_key):
     """Parses an F value.
@@ -107,7 +104,7 @@ class SAMUsersWindowsRegistryPlugin(
       username = descriptor_data.decode('utf-16-le')
     except (UnicodeDecodeError, UnicodeEncodeError) as exception:
       username = descriptor_data.decode('utf-16-le', errors='replace')
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to decode V value string with error: {0!s}. Characters '
           'that cannot be decoded will be replaced with "?" or '
           '"\\ufffd".').format(exception))
@@ -124,7 +121,7 @@ class SAMUsersWindowsRegistryPlugin(
     """
     names_key = registry_key.GetSubkeyByName('Names')
     if not names_key:
-      parser_mediator.ProduceExtractionError('missing subkey: Names.')
+      parser_mediator.ProduceExtractionWarning('missing subkey: Names.')
       return
 
     last_written_time_per_username = {
@@ -138,13 +135,13 @@ class SAMUsersWindowsRegistryPlugin(
       try:
         f_value = self._ParseFValue(subkey)
       except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse F value with error: {0!s}'.format(exception))
         continue
 
       registry_value = subkey.GetValueByName('V')
       if not registry_value:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'missing Registry value: "V" in subkey: {0:s}.'.format(
                 subkey.name))
         continue
@@ -155,7 +152,7 @@ class SAMUsersWindowsRegistryPlugin(
         v_value = self._ReadStructureFromByteStream(
             registry_value.data, 0, v_value_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse V value with error: {0!s}'.format(exception))
         continue
 
@@ -172,27 +169,6 @@ class SAMUsersWindowsRegistryPlugin(
 
       # TODO: check if subkey.name == f_value.rid
 
-      if last_written_time:
-        values_dict = {
-            'account_rid': f_value.rid,
-            'login_count': f_value.number_of_logons}
-
-        if username:
-          values_dict['username'] = username
-        if fullname:
-          values_dict['full_name'] = fullname
-        if comments:
-          values_dict['comments'] = comments
-
-        event_data = windows_events.WindowsRegistryEventData()
-        event_data.key_path = registry_key.path
-        event_data.regvalue = values_dict
-        event_data.source_append = self._SOURCE_APPEND
-
-        event = time_events.DateTimeValuesEvent(
-            last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
       event_data = SAMUsersWindowsRegistryEventData()
       event_data.account_rid = f_value.rid
       event_data.comments = comments
@@ -200,6 +176,10 @@ class SAMUsersWindowsRegistryPlugin(
       event_data.key_path = registry_key.path
       event_data.login_count = f_value.number_of_logons
       event_data.username = username
+
+      event = time_events.DateTimeValuesEvent(
+          last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if f_value.last_login_time != 0:
         date_time = dfdatetime_filetime.Filetime(

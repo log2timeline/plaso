@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the iMessage plugin."""
 
@@ -10,21 +10,19 @@ from plaso.formatters import imessage as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import imessage
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class IMessageTest(test_lib.SQLitePluginTestCase):
   """Tests for the iMessage database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['imessage_chat.db'])
   def testProcess(self):
     """Test the Process function on a iMessage chat.db file."""
     plugin = imessage.IMessagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['imessage_chat.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())

@@ -1,17 +1,38 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Run/RunOnce Key plugins for Plaso."""
+"""This file contains the Run/RunOnce key plugins for Plaso."""
 
 from __future__ import unicode_literals
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
+class RunKeyEventData(events.EventData):
+  """Run/RunOnce key event data attribute container.
+
+  Attributes:
+    entries (str): Run/RunOnce entries.
+    key_path (str): Windows Registry key path.
+  """
+
+  DATA_TYPE = 'windows:registry:run'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(RunKeyEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.entries = None
+    self.key_path = None
+
+
 class AutoRunsPlugin(interface.WindowsRegistryPlugin):
-  """Windows Registry plugin for parsing user specific auto runs."""
+  """Windows Registry plugin for parsing user specific auto runs.
+
+  Also see:
+    http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx
+  """
 
   NAME = 'windows_run'
   DESCRIPTION = 'Parser for run and run once Registry data.'
@@ -39,10 +60,6 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'RunServicesOnce')])
 
-  URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
-
-  _SOURCE_APPEND = ': Run Key'
-
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
@@ -51,7 +68,7 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = {}
+    entries = []
     for registry_value in registry_key.GetValues():
       # Ignore the default value.
       if not registry_value.name:
@@ -62,14 +79,13 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
         continue
 
       value_data = registry_value.GetDataAsObject()
-      values_dict[registry_value.name] = value_data
 
-    event_data = windows_events.WindowsRegistryEventData()
+      value_string = '{0:s}: {1:s}'.format(registry_value.name, value_data)
+      entries.append(value_string)
+
+    event_data = RunKeyEventData()
+    event_data.entries = ' '.join(sorted(entries)) or None
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
-    event_data.source_append = self._SOURCE_APPEND
-    event_data.urls = self.URLS
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)

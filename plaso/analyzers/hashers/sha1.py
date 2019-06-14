@@ -13,21 +13,13 @@ class SHA1Hasher(interface.BaseHasher):
   """This class provides SHA-1 hashing functionality."""
 
   NAME = 'sha1'
+  ATTRIBUTE_NAME = 'sha1_hash'
   DESCRIPTION = 'Calculates a SHA-1 digest hash over input data.'
 
   def __init__(self):
     """Initializes the SHA-1 hasher."""
     super(SHA1Hasher, self).__init__()
     self._sha1_context = hashlib.sha1()
-
-  def GetBinaryDigest(self):
-    """Returns the digest of the hash function as a binary string.
-
-    Returns:
-      bytes: binary string hash digest calculated over the data blocks passed to
-          Update().
-    """
-    return self._sha1_context.digest()
 
   def GetStringDigest(self):
     """Returns the digest of the hash function expressed as a Unicode string.

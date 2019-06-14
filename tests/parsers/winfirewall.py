@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows firewall log parser."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import winfirewall as _  # pylint: disable=unused-import
 from plaso.parsers import winfirewall
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinFirewallParserTest(test_lib.ParserTestCase):
   """Tests for the Windows firewall log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['firewall.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = winfirewall.WinFirewallParser()
     storage_writer = self._ParseFile(['firewall.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 15)
 
     events = list(storage_writer.GetSortedEvents())

@@ -251,6 +251,24 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # a structural fix.
     self._line_structures = list(self.LINE_STRUCTURES)
 
+  def _GetValueFromStructure(self, structure, name, default_value=None):
+    """Retrieves a token value from a Pyparsing structure.
+
+    This method ensures the token value is set to the default value when
+    the token is not present in the structure. Instead of returning
+    the Pyparsing default value of an empty byte stream (b'').
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+      default_value (Optional[object]): default value.
+
+    Returns:
+      object: value in the token or default value if the token is not available
+          in the structure.
+    """
+    return structure.get(name, default_value)
+
   # Pylint is confused by the formatting of the bytes_in argument.
   # pylint: disable=missing-param-doc,missing-type-doc
   def _IsText(self, bytes_in, encoding=None):
@@ -414,9 +432,9 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       else:
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
-        parser_mediator.ProduceExtractionError(
-            'unable to parse log line: {0:s} at offset: {1:d}'.format(
-                repr(line), self._current_offset))
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse log line: "{0:s}" at offset: {1:d}'.format(
+                line, self._current_offset))
         consecutive_line_failures += 1
         if (consecutive_line_failures >
             self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
@@ -429,7 +447,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       try:
         line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
       except UnicodeDecodeError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to read and decode log line at offset {0:d}'.format(
                 self._current_offset))
         break
@@ -664,7 +682,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           self.ParseRecord(parser_mediator, key, tokens)
           consecutive_line_failures = 0
         except (errors.ParseError, errors.TimestampError) as exception:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse record: {0:s} with error: {1!s}'.format(
                   key, exception))
 
@@ -675,7 +693,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         if odd_line:
           if len(odd_line) > 80:
             odd_line = '{0:s}...'.format(odd_line[:77])
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse log line: {0:s}'.format(repr(odd_line)))
           consecutive_line_failures += 1
           if (consecutive_line_failures >
@@ -686,7 +704,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       try:
         text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to read lines with error: {0!s}'.format(exception))
 
   # pylint: disable=redundant-returns-doc

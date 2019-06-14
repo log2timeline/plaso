@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Opera browser history parsers."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import opera as _  # pylint: disable=unused-import
 from plaso.parsers import opera
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class OperaTypedParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Typed History parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['typed_history.xml'])
   def testParse(self):
     """Tests the Parse function."""
     parser = opera.OperaTypedHistoryParser()
     storage_writer = self._ParseFile(['typed_history.xml'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())
@@ -51,13 +49,12 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 class OperaGlobalParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Global History parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['global_history.dat'])
   def testParseFile(self):
     """Read a history file and run a few tests."""
     parser = opera.OperaGlobalHistoryParser()
     storage_writer = self._ParseFile(['global_history.dat'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 37)
 
     events = list(storage_writer.GetEvents())

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for Apple System Log file parser."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import asl as _  # pylint: disable=unused-import
 from plaso.parsers import asl
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ASLParserTest(test_lib.ParserTestCase):
   """Tests for Apple System Log file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['applesystemlog.asl'])
   def testParse(self):
     """Tests the Parse function."""
     parser = asl.ASLParser()
     storage_writer = self._ParseFile(['applesystemlog.asl'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())

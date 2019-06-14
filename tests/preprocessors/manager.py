@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the preprocess plugins manager."""
 
@@ -38,13 +38,14 @@ class PreprocessPluginsManagerTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   def testCollectFromFileSystem(self):
     """Tests the CollectFromFileSystem function."""
-    path = self._GetTestFilePath(['artifacts'])
+    artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(artifacts_path)
+
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
-    registry.ReadFromDirectory(reader, path)
+    registry.ReadFromDirectory(reader, artifacts_path)
 
     knowledge_base_object = knowledge_base_library.KnowledgeBase()
 

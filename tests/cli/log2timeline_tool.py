@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline CLI tool."""
 
@@ -187,33 +187,40 @@ optional arguments:
     # TODO: check output.
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
-    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['testdir'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    yara_rules_path = self._GetTestFilePath(['yara.rules'])
+    self._SkipIfPathNotExists(yara_rules_path)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.source = self._GetTestFilePath(['testdir'])
+    options.artifact_definitions_path = test_artifacts_path
+    options.source = test_file_path
     options.storage_file = 'storage.plaso'
     options.storage_format = definitions.STORAGE_FORMAT_SQLITE
-    options.yara_rules_path = self._GetTestFilePath(['yara.rules'])
+    options.yara_rules_path = yara_rules_path
 
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
     test_tool.ParseOptions(options)
 
     self.assertIsNotNone(test_tool._yara_rules_string)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.artifact_definitions_path = test_artifacts_path
 
     # ParseOptions will raise if source is not set.
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.source = self._GetTestFilePath(['testdir'])
+    options.artifact_definitions_path = test_artifacts_path
+    options.source = test_file_path
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
@@ -222,11 +229,13 @@ optional arguments:
 
   def testExtractEventsFromSourcesOnDirectory(self):
     """Tests the ExtractEventsFromSources function on a directory."""
+    test_file_path = self._GetTestFilePath(['testdir'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
-    source_path = self._GetTestFilePath(['testdir'])
-    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -250,14 +259,15 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['apfs.dmg'])
   def testExtractEventsFromSourcesOnAPFSImage(self):
     """Tests the ExtractEventsFromSources function on APFS image."""
+    test_file_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
-    source_path = self._GetTestFilePath(['apfs.dmg'])
-    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -281,15 +291,16 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testExtractEventsFromSourcesOnBDEImage(self):
     """Tests the ExtractEventsFromSources function on BDE image."""
+    test_file_path = self._GetTestFilePath(['bdetogo.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(
+        test_file_path, password=self._BDE_PASSWORD)
+
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
-    source_path = self._GetTestFilePath(['bdetogo.raw'])
-    options = self._CreateExtractionOptions(
-        source_path, password=self._BDE_PASSWORD)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -313,14 +324,15 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on single partition image."""
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
-    source_path = self._GetTestFilePath(['ímynd.dd'])
-    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -344,17 +356,18 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testExtractEventsFromSourcesPartitionedImage(self):
     """Tests the ExtractEventsFromSources function on multi partition image."""
-    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
-    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
     # Note that the source file is a RAW (VMDK flat) image.
-    source_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
-    options = self._CreateExtractionOptions(source_path)
+    test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
     options.partitions = 'all'
 
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
@@ -377,15 +390,16 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testExtractEventsFromSourcesOnVSSImage(self):
     """Tests the ExtractEventsFromSources function on VSS image."""
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
+    options.vss_stores = 'all'
+
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
-    source_path = self._GetTestFilePath(['vsstest.qcow2'])
-    options = self._CreateExtractionOptions(source_path)
-    options.vss_stores = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -404,23 +418,24 @@ optional arguments:
           'Processing started.',
           'Processing completed.',
           '',
-          'Number of errors encountered while extracting events: 3.',
+          'Number of warnings generated while extracting events: 3.',
           '',
-          'Use pinfo to inspect errors in more detail.',
+          'Use pinfo to inspect warnings in more detail.',
           '',
           '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   def testExtractEventsFromSourcesOnFile(self):
     """Tests the ExtractEventsFromSources function on a file."""
+    test_file_path = self._GetTestFilePath(['System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
-    source_path = self._GetTestFilePath(['System.evtx'])
-    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -450,11 +465,13 @@ optional arguments:
       'not supported on Windows Subsystem for Linux')
   def testExtractEventsFromSourcesOnLinkToDirectory(self):
     """Tests the ExtractEventsFromSources function on a symlink to directory."""
+    test_file_path = self._GetTestFilePath(['link_to_testdir'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
+
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
-    source_path = self._GetTestFilePath(['link_to_testdir'])
-    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')

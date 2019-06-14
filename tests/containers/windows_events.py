@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows event data attribute containers."""
 
@@ -55,22 +55,6 @@ class WindowsRegistryListEventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         'data_type', 'key_path', 'known_folder_identifier', 'list_name',
         'list_values', 'offset', 'query', 'value_name']
-
-    attribute_names = sorted(attribute_container.GetAttributeNames())
-
-    self.assertEqual(attribute_names, expected_attribute_names)
-
-
-class WindowsRegistryServiceEventDataTest(shared_test_lib.BaseTestCase):
-  """Tests for the Windows Registry service event data attribute container."""
-
-  def testGetAttributeNames(self):
-    """Tests the GetAttributeNames function."""
-    attribute_container = windows_events.WindowsRegistryServiceEventData()
-
-    expected_attribute_names = [
-        'data_type', 'key_path', 'offset', 'query', 'regvalue',
-        'source_append', 'urls']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

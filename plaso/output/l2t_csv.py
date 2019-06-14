@@ -7,9 +7,11 @@ http://forensicswiki.org/wiki/L2T_CSV
 
 from __future__ import unicode_literals
 
+import logging
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.lib import definitions
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.output import interface
@@ -41,29 +43,159 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       return field.replace(self._FIELD_DELIMITER, ' ')
     return field
 
-  def _FormatHostname(self, event):
+  def _FormatHostname(self, event_data):
     """Formats the hostname.
 
     Args:
-      event (EventObject): event.
+      event_data (EventData): event data.
 
      Returns:
        str: formatted hostname field.
     """
-    hostname = self._output_mediator.GetHostname(event)
+    hostname = self._output_mediator.GetHostname(event_data)
     return self._FormatField(hostname)
 
-  def _FormatUsername(self, event):
+  def _FormatInode(self, event_data):
+    """Formats the inode.
+
+    Args:
+      event_data (EventData): event data.
+
+    Returns:
+      str: inode field.
+    """
+    inode = getattr(event_data, 'inode', None)
+    if inode is None:
+      pathspec = getattr(event_data, 'pathspec', None)
+      if pathspec and hasattr(pathspec, 'inode'):
+        inode = pathspec.inode
+    if inode is None:
+      inode = '-'
+
+    return inode
+
+  def _FormatUsername(self, event_data):
     """Formats the username.
 
     Args:
-      event (EventObject): event.
+      event_data (EventData): event data.
 
      Returns:
        str: formatted username field.
     """
-    username = self._output_mediator.GetUsername(event)
+    username = self._output_mediator.GetUsername(event_data)
     return self._FormatField(username)
+
+  def _GetOutputValues(self, event, event_data, event_tag):
+    """Retrieves output values.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      list[str]: output values or None if no timestamp was present in the event.
+
+    Raises:
+      NoFormatterFound: If no event formatter can be found to match the data
+          type in the event data.
+    """
+    if not hasattr(event, 'timestamp'):
+      logger.error('Unable to output event without timestamp.')
+      return None
+
+    data_type = getattr(event_data, 'data_type', 'UNKNOWN')
+
+    # TODO: add function to pass event_values to GetFormattedMessages.
+    message, message_short = self._output_mediator.GetFormattedMessages(
+        event_data)
+    if message is None or message_short is None:
+      raise errors.NoFormatterFound(
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
+
+    # TODO: add function to pass event_values to GetFormattedSources.
+    source_short, source = self._output_mediator.GetFormattedSources(
+        event, event_data)
+    if source is None or source_short is None:
+      raise errors.NoFormatterFound(
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
+
+    # TODO: preserve dfdatetime as an object.
+    # TODO: add support for self._output_mediator.timezone
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
+
+    unformatted_attributes = (
+        formatters_manager.FormattersManager.GetUnformattedAttributes(
+            event_data))
+    if unformatted_attributes is None:
+      raise errors.NoFormatterFound(
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
+
+    extra_attributes = []
+    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+      if attribute_name in unformatted_attributes:
+        # TODO: some pyparsing based parsers can generate empty bytes values
+        # in Python 3.
+        if (isinstance(attribute_value, py2to3.BYTES_TYPE) and
+            attribute_value == b''):
+          logging.debug((
+              'attribute: {0:s} of data type: {1:s} contains an empty bytes '
+              'value').format(attribute_name, event_data.data_type))
+          attribute_value = ''
+
+        # With ! in {1!s} we force a string conversion since some of
+        # the extra attributes values can be integer, float point or
+        # boolean values.
+        extra_attributes.append('{0:s}: {1!s}'.format(
+            attribute_name, attribute_value))
+
+    extra_attributes = '; '.join(extra_attributes)
+    extra_attributes = extra_attributes.replace('\n', '-').replace('\r', '')
+
+    inode = self._FormatInode(event_data)
+    hostname = self._FormatHostname(event_data)
+    username = self._FormatUsername(event_data)
+
+    if event_tag:
+      notes = ' '.join(event_tag.labels) or '-'
+    else:
+      notes = '-'
+
+    year, month, day_of_month = date_time.GetDate()
+    hours, minutes, seconds = date_time.GetTimeOfDay()
+    try:
+      date_string = '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
+      time_string = '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
+    except (TypeError, ValueError):
+      self._ReportEventError(event, event_data, (
+          'unable to copy timestamp: {0!s} to a human readable date and time. '
+          'Defaulting to: "00/00/0000" "--:--:--"').format(event.timestamp))
+
+      date_string = '00/00/0000'
+      time_string = '--:--:--'
+
+    output_values = [
+        date_string,
+        time_string,
+        '{0!s}'.format(self._output_mediator.timezone),
+        '....',
+        source_short,
+        source,
+        '-',
+        username,
+        hostname,
+        message_short,
+        message,
+        '2',
+        getattr(event_data, 'display_name', '-'),
+        '{0!s}'.format(inode),
+        notes,
+        getattr(event_data, 'parser', '-'),
+        extra_attributes]
+
+    return output_values
 
   def _WriteOutputValues(self, output_values):
     """Writes values to the output.
@@ -80,127 +212,22 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     output_line = '{0:s}\n'.format(output_line)
     self._output_writer.Write(output_line)
 
-  def _GetOutputValues(self, event):
-    """Retrieves output values.
+  def WriteEventBody(self, event, event_data, event_tag):
+    """Writes event values to the output.
 
     Args:
       event (EventObject): event.
-
-    Returns:
-      list[str]: output values or None if no timestamp was present in the event.
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-          type in the event.
-    """
-    if not hasattr(event, 'timestamp'):
-      logger.error('Unable to output event without timestamp.')
-      return None
-
-    # TODO: add function to pass event_values to GetFormattedMessages.
-    message, message_short = self._output_mediator.GetFormattedMessages(event)
-    if message is None or message_short is None:
-      data_type = getattr(event, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(data_type))
-
-    # TODO: add function to pass event_values to GetFormattedSources.
-    source_short, source = self._output_mediator.GetFormattedSources(event)
-    if source is None or source_short is None:
-      data_type = getattr(event, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(data_type))
-
-    # TODO: preserve dfdatetime as an object.
-    # TODO: add support for self._output_mediator.timezone
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=event.timestamp)
-
-    format_variables = self._output_mediator.GetFormatStringAttributeNames(
-        event)
-    if format_variables is None:
-      data_type = getattr(event, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(data_type))
-
-    extra_attributes = []
-    for attribute_name, attribute_value in sorted(event.GetAttributes()):
-      if (attribute_name in definitions.RESERVED_VARIABLE_NAMES or
-          attribute_name in format_variables):
-        continue
-
-      # With ! in {1!s} we force a string conversion since some of
-      # the extra attributes values can be integer, float point or
-      # boolean values.
-      extra_attributes.append(
-          '{0:s}: {1!s}'.format(attribute_name, attribute_value))
-
-    extra_attributes = '; '.join(extra_attributes)
-    extra_attributes = extra_attributes.replace('\n', '-').replace('\r', '')
-
-    inode = getattr(event, 'inode', None)
-    if inode is None:
-      if hasattr(event, 'pathspec') and hasattr(
-          event.pathspec, 'image_inode'):
-        inode = event.pathspec.image_inode
-    if inode is None:
-      inode = '-'
-
-    hostname = self._FormatHostname(event)
-    username = self._FormatUsername(event)
-
-    notes = []
-    note_string = getattr(event, 'notes', None)
-    if note_string:
-      notes.append(note_string)
-
-    tag = getattr(event, 'tag', None)
-    if tag:
-      notes.extend(tag.labels)
-
-    if not notes:
-      notes.append('-')
-
-    year, month, day_of_month = date_time.GetDate()
-    date_string = '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
-
-    hours, minutes, seconds = date_time.GetTimeOfDay()
-    time_string = '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
-
-    output_values = [
-        date_string,
-        time_string,
-        '{0!s}'.format(self._output_mediator.timezone),
-        '....',
-        source_short,
-        source,
-        '-',
-        username,
-        hostname,
-        message_short,
-        message,
-        '2',
-        getattr(event, 'display_name', '-'),
-        '{0!s}'.format(inode),
-        ' '.join(notes),
-        getattr(event, 'parser', '-'),
-        extra_attributes]
-
-    return output_values
-
-  def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
-
-    Args:
-      event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-          type in the event object.
+          type in the event data.object.
     """
-    output_values = self._GetOutputValues(event)
+    output_values = self._GetOutputValues(event, event_data, event_tag)
 
-    output_values[3] = self._output_mediator.GetMACBRepresentation(event)
+    output_values[3] = self._output_mediator.GetMACBRepresentation(
+        event, event_data)
     output_values[6] = event.timestamp_desc or '-'
 
     self._WriteOutputValues(output_values)
@@ -211,10 +238,10 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     Args:
       event_macb_group (list[EventObject]): event MACB group.
     """
-    output_values = self._GetOutputValues(event_macb_group[0])
+    output_values = self._GetOutputValues(*event_macb_group[0])
 
     timestamp_descriptions = [
-        event.timestamp_desc for event in event_macb_group]
+        event.timestamp_desc for event, _, _ in event_macb_group]
     output_values[3] = (
         self._output_mediator.GetMACBRepresentationFromDescriptions(
             timestamp_descriptions))

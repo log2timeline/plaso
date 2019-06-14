@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests the plist parser."""
 
@@ -11,7 +11,6 @@ from plaso.parsers import plist
 # Register all plugins.
 from plaso.parsers import plist_plugins  # pylint: disable=unused-import
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -30,13 +29,12 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertNotEqual(parser._plugins, [])
     self.assertEqual(len(parser._plugins), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['plist_binary'])
   def testParse(self):
     """Tests the Parse function."""
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['plist_binary'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 12)
 
     timestamps, roots, keys = zip(
@@ -69,7 +67,6 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertTrue(expected_keys == set(keys))
     self.assertEqual(3, len(set(keys)))
 
-  @shared_test_lib.skipUnlessHasTestFile(['truncated.plist'])
   def testParseWithTruncatedFile(self):
     """Tests the Parse function on a truncated plist file."""
     parser = plist.PlistParser()

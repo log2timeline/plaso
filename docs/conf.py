@@ -16,18 +16,15 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-
 import re
 import os
 import sys
 import time
 
 from mock import Mock as MagicMock
-from sphinx import apidoc
+from sphinx.ext import apidoc
 
 from docutils import nodes, transforms
-from recommonmark.parser import CommonMarkParser
-from recommonmark.transform import AutoStructify
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -41,7 +38,7 @@ from plaso import dependencies
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.7'
+needs_sphinx = '2.0.1'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -54,7 +51,8 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-    'sphinx_markdown_tables'
+    'sphinx_markdown_tables',
+    'recommonmark'
 ]
 
 
@@ -129,8 +127,6 @@ PIP_INSTALLED_MODULES = set(['pyparsing', 'six'])
 modules_to_mock = set(modules_to_mock).difference(PIP_INSTALLED_MODULES)
 modules_to_mock = sorted(modules_to_mock)
 print('Mocking modules')
-for module_name in modules_to_mock:
-  print(module_name)
 
 sys.modules.update((module_name, Mock()) for module_name in modules_to_mock)
 
@@ -143,15 +139,6 @@ napoleon_include_special_with_doc = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-
-# Enable markdown parser.
-source_parsers = {
-    '.md': CommonMarkParser,
-}
-
-# The suffixes of source filenames.
-
-source_suffix = ['.rst', '.md']
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -246,7 +233,7 @@ html_theme = 'default'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -372,12 +359,21 @@ texinfo_documents = [(
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
 
+# This function is a Sphinx core event callback, the format of which is detailed
+# here: https://www.sphinx-doc.org/en/master/extdev/appapi.html#events
+def RunSphinxAPIDoc(unused_app):
+  """Runs sphinx-apidoc to auto-generate documentation.
 
-# Configure sphinx to convert markdown links (recommonmark is broken at the
-# moment).
+  Args:
+    unused_app (sphinx.application.Sphinx): Sphinx application. Required by the
+        the Sphinx event callback API.
+  """
+  current_directory = os.path.abspath(os.path.dirname(__file__))
+  module_path = os.path.join(current_directory, '..', 'plaso')
+  api_directory = os.path.join(current_directory, 'sources', 'api')
+  apidoc.main(['-o', api_directory, module_path, '--force'])
 
-
-class ProcessLink(transforms.Transform):
+class L2TDocsLinkFixer(transforms.Transform):
   """Transform definition to parse .md references to internal pages."""
 
   default_priority = 1000
@@ -385,59 +381,51 @@ class ProcessLink(transforms.Transform):
   ANCHOR_REGEX = re.compile(
       r'(?P<uri>[a-zA-Z0-9-./]+?).md#(?P<anchor>[a-zA-Z0-9-]+)')
 
-  def find_and_replace(self, node):
-    """Parses URIs containing .md and replaces them with their HTML page.
+  def _FixLinks(self, node):
+    """Corrects links to .md files hosted on l2tdocs.
 
     Args:
-        node(node): docutils node.
+      node (docutils.nodes.Node): docutils node.
 
     Returns:
-      node: docutils node.
+      docutils.nodes.Node: docutils node, with URIs point to l2tdocs
+          corrected.
     """
     if isinstance(node, nodes.reference) and 'refuri' in node:
       reference_uri = node['refuri']
-      if reference_uri.endswith('.md') and not reference_uri.startswith('http'):
-        reference_uri = reference_uri[:-3] + '.html'
-        node['refuri'] = reference_uri
-      else:
-        match = self.ANCHOR_REGEX.match(reference_uri)
-        if match:
-          node['refuri'] = '{0:s}.html#{1:s}'.format(
-              match.group('uri'), match.group('anchor'))
+      l2tdocs_prefix = 'https://github.com/log2timeline/l2tdocs/blob/'
+      if (
+          reference_uri.startswith(l2tdocs_prefix) and
+          not reference_uri.endswith('.asciidoc')):
+        node['refuri'] = reference_uri + '.md'
     return node
 
-  def traverse(self, node):
-    """Traverse the document tree rooted at node.
+  def _Traverse(self, node):
+    """Traverses the document tree rooted at node.
 
-    node(node): docutils node.
+    Args:
+      node (docutils.nodes.Node): docutils node.
     """
-    self.find_and_replace(node)
+    self._FixLinks(node)
 
-    for c in node.children:
-      self.traverse(c)
+    for child_node in node.children:
+      self._Traverse(child_node)
 
   # pylint: disable=arguments-differ
   def apply(self):
-    """Applies transform on document tree."""
-    self.traverse(self.document)
-
-
-def RunSphinxAPIDoc(_):
-  """Runs sphinx-apidoc to auto-generate documentation."""
-  current_directory = os.path.abspath(os.path.dirname(__file__))
-  module = os.path.join(current_directory, '..', 'plaso')
-  api_directory = os.path.join(current_directory, 'sources', 'api')
-  apidoc.main(['-o', api_directory, module, '--force'])
-
+    """Applies this transform on document tree."""
+    self._Traverse(self.document)
 
 def setup(app):
-  """Called at Sphinx initialization."""
+  """Called at Sphinx initialization.
+
+  Args:
+    app (sphinx.application.Sphinx): Sphinx application.
+  """
   # Triggers sphinx-apidoc to generate API documentation.
   app.connect('builder-inited', RunSphinxAPIDoc)
   app.add_config_value(
       'recommonmark_config', {
-        'enable_auto_doc_ref': False},
+        'enable_auto_toc_tree': True},
       True)
-
-  app.add_transform(AutoStructify)
-  app.add_transform(ProcessLink)
+  app.add_transform(L2TDocsLinkFixer)

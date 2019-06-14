@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the parsers mediator."""
 
@@ -21,7 +21,6 @@ from plaso.lib import timelib
 from plaso.engine import configurations
 from plaso.storage.fake import writer as fake_writer
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -59,8 +58,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   # TODO: add tests for ClearEventAttributes.
   # TODO: add tests for ClearParserChain.
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog.gz'])
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testGetDisplayName(self):
     """Tests the GetDisplayName function."""
     session = sessions.Session()
@@ -70,14 +67,16 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     with self.assertRaises(ValueError):
       parsers_mediator.GetDisplayName(file_entry=None)
 
-    test_path = self._GetTestFilePath(['syslog.gz'])
+    test_file_path = self._GetTestFilePath(['syslog.gz'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
 
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
 
-    expected_display_name = 'OS:{0:s}'.format(test_path)
+    expected_display_name = 'OS:{0:s}'.format(test_file_path)
     self.assertEqual(display_name, expected_display_name)
 
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -86,12 +85,14 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
 
-    expected_display_name = 'GZIP:{0:s}'.format(test_path)
+    expected_display_name = 'GZIP:{0:s}'.format(test_file_path)
     self.assertEqual(display_name, expected_display_name)
 
-    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
     vshadow_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -124,11 +125,13 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
-    test_path = self._GetTestFilePath(['syslog.gz'])
-    os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    test_file_path = self._GetTestFilePath(['syslog.gz'])
+    self._SkipIfPathNotExists(test_file_path)
 
-    expected_display_name = 'OS:{0:s}'.format(test_path)
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+
+    expected_display_name = 'OS:{0:s}'.format(test_file_path)
     display_name = parsers_mediator.GetDisplayNameForPathSpec(os_path_spec)
     self.assertEqual(display_name, expected_display_name)
 
@@ -190,7 +193,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     event_data = events.EventData()
 
     parsers_mediator.ProduceEventWithEventData(event_with_timestamp, event_data)
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     event_without_timestamp = events.EventObject()
@@ -198,7 +201,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
       parsers_mediator.ProduceEventWithEventData(
           event_without_timestamp, event_data)
 
-  # TODO: add tests for ProduceExtractionError.
+  # TODO: add tests for ProduceExtractionWarning.
   # TODO: add tests for RemoveEventAttribute.
 
   def testResetFileEntry(self):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Android WebViewCache plugin."""
 
@@ -9,21 +9,19 @@ import unittest
 from plaso.formatters import android_webviewcache as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import android_webviewcache
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
   """Tests for the Android WebViewCache database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['webviewCache.db'])
   def testProcess(self):
     """Test the Process function on a WebViewCache file."""
     plugin = android_webviewcache.AndroidWebViewCachePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['webviewCache.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())

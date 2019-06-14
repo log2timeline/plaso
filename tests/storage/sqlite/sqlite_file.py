@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the SQLite-based storage."""
 
@@ -7,17 +7,32 @@ from __future__ import unicode_literals
 import os
 import unittest
 
-from plaso.containers import errors
 from plaso.containers import events
 from plaso.containers import event_sources
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
+
+
+class _TestSQLiteStorageFileV1(sqlite_file.SQLiteStorageFile):
+  """Test class for testing format compatibility checks."""
+
+  _FORMAT_VERSION = 1
+  _COMPATIBLE_FORMAT_VERSION = 1
+
+
+class _TestSQLiteStorageFileV2(sqlite_file.SQLiteStorageFile):
+  """Test class for testing format compatibility checks."""
+
+  _FORMAT_VERSION = 2
+  _COMPATIBLE_FORMAT_VERSION = 1
 
 
 class SQLiteStorageFileTest(test_lib.StorageTestCase):
@@ -77,9 +92,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       with self.assertRaises(ValueError):
         storage_file._CountStoredAttributeContainers('bogus')
 
-      storage_file.Close()
+      # Test for a supported container type that does not have a table
+      # present in the storage file.
+      query = 'DROP TABLE {0:s}'.format(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      storage_file._cursor.execute(query)
+      number_of_containers = storage_file._CountStoredAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      self.assertEqual(number_of_containers, 0)
 
-  # TODO: add tests for _CheckStorageMetadata
+      storage_file.Close()
 
   def testGetAttributeContainerByIndex(self):
     """Tests the _GetAttributeContainerByIndex function."""
@@ -238,30 +260,18 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testAddError(self):
-    """Tests the AddError function."""
-    extraction_error = errors.ExtractionError(
-        message='Test extraction error')
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      storage_file.AddError(extraction_error)
-
-      storage_file.Close()
-
   def testAddEvent(self):
     """Tests the AddEvent function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
 
       storage_file.Close()
@@ -294,19 +304,38 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
-    test_events = self._CreateTestEvents()
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      test_events = []
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
+        storage_file.AddEvent(event)
+
+        test_events.append(event)
+
+      test_event_tags = self._CreateTestEventTags(test_events)
+      for event_tag in test_event_tags:
+        storage_file.AddEventTag(event_tag)
+
+      storage_file.Close()
+
+  def testAddWarning(self):
+    """Tests the AddWarning function."""
+    extraction_warning = warnings.ExtractionWarning(
+        message='Test extraction warning')
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
-        storage_file.AddEvent(event)
-
-      test_event_tags = self._CreateTestEventTags(test_events)
-      for event_tag in test_event_tags:
-        storage_file.AddEventTag(event_tag)
+      storage_file.AddWarning(extraction_warning)
 
       storage_file.Close()
 
@@ -334,9 +363,31 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testGetErrors(self):
-    """Tests the GetErrors function."""
-    extraction_error = errors.ExtractionError(
+  def testGetWarnings(self):
+    """Tests the GetWarnings function."""
+    extraction_warning = warnings.ExtractionWarning(
+        message='Test extraction warning')
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file.AddWarning(extraction_warning)
+
+      storage_file.Close()
+
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file)
+
+      test_warnings = list(storage_file.GetWarnings())
+      self.assertEqual(len(test_warnings), 1)
+
+      storage_file.Close()
+
+  def testExtractionErrorCompatibility(self):
+    """Tests that extraction errors are converted to warnings."""
+    extraction_error = warnings.ExtractionError(
         message='Test extraction error')
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -344,15 +395,19 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      storage_file.AddError(extraction_error)
+      # Directly using the private methods as AddError has been removed.
+      storage_file._AddAttributeContainer(
+          extraction_error.CONTAINER_TYPE, extraction_error)
+      storage_file._WriteSerializedAttributeContainerList(
+          extraction_error.CONTAINER_TYPE)
 
       storage_file.Close()
 
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file)
 
-      test_errors = list(storage_file.GetErrors())
-      self.assertEqual(len(test_errors), 1)
+      test_warnings = list(storage_file.GetWarnings())
+      self.assertEqual(len(test_warnings), 1)
 
       storage_file.Close()
 
@@ -361,14 +416,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testGetEvents(self):
     """Tests the GetEvents function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
 
       storage_file.Close()
@@ -406,15 +463,20 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testGetEventTags(self):
     """Tests the GetEventTags function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      test_events = []
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
+
+        test_events.append(event)
 
       test_event_tags = self._CreateTestEventTags(test_events)
       for event_tag in test_event_tags:
@@ -437,14 +499,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
-    test_events = self._CreateTestEvents()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in test_events:
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        storage_file.AddEventData(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
         storage_file.AddEvent(event)
 
       storage_file.Close()
@@ -460,7 +524,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     # TODO: add test with time range.
 
   # TODO: add tests for HasAnalysisReports
-  # TODO: add tests for HasErrors
+  # TODO: add tests for HasWarnings
   # TODO: add tests for HasEventTags
 
   # TODO: add tests for Open and Close
@@ -504,6 +568,26 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.WriteTaskCompletion(task_completion)
 
       storage_file.Close()
+
+  def testVersionCompatibility(self):
+    """Tests the version compatibility methods."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      v1_storage_path = os.path.join(temp_directory, 'v1.sqlite')
+      v1_storage_file = _TestSQLiteStorageFileV1(
+          storage_type=definitions.STORAGE_TYPE_SESSION)
+      v1_storage_file.Open(path=v1_storage_path, read_only=False)
+      v1_storage_file.Close()
+
+      v2_storage_file_rw = _TestSQLiteStorageFileV2(
+          storage_type=definitions.STORAGE_TYPE_SESSION)
+
+      with self.assertRaises((IOError, OSError)):
+        v2_storage_file_rw.Open(path=v1_storage_path, read_only=False)
+
+      v2_storage_file_ro = _TestSQLiteStorageFileV2(
+          storage_type=definitions.STORAGE_TYPE_SESSION)
+      v2_storage_file_ro.Open(path=v1_storage_path, read_only=True)
+      v2_storage_file_ro.Close()
 
 
 # TODO: add tests for SQLiteStorageMergeReader

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the filter file CLI arguments helper."""
 
@@ -25,7 +25,7 @@ usage: cli_helper.py [-f FILE_FILTER]
 Test argument parser.
 
 optional arguments:
-  -f FILE_FILTER, --file_filter FILE_FILTER, --file-filter FILE_FILTER
+  -f FILE_FILTER, --filter-file FILE_FILTER, --filter_file FILE_FILTER, --file-filter FILE_FILTER, --file_filter FILE_FILTER
                         List of files to include for targeted collection of
                         files to parse, one line per file path, setup is
                         /path|file - where each element can contain either a

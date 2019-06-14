@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows Registry key or value event formatter."""
 
@@ -25,7 +25,7 @@ class WinRegistryGenericFormatterTest(test_lib.EventFormatterTestCase):
 
     expected_attribute_names = [
         'key_path',
-        'text']
+        'values']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

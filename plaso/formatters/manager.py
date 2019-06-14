@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.formatters import default
 from plaso.formatters import logger
+from plaso.lib import definitions
 
 
 class FormattersManager(object):
@@ -12,6 +13,7 @@ class FormattersManager(object):
 
   _formatter_classes = {}
   _formatter_objects = {}
+  _unformatted_attributes = {}
 
   @classmethod
   def DeregisterFormatter(cls, formatter_class):
@@ -64,35 +66,63 @@ class FormattersManager(object):
     return cls._formatter_objects[data_type]
 
   @classmethod
-  def GetMessageStrings(cls, formatter_mediator, event):
-    """Retrieves the formatted message strings for a specific event object.
+  def GetMessageStrings(cls, formatter_mediator, event_data):
+    """Retrieves the formatted message strings for a specific event.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions between
           formatters and other components, such as storage and Windows EventLog
           resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       list[str, str]: long and short version of the message string.
     """
-    formatter_object = cls.GetFormatterObject(event.data_type)
-    return formatter_object.GetMessages(formatter_mediator, event)
+    formatter_object = cls.GetFormatterObject(event_data.data_type)
+    return formatter_object.GetMessages(formatter_mediator, event_data)
 
   @classmethod
-  def GetSourceStrings(cls, event):
-    """Retrieves the formatted source strings for a specific event object.
+  def GetSourceStrings(cls, event, event_data):
+    """Retrieves the formatted source strings for a specific event.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       list[str, str]: short and long version of the source of the event.
     """
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
-    formatter_object = cls.GetFormatterObject(event.data_type)
-    return formatter_object.GetSources(event)
+    formatter_object = cls.GetFormatterObject(event_data.data_type)
+    return formatter_object.GetSources(event, event_data)
+
+  @classmethod
+  def GetUnformattedAttributes(cls, event_data):
+    """Retrieves names of the event data attributes that are not formatted.
+
+    Args:
+      event_data (EventData): event data.
+
+    Returns:
+      list[str]: names of the event data attributes that are not formatted.
+    """
+    unformatted_attributes = cls._unformatted_attributes.get(
+        event_data.data_type, None)
+    if not unformatted_attributes:
+      formatter_object = cls.GetFormatterObject(event_data.data_type)
+
+      event_data_attribute_names = set(event_data.GetAttributeNames())
+
+      formatter_attribute_names = (
+          formatter_object.GetFormatStringAttributeNames())
+      formatter_attribute_names.update(definitions.RESERVED_VARIABLE_NAMES)
+
+      unformatted_attributes = sorted(event_data_attribute_names.difference(
+          formatter_attribute_names))
+      cls._unformatted_attributes[event_data.data_type] = unformatted_attributes
+
+    return unformatted_attributes
 
   @classmethod
   def RegisterFormatter(cls, formatter_class):
@@ -105,7 +135,7 @@ class FormattersManager(object):
 
     Raises:
       KeyError: if formatter class is already set for the corresponding
-                data type.
+          data type.
     """
     formatter_data_type = formatter_class.DATA_TYPE.lower()
     if formatter_data_type in cls._formatter_classes:
@@ -126,7 +156,7 @@ class FormattersManager(object):
 
     Raises:
       KeyError: if formatter class is already set for the corresponding
-                data type.
+          data type.
     """
     for formatter_class in formatter_classes:
       cls.RegisterFormatter(formatter_class)

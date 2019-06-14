@@ -27,18 +27,25 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  _DATATYPES = frozenset([
-      'chrome:history:file_downloaded', 'chrome:history:page_visited',
-      'firefox:places:page_visited', 'firefox:downloads:download',
-      'macosx:lsquarantine', 'msiecf:redirected', 'msiecf:url',
-      'msie:webcache:container', 'opera:history', 'safari:history:visit'])
+  _SUPPORTED_EVENT_DATA_TYPES = frozenset([
+      'chrome:history:file_downloaded',
+      'chrome:history:page_visited',
+      'firefox:downloads:download',
+      'firefox:places:page_visited',
+      'macosx:lsquarantine',
+      'msiecf:redirected',
+      'msiecf:url',
+      'msie:webcache:container',
+      'opera:history',
+      'safari:history:visit'])
 
   def __init__(self):
     """Initializes the domains visited plugin."""
     super(UniqueDomainsVisitedPlugin, self).__init__()
     self._domains = []
 
-  def ExamineEvent(self, mediator, event):
+  # pylint: disable=unused-argument
+  def ExamineEvent(self, mediator, event, event_data):
     """Analyzes an event and extracts domains from it.
 
     We only evaluate straightforward web history events, not visits which can
@@ -48,18 +55,21 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
+      event_data (EventData): event data.
     """
-    if event.data_type not in self._DATATYPES:
+    if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
       return
 
-    url = getattr(event, 'url', None)
+    url = getattr(event_data, 'url', None)
     if url is None:
       return
+
     parsed_url = urlparse.urlparse(url)
     domain = getattr(parsed_url, 'netloc', None)
     if domain in self._domains:
       # We've already found an event containing this domain.
       return
+
     self._domains.append(domain)
 
   def CompileReport(self, mediator):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows Shortcut (LNK) parser."""
 
@@ -10,14 +10,12 @@ from plaso.formatters import winlnk as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import winlnk
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinLnkParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Shortcut (LNK) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['example.lnk'])
   def testParse(self):
     """Tests the Parse function."""
     parser = winlnk.WinLnkParser()
@@ -33,7 +31,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # 	Icon location			: %windir%\system32\migwiz\migwiz.exe
     # 	Environment variables location	: %windir%\system32\migwiz\migwiz.exe
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())
@@ -99,13 +97,12 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.uuid, expected_uuid)
     self.assertEqual(event.mac_address, '00:1d:09:fa:5a:1c')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NeroInfoTool.lnk'])
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
     parser = winlnk.WinLnkParser()
     storage_writer = self._ParseFile(['NeroInfoTool.lnk'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 20)
 
     events = list(storage_writer.GetEvents())

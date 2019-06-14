@@ -96,7 +96,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
     number_of_fields = len(fields)
 
     if number_of_fields not in (1, 6):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported number of fields: {0:d} in cookie: {1:s}'.format(
               number_of_fields, self.COOKIE_NAME))
       return
@@ -217,7 +217,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
     number_of_fields = len(fields)
 
     if number_of_fields not in (1, 4):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported number of fields: {0:d} in cookie: {1:s}'.format(
               number_of_fields, self.COOKIE_NAME))
       return
@@ -296,7 +296,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
     number_of_fields = len(fields)
 
     if number_of_fields != 1:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported number of fields: {0:d} in cookie: {1:s}'.format(
               number_of_fields, self.COOKIE_NAME))
       return
@@ -368,7 +368,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       number_of_fields = len(fields)
 
     if number_of_fields not in (1, 5):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported number of fields: {0:d} in cookie: {1:s}'.format(
               number_of_fields, self.COOKIE_NAME))
       return
@@ -418,7 +418,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
             value = codecs.decode(value, 'ascii')
           except UnicodeEncodeError:
             value = codecs.decode(value, 'ascii', errors='replace')
-            parser_mediator.ProduceExtractionError(
+            parser_mediator.ProduceExtractionWarning(
                 'Cookie contains non 7-bit ASCII characters, which have been '
                 'replaced with a "?".')
 
@@ -429,7 +429,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
             value = codecs.encode(value, 'utf-8')
           except UnicodeDecodeError:
             value = codecs.encode(value, 'utf-8', errors='replace')
-            parser_mediator.ProduceExtractionError(
+            parser_mediator.ProduceExtractionWarning(
                 'Cookie value did not contain a Unicode string. Non UTF-8 '
                 'characters have been replaced.')
 

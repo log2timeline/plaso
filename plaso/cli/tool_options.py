@@ -16,7 +16,6 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
-from plaso.parsers import manager as parsers_manager
 from plaso.winnt import language_ids
 
 
@@ -213,70 +212,6 @@ class OutputModuleOptions(object):
         title='Disabled Output Modules')
     for name, output_class in disabled_classes:
       table_view.AddRow([name, output_class.DESCRIPTION])
-    table_view.Write(self._output_writer)
-
-
-class ParsersOptions(object):
-  """Parsers options mix-in."""
-
-  # pylint: disable=no-member
-
-  def __init__(self):
-    """Initializes parser options."""
-    super(ParsersOptions, self).__init__()
-    self._parser_filter_expression = None
-
-  def _GetParserPresetsInformation(self):
-    """Retrieves the parser presets information.
-
-    Returns:
-      list[tuple]: containing:
-
-        str: parser preset name
-        str: parsers names corresponding to the preset
-    """
-    parser_presets_information = []
-    for preset_definition in parsers_manager.ParsersManager.GetPresets():
-      preset_information_tuple = (
-          preset_definition.name, ', '.join(preset_definition.parsers))
-      # TODO: refactor to pass PresetDefinition.
-      parser_presets_information.append(preset_information_tuple)
-
-    return parser_presets_information
-
-  def ListParsersAndPlugins(self):
-    """Lists information about the available parsers and plugins."""
-    parsers_information = parsers_manager.ParsersManager.GetParsersInformation()
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=['Name', 'Description'],
-        title='Parsers')
-
-    for name, description in sorted(parsers_information):
-      table_view.AddRow([name, description])
-    table_view.Write(self._output_writer)
-
-    parser_names = parsers_manager.ParsersManager.GetNamesOfParsersWithPlugins()
-    for parser_name in parser_names:
-      plugins_information = (
-          parsers_manager.ParsersManager.GetParserPluginsInformation(
-              parser_filter_expression=parser_name))
-
-      table_title = 'Parser plugins: {0:s}'.format(parser_name)
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, column_names=['Name', 'Description'],
-          title=table_title)
-      for name, description in sorted(plugins_information):
-        table_view.AddRow([name, description])
-      table_view.Write(self._output_writer)
-
-    presets_information = self._GetParserPresetsInformation()
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=['Name', 'Parsers and plugins'],
-        title='Parser presets')
-    for name, description in sorted(presets_information):
-      table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
 
 

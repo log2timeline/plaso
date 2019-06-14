@@ -9,10 +9,10 @@ import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.containers import errors
+from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
-from plaso.lib import errors as errors_lib
+from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import logger
@@ -22,6 +22,8 @@ class ParserMediator(object):
   """Parser mediator.
 
   Attributes:
+    collection_filters_helper (CollectionFiltersHelper): collection filters
+        helper.
     last_activity_timestamp (int): timestamp received that indicates the last
         time activity was observed. The last activity timestamp is updated
         when the mediator produces an attribute container, such as an event
@@ -34,14 +36,16 @@ class ParserMediator(object):
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
-      self, storage_writer, knowledge_base, preferred_year=None,
-      resolver_context=None, temporary_directory=None):
+      self, storage_writer, knowledge_base, collection_filters_helper=None,
+      preferred_year=None, resolver_context=None, temporary_directory=None):
     """Initializes a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for parsing.
+      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
+          filters helper.
       preferred_year (Optional[int]): preferred year.
       resolver_context (Optional[dfvfs.Context]): resolver context.
       temporary_directory (Optional[str]): path of the directory for temporary
@@ -57,9 +61,9 @@ class ParserMediator(object):
     self._last_event_data_identifier = None
     self._memory_profiler = None
     self._mount_path = None
-    self._number_of_errors = 0
     self._number_of_event_sources = 0
     self._number_of_events = 0
+    self._number_of_warnings = 0
     self._parser_chain_components = []
     self._preferred_year = preferred_year
     self._process_information = None
@@ -68,6 +72,7 @@ class ParserMediator(object):
     self._temporary_directory = temporary_directory
     self._text_prepend = None
 
+    self.collection_filters_helper = collection_filters_helper
     self.last_activity_timestamp = 0.0
 
   @property
@@ -91,11 +96,6 @@ class ParserMediator(object):
     return self._knowledge_base
 
   @property
-  def number_of_produced_errors(self):
-    """int: number of produced errors."""
-    return self._number_of_errors
-
-  @property
   def number_of_produced_event_sources(self):
     """int: number of produced event sources."""
     return self._number_of_event_sources
@@ -104,6 +104,11 @@ class ParserMediator(object):
   def number_of_produced_events(self):
     """int: number of produced events."""
     return self._number_of_events
+
+  @property
+  def number_of_produced_warnings(self):
+    """int: number of produced warnings."""
+    return self._number_of_warnings
 
   @property
   def operating_system(self):
@@ -385,41 +390,39 @@ class ParserMediator(object):
     """Removes the last added parser or parser plugin from the parser chain."""
     self._parser_chain_components.pop()
 
-  # Pylint is confused by the format of the event docstring.
-  # pylint: disable=missing-param-doc,missing-type-doc
-  def ProcessEvent(
-      self, event, parser_chain=None, file_entry=None, query=None):
-    """Processes an event before it written to the storage.
+  def ProcessEventData(
+      self, event_data, parser_chain=None, file_entry=None, query=None):
+    """Processes event data before it written to the storage.
 
     Args:
-      event (EventObject|EventData): event or event data.
+      event_data (EventData): event data.
       parser_chain (Optional[str]): parsing chain up to this point.
       file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
           use the current file entry set in the mediator.
-      query (Optional[str]): query that was used to obtain the event.
+      query (Optional[str]): query that was used to obtain the event data.
 
     Raises:
       KeyError: if there's an attempt to add a duplicate attribute value to the
-          event.
+          event data.
     """
-    # TODO: rename this to event.parser_chain or equivalent.
-    if not getattr(event, 'parser', None) and parser_chain:
-      event.parser = parser_chain
+    # TODO: rename this to event_data.parser_chain or equivalent.
+    if not getattr(event_data, 'parser', None) and parser_chain:
+      event_data.parser = parser_chain
 
     # TODO: deprecate text_prepend in favor of an event tag.
-    if not getattr(event, 'text_prepend', None) and self._text_prepend:
-      event.text_prepend = self._text_prepend
+    if not getattr(event_data, 'text_prepend', None) and self._text_prepend:
+      event_data.text_prepend = self._text_prepend
 
     if file_entry is None:
       file_entry = self._file_entry
 
     display_name = None
     if file_entry:
-      event.pathspec = file_entry.path_spec
+      event_data.pathspec = file_entry.path_spec
 
-      if not getattr(event, 'filename', None):
+      if not getattr(event_data, 'filename', None):
         path_spec = getattr(file_entry, 'path_spec', None)
-        event.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
+        event_data.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
             path_spec, mount_path=self._mount_path)
 
       if not display_name:
@@ -429,32 +432,29 @@ class ParserMediator(object):
 
       stat_object = file_entry.GetStat()
       inode_value = getattr(stat_object, 'ino', None)
-      # TODO: refactor to ProcessEventData.
-      # Note that we use getattr here since event can be either EventObject
-      # or EventData.
-      if getattr(event, 'inode', None) is None and inode_value is not None:
-        event.inode = self._GetInode(inode_value)
+      if getattr(event_data, 'inode', None) is None and inode_value is not None:
+        event_data.inode = self._GetInode(inode_value)
 
-    if not getattr(event, 'display_name', None) and display_name:
-      event.display_name = display_name
+    if not getattr(event_data, 'display_name', None) and display_name:
+      event_data.display_name = display_name
 
-    if not getattr(event, 'hostname', None) and self.hostname:
-      event.hostname = self.hostname
+    if not getattr(event_data, 'hostname', None) and self.hostname:
+      event_data.hostname = self.hostname
 
-    if not getattr(event, 'username', None):
-      user_sid = getattr(event, 'user_sid', None)
+    if not getattr(event_data, 'username', None):
+      user_sid = getattr(event_data, 'user_sid', None)
       username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
       if username:
-        event.username = username
+        event_data.username = username
 
-    if not getattr(event, 'query', None) and query:
-      event.query = query
+    if not getattr(event_data, 'query', None) and query:
+      event_data.query = query
 
     for attribute, value in iter(self._extra_event_attributes.items()):
-      if hasattr(event, attribute):
+      if hasattr(event_data, attribute):
         raise KeyError('Event already has a value for {0:s}'.format(attribute))
 
-      setattr(event, attribute, value)
+      setattr(event_data, attribute, value)
 
   def ProduceEventSource(self, event_source):
     """Produces an event source.
@@ -484,18 +484,17 @@ class ParserMediator(object):
       InvalidEvent: if the event timestamp value is not set or out of bounds.
     """
     if event.timestamp is None:
-      raise errors_lib.InvalidEvent('Event timestamp value not set.')
+      raise errors.InvalidEvent('Event timestamp value not set.')
 
     if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
-      raise errors_lib.InvalidEvent('Event timestamp value out of bounds.')
+      raise errors.InvalidEvent('Event timestamp value out of bounds.')
 
     event_data_hash = event_data.GetAttributeValuesHash()
     if event_data_hash != self._last_event_data_hash:
       # Make a copy of the event data before adding additional values.
       event_data = copy.deepcopy(event_data)
 
-      # TODO: refactor to ProcessEventData.
-      self.ProcessEvent(
+      self.ProcessEventData(
           event_data, parser_chain=self.GetParserChain(),
           file_entry=self._file_entry)
 
@@ -516,11 +515,11 @@ class ParserMediator(object):
 
     self.last_activity_timestamp = time.time()
 
-  def ProduceExtractionError(self, message, path_spec=None):
-    """Produces an extraction error.
+  def ProduceExtractionWarning(self, message, path_spec=None):
+    """Produces an extraction warning.
 
     Args:
-      message (str): message of the error.
+      message (str): message of the warning.
       path_spec (Optional[dfvfs.PathSpec]): path specification, where None
           will use the path specification of current file entry set in
           the mediator.
@@ -535,10 +534,10 @@ class ParserMediator(object):
       path_spec = self._file_entry.path_spec
 
     parser_chain = self.GetParserChain()
-    extraction_error = errors.ExtractionError(
+    warning = warnings.ExtractionWarning(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
-    self._storage_writer.AddError(extraction_error)
-    self._number_of_errors += 1
+    self._storage_writer.AddWarning(warning)
+    self._number_of_warnings += 1
 
     self.last_activity_timestamp = time.time()
 

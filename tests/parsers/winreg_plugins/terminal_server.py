@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Terminal Server Windows Registry plugin."""
 
@@ -75,7 +75,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     plugin = terminal_server.TerminalServerClientPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())
@@ -86,6 +86,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mstsc:connection')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
@@ -97,11 +98,13 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
+    self.assertEqual(event.data_type, 'windows:registry:key_value')
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+
     expected_message = (
         '[{0:s}] '
-        'myserver.com: DOMAIN\\username').format(key_path)
+        'No values stored in key.').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
@@ -149,7 +152,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     plugin = terminal_server.TerminalServerClientMRUPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -160,6 +163,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mstsc:mru')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (

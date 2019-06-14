@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Android Application Usage history parsers."""
 
@@ -9,21 +9,19 @@ import unittest
 from plaso.formatters import android_app_usage as _  # pylint: disable=unused-import
 from plaso.parsers import android_app_usage
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class AndroidAppUsageParserTest(test_lib.ParserTestCase):
   """Tests for the Android Application Usage History parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['usage-history.xml'])
   def testParse(self):
     """Tests the Parse function."""
     parser = android_app_usage.AndroidAppUsageParser()
     storage_writer = self._ParseFile(
         ['usage-history.xml'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 28)
 
     events = list(storage_writer.GetEvents())

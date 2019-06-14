@@ -126,7 +126,7 @@ class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
       event_data.original_filename = self._ParseOriginalFilename(
           file_object, file_header.format_version)
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to parse original filename with error: {0!s}.'.format(
               exception))
 
@@ -185,7 +185,7 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
     except UnicodeDecodeError:
       ascii_filename = ascii_filename.decode(codepage, errors='replace')
 
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to decode original filename.')
 
     unicode_filename = None
@@ -254,12 +254,12 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
           'error: {0!s}').format(exception))
 
     if file_header.unknown1 != 5:
-      parser_mediator.ProduceExtractionError('unsupported format signature.')
+      parser_mediator.ProduceExtractionWarning('unsupported format signature.')
       return
 
     file_entry_size = file_header.file_entry_size
     if file_entry_size not in (280, 800):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported file entry size: {0:d}'.format(file_entry_size))
       return
 

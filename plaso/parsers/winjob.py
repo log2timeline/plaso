@@ -109,7 +109,7 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
         date_time = dfdatetime_systemtime.Systemtime(
             system_time_tuple=system_time_tuple)
       except ValueError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'invalid last run time: {0!s}'.format(system_time_tuple))
 
     return date_time
@@ -139,7 +139,7 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
         # TODO: add functionality to dfdatetime to control precision.
         date_time._precision = dfdatetime_definitions.PRECISION_1_DAY  # pylint: disable=protected-access
       except ValueError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'invalid trigger end time: {0!s}'.format(time_elements_tuple))
 
     return date_time
@@ -170,7 +170,7 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
         # TODO: add functionality to dfdatetime to control precision.
         date_time._precision = dfdatetime_definitions.PRECISION_1_MINUTE  # pylint: disable=protected-access
       except ValueError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'invalid trigger start time: {0!s}'.format(time_elements_tuple))
 
     return date_time

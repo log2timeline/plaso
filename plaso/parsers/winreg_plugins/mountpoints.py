@@ -1,13 +1,39 @@
 # -*- coding: utf-8 -*-
-"""This file contains the MountPoints2 plugin."""
+"""MountPoints2 Windows Registry parser plugin."""
 
 from __future__ import unicode_literals
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
+
+
+class MountPoints2EventData(events.EventData):
+  """Windows MountPoints2 event data attribute container.
+
+  Attributes:
+    key_path (str): Windows Registry key path.
+    label (str): mount point label.
+    name (str): name of the mount point source.
+    server_name (str): name of the remote drive server or None if not set.
+    share_name (str): name of the remote drive share or None if not set.
+    type (str): type of the mount point source, which can be "Drive",
+        "Remove Drive" or "Volume".
+  """
+
+  DATA_TYPE = 'windows:registry:mount_points2'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(MountPoints2EventData, self).__init__(data_type=self.DATA_TYPE)
+    self.key_path = None
+    self.label = None
+    self.name = None
+    self.server_name = None
+    self.share_name = None
+    self.type = None
 
 
 class MountPoints2Plugin(interface.WindowsRegistryPlugin):
@@ -20,8 +46,6 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\MountPoints2')])
-
-  URLS = ['http://support.microsoft.com/kb/932463']
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -36,32 +60,32 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
       if not name:
         continue
 
-      values_dict = {}
-      values_dict['Volume'] = name
+      server_name = 'Drive'
+      share_name = None
+      source_type = None
+
+      if name.startswith('{'):
+        source_type = 'Volume'
+
+      # Check if the name is formatted as: "##Server_Name#Share_Name".
+      elif name.startswith('##'):
+        source_type = 'Remote Drive'
+        server_name, _, share_name = name[2:].partition('#')
+        share_name = '\\{0:s}'.format(share_name.replace('#', '\\'))
 
       label_value = subkey.GetValueByName('_LabelFromReg')
       if label_value:
-        values_dict['Label'] = label_value.GetDataAsObject()
-
-      if name.startswith('{'):
-        values_dict['Type'] = 'Volume'
-
-      elif name.startswith('#'):
-        # The format is: ##Server_Name#Share_Name.
-        values_dict['Type'] = 'Remote Drive'
-        server_name, _, share_name = name[2:].partition('#')
-        values_dict['Remote_Server'] = server_name
-        values_dict['Share_Name'] = '\\{0:s}'.format(
-            share_name.replace('#', '\\'))
-
+        label = label_value.GetDataAsObject()
       else:
-        values_dict['Type'] = 'Drive'
+        label = None
 
-      event_data = windows_events.WindowsRegistryEventData()
+      event_data = MountPoints2EventData()
       event_data.key_path = registry_key.path
-      event_data.offset = subkey.offset
-      event_data.regvalue = values_dict
-      event_data.urls = self.URLS
+      event_data.label = label
+      event_data.name = name
+      event_data.server_name = server_name
+      event_data.share_name = share_name
+      event_data.type = source_type
 
       event = time_events.DateTimeValuesEvent(
           subkey.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)

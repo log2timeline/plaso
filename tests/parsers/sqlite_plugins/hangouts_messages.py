@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the hangouts messages plugin."""
 
@@ -10,21 +10,19 @@ from plaso.formatters import hangouts_messages as _  # pylint: disable=unused-im
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import hangouts_messages
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class HangoutsMessagesTest(test_lib.SQLitePluginTestCase):
   """Tests for the Hangouts message database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['googlehangouts.db'])
   def testProcess(self):
     """Test the Process function on a Google hangouts file."""
     plugin = hangouts_messages.HangoutsMessagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['googlehangouts.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
 
     events = list(storage_writer.GetSortedEvents())

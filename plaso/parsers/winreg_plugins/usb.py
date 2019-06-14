@@ -3,16 +3,44 @@
 
 from __future__ import unicode_literals
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import logger
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
+class WindowsUSBDeviceEventData(events.EventData):
+  """Windows USB device event data attribute container.
+
+  Attributes:
+    key_path (str): Windows Registry key path.
+    product (str): product of the USB device.
+    serial (str): serial number of the USB device.
+    subkey_name (str): name of the Windows Registry subkey.
+    vendor (str): vendor of the USB device.
+  """
+
+  DATA_TYPE = 'windows:registry:usb'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(WindowsUSBDeviceEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.key_path = None
+    self.product = None
+    self.serial = None
+    # TODO: rename subkey_name to something that closer matches its purpose.
+    self.subkey_name = None
+    self.vendor = None
+
+
 class USBPlugin(interface.WindowsRegistryPlugin):
-  """USB Windows Registry plugin for last connection time."""
+  """USB Windows Registry plugin for last connection time.
+
+  Also see:
+    https://msdn.microsoft.com/en-us/library/windows/hardware/jj649944%28v=vs.85%29.aspx
+  """
 
   NAME = 'windows_usb_devices'
   DESCRIPTION = 'Parser for USB device Registry entries.'
@@ -20,12 +48,6 @@ class USBPlugin(interface.WindowsRegistryPlugin):
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Enum\\USB')])
-
-  URLS = [
-      ('https://msdn.microsoft.com/en-us/library/windows/hardware/'
-       'jj649944%28v=vs.85%29.aspx')]
-
-  _SOURCE_APPEND = ': USB Entries'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -35,9 +57,11 @@ class USBPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
+    event_data = WindowsUSBDeviceEventData()
+    event_data.key_path = registry_key.path
+
     for subkey in registry_key.GetSubkeys():
-      values_dict = {}
-      values_dict['subkey_name'] = subkey.name
+      event_data.subkey_name = subkey.name
 
       vendor_identification = None
       product_identification = None
@@ -52,17 +76,11 @@ class USBPlugin(interface.WindowsRegistryPlugin):
                 subkey.name, exception))
 
       if vendor_identification and product_identification:
-        values_dict['vendor'] = vendor_identification
-        values_dict['product'] = product_identification
+        event_data.vendor = vendor_identification
+        event_data.product = product_identification
 
       for devicekey in subkey.GetSubkeys():
-        values_dict['serial'] = devicekey.name
-
-        event_data = windows_events.WindowsRegistryEventData()
-        event_data.key_path = registry_key.path
-        event_data.offset = registry_key.offset
-        event_data.regvalue = values_dict
-        event_data.source_append = self._SOURCE_APPEND
+        event_data.serial = devicekey.name
 
         # Last USB connection per USB device recorded in the Registry.
         event = time_events.DateTimeValuesEvent(

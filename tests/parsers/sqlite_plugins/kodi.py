@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Kodi videos plugin."""
 
@@ -10,21 +10,19 @@ from plaso.formatters import kodi as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import kodi
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class KodiVideosTest(test_lib.SQLitePluginTestCase):
   """Tests for the Kodi videos database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['MyVideos107.db'])
   def testProcess(self):
     """Test the Process function on a Kodi Videos database."""
     plugin = kodi.KodiMyVideosPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['MyVideos107.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetSortedEvents())

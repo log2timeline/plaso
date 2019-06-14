@@ -164,8 +164,11 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
+    # TODO: refactor. Why is this method named _ParseComment when it extracts
+    # the date and time?
     if structure[1] == 'Date:':
-      self._year, self._month, self._day_of_month, _, _, _ = structure.date_time
+      time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+      self._year, self._month, self._day_of_month, _, _, _ = time_elements_tuple
     elif structure[1] == 'Fields:':
       self._ParseFieldsMetadata(structure)
 
@@ -175,7 +178,8 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
-    fields = structure.fields.split(' ')
+    fields = self._GetValueFromStructure(structure, 'fields', default_value='')
+    fields = fields.split(' ')
 
     log_line_structure = pyparsing.Empty()
     if fields[0] == 'date' and fields[1] == 'time':
@@ -202,28 +206,29 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
           and other components, such as storage and dfvfs.
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
-    if structure.date_time:
-      time_elements_tuple = structure.date_time
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    if not time_elements_tuple:
+      time_tuple = self._GetValueFromStructure(structure, 'time')
+      if not time_tuple:
+        parser_mediator.ProduceExtractionWarning('missing time values')
+        return
 
-    elif structure.date and structure.time:
-      year, month, day_of_month = structure.date
-      hours, minutes, seconds = structure.time
-      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+      date_tuple = self._GetValueFromStructure(structure, 'date')
+      if not date_tuple:
+        time_elements_tuple = (
+            self._year, self._month, self._day_of_month, time_tuple[0],
+            time_tuple[1], time_tuple[2])
 
-    elif structure.time:
-      hours, minutes, seconds = structure.time
-      time_elements_tuple = (
-          self._year, self._month, self._day_of_month, hours, minutes, seconds)
-
-    else:
-      parser_mediator.ProduceExtractionError('missing date and time values')
-      return
+      else:
+        time_elements_tuple = (
+            date_tuple[0], date_tuple[1], date_tuple[2], time_tuple[0],
+            time_tuple[1], time_tuple[2])
 
     try:
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 

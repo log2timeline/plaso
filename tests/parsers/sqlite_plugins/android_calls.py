@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Android SMS call history plugin."""
 
@@ -9,21 +9,19 @@ import unittest
 from plaso.formatters import android_calls as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import android_calls
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Android Call History database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['contacts2.db'])
   def testProcess(self):
     """Test the Process function on an Android contacts2.db file."""
     plugin = android_calls.AndroidCallPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['contacts2.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())

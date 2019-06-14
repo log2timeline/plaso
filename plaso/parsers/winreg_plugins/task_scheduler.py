@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
-from plaso.containers import windows_events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -19,6 +18,7 @@ class TaskCacheEventData(events.EventData):
   """Task Cache event data.
 
   Attributes:
+    key_path (str): Windows Registry key path.
     task_name (str): name of the task.
     task_identifier (str): identifier of the task.
   """
@@ -28,6 +28,7 @@ class TaskCacheEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(TaskCacheEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.key_path = None
     self.task_name = None
     self.task_identifier = None
 
@@ -43,10 +44,6 @@ class TaskCacheWindowsRegistryPlugin(
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
           'CurrentVersion\\Schedule\\TaskCache')])
-
-  URLS = [(
-      'https://github.com/libyal/winreg-kb/blob/master/documentation/'
-      'Task%20Scheduler%20Keys.asciidoc')]
 
   _DEFINITION_FILE = 'task_scheduler.yaml'
 
@@ -84,7 +81,7 @@ class TaskCacheWindowsRegistryPlugin(
     tree_key = registry_key.GetSubkeyByName('Tree')
 
     if not tasks_key or not tree_key:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'Task Cache is missing a Tasks or Tree sub key.')
       return
 
@@ -96,7 +93,7 @@ class TaskCacheWindowsRegistryPlugin(
         # string and should be 78 bytes in size.
         id_value_data_size = len(id_value.data)
         if id_value_data_size != 78:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unsupported Id value data size: {0:d}.'.format(
                   id_value_data_size))
           continue
@@ -123,7 +120,7 @@ class TaskCacheWindowsRegistryPlugin(
         dynamic_info_record_map = dynamic_info2_map
       else:
         if not dynamic_info_size_error_reported:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unsupported DynamicInfo value data size: {0:d}.'.format(
                   dynamic_info_value_data_size))
           dynamic_info_size_error_reported = True
@@ -133,28 +130,20 @@ class TaskCacheWindowsRegistryPlugin(
         dynamic_info_record = self._ReadStructureFromByteStream(
             dynamic_info_value.data, 0, dynamic_info_record_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse DynamicInfo record with error: {0!s}.'.format(
                 exception))
 
       name = task_guids.get(sub_key.name, sub_key.name)
 
-      values_dict = {}
-      values_dict['Task: {0:s}'.format(name)] = '[ID: {0:s}]'.format(
-          sub_key.name)
-
-      event_data = windows_events.WindowsRegistryEventData()
+      event_data = TaskCacheEventData()
       event_data.key_path = registry_key.path
-      event_data.offset = registry_key.offset
-      event_data.regvalue = values_dict
+      event_data.task_name = name
+      event_data.task_identifier = sub_key.name
 
       event = time_events.DateTimeValuesEvent(
           registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      event_data = TaskCacheEventData()
-      event_data.task_name = name
-      event_data.task_identifier = sub_key.name
 
       last_registered_time = dynamic_info_record.last_registered_time
       if last_registered_time:

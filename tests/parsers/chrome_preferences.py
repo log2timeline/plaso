@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Chrome Preferences file parser."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import chrome_preferences as _  # pylint: disable=unused-import
 from plaso.parsers import chrome_preferences
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ChromePreferencesParserTest(test_lib.ParserTestCase):
   """Tests for the Google Chrome Preferences file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Preferences'])
   def testParseFile(self):
     """Tests parsing a default profile Preferences file."""
     parser = chrome_preferences.ChromePreferencesParser()
     storage_writer = self._ParseFile(['Preferences'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 30)
 
     events = list(storage_writer.GetSortedEvents())

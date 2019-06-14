@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the MSIE typed URLs Windows Registry plugin."""
 
@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import typedurls
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -32,7 +31,6 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -47,7 +45,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -59,19 +57,12 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:typedurls')
     self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307750')
-
-    regvalue_identifier = 'url1'
-    expected_value = 'http://cnn.com/'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
         '[{0:s}] '
         'url1: http://cnn.com/ '
-        'url10: http://www.adobe.com/ '
-        'url11: http://www.google.com/ '
-        'url12: http://www.firefox.com/ '
-        'url13: http://go.microsoft.com/fwlink/?LinkId=69157 '
         'url2: http://twitter.com/ '
         'url3: http://linkedin.com/ '
         'url4: http://tweetdeck.com/ '
@@ -79,7 +70,11 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         'url6: http://google.com/ '
         'url7: http://controller.shieldbase.local/certsrv/ '
         'url8: http://controller.shieldbase.local/ '
-        'url9: http://www.stark-research-labs.com/').format(key_path)
+        'url9: http://www.stark-research-labs.com/ '
+        'url10: http://www.adobe.com/ '
+        'url11: http://www.google.com/ '
+        'url12: http://www.firefox.com/ '
+        'url13: http://go.microsoft.com/fwlink/?LinkId=69157').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -88,7 +83,6 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the typed paths Windows Registry plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -103,7 +97,7 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -115,14 +109,12 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:typedurls')
     self.CheckTimestamp(event.timestamp, '2010-11-10 07:58:15.811625')
 
-    regvalue_identifier = 'url1'
-    expected_value = '\\\\controller'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
-
-    expected_message = '[{0:s}] {1:s}: {2:s}'.format(
-        key_path, regvalue_identifier, expected_value)
+    expected_message = (
+        '[{0:s}] '
+        'url1: \\\\controller').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

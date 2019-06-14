@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome cookie database plugin."""
 
@@ -10,14 +10,12 @@ from plaso.formatters import chrome_cookies as _  # pylint: disable=unused-impor
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import chrome_cookies
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome 17-65 cookie database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['cookies.db'])
   def testProcess(self):
     """Tests the Process function on a Chrome cookie database file."""
     plugin = chrome_cookies.Chrome17CookiePlugin()
@@ -117,7 +115,6 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
 class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome 66 Cookies database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Cookies-68.0.3440.106'])
   def testProcess(self):
     """Tests the Process function on a Chrome cookie database file."""
     plugin = chrome_cookies.Chrome66CookiePlugin()

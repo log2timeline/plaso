@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Microsoft Internet Explorer (MSIE) Cache Files (CF) parser."""
 
@@ -10,14 +10,12 @@ from plaso.formatters import msiecf as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import msiecf
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MSIECFParserTest(test_lib.ParserTestCase):
   """Tests for the MSIE Cache Files (MSIECF) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['index.dat'])
   def testParse(self):
     """Tests the Parse function."""
     parser = msiecf.MSIECFParser()
@@ -29,7 +27,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     #   Number of items                 : 7
     #   Number of recovered items       : 11
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # 7 + 11 records, each with 4 records.
     self.assertEqual(storage_writer.number_of_events, (7 + 11) * 4)
 
@@ -88,12 +86,11 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['nfury_index.dat'])
   def testParseLeakAndRedirect(self):
     """Tests the Parse function with leak and redirected records."""
     parser = msiecf.MSIECFParser()
     storage_writer = self._ParseFile(['nfury_index.dat'], parser)
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
 
     # MSIE Cache File information:
     #   Version                         : 5.2

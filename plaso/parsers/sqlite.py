@@ -393,7 +393,7 @@ class SQLiteParser(interface.FileEntryParser):
       database_wal.Open(database_file_object, wal_file_object=wal_file_object)
 
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to open SQLite database and WAL with error: '
           '{0!s}').format(exception))
 
@@ -434,7 +434,7 @@ class SQLiteParser(interface.FileEntryParser):
       database.Open(file_object)
 
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open SQLite database with error: {0!s}'.format(exception))
       file_object.close()
       return
@@ -456,7 +456,7 @@ class SQLiteParser(interface.FileEntryParser):
 
         schema_match = plugin.CheckSchema(database)
         if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} found required tables but not a matching '
               'schema').format(plugin.NAME))
           continue
@@ -470,7 +470,7 @@ class SQLiteParser(interface.FileEntryParser):
               database_wal=database_wal, wal_file_entry=wal_file_entry)
 
         except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse SQLite database with error: '
               '{1!s}').format(plugin.NAME, exception))
 
@@ -491,7 +491,7 @@ class SQLiteParser(interface.FileEntryParser):
               database_wal=database_wal, wal_file_entry=wal_file_entry)
 
         except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse SQLite database and WAL with '
               'error: {1!s}').format(plugin.NAME, exception))
 

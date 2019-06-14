@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Safari cookie parser."""
 
@@ -10,14 +10,12 @@ from plaso.formatters import safari_cookies as _  # pylint: disable=unused-impor
 from plaso.lib import definitions
 from plaso.parsers import safari_cookies
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class SafariCookieParserTest(test_lib.ParserTestCase):
   """Tests for the Safari cookie parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Cookies.binarycookies'])
   def testParseFile(self):
     """Tests the Parse function on a Safari binary cookies file."""
     parser = safari_cookies.BinaryCookieParser()
@@ -34,7 +32,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     # * 182 events from the safari cookie parser
     # * 25 event from the cookie plugins
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 207)
     self.assertEqual(len(cookie_events), 182)
 

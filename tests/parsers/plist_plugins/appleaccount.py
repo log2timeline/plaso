@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Apple account plist plugin."""
 
@@ -9,16 +9,12 @@ import unittest
 from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import appleaccount
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
 class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Apple account plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'com.apple.coreservices.appleidauthenticationinfo.'
-      'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist'])
   def testProcess(self):
     """Tests the Process function."""
     plist_file = (
@@ -30,7 +26,7 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     # The order in which PlistParser generates events is nondeterministic

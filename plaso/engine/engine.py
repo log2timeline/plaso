@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import os
 
-from artifacts import definitions as artifact_types
 from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
@@ -20,8 +19,10 @@ from plaso.engine import artifact_filters
 from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import logger
+from plaso.engine import path_filters
 from plaso.engine import processing_status
 from plaso.engine import profilers
+from plaso.engine import yaml_filter_file
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.preprocessors import manager as preprocess_manager
@@ -31,11 +32,16 @@ class BaseEngine(object):
   """Processing engine interface.
 
   Attributes:
+    collection_filters_helper (CollectionFiltersHelper): collection filters
+        helper.
     knowledge_base (KnowledgeBase): knowledge base.
   """
 
   # The interval of status updates in number of seconds.
   _STATUS_UPDATE_INTERVAL = 0.5
+
+  _WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES = [
+      'WindowsSystemRegistryFiles', 'WindowsUserRegistryFiles']
 
   def __init__(self):
     """Initializes an engine."""
@@ -50,6 +56,7 @@ class BaseEngine(object):
     self._storage_profiler = None
     self._task_queue_profiler = None
 
+    self.collection_filters_helper = None
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def _DetermineOperatingSystem(self, searcher):
@@ -289,50 +296,74 @@ class BaseEngine(object):
     """
     return profilers.GuppyMemoryProfiler.IsSupported()
 
-  @classmethod
-  def BuildFilterFindSpecs(
-      cls, artifact_definitions_path, custom_artifacts_path,
+  def BuildCollectionFilters(
+      self, artifact_definitions_path, custom_artifacts_path,
       knowledge_base_object, artifact_filter_names=None, filter_file_path=None):
-    """Builds find specifications from artifacts or filter file if available.
+    """Builds collection filters from artifacts or filter file if available.
 
     Args:
-       artifact_definitions_path (str): path to artifact definitions file.
-       custom_artifacts_path (str): path to custom artifact definitions file.
-       knowledge_base_object (KnowledgeBase): knowledge base.
-       artifact_filter_names (Optional[list[str]]): names of artifact
+      artifact_definitions_path (str): path to artifact definitions file.
+      custom_artifacts_path (str): path to custom artifact definitions file.
+      knowledge_base_object (KnowledgeBase): knowledge base.
+      artifact_filter_names (Optional[list[str]]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
-       filter_file_path (Optional[str]): path of filter file.
-
-    Returns:
-      list[dfvfs.FindSpec]: find specifications for the file source type.
+      filter_file_path (Optional[str]): path of filter file.
 
     Raises:
-      InvalidFilter: if no valid FindSpecs are built.
+      InvalidFilter: if no valid file system find specifications are built.
     """
     environment_variables = knowledge_base_object.GetEnvironmentVariables()
-    find_specs = None
     if artifact_filter_names:
-      artifacts_registry_object = cls.BuildArtifactsRegistry(
+      logger.debug(
+          'building find specification based on artifacts: {0:s}'.format(
+              ', '.join(artifact_filter_names)))
+
+      artifacts_registry_object = BaseEngine.BuildArtifactsRegistry(
           artifact_definitions_path, custom_artifacts_path)
-      artifact_filters_object = (
-          artifact_filters.ArtifactDefinitionsFilterHelper(
-              artifacts_registry_object, artifact_filter_names,
-              knowledge_base_object))
-      artifact_filters_object.BuildFindSpecs(environment_variables)
-      find_specs = knowledge_base_object.GetValue(
-          artifact_filters_object.KNOWLEDGE_BASE_VALUE)[
-              artifact_types.TYPE_INDICATOR_FILE]
+      self.collection_filters_helper = (
+          artifact_filters.ArtifactDefinitionsFiltersHelper(
+              artifacts_registry_object, knowledge_base_object))
+      self.collection_filters_helper.BuildFindSpecs(
+          artifact_filter_names, environment_variables=environment_variables)
+
+      # If the user selected Windows Registry artifacts we have to ensure
+      # the Windows Registry files are parsed.
+      if self.collection_filters_helper.registry_find_specs:
+        self.collection_filters_helper.BuildFindSpecs(
+            self._WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES,
+            environment_variables=environment_variables)
+
+      if not self.collection_filters_helper.included_file_system_find_specs:
+        raise errors.InvalidFilter(
+            'No valid file system find specifications were built from '
+            'artifacts.')
+
     elif filter_file_path:
-      filter_file_object = filter_file.FilterFile(filter_file_path)
-      find_specs = filter_file_object.BuildFindSpecs(
-          environment_variables=environment_variables)
+      logger.debug(
+          'building find specification based on filter file: {0:s}'.format(
+              filter_file_path))
 
-    if (artifact_filter_names or filter_file_path) and not find_specs:
-      raise errors.InvalidFilter(
-          'Error processing filters, no valid specifications built.')
+      filter_file_path_lower = filter_file_path.lower()
+      if (filter_file_path_lower.endswith('.yaml') or
+          filter_file_path_lower.endswith('.yml')):
+        filter_file_object = yaml_filter_file.YAMLFilterFile()
+      else:
+        filter_file_object = filter_file.FilterFile()
 
-    return find_specs
+      filter_file_path_filters = filter_file_object.ReadFromFile(
+          filter_file_path)
+
+      self.collection_filters_helper = (
+          path_filters.PathCollectionFiltersHelper())
+      self.collection_filters_helper.BuildFindSpecs(
+          filter_file_path_filters, environment_variables=environment_variables)
+
+      if (not self.collection_filters_helper.excluded_file_system_find_specs and
+          not self.collection_filters_helper.included_file_system_find_specs):
+        raise errors.InvalidFilter((
+            'No valid file system find specifications were built from filter '
+            'file: {0:s}.').format(filter_file_path))
 
   @classmethod
   def BuildArtifactsRegistry(
@@ -347,7 +378,7 @@ class BaseEngine(object):
       artifacts.ArtifactDefinitionsRegistry: artifact definitions registry.
 
     Raises:
-      RuntimeError: if no valid FindSpecs are built.
+      BadConfigOption: if artifact definitions cannot be read.
     """
     if artifact_definitions_path and not os.path.isdir(
         artifact_definitions_path):

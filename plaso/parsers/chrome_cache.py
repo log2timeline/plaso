@@ -345,7 +345,7 @@ class ChromeCacheParser(interface.FileEntryParser):
       cache_address_chain_length = 0
       while cache_address.value != 0:
         if cache_address_chain_length >= 64:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'Maximum allowed cache address chain length reached.')
           break
 
@@ -354,14 +354,14 @@ class ChromeCacheParser(interface.FileEntryParser):
         if not data_block_file_object:
           message = 'Cache address: 0x{0:08x} missing data file.'.format(
               cache_address.value)
-          parser_mediator.ProduceExtractionError(message)
+          parser_mediator.ProduceExtractionWarning(message)
           break
 
         try:
           cache_entry = self._data_block_file_parser.ParseCacheEntry(
               data_block_file_object, cache_address.block_offset)
         except (IOError, errors.ParseError) as exception:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'Unable to parse cache entry with error: {0!s}'.format(
                   exception))
           break
@@ -418,13 +418,13 @@ class ChromeCacheParser(interface.FileEntryParser):
           message = (
               'Unable to open data block file: {0:s} with error: '
               '{1!s}'.format(kwargs['location'], exception))
-          parser_mediator.ProduceExtractionError(message)
+          parser_mediator.ProduceExtractionWarning(message)
           data_block_file_entry = None
 
         if not data_block_file_entry:
           message = 'Missing data block file: {0:s}'.format(
               cache_address.filename)
-          parser_mediator.ProduceExtractionError(message)
+          parser_mediator.ProduceExtractionWarning(message)
           data_block_file_object = None
 
         else:
@@ -437,7 +437,7 @@ class ChromeCacheParser(interface.FileEntryParser):
             message = (
                 'Unable to parse data block file: {0:s} with error: '
                 '{1!s}').format(cache_address.filename, exception)
-            parser_mediator.ProduceExtractionError(message)
+            parser_mediator.ProduceExtractionWarning(message)
             data_block_file_object.close()
             data_block_file_object = None
 

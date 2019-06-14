@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the YARA rules CLI arguments helper."""
 
@@ -11,7 +11,6 @@ from plaso.cli import tools
 from plaso.cli.helpers import yara_rules
 from plaso.lib import errors
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 
 
@@ -42,11 +41,13 @@ optional arguments:
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  @shared_test_lib.skipUnlessHasTestFile(['yara.rules'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
+    test_file_path = self._GetTestFilePath(['yara.rules'])
+    self._SkipIfPathNotExists(test_file_path)
+
     options = cli_test_lib.TestOptions()
-    options.yara_rules_path = self._GetTestFilePath(['yara.rules'])
+    options.yara_rules_path = test_file_path
 
     test_tool = tools.CLITool()
     yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)

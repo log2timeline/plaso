@@ -7,7 +7,6 @@ import argparse
 import collections
 import datetime
 import os
-import sys
 import textwrap
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -36,7 +35,6 @@ class PstealTool(
     extraction_tool.ExtractionTool,
     tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
-    tool_options.ParsersOptions,
     tool_options.StorageFileOptions):
   """Psteal CLI tool.
 
@@ -85,13 +83,6 @@ class PstealTool(
       'And that is how you build a timeline using psteal...',
       '']))
 
-  # The window status-view mode has an annoying flicker on Windows,
-  # hence we default to linear status-view mode instead.
-  if sys.platform.startswith('win'):
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
-  else:
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
-
   _SOURCE_TYPES_TO_PREPROCESS = frozenset([
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -119,7 +110,7 @@ class PstealTool(
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
     self._preferred_year = None
-    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._time_slice = None
     self._use_time_slicer = False
@@ -222,13 +213,11 @@ class PstealTool(
       analysis_engine = psort.PsortMultiProcessEngine(
           use_zeromq=self._use_zeromq)
 
-      events_counter = analysis_engine.ExportEvents(
+      analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
           configuration, deduplicate_events=self._deduplicate_events,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
-
-      counter += events_counter
 
     for item, value in iter(session.analysis_reports_counter.items()):
       counter[item] = value
@@ -262,7 +251,8 @@ class PstealTool(
     constructor of this class.
 
     Raises:
-      BadConfigOption: if the storage format is not supported.
+      BadConfigOption: if the storage file path is invalid or the storage
+          format not supported or an invalid collection filter was specified.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -321,10 +311,15 @@ class PstealTool(
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
-    filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
-        self._artifact_definitions_path, self._custom_artifacts_path,
-        extraction_engine.knowledge_base, self._artifact_filters,
-        self._filter_file)
+    try:
+      extraction_engine.BuildCollectionFilters(
+          self._artifact_definitions_path, self._custom_artifacts_path,
+          extraction_engine.knowledge_base, self._artifact_filters,
+          self._filter_file)
+    except errors.InvalidFilter as exception:
+      raise errors.BadConfigOption(
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
 
     processing_status = None
     if single_process_mode:
@@ -332,8 +327,7 @@ class PstealTool(
 
       processing_status = extraction_engine.ProcessSources(
           self._source_path_specs, storage_writer, self._resolver_context,
-          configuration, filter_find_specs=filter_find_specs,
-          status_update_callback=status_update_callback)
+          configuration, status_update_callback=status_update_callback)
 
     else:
       logger.debug('Starting extraction in multi process mode.')
@@ -342,7 +336,6 @@ class PstealTool(
           session.identifier, self._source_path_specs, storage_writer,
           configuration,
           enable_sigsegv_handler=self._enable_sigsegv_handler,
-          filter_find_specs=filter_find_specs,
           number_of_worker_processes=self._number_of_extraction_workers,
           status_update_callback=status_update_callback)
 
@@ -446,12 +439,7 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    presets_file = os.path.join(self._data_location, 'presets.yaml')
-    if not os.path.isfile(presets_file):
-      raise errors.BadConfigOption(
-          'No such parser presets file: {0:s}.'.format(presets_file))
-
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
+    self._ReadParserPresetsFromFile()
 
     # The output modules options are dependent on the preferred language
     # and preferred time zone options.
@@ -466,9 +454,12 @@ class PstealTool(
     self.list_language_identifiers = self._preferred_language == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
+    self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
+
     # Check the list options first otherwise required options will raise.
     if (self.list_hashers or self.list_language_identifiers or
-        self.list_parsers_and_plugins or self.list_timezones):
+        self.list_parsers_and_plugins or self.list_timezones or
+        self.show_troubleshooting):
       return
 
     # Check output modules after the other listable options, otherwise

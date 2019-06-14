@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome extension activity database plugin."""
 
@@ -10,21 +10,19 @@ from plaso.formatters import chrome_extension_activity as _  # pylint: disable=u
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome extension activity database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Extension Activity'])
   def testProcess(self):
     """Tests the Process function on a Chrome extension activity database."""
     plugin = chrome_extension_activity.ChromeExtensionActivityPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['Extension Activity'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 56)
 
     events = list(storage_writer.GetEvents())

@@ -118,6 +118,7 @@ class PreprocessPluginsManager(object):
 
   _plugins = {}
   _file_system_plugins = {}
+  _knowledge_base_plugins = {}
   _windows_registry_plugins = {}
 
   @classmethod
@@ -141,6 +142,8 @@ class PreprocessPluginsManager(object):
             preprocess_plugin.ARTIFACT_DEFINITION_NAME))
         continue
 
+      logger.debug('Running file system preprocessor plugin: {0:s}'.format(
+          preprocess_plugin.ARTIFACT_DEFINITION_NAME))
       try:
         preprocess_plugin.Collect(
             knowledge_base, artifact_definition, searcher, file_system)
@@ -149,7 +152,23 @@ class PreprocessPluginsManager(object):
             'Unable to collect value from artifact definition: {0:s} '
             'with error: {1!s}').format(
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
-        continue
+
+  @classmethod
+  def CollectFromKnowledgeBase(cls, knowledge_base):
+    """Collects values from knowledge base values.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+    """
+    for preprocess_plugin in cls._knowledge_base_plugins.values():
+      logger.debug('Running knowledge base preprocessor plugin: {0:s}'.format(
+          preprocess_plugin.__class__.__name__))
+      try:
+        preprocess_plugin.Collect(knowledge_base)
+      except errors.PreProcessFail as exception:
+        logger.warning(
+            'Unable to collect knowledge base value with error: {0!s}'.format(
+                exception))
 
   @classmethod
   def CollectFromWindowsRegistry(
@@ -171,6 +190,8 @@ class PreprocessPluginsManager(object):
             preprocess_plugin.ARTIFACT_DEFINITION_NAME))
         continue
 
+      logger.debug('Running Windows Registry preprocessor plugin: {0:s}'.format(
+          preprocess_plugin.ARTIFACT_DEFINITION_NAME))
       try:
         preprocess_plugin.Collect(knowledge_base, artifact_definition, searcher)
       except (IOError, errors.PreProcessFail) as exception:
@@ -178,7 +199,6 @@ class PreprocessPluginsManager(object):
             'Unable to collect value from artifact definition: {0:s} '
             'with error: {1!s}').format(
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
-        continue
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
@@ -191,7 +211,9 @@ class PreprocessPluginsManager(object):
       KeyError: if plugin class is not set for the corresponding name.
       TypeError: if the source type of the plugin class is not supported.
     """
-    name = plugin_class.ARTIFACT_DEFINITION_NAME.lower()
+    name = getattr(
+        plugin_class, 'ARTIFACT_DEFINITION_NAME', plugin_class.__name__)
+    name = name.lower()
     if name not in cls._plugins:
       raise KeyError(
           'Artifact plugin class not set for name: {0:s}.'.format(name))
@@ -200,6 +222,9 @@ class PreprocessPluginsManager(object):
 
     if name in cls._file_system_plugins:
       del cls._file_system_plugins[name]
+
+    if name in cls._knowledge_base_plugins:
+      del cls._knowledge_base_plugins[name]
 
     if name in cls._windows_registry_plugins:
       del cls._windows_registry_plugins[name]
@@ -211,9 +236,13 @@ class PreprocessPluginsManager(object):
     Returns:
       list[str]: registered artifact definitions names.
     """
-    return [
-        plugin_class.ARTIFACT_DEFINITION_NAME
-        for plugin_class in cls._plugins.values()]
+    names = []
+    for plugin_class in cls._plugins.values():
+      name = getattr(plugin_class, 'ARTIFACT_DEFINITION_NAME', None)
+      if name:
+        names.append(name)
+
+    return names
 
   @classmethod
   def RegisterPlugin(cls, plugin_class):
@@ -226,7 +255,9 @@ class PreprocessPluginsManager(object):
       KeyError: if plugin class is already set for the corresponding name.
       TypeError: if the source type of the plugin class is not supported.
     """
-    name = plugin_class.ARTIFACT_DEFINITION_NAME.lower()
+    name = getattr(
+        plugin_class, 'ARTIFACT_DEFINITION_NAME', plugin_class.__name__)
+    name = name.lower()
     if name in cls._plugins:
       raise KeyError(
           'Artifact plugin class already set for name: {0:s}.'.format(name))
@@ -238,6 +269,10 @@ class PreprocessPluginsManager(object):
     if isinstance(
         preprocess_plugin, interface.FileSystemArtifactPreprocessorPlugin):
       cls._file_system_plugins[name] = preprocess_plugin
+
+    elif isinstance(
+        preprocess_plugin, interface.KnowledgeBasePreprocessorPlugin):
+      cls._knowledge_base_plugins[name] = preprocess_plugin
 
     elif isinstance(
         preprocess_plugin,
@@ -291,6 +326,8 @@ class PreprocessPluginsManager(object):
 
     cls.CollectFromWindowsRegistry(
         artifacts_registry, knowledge_base, searcher)
+
+    cls.CollectFromKnowledgeBase(knowledge_base)
 
     if not knowledge_base.HasUserAccounts():
       logger.warning('Unable to find any user accounts on the system.')

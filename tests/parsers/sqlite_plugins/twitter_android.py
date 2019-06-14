@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for Twitter on Android plugin."""
 
@@ -9,14 +9,12 @@ import unittest
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import twitter_android
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
   """Tests for Twitter on Android database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['twitter_android.db'])
   def testProcess(self):
     """Test the Process function on a Twitter Android file."""
     plugin = twitter_android.TwitterAndroidPlugin()

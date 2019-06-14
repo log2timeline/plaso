@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows Event Log resources database reader."""
 
@@ -14,10 +14,11 @@ from tests import test_lib as shared_test_lib
 class WinevtResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the Event Log resources sqlite3 database reader."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-rc.db'])
   def testGetMessage(self):
     """Tests the GetMessage function."""
     database_path = self._GetTestFilePath(['winevt-rc.db'])
+    self._SkipIfPathNotExists(database_path)
+
     database_reader = winevt_rc.WinevtResourcesSqlite3DatabaseReader()
 
     database_reader.Open(database_path)
