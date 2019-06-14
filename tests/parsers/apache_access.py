@@ -53,13 +53,11 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'http_request: GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a '
         'HTTP/1.1 from: 192.168.0.2 code: 200 referer: http://localhost/ '
         'user_agent: Mozilla/5.0 (X11; Linux i686; rv:2.0b12pre) '
-        'Gecko/20100101 Firefox/4'
-    )
+        'Gecko/20100101 Firefox/4')
 
     expected_short_message = (
         'GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a HTTP/1.1 from: '
-        '192.168.0.2'
-    )
+        '192.168.0.2')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -80,13 +78,11 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
 
     expected_message = (
         'http_request: GET /wp-content/themes/darkmode/header.php?install2 '
-        'HTTP/1.1 from: 10.0.0.1 code: 200'
-    )
+        'HTTP/1.1 from: 10.0.0.1 code: 200')
 
     expected_short_message = (
         'GET /wp-content/themes/darkmode/header.php?install2 HTTP/1.1 from: '
-        '10.0.0.1'
-    )
+        '10.0.0.1')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -123,14 +119,13 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'user_agent: Mozilla/5.0 (Windows NT 7.1) AppleWebKit/534.30 '
         '(KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30 '
         'server_name: plaso.log2timeline.net '
-        'port: 443'
-    )
+        'port: 443')
 
     expected_short_message = (
-        'GET /wp-content/themes/darkmode/evil.php HTTP/1.1 from: 192.168.0.2'
-    )
+        'GET /wp-content/themes/darkmode/evil.php HTTP/1.1 from: 192.168.0.2')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
 
 if __name__ == '__main__':
   unittest.main()

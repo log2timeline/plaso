@@ -261,7 +261,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
     event_data.http_response_bytes = self._GetValueFromStructure(
         structure, 'response_bytes')
 
-    if key in ['combined_log_format', 'vhost_combined_log_format']:
+    if key in ('combined_log_format', 'vhost_combined_log_format'):
       event_data.http_request_referer = self._GetValueFromStructure(
           structure, 'referer')
       event_data.http_request_user_agent = self._GetValueFromStructure(
