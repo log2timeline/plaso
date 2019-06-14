@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests the single process processing engine."""
 
@@ -25,22 +25,24 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testProcessSources(self):
     """Tests the ProcessSources function."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
-    path = shared_test_lib.GetTestFilePath(['artifacts'])
-    registry.ReadFromDirectory(reader, path)
+    registry.ReadFromDirectory(reader, test_artifacts_path)
 
     test_engine = single_process.SingleProcessEngine()
     resolver_context = context.Context()
     session = sessions.Session()
 
-    source_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)

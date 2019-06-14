@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Google Drive database plugin."""
 
@@ -10,21 +10,18 @@ from plaso.formatters import gdrive as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import gdrive
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Drive database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['snapshot.db'])
   def testProcess(self):
     """Tests the Process function on a Google Drive database file."""
     plugin = gdrive.GoogleDrivePlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['snapshot.db'], plugin)
+    storage_writer = self._ParseDatabaseFileWithPlugin(['snapshot.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 30)
 
     # Let's verify that we've got the correct balance of cloud and local

@@ -8,20 +8,73 @@
 # Exit on error.
 set -e;
 
-if test "${TARGET}" = "jenkins";
+if test -n "${FEDORA_VERSION}";
 then
-	./config/jenkins/linux/run_end_to_end_tests.sh "travis";
+	CONTAINER_NAME="fedora${FEDORA_VERSION}";
+	CONTAINER_OPTIONS="-e LANG=en_US.UTF-8";
 
-elif test "${TARGET}" = "pylint";
+	if test -n "${TOXENV}";
+	then
+		TEST_COMMAND="tox -e ${TOXENV}";
+
+	elif test "${TARGET}" = "pylint";
+	then
+		TEST_COMMAND="./config/travis/run_pylint.sh";
+
+	elif test ${TRAVIS_PYTHON_VERSION} = "2.7";
+	then
+		TEST_COMMAND="./config/travis/run_python2.sh";
+	else
+		TEST_COMMAND="./config/travis/run_python3.sh";
+	fi
+	# Note that exec options need to be defined before the container name.
+	docker exec ${CONTAINER_OPTIONS} ${CONTAINER_NAME} sh -c "cd plaso && ${TEST_COMMAND}";
+
+elif test -n "${UBUNTU_VERSION}";
 then
-	pylint --version
+	CONTAINER_NAME="ubuntu${UBUNTU_VERSION}";
+	CONTAINER_OPTIONS="-e LANG=en_US.UTF-8";
 
-	for FILE in `find setup.py config plaso tests tools -name \*.py`;
-	do
-		echo "Checking: ${FILE}";
+	if test -n "${TOXENV}";
+	then
+		TEST_COMMAND="tox -e ${TOXENV}";
 
-		pylint --rcfile=.pylintrc ${FILE};
-	done
+	elif test "${TARGET}" = "coverage";
+	then
+		# Also see: https://docs.codecov.io/docs/testing-with-docker
+		curl -o codecov_env.sh -s https://codecov.io/env;
+
+		# Generates a series of -e options.
+		CODECOV_ENV=$(/bin/bash ./codecov_env.sh);
+
+		CONTAINER_OPTIONS="${CODECOV_ENV} ${CONTAINER_OPTIONS}";
+
+		TEST_COMMAND="./config/travis/run_coverage.sh";
+
+	elif test "${TARGET}" = "jenkins2";
+	then
+		TEST_COMMAND="./config/jenkins/linux/run_end_to_end_tests.sh travis";
+
+	elif test "${TARGET}" = "jenkins3";
+	then
+		TEST_COMMAND="./config/jenkins/linux/run_end_to_end_tests_py3.sh travis";
+
+	elif test "${TARGET}" = "pylint";
+	then
+		TEST_COMMAND="./config/travis/run_pylint.sh";
+
+	elif test ${TRAVIS_PYTHON_VERSION} = "2.7";
+	then
+		TEST_COMMAND="./config/travis/run_python2.sh";
+	else
+		TEST_COMMAND="./config/travis/run_python3.sh";
+	fi
+	# Note that exec options need to be defined before the container name.
+	docker exec ${CONTAINER_OPTIONS} ${CONTAINER_NAME} sh -c "cd plaso && ${TEST_COMMAND}";
+
+elif test "${TARGET}" = "dockerfile";
+then
+	cd config/docker && docker build --build-arg PPA_TRACK="dev" -f Dockerfile .
 
 elif test "${TRAVIS_OS_NAME}" = "osx";
 then
@@ -36,56 +89,5 @@ then
 	if test -f tests/end-to-end.py;
 	then
 		PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
-	fi
-
-elif test -n "${FEDORA_VERSION}";
-then
-	CONTAINER_NAME="fedora${FEDORA_VERSION}";
-
-	if test ${TRAVIS_PYTHON_VERSION} = "2.7";
-	then
-		docker exec "${CONTAINER_NAME}" sh -c "export LANG=en_US.UTF-8; cd plaso && python2 run_tests.py";
-	else
-		docker exec "${CONTAINER_NAME}" sh -c "cd plaso && python3 run_tests.py";
-	fi
-
-elif test "${TRAVIS_OS_NAME}" = "linux";
-then
-	COVERAGE="/usr/bin/coverage";
-
-	if ! test -x "${COVERAGE}";
-	then
-		# Ubuntu has renamed coverage.
-		COVERAGE="/usr/bin/python-coverage";
-	fi
-
-	if test -n "${TOXENV}";
-	then
-		tox --sitepackages ${TOXENV};
-
-	elif test "${TRAVIS_PYTHON_VERSION}" = "2.7";
-	then
-		${COVERAGE} erase
-		${COVERAGE} run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py
-	else
-		python ./run_tests.py
-
-		python ./setup.py build
-
-		python ./setup.py sdist
-
-		python ./setup.py bdist
-
-		TMPDIR="${PWD}/tmp";
-		TMPSITEPACKAGES="${TMPDIR}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages";
-
-		mkdir -p ${TMPSITEPACKAGES};
-
-		PYTHONPATH=${TMPSITEPACKAGES} python ./setup.py install --prefix=${TMPDIR};
-
-		if test -f tests/end-to-end.py;
-		then
-			PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
-		fi
 	fi
 fi

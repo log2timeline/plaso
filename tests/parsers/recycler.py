@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows recycler parsers."""
 
@@ -10,20 +10,18 @@ from plaso.formatters import recycler as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import recycler
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinRecycleBinParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycle Bin parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['$II3DF3L.zip'])
   def testParseVista(self):
     """Tests the Parse function on a Windows Vista RecycleBin file."""
     parser = recycler.WinRecycleBinParser()
     storage_writer = self._ParseFile(['$II3DF3L.zip'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -41,13 +39,12 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     expected_short_message = 'Deleted file: {0:s}'.format(expected_filename)
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['$I103S5F.jpg'])
   def testParseWindows10(self):
     """Tests the Parse function on a Windows 10 RecycleBin file."""
     parser = recycler.WinRecycleBinParser()
     storage_writer = self._ParseFile(['$I103S5F.jpg'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -69,13 +66,12 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycler INFO2 parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['INFO2'])
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
     parser = recycler.WinRecyclerInfo2Parser()
     storage_writer = self._ParseFile(['INFO2'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())
@@ -104,7 +100,10 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    self._TestGetSourceStrings(event, 'Recycle Bin', 'RECBIN')
+    event_data_identifier = event.GetEventDataIdentifier()
+    event_data = storage_writer.GetEventDataByIdentifier(event_data_identifier)
+
+    self._TestGetSourceStrings(event, event_data, 'Recycle Bin', 'RECBIN')
 
 
 if __name__ == '__main__':

@@ -53,7 +53,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._foreman_status_wait_event = None
     self._knowledge_base = knowledge_base
     self._number_of_consumed_events = 0
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
 
@@ -83,23 +83,23 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     status = {
         'display_name': '',
         'identifier': self._name,
-        'number_of_consumed_errors': None,
         'number_of_consumed_event_tags': None,
         'number_of_consumed_events': self._number_of_consumed_events,
         'number_of_consumed_reports': None,
         'number_of_consumed_sources': None,
-        'number_of_produced_errors': None,
+        'number_of_consumed_warnings': None,
         'number_of_produced_event_tags': number_of_produced_event_tags,
         'number_of_produced_events': None,
         'number_of_produced_reports': number_of_produced_reports,
         'number_of_produced_sources': None,
+        'number_of_produced_warnings': None,
         'processing_status': self._status,
         'task_identifier': None,
         'used_memory': used_memory}
 
     if self._status in (
-        definitions.PROCESSING_STATUS_ABORTED,
-        definitions.PROCESSING_STATUS_COMPLETED):
+        definitions.STATUS_INDICATOR_ABORTED,
+        definitions.STATUS_INDICATOR_COMPLETED):
       self._foreman_status_wait_event.set()
 
     return status
@@ -120,7 +120,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     # Creating the threading event in the constructor will cause a pickle
     # error on Windows when an analysis process is created.
     self._foreman_status_wait_event = threading.Event()
-    self._status = definitions.PROCESSING_STATUS_ANALYZING
+    self._status = definitions.STATUS_INDICATOR_ANALYZING
 
     task = tasks.Task()
     # TODO: temporary solution.
@@ -152,18 +152,18 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
       while not self._abort:
         try:
-          event = self._event_queue.PopItem()
+          queued_object = self._event_queue.PopItem()
 
         except (errors.QueueClose, errors.QueueEmpty) as exception:
           logger.debug('ConsumeItems exiting with exception {0:s}.'.format(
               type(exception)))
           break
 
-        if isinstance(event, plaso_queue.QueueAbort):
+        if isinstance(queued_object, plaso_queue.QueueAbort):
           logger.debug('ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
-        self._ProcessEvent(self._analysis_mediator, event)
+        self._ProcessEvent(self._analysis_mediator, *queued_object)
 
         self._number_of_consumed_events += 1
 
@@ -175,7 +175,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
               self._name, self._pid))
 
       if not self._abort:
-        self._status = definitions.PROCESSING_STATUS_REPORTING
+        self._status = definitions.STATUS_INDICATOR_REPORTING
 
         self._analysis_mediator.ProduceAnalysisReport(self._analysis_plugin)
 
@@ -206,9 +206,9 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       pass
 
     if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
+      self._status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
 
     self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
 
@@ -233,16 +233,17 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     except errors.QueueAlreadyClosed:
       logger.error('Queue for {0:s} was already closed.'.format(self.name))
 
-  def _ProcessEvent(self, mediator, event):
+  def _ProcessEvent(self, mediator, event, event_data):
     """Processes an event.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
+      event_data (EventData): event data.
     """
     try:
-      self._analysis_plugin.ExamineEvent(mediator, event)
+      self._analysis_plugin.ExamineEvent(mediator, event, event_data)
 
     except Exception as exception:  # pylint: disable=broad-except
       self.SignalAbort()

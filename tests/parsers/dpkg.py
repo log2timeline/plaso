@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*_ coding: utf-8 -*-
 """Tests for the dpkg.Log parser."""
 
@@ -8,20 +8,18 @@ import unittest
 
 from plaso.parsers import dpkg
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class DpkgParserTest(test_lib.ParserTestCase):
   """Tests for the Dpkg Log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['dpkg.log'])
   def testParse(self):
     """Tests for the Parse method."""
     parser = dpkg.DpkgParser()
     storage_writer = self._ParseFile(['dpkg.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())

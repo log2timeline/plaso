@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the .customDestinations-ms file parser."""
 
@@ -10,22 +10,19 @@ from plaso.formatters import winlnk  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import custom_destinations
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class CustomDestinationsParserTest(test_lib.ParserTestCase):
   """Tests for the .customDestinations-ms file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      '5afe4de1b92fc382.customDestinations-ms'])
   def testParse(self):
     """Tests the Parse function."""
     parser = custom_destinations.CustomDestinationsParser()
     storage_writer = self._ParseFile(
         ['5afe4de1b92fc382.customDestinations-ms'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 126)
 
     events = list(storage_writer.GetEvents())

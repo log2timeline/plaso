@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for Basic Security Module (BSM) file parser."""
 
@@ -10,14 +10,12 @@ from plaso.formatters import bsm as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import bsm
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacOSBSMParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['apple.bsm'])
   def testParse(self):
     """Tests the Parse function on a MacOS BSM file."""
     parser = bsm.BSMParser()
@@ -27,7 +25,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
         ['apple.bsm'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 54)
 
     events = list(storage_writer.GetEvents())
@@ -172,7 +170,6 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 class OpenBSMParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['openbsm.bsm'])
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
     parser = bsm.BSMParser()
@@ -181,7 +178,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['openbsm.bsm'], parser, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 50)
 
     events = list(storage_writer.GetEvents())

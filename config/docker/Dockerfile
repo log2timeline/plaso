@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 # Create container with:
@@ -18,7 +18,7 @@ RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get -y update
 RUN apt-get -y upgrade
 
-RUN apt-get -y install python-plaso plaso-tools locales
+RUN apt-get -y install locales plaso-tools
 RUN apt-get clean &&  rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Set terminal to UTF-8 by default

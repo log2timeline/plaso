@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the xchatlog parser."""
 
@@ -9,21 +9,19 @@ import unittest
 from plaso.formatters import xchatlog as _  # pylint: disable=unused-import
 from plaso.parsers import xchatlog
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class XChatLogUnitTest(test_lib.ParserTestCase):
   """Tests for the xchatlog parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['xchat.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = xchatlog.XChatLogParser()
     storage_writer = self._ParseFile(
         ['xchat.log'], parser, timezone='Europe/Rome')
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 9)
 
     events = list(storage_writer.GetEvents())

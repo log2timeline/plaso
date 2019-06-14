@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the event tag index."""
 
@@ -12,6 +12,7 @@ from plaso.storage import identifiers
 from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
 
@@ -29,9 +30,15 @@ class EventTagIndexTest(test_lib.StorageTestCase):
     storage_file = sqlite_file.SQLiteStorageFile()
     storage_file.Open(path=path, read_only=False)
 
-    test_events = self._CreateTestEvents()
-    for event in test_events:
+    test_events = []
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      storage_file.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_file.AddEvent(event)
+
+      test_events.append(event)
 
     test_event_tags = self._CreateTestEventTags(test_events)
     storage_file.AddEventTags(test_event_tags[:-1])
@@ -39,16 +46,17 @@ class EventTagIndexTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testBuild(self):
     """Tests the _Build function."""
     test_index = event_tag_index.EventTagIndex()
 
     self.assertIsNone(test_index._index)
 
-    test_file = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
     storage_file = sqlite_file.SQLiteStorageFile()
-    storage_file.Open(path=test_file)
+    storage_file.Open(path=test_file_path)
     test_index._Build(storage_file)
     storage_file.Close()
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the selinux log file parser."""
 
@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import selinux as _  # pylint: disable=unused-import
 from plaso.parsers import selinux
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class SELinuxUnitTest(test_lib.ParserTestCase):
   """Tests for the selinux log file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['selinux.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = selinux.SELinuxParser()
@@ -25,7 +23,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         ['selinux.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 4)
+    self.assertEqual(storage_writer.number_of_warnings, 4)
     self.assertEqual(storage_writer.number_of_events, 7)
 
     events = list(storage_writer.GetEvents())

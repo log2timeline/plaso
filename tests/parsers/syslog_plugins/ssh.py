@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the SSH syslog plugin."""
 
@@ -6,14 +6,12 @@ from __future__ import unicode_literals
 
 import unittest
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib
 
 
 class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
   """Tests for the SSH syslog plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['syslog_ssh.log'])
   def testParse(self):
     """Tests the Parse function."""
     knowledge_base_values = {'year': 2016}
@@ -22,7 +20,7 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
         ['syslog_ssh.log'], 'ssh',
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
 
     events = list(storage_writer.GetSortedEvents())

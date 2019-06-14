@@ -13,40 +13,48 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
   DATA_TYPE = 'windows:registry:key_value'
 
-  FORMAT_STRING = '[{key_path}] {text}'
-  FORMAT_STRING_ALTERNATIVE = '{text}'
+  FORMAT_STRING = '[{key_path}] {values}'
+  FORMAT_STRING_ALTERNATIVE = '{values}'
 
   SOURCE_LONG = 'Registry Key'
   SOURCE_SHORT = 'REG'
 
   # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for the event data.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event data cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+          event_data.data_type))
 
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
 
-    regvalue = event_values.get('regvalue', {})
-    string_parts = []
-    for key, value in sorted(regvalue.items()):
-      string_parts.append('{0:s}: {1!s}'.format(key, value))
-    event_values['text'] = ' '.join(string_parts)
+    values = event_values.get('values', None)
+    if values is None:
+      # TODO: remove regvalue.
+      regvalue = event_values.get('regvalue', {})
+      string_parts = []
+      for key, value in sorted(regvalue.items()):
+        string_parts.append('{0:s}: {1!s}'.format(key, value))
+      values = ' '.join(string_parts)
+      event_values['values'] = values
 
+    if not values:
+      event_values['values'] = 'No values stored in key.'
+
+    # TODO: remove urls.
     urls = event_values.get('urls', [])
     if urls:
       event_values['urls'] = ' - '.join(urls)
@@ -59,24 +67,26 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
     return self._FormatMessages(
         format_string, self.FORMAT_STRING_SHORT, event_values)
 
-  def GetSources(self, event):
-    """Determines the the short and long source for an event object.
+  # pylint: disable=unused-argument
+  def GetSources(self, event, event_data):
+    """Determines the the short and long source for an event.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): short and long source string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event data cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+          event_data.data_type))
 
-    source_long = getattr(event, 'source_long', 'UNKNOWN')
-    source_append = getattr(event, 'source_append', None)
+    source_long = getattr(event_data, 'source_long', 'UNKNOWN')
+    source_append = getattr(event_data, 'source_append', None)
     if source_append:
       source_long = '{0:s} {1:s}'.format(source_long, source_append)
 

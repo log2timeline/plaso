@@ -31,6 +31,8 @@ class CLITool(object):
     list_timezones (bool): True if the time zones should be listed.
     preferred_encoding (str): preferred encoding of single-byte or multi-byte
         character strings, sometimes referred to as extended ASCII.
+    show_troubleshooting (bool): True if troubleshooting information should
+        be shown.
   """
   # The maximum number of characters of a line written to the output writer.
   _LINE_LENGTH = 80
@@ -74,6 +76,7 @@ class CLITool(object):
 
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
+    self.show_troubleshooting = False
 
   def _CanEnforceProcessMemoryLimit(self):
     """Determines if a process memory limit can be enforced.
@@ -146,6 +149,13 @@ class CLITool(object):
       options (argparse.Namespace): command line arguments.
     """
     self._log_file = self.ParseStringOption(options, 'log_file')
+    if not self._log_file:
+      local_date_time = datetime.datetime.now()
+      self._log_file = (
+          '{0:s}-{1:04d}{2:02d}{3:02d}T{4:02d}{5:02d}{6:02d}.log.gz').format(
+              self.NAME, local_date_time.year, local_date_time.month,
+              local_date_time.day, local_date_time.hour, local_date_time.minute,
+              local_date_time.second)
 
   def _ParseTimezoneOption(self, options):
     """Parses the timezone options.
@@ -188,13 +198,16 @@ class CLITool(object):
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
-    version_string = 'plaso - {0:s} version {1:s}'.format(
-        self.NAME, plaso.__version__)
+    version_string = self.GetVersionInformation()
 
     # We want a custom help message and not the default argparse one.
     argument_group.add_argument(
         '-h', '--help', action='help',
         help='Show this help message and exit.')
+
+    argument_group.add_argument(
+        '--troubles', dest='show_troubleshooting', action='store_true',
+        default=False, help='Show troubleshooting information.')
 
     argument_group.add_argument(
         '-V', '--version', dest='version', action='version',
@@ -223,8 +236,10 @@ class CLITool(object):
     argument_group.add_argument(
         '--logfile', '--log_file', '--log-file', action='store',
         metavar='FILENAME', dest='log_file', type=str, default='', help=(
-            'If defined all log messages will be redirected to this file '
-            'instead the default STDERR.'))
+            'Path of the file in which to store log messages, by default '
+            'this file will be named: "{0:s}-YYYYMMDDThhmmss.log.gz". Note '
+            'that the file will be gzip compressed if the extension is '
+            '".gz".').format(self.NAME))
 
   def AddTimeZoneOption(self, argument_group):
     """Adds the time zone option to the argument group.
@@ -274,6 +289,14 @@ class CLITool(object):
             for argument in command_line_arguments]
 
     return ' '.join(command_line_arguments)
+
+  def GetVersionInformation(self):
+    """Retrieves the version information.
+
+    Returns:
+      str: version information.
+    """
+    return 'plaso - {0:s} version {1:s}'.format(self.NAME, plaso.__version__)
 
   def ListTimeZones(self):
     """Lists the timezones."""

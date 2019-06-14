@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Task Scheduler event formatter."""
 
@@ -24,6 +24,7 @@ class TaskCacheEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = task_scheduler.TaskCacheEventFormatter()
 
     expected_attribute_names = [
+        'key_path',
         'task_name',
         'task_identifier']
 

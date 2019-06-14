@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows services event formatter."""
 
@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import winregservice
+from plaso.formatters import services
 
 from tests.formatters import test_lib
 
@@ -16,16 +16,20 @@ class WinRegistryServiceFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = winregservice.WinRegistryServiceFormatter()
+    event_formatter = services.WinRegistryServiceFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = winregservice.WinRegistryServiceFormatter()
+    event_formatter = services.WinRegistryServiceFormatter()
 
     expected_attribute_names = [
+        'error_control',
+        'image_path',
         'key_path',
-        'text']
+        'service_type',
+        'start_type',
+        'values']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

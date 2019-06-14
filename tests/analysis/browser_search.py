@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the browser search analysis plugin."""
 
@@ -9,11 +9,9 @@ import unittest
 from plaso.analysis import browser_search
 from plaso.parsers import sqlite
 
-from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
 
 
-@shared_test_lib.skipUnlessHasTestFile(['History'])
 class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
   """Tests for the browser search analysis plugin."""
 

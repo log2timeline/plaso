@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the SQLite database parser."""
 
@@ -9,7 +9,6 @@ from plaso.parsers import sqlite
 # Register all plugins.
 from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -28,7 +27,6 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     self.assertNotEqual(parser._plugins, [])
     self.assertEqual(len(parser._plugins), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile(['contacts2.db'])
   def testFileParserChainMaintenance(self):
     """Tests that the parser chain is correctly maintained by the parser."""
     parser = sqlite.SQLiteParser()
@@ -38,16 +36,17 @@ class SQLiteParserTest(test_lib.ParserTestCase):
       chain = event.parser
       self.assertEqual(1, chain.count('/'))
 
-  @shared_test_lib.skipUnlessHasTestFile(['wal_database.db'])
-  @shared_test_lib.skipUnlessHasTestFile(['wal_database.db-wal'])
   def testQueryDatabaseWithWAL(self):
     """Tests the Query function on a database with a WAL file."""
-    database_file = self._GetTestFilePath(['wal_database.db'])
-    wal_file = self._GetTestFilePath(['wal_database.db-wal'])
+    database_file_path = self._GetTestFilePath(['wal_database.db'])
+    self._SkipIfPathNotExists(database_file_path)
+
+    database_wal_file_path = self._GetTestFilePath(['wal_database.db-wal'])
+    self._SkipIfPathNotExists(database_wal_file_path)
 
     database = sqlite.SQLiteDatabase('wal_database.db')
-    with open(database_file, 'rb') as database_file_object:
-      with open(wal_file, 'rb') as wal_file_object:
+    with open(database_file_path, 'rb') as database_file_object:
+      with open(database_wal_file_path, 'rb') as wal_file_object:
         database.Open(database_file_object, wal_file_object=wal_file_object)
 
     row_results = []
@@ -77,13 +76,13 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(expected_results, row_results)
 
-  @shared_test_lib.skipUnlessHasTestFile(['wal_database.db'])
   def testQueryDatabaseWithoutWAL(self):
     """Tests the Query function on a database without a WAL file."""
-    database_file = self._GetTestFilePath(['wal_database.db'])
+    database_file_path = self._GetTestFilePath(['wal_database.db'])
+    self._SkipIfPathNotExists(database_file_path)
 
     database = sqlite.SQLiteDatabase('wal_database.db')
-    with open(database_file, 'rb') as database_file_object:
+    with open(database_file_path, 'rb') as database_file_object:
       database.Open(database_file_object)
 
     row_results = []

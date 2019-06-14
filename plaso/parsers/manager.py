@@ -406,6 +406,25 @@ class ParsersManager(object):
     return parsers_information
 
   @classmethod
+  def GetPresetsInformation(cls):
+    """Retrieves the presets information.
+
+    Returns:
+      list[tuple]: containing:
+
+        str: preset name
+        str: comma separated parser names that are defined by the preset
+    """
+    parser_presets_information = []
+    for preset_definition in ParsersManager.GetPresets():
+      preset_information_tuple = (
+          preset_definition.name, ', '.join(preset_definition.parsers))
+      # TODO: refactor to pass PresetDefinition.
+      parser_presets_information.append(preset_information_tuple)
+
+    return parser_presets_information
+
+  @classmethod
   def GetPresetsForOperatingSystem(
       cls, operating_system, operating_system_product,
       operating_system_version):
@@ -446,6 +465,10 @@ class ParsersManager(object):
     Args:
       path (str): path of file that contains the the parser and parser plugin
           presets configuration.
+
+    Raises:
+      MalformedPresetError: if one or more plugin preset definitions are
+          malformed.
     """
     cls._presets.ReadFromFile(path)
 

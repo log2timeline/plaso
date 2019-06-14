@@ -140,6 +140,8 @@ kik_messenger | Parser for iOS Kik messenger SQLite database files.
 kodi | Parser for Kodi MyVideos.db files.
 ls_quarantine | Parser for LS quarantine events SQLite database files.
 mac_document_versions | Parser for document revisions SQLite database files.
+mac_knowledgec | Parser for Duet / KnowledgeC database file.
+mac_notes | Parser for Mac Notes
 mac_notificationcenter | Parser for the Notification Center SQLite database
 mackeeper_cache | Parser for MacKeeper Cache SQLite database files.
 safari_history | Parser for Safari history SQLite database files.
@@ -197,13 +199,13 @@ winlogon | Parser for winlogon Registry data.
 winrar_mru | Parser for WinRAR History Registry data.
 winreg_default | Parser for Registry data.
 
-### Parser presets
+### Parser presets (data/presets.yaml)
 
 Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_27_history, sqlite/chrome_8_history, sqlite/chrome_cookies, sqlite/skype
 linux | bash_history, bencode, czip/oxml, dockerjson, dpkg, filestat, gdrive_synclog, java_idx, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, webhist, xchatlog, xchatscrollback, zsh_extended_history
-macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, java_idx, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mackeeper_cache, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
+macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, java_idx, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_27_history, sqlite/chrome_8_history, sqlite/chrome_autofill, sqlite/chrome_cookies, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history
 win7 | amcache, custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
 win7_slow | mft, win7

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Trend Micro AV Log parser."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import trendmicroav as _  # pylint: disable=unused-import
 from plaso.parsers import trendmicroav
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class TrendMicroUnitTest(test_lib.ParserTestCase):
   """Tests for the Trend Micro AV Log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['pccnt35.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = trendmicroav.OfficeScanVirusDetectionParser()
     storage_writer = self._ParseFile(['pccnt35.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     # The order in which DSVParser generates events is nondeterministic
@@ -49,13 +47,12 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['OfcUrlf.log'])
   def testWebReputationParse(self):
     """Tests the Parse function."""
     parser = trendmicroav.OfficeScanWebReputationParser()
     storage_writer = self._ParseFile(['OfcUrlf.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     # The order in which DSVParser generates events is nondeterministic

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the multi-processing worker process."""
 
@@ -24,13 +24,15 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing."""
 
   # pylint: disable=unused-argument
-  def ProcessPathSpec(self, mediator, path_spec):
+  def ProcessPathSpec(self, mediator, path_spec, excluded_find_specs=None):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates interactions between parsers and
-          other components, such as storage and dfvfs.
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
       path_spec (dfvfs.PathSpec): path specification.
+      excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+         that are excluded from processing.
     """
     return
 
@@ -39,13 +41,15 @@ class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing failure."""
 
   # pylint: disable=unused-argument
-  def ProcessPathSpec(self, mediator, path_spec):
+  def ProcessPathSpec(self, mediator, path_spec, excluded_find_specs=None):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates interactions between parsers and
-          other components, such as storage and dfvfs.
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
       path_spec (dfvfs.PathSpec): path specification.
+      excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+         that are excluded from processing.
 
     Raises:
       dfvfs_errors.CacheFullError: cache full error.
@@ -61,19 +65,19 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, None, name='TestWorker')
+        None, None, None, None, None, None, name='TestWorker')
     self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
     """Tests the _GetStatus function."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, None, name='TestWorker')
+        None, None, None, None, None, None, name='TestWorker')
     status_attributes = test_process._GetStatus()
 
     self.assertIsNotNone(status_attributes)
     self.assertEqual(status_attributes['identifier'], 'TestWorker')
     self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
-    self.assertIsNone(status_attributes['number_of_produced_errors'])
+    self.assertIsNone(status_attributes['number_of_produced_warnings'])
 
     session = sessions.Session()
     storage_writer = self._CreateStorageWriter(session)
@@ -85,7 +89,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     self.assertIsNotNone(status_attributes)
     self.assertEqual(status_attributes['identifier'], 'TestWorker')
     self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
-    self.assertEqual(status_attributes['number_of_produced_errors'], 0)
+    self.assertEqual(status_attributes['number_of_produced_warnings'], 0)
 
   def testMain(self):
     """Tests the _Main function."""
@@ -94,7 +98,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     test_process = worker_process.WorkerProcess(
-        task_queue, None, None, None, configuration, name='TestWorker')
+        task_queue, None, None, None, None, configuration, name='TestWorker')
     test_process._abort = True
     test_process._pid = 0
 
@@ -105,7 +109,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, configuration, name='TestWorker')
+        None, None, None, None, None, configuration, name='TestWorker')
 
     session = sessions.Session()
     storage_writer = self._CreateStorageWriter(session)
@@ -116,15 +120,15 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
     extraction_worker = TestEventExtractionWorker()
     test_process._ProcessPathSpec(extraction_worker, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_errors, 0)
+    self.assertEqual(parser_mediator._number_of_warnings, 0)
 
     extraction_worker = TestFailureEventExtractionWorker()
     test_process._ProcessPathSpec(extraction_worker, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_errors, 0)
+    self.assertEqual(parser_mediator._number_of_warnings, 0)
     self.assertTrue(test_process._abort)
 
     test_process._ProcessPathSpec(None, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_errors, 1)
+    self.assertEqual(parser_mediator._number_of_warnings, 1)
 
   def testProcessTask(self):
     """Tests the _ProcessTask function."""
@@ -134,8 +138,9 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     test_process = worker_process.WorkerProcess(
-        None, storage_writer, knowledge_base, session.identifier, configuration,
-        name='TestWorker')
+        None, storage_writer, None, knowledge_base, session.identifier,
+        configuration, name='TestWorker')
+    test_process._extraction_worker = TestEventExtractionWorker()
     test_process._parser_mediator = self._CreateParserMediator(
         storage_writer, knowledge_base)
 
@@ -152,7 +157,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
           'task_queue'])
 
       test_process = worker_process.WorkerProcess(
-          None, None, None, None, configuration, name='TestWorker')
+          None, None, None, None, None, configuration, name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
 
       test_process._StartProfiling(None)
@@ -163,7 +168,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, None, name='TestWorker')
+        None, None, None, None, None, None, name='TestWorker')
     test_process.SignalAbort()
 
 

@@ -143,7 +143,7 @@ class WinLnkParser(interface.FileObjectParser):
     try:
       lnk_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open file with error: {0!s}'.format(exception))
       return
 
@@ -213,7 +213,7 @@ class WinLnkParser(interface.FileObjectParser):
         self._ParseDistributedTrackingIdentifier(
             parser_mediator, lnk_file.droid_file_identifier, display_name)
       except (TypeError, ValueError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to read droid file identifier with error: {0!s}.'.format(
                 exception))
 
@@ -222,7 +222,7 @@ class WinLnkParser(interface.FileObjectParser):
         self._ParseDistributedTrackingIdentifier(
             parser_mediator, lnk_file.birth_droid_file_identifier, display_name)
       except (TypeError, ValueError) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to read birth droid file identifier with error: '
             '{0!s}.').format(exception))
 

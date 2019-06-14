@@ -20,8 +20,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
   """Class that defines a multi-processing worker process."""
 
   def __init__(
-      self, task_queue, storage_writer, knowledge_base, session_identifier,
-      processing_configuration, **kwargs):
+      self, task_queue, storage_writer, collection_filters_helper,
+      knowledge_base, session_identifier, processing_configuration, **kwargs):
     """Initializes a worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -30,6 +30,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     Args:
       task_queue (PlasoQueue): task queue.
       storage_writer (StorageWriter): storage writer for a session storage.
+      collection_filters_helper (CollectionFiltersHelper): collection filters
+          helper.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
       session_identifier (str): identifier of the session.
@@ -39,6 +41,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     """
     super(WorkerProcess, self).__init__(processing_configuration, **kwargs)
     self._abort = False
+    self._collection_filters_helper = collection_filters_helper
     self._buffer_size = 0
     self._current_display_name = ''
     self._extraction_worker = None
@@ -47,7 +50,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
     self._session_identifier = session_identifier
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
     self._task_queue = task_queue
@@ -59,16 +62,16 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       dict[str, object]: status attributes, indexed by name.
     """
     if self._parser_mediator:
-      number_of_produced_errors = (
-          self._parser_mediator.number_of_produced_errors)
       number_of_produced_events = (
           self._parser_mediator.number_of_produced_events)
       number_of_produced_sources = (
           self._parser_mediator.number_of_produced_event_sources)
+      number_of_produced_warnings = (
+          self._parser_mediator.number_of_produced_warnings)
     else:
-      number_of_produced_errors = None
       number_of_produced_events = None
       number_of_produced_sources = None
+      number_of_produced_warnings = None
 
     if self._extraction_worker and self._parser_mediator:
       last_activity_timestamp = max(
@@ -96,15 +99,15 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     status = {
         'display_name': self._current_display_name,
         'identifier': self._name,
-        'number_of_consumed_errors': None,
+        'last_activity_timestamp': last_activity_timestamp,
         'number_of_consumed_event_tags': None,
         'number_of_consumed_events': self._number_of_consumed_events,
         'number_of_consumed_sources': self._number_of_consumed_sources,
-        'number_of_produced_errors': number_of_produced_errors,
+        'number_of_consumed_warnings': None,
         'number_of_produced_event_tags': None,
         'number_of_produced_events': number_of_produced_events,
         'number_of_produced_sources': number_of_produced_sources,
-        'last_activity_timestamp': last_activity_timestamp,
+        'number_of_produced_warnings': number_of_produced_warnings,
         'processing_status': processing_status,
         'task_identifier': task_identifier,
         'used_memory': used_memory}
@@ -125,6 +128,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     self._parser_mediator = parsers_mediator.ParserMediator(
         None, self._knowledge_base,
+        collection_filters_helper=self._collection_filters_helper,
         preferred_year=self._processing_configuration.preferred_year,
         resolver_context=resolver_context,
         temporary_directory=self._processing_configuration.temporary_directory)
@@ -162,7 +166,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     logger.debug('Worker: {0!s} (PID: {1:d}) started.'.format(
         self._name, self._pid))
 
-    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self._status = definitions.STATUS_INDICATOR_RUNNING
 
     try:
       logger.debug('{0!s} (PID: {1:d}) started monitoring task queue.'.format(
@@ -212,9 +216,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._storage_writer = None
 
     if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
+      self._status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
 
     logger.debug('Worker: {0!s} (PID: {1:d}) stopped.'.format(
         self._name, self._pid))
@@ -235,8 +239,14 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
 
+    excluded_find_specs = None
+    if self._collection_filters_helper:
+      excluded_find_specs = (
+          self._collection_filters_helper.excluded_file_system_find_specs)
+
     try:
-      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+      extraction_worker.ProcessPathSpec(
+          parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
 
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
@@ -246,7 +256,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           '{0:s}').format(self._current_display_name))
 
     except Exception as exception:  # pylint: disable=broad-except
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to process path specification with error: '
           '{0!s}').format(exception), path_spec=path_spec)
 

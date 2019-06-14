@@ -111,31 +111,24 @@ class WindowsService(yaml.YAMLObject):
     return True
 
   @classmethod
-  def FromEvent(cls, service_event):
-    """Creates a service object from an event.
+  def FromEventData(cls, event_data):
+    """Creates a service object from event data.
 
     Args:
-      service_event (EventObject): event to create a new service object from.
+      event_data (EventData): event data.
 
     Returns:
       WindowsService: service.
     """
-    _, _, name = service_event.key_path.rpartition(
-        WindowsService._REGISTRY_KEY_PATH_SEPARATOR)
-    service_type = service_event.regvalue.get('Type', '')
-    image_path = service_event.regvalue.get('ImagePath', '')
-    start_type = service_event.regvalue.get('Start', '')
-    service_dll = service_event.regvalue.get('ServiceDll', '')
-    object_name = service_event.regvalue.get('ObjectName', '')
-
-    if service_event.pathspec:
-      source = (service_event.pathspec.location, service_event.key_path)
+    if event_data.pathspec:
+      source = (event_data.pathspec.location, event_data.key_path)
     else:
       source = ('Unknown', 'Unknown')
+
     return cls(
-        name=name, service_type=service_type, image_path=image_path,
-        start_type=start_type, object_name=object_name,
-        source=source, service_dll=service_dll)
+        event_data.name, event_data.service_type, event_data.image_path,
+        event_data.start_type, event_data.object_name, source,
+        service_dll=event_data.service_dll)
 
   def HumanReadableType(self):
     """Return a human readable string describing the type value.
@@ -199,6 +192,9 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
+  _SUPPORTED_EVENT_DATA_TYPES = frozenset([
+      'windows:registry:service'])
+
   def __init__(self):
     """Initializes the Windows Services plugin."""
     super(WindowsServicesAnalysisPlugin, self).__init__()
@@ -214,17 +210,21 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
     Returns:
       str: human readable representation of a Windows Service.
     """
+    service_type = service.HumanReadableType()
+    start_type = service.HumanReadableStartType()
+
     string_segments = [
         service.name,
-        '\tImage Path    = {0:s}'.format(service.image_path),
-        '\tService Type  = {0:s}'.format(service.HumanReadableType()),
-        '\tStart Type    = {0:s}'.format(service.HumanReadableStartType()),
-        '\tService Dll   = {0:s}'.format(service.service_dll),
-        '\tObject Name   = {0:s}'.format(service.object_name),
+        '\tImage Path    = {0:s}'.format(service.image_path or ''),
+        '\tService Type  = {0:s}'.format(service_type),
+        '\tStart Type    = {0:s}'.format(start_type),
+        '\tService Dll   = {0:s}'.format(service.service_dll or ''),
+        '\tObject Name   = {0:s}'.format(service.object_name or ''),
         '\tSources:']
 
-    for source in service.sources:
-      string_segments.append('\t\t{0:s}:{1:s}'.format(source[0], source[1]))
+    string_segments.extend([
+        '\t\t{0:s}:{1:s}'.format(source[0], source[1])
+        for source in service.sources])
     return '\n'.join(string_segments)
 
   def CompileReport(self, mediator):
@@ -252,29 +252,30 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
     report_text = '\n'.join(lines_of_text)
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
-  def ExamineEvent(self, mediator, event):
+  # pylint: disable=unused-argument
+  def ExamineEvent(self, mediator, event, event_data):
     """Analyzes an event and creates Windows Services as required.
 
-      At present, this method only handles events extracted from the Registry.
+    At present, this method only handles events extracted from the Registry.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
+      event_data (EventData): event data.
     """
+    if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
+      return
+
     # TODO: Handle event log entries here also (ie, event id 4697).
-    event_data_type = getattr(event, 'data_type', '')
-    if event_data_type == 'windows:registry:service':
-      # Create and store the service.
-      service = WindowsService.FromEvent(event)
-      self._service_collection.AddService(service)
+    service = WindowsService.FromEventData(event_data)
+    self._service_collection.AddService(service)
 
   def SetOutputFormat(self, output_format):
     """Sets the output format of the generated report.
 
     Args:
-      output_format (str): The format the the plugin should used to produce its
-          output.
+      output_format (str): format the plugin should used to produce its output.
     """
     self._output_format = output_format
 

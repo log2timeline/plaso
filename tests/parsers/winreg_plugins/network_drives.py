@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Network Drives Windows Registry plugin."""
 
@@ -149,13 +149,14 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     plugin = network_drives.NetworkDrivesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetSortedEvents())
 
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:registry:network_drive')
     self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
     expected_message = (

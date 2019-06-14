@@ -20,7 +20,7 @@ import pytz  # pylint: disable=wrong-import-order
 
 
 class KnowledgeBase(object):
-  """Class that implements the artifact knowledge base."""
+  """The knowledge base."""
 
   CURRENT_SESSION = 0
 

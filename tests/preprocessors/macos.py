@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the MacOS preprocess plug-ins."""
 
@@ -11,7 +11,6 @@ from dfvfs.path import fake_path_spec
 
 from plaso.preprocessors import macos
 
-from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -66,11 +65,12 @@ class MacOSKeyboardLayoutPluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the MacOS keyboard layout plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['com.apple.HIToolbox.plist'])
   def testParsePlistKeyValue(self):
     """Tests the _ParsePlistKeyValue function."""
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath(['com.apple.HIToolbox.plist'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFileReadData(
         '/Library/Preferences/com.apple.HIToolbox.plist', test_file_path)
 
@@ -146,11 +146,12 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['nobody.plist'])
   def testRun(self):
     """Tests the Run function."""
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath(['nobody.plist'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFileReadData(
         '/private/var/db/dslocal/nodes/Default/users/nobody.plist',
         test_file_path)

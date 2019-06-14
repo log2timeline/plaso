@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the serializer object implementation using JSON."""
 
@@ -128,7 +128,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(analysis_report_dict.items()),
         sorted(expected_analysis_report_dict.items()))
 
-  # TODO: add ExtractionError tests.
+  # TODO: add ExtractionWarning tests.
 
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""

@@ -64,19 +64,25 @@ class EventObject(interface.AttributeContainer):
     """Initializes an event attribute container."""
     super(EventObject, self).__init__()
     self._event_data_identifier = None
+    # TODO: move to event data
     self.data_type = self.DATA_TYPE
+    # TODO: move to event data
     self.display_name = None
+    # TODO: move to event data
     self.filename = None
+    # TODO: move to event data
     self.hostname = None
+    # TODO: move to event data
     self.inode = None
+    # TODO: move to event data
     self.offset = None
+    # TODO: move to event data
     self.pathspec = None
     self.tag = None
     self.timestamp = None
     self.timestamp_desc = None
 
-    # TODO: add a solution for event_data_entry_index,
-    # event_data_stream_number and event_data_row_identifier
+    # TODO: add a solution for event_data_row_identifier
 
   # This method is necessary for heap sort.
   def __lt__(self, other):

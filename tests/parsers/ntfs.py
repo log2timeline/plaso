@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the NTFS metadata file parser."""
 
@@ -13,25 +13,25 @@ from plaso.formatters import file_system  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import ntfs
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class NTFSMFTParserTest(test_lib.ParserTestCase):
   """Tests for NTFS $MFT metadata file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['MFT'])
   def testParseFile(self):
     """Tests the Parse function on a stand-alone $MFT file."""
     parser = ntfs.NTFSMFTParser()
 
-    test_path = self._GetTestFilePath(['MFT'])
+    test_file_path = self._GetTestFilePath(['MFT'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
     storage_writer = self._ParseFileByPathSpec(os_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 126352)
 
     events = list(storage_writer.GetEvents())
@@ -54,15 +54,15 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
-  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
     parser = ntfs.NTFSMFTParser()
 
-    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -71,7 +71,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 284)
 
     events = list(storage_writer.GetEvents())
@@ -154,9 +154,11 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Note that the source file is a RAW (VMDK flat) image.
-    test_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     p2_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p2',
         part_index=3, start_offset=0x00510000, parent=os_path_spec)
@@ -166,21 +168,22 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 184)
 
 
 class NTFSUsnJrnlParser(test_lib.ParserTestCase):
   """Tests for NTFS $UsnJrnl metadata file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['usnjrnl.qcow2'])
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
     parser = ntfs.NTFSUsnJrnlParser()
 
-    test_path = self._GetTestFilePath(['usnjrnl.qcow2'])
+    test_file_path = self._GetTestFilePath(['usnjrnl.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -191,7 +194,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     # requires to read directly from the volume.
     storage_writer = self._ParseFileByPathSpec(volume_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 19)
 
     events = list(storage_writer.GetEvents())

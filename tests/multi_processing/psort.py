@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the psort multi-processing engine."""
 
@@ -11,7 +11,6 @@ import unittest
 
 from plaso.analysis import interface as analysis_interface
 from plaso.analysis import tagging
-from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import knowledge_base
@@ -30,6 +29,7 @@ from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.filters import test_lib as filters_test_lib
+from tests.multi_processing import test_lib
 
 
 class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
@@ -52,41 +52,16 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     """
     return
 
-  def ExamineEvent(self, mediator, event):
+  def ExamineEvent(self, mediator, event, event_data):
     """Analyzes an event object.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
+      event_data (EventData): event data.
     """
     return
-
-
-class TestEvent(events.EventObject):
-  """Event for testing."""
-
-  DATA_TYPE = 'test:event:psort'
-
-  def __init__(
-      self, timestamp,
-      text='My text dude.',
-      timestamp_description=definitions.TIME_DESCRIPTION_LAST_PRINTED):
-    """Initializes an event.
-
-    Args:
-      timestamp (int): timestamp.
-      text (Optional[str]): text.
-      timestamp_description (Optional[str]): timestamp description.
-    """
-    super(TestEvent, self).__init__()
-    self.display_name = '/dev/none'
-    self.filename = '/dev/none'
-    self.parser = 'TestEvent'
-    self.text = text
-    self.timestamp_desc = timestamp_description
-    self.timestamp = timestamp
-    self.var = {'Issue': False, 'Closed': True}
 
 
 class TestEventFormatter(formatters_interface.EventFormatter):
@@ -104,9 +79,9 @@ class TestOutputModule(output_interface.LinearOutputModule):
   """Output module for testing.
 
   Attributes:
-    events (list[EventObject]): event written to the output.
-    macb_groups (list[list[EventObject]]): MACB groups of events written to
-        the output.
+    events (list[tuple[EventObject, EventData]]): event written to the output.
+    macb_groups (list[list[tuple[EventObject, EventData]]]): MACB groups of
+        events written to the output.
   """
 
   NAME = 'psort_test'
@@ -125,13 +100,15 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self.events = []
     self.macb_groups = []
 
-  def WriteEventBody(self, event):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes the body of an event object to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
-    self.events.append(event)
+    self.events.append((event, event_data, event_tag))
 
   def WriteHeader(self):
     """Writes the header to the output."""
@@ -156,13 +133,23 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self.macb_groups.append(event_macb_group)
 
 
-class PsortEventHeapTest(shared_test_lib.BaseTestCase):
+class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
   """Tests for the psort events heap."""
 
   # pylint: disable=protected-access
 
-  _TEST_EVENT_ATTRIBUTES = {
-      'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+      {'data_type': 'test:event:psort',
+       'display_name': '/dev/none',
+       'filename': '/dev/none',
+       'parser': 'TestEvent',
+       'text': 'text',
+       'timestamp': 2345871286,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE,
+       'var': {'Issue': False, 'Closed': True}}]
 
   def testNumberOfEvents(self):
     """Tests the number_of_events property."""
@@ -173,10 +160,10 @@ class PsortEventHeapTest(shared_test_lib.BaseTestCase):
     """Tests the _GetEventIdentifiers function."""
     event_heap = psort.PsortEventHeap()
 
-    event = containers_test_lib.TestEvent(
-        5134324321, attributes=self._TEST_EVENT_ATTRIBUTES)
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     macb_group_identifier, content_identifier = (
-        event_heap._GetEventIdentifiers(event))
+        event_heap._GetEventIdentifiers(event, event_data))
 
     expected_identifier = 'data_type: test:event'
     self.assertEqual(macb_group_identifier, expected_identifier)
@@ -193,13 +180,9 @@ class PsortEventHeapTest(shared_test_lib.BaseTestCase):
     test_event = event_heap.PopEvent()
     self.assertIsNone(test_event)
 
-    event1 = containers_test_lib.TestEvent(
-        5134324321, attributes=self._TEST_EVENT_ATTRIBUTES)
-    event_heap.PushEvent(event1)
-
-    event2 = containers_test_lib.TestEvent(
-        2345871286, attributes=self._TEST_EVENT_ATTRIBUTES)
-    event_heap.PushEvent(event2)
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      event_heap.PushEvent(event, event_data)
 
     self.assertEqual(len(event_heap._heap), 2)
 
@@ -217,13 +200,9 @@ class PsortEventHeapTest(shared_test_lib.BaseTestCase):
     test_events = list(event_heap.PopEvents())
     self.assertEqual(len(test_events), 0)
 
-    event1 = containers_test_lib.TestEvent(
-        5134324321, attributes=self._TEST_EVENT_ATTRIBUTES)
-    event_heap.PushEvent(event1)
-
-    event2 = containers_test_lib.TestEvent(
-        2345871286, attributes=self._TEST_EVENT_ATTRIBUTES)
-    event_heap.PushEvent(event2)
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      event_heap.PushEvent(event, event_data)
 
     self.assertEqual(len(event_heap._heap), 2)
 
@@ -238,51 +217,73 @@ class PsortEventHeapTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(event_heap._heap), 0)
 
-    event = containers_test_lib.TestEvent(
-        5134324321, attributes=self._TEST_EVENT_ATTRIBUTES)
-    event_heap.PushEvent(event)
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+    event_heap.PushEvent(event, event_data)
 
     self.assertEqual(len(event_heap._heap), 1)
 
 
-class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
+class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
   """Tests for the multi-processing engine."""
 
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      (5134324321, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_WRITTEN}),
-      (5134324321, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_LAST_ACCESS}),
-      (2134324321, {}),
-      (9134324321, {}),
-      (5134324321, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_CHANGE}),
-      (5134324321, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_CREATION}),
-      (15134324321, {}),
-      (5134324322, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_CREATION}),
-      (5134324322, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_LAST_ACCESS}),
-      (5134324322, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_CHANGE}),
-      (5134324322, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_WRITTEN}),
-      (5134324322, {
-          'timestamp_description': definitions.TIME_DESCRIPTION_WRITTEN}),
-      (5134324322, {
-          'text': 'Another text',
-          'timestamp_description': definitions.TIME_DESCRIPTION_LAST_ACCESS}),
-      (5134324322, {
-          'text': 'Another text',
-          'timestamp_description': definitions.TIME_DESCRIPTION_CHANGE}),
-      (5134324322, {
-          'text': 'Another text',
-          'timestamp_description': definitions.TIME_DESCRIPTION_WRITTEN}),
-      (5134024321, {}),
-      (5134024321, {})]
+      {'data_type': 'test:event',
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+      {'data_type': 'test:event',
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS},
+      {'data_type': 'test:event',
+       'timestamp': 2134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'timestamp': 9134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+      {'data_type': 'test:event',
+       'timestamp': 5134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION},
+      {'data_type': 'test:event',
+       'timestamp': 15134324321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'timestamp': 5134324322,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION},
+      {'data_type': 'test:event',
+       'timestamp': 5134324322,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS},
+      {'data_type': 'test:event',
+       'timestamp': 5134324322,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+      {'data_type': 'test:event',
+       'timestamp': 5134324322,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+      {'data_type': 'test:event',
+       'timestamp': 5134324322,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+      {'data_type': 'test:event',
+       'timestamp': 5134324322,
+       'text': 'Another text',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS},
+      {'data_type': 'test:event',
+       'timestamp': 5134324322,
+       'text': 'Another text',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+      {'data_type': 'test:event',
+       'text': 'Another text',
+       'timestamp': 5134324322,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+      {'data_type': 'test:event',
+       'timestamp': 5134024321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'timestamp': 5134024321,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   def _CreateTestStorageFile(self, path):
     """Creates a storage file for testing.
@@ -296,8 +297,11 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     # TODO: add preprocessing information.
 
-    for timestamp, kwargs in self._TEST_EVENTS:
-      event = TestEvent(timestamp, **kwargs)
+    for event, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      storage_file.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_file.AddEvent(event)
 
     storage_file.Close()
@@ -428,10 +432,10 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   # TODO: add test for _StopAnalysisProcesses.
   # TODO: add test for _UpdateProcessingStatus.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testAnalyzeEvents(self):
     """Tests the AnalyzeEvents function."""
-    storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
 
     session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -455,7 +459,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      shutil.copyfile(storage_file_path, temp_file)
+      shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
@@ -471,7 +475,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      shutil.copyfile(storage_file_path, temp_file)
+      shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
@@ -485,10 +489,10 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     # TODO: add bogus data location test.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testExportEvents(self):
     """Tests the ExportEvents function."""
-    storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_writer = cli_test_lib.TestBinaryOutputWriter()
@@ -505,13 +509,11 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        storage_file_path)
+        test_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
-    counter = test_engine.ExportEvents(
+    test_engine.ExportEvents(
         knowledge_base_object, storage_reader, output_module, configuration)
-
-    self.assertEqual(counter['Stored Events'], 0)
 
     lines = []
     output = output_writer.ReadOutput()
@@ -521,7 +523,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     for line in output.split('\n'):
       lines.append(line)
 
-    self.assertEqual(len(lines), 21)
+    self.assertEqual(len(lines), 22)
 
     expected_line = (
         '2014-11-18T01:15:43+00:00,'

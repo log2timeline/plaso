@@ -44,8 +44,14 @@ class SingleProcessEngine(engine.BaseEngine):
     self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
 
+    excluded_find_specs = None
+    if self.collection_filters_helper:
+      excluded_find_specs = (
+          self.collection_filters_helper.excluded_file_system_find_specs)
+
     try:
-      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+      extraction_worker.ProcessPathSpec(
+          parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
 
     except KeyboardInterrupt:
       self._abort = True
@@ -66,7 +72,7 @@ class SingleProcessEngine(engine.BaseEngine):
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to process path specification with error: '
           '{0!s}').format(exception), path_spec=path_spec)
 
@@ -80,7 +86,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def _ProcessSources(
       self, source_path_specs, extraction_worker, parser_mediator,
-      storage_writer, filter_find_specs=None):
+      storage_writer):
     """Processes the sources.
 
     Args:
@@ -89,8 +95,6 @@ class SingleProcessEngine(engine.BaseEngine):
       extraction_worker (worker.ExtractionWorker): extraction worker.
       parser_mediator (ParserMediator): parser mediator.
       storage_writer (StorageWriter): storage writer for a session storage.
-      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
@@ -98,13 +102,17 @@ class SingleProcessEngine(engine.BaseEngine):
     number_of_consumed_sources = 0
 
     self._UpdateStatus(
-        definitions.PROCESSING_STATUS_COLLECTING, '',
+        definitions.STATUS_INDICATOR_COLLECTING, '',
         number_of_consumed_sources, storage_writer)
 
     display_name = ''
+    find_specs = None
+    if self.collection_filters_helper:
+      find_specs = (
+          self.collection_filters_helper.included_file_system_find_specs)
+
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=filter_find_specs,
-        recurse_file_system=False,
+        source_path_specs, find_specs=find_specs, recurse_file_system=False,
         resolver_context=parser_mediator.resolver_context)
 
     for path_spec in path_spec_generator:
@@ -119,12 +127,12 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.AddEventSource(event_source)
 
       self._UpdateStatus(
-          definitions.PROCESSING_STATUS_COLLECTING, display_name,
+          definitions.STATUS_INDICATOR_COLLECTING, display_name,
           number_of_consumed_sources, storage_writer)
 
     # Force the status update here to make sure the status is up to date.
     self._UpdateStatus(
-        definitions.PROCESSING_STATUS_RUNNING, display_name,
+        definitions.STATUS_INDICATOR_RUNNING, display_name,
         number_of_consumed_sources, storage_writer, force=True)
 
     if self._processing_profiler:
@@ -159,9 +167,9 @@ class SingleProcessEngine(engine.BaseEngine):
         self._processing_profiler.StopTiming('get_event_source')
 
     if self._abort:
-      status = definitions.PROCESSING_STATUS_ABORTED
+      status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      status = definitions.PROCESSING_STATUS_COMPLETED
+      status = definitions.STATUS_INDICATOR_COMPLETED
 
     # Force the status update here to make sure the status is up to date
     # on exit.
@@ -190,18 +198,16 @@ class SingleProcessEngine(engine.BaseEngine):
         self._last_status_update_timestamp + self._STATUS_UPDATE_INTERVAL):
       return
 
-    if status == definitions.PROCESSING_STATUS_IDLE:
-      status = definitions.PROCESSING_STATUS_RUNNING
+    if status == definitions.STATUS_INDICATOR_IDLE:
+      status = definitions.STATUS_INDICATOR_RUNNING
 
     used_memory = self._process_information.GetUsedMemory() or 0
 
     self._processing_status.UpdateForemanStatus(
         self._name, status, self._pid, used_memory, display_name,
-        number_of_consumed_sources, storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events,
-        0, 0,
-        0, storage_writer.number_of_errors,
-        0, 0)
+        number_of_consumed_sources, storage_writer.number_of_event_sources, 0,
+        storage_writer.number_of_events, 0, 0, 0, 0, 0,
+        storage_writer.number_of_warnings)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
@@ -210,8 +216,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def ProcessSources(
       self, source_path_specs, storage_writer, resolver_context,
-      processing_configuration, filter_find_specs=None,
-      status_update_callback=None):
+      processing_configuration, status_update_callback=None):
     """Processes the sources.
 
     Args:
@@ -221,8 +226,6 @@ class SingleProcessEngine(engine.BaseEngine):
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
-      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction.
       status_update_callback (Optional[function]): callback function for status
           updates.
 
@@ -231,6 +234,7 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, self.knowledge_base,
+        collection_filters_helper=self.collection_filters_helper,
         preferred_year=processing_configuration.preferred_year,
         resolver_context=resolver_context,
         temporary_directory=processing_configuration.temporary_directory)
@@ -274,8 +278,7 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
-          source_path_specs, extraction_worker, parser_mediator,
-          storage_writer, filter_find_specs=filter_find_specs)
+          source_path_specs, extraction_worker, parser_mediator, storage_writer)
 
     finally:
       storage_writer.WriteSessionCompletion(aborted=self._abort)

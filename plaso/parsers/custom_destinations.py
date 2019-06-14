@@ -11,6 +11,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver
 
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 from plaso.parsers import winlnk
@@ -58,12 +59,13 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
     display_name = '{0:s} # 0x{1:08x}'.format(file_entry.name, file_offset)
 
     try:
-      lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
+      lnk_file_object = resolver.Resolver.OpenFileObject(
+          path_spec, resolver_context=parser_mediator.resolver_context)
     except (dfvfs_errors.BackEndError, RuntimeError) as exception:
       message = (
           'unable to open LNK file: {0:s} with error: {1!s}').format(
               display_name, exception)
-      parser_mediator.ProduceExtractionError(message)
+      parser_mediator.ProduceExtractionWarning(message)
       return 0
 
     parser_mediator.AppendToParserChain(self._WINLNK_PARSER)
@@ -81,6 +83,17 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
     lnk_file_object.close()
 
     return lnk_file_size
+
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'\xab\xfb\xbf\xba', offset=-4)
+    return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a .customDestinations-ms file-like object.
@@ -154,7 +167,7 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
               'entry header with error: {1!s}').format(
                   display_name, exception))
 
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse entry header with error: {0!s}'.format(
                 exception))
         break
@@ -172,12 +185,12 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
               file_object, file_offset, file_footer_map)
 
           if file_footer.signature != self._FILE_FOOTER_SIGNATURE:
-            parser_mediator.ProduceExtractionError(
+            parser_mediator.ProduceExtractionWarning(
                 'invalid entry header signature at offset: 0x{0:08x}'.format(
                     file_offset))
 
         except (ValueError, errors.ParseError) as exception:
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'unable to parse footer at offset: 0x{0:08x} with error: '
               '{1!s}').format(file_offset, exception))
           break
@@ -200,11 +213,11 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
           file_object, file_offset, file_footer_map)
 
       if file_footer.signature != self._FILE_FOOTER_SIGNATURE:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'invalid footer signature at offset: 0x{0:08x}'.format(file_offset))
 
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to parse footer at offset: 0x{0:08x} with error: '
           '{1!s}').format(file_offset, exception))
 

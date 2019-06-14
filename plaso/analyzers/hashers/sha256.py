@@ -13,21 +13,13 @@ class SHA256Hasher(interface.BaseHasher):
   """This class provides SHA-256 hashing functionality."""
 
   NAME = 'sha256'
+  ATTRIBUTE_NAME = 'sha256_hash'
   DESCRIPTION = 'Calculates a SHA-256 digest hash over input data.'
 
   def __init__(self):
     """Initializes the SHA-256 hasher."""
     super(SHA256Hasher, self).__init__()
     self._sha256_context = hashlib.sha256()
-
-  def GetBinaryDigest(self):
-    """Returns the digest of the hash function as a binary string.
-
-    Returns:
-      bytes: binary string hash digest calculated over the data blocks passed to
-          Update().
-    """
-    return self._sha256_context.digest()
 
   def GetStringDigest(self):
     """Returns the digest of the hash function expressed as a Unicode string.

@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the MSIE Zone settings Windows Registry plugin."""
+"""Tests for the MSIE zone settings Windows Registry plugin."""
 
 from __future__ import unicode_literals
 
@@ -9,16 +9,15 @@ import unittest
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import msie_zones
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for Internet Settings Zones plugin."""
+class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for Internet Settings zone settings plugin."""
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = msie_zones.MsieZoneSettingsPlugin()
+    plugin = msie_zones.MSIEZoneSettingsPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
@@ -42,7 +41,6 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcessNtuserLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -53,11 +51,11 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = msie_zones.MsieZoneSettingsPlugin()
+    plugin = msie_zones.MSIEZoneSettingsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -68,11 +66,8 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:msie_zone_settings')
     self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
-
-    regvalue_identifier = '[1200] Run ActiveX controls and plug-ins'
-    expected_value = '3 (Not Allowed)'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
         '[{0:s}\\0 (My Computer)] '
@@ -91,7 +86,6 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcessNtuserZones(self):
     """Tests the Process function on a Zones key."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -102,11 +96,11 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = msie_zones.MsieZoneSettingsPlugin()
+    plugin = msie_zones.MSIEZoneSettingsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -117,11 +111,8 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:msie_zone_settings')
     self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
-
-    regvalue_identifier = '[1200] Run ActiveX controls and plug-ins'
-    expected_value = '0 (Allow)'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
         '[{0:s}\\0 (My Computer)] '
@@ -144,7 +135,6 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testProcessSoftwareLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
     test_file_entry = self._GetTestFileEntry(['SOFTWARE'])
@@ -155,11 +145,11 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = msie_zones.MsieZoneSettingsPlugin()
+    plugin = msie_zones.MSIEZoneSettingsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -170,11 +160,8 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:msie_zone_settings')
     self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
-
-    regvalue_identifier = '[1200] Run ActiveX controls and plug-ins'
-    expected_value = '3 (Not Allowed)'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
         '[{0:s}\\0 (My Computer)] '
@@ -274,7 +261,6 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
   def testProcessSoftwareZones(self):
     """Tests the Process function on a Zones key."""
     test_file_entry = self._GetTestFileEntry(['SOFTWARE'])
@@ -285,11 +271,11 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = msie_zones.MsieZoneSettingsPlugin()
+    plugin = msie_zones.MSIEZoneSettingsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -300,11 +286,8 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:msie_zone_settings')
     self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
-
-    regvalue_identifier = '[1200] Run ActiveX controls and plug-ins'
-    expected_value = '0 (Allow)'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
         '[{0:s}\\0 (My Computer)] '

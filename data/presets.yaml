@@ -69,7 +69,9 @@ parsers:
 - sqlite/imessage
 - sqlite/ls_quarantine
 - sqlite/mac_document_versions
+- sqlite/mac_notes
 - sqlite/mackeeper_cache
+- sqlite/mac_knowledgec
 - sqlite/skype
 - syslog
 - utmpx

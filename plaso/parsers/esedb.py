@@ -73,7 +73,7 @@ class ESEDBParser(interface.FileObjectParser):
     try:
       esedb_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open file with error: {0!s}'.format(exception))
       return
 
@@ -94,7 +94,7 @@ class ESEDBParser(interface.FileObjectParser):
               parser_mediator, cache=cache, database=esedb_file)
 
         except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse ESE database with error: '
               '{1!s}').format(plugin.NAME, exception))
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Parser test for utmp files."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import utmp as _  # pylint: disable=unused-import
 from plaso.parsers import utmp
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class UtmpParserTest(test_lib.ParserTestCase):
   """The unit test for utmp parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['utmp'])
   def testParseUtmpFile(self):
     """Tests the Parse function on a utmp file."""
     parser = utmp.UtmpParser()
     storage_writer = self._ParseFile(['utmp'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
 
     events = list(storage_writer.GetEvents())
@@ -88,13 +86,12 @@ class UtmpParserTest(test_lib.ParserTestCase):
         'Status: USER_PROCESS')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['wtmp.1'])
   def testParseWtmpFile(self):
     """Tests the Parse function on a wtmp file."""
     parser = utmp.UtmpParser()
     storage_writer = self._ParseFile(['wtmp.1'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())

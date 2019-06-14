@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*_ coding: utf-8 -*-
 """Tests for the Zsh extended_history parser."""
 
@@ -8,20 +8,18 @@ import unittest
 
 from plaso.parsers import zsh_extended_history
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ZshExtendedHistoryTest(test_lib.ParserTestCase):
   """Tests for the Zsh extended_history parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['zsh_extended_history.txt'])
   def testParse(self):
     """Tests for the Parse method."""
     parser = zsh_extended_history.ZshExtendedHistoryParser()
     storage_writer = self._ParseFile(['zsh_extended_history.txt'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())

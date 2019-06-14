@@ -219,7 +219,7 @@ class SymantecParser(dsv_parser.DSVParser):
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 

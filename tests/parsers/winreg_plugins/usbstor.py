@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the USBStor Windows Registry plugin."""
 
@@ -10,7 +10,6 @@ from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import usbstor
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -26,7 +25,6 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry(['SYSTEM'])
@@ -39,7 +37,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())
@@ -51,27 +49,26 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:usbstor')
     self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.640871')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    expected_value = 'Disk&Ven_HP&Prod_v100w&Rev_1024'
-    self._TestRegvalue(event, 'subkey_name', expected_value)
-
-    self._TestRegvalue(event, 'device_type', 'Disk')
-    self._TestRegvalue(event, 'vendor', 'Ven_HP')
-    self._TestRegvalue(event, 'product', 'Prod_v100w')
-    self._TestRegvalue(event, 'revision', 'Rev_1024')
+    self.assertEqual(event.subkey_name, 'Disk&Ven_HP&Prod_v100w&Rev_1024')
+    self.assertEqual(event.device_type, 'Disk')
+    self.assertEqual(event.vendor, 'Ven_HP')
+    self.assertEqual(event.product, 'Prod_v100w')
+    self.assertEqual(event.revision, 'Rev_1024')
 
     expected_message = (
         '[{0:s}] '
-        'device_type: Disk '
-        'friendly_name: HP v100w USB Device '
-        'product: Prod_v100w '
-        'revision: Rev_1024 '
-        'serial: AA951D0000007252&0 '
-        'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
-        'vendor: Ven_HP').format(key_path)
+        'Device type: Disk '
+        'Display name: HP v100w USB Device '
+        'Product: Prod_v100w '
+        'Revision: Rev_1024 '
+        'Serial: AA951D0000007252&0 '
+        'Subkey name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
+        'Vendor: Ven_HP').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)

@@ -447,28 +447,26 @@ class PathSpecExtractor(object):
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in the source.
     """
+    file_entry = None
     try:
       file_entry = path_spec_resolver.Resolver.OpenFileEntry(
           path_spec, resolver_context=resolver_context)
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logger.error(
-          'Unable to open file entry with error: {0!s}'.format(exception))
-      return
+      logger.error('Unable to open file entry with error: {0!s}'.format(
+          exception))
 
     if not file_entry:
       logger.warning('Unable to open: {0:s}'.format(path_spec.comparable))
-      return
 
-    if (not file_entry.IsDirectory() and not file_entry.IsFile() and
-        not file_entry.IsDevice()):
+    elif (not file_entry.IsDirectory() and not file_entry.IsFile() and
+          not file_entry.IsDevice()):
       logger.warning((
           'Source path specification not a device, file or directory.\n'
           '{0:s}').format(path_spec.comparable))
-      return
 
-    if file_entry.IsFile():
+    elif file_entry.IsFile():
       yield path_spec
 
     else:
@@ -578,7 +576,8 @@ class PathSpecExtractor(object):
     Args:
       path_spec (dfvfs.PathSpec): path specification of the root of
           the file system.
-      find_specs (Optional[list[dfvfs.FindSpec]]): find specifications.
+      find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
       recurse_file_system (Optional[bool]): True if extraction should
           recurse into a file system.
       resolver_context (Optional[dfvfs.Context]): resolver context.
@@ -587,40 +586,41 @@ class PathSpecExtractor(object):
       dfvfs.PathSpec: path specification of a file entry found in
           the file system.
     """
+    file_system = None
     try:
       file_system = path_spec_resolver.Resolver.OpenFileSystem(
           path_spec, resolver_context=resolver_context)
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logger.error(
-          'Unable to open file system with error: {0!s}'.format(exception))
-      return
+      logger.error('Unable to open file system with error: {0!s}'.format(
+          exception))
 
-    try:
-      if find_specs:
-        searcher = file_system_searcher.FileSystemSearcher(
-            file_system, path_spec)
-        for extracted_path_spec in searcher.Find(find_specs=find_specs):
-          yield extracted_path_spec
-
-      elif recurse_file_system:
-        file_entry = file_system.GetFileEntryByPathSpec(path_spec)
-        if file_entry:
-          for extracted_path_spec in self._ExtractPathSpecsFromDirectory(
-              file_entry):
+    if file_system:
+      try:
+        if find_specs:
+          searcher = file_system_searcher.FileSystemSearcher(
+              file_system, path_spec)
+          for extracted_path_spec in searcher.Find(find_specs=find_specs):
             yield extracted_path_spec
 
-      else:
-        yield path_spec
+        elif recurse_file_system:
+          file_entry = file_system.GetFileEntryByPathSpec(path_spec)
+          if file_entry:
+            for extracted_path_spec in self._ExtractPathSpecsFromDirectory(
+                file_entry):
+              yield extracted_path_spec
 
-    except (
-        dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
-        dfvfs_errors.PathSpecError) as exception:
-      logger.warning('{0!s}'.format(exception))
+        else:
+          yield path_spec
 
-    finally:
-      file_system.Close()
+      except (
+          dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+          dfvfs_errors.PathSpecError) as exception:
+        logger.warning('{0!s}'.format(exception))
+
+      finally:
+        file_system.Close()
 
   def ExtractPathSpecs(
       self, path_specs, find_specs=None, recurse_file_system=True,
@@ -629,7 +629,8 @@ class PathSpecExtractor(object):
 
     Args:
       path_specs (Optional[list[dfvfs.PathSpec]]): path specifications.
-      find_specs (Optional[list[dfvfs.FindSpec]]): find specifications.
+      find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
       recurse_file_system (Optional[bool]): True if extraction should
           recurse into a file system.
       resolver_context (Optional[dfvfs.Context]): resolver context.

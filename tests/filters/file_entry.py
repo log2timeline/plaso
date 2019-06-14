@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the file entry filters."""
 
@@ -47,12 +47,13 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(ValueError):
       test_filter.AddDateTimeRange('atime')
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
-    test_path = self._GetTestFilePath(['ímynd.dd'])
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
         location='/a_directory/another_file', parent=os_path_spec)
@@ -154,12 +155,13 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
 class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests the extensions file entry filter."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
-    test_path = self._GetTestFilePath(['ímynd.dd'])
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
     test_filter = file_entry_filters.ExtensionsFileEntryFilter(['txt'])
 
@@ -207,12 +209,13 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests the names file entry filter."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
-    test_path = self._GetTestFilePath(['ímynd.dd'])
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
     test_filter = file_entry_filters.NamesFileEntryFilter(['passwords.txt'])
 
@@ -299,8 +302,6 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
         specification_store, ['positive_offset'])
     self.assertIsNotNone(file_scanner)
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
-  @shared_test_lib.skipUnlessHasTestFile(['test_pe.exe'])
   def testMatches(self):
     """Tests the Matches function."""
     specification_store = specification.FormatSpecificationStore()
@@ -312,17 +313,21 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
         specification_store, ['regf'])
 
     # Test a filter match.
-    test_path = self._GetTestFilePath(['NTUSER.DAT'])
+    test_file_path = self._GetTestFilePath(['NTUSER.DAT'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
     self.assertTrue(test_filter.Matches(file_entry))
 
     # Test a filter non-match.
-    test_path = self._GetTestFilePath(['test_pe.exe'])
+    test_file_path = self._GetTestFilePath(['test_pe.exe'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
     self.assertFalse(test_filter.Matches(file_entry))

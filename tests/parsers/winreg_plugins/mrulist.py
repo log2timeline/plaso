@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the MRUList Windows Registry plugin."""
 
@@ -101,7 +101,7 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     plugin = mrulist.MRUListStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -112,6 +112,7 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulist')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
@@ -194,7 +195,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     plugin = mrulist.MRUListShellItemListWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())
@@ -206,6 +207,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulist')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
@@ -220,6 +222,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     # A shell item event.
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:shell_item:file_entry')
     self.CheckTimestamp(event.timestamp, '2011-01-14 12:03:52.000000')
 
     expected_message = (

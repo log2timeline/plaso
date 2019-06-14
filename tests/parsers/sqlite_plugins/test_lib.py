@@ -5,10 +5,6 @@ from __future__ import unicode_literals
 
 import os
 
-from dfvfs.lib import definitions
-from dfvfs.path import factory as path_spec_factory
-from dfvfs.resolver import resolver as path_spec_resolver
-
 from plaso.containers import sessions
 from plaso.parsers import sqlite
 from plaso.storage.fake import writer as fake_writer
@@ -19,25 +15,28 @@ from tests.parsers import test_lib
 class SQLitePluginTestCase(test_lib.ParserTestCase):
   """SQLite database plugin test case."""
 
-  def _OpenDatabaseFile(self, path_segments, wal_path=None):
+  def _OpenDatabaseFile(self, path_segments, wal_path_segments=None):
     """Opens a SQLite database file.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
-      wal_path (Optional[str]): path to the SQLite WAL file.
+      wal_path_segments (list[str]): path segments inside the test data
+          directory of the SQLite WAL file.
 
     Returns:
       tuple: containing:
           file_entry (dfvfs.FileEntry): file entry of the SQLite database file.
           SQLiteDatabase: SQLite database file.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     file_entry = self._GetTestFileEntry(path_segments)
 
     wal_file_entry = None
-    if wal_path:
-      wal_path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_OS, location=wal_path)
-      wal_file_entry = path_spec_resolver.Resolver.OpenFileEntry(wal_path_spec)
+    if wal_path_segments:
+      wal_file_entry = self._GetTestFileEntry(wal_path_segments)
 
     database = sqlite.SQLiteDatabase(file_entry.name)
     file_object = file_entry.GetFileObject()
@@ -60,7 +59,8 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     return file_entry, database
 
   def _ParseDatabaseFileWithPlugin(
-      self, path_segments, plugin, knowledge_base_values=None, wal_path=None):
+      self, path_segments, plugin, knowledge_base_values=None,
+      wal_path_segments=None):
     """Parses a file as a SQLite database with a specific plugin.
 
     Args:
@@ -68,17 +68,22 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       plugin (SQLitePlugin): SQLite database plugin.
       knowledge_base_values (Optional[dict[str, object]]): knowledge base
           values.
-      wal_path (Optional[str]): path to the SQLite WAL file.
+      wal_path_segments (list[str]): path segments inside the test data
+          directory of the SQLite WAL file.
 
     Returns:
       FakeStorageWriter: storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     file_entry, database = self._OpenDatabaseFile(
-        path_segments, wal_path=wal_path)
+        path_segments, wal_path_segments=wal_path_segments)
 
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Networks Windows Registry plugin."""
 
@@ -210,13 +210,14 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = networks.NetworksWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetSortedEvents())
 
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:registry:network')
     self.CheckTimestamp(event.timestamp, '2014-05-06 17:02:19.795000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
@@ -233,6 +234,7 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[3]
 
+    self.assertEqual(event.data_type, 'windows:registry:network')
     self.CheckTimestamp(event.timestamp, '2015-01-27 15:15:27.965000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)

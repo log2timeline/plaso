@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the tagging file."""
 
@@ -15,21 +15,23 @@ from tests import test_lib as shared_test_lib
 class TaggingFileTestCase(shared_test_lib.BaseTestCase):
   """Tests for the tagging file."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testGetEventTaggingRules(self):
     """Tests the GetEventTaggingRules function."""
-    test_path = self._GetTestFilePath(['tagging_file', 'valid.txt'])
-    tag_file = tagging_file.TaggingFile(test_path)
+    test_file_path = self._GetTestFilePath(['tagging_file', 'valid.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    tag_file = tagging_file.TaggingFile(test_file_path)
 
     tagging_rules = tag_file.GetEventTaggingRules()
     self.assertEqual(len(tagging_rules), 5)
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'tagging_file', 'invalid_syntax.txt'])
   def testGetEventTaggingRulesInvalidSyntax(self):
     """Tests the GetEventTaggingRules function on a file with invalid syntax."""
-    test_path = self._GetTestFilePath(['tagging_file', 'invalid_syntax.txt'])
-    tag_file = tagging_file.TaggingFile(test_path)
+    test_file_path = self._GetTestFilePath([
+        'tagging_file', 'invalid_syntax.txt'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    tag_file = tagging_file.TaggingFile(test_file_path)
 
     with self.assertRaises(errors.TaggingFileError):
       tag_file.GetEventTaggingRules()

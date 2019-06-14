@@ -59,13 +59,15 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
     report_text = '\n'.join(report_text)
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
-  def ExamineEvent(self, mediator, event):
+  # pylint: disable=unused-argument
+  def ExamineEvent(self, mediator, event, event_data):
     """Analyzes an EventObject and tags it as part of a session.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
+      event_data (EventData): event data.
     """
     if self._session_end_timestamp is None:
       self._session_end_timestamp = (

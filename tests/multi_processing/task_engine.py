@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests the multi-process processing engine."""
 
@@ -23,20 +23,23 @@ from tests import test_lib as shared_test_lib
 class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the task multi-process engine."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
+    artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(artifacts_path)
+
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
-    path = shared_test_lib.GetTestFilePath(['artifacts'])
-    registry.ReadFromDirectory(reader, path)
+    registry.ReadFromDirectory(reader, artifacts_path)
 
     test_engine = task_engine.TaskMultiProcessEngine(
         maximum_number_of_tasks=100)
 
-    source_path = self._GetTestFilePath(['ímynd.dd'])
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)

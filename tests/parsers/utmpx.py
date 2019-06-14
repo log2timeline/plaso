@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for UTMPX file parser."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import utmpx as _  # pylint: disable=unused-import
 from plaso.parsers import utmpx
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class UtmpxParserTest(test_lib.ParserTestCase):
   """Tests for utmpx file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['utmpx_mac'])
   def testParse(self):
     """Tests the Parse function."""
     parser = utmpx.UtmpxParser()
     storage_writer = self._ParseFile(['utmpx_mac'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())

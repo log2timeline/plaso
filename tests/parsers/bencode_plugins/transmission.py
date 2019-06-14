@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the bencode parser plugin for Transmission BitTorrent files."""
 
@@ -10,20 +10,18 @@ from plaso.formatters import bencode_parser as _  # pylint: disable=unused-impor
 from plaso.lib import definitions
 from plaso.parsers import bencode_parser
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.bencode_plugins import test_lib
 
 
 class BencodeTest(test_lib.BencodePluginTestCase):
   """Tests for bencode parser plugin for Transmission BitTorrent files."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['bencode_transmission'])
   def testProcess(self):
     """Tests the Process function."""
     parser = bencode_parser.BencodeParser()
     storage_writer = self._ParseFile(['bencode_transmission'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     # The order in which BencodeParser generates events is nondeterministic

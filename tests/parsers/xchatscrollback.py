@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the xchatscrollback log parser."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import xchatscrollback as _  # pylint: disable=unused-import
 from plaso.parsers import xchatscrollback
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class XChatScrollbackUnitTest(test_lib.ParserTestCase):
   """Tests for the xchatscrollback log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['xchatscrollback.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = xchatscrollback.XChatScrollbackParser()
     storage_writer = self._ParseFile(['xchatscrollback.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())

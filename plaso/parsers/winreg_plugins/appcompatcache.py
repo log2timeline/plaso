@@ -631,7 +631,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
     format_type = self._CheckSignature(value_data)
     if not format_type:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'Unsupported signature in AppCompatCache key: {0:s}'.format(
               registry_key.path))
       return

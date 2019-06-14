@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the delimiter separated values (DSV) parser."""
 
@@ -8,7 +8,6 @@ import unittest
 
 from plaso.parsers import dsv_parser
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -90,7 +89,6 @@ class DSVParserTest(test_lib.ParserTestCase):
     unicode_row = parser._ConvertRowToUnicode(parser_mediator, binary_row)
     self.assertEqual(unicode_row['password'], 'superr\xedch')
 
-  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
     parser = TestDSVParser()
@@ -107,7 +105,6 @@ class DSVParserTest(test_lib.ParserTestCase):
     self.assertEqual(row['user'], 'joesmith')
     self.assertEqual(row['password'], 'superrich')
 
-  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testHasExpectedLineLength(self):
     """Tests the _HasExpectedLineLength function."""
     parser = TestDSVParser()

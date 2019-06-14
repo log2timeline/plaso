@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the chrome extension analysis plugin."""
 
@@ -8,6 +8,8 @@ import os
 import unittest
 
 from plaso.analysis import chrome_extension
+from plaso.lib import definitions
+from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
@@ -69,6 +71,19 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
        'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
       '/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
 
+  _MACOS_TEST_EVENTS = [
+      {'data_type': 'fs:stat',
+       'filename': path,
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
+      for path in _MACOS_PATHS]
+
+  _MACOS_USERS = [
+      {'name': 'root', 'path': '/var/root', 'sid': '0'},
+      {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
+      {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
+      {'name': 'dude', 'path': '/Users/dude', 'sid': '1123'}]
+
   _WINDOWS_PATHS = [
       'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
       ('C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
@@ -81,19 +96,22 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       'C:\\Windows\\System32',
       'C:\\Stuff/with path separator\\Folder']
 
-  _MACOS_USERS = [
-      {'name': 'root', 'path': '/var/root', 'sid': '0'},
-      {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
-      {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
-      {'name': 'dude', 'path': '/Users/dude', 'sid': '1123'}]
+  _WINDOWS_TEST_EVENTS = [
+      {'data_type': 'fs:stat',
+       'filename': path,
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
+      for path in _WINDOWS_PATHS]
 
   _WINDOWS_USERS = [
       {'name': 'dude', 'path': 'C:\\Users\\dude', 'sid': 'S-1'},
       {'name': 'frank', 'path': 'C:\\Users\\frank', 'sid': 'S-2'}]
 
-  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testGetPathSegmentSeparator(self):
     """Tests the _GetPathSegmentSeparator function."""
+    test_file_path = self._GetTestFilePath(['chrome_extensions'])
+    self._SkipIfPathNotExists(test_file_path)
+
     plugin = MockChromeExtensionPlugin()
 
     for path in self._MACOS_PATHS:
@@ -104,29 +122,19 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       path_segment_separator = plugin._GetPathSegmentSeparator(path)
       self.assertEqual(path_segment_separator, '\\')
 
-  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportMacOSPaths(self):
     """Tests the ExamineEvent and CompileReport functions on MacOS paths."""
-    events = []
-    for path in self._MACOS_PATHS:
-      event_dictionary = {
-          'data_type': 'fs:stat',
-          'filename': path,
-          'timestamp': 12345,
-          'timestamp_desc': 'Some stuff'}
-
-      event = self._CreateTestEventObject(event_dictionary)
-      events.append(event)
+    test_file_path = self._GetTestFilePath(['chrome_extensions'])
+    self._SkipIfPathNotExists(test_file_path)
 
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        events, plugin, knowledge_base_values={'users': self._MACOS_USERS})
+        self._MACOS_TEST_EVENTS, plugin, knowledge_base_values={
+            'users': self._MACOS_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
     analysis_report = storage_writer.analysis_reports[0]
-
-    self.assertEqual(plugin._sep, '/')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
@@ -145,29 +153,19 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     expected_keys = set(['frank', 'dude'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
-  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
-    events = []
-    for path in self._WINDOWS_PATHS:
-      event_dictionary = {
-          'data_type': 'fs:stat',
-          'filename': path,
-          'timestamp': 12345,
-          'timestamp_desc': 'Some stuff'}
-
-      event = self._CreateTestEventObject(event_dictionary)
-      events.append(event)
+    test_file_path = self._GetTestFilePath(['chrome_extensions'])
+    self._SkipIfPathNotExists(test_file_path)
 
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        events, plugin, knowledge_base_values={'users': self._WINDOWS_USERS})
+        self._WINDOWS_TEST_EVENTS, plugin, knowledge_base_values={
+            'users': self._WINDOWS_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
     analysis_report = storage_writer.analysis_reports[0]
-
-    self.assertEqual(plugin._sep, '\\')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Psteal (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk).
 
@@ -16,19 +16,32 @@ from __future__ import unicode_literals
 
 import multiprocessing
 import logging
+import os
 import sys
 
+from plaso import dependencies
 from plaso.cli import psteal_tool
 from plaso.lib import errors
 
 
 def Main():
   """The main function."""
-  multiprocessing.freeze_support()
-
   tool = psteal_tool.PstealTool()
   if not tool.ParseArguments():
     return False
+
+  if tool.show_troubleshooting:
+    print('Using Python version {0!s}'.format(sys.version))
+    print()
+    print('Path: {0:s}'.format(os.path.abspath(__file__)))
+    print()
+    print(tool.GetVersionInformation())
+    print()
+    dependencies.CheckDependencies(verbose_output=True)
+
+    print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
+          'Troubleshooting.html')
+    return True
 
   have_list_option = False
 
@@ -75,6 +88,10 @@ def Main():
 
 
 if __name__ == '__main__':
+  # For PyInstaller sake we need to define this directly after "__main__".
+  # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+  multiprocessing.freeze_support()
+
   if not Main():
     sys.exit(1)
   else:

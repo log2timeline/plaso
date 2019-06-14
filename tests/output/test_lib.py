@@ -3,12 +3,6 @@
 
 from __future__ import unicode_literals
 
-import os
-
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as path_spec_factory
-
-from plaso.containers import events
 from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import mediator as formatters_mediator
@@ -21,31 +15,6 @@ from tests import test_lib as shared_test_lib
 
 class TestConfig(object):
   """Test configuration."""
-
-
-class TestEventObject(events.EventObject):
-  """Test event."""
-  DATA_TYPE = 'test:output'
-
-  def __init__(self):
-    """Initialize a test event."""
-    super(TestEventObject, self).__init__()
-    self.timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01')
-    self.hostname = 'ubuntu'
-    self.display_name = 'OS: /var/log/syslog.1'
-    self.inode = 12345678
-    self.text = (
-        'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\n '
-        'closed for user root)')
-    self.username = 'root'
-
-    os_location = '{0:s}{1:s}'.format(
-        os.path.sep, os.path.join('cases', 'image.dd'))
-    os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=os_location)
-    self.pathspec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
-        location='/var/log/syslog.1', parent=os_path_spec)
 
 
 class TestEventFormatter(formatters_interface.EventFormatter):
@@ -62,24 +31,31 @@ class TestOutputModule(interface.LinearOutputModule):
   NAME = 'test_xml'
   DESCRIPTION = 'Test output that provides a simple mocked XML.'
 
-  def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+  def WriteEventBody(self, event, event_data, event_tag):
+    """Writes the body of an event to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
+    date_time = timelib.Timestamp.CopyToIsoFormat(
+        event.timestamp, timezone=self._output_mediator.timezone,
+        raise_error=False)
+
     output_text = (
-        '\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
-        '\t<Entry>{2:s}</Entry>\n').format(
-            event.date, event.timestamp, event.entry)
+        '\t<DateTime>{0:s}</DateTime>\n'
+        '\t<Entry>{1:s}</Entry>\n').format(date_time, event_data.entry)
     self._output_writer.Write(output_text)
 
+    # TODO: add support for event tag.
+
   def WriteEventEnd(self):
-    """Writes the end of an event object to the output."""
+    """Writes the end of an event to the output."""
     self._output_writer.Write('</Event>\n')
 
   def WriteEventStart(self):
-    """Writes the start of an event object to the output."""
+    """Writes the start of an event to the output."""
     self._output_writer.Write('<Event>\n')
 
   def WriteFooter(self):

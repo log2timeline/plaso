@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the OLE Compound File summary and document summary plugins."""
 
@@ -9,20 +9,18 @@ import unittest
 from plaso.formatters import olecf  # pylint: disable=unused-import
 from plaso.parsers.olecf_plugins import summary
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
 class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
   """Tests for the OLECF summary information plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Document.doc'])
   def testProcess(self):
     """Tests the Process function on a Summary Information stream."""
     plugin = summary.SummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetSortedEvents())
@@ -69,13 +67,12 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
 class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
   """Tests for the OLECF document summary information plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Document.doc'])
   def testProcess(self):
     """Tests the Process function on a Document Summary Information stream."""
     plugin = summary.DocumentSummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetSortedEvents())

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the status view."""
 
@@ -44,6 +44,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
   # TODO: add tests for _PrintAnalysisStatusHeader
   # TODO: add tests for _PrintAnalysisStatusUpdateLinear
   # TODO: add tests for _PrintAnalysisStatusUpdateWindow
+  # TODO: add tests for _PrintEventsStatus
 
   def testPrintExtractionStatusUpdateLinear(self):
     """Tests the PrintExtractionStatusUpdateLinear function."""
@@ -56,8 +57,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
         'f_identifier', 'f_status', 123, 0,
-        'f_test_file', 1, 29, 3, 456, 5, 6, 7,
-        8, 9, 10)
+        'f_test_file', 1, 29, 3, 456, 5, 6, 9, 10, 7, 8)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
     output = output_writer.ReadOutput()
@@ -65,8 +65,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
-        'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        10)
+        'w_test_file', 1, 2, 3, 4, 5, 6, 9, 10, 7, 8)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
     expected_output = (
@@ -87,8 +86,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
         'f_identifier', 'f_status', 123, 0,
-        'f_test_file', 1, 29, 3, 456, 5, 6, 7,
-        8, 9, 10)
+        'f_test_file', 1, 29, 3, 456, 5, 6, 9, 10, 7, 8)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
 
     table_header = (
@@ -126,8 +124,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
-        'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        10)
+        'w_test_file', 1, 2, 3, 4, 5, 6, 9, 10, 7, 8)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
 
     expected_output = [
@@ -158,6 +155,8 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
     self._CheckOutput(output, expected_output)
 
+  # TODO: add tests for _PrintProcessingTime
+  # TODO: add tests for _PrintTasksStatus
   # TODO: add tests for GetAnalysisStatusUpdateCallback
   # TODO: add tests for GetExtractionStatusUpdateCallback
   # TODO: add tests for PrintAnalysisReportsDetails

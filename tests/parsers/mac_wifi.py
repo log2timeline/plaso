@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Mac wifi.log parser."""
 
@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import mac_wifi as _  # pylint: disable=unused-import
 from plaso.parsers import mac_wifi
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacWifiUnitTest(test_lib.ParserTestCase):
   """Tests for the Mac wifi.log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['wifi_turned_over.log'])
   def testParseTurnedOver(self):
     """Tests the Parse function."""
     parser = mac_wifi.MacWifiLogParser()
@@ -25,7 +23,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         ['wifi_turned_over.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -65,7 +63,6 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.text, expected_text)
 
-  @shared_test_lib.skipUnlessHasTestFile(['wifi.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser = mac_wifi.MacWifiLogParser()
@@ -74,7 +71,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         ['wifi.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())

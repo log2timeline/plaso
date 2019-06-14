@@ -8,6 +8,7 @@ recursive-include doc *
 recursive-exclude test_data *
 exclude .gitignore
 exclude *.pyc
+recursive-include plaso *.yaml
 recursive-exclude plaso *.pyc
 # The test scripts are not required in a binary distribution package they 
 # are considered source distribution files and excluded in find_package()

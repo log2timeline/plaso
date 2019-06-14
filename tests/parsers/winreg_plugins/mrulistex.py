@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the MRUListEx Windows Registry plugin."""
 
@@ -13,7 +13,6 @@ from dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import mrulistex
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -108,7 +107,7 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     plugin = mrulistex.MRUListExStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -120,6 +119,7 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulistex')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
@@ -152,7 +152,6 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -167,7 +166,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 65)
 
     events = list(storage_writer.GetEvents())
@@ -180,6 +179,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulistex')
     self.CheckTimestamp(event.timestamp, '2011-08-28 22:48:28.159309')
 
     expected_message = (
@@ -196,6 +196,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     # A shell item event.
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:shell_item:file_entry')
     self.CheckTimestamp(event.timestamp, '2012-03-08 22:16:02.000000')
 
     expected_message = (
@@ -228,7 +229,6 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -243,7 +243,7 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -256,12 +256,30 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulistex')
     self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:39.113742')
 
     expected_message = (
         '[{0:s}] '
         'Index: 1 [MRU Value 17]: Path: The SHIELD, '
         'Shell item: [The SHIELD.lnk] '
+        'Index: 2 [MRU Value 18]: '
+        'Path: captain_america_shield_by_almogrem-d48x9x8.jpg, '
+        'Shell item: [captain_america_shield_by_almogrem-d48x9x8.lnk] '
+        'Index: 3 [MRU Value 16]: Path: captain-america-shield-front.jpg, '
+        'Shell item: [captain-america-shield-front.lnk] '
+        'Index: 4 [MRU Value 12]: Path: Leadership, '
+        'Shell item: [Leadership.lnk] '
+        'Index: 5 [MRU Value 15]: Path: followership.pdf, '
+        'Shell item: [followership.lnk] '
+        'Index: 6 [MRU Value 14]: Path: leaderqualities.pdf, '
+        'Shell item: [leaderqualities.lnk] '
+        'Index: 7 [MRU Value 13]: Path: htlhtl.pdf, '
+        'Shell item: [htlhtl.lnk] '
+        'Index: 8 [MRU Value 8]: Path: StarFury, '
+        'Shell item: [StarFury (2).lnk] '
+        'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, '
+        'Shell item: [Earth_SA-26_Thunderbolt.lnk] '
         'Index: 10 [MRU Value 11]: Path: 5031RR_BalancedLeadership.pdf, '
         'Shell item: [5031RR_BalancedLeadership.lnk] '
         'Index: 11 [MRU Value 10]: '
@@ -282,24 +300,7 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
         'Index: 18 [MRU Value 1]: Path: Downloads, '
         'Shell item: [Downloads.lnk] '
         'Index: 19 [MRU Value 0]: Path: wallpaper_medium.jpg, '
-        'Shell item: [wallpaper_medium.lnk] '
-        'Index: 2 [MRU Value 18]: '
-        'Path: captain_america_shield_by_almogrem-d48x9x8.jpg, '
-        'Shell item: [captain_america_shield_by_almogrem-d48x9x8.lnk] '
-        'Index: 3 [MRU Value 16]: Path: captain-america-shield-front.jpg, '
-        'Shell item: [captain-america-shield-front.lnk] '
-        'Index: 4 [MRU Value 12]: Path: Leadership, '
-        'Shell item: [Leadership.lnk] '
-        'Index: 5 [MRU Value 15]: Path: followership.pdf, '
-        'Shell item: [followership.lnk] '
-        'Index: 6 [MRU Value 14]: Path: leaderqualities.pdf, '
-        'Shell item: [leaderqualities.lnk] '
-        'Index: 7 [MRU Value 13]: Path: htlhtl.pdf, '
-        'Shell item: [htlhtl.lnk] '
-        'Index: 8 [MRU Value 8]: Path: StarFury, '
-        'Shell item: [StarFury (2).lnk] '
-        'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, '
-        'Shell item: [Earth_SA-26_Thunderbolt.lnk]').format(key_path)
+        'Shell item: [wallpaper_medium.lnk]').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -320,7 +321,6 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
 
     self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
-  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
@@ -335,7 +335,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 31)
 
     events = list(storage_writer.GetEvents())
@@ -348,6 +348,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:mrulistex')
     self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:38.966290')
 
     expected_message = (

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests the engine."""
 
@@ -73,14 +73,15 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testDetermineOperatingSystem(self):
     """Tests the _DetermineOperatingSystem function."""
     test_engine = engine.BaseEngine()
 
-    source_path = self._GetTestFilePath(['ímynd.dd'])
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
@@ -117,14 +118,15 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     session = test_engine.CreateSession()
     self.assertIsNotNone(session)
 
-  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testGetSourceFileSystem(self):
     """Tests the GetSourceFileSystem function."""
     test_engine = engine.BaseEngine()
 
-    source_path = self._GetTestFilePath(['ímynd.dd'])
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
@@ -144,15 +146,20 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(RuntimeError):
       test_engine.GetSourceFileSystem(None)
 
-  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
-    path = shared_test_lib.GetTestFilePath(['artifacts'])
-    registry.ReadFromDirectory(reader, path)
+    registry.ReadFromDirectory(reader, test_artifacts_path)
 
     test_engine = TestEngine()
 

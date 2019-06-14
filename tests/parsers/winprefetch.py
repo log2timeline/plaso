@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Windows prefetch parser."""
 
@@ -10,20 +10,18 @@ from plaso.formatters import winprefetch as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import winprefetch
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinPrefetchParserTest(test_lib.ParserTestCase):
   """Tests for the Windows prefetch parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['CMD.EXE-087B4001.pf'])
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['CMD.EXE-087B4001.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())
@@ -104,13 +102,12 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['PING.EXE-B29F6629.pf'])
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['PING.EXE-B29F6629.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())
@@ -152,14 +149,13 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-  @shared_test_lib.skipUnlessHasTestFile(['WUAUCLT.EXE-830BCC14.pf'])
   def testParse23MultiVolume(self):
     """Tests the Parse function on a multi volume version 23 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
         ['WUAUCLT.EXE-830BCC14.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -220,14 +216,13 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile(['TASKHOST.EXE-3AE259FC.pf'])
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
         ['TASKHOST.EXE-3AE259FC.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())
@@ -244,6 +239,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.executable, 'TASKHOST.EXE')
     self.assertEqual(event.prefetch_hash, 0x3ae259fc)
+    self.assertEqual(event.run_count, 4)
 
     # The prefetch previous last run event.
     event = events[2]
@@ -255,106 +251,66 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp_desc, expected_timestamp_desc)
 
     expected_mapped_files = [
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTDLL.DLL '
-         '[MFT entry: 46299, sequence: 1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTDLL.DLL [46299-1]',
         '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TASKHOST.EXE',
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNEL32.DLL '
-         '[MFT entry: 45747, sequence: 1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNEL32.DLL [45747-1]',
         ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNELBASE.DLL '
-         '[MFT entry: 45734, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\LOCALE.NLS '
-         '[MFT entry: 45777, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\MSVCRT.DLL '
-         '[MFT entry: 46033, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RPCRT4.DLL '
-         '[MFT entry: 46668, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\COMBASE.DLL '
-         '[MFT entry: 44616, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\OLEAUT32.DLL '
-         '[MFT entry: 46309, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\OLE32.DLL '
-         '[MFT entry: 46348, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RPCSS.DLL '
-         '[MFT entry: 46654, sequence: 1]'),
+         '[45734-1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\LOCALE.NLS [45777-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\MSVCRT.DLL [46033-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RPCRT4.DLL [46668-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\COMBASE.DLL [44616-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\OLEAUT32.DLL [46309-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\OLE32.DLL [46348-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RPCSS.DLL [46654-1]',
         ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNEL.APPCORE.DLL '
-         '[MFT entry: 45698, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CRYPTBASE.DLL '
-         '[MFT entry: 44560, sequence: 1]'),
+         '[45698-1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CRYPTBASE.DLL [44560-1]',
         ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\BCRYPTPRIMITIVES.DLL '
-         '[MFT entry: 44355, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\USER32.DLL '
-         '[MFT entry: 47130, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\GDI32.DLL '
-         '[MFT entry: 45344, sequence: 1]'),
+         '[44355-1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\USER32.DLL [47130-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\GDI32.DLL [45344-1]',
         ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\EN-US\\'
          'TASKHOST.EXE.MUI'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SECHOST.DLL '
-         '[MFT entry: 46699, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CLBCATQ.DLL '
-         '[MFT entry: 44511, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RACENGN.DLL '
-         '[MFT entry: 46549, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTMARTA.DLL '
-         '[MFT entry: 46262, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WEVTAPI.DLL '
-         '[MFT entry: 47223, sequence: 1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SECHOST.DLL [46699-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CLBCATQ.DLL [44511-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RACENGN.DLL [46549-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTMARTA.DLL [46262-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WEVTAPI.DLL [47223-1]',
         '\\DEVICE\\HARDDISKVOLUME2\\$MFT',
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SQMAPI.DLL '
-         '[MFT entry: 46832, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\AEPIC.DLL '
-         '[MFT entry: 43991, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WINTRUST.DLL '
-         '[MFT entry: 47372, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SLWGA.DLL '
-         '[MFT entry: 46762, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\DXGI.DLL '
-         '[MFT entry: 44935, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\ESENT.DLL '
-         '[MFT entry: 45256, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WMICLNT.DLL '
-         '[MFT entry: 47413, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\ADVAPI32.DLL '
-         '[MFT entry: 43994, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SFC_OS.DLL '
-         '[MFT entry: 46729, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\VERSION.DLL '
-         '[MFT entry: 47120, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CRYPT32.DLL '
-         '[MFT entry: 44645, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\MSASN1.DLL '
-         '[MFT entry: 45909, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WTSAPI32.DLL '
-         '[MFT entry: 47527, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SPPC.DLL '
-         '[MFT entry: 46803, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\POWRPROF.DLL '
-         '[MFT entry: 46413, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\PROFAPI.DLL '
-         '[MFT entry: 46441, sequence: 1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SQMAPI.DLL [46832-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\AEPIC.DLL [43991-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WINTRUST.DLL [47372-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SLWGA.DLL [46762-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\DXGI.DLL [44935-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\ESENT.DLL [45256-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WMICLNT.DLL [47413-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\ADVAPI32.DLL [43994-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SFC_OS.DLL [46729-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\VERSION.DLL [47120-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CRYPT32.DLL [44645-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\MSASN1.DLL [45909-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WTSAPI32.DLL [47527-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SPPC.DLL [46803-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\POWRPROF.DLL [46413-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\PROFAPI.DLL [46441-1]',
         ('\\DEVICE\\HARDDISKVOLUME2\\PROGRAMDATA\\MICROSOFT\\RAC\\STATEDATA\\'
-         'RACMETADATA.DAT [MFT entry: 39345, sequence: 2]'),
+         'RACMETADATA.DAT [39345-2]'),
         ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\GLOBALIZATION\\SORTING\\'
-         'SORTDEFAULT.NLS [MFT entry: 37452, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RACRULES.XML '
-         '[MFT entry: 46509, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TASKSCHD.DLL '
-         '[MFT entry: 47043, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SSPICLI.DLL '
-         '[MFT entry: 46856, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\XMLLITE.DLL '
-         '[MFT entry: 47569, sequence: 1]'),
+         'SORTDEFAULT.NLS [37452-1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RACRULES.XML [46509-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TASKSCHD.DLL [47043-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SSPICLI.DLL [46856-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\XMLLITE.DLL [47569-1]',
         ('\\DEVICE\\HARDDISKVOLUME2\\PROGRAMDATA\\MICROSOFT\\RAC\\STATEDATA\\'
-         'RACWMIEVENTDATA.DAT [MFT entry: 23870, sequence: 3]'),
+         'RACWMIEVENTDATA.DAT [23870-3]'),
         ('\\DEVICE\\HARDDISKVOLUME2\\PROGRAMDATA\\MICROSOFT\\RAC\\STATEDATA\\'
-         'RACWMIDATABOOKMARKS.DAT [MFT entry: 23871, sequence: 2]'),
+         'RACWMIDATABOOKMARKS.DAT [23871-2]'),
         ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TPMTASKS.DLL '
-         '[MFT entry: 47003, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NCRYPT.DLL '
-         '[MFT entry: 46073, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\BCRYPT.DLL '
-         '[MFT entry: 44346, sequence: 1]'),
-        ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTASN1.DLL '
-         '[MFT entry: 46261, sequence: 1]')]
+         '[47003-1]'),
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NCRYPT.DLL [46073-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\BCRYPT.DLL [44346-1]',
+        '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTASN1.DLL [46261-1]']
 
     self.assertEqual(event.mapped_files, expected_mapped_files)
 
@@ -367,14 +323,13 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-  @shared_test_lib.skipUnlessHasTestFile(['BYTECODEGENERATOR.EXE-C1E9BCE6.pf'])
   def testParse30Compressed(self):
     """Tests the Parse function on a compressed version 30 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
         ['BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
     events = list(storage_writer.GetEvents())
@@ -385,13 +340,12 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:prefetch:execution')
     self.assertEqual(event.version, 30)
 
-    self.assertEqual(event.data_type, 'windows:prefetch:execution')
-
     self.CheckTimestamp(event.timestamp, '2015-05-14 22:11:58.091134')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
     self.assertEqual(event.executable, 'BYTECODEGENERATOR.EXE')
     self.assertEqual(event.prefetch_hash, 0xc1e9bce6)
+    self.assertEqual(event.run_count, 7)
 
     # The prefetch previous last run event.
     event = events[2]
@@ -409,6 +363,48 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:volume:creation')
 
     self.CheckTimestamp(event.timestamp, '2015-05-15 06:54:55.139294')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+
+  def testParse30Variant2Compressed(self):
+    """Tests the Parse function on a compressed version 30 variant 2 file."""
+    parser = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile(['NOTEPAD.EXE-D8414F97.pf'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 3)
+
+    events = list(storage_writer.GetEvents())
+
+    # The prefetch last run event.
+    event = events[1]
+
+    self.assertEqual(event.data_type, 'windows:prefetch:execution')
+    self.assertEqual(event.version, 30)
+
+    self.CheckTimestamp(event.timestamp, '2019-06-05 19:55:04.877779')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
+    self.assertEqual(event.executable, 'NOTEPAD.EXE')
+    self.assertEqual(event.prefetch_hash, 0xd8414f97)
+    self.assertEqual(event.run_count, 2)
+
+    # The prefetch previous last run event.
+    event = events[2]
+
+    self.CheckTimestamp(event.timestamp, '2019-06-05 19:23:00.815705')
+    expected_timestamp_desc = 'Previous {0:s}'.format(
+        definitions.TIME_DESCRIPTION_LAST_RUN)
+    self.assertEqual(event.timestamp_desc, expected_timestamp_desc)
+
+    self.assertEqual(len(event.mapped_files), 56)
+
+    # The volume creation event.
+    event = events[0]
+
+    self.assertEqual(event.data_type, 'windows:volume:creation')
+
+    self.CheckTimestamp(event.timestamp, '2017-07-30 19:40:03.548784')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 

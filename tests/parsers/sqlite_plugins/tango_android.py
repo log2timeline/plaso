@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for Tango on Android plugins."""
 
@@ -9,23 +9,21 @@ import unittest
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import tango_android
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
   """Tests for Tango on Android profile database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['tango_android_profile.db'])
   def testProcess(self):
     """Test the Process function on a Tango Android file."""
     plugin = tango_android.TangoAndroidProfilePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_profile.db'], plugin)
 
-    # We should have 115 tango profile events in total with no errors.
+    # We should have 115 tango profile events in total with no warnings.
     self.assertEqual(115, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_errors)
+    self.assertEqual(0, storage_writer.number_of_warnings)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -74,16 +72,15 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
 class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
   """Tests for Tango on Android tc databases plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['tango_android_tc.db'])
   def testProcess(self):
     """Test the Process function on a Tango Android file."""
     plugin = tango_android.TangoAndroidTCPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_tc.db'], plugin)
 
-    # We should have 43 tango tc events in total with no errors.
+    # We should have 43 tango tc events in total with no warnings.
     self.assertEqual(43, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_errors)
+    self.assertEqual(0, storage_writer.number_of_warnings)
 
     events = list(storage_writer.GetSortedEvents())
 

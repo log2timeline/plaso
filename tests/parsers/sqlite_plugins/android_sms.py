@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Android SMS plugin."""
 
@@ -10,20 +10,18 @@ from plaso.formatters import android_sms as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import android_sms
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class AndroidSMSTest(test_lib.SQLitePluginTestCase):
   """Tests for the Android SMS database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['mmssms.db'])
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""
     plugin = android_sms.AndroidSMSPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['mmssms.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEqual(storage_writer.number_of_events, 9)
 
