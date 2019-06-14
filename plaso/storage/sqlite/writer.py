@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 """Storage writer for SQLite storage files."""
-
 from plaso.lib import definitions
-from plaso.storage import interface
+from plaso.storage import file_interface
 from plaso.storage.sqlite import merge_reader
 from plaso.storage.sqlite import sqlite_file
 
 
-class SQLiteStorageFileWriter(interface.StorageFileWriter):
+class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
   """SQLite-based storage file writer."""
 
   def _CreateStorageFile(self):
