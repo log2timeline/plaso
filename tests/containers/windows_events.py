@@ -29,22 +29,6 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
     self.assertEqual(attribute_names, expected_attribute_names)
 
 
-class WindowsRegistryListEventDataTest(shared_test_lib.BaseTestCase):
-  """Tests for the Windows Registry list event data attribute container."""
-
-  def testGetAttributeNames(self):
-    """Tests the GetAttributeNames function."""
-    attribute_container = windows_events.WindowsRegistryListEventData()
-
-    expected_attribute_names = [
-        'data_type', 'key_path', 'known_folder_identifier', 'list_name',
-        'list_values', 'offset', 'query', 'value_name']
-
-    attribute_names = sorted(attribute_container.GetAttributeNames())
-
-    self.assertEqual(attribute_names, expected_attribute_names)
-
-
 class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows volume event data attribute container."""
 
