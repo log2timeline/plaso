@@ -106,6 +106,7 @@ from plaso.formatters import utmp
 from plaso.formatters import utmpx
 from plaso.formatters import windows
 from plaso.formatters import windows_timeline
+from plaso.formatters import windows_version
 from plaso.formatters import winevt
 from plaso.formatters import winevtx
 from plaso.formatters import winfirewall
