@@ -16,12 +16,12 @@ from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import event_heaps
+from plaso.storage import file_interface
 from plaso.storage import identifiers
-from plaso.storage import interface
 from plaso.storage import logger
 
 
-class SQLiteStorageFile(interface.BaseStorageFile):
+class SQLiteStorageFile(file_interface.BaseStorageFile):
   """SQLite-based storage file.
 
   Attributes:
