@@ -71,6 +71,7 @@ from plaso.formatters import pe
 from plaso.formatters import plist
 from plaso.formatters import pls_recall
 from plaso.formatters import popcontest
+from plaso.formatters import programscache
 from plaso.formatters import recycler
 from plaso.formatters import run
 from plaso.formatters import safari
