@@ -403,8 +403,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
     else:
-      extraction_engine = multi_process_engine.TaskMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      extraction_engine = multi_process_engine.TaskMultiProcessEngine()
 
     # If the source is a directory or a storage media image
     # run pre-processing.

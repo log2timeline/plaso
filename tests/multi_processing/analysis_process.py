@@ -9,8 +9,9 @@ import unittest
 from plaso.analysis import interface as analysis_interface
 from plaso.containers import sessions
 from plaso.engine import configurations
+from plaso.engine import plaso_queue
+from plaso.engine import zeromq_queue
 from plaso.multi_processing import analysis_process
-from plaso.multi_processing import multi_process_queue
 
 from tests.multi_processing import test_lib
 
@@ -51,6 +52,8 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
 
   # pylint: disable=protected-access
 
+  _QUEUE_TIMEOUT = 5
+
   def testInitialization(self):
     """Tests the initialization."""
     configuration = configurations.ProcessingConfiguration()
@@ -75,7 +78,14 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
 
   def testMain(self):
     """Tests the _Main function."""
-    event_queue = multi_process_queue.MultiProcessingQueue(timeout=1)
+    output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
+        name='test output event queue', timeout_seconds=self._QUEUE_TIMEOUT)
+    output_event_queue.Open()
+
+    input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
+        name='test input event queue', delay_open=True,
+        port=output_event_queue.port,
+        timeout_seconds=self._QUEUE_TIMEOUT)
 
     session = sessions.Session()
     storage_writer = self._CreateStorageWriter(session)
@@ -84,13 +94,14 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     test_process = analysis_process.AnalysisProcess(
-        event_queue, storage_writer, None, analysis_plugin, configuration,
+        input_event_queue, storage_writer, None, analysis_plugin, configuration,
         name='TestAnalysis')
-    test_process._abort = True
     test_process._FOREMAN_STATUS_WAIT = 1
-    test_process._pid = 0
 
-    test_process._Main()
+    test_process.start()
+
+    output_event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+    output_event_queue.Close(abort=True)
 
   # TODO: add test for _ProcessEvent.
 

@@ -12,8 +12,9 @@ from dfvfs.path import fake_path_spec
 from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.engine import configurations
+from plaso.engine import plaso_queue
 from plaso.engine import worker
-from plaso.multi_processing import multi_process_queue
+from plaso.engine import zeromq_queue
 from plaso.multi_processing import worker_process
 
 from tests import test_lib as shared_test_lib
@@ -62,6 +63,8 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
   # pylint: disable=protected-access
 
+  _QUEUE_TIMEOUT = 5
+
   def testInitialization(self):
     """Tests the initialization."""
     test_process = worker_process.WorkerProcess(
@@ -93,16 +96,25 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
   def testMain(self):
     """Tests the _Main function."""
-    task_queue = multi_process_queue.MultiProcessingQueue(timeout=1)
+    output_task_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+        delay_open=True, linger_seconds=0, maximum_items=1,
+        name='test output task queue', timeout_seconds=self._QUEUE_TIMEOUT)
+    output_task_queue.Open()
+
+    input_task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
+        delay_open=True, linger_seconds=0, name='test input task queue',
+        port=output_task_queue.port, timeout_seconds=self._QUEUE_TIMEOUT)
 
     configuration = configurations.ProcessingConfiguration()
 
     test_process = worker_process.WorkerProcess(
-        task_queue, None, None, None, None, configuration, name='TestWorker')
-    test_process._abort = True
-    test_process._pid = 0
+        input_task_queue, None, None, None, None, configuration,
+        name='TestWorker')
 
-    test_process._Main()
+    test_process.start()
+
+    output_task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+    output_task_queue.Close(abort=True)
 
   def testProcessPathSpec(self):
     """Tests the _ProcessPathSpec function."""
