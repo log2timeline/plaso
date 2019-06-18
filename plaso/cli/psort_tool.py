@@ -91,7 +91,6 @@ class PsortTool(
     self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
-    self._use_zeromq = True
     self._worker_memory_limit = None
 
     self.list_analysis_plugins = False
@@ -531,8 +530,7 @@ class PsortTool(
               session, self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.AnalyzeEvents(
           self._knowledge_base, storage_writer, self._data_location,
@@ -552,8 +550,7 @@ class PsortTool(
               self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,

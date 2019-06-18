@@ -67,7 +67,6 @@ class ExtractionTool(
     self._storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._temporary_directory = None
     self._text_prepend = None
-    self._use_zeromq = True
     self._yara_rules_string = None
 
   def _CreateProcessingConfiguration(self, knowledge_base):
