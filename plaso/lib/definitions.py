@@ -34,6 +34,7 @@ OPERATING_SYSTEM_FAMILIES = frozenset([
     OPERATING_SYSTEM_FAMILY_WINDOWS_9x,
     OPERATING_SYSTEM_FAMILY_WINDOWS_NT])
 
+# TODO: remove regvalue, which is kept for backwards compatibility.
 RESERVED_VARIABLE_NAMES = frozenset([
     'body',
     'data_type',

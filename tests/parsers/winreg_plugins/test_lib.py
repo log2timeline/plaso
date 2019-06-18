@@ -128,16 +128,3 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     plugin.Process(parser_mediator, registry_key)
 
     return storage_writer
-
-  # TODO: deprecate the usage of "event.regvalue".
-  def _TestRegvalue(self, event, identifier, expected_value):
-    """Tests a specific 'regvalue' attribute within the event.
-
-    Args:
-      event (EventObject): event.
-      identifier (str): identifier of the 'regvalue' attribute.
-      expected_value (object): expected value of the 'regvalue' attribute.
-    """
-    self.assertTrue(hasattr(event, 'regvalue'))
-    self.assertIn(identifier, event.regvalue)
-    self.assertEqual(event.regvalue[identifier], expected_value)
