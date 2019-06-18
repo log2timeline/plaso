@@ -13,9 +13,9 @@ from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
+from plaso.serializer import json_serializer
 
 
-# pylint: disable=redundant-returns-doc,redundant-yields-doc
 class BaseStore(object):
   """Storage interface.
 
@@ -279,6 +279,7 @@ class BaseStore(object):
     return self._GetAttributeContainerByIdentifier(
         self._CONTAINER_TYPE_EVENT_TAG, identifier)
 
+  # pylint: disable=redundant-yields-doc
   def GetEventTags(self):
     """Retrieves the event tags.
 
@@ -342,7 +343,7 @@ class BaseStore(object):
     Returns:
       bool: True if the store contains analysis reports.
     """
-    self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
   def HasWarnings(self):
     """Determines if a store contains extraction warnings.
@@ -619,18 +620,6 @@ class StorageReader(object):
     """Make usable with "with" statement."""
     self.Close()
 
-  @abc.abstractproperty
-  def format_version(self):
-    """int: format version"""
-
-  @abc.abstractproperty
-  def serialization_format(self):
-    """str: serialization format."""
-
-  @abc.abstractproperty
-  def storage_type(self):
-    """str: storage type."""
-
   @abc.abstractmethod
   def Close(self):
     """Closes the storage reader."""
@@ -887,7 +876,7 @@ class StorageWriter(object):
 
   @abc.abstractmethod
   def CheckTaskReadyForMerge(self, task):
-    """Checks if a task is ready for merging with this session storage.
+    """Checks if a task is ready for merging into the store.
 
     Args:
       task (Task): task.
@@ -1065,5 +1054,3 @@ class StorageWriter(object):
   @abc.abstractmethod
   def WriteTaskStart(self):
     """Writes task start information."""
-
-

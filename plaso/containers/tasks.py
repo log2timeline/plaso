@@ -35,7 +35,7 @@ class Task(interface.AttributeContainer):
     start_time (int): time that the task was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
     storage_file_size (int): size of the storage file in bytes.
-    storage_format (str): the format the task was stored in.
+    storage_format (str): the format the task results are to be stored in.
   """
   CONTAINER_TYPE = 'task'
 

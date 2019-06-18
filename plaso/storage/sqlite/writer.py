@@ -6,9 +6,6 @@ from plaso.lib import definitions
 from plaso.storage import file_interface
 from plaso.storage.sqlite import merge_reader
 from plaso.storage.sqlite import sqlite_file
-from plaso.storage.redis import merge_reader as redis_merge_reader
-from plaso.storage.redis import writer as redis_writer
-from plaso.storage.redis import reader as redis_reader
 
 
 class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
@@ -36,10 +33,6 @@ class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
 
     if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       writer = self._CreateTaskStorageWriter(task)
-
-    elif task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      writer = redis_writer.RedisStorageWriter(
-          self._session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
     else:
       raise IOError('Unsupported storage format: {0:s}'.format(
@@ -115,6 +108,7 @@ class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
     Returns:
       StorageMergeReader: storage merge reader.
     """
+    path = self._GetMergeTaskStorageFilePath(task)
     return merge_reader.SQLiteStorageMergeReader(self, path)
 
   def _CreateTaskStorageWriter(self, task):

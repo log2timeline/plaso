@@ -211,8 +211,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       except KeyError as exception:
         logger.error(
-            'Unable to retrieve task: {0:s} to prepare it to be merged. '
-            'Error: {1!s}.'.format(task_identifier, exception))
+            'Unable to retrieve task: {0:s} to prepare it to be merged '
+            'with error: {1!s}.'.format(task_identifier, exception))
         continue
 
     if self._processing_profiler:
@@ -437,10 +437,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         if task:
           if self._ScheduleTask(task):
-            task_path_spec = task.path_spec.comparable.replace('\n', ' ')
+            task_path_spec_string = task.path_spec.comparable.replace('\n', ' ')
             logger.debug(
                 'Scheduled task {0:s} for path specification {1:s}'.format(
-                    task.identifier, task_path_spec))
+                    task.identifier, task_path_spec_string))
 
             self._task_manager.SampleTaskStatus(task, 'scheduled')
 

@@ -86,5 +86,4 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
     setattr(configuration_object, '_task_storage_format', task_storage_format)
 
 
-
 manager.ArgumentHelperManager.RegisterHelper(StorageFormatArgumentsHelper)
