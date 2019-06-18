@@ -697,8 +697,11 @@ class PinfoTool(
 
     return result
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -738,7 +741,7 @@ class PinfoTool(
         help='Output filename.')
 
     try:
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.

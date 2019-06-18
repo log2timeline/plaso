@@ -220,7 +220,7 @@ optional arguments:
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
-    result = test_tool.ParseArguments()
+    result = test_tool.ParseArguments([])
     self.assertFalse(result)
 
     # TODO: check output.

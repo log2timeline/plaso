@@ -19,7 +19,7 @@ def Main():
   """The main function."""
   tool = log2timeline_tool.Log2TimelineTool()
 
-  if not tool.ParseArguments():
+  if not tool.ParseArguments(sys.argv):
     return False
 
   if tool.show_info:
