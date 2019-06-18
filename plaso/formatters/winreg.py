@@ -43,7 +43,7 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
     values = event_values.get('values', None)
     if values is None:
-      # TODO: remove regvalue.
+      # TODO: remove regvalue, which is kept for backwards compatibility.
       regvalue = event_values.get('regvalue', {})
       string_parts = []
       for key, value in sorted(regvalue.items()):
@@ -53,11 +53,6 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
     if not values:
       event_values['values'] = 'No values stored in key.'
-
-    # TODO: remove urls.
-    urls = event_values.get('urls', [])
-    if urls:
-      event_values['urls'] = ' - '.join(urls)
 
     if 'key_path' in event_values:
       format_string = self.FORMAT_STRING
@@ -86,6 +81,8 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
           event_data.data_type))
 
     source_long = getattr(event_data, 'source_long', 'UNKNOWN')
+
+    # TODO: remove source_append, which is kept for backwards compatibility.
     source_append = getattr(event_data, 'source_append', None)
     if source_append:
       source_long = '{0:s} {1:s}'.format(source_long, source_append)
