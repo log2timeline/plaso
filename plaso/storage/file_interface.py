@@ -392,6 +392,14 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.GetNumberOfAnalysisReports()
 
+  def GetNumberOfEventSources(self):
+    """Retrieves the number event sources.
+
+    Returns:
+      int: number of event sources.
+    """
+    return self._storage_file.GetNumberOfEventSources()
+
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 

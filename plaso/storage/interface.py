@@ -405,6 +405,14 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetNumberOfEventSources(self):
+    """Retrieves the number event sources.
+
+    Returns:
+      int: number of event sources.
+    """
+
+  @abc.abstractmethod
   def GetSessions(self):
     """Retrieves the sessions.
 
