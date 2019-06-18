@@ -210,8 +210,7 @@ class PstealTool(
               self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
@@ -297,8 +296,7 @@ class PstealTool(
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
     else:
-      extraction_engine = multi_process_engine.TaskMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      extraction_engine = multi_process_engine.TaskMultiProcessEngine()
 
     # If the source is a directory or a storage media image
     # run pre-processing.
