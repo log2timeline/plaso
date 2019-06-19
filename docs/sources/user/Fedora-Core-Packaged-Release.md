@@ -1,8 +1,8 @@
-# Fedora Core Packaged Release 
+# Fedora Packaged Release 
 
-### Fedora Core 28 and 29
+### Fedora 28 and 29
 
-**Note that other versions of Fedora Core are not supported at this time.**
+**Note that other versions of Fedora are not supported at this time.**
 
 To install plaso and dependencies from the GIFT Cool Other Package Repo (COPR) you'll need to have dnf plugins installed:
 
