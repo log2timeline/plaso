@@ -4,11 +4,11 @@ For development purposes, Plaso can be installed using virtualenv.
 
 **Note that this is intended for development use only, and if you aren't comfortable debugging package installation, this is not for you.**
 
-## Fedora Core
+## Fedora
 
 ### Install virtualenv
 
-To install virtualenv on Fedora Core (or equivalent) run:
+To install virtualenv on Fedora (or equivalent) run:
 ```
 sudo dnf install python-virtualenv
 ```

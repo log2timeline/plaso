@@ -16,9 +16,9 @@ Some dependencies for plaso are optional:
 
 ## Prepackaged dependencies
 
-### Fedora Core
+### Fedora
 
-**Note that the instructions in this page assume you are running on Fedora Core 26, 27 or 28. Installing packages from the copr on other versions and/or distributions is not recommended.**
+**Note that the instructions in this page assume you are running on Fedora 28, 29 or 30. Installing packages from the copr on other versions and/or distributions is not recommended.**
 
 The [GIFT copr](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) contains the necessary packages for running plaso. GIFT copr provides the following tracks:
 
@@ -197,7 +197,7 @@ Successfully built packages will be stored in the build directory, which is `bui
 
 ## Manual build
 
-* Dependencies-Fedora-Core
+* Dependencies-Fedora
 * Dependencies-Mac-OS-X
 * Dependencies---Ubuntu
 * Dependencies-Windows

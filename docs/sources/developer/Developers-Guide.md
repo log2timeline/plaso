@@ -13,9 +13,9 @@ The first challenge you will encounter is setting up and maintaining your develo
 Start by installing a development release on your platform:
 
 * [Development installation in a VirtualEnv](Running-plaso-in-virtualenv.md)
-* [Development installation on Fedora Core](Development-release-Fedora-Core.md)
+* [Development installation on Fedora](Development-release-Fedora.md)
 * [Development installation on MacOS](Development-release-MacOS.md)
-* [Development installation on Fedora Core](Development-release-Ubuntu.md)
+* [Development installation on Fedora](Development-release-Ubuntu.md)
 * [Development installation on Windows](Development-release-Windows.md)
 
 
@@ -26,8 +26,8 @@ If you're feeling particularly brave, you can try building all the dependencies 
 
 * [Running the development release on Ubuntu Linux](Development-release-Ubuntu.md)
   * [Building and installing dependencies on Ubuntu Linux](Dependencies---Ubuntu.md)
-* [Running the development release on Fedora Core Linux](Development-release-Fedora-Core.md)
-  * [Building and installing dependencies on Fedora Core Linux](Dependencies-Fedora-Core.md)
+* [Running the development release on Fedora Linux](Development-release-Fedora.md)
+  * [Building and installing dependencies on Fedora Linux](Dependencies-Fedora.md)
 * [Running the development release on MacOS](Development-release-MacOS.md)
   * [Building and installing dependencies on MacOS](Dependencies-MacOS.md)
 * [Running the development release on Windows](Development-release-Windows.md)
