@@ -31,7 +31,7 @@ class ApacheAccessEventData(events.EventData):
     ip_address (str): IPv4 or IPv6 addresses.
     port_number (int): canonical port of the server serving the request.
     remote_name (str): remote logname (from identd, if supplied).
-    servername (str): canonical hostname of the server serving the request.
+    server_name (str): canonical hostname of the server serving the request.
     user_name (str): logged user name.
   """
 
@@ -101,9 +101,9 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.SkipTo('"').setResultsName('referer') +
       pyparsing.Suppress('"'))
 
-  _SERVERNAME = (
+  _SERVER_NAME = (
       pyparsing.Word(pyparsing.alphanums + '-' + '.').setResultsName(
-          'servername'))
+          'server_name'))
 
   _USER_AGENT = (
       pyparsing.Suppress('"') +
@@ -143,7 +143,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
   # "vhost_combined" format as used by Debian and related distributions.
   # "%v:%p %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
   _VHOST_COMBINED_LOG_FORMAT = (
-      _SERVERNAME +
+      _SERVER_NAME +
       pyparsing.Suppress(':') +
       _PORT_NUMBER +
       text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
@@ -269,7 +269,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
     if key == 'vhost_combined_log_format':
       event_data.server_name = self._GetValueFromStructure(
-          structure, 'servername')
+          structure, 'server_name')
       event_data.port_number = self._GetValueFromStructure(
           structure, 'port_number')
 
