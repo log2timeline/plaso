@@ -39,6 +39,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-chardet
                       python-crypto
                       python-dateutil
+                      python-defusedxml
                       python-dfdatetime
                       python-dfvfs
                       python-dfwinreg
