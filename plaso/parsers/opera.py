@@ -5,14 +5,13 @@ from __future__ import unicode_literals
 
 import os
 
-from xml.etree import ElementTree
-
 try:
   import urlparse
 except ImportError:
   from urllib import parse as urlparse
 
 # pylint: disable=wrong-import-position
+from defusedxml import ElementTree
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 from dfdatetime import semantic_time as dfdatetime_semantic_time

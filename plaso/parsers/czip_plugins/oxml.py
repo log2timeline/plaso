@@ -6,8 +6,7 @@ from __future__ import unicode_literals
 import re
 import zipfile
 
-from xml.etree import ElementTree
-
+from defusedxml import ElementTree
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
