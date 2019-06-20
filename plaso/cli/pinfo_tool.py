@@ -18,7 +18,6 @@ from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.serializer import json_serializer
 from plaso.storage import factory as storage_factory
@@ -52,8 +51,8 @@ class PinfoTool(
     self._output_format = None
     self._process_memory_limit = None
     self._storage_file_path = None
-
     self._verbose = False
+
     self.compare_storage_information = False
 
   def _CalculateStorageCounters(self, storage_reader):
@@ -73,28 +72,17 @@ class PinfoTool(
     parsers_counter_error = False
 
     for session in storage_reader.GetSessions():
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.analysis_reports_counter, dict):
-        analysis_reports_counter += collections.Counter(
-            session.analysis_reports_counter)
-      elif isinstance(session.analysis_reports_counter, collections.Counter):
+      if isinstance(session.analysis_reports_counter, collections.Counter):
         analysis_reports_counter += session.analysis_reports_counter
       else:
         analysis_reports_counter_error = True
 
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.event_labels_counter, dict):
-        event_labels_counter += collections.Counter(
-            session.event_labels_counter)
-      elif isinstance(session.event_labels_counter, collections.Counter):
+      if isinstance(session.event_labels_counter, collections.Counter):
         event_labels_counter += session.event_labels_counter
       else:
         event_labels_counter_error = True
 
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.parsers_counter, dict):
-        parsers_counter += collections.Counter(session.parsers_counter)
-      elif isinstance(session.parsers_counter, collections.Counter):
+      if isinstance(session.parsers_counter, collections.Counter):
         parsers_counter += session.parsers_counter
       else:
         parsers_counter_error = True
@@ -280,9 +268,8 @@ class PinfoTool(
         column_names=['Plugin name', 'Number of reports'], title=title)
 
     for key, value in sorted(analysis_reports_counter.items()):
-      if key == 'total':
-        continue
-      table_view.AddRow([key, value])
+      if key != 'total':
+        table_view.AddRow([key, value])
 
     try:
       total = analysis_reports_counter['total']
@@ -404,9 +391,8 @@ class PinfoTool(
         column_names=['Label', 'Number of event tags'], title=title)
 
     for key, value in sorted(event_labels_counter.items()):
-      if key == 'total':
-        continue
-      table_view.AddRow([key, value])
+      if key != 'total':
+        table_view.AddRow([key, value])
 
     try:
       total = event_labels_counter['total']
@@ -426,6 +412,7 @@ class PinfoTool(
       session_identifier (Optional[str]): session identifier.
     """
     if not parsers_counter:
+      self._output_writer.Write('No events stored.\n\n')
       return
 
     title = 'Events generated per parser'
@@ -438,9 +425,8 @@ class PinfoTool(
         title=title)
 
     for key, value in sorted(parsers_counter.items()):
-      if key == 'total':
-        continue
-      table_view.AddRow([key, value])
+      if key != 'total':
+        table_view.AddRow([key, value])
 
     table_view.AddRow(['Total', parsers_counter['total']])
 
@@ -527,15 +513,13 @@ class PinfoTool(
       command_line_arguments = session.command_line_arguments or 'N/A'
       parser_filter_expression = session.parser_filter_expression or 'N/A'
       preferred_encoding = session.preferred_encoding or 'N/A'
-      # Workaround for some older Plaso releases writing preferred encoding as
-      # bytes.
-      if isinstance(preferred_encoding, py2to3.BYTES_TYPE):
-        preferred_encoding = preferred_encoding.decode('utf-8')
+
       if session.artifact_filters:
         artifact_filters_string = ', '.join(session.artifact_filters)
       else:
         artifact_filters_string = 'N/A'
       filter_file = session.filter_file or 'N/A'
+      number_of_event_sources = storage_reader.GetNumberOfEventSources()
 
       title = 'Session: {0:s}'.format(session_identifier)
       table_view = views.ViewsFactory.GetTableView(
@@ -552,6 +536,7 @@ class PinfoTool(
       table_view.AddRow(['Debug mode', session.debug_mode])
       table_view.AddRow(['Artifact filters', artifact_filters_string])
       table_view.AddRow(['Filter file', filter_file])
+      table_view.AddRow(['Number of event sources', number_of_event_sources])
 
       table_view.Write(self._output_writer)
 
