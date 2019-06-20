@@ -245,14 +245,22 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
           value_string = '[{0:s}]'.format(', '.join([
               value for value in value_object or []]))
 
-        elif registry_value.DataIsBinaryData():
-          value_string = '({0:d} bytes)'.format(len(value_object))
-
-        else:
+        elif (registry_value.DataIsInteger() or
+              registry_value.DataIsString()):
           value_string = '{0!s}'.format(value_object)
 
-      value_string = '[{0:s}] {1:s}'.format(
-          registry_value.data_type_string, value_string)
+        else:
+          # Represent remaining types like REG_BINARY and
+          # REG_RESOURCE_REQUIREMENT_LIST.
+          value_string = '({0:d} bytes)'.format(len(value_object))
+
+      data_type_string = registry_value.data_type_string
+
+      # Correct typo in dfWinReg < 20190620
+      if data_type_string == 'REG_RESOURCE_REQUIREMENT_LIST':
+        data_type_string = 'REG_RESOURCE_REQUIREMENTS_LIST'
+
+      value_string = '[{0:s}] {1:s}'.format(data_type_string, value_string)
       values_dict[value_name] = value_string
 
     return values_dict
