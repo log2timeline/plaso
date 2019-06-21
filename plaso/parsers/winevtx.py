@@ -15,6 +15,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -101,6 +102,9 @@ class WinEvtxParser(interface.FileObjectParser):
       str: creation date and time formatted as ISO 8601 or None if not
           available.
     """
+    if py2to3.PY_2:
+      xml_string = xml_string.encode('utf-8')
+
     xml_root = ElementTree.fromstring(xml_string)
 
     system_xml_element = xml_root.find(
