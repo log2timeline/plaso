@@ -339,8 +339,11 @@ class PstealTool(
 
     self._status_view.PrintExtractionSummary(processing_status)
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -402,7 +405,7 @@ class PstealTool(
     self.AddProcessingOptions(processing_group)
 
     try:
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.

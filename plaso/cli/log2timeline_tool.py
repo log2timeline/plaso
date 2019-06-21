@@ -132,8 +132,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     return return_dict
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -231,7 +234,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             'or a directory, the files within are processed recursively.'))
 
     try:
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.
