@@ -87,7 +87,7 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
         '[{0:s}] '
         'MRUList: [REG_SZ] acb '
         'a: [REG_SZ] Some random text here '
-        'b: [REG_BINARY] '
+        'b: [REG_BINARY] (22 bytes) '
         'c: [REG_SZ] C:/looks_legit.exe').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 

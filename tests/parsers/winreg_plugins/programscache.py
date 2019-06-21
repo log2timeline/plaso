@@ -131,11 +131,11 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
 
     expected_message = (
         '[{0:s}] '
-        'Favorites: (omitted) '
-        'FavoritesChanges: 1 '
-        'FavoritesResolve: (omitted) '
-        'StartMenu_Balloon_Time: (omitted) '
-        'StartMenu_Start_Time: (omitted)').format(key_path)
+        'Favorites: [REG_BINARY] (55 bytes) '
+        'FavoritesChanges: [REG_DWORD_LE] 1 '
+        'FavoritesResolve: [REG_BINARY] (8 bytes) '
+        'StartMenu_Balloon_Time: [REG_BINARY] (8 bytes) '
+        'StartMenu_Start_Time: [REG_BINARY] (8 bytes)').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
