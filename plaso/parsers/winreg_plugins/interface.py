@@ -13,7 +13,7 @@ class BaseWindowsRegistryKeyFilter(object):
 
   @property
   def key_paths(self):
-    """List of key paths defined by the filter."""
+    """list[str]: key paths defined by the filter."""
     return []
 
   # pylint: disable=redundant-returns-doc
@@ -81,10 +81,13 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
 
       if wow64_prefix:
         key_path_suffix = self._key_path[len(wow64_prefix):]
+        self._wow64_key_path = '\\'.join([wow64_prefix, 'Wow6432Node'])
+
         if key_path_suffix.startswith('\\'):
           key_path_suffix = key_path_suffix[1:]
-        self._wow64_key_path = '\\'.join([
-            wow64_prefix, 'Wow6432Node', key_path_suffix])
+        if key_path_suffix:
+          self._wow64_key_path = '\\'.join([
+              self._wow64_key_path, key_path_suffix])
         self._wow64_key_path_upper = self._wow64_key_path.upper()
 
   @property
