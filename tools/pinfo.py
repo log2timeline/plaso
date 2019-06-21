@@ -21,7 +21,7 @@ def Main():
   """The main function."""
   tool = pinfo_tool.PinfoTool()
 
-  if not tool.ParseArguments():
+  if not tool.ParseArguments(sys.argv[1:]):
     return False
 
   if tool.show_troubleshooting:
