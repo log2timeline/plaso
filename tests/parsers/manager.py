@@ -59,9 +59,9 @@ class TestPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      kwargs: Depending on the plugin they may require different sets of
-              arguments to be able to evaluate whether or not this is
-              the correct plugin.
+      kwargs (dict[str, object]): Depending on the plugin they may require
+          different sets of arguments to be able to evaluate whether or not
+          this is the correct plugin.
 
     Raises:
       ValueError: When there are unused keyword arguments.
@@ -73,100 +73,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the parsers manager."""
 
   # pylint: disable=protected-access
-
-  def testGetParserFilters(self):
-    """Tests the _GetParserFilters function."""
-    parser_filter_expression = ''
-    includes, excludes = manager.ParsersManager._GetParserFilters(
-        parser_filter_expression)
-    self.assertEqual(includes, {})
-    self.assertEqual(excludes, {})
-
-    parser_filter_expression = 'test_include,!test_exclude'
-    includes, excludes = manager.ParsersManager._GetParserFilters(
-        parser_filter_expression)
-    self.assertEqual(includes, {'test_include': []})
-    self.assertEqual(excludes, {})
-
-    parser_filter_expression = (
-        'test_include,test_intersection,!test_exclude,!test_intersection')
-    includes, excludes = manager.ParsersManager._GetParserFilters(
-        parser_filter_expression)
-    self.assertEqual(includes, {'test_include': []})
-    self.assertEqual(excludes, {})
-
-    parser_filter_expression = 'test/include,!test/exclude'
-    includes, excludes = manager.ParsersManager._GetParserFilters(
-        parser_filter_expression)
-    self.assertEqual(includes, {'test': ['include']})
-    self.assertEqual(excludes, {'test': ['exclude']})
-
-    parser_filter_expression = (
-        'test/include,test/intersection,!test/exclude,!test/intersection')
-    includes, excludes = manager.ParsersManager._GetParserFilters(
-        parser_filter_expression)
-    self.assertEqual(includes, {'test': ['include']})
-    self.assertEqual(excludes, {'test': ['exclude', 'intersection']})
-
-  def testGetParsersFromPresetCategory(self):
-    """Tests the _GetParsersFromPresetCategory function."""
-    expected_parser_names = [
-        'bencode', 'binary_cookies', 'chrome_cache', 'chrome_preferences',
-        'czip/oxml', 'esedb', 'esedb/msie_webcache', 'filestat',
-        'firefox_cache', 'gdrive_synclog', 'java_idx', 'lnk',
-        'mcafee_protection', 'msiecf', 'olecf', 'opera_global',
-        'opera_typed_history', 'pe', 'plist/safari_history', 'prefetch',
-        'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite/chrome_27_history',
-        'sqlite/chrome_8_history', 'sqlite/chrome_autofill',
-        'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',
-        'sqlite/firefox_cookies', 'sqlite/firefox_downloads',
-        'sqlite/firefox_history', 'sqlite/google_drive', 'sqlite/skype',
-        'symantec_scanlog', 'usnjrnl', 'winfirewall', 'winjob', 'winreg']
-
-    parser_names = manager.ParsersManager._GetParsersFromPresetCategory(
-        'win_gen')
-    self.assertEqual(parser_names, expected_parser_names)
-
-    parser_names = manager.ParsersManager._GetParsersFromPresetCategory(
-        'bogus')
-    self.assertEqual(parser_names, [])
-
-  def testReduceParserFilters(self):
-    """Tests the _ReduceParserFilters function."""
-    includes = {}
-    excludes = {}
-
-    manager.ParsersManager._ReduceParserFilters(includes, excludes)
-    self.assertEqual(includes, {})
-    self.assertEqual(excludes, {})
-
-    includes = {'test_include': ''}
-    excludes = {'test_exclude': ''}
-
-    manager.ParsersManager._ReduceParserFilters(includes, excludes)
-    self.assertEqual(includes, {'test_include': ''})
-    self.assertEqual(excludes, {})
-
-    includes = {'test_include': '', 'test_intersection': ''}
-    excludes = {'test_exclude': '', 'test_intersection': ''}
-
-    manager.ParsersManager._ReduceParserFilters(includes, excludes)
-    self.assertEqual(includes, {'test_include': ''})
-    self.assertEqual(excludes, {})
-
-    includes = {'test': ['include']}
-    excludes = {'test': ['exclude']}
-
-    manager.ParsersManager._ReduceParserFilters(includes, excludes)
-    self.assertEqual(includes, {'test': ['include']})
-    self.assertEqual(excludes, {'test': ['exclude']})
-
-    includes = {'test': ['include', 'intersection']}
-    excludes = {'test': ['exclude', 'intersection']}
-
-    manager.ParsersManager._ReduceParserFilters(includes, excludes)
-    self.assertEqual(includes, {'test': ['include']})
-    self.assertEqual(excludes, {'test': ['exclude', 'intersection']})
 
   # TODO: add tests for CreateSignatureScanner.
 
@@ -229,16 +135,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
-
-    # Test with a preset name.
-    test_file_path = self._GetTestFilePath(['presets.yaml'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    manager.ParsersManager.ReadPresetsFromFile(test_file_path)
-
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='win_gen')
-    self.assertIn('lnk', parser_names)
 
   def testGetParserPluginsInformation(self):
     """Tests the GetParserPluginsInformation function."""
@@ -304,33 +200,33 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParser)
 
   def testGetParsers(self):
-    """Tests the GetParsers function."""
+    """Tests the _GetParsers function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
     manager.ParsersManager.RegisterParser(TestParserWithPlugins)
     manager.ParsersManager.RegisterParser(TestParser)
 
     parser_names = []
-    for _, parser_class in manager.ParsersManager.GetParsers(
+    for _, parser_class in manager.ParsersManager._GetParsers(
         parser_filter_expression='test_parser'):
       parser_names.append(parser_class.NAME)
     self.assertEqual(parser_names, ['test_parser'])
 
     parser_names = []
-    for _, parser_class in manager.ParsersManager.GetParsers(
+    for _, parser_class in manager.ParsersManager._GetParsers(
         parser_filter_expression='!test_parser'):
       parser_names.append(parser_class.NAME)
     self.assertNotEqual(len(parser_names), 0)
     self.assertNotIn('test_parser', parser_names)
 
     parser_names = []
-    for _, parser_class in manager.ParsersManager.GetParsers(
+    for _, parser_class in manager.ParsersManager._GetParsers(
         parser_filter_expression='test_parser_with_plugins/test_plugin'):
       parser_names.append(parser_class.NAME)
     self.assertEqual(parser_names, ['test_parser_with_plugins'])
 
     # Test with a parser name, not using plugin names.
     parser_names = []
-    for _, parser_class in manager.ParsersManager.GetParsers(
+    for _, parser_class in manager.ParsersManager._GetParsers(
         parser_filter_expression='test_parser_with_plugins'):
       parser_names.append(parser_class.NAME)
     self.assertEqual(parser_names, ['test_parser_with_plugins'])
@@ -338,27 +234,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
-
-    # Test with a preset name.
-    test_file_path = self._GetTestFilePath(['presets.yaml'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    manager.ParsersManager.ReadPresetsFromFile(test_file_path)
-
-    expected_parser_names = [
-        'bencode', 'binary_cookies', 'chrome_cache', 'chrome_preferences',
-        'czip', 'esedb', 'filestat', 'firefox_cache', 'gdrive_synclog',
-        'java_idx', 'lnk', 'mcafee_protection', 'msiecf', 'olecf',
-        'opera_global', 'opera_typed_history', 'pe', 'plist', 'prefetch',
-        'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite',
-        'symantec_scanlog', 'usnjrnl', 'winfirewall', 'winjob', 'winreg']
-
-    parser_names = []
-    for _, parser_class in manager.ParsersManager.GetParsers(
-        parser_filter_expression='win_gen'):
-      parser_names.append(parser_class.NAME)
-
-    self.assertEqual(sorted(parser_names), expected_parser_names)
 
   def testGetParsersInformation(self):
     """Tests the GetParsersInformation function."""
@@ -373,19 +248,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     manager.ParsersManager.DeregisterParser(TestParser)
 
-  def testGetPresetsInformation(self):
-    """Tests the GetPresetsInformation function."""
-    test_file_path = self._GetTestFilePath(['presets.yaml'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    manager.ParsersManager.ReadPresetsFromFile(test_file_path)
-
-    parser_presets_information = manager.ParsersManager.GetPresetsInformation()
-    self.assertGreaterEqual(len(parser_presets_information), 1)
-
-    available_parser_names = [name for name, _ in parser_presets_information]
-    self.assertIn('linux', available_parser_names)
-
   def testGetPlugins(self):
     """Tests the GetPlugins function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
@@ -396,8 +258,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     self.assertIsNotNone(plugin_tuples[0])
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
-
-  # TODO: add tests for GetPresetsForOperatingSystem.
 
   def testPluginRegistration(self):
     """Tests the RegisterPlugin and DeregisterPlugin functions."""

@@ -43,8 +43,6 @@ class EventExtractor(object):
           denotes a list of parser names to include and/or exclude. Each entry
           can have the value of:
 
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
     """
@@ -113,8 +111,6 @@ class EventExtractor(object):
           denotes a list of parser names to include and/or exclude. Each entry
           can have the value of:
 
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
     """
@@ -161,8 +157,7 @@ class EventExtractor(object):
     """
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
-      raise RuntimeError(
-          'Unable to retrieve file-like object from file entry.')
+      raise RuntimeError('Unable to retrieve file-like object from file entry.')
 
     try:
       self._ParseFileEntryWithParser(
@@ -486,6 +481,9 @@ class PathSpecExtractor(object):
 
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in the directory.
+
+    Raises:
+      MaximumRecursionDepth: when the maximum recursion depth is reached.
     """
     if depth >= self._MAXIMUM_DEPTH:
       raise errors.MaximumRecursionDepth('Maximum recursion depth reached.')
