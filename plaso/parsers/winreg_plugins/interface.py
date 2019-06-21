@@ -210,35 +210,58 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   # parse the Windows Registry key or its values.
   FILTERS = frozenset()
 
-  def _GetValuesFromKey(self, registry_key):
+  def _GetValuesFromKey(self, registry_key, names_to_skip=None):
     """Retrieves the values from a Windows Registry key.
 
-    Binary data values are represented as "(binary)".
-
-    An empty multi value string value is represented as "[]".
+    Where:
+    * the default value is represented as "(default)";
+    * binary data values are represented as "(# bytes)", where # contains
+          the number of bytes of the data;
+    * empty values are represented as "(empty)".
+    * empty multi value string values are represented as "[]".
 
     Args:
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      names_to_skip (Optional[list[str]]): names of values that should
+          be skipped.
 
     Returns:
-      dict[str, object]: names and data of the values in the key. The default
-          value is named "(default)".
+      dict[str, object]: names and data of the values in the key.
     """
+    names_to_skip = [name.lower() for name in names_to_skip or []]
+
     values_dict = {}
     for registry_value in registry_key.GetValues():
       value_name = registry_value.name or '(default)'
+      if value_name.lower() in names_to_skip:
+        continue
 
-      value_object = registry_value.GetDataAsObject()
-      if registry_value.DataIsMultiString():
-        if value_object:
-          value_object = ''.join(value_object)
+      if registry_value.data is None:
+        value_string = '(empty)'
+      else:
+        value_object = registry_value.GetDataAsObject()
+
+        if registry_value.DataIsMultiString():
+          value_string = '[{0:s}]'.format(', '.join([
+              value for value in value_object or []]))
+
+        elif (registry_value.DataIsInteger() or
+              registry_value.DataIsString()):
+          value_string = '{0!s}'.format(value_object)
+
         else:
-          value_object = '[]'
+          # Represent remaining types like REG_BINARY and
+          # REG_RESOURCE_REQUIREMENT_LIST.
+          value_string = '({0:d} bytes)'.format(len(value_object))
 
-      elif registry_value.DataIsBinaryData():
-        value_object = '(binary)'
+      data_type_string = registry_value.data_type_string
 
-      values_dict[value_name] = value_object
+      # Correct typo in dfWinReg < 20190620
+      if data_type_string == 'REG_RESOURCE_REQUIREMENT_LIST':
+        data_type_string = 'REG_RESOURCE_REQUIREMENTS_LIST'
+
+      value_string = '[{0:s}] {1:s}'.format(data_type_string, value_string)
+      values_dict[value_name] = value_string
 
     return values_dict
 

@@ -22,47 +22,6 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
   NAME = 'winreg_default'
   DESCRIPTION = 'Parser for Registry data.'
 
-  # TODO: merge with interface._GetValuesFromKey and remove the data types.
-  def _GetValuesFromKey(self, registry_key):
-    """Retrieves the values from a Windows Registry key.
-
-    Args:
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-
-    Returns:
-      dict[str, object]: names and data of the values in the key. The default
-          value is named "(default)".
-    """
-    values_dict = {}
-    for registry_value in registry_key.GetValues():
-      value_name = registry_value.name or '(default)'
-
-      value_string = '[{0:s}]'.format(registry_value.data_type_string)
-      if registry_value.data is None:
-        value_string = '{0:s} Empty'.format(value_string)
-      else:
-        value_object = registry_value.GetDataAsObject()
-
-        if registry_value.DataIsInteger():
-          value_string = '{0:s} {1:d}'.format(value_string, value_object)
-
-        elif registry_value.DataIsString():
-          value_string = '{0:s} {1:s}'.format(value_string, value_object)
-
-        elif registry_value.DataIsMultiString():
-          if not value_object:
-            value_string = '{0:s} []'.format(value_string)
-          elif not isinstance(value_object, (list, tuple)):
-            value_string = '{0:s} (unknown)'.format(value_string)
-            # TODO: Add a flag or some sort of an anomaly alert.
-          else:
-            value_string = '{0:s} {1:s}'.format(
-                value_string, ''.join(value_object))
-
-      values_dict[value_name] = value_string
-
-    return values_dict
-
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 

@@ -103,9 +103,9 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = (
         '[{0:s}] '
-        'No values stored in key.').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+        '(empty)').format(key_path)
+
+    self._TestGetMessageStrings(event, expected_message, expected_message)
 
 
 class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):

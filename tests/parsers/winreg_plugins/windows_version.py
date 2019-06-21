@@ -122,10 +122,10 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = (
         '[{0:s}] '
-        'CSDVersion: Service Pack 1 '
-        'CurrentVersion: 5.1 '
-        'ProductName: MyTestOS '
-        'RegisteredOwner: A Concerned Citizen').format(key_path)
+        'CSDVersion: [REG_SZ] Service Pack 1 '
+        'CurrentVersion: [REG_SZ] 5.1 '
+        'ProductName: [REG_SZ] MyTestOS '
+        'RegisteredOwner: [REG_SZ] A Concerned Citizen').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -182,26 +182,26 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = (
         '[{0:s}] '
-        'BuildGUID: f4bf21b9-55fe-4ee8-a84b-0e91cbd5fe5d '
-        'BuildLab: 7601.win7sp1_gdr.111118-2330 '
-        'BuildLabEx: 7601.17727.amd64fre.win7sp1_gdr.111118-2330 '
-        'CSDBuildNumber: 1130 '
-        'CSDVersion: Service Pack 1 '
-        'CurrentBuild: 7601 '
-        'CurrentBuildNumber: 7601 '
-        'CurrentType: Multiprocessor Free '
-        'CurrentVersion: 6.1 '
-        'DigitalProductId: (binary) '
-        'DigitalProductId4: (binary) '
-        'EditionID: Ultimate '
-        'InstallationType: Client '
-        'PathName: C:\\Windows '
-        'ProductId: 00426-065-0381817-86216 '
-        'ProductName: Windows 7 Ultimate '
-        'RegisteredOrganization:  '
-        'RegisteredOwner: Windows User '
-        'SoftwareType: System '
-        'SystemRoot: C:\\Windows').format(key_path)
+        'BuildGUID: [REG_SZ] f4bf21b9-55fe-4ee8-a84b-0e91cbd5fe5d '
+        'BuildLab: [REG_SZ] 7601.win7sp1_gdr.111118-2330 '
+        'BuildLabEx: [REG_SZ] 7601.17727.amd64fre.win7sp1_gdr.111118-2330 '
+        'CSDBuildNumber: [REG_SZ] 1130 '
+        'CSDVersion: [REG_SZ] Service Pack 1 '
+        'CurrentBuild: [REG_SZ] 7601 '
+        'CurrentBuildNumber: [REG_SZ] 7601 '
+        'CurrentType: [REG_SZ] Multiprocessor Free '
+        'CurrentVersion: [REG_SZ] 6.1 '
+        'DigitalProductId: [REG_BINARY] (164 bytes) '
+        'DigitalProductId4: [REG_BINARY] (1272 bytes) '
+        'EditionID: [REG_SZ] Ultimate '
+        'InstallationType: [REG_SZ] Client '
+        'PathName: [REG_SZ] C:\\Windows '
+        'ProductId: [REG_SZ] 00426-065-0381817-86216 '
+        'ProductName: [REG_SZ] Windows 7 Ultimate '
+        'RegisteredOrganization: [REG_SZ]  '
+        'RegisteredOwner: [REG_SZ] Windows User '
+        'SoftwareType: [REG_SZ] System '
+        'SystemRoot: [REG_SZ] C:\\Windows').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)

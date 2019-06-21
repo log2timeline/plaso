@@ -55,41 +55,6 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
 
   _DEFINITION_FILE = 'programscache.yaml'
 
-  def _GetValuesFromKey(self, registry_key):
-    """Retrieves the values from a Windows Registry key.
-
-    Args:
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-
-    Returns:
-      dict[str, object]: names and data of the values in the key. The default
-          value is named "(default)".
-    """
-    values_dict = {}
-    for registry_value in registry_key.GetValues():
-      value_name = registry_value.name or '(default)'
-      value_object = registry_value.GetDataAsObject()
-
-      if not registry_value.data:
-        values_dict[value_name] = '(empty)'
-
-      elif registry_value.DataIsInteger():
-        values_dict[value_name] = '{0:d}'.format(value_object)
-
-      elif registry_value.DataIsString():
-        values_dict[value_name] = value_object
-
-      elif registry_value.DataIsMultiString():
-        if value_object:
-          values_dict[value_name] = ''.join(value_object)
-        else:
-          values_dict[value_name] = '[]'
-
-      else:
-        values_dict[value_name] = '(omitted)'
-
-    return values_dict
-
   def _ParseValueData(self, parser_mediator, registry_key, registry_value):
     """Extracts event objects from a Explorer ProgramsCache value data.
 

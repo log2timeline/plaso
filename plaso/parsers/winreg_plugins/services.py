@@ -81,36 +81,6 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
 
     return service_dll.GetDataAsObject()
 
-  def _GetValuesFromKey(self, registry_key):
-    """Retrieves the values from a Windows Registry key.
-
-    Args:
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-
-    Returns:
-      dict[str, object]: names and data of the values in the key. The default
-          value is named "(default)".
-    """
-    values_dict = {}
-    for registry_value in registry_key.GetValues():
-      if not registry_value.name or registry_value.name.lower() in (
-          'errorcontrol', 'imagepath', 'objectname', 'start', 'type'):
-        continue
-
-      value_object = registry_value.GetDataAsObject()
-      if registry_value.DataIsString() or registry_value.DataIsInteger():
-        values_dict[registry_value.name] = value_object
-
-      elif registry_value.DataIsMultiString():
-        if value_object:
-          value_object = ', '.join(value_object)
-        else:
-          value_object = '[]'
-
-        values_dict[registry_value.name] = value_object
-
-    return values_dict
-
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
@@ -155,7 +125,8 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     if registry_value:
       event_data.object_name = registry_value.GetDataAsObject()
 
-    values_dict = self._GetValuesFromKey(registry_key)
+    values_dict = self._GetValuesFromKey(registry_key, names_to_skip=[
+        'ErrorControl', 'ImagePath', 'ObjectName', 'Start', 'Type'])
     event_data.values = ' '.join([
         '{0:s}: {1!s}'.format(name, value)
         for name, value in sorted(values_dict.items())]) or None
