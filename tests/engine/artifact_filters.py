@@ -103,9 +103,8 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_filters_helper.BuildFindSpecs(
         artifact_filter_names, environment_variables=[environment_variable])
 
-    # There should be 15 file system find specifications.
     self.assertEqual(
-        len(test_filters_helper.included_file_system_find_specs), 15)
+        len(test_filters_helper.included_file_system_find_specs), 16)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
 
     # Last find_spec should contain the testuser2 profile path.
@@ -157,9 +156,8 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_filters_helper.BuildFindSpecs(
         artifact_filter_names, environment_variables=[environment_variable])
 
-    # There should be 15 file system find specifications.
     self.assertEqual(
-        len(test_filters_helper.included_file_system_find_specs), 15)
+        len(test_filters_helper.included_file_system_find_specs), 16)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(

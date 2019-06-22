@@ -42,7 +42,7 @@ sources:
       - '%%users.homedir%%\Documents\WindowsPowerShell\profile.ps1'
       - '\test_data\testdir\filter_*.txt'
       - '\does_not_exist\some_file_*.txt'
-      - '\globbed\test\path\**\'
+      - '\globbed\test\path\**'
       - 'failing'
     separator: '\'
 labels: [System]

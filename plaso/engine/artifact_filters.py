@@ -147,7 +147,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
           source type.
     """
     find_specs = []
-    for key_path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
+    for key_path_glob in path_helper.PathHelper.ExpandGlobStars(
         key_path, '\\'):
       logger.debug('building find spec from key path glob: {0:s}'.format(
           key_path_glob))
@@ -177,7 +177,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
       list[dfvfs.FindSpec]: find specifications for the file source type.
     """
     find_specs = []
-    for path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
+    for path_glob in path_helper.PathHelper.ExpandGlobStars(
         source_path, path_separator):
       logger.debug('building find spec from path glob: {0:s}'.format(
           path_glob))
