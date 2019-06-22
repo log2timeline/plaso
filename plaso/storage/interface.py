@@ -279,14 +279,13 @@ class BaseStore(object):
     return self._GetAttributeContainerByIdentifier(
         self._CONTAINER_TYPE_EVENT_TAG, identifier)
 
-  # pylint: disable=redundant-yields-doc
   def GetEventTags(self):
     """Retrieves the event tags.
 
     Yields:
-      EventTag: event tag.
+      generator(EventTag): event tag generator.
     """
-    self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
 
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.
