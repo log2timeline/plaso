@@ -25,7 +25,6 @@ class DateCompareObjectTest(shared_test_lib.BaseTestCase):
   # TODO: improve test coverage
 
 
-# TODO: add tests for DictObject
 # TODO: add tests for TimeRangeCache
 
 
