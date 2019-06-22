@@ -14,8 +14,8 @@ git clone https://github.com/log2timeline/plaso.git
 ## Dependencies
 
 Install the dependencies, using either:
-* A [virtualenv](Developing-Virtualenv.html#Fedora%20Core)
-* The [prepackaged dependencies](Dependencies.html#Fedora%20Core).
+* A [virtualenv](Developing-Virtualenv.html#Ubuntu)
+* The [prepackaged dependencies](Development-Dependencies.html#Ubuntu).
 
 Check if you have all the dependencies installed and have the right minimum 
 versions:
