@@ -1,13 +1,13 @@
-# Plaso Dependencies
+# Plaso Development Dependencies
 
 This page contains detailed instructions on how to install dependencies for 
 development.
 
 There are multiple ways to install the dependencies:
 
-* [Using pre-packaged dependencies](Dependencies.md#prepackaged-dependencies)
-* [Batch build](Dependencies.md#batch-build)
-* [Manual build](Dependencies.md#manual-build)
+* [Using prepackaged dependencies](Development-Dependencies.md#prepackaged-dependencies)
+* [Batch build](Development-Dependencies.md#batch-build)
+* [Manual build](Development-Dependencies.md#manual-build)
 
 ## Optional dependencies
 
@@ -24,7 +24,7 @@ or 30. Installing packages from the copr on other versions and/or distributions
 is not recommended.**
 
 The [GIFT copr](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) contains
-the necessary packages for running plaso. GIFT copr provides the following 
+the necessary packages for running Plaso. GIFT copr provides the following 
 tracks:
 
 * stable; track intended for the "packaged release" of Plaso and dependencies;
@@ -65,8 +65,6 @@ The l2tdevtools project provides
 [an update script](https://github.com/log2timeline/l2tdevtools/wiki/Update-script)
  to ease the process of keeping the dependencies up to date.
 
-#### Development track
-
 To install the development versions of the dependencies run:
 
 ```bash
@@ -87,14 +85,12 @@ its dependencies;
 * Bleeding Edge (dev) track intended for development of Plaso;
 * Testing (testing) track intended for testing newly created packages.
 
-To install plaso from the GIFT PPA you'll need to have Ubuntu universe enabled:
+To install Plaso from the GIFT PPA you'll need to have Ubuntu universe enabled:
 
 ```bash
 sudo add-apt-repository universe
 sudo apt-get update
 ```
-
-#### Development track
 
 To add the dev track to your apt configuration run:
 
@@ -129,9 +125,8 @@ The l2tdevtools project provides
 [an update script](https://github.com/log2timeline/l2tdevtools/wiki/Update-script)
  to ease the process of keeping the dependencies up to date.
 
-The script requires [pywin32](https://github.com/mhammond/pywin32/releases) and [Python WMI](https://pypi.python.org/pypi/WMI/).
-
-#### Development branch
+The script requires [pywin32](https://github.com/mhammond/pywin32/releases) and 
+[Python WMI](https://pypi.python.org/pypi/WMI/).
 
 To install the development versions of the dependencies run:
 
@@ -168,12 +163,3 @@ method.
 
 Successfully built packages will be stored in the build directory, which is 
 `build` by default. You can use your preferred installation method to install them.
-
-## Manual build
-If you're feeling brave, you can also try manually building each of the 
-dependences. The steps to do so are below:
-
-* [Fedora Core](Manual-Dependencies-Fedora-Core.md)
-* [MacOS](Manual-Dependencies-MacOS.md)
-* [Ubuntu](Manual-Dependencies-Ubuntu.md)
-* [Windows](Manual-Dependencies-Windows.md)

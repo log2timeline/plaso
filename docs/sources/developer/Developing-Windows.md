@@ -22,7 +22,7 @@ git config --global core.autocrlf false
 ## Dependencies
 
 Install the dependencies, using the 
-[pre-packaged dependencies](Dependencies.html#Windows).
+[prepackaged dependencies](Development-Dependencies.html#Windows).
 
 Check if you have all the dependencies installed and have the right minimum 
 version:
@@ -43,7 +43,7 @@ set PYTHONPATH=C:\plaso-build\plaso
 
 To run a tool, for example `pinfo`:
 ```
-C:\Python27\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py test.plaso
+C:\Python37\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py test.plaso
 ```
 
 ## Development tools
@@ -71,7 +71,7 @@ To build the MSI file run the following commands from the build root directory:
 ```
 tar xvf mock-1.0.1.tar.gz
 cd mock-1.0.1\
-C:\Python27\python.exe setup.py bdist_msi
+C:\Python37\python.exe setup.py bdist_msi
 cd ..
 ```
 

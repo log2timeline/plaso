@@ -15,7 +15,7 @@ git clone https://github.com/log2timeline/plaso.git
 
 Install the dependencies, using either:
 * A [virtualenv](Developing-Virtualenv.html#Fedora%20Core)
-* The [pre-packaged dependencies](Dependencies.html#Fedora%20Core).
+* The [prepackaged dependencies](Dependencies.html#Fedora%20Core).
 
 Check if you have all the dependencies installed and have the right minimum 
 versions:
@@ -29,14 +29,9 @@ frequently updated, therefore we recommend checking the status of the
 
 ## Updating your environment.
 
-To update the Plaso source code, run:
-```
-git pull origin master
-```
-
-If you are using a github fork your origin is pointing to your fork not, and not
- the main Plaso git repository. When you run `git remote -v` You might see 
- something like:
+If you are using a github fork your origin is pointing to your fork and not
+the main Plaso git repository. When you run `git remote -v` you might see 
+something like:
 ```
 origin	https://github.com/Onager/plaso (fetch)
 origin	https://github.com/Onager/plaso (push)

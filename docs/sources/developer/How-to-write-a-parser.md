@@ -17,13 +17,14 @@ Python and use of git.
 Before you can write a binary file parser you will need to have a good 
 understanding of the file format. A description of the 
 Safari Cookies.binarycookies format can be found 
-[here](https://github.com/libyal/assorted/blob/master/documentation/Safari%20Cookies.asciidoc).
+[here](https://github.com/libyal/dtformats/blob/master/documentation/Safari%20Cookies.asciidoc).
 
 ## Parsers vs. Plugins
 Before starting work on a parser, check if Plaso already has a parser that 
 handles the underlying format of the file you're parsing. Plaso currently 
 supports plugins for the following file formats:
 * Bencode
+* Compound zip files
 * Web Browser Cookies
 * ESEDB
 * OLECF

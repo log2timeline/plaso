@@ -11,12 +11,12 @@
 The first challenge you will encounter is setting up and maintaining your 
 development environment.
 
-Start by preparing a development environment:
+Start by setting up a development environment:
 
 * [Development environment in a VirtualEnv](Developing-Virtualenv.md)
 * [Development environment on Fedora Core](Developing-Fedora-Core.md)
 * [Development environment on MacOS](Developing-MacOS.md)
-* [Development environment on Fedora Core](Developing-Ubuntu.md)
+* [Development environment on Ubuntu](Developing-Ubuntu.md)
 * [Development environment on Windows](Developing-Windows.md)
 
 ## Getting Started
@@ -58,19 +58,20 @@ Before you start writing  code, please review the following:
 
 * [Style guide](Style-guide.md). All code submitted to the project needs to 
 follow this style guide.
-* [Code review](Codereview.md). All code that is submitted into the project is
+* [Code review](https://github.com/log2timeline/l2tdocs/blob/master/process/Code%20review%20process.md). All code that is submitted into the project is
  reviewed by at least one other person.
 * [Adding a new dependency](https://github.com/log2timeline/l2tdocs/blob/master/process/Dependencies.md). 
 If your code requires adding a new dependency please check out these instructions.
 
 ### Before you submit your first code review
 
-1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev),
-we recommend using the same account as step 1
-1. Install the required development tools like pylint, python-mock, sphinx
-1. Make sure to run all the tests inside the Plaso and the dfVFS codebase, and
-that they successfully complete on your development system
-1. Make sure your development system is set up correctly so that you can develop
+1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev)
+and [Slack channel](https://github.com/open-source-dfir/slack), we recommend 
+using the same account as step 1
+1. Install the required development tools like pylint and python-mock
+1. Make sure to run all the tests in the Plaso codebase, and that they 
+successfully complete in your development environment 
+1. Make sure your development environment is set up correctly so that you can develop
  and test correctly.
 1. Make sure your email address and name are correctly set in git. You can use 
 the following commands:
@@ -85,7 +86,7 @@ Use `git config -l` to see your current configuration.
 ### Core features changes
 
 Sometimes you need to make some change to the core of the Plaso codebase. 
-In those cases we ask that contributors first create a short design doc 
+In those cases we ask that contributors first create a short design proposal 
 explaining the rationale behind the change. The design doc needs to contain:
 
 1. A description of the problem you are facing

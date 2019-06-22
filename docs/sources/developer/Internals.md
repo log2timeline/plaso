@@ -15,15 +15,16 @@ Also see: [Architecture overview](https://docs.google.com/drawings/d/1WzB3rz50Kf
 ## Preprocessing
 
 This operation runs prior to all other processing. The purpose of this operation
-is to examine the source data and determine ine which OS it belongs to and 
-collect important information that can be used to both augment parsing and make
-it more accurate. Examples of what the pre-processing operation should collects:
+is to examine the source data and determine which operating systems it belongs 
+to and collect important information that can be used to both augment parsing 
+and make it more accurate. Examples of what the pre-processing operation should
+collect:
 
 * Timezone information.
 * Names and metadata about all users, like the path to their home directory.
 * Hostname.
-* OS specific items that make future processing simpler (such as current control 
-set in registry, code page used, etc.)
+* Operating sytems specific items that make future processing simpler 
+(such as current control set in registry, code page used, etc.)
 
 ## Collection
 
