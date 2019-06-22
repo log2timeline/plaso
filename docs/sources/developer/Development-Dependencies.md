@@ -17,9 +17,9 @@ Some dependencies for Plaso are optional:
 
 ## Prepackaged dependencies
 
-### Fedora Core
+### Fedora
 
-**Note that these instructions assume you are running on Fedora Core 28, 29 
+**Note that these instructions assume you are running on Fedora 28, 29 
 or 30. Installing packages from the copr on other versions and/or distributions 
 is not recommended.**
 

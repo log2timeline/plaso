@@ -14,7 +14,7 @@ development environment.
 Start by setting up a development environment:
 
 * [Development environment in a VirtualEnv](Developing-Virtualenv.md)
-* [Development environment on Fedora Core](Developing-Fedora-Core.md)
+* [Development environment on Fedora](Developing-Fedora.md)
 * [Development environment on MacOS](Developing-MacOS.md)
 * [Development environment on Ubuntu](Developing-Ubuntu.md)
 * [Development environment on Windows](Developing-Windows.md)

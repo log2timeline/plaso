@@ -1,4 +1,4 @@
-# Developing on Fedora Core
+# Developing on Fedora
 
 To download the latest version of Plaso you'll need to install the git tools:
 ```bash
