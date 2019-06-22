@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import calendar
 import codecs
 import datetime
-import re
 
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -184,69 +183,6 @@ class DateCompareObject(object):
       str: string representation of the object.
     """
     return self.text
-
-
-class DictObject(object):
-  # There's a backslash in the class docstring, so as not to confuse Sphinx.
-  # pylint: disable=anomalous-backslash-in-string
-  """A simple object representing a dict object.
-
-  To filter against an object that is stored as a dictionary the dict
-  is converted into a simple object. Since keys can contain spaces
-  and/or other symbols they are stripped out to make filtering work
-  like it is another object.
-
-  Example dict::
-
-    {'A value': 234,
-     'this (my) key_': 'value',
-     'random': True,
-    }
-
-  This object would then allow access to object.thismykey that would access
-  the key 'this (my) key\_' inside the dict.
-  """
-
-  _STRIP_KEY_RE = re.compile(r'[ (){}+_=\-<>[\]]')
-
-  def __init__(self, dict_object):
-    """Initialize the object and build a secondary dict."""
-    # TODO: Move some of this code to a more value typed system.
-    self._dict_object = dict_object
-
-    self._dict_translated = {}
-    for key, value in dict_object.items():
-      key = self._StripKey(key)
-      self._dict_translated[key] = value
-
-  def _StripKey(self, key):
-    """Strips a key form symbols to use within a dictionary.
-
-    Args:
-      key (str): key to strip.
-
-    Returns:
-      str: stripped key.
-    """
-    return self._STRIP_KEY_RE.sub('', key.lower())
-
-  def __getattr__(self, attr):
-    """Return back entries from the dictionary."""
-    if attr in self._dict_object:
-      return self._dict_object.get(attr)
-
-    # Special case of getting all the key/value pairs.
-    if attr == '__all__':
-      ret = []
-      for key, value in self._dict_translated.items():
-        ret.append('{}:{}'.format(key, value))
-      return ' '.join(ret)
-
-    test = self._StripKey(attr)
-    if test in self._dict_translated:
-      return self._dict_translated.get(test)
-
-    return None
 
 
 class TimeRangeCache(object):
