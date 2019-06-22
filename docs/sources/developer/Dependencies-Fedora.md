@@ -1,8 +1,8 @@
-# Building and Installing Dependencies on Fedora Core 
+# Building and Installing Dependencies on Fedora 
 
 ## Manual build
 
-It is impossible for us to support all flavors of Fedora Core out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.
+It is impossible for us to support all flavors of Fedora out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.
 
 For ease of maintenance the following instructions use as much rpm package files as possible. Note that the resulting rpm files are not intended for public redistribution.
 
