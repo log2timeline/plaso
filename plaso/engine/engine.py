@@ -71,17 +71,23 @@ class BaseEngine(object):
     """
     find_specs = [
         file_system_searcher.FindSpec(
-            location='/etc', case_sensitive=False),
+            case_sensitive=False, location='/etc',
+            location_separator='/'),
         file_system_searcher.FindSpec(
-            location='/System/Library', case_sensitive=False),
+            case_sensitive=False, location='/System/Library',
+            location_separator='/'),
         file_system_searcher.FindSpec(
-            location='/Windows/System32', case_sensitive=False),
+            case_sensitive=False, location='\\Windows\\System32',
+            location_separator='\\'),
         file_system_searcher.FindSpec(
-            location='/WINNT/System32', case_sensitive=False),
+            case_sensitive=False, location='\\WINNT\\System32',
+            location_separator='\\'),
         file_system_searcher.FindSpec(
-            location='/WINNT35/System32', case_sensitive=False),
+            case_sensitive=False, location='\\WINNT35\\System32',
+            location_separator='\\'),
         file_system_searcher.FindSpec(
-            location='/WTSRV/System32', case_sensitive=False)]
+            case_sensitive=False, location='\\WTSRV\\System32',
+            location_separator='\\')]
 
     locations = []
     for path_spec in searcher.Find(find_specs=find_specs):

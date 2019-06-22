@@ -28,7 +28,7 @@ PYTHON_DEPENDENCIES = {
     'dateutil': ('__version__', '1.5', None, True),
     'defusedxml': ('__version__', '0.5.0', None, True),
     'dfdatetime': ('__version__', '20180704', None, True),
-    'dfvfs': ('__version__', '20190607', None, True),
+    'dfvfs': ('__version__', '20190609', None, True),
     'dfwinreg': ('__version__', '20180712', None, True),
     'dtfabric': ('__version__', '20181128', None, True),
     'elasticsearch': ('__versionstr__', '6.0', None, False),

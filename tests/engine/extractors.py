@@ -69,13 +69,9 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     """
     find_specs = []
     for location_expression in location_expressions:
-      # Convert the filter paths into a list of path segments and strip
-      # the root path segment.
-      path_segments = location_expression.split('/')
-      path_segments.pop(0)
-
       find_spec = file_system_searcher.FindSpec(
-          location_regex=path_segments, case_sensitive=False)
+          case_sensitive=False, location_regex=location_expression,
+          location_separator='/')
       find_specs.append(find_spec)
 
     return find_specs
@@ -273,14 +269,14 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     paths = self._GetFilePaths(path_specs)
 
     # path_specs[0]
-    # type: TSK
+    # path_spec_type: TSK
     # file_path: '/a_directory/another_file'
     # container_path: 'test_data/ímynd.dd'
     # image_offset: 0
     self.assertEqual(paths[0], '/a_directory/another_file')
 
     # path_specs[1]
-    # type: TSK
+    # path_spec_type: TSK
     # file_path: '/passwords.txt'
     # container_path: 'test_data/ímynd.dd'
     # image_offset: 0

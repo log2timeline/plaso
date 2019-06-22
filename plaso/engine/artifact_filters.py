@@ -198,21 +198,10 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
               '"{0:s}"').format(path))
           continue
 
-        # Convert the path filters into a list of path segments and
-        # strip the root path segment.
-        path_segments = path.split(path_separator)
-
-        # Remove initial root entry
-        path_segments.pop(0)
-
-        if not path_segments[-1]:
-          logger.warning(
-              'Empty last path segment in path filter: "{0:s}"'.format(path))
-          path_segments.pop(-1)
-
         try:
           find_spec = file_system_searcher.FindSpec(
-              location_glob=path_segments, case_sensitive=False)
+              case_sensitive=False, location_glob=path,
+              location_separator=path_separator)
         except ValueError as exception:
           logger.error((
               'Unable to build find specification for path: "{0:s}" with '
