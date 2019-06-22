@@ -24,6 +24,7 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
       {'data_type': 'test:event',
        'filename': 'c:/Users/joesmith/NTUSER.DAT',
        'hostname': 'MYHOSTNAME',
+       'random': 'random',
        'text': '',
        'timestamp': 0,
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
@@ -31,23 +32,23 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
       {'data_type': 'windows:registry:key_value',
        'hostname': 'MYHOSTNAME',
        'key_path': 'MY AutoRun key',
-       'regvalue': {'Value': 'c:/Temp/evil.exe'},
        'timestamp': timelib.Timestamp.CopyFromString(
            '2012-04-20 22:38:46.929596'),
-       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+       'values': 'Value: c:/Temp/evil.exe'},
       {'data_type': 'windows:registry:key_value',
        'hostname': 'MYHOSTNAME',
        'key_path': 'HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key',
-       'regvalue': {'Value': 'send all the exes to the other world'},
        'timestamp': timelib.Timestamp.CopyFromString(
            '2012-04-20 23:56:46.929596'),
-       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+       'values': 'Value: send all the exes to the other world'},
       {'data_type': 'windows:registry:key_value',
        'hostname': 'MYHOSTNAME',
        'key_path': 'HKEY_CURRENT_USER\\Windows\\Normal',
-       'regvalue': {'Value': 'run all the benign stuff'},
        'timestamp': timelib.Timestamp.CopyFromString('2012-04-20 16:44:46'),
-       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+       'values': 'Value: run all the benign stuff'},
       {'data_type': 'test:event',
        'filename': 'c:/Temp/evil.exe',
        'hostname': 'MYHOSTNAME',
@@ -162,6 +163,19 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
         'This is a line by someone not reading the log line properly. '
         'And since this l...')
     self.assertEqual(text_message_short, expected_text_message_short)
+
+    manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
+
+  def testGetUnformattedAttributes(self):
+    """Tests the GetUnformattedAttributes function."""
+    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
+
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
+    unformatted_attributes = manager.FormattersManager.GetUnformattedAttributes(
+        event_data)
+    self.assertEqual(unformatted_attributes, ['random'])
 
     manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 

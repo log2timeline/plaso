@@ -18,7 +18,7 @@ from plaso.parsers.winreg_plugins import dtfabric_plugin
 
 
 class AppCompatCacheEventData(events.EventData):
-  """Class that defines AppCompatCache event data.
+  """Application Compatibility Cache event data.
 
   Attributes:
     entry_index (int): cache entry index number for the record.
@@ -37,7 +37,7 @@ class AppCompatCacheEventData(events.EventData):
 
 
 class AppCompatCacheHeader(object):
-  """Class that contains the Application Compatibility Cache header."""
+  """Application Compatibility Cache header."""
 
   def __init__(self):
     """Initializes the header object."""
@@ -47,7 +47,7 @@ class AppCompatCacheHeader(object):
 
 
 class AppCompatCacheCachedEntry(object):
-  """Class that contains the Application Compatibility Cache cached entry."""
+  """Application Compatibility Cache cached entry."""
 
   def __init__(self):
     """Initializes the cached entry object."""
@@ -64,7 +64,7 @@ class AppCompatCacheCachedEntry(object):
 
 class AppCompatCacheWindowsRegistryPlugin(
     dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
-  """Class that parses the Application Compatibility Cache Registry data."""
+  """Application Compatibility Cache data Windows Registry plugin."""
 
   NAME = 'appcompatcache'
   DESCRIPTION = 'Parser for Application Compatibility Cache Registry data.'
@@ -76,10 +76,6 @@ class AppCompatCacheWindowsRegistryPlugin(
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
           'Session Manager\\AppCompatCache')])
-
-  URLS = [
-      ('https://github.com/libyal/winreg-kb/blob/master/documentation/'
-       'Application%20Compatibility%20Cache%20key.asciidoc')]
 
   _DEFINITION_FILE = 'appcompatcache.yaml'
 

@@ -10,14 +10,12 @@ from plaso.formatters import android_sms as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import android_sms
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class AndroidSMSTest(test_lib.SQLitePluginTestCase):
   """Tests for the Android SMS database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['mmssms.db'])
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""
     plugin = android_sms.AndroidSMSPlugin()

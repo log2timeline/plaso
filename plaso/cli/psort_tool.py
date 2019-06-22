@@ -91,7 +91,6 @@ class PsortTool(
     self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
-    self._use_zeromq = True
     self._worker_memory_limit = None
 
     self.list_analysis_plugins = False
@@ -307,8 +306,11 @@ class PsortTool(
             'If a worker process exceeds this limit is is killed by the main '
             '(foreman) process.'))
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -378,7 +380,7 @@ class PsortTool(
 
     try:
       # TODO: refactor how arguments is used in a more argparse way.
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.
@@ -531,8 +533,7 @@ class PsortTool(
               session, self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.AnalyzeEvents(
           self._knowledge_base, storage_writer, self._data_location,
@@ -552,8 +553,7 @@ class PsortTool(
               self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,

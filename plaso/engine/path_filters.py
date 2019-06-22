@@ -106,7 +106,7 @@ class PathCollectionFiltersHelper(filters_helper.CollectionFiltersHelper):
           continue
 
         find_spec = file_system_searcher.FindSpec(
-            location_regex=path_segments, case_sensitive=False)
+            case_sensitive=False, location_regex=path_segments)
 
         if path_filter.filter_type == PathFilter.FILTER_TYPE_EXCLUDE:
           self.excluded_file_system_find_specs.append(find_spec)

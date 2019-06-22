@@ -38,6 +38,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-chardet
                       python3-crypto
                       python3-dateutil
+                      python3-defusedxml
                       python3-dfdatetime
                       python3-dfvfs
                       python3-dfwinreg

@@ -8,10 +8,9 @@ from __future__ import unicode_literals
 
 import codecs
 
-from xml.etree import ElementTree
-
 import biplist
 
+from defusedxml import ElementTree
 from dfdatetime import time_elements as dfdatetime_time_elements
 from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec

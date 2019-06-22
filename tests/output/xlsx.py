@@ -8,7 +8,7 @@ import os
 import unittest
 import zipfile
 
-from xml.etree import ElementTree
+from defusedxml import ElementTree
 
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager

@@ -10,7 +10,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
+from plaso.formatters import services as services_formatter  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import services
 
 from tests.parsers.winreg_plugins import test_lib
@@ -80,6 +80,9 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  # TODO: add test for _GetServiceDll
+  # TODO: add test for _GetValuesFromKey
+
   def testFilters(self):
     """Tests the FILTERS class attribute."""
     plugin = services.ServicesPlugin()
@@ -110,16 +113,17 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+    self.assertEqual(event.data_type, 'windows:registry:service')
 
     expected_message = (
         '[{0:s}] '
-        'DisplayName: Test Driver '
-        'DriverPackageId: testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
-        'ErrorControl: Normal (1) '
-        'Group: Pnp Filter '
-        'ImagePath: C:\\Dell\\testdriver.sys '
+        'Type: File System Driver (0x2) '
         'Start: Auto Start (2) '
-        'Type: File System Driver (0x2)').format(key_path)
+        'Image path: C:\\Dell\\testdriver.sys '
+        'Error control: Normal (1) '
+        'DisplayName: [REG_SZ] Test Driver '
+        'DriverPackageId: [REG_SZ] testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
+        'Group: [REG_SZ] Pnp Filter').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -168,11 +172,11 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     self.CheckTimestamp(event.timestamp, '2012-04-06 20:43:27.639075')
+    self.assertEqual(event.data_type, 'windows:registry:service')
 
-    self._TestRegvalue(event, 'Type', 0x20)
-    self._TestRegvalue(event, 'Start', 3)
-    self._TestRegvalue(
-        event, 'ServiceDll', '%SystemRoot%\\System32\\qmgr.dll')
+    self.assertEqual(event.service_type, 0x20)
+    self.assertEqual(event.start_type, 3)
+    self.assertEqual(event.service_dll, '%SystemRoot%\\System32\\qmgr.dll')
 
     # Test the McTaskManager subkey events.
     self.assertEqual(len(mc_task_manager_events), 1)
@@ -180,9 +184,10 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event = mc_task_manager_events[0]
 
     self.CheckTimestamp(event.timestamp, '2011-09-16 20:49:16.877416')
+    self.assertEqual(event.data_type, 'windows:registry:service')
 
-    self._TestRegvalue(event, 'DisplayName', 'McAfee Task Manager')
-    self._TestRegvalue(event, 'Type', 0x10)
+    self.assertEqual(event.service_type, 0x10)
+    self.assertTrue('DisplayName: [REG_SZ] McAfee Task Manager' in event.values)
 
     # Test the RdpVideoMiniport subkey events.
     self.assertEqual(len(rdp_video_miniport_events), 1)
@@ -190,10 +195,11 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event = rdp_video_miniport_events[0]
 
     self.CheckTimestamp(event.timestamp, '2011-09-17 13:37:59.347158')
+    self.assertEqual(event.data_type, 'windows:registry:service')
 
-    self._TestRegvalue(event, 'Start', 3)
-    expected_value = 'System32\\drivers\\rdpvideominiport.sys'
-    self._TestRegvalue(event, 'ImagePath', expected_value)
+    self.assertEqual(event.start_type, 3)
+    self.assertEqual(
+        event.image_path, 'System32\\drivers\\rdpvideominiport.sys')
 
 
 if __name__ == '__main__':

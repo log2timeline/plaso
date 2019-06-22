@@ -134,6 +134,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:registry:timezone')
     self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
     expected_message = (
@@ -171,6 +172,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.assertEqual(event.data_type, 'windows:registry:timezone')
     self.CheckTimestamp(event.timestamp, '2012-03-11 07:00:00.000642')
 
     expected_message = (

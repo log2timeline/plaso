@@ -3,11 +3,29 @@
 
 from __future__ import unicode_literals
 
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
+
+
+class WindowsTimezoneSettingsEventData(events.EventData):
+  """Timezone settings event data attribute container.
+
+  Attributes:
+    configuration (str): timezone configuration.
+    key_path (str): Windows Registry key path.
+  """
+
+  DATA_TYPE = 'windows:registry:timezone'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(WindowsTimezoneSettingsEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.configuration = None
+    self.key_path = None
 
 
 class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
@@ -26,7 +44,6 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
       'DynamicDaylightTimeDisabled', 'StandardBias', 'StandardName',
       'TimeZoneKeyName'])
 
-
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
@@ -38,22 +55,21 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
     if registry_key is None:
       return
 
-    values_dict = {}
+    configuration = []
     for value_name in self._VALUE_NAMES:
       registry_value = registry_key.GetValueByName(value_name)
       if not registry_value:
         continue
 
-      value_data = registry_value.GetDataAsObject()
-      if value_data is None:
+      value = registry_value.GetDataAsObject()
+      if value is None:
         continue
 
-      values_dict[value_name] = value_data
+      configuration.append('{0:s}: {1!s}'.format(registry_value.name, value))
 
-    event_data = windows_events.WindowsRegistryEventData()
+    event_data = WindowsTimezoneSettingsEventData()
+    event_data.configuration = ' '.join(sorted(configuration)) or None
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)

@@ -9,14 +9,11 @@ import unittest
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import windows_timeline
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
   """Tests for the Windows Timeline plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([
-      'windows_timeline_ActivitiesCache.db'])
   def testProcess(self):
     """Tests the Process function on a Windows Timeline db."""
 

@@ -8,14 +8,12 @@ import unittest
 
 from plaso.parsers import amcache
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class AmcacheParserTest(test_lib.ParserTestCase):
   """Tests for the Amcache Registry plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Amcache.hve'])
   def testParse(self):
     """Tests the Parse function."""
     parser = amcache.AmcacheParser()
@@ -49,7 +47,6 @@ class AmcacheParserTest(test_lib.ParserTestCase):
 
     # TODO: add test for message string
 
-  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testParseWithSystem(self):
     """Tests the Parse function with a SYSTEM Registry file."""
     parser = amcache.AmcacheParser()

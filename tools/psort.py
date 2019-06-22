@@ -27,7 +27,7 @@ def Main():
   input_reader = cli_tools.StdinInputReader()
   tool = psort_tool.PsortTool(input_reader=input_reader)
 
-  if not tool.ParseArguments():
+  if not tool.ParseArguments(sys.argv[1:]):
     return False
 
   if tool.show_troubleshooting:

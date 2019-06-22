@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import uuid
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -13,6 +14,28 @@ from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
+
+
+class ExplorerProgramsCacheEventData(events.EventData):
+  """Explorer ProgramsCache event data attribute container.
+
+  Attributes:
+    entries (str): entries in the program cache.
+    key_path (str): Windows Registry key path.
+    known_folder_identifier (str): known folder identifier.
+    value_name (str): Windows Registry value name.
+  """
+
+  DATA_TYPE = 'windows:registry:explorer:programcache'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(ExplorerProgramsCacheEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.entries = None
+    self.key_path = None
+    self.known_folder_identifier = None
+    self.value_name = None
 
 
 class ExplorerProgramsCacheWindowsRegistryPlugin(
@@ -29,10 +52,6 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\StartPage2')])
-
-  URLS = [
-      ('https://github.com/libyal/winreg-kb/blob/master/documentation/'
-       'Programs%20Cache%20values.asciidoc')]
 
   _DEFINITION_FILE = 'programscache.yaml'
 
@@ -146,13 +165,12 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
     if known_folder_identifier:
       known_folder_identifier = '{0!s}'.format(known_folder_identifier)
 
-    event_data = windows_events.WindowsRegistryListEventData()
+    event_data = ExplorerProgramsCacheEventData()
+    event_data.entries = ' '.join([
+        '{0:d}: {1:s}'.format(index, link_target)
+        for index, link_target in enumerate(link_targets)]) or None
     event_data.key_path = registry_key.path
     event_data.known_folder_identifier = known_folder_identifier
-    event_data.list_name = registry_value.name
-    event_data.list_values = ' '.join([
-        '{0:d}: {1:s}'.format(index, link_target)
-        for index, link_target in enumerate(link_targets)])
     event_data.value_name = registry_value.name
 
     event = time_events.DateTimeValuesEvent(
@@ -179,23 +197,17 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
     if registry_value:
       self._ParseValueData(parser_mediator, registry_key, registry_value)
 
-    values_dict = {}
-    for registry_value in registry_key.GetValues():
-      # Ignore the default value.
-      if not registry_value.name or registry_value.name in (
-          'ProgramsCache', 'ProgramsCacheSMP', 'ProgramsCacheTBP'):
-        continue
-
-      # Ignore any value that is empty or that does not contain a string.
-      if not registry_value.data or not registry_value.DataIsString():
-        continue
-
-      values_dict[registry_value.name] = registry_value.GetDataAsObject()
+    values_dict = self._GetValuesFromKey(registry_key)
+    for name in list(values_dict.keys()):
+      if name.lower() in (
+          'programscache', 'programscachesmp', 'programscachetbp'):
+        del values_dict[name]
 
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
+    event_data.values = ' '.join([
+        '{0:s}: {1!s}'.format(name, value)
+        for name, value in sorted(values_dict.items())]) or None
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)

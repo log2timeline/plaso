@@ -57,19 +57,12 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:typedurls')
     self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307750')
-
-    regvalue_identifier = 'url1'
-    expected_value = 'http://cnn.com/'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
         '[{0:s}] '
         'url1: http://cnn.com/ '
-        'url10: http://www.adobe.com/ '
-        'url11: http://www.google.com/ '
-        'url12: http://www.firefox.com/ '
-        'url13: http://go.microsoft.com/fwlink/?LinkId=69157 '
         'url2: http://twitter.com/ '
         'url3: http://linkedin.com/ '
         'url4: http://tweetdeck.com/ '
@@ -77,7 +70,11 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         'url6: http://google.com/ '
         'url7: http://controller.shieldbase.local/certsrv/ '
         'url8: http://controller.shieldbase.local/ '
-        'url9: http://www.stark-research-labs.com/').format(key_path)
+        'url9: http://www.stark-research-labs.com/ '
+        'url10: http://www.adobe.com/ '
+        'url11: http://www.google.com/ '
+        'url12: http://www.firefox.com/ '
+        'url13: http://go.microsoft.com/fwlink/?LinkId=69157').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -112,14 +109,12 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:typedurls')
     self.CheckTimestamp(event.timestamp, '2010-11-10 07:58:15.811625')
 
-    regvalue_identifier = 'url1'
-    expected_value = '\\\\controller'
-    self._TestRegvalue(event, regvalue_identifier, expected_value)
-
-    expected_message = '[{0:s}] {1:s}: {2:s}'.format(
-        key_path, regvalue_identifier, expected_value)
+    expected_message = (
+        '[{0:s}] '
+        'url1: \\\\controller').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

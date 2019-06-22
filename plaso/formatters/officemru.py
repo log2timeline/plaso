@@ -24,5 +24,18 @@ class OfficeMRUWindowsRegistryEventFormatter(
   SOURCE_SHORT = 'REG'
 
 
-manager.FormattersManager.RegisterFormatter(
-    OfficeMRUWindowsRegistryEventFormatter)
+class OfficeMRUListWindowsRegistryEventFormatter(interface.EventFormatter):
+  """Formatter for a BagMRU event."""
+
+  DATA_TYPE = 'windows:registry:office_mru_list'
+
+  FORMAT_STRING = '[{key_path}] {entries}'
+  FORMAT_STRING_ALTERNATIVE = '{entries}'
+
+  SOURCE_LONG = 'Registry Key : Microsoft Office MRU'
+  SOURCE_SHORT = 'REG'
+
+
+manager.FormattersManager.RegisterFormatters([
+    OfficeMRUWindowsRegistryEventFormatter,
+    OfficeMRUListWindowsRegistryEventFormatter])

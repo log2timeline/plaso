@@ -9,25 +9,23 @@ import unittest
 from plaso.formatters import skype as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import skype
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class SkypePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Skype main.db history database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['skype_main.db'])
   def testProcess(self):
     """Tests the Process function on a Skype History database file.
 
-      The History file contains 24 events:
+    The History file contains 24 events:
       3 call events
       4 transfers file events
       1 sms event
       1 account event
       15 chat events
 
-      Events used:
+    Events used:
       id = 16 -> SMS
       id = 22 -> Call
       id = 18 -> File

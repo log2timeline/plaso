@@ -9,14 +9,12 @@ import unittest
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import tango_android
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
   """Tests for Tango on Android profile database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['tango_android_profile.db'])
   def testProcess(self):
     """Test the Process function on a Tango Android file."""
     plugin = tango_android.TangoAndroidProfilePlugin()
@@ -74,7 +72,6 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
 class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
   """Tests for Tango on Android tc databases plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['tango_android_tc.db'])
   def testProcess(self):
     """Test the Process function on a Tango Android file."""
     plugin = tango_android.TangoAndroidTCPlugin()

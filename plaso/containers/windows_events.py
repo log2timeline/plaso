@@ -46,38 +46,11 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
     self.uuid = '{0!s}'.format(uuid)
 
 
-class WindowsRegistryInstallationEventData(events.EventData):
-  """Windows installation event data attribute container.
-
-  Attributes:
-    key_path (str): Windows Registry key path.
-    owner (str): owner.
-    product_name (str): product name.
-    service_pack (str): service pack.
-    version (str): version.
-  """
-
-  DATA_TYPE = 'windows:registry:installation'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(WindowsRegistryInstallationEventData, self).__init__(
-        data_type=self.DATA_TYPE)
-    self.key_path = None
-    self.owner = None
-    self.product_name = None
-    self.service_pack = None
-    self.version = None
-
-
 class WindowsRegistryEventData(events.EventData):
   """Windows Registry event data attribute container.
 
   Attributes:
     key_path (str): Windows Registry key path.
-    regvalue (dict[str, object]): values in the key.
-    source_append (str): text to append to the source_long of the event.
-    urls (list[str]): URLs.
     values (str): names and data of the values in the key.
   """
 
@@ -87,62 +60,7 @@ class WindowsRegistryEventData(events.EventData):
     """Initializes event data."""
     super(WindowsRegistryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.key_path = None
-    # TODO: deprecate regvalue.
-    self.regvalue = None
-    # TODO: deprecate source_append.
-    self.source_append = None
-    # TODO: deprecate urls.
-    self.urls = None
     self.values = None
-
-
-class WindowsRegistryListEventData(events.EventData):
-  """Windows Registry list event data attribute container.
-
-  Windows Registry list event data is used to store a MRU.
-
-  Attributes:
-    key_path (str): Windows Registry key path.
-    known_folder_identifier (str): known folder identifier.
-    list_name (str): name of the list.
-    list_values (str): values in the list.
-    value_name (str): Windows Registry value name.
-  """
-  DATA_TYPE = 'windows:registry:list'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(WindowsRegistryListEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.key_path = None
-    self.known_folder_identifier = None
-    self.list_name = None
-    self.list_values = None
-    self.value_name = None
-
-
-class WindowsRegistryServiceEventData(events.EventData):
-  """Windows Registry service event data attribute container.
-
-  Attributes:
-    key_path (str): Windows Registry key path.
-    offset (int): data offset of the Windows Registry key or value.
-    regvalue (dict[str, str]): values of a key.
-    urls (Optional[list[str]]): URLs.
-  """
-
-  DATA_TYPE = 'windows:registry:service'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(WindowsRegistryServiceEventData, self).__init__(
-        data_type=self.DATA_TYPE)
-    self.key_path = None
-    # TODO: deprecate regvalue.
-    self.regvalue = None
-    # TODO: deprecate source_append.
-    self.source_append = None
-    # TODO: deprecate urls.
-    self.urls = None
 
 
 class WindowsVolumeEventData(events.EventData):

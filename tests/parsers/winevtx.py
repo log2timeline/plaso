@@ -29,7 +29,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     #   Number of recovered records : 0
     #   Log type                    : System
 
-    self.assertEqual(storage_writer.number_of_events, 1601)
+    self.assertEqual(storage_writer.number_of_events, 3202)
 
     events = list(storage_writer.GetEvents())
 
@@ -62,7 +62,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.strings[1], expected_string)
 
-    event = events[1]
+    event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2012-03-14 04:17:38.276340')
     self.assertEqual(
@@ -127,11 +127,11 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(['System2.evtx'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 194)
+    self.assertEqual(storage_writer.number_of_events, 388)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[178]
+    event = events[356]
 
     expected_strings_parsed = [
         ('source_user_id', 'S-1-5-18'),
@@ -146,7 +146,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.event_identifier, 4624)
 
-    event = events[180]
+    event = events[360]
 
     expected_strings_parsed = [
         ('source_user_id', 'S-1-5-21-1539974973-2753941131-3212641383-1000'),

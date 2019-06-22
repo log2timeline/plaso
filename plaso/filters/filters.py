@@ -220,16 +220,12 @@ class GenericBinaryOperator(BinaryOperator):
               attribute_name))
 
     if attribute_name in self._EVENT_ATTRIBUTE_NAMES:
-      attribute_value = getattr(event, attribute_name, None)
-    elif attribute_name == 'tag':
-      attribute_value = getattr(event_tag, 'labels', None)
-    else:
-      attribute_value = getattr(event_data, attribute_name, None)
+      return getattr(event, attribute_name, None)
 
-    if attribute_value and isinstance(attribute_value, dict):
-      return helpers.DictObject(attribute_value)
+    if attribute_name == 'tag':
+      return getattr(event_tag, 'labels', None)
 
-    return attribute_value
+    return getattr(event_data, attribute_name, None)
 
   def _GetValueByPath(self, path, event, event_data, event_tag):
     """Retrieves the value of a specific event attribute given a specific path.
@@ -257,7 +253,17 @@ class GenericBinaryOperator(BinaryOperator):
     if attribute_value is None:
       return None
 
-    if len(path) == 1 or isinstance(attribute_value, dict):
+    if isinstance(attribute_value, dict):
+      if len(path) != 2:
+        logging.warning((
+            'Unsupported object path length: {0:d} for dictionary '
+            'value').format(len(path)))
+        return None
+
+      attribute_name = path[1].lower()
+      return attribute_value.get(attribute_name, None)
+
+    if len(path) == 1:
       return attribute_value
 
     return self._GetValueByPath(path[1:], None, attribute_value, None)

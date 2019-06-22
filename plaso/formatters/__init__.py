@@ -56,6 +56,7 @@ from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
 from plaso.formatters import mountpoints
+from plaso.formatters import mrulist
 from plaso.formatters import mrulistex
 from plaso.formatters import msie_webcache
 from plaso.formatters import msie_zones
@@ -70,6 +71,7 @@ from plaso.formatters import pe
 from plaso.formatters import plist
 from plaso.formatters import pls_recall
 from plaso.formatters import popcontest
+from plaso.formatters import programscache
 from plaso.formatters import recycler
 from plaso.formatters import run
 from plaso.formatters import safari
@@ -78,6 +80,7 @@ from plaso.formatters import sam_users
 from plaso.formatters import santa
 from plaso.formatters import sccm
 from plaso.formatters import selinux
+from plaso.formatters import services
 from plaso.formatters import shell_items
 from plaso.formatters import shutdown
 from plaso.formatters import skydrivelog
@@ -92,9 +95,11 @@ from plaso.formatters import tango_android
 from plaso.formatters import task_scheduler
 from plaso.formatters import terminal_server
 from plaso.formatters import text
+from plaso.formatters import timezone
 from plaso.formatters import trendmicroav
 from plaso.formatters import twitter_android
 from plaso.formatters import twitter_ios
+from plaso.formatters import typedurls
 from plaso.formatters import usb
 from plaso.formatters import usbstor
 from plaso.formatters import userassist
@@ -102,14 +107,16 @@ from plaso.formatters import utmp
 from plaso.formatters import utmpx
 from plaso.formatters import windows
 from plaso.formatters import windows_timeline
+from plaso.formatters import windows_version
 from plaso.formatters import winevt
 from plaso.formatters import winevtx
 from plaso.formatters import winfirewall
 from plaso.formatters import winjob
 from plaso.formatters import winlnk
+from plaso.formatters import winlogon
 from plaso.formatters import winprefetch
+from plaso.formatters import winrar
 from plaso.formatters import winreg
-from plaso.formatters import winregservice
 from plaso.formatters import winrestore
 from plaso.formatters import xchatlog
 from plaso.formatters import xchatscrollback

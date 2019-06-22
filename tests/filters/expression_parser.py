@@ -85,7 +85,9 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
        'hostname': 'Agrabah',
        'inode': 1245,
        'mydict': {
-           'value': 134, 'another': 'value', 'A Key (with stuff)': 'Here'},
+           'akeywithstuff': 'Here',
+           'another': 'value',
+           'value': 134},
        'parser': 'Weirdo',
        'text': (
            'User did a very bad thing, bad, bad thing that awoke Dr. Evil.'),

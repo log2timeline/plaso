@@ -93,22 +93,6 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.DeregisterFormatter(
         TestEventFormatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
-    expected_attribute_names = set(['text'])
-
-    _, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    attribute_names = self._output_mediator.GetFormatStringAttributeNames(
-        event_data)
-    self.assertEqual(attribute_names, expected_attribute_names)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
-
   def testGetHostname(self):
     """Tests the GetHostname function."""
     _, event_data = containers_test_lib.CreateEventFromValues(

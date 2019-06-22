@@ -101,7 +101,10 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.data_type, 'windows:registry:key_value')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
-    expected_message = '[{0:s}] '.format(key_path)
+    expected_message = (
+        '[{0:s}] '
+        '(empty)').format(key_path)
+
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
 

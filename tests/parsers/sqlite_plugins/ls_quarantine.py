@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import ls_quarantine as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import ls_quarantine
 
-from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the LS Quarantine database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['quarantine.db'])
   def testProcess(self):
     """Tests the Process function on a LS Quarantine database file."""
     plugin = ls_quarantine.LsQuarantinePlugin()

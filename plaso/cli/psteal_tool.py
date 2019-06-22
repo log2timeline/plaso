@@ -210,8 +210,7 @@ class PstealTool(
               self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
@@ -297,8 +296,7 @@ class PstealTool(
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
     else:
-      extraction_engine = multi_process_engine.TaskMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      extraction_engine = multi_process_engine.TaskMultiProcessEngine()
 
     # If the source is a directory or a storage media image
     # run pre-processing.
@@ -341,8 +339,11 @@ class PstealTool(
 
     self._status_view.PrintExtractionSummary(processing_status)
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -404,7 +405,7 @@ class PstealTool(
     self.AddProcessingOptions(processing_group)
 
     try:
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.

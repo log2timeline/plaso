@@ -24,8 +24,10 @@ class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
 
 
 class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
-  """An event formatter for testing the conditional event formatter."""
+  """A test conditional event formatter."""
+
   DATA_TYPE = 'test:event:conditional'
+
   FORMAT_STRING_PIECES = [
       'Description: {description}',
       'Comment',
@@ -40,6 +42,7 @@ class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
 class WrongEventFormatter(interface.EventFormatter):
   """An event formatter for testing."""
   DATA_TYPE = 'test:wrong'
+
   FORMAT_STRING = 'This format string does not match {body}.'
 
   SOURCE_SHORT = 'FILE'
@@ -49,10 +52,21 @@ class WrongEventFormatter(interface.EventFormatter):
 class EventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the event formatter."""
 
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'description': 'this is beyond words',
+       'numeric': 12,
+       'text': 'but we\'re still trying to say something about the event',
+       'timestamp': 1335791207939596,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
+
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = test_lib.TestEventFormatter()
     self.assertIsNotNone(event_formatter)
+
+  # TODO: add tests for _FormatMessage
+  # TODO: add tests for _FormatMessages
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -63,8 +77,20 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
     attribute_names = event_formatter.GetFormatStringAttributeNames()
     self.assertEqual(sorted(attribute_names), expected_attribute_names)
 
-  # TODO: add test for GetMessages.
-  # TODO: add test for GetSources.
+  def testGetMessages(self):
+    """Tests the GetMessages function."""
+    formatter_mediator = mediator.FormatterMediator()
+    event_formatter = test_lib.TestEventFormatter()
+
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
+    message, _ = event_formatter.GetMessages(formatter_mediator, event_data)
+
+    self.assertEqual(
+        message, 'but we\'re still trying to say something about the event')
+
+  # TODO: add tests for GetSources
 
 
 class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
@@ -104,11 +130,11 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
     _, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
+    message, _ = event_formatter.GetMessages(formatter_mediator, event_data)
+
     expected_message = (
         'Description: this is beyond words Comment Value: 0x0c '
         'Text: but we\'re still trying to say something about the event')
-
-    message, _ = event_formatter.GetMessages(formatter_mediator, event_data)
     self.assertEqual(message, expected_message)
 
   # TODO: add test for GetSources.

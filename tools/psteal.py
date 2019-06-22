@@ -27,7 +27,7 @@ from plaso.lib import errors
 def Main():
   """The main function."""
   tool = psteal_tool.PstealTool()
-  if not tool.ParseArguments():
+  if not tool.ParseArguments(sys.argv[1:]):
     return False
 
   if tool.show_troubleshooting:

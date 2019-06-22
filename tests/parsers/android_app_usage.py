@@ -9,14 +9,12 @@ import unittest
 from plaso.formatters import android_app_usage as _  # pylint: disable=unused-import
 from plaso.parsers import android_app_usage
 
-from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class AndroidAppUsageParserTest(test_lib.ParserTestCase):
   """Tests for the Android Application Usage History parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['usage-history.xml'])
   def testParse(self):
     """Tests the Parse function."""
     parser = android_app_usage.AndroidAppUsageParser()

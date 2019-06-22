@@ -5,8 +5,7 @@ from __future__ import unicode_literals
 
 import os
 
-from xml.etree import ElementTree
-
+from defusedxml import ElementTree
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events

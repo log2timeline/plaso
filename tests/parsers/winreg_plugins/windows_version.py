@@ -14,7 +14,24 @@ from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import windows_version
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
+
+
+class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows installation event data attribute container."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = windows_version.WindowsRegistryInstallationEventData()
+
+    expected_attribute_names = [
+        'build_number', 'data_type', 'key_path', 'offset', 'owner',
+        'product_name', 'query', 'service_pack', 'version']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+
+    self.assertEqual(attribute_names, expected_attribute_names)
 
 
 class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
@@ -99,35 +116,36 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
+    self.assertEqual(event.data_type, 'windows:registry:key_value')
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.123521')
-
-    expected_data_type = 'windows:registry:key_value'
-    self.assertEqual(event.data_type, expected_data_type)
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_message = (
         '[{0:s}] '
-        'Owner: A Concerned Citizen '
-        'Product name: MyTestOS '
-        'Service pack: Service Pack 1 '
-        'Windows Version Information: 5.1').format(key_path)
+        'CSDVersion: [REG_SZ] Service Pack 1 '
+        'CurrentVersion: [REG_SZ] 5.1 '
+        'ProductName: [REG_SZ] MyTestOS '
+        'RegisteredOwner: [REG_SZ] A Concerned Citizen').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[1]
 
+    self.assertEqual(event.data_type, 'windows:registry:installation')
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_INSTALLATION)
 
-    self.assertEqual(event.data_type, 'windows:registry:installation')
-
-    expected_data_type = 'windows:registry:installation'
-    self.assertEqual(event.data_type, expected_data_type)
+    self.assertEqual(event.key_path, key_path)
+    self.assertEqual(event.owner, 'A Concerned Citizen')
+    self.assertEqual(event.product_name, 'MyTestOS')
+    self.assertEqual(event.service_pack, 'Service Pack 1')
+    self.assertEqual(event.version, '5.1')
 
     expected_message = (
         'MyTestOS 5.1 Service Pack 1 '
-        'Owner: owner '
+        'Owner: A Concerned Citizen '
         'Origin: {0:s}').format(key_path)
     expected_short_message = (
         'MyTestOS 5.1 Service Pack 1 '
@@ -159,16 +177,31 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2012-03-15 07:09:20.671875')
-
     self.assertEqual(event.data_type, 'windows:registry:key_value')
+    self.CheckTimestamp(event.timestamp, '2012-03-15 07:09:20.671875')
 
     expected_message = (
         '[{0:s}] '
-        'Owner: Windows User '
-        'Product name: Windows 7 Ultimate '
-        'Service pack: Service Pack 1 '
-        'Windows Version Information: 6.1').format(key_path)
+        'BuildGUID: [REG_SZ] f4bf21b9-55fe-4ee8-a84b-0e91cbd5fe5d '
+        'BuildLab: [REG_SZ] 7601.win7sp1_gdr.111118-2330 '
+        'BuildLabEx: [REG_SZ] 7601.17727.amd64fre.win7sp1_gdr.111118-2330 '
+        'CSDBuildNumber: [REG_SZ] 1130 '
+        'CSDVersion: [REG_SZ] Service Pack 1 '
+        'CurrentBuild: [REG_SZ] 7601 '
+        'CurrentBuildNumber: [REG_SZ] 7601 '
+        'CurrentType: [REG_SZ] Multiprocessor Free '
+        'CurrentVersion: [REG_SZ] 6.1 '
+        'DigitalProductId: [REG_BINARY] (164 bytes) '
+        'DigitalProductId4: [REG_BINARY] (1272 bytes) '
+        'EditionID: [REG_SZ] Ultimate '
+        'InstallationType: [REG_SZ] Client '
+        'PathName: [REG_SZ] C:\\Windows '
+        'ProductId: [REG_SZ] 00426-065-0381817-86216 '
+        'ProductName: [REG_SZ] Windows 7 Ultimate '
+        'RegisteredOrganization: [REG_SZ]  '
+        'RegisteredOwner: [REG_SZ] Windows User '
+        'SoftwareType: [REG_SZ] System '
+        'SystemRoot: [REG_SZ] C:\\Windows').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)

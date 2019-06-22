@@ -22,7 +22,6 @@ from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import engine
 from plaso.multi_processing import logger
-from plaso.multi_processing import multi_process_queue
 from plaso.multi_processing import task_manager
 from plaso.multi_processing import worker_process
 
@@ -104,14 +103,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
   def __init__(
-      self, maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS, use_zeromq=True):
+      self, maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS):
     """Initializes an engine.
 
     Args:
       maximum_number_of_tasks (Optional[int]): maximum number of concurrent
           tasks, where 0 represents no limit.
-      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
-          instead of Python's multiprocessing queue.
     """
     super(TaskMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
@@ -140,7 +137,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._task_queue = None
     self._task_queue_port = None
     self._task_manager = task_manager.TaskManager()
-    self._use_zeromq = use_zeromq
 
   def _FillEventSourceHeap(
       self, storage_writer, event_source_heap, start_with_first=False):
@@ -494,14 +490,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     process_name = 'Worker_{0:02d}'.format(self._last_worker_number)
     logger.debug('Starting worker process {0:s}'.format(process_name))
 
-    if self._use_zeromq:
-      queue_name = '{0:s} task queue'.format(process_name)
-      task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
-          delay_open=True, linger_seconds=0, name=queue_name,
-          port=self._task_queue_port,
-          timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
-    else:
-      task_queue = self._task_queue
+    queue_name = '{0:s} task queue'.format(process_name)
+    task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
+        delay_open=True, linger_seconds=0, name=queue_name,
+        port=self._task_queue_port,
+        timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
 
     process = worker_process.WorkerProcess(
         task_queue, storage_writer, self.collection_filters_helper,
@@ -570,10 +563,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     """
     logger.debug('Stopping extraction processes.')
     self._StopMonitoringProcesses()
-
-    # Note that multiprocessing.Queue is very sensitive regarding
-    # blocking on either a get or a put. So we try to prevent using
-    # any blocking behavior.
 
     if abort:
       # Signal all the processes to abort.
@@ -774,22 +763,17 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._storage_writer = storage_writer
 
     # Set up the task queue.
-    if not self._use_zeromq:
-      self._task_queue = multi_process_queue.MultiProcessingQueue(
-          maximum_number_of_queued_items=self._maximum_number_of_tasks)
+    task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+        delay_open=True, linger_seconds=0, maximum_items=1,
+        name='main_task_queue',
+        timeout_seconds=self._ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS)
+    self._task_queue = task_outbound_queue
 
-    else:
-      task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
-          delay_open=True, linger_seconds=0, maximum_items=1,
-          name='main_task_queue',
-          timeout_seconds=self._ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS)
-      self._task_queue = task_outbound_queue
-
-      # The ZeroMQ backed queue must be started first, so we can save its port.
-      # TODO: raises: attribute-defined-outside-init
-      # self._task_queue.name = 'Task queue'
-      self._task_queue.Open()
-      self._task_queue_port = self._task_queue.port
+    # The ZeroMQ backed queue must be started first, so we can save its port.
+    # TODO: raises: attribute-defined-outside-init
+    # self._task_queue.name = 'Task queue'
+    self._task_queue.Open()
+    self._task_queue_port = self._task_queue.port
 
     self._StartProfiling(self._processing_configuration.profiling)
     self._task_manager.StartProfiling(
@@ -855,8 +839,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._KillProcess(os.getpid())
 
     # The task queue should be closed by _StopExtractionProcesses, this
-    # close is a failsafe, primarily due to MultiProcessingQueue's
-    # blocking behavior.
+    # close is a failsafe.
     self._task_queue.Close(abort=True)
 
     if self._processing_status.error_path_specs:

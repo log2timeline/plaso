@@ -81,20 +81,18 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     # The ProgramsCache list event.
     event = events[75]
 
-    expected_parser = 'explorer_programscache'
-    self.assertEqual(event.parser, expected_parser)
+    self.assertEqual(event.parser, 'explorer_programscache')
 
     self.CheckTimestamp(event.timestamp, '2009-08-04 15:22:18.419625')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    expected_data_type = 'windows:registry:list'
-    self.assertEqual(event.data_type, expected_data_type)
+    self.assertEqual(event.data_type, 'windows:registry:explorer:programcache')
 
     expected_message = (
         'Key: {0:s} '
         'Value: ProgramsCache '
-        'List: ProgramsCache ['
+        'Entries: ['
         '0: Programs '
         '1: Internet Explorer.lnk '
         '2: Outlook Express.lnk '
@@ -129,8 +127,18 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    expected_data_type = 'windows:registry:key_value'
-    self.assertEqual(event.data_type, expected_data_type)
+    self.assertEqual(event.data_type, 'windows:registry:key_value')
+
+    expected_message = (
+        '[{0:s}] '
+        'Favorites: [REG_BINARY] (55 bytes) '
+        'FavoritesChanges: [REG_DWORD_LE] 1 '
+        'FavoritesResolve: [REG_BINARY] (8 bytes) '
+        'StartMenu_Balloon_Time: [REG_BINARY] (8 bytes) '
+        'StartMenu_Start_Time: [REG_BINARY] (8 bytes)').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
+
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""

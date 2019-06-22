@@ -84,7 +84,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    result = test_tool.ParseArguments()
+    result = test_tool.ParseArguments([])
     self.assertFalse(result)
 
     # TODO: check output.
@@ -206,6 +206,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     table_view.AddRow(['Debug mode', 'False'])
     table_view.AddRow(['Artifact filters', 'N/A'])
     table_view.AddRow(['Filter file', 'N/A'])
+    table_view.AddRow(['Number of event sources', '2'])
     table_view.Write(output_writer)
 
     table_view = cli_views.ViewsFactory.GetTableView(

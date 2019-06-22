@@ -121,68 +121,14 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     result = path_helper.PathHelper._IsWindowsDrivePathSegment('Windows')
     self.assertFalse(result)
 
-  def testAppendPathEntries(self):
-    """Tests the AppendPathEntries function."""
-    separator = '\\'
-    path = '\\Windows\\Test'
+  def testExpandGlobStars(self):
+    """Tests the ExpandGlobStars function."""
+    paths = path_helper.PathHelper.ExpandGlobStars('/etc/sysconfig/**', '/')
 
-    # Test depth of ten skipping first entry.
-    # The path will have 9 entries as the default depth for ** is 10, but the
-    # first entry is being skipped.
-    count = 10
-    skip_first = True
-    paths = path_helper.PathHelper.AppendPathEntries(
-        path, separator, count, skip_first)
+    self.assertEqual(len(paths), 10)
 
-    # Nine paths returned
-    self.assertEqual(len(paths), 9)
-
-    # Nine paths in total, each one level deeper than the previous.
-    check_paths = sorted([
-        '\\Windows\\Test\\*\\*',
-        '\\Windows\\Test\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*'])
-    self.assertEqual(sorted(paths), check_paths)
-
-    # Now test with skip_first set to False, but only a depth of 4.
-    # the path will have a total of 4 entries.
-    count = 4
-    skip_first = False
-    paths = path_helper.PathHelper.AppendPathEntries(
-        path, separator, count, skip_first)
-
-    # Four paths returned
-    self.assertEqual(len(paths), 4)
-
-    # Four paths in total, each one level deeper than the previous.
-    check_paths = sorted([
-        '\\Windows\\Test\\*',
-        '\\Windows\\Test\\*\\*',
-        '\\Windows\\Test\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*'])
-    self.assertEqual(sorted(paths), check_paths)
-
-  def testExpandRecursiveGlobs(self):
-    """Tests the _ExpandRecursiveGlobs function."""
-    separator = '/'
-
-    # Test a path with a trailing /, which means first directory is skipped.
-    # The path will have 9 entries as the default depth for ** is 10, but the
-    # first entry is being skipped.
-    path = '/etc/sysconfig/**/'
-    paths = path_helper.PathHelper.ExpandRecursiveGlobs(path, separator)
-
-    # Nine paths returned
-    self.assertEqual(len(paths), 9)
-
-    # Nine paths in total, each one level deeper than the previous.
-    check_paths = sorted([
+    expected_paths = sorted([
+        '/etc/sysconfig/*',
         '/etc/sysconfig/*/*',
         '/etc/sysconfig/*/*/*',
         '/etc/sysconfig/*/*/*/*',
@@ -192,23 +138,51 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         '/etc/sysconfig/*/*/*/*/*/*/*/*',
         '/etc/sysconfig/*/*/*/*/*/*/*/*/*',
         '/etc/sysconfig/*/*/*/*/*/*/*/*/*/*'])
-    self.assertEqual(sorted(paths), check_paths)
+    self.assertEqual(sorted(paths), expected_paths)
 
-    # Now test with no trailing separator, but only a depth of 4.
-    # the path will have a total of 4 entries.
-    path = '/etc/sysconfig/**4'
-    paths = path_helper.PathHelper.ExpandRecursiveGlobs(path, separator)
+    # Test globstar with recursion depth of 4.
+    paths = path_helper.PathHelper.ExpandGlobStars('/etc/sysconfig/**4', '/')
 
-    # Four paths returned
     self.assertEqual(len(paths), 4)
 
-    # Four paths in total, each one level deeper than the previous.
-    check_paths = sorted([
+    expected_paths = sorted([
         '/etc/sysconfig/*',
         '/etc/sysconfig/*/*',
         '/etc/sysconfig/*/*/*',
         '/etc/sysconfig/*/*/*/*'])
-    self.assertEqual(sorted(paths), check_paths)
+    self.assertEqual(sorted(paths), expected_paths)
+
+    # Test globstar with unsupported recursion depth of 99.
+    paths = path_helper.PathHelper.ExpandGlobStars('/etc/sysconfig/**99', '/')
+
+    self.assertEqual(len(paths), 10)
+
+    expected_paths = sorted([
+        '/etc/sysconfig/*',
+        '/etc/sysconfig/*/*',
+        '/etc/sysconfig/*/*/*',
+        '/etc/sysconfig/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*/*/*/*/*'])
+    self.assertEqual(sorted(paths), expected_paths)
+
+    # Test globstar with prefix.
+    paths = path_helper.PathHelper.ExpandGlobStars('/etc/sysconfig/my**', '/')
+
+    self.assertEqual(len(paths), 1)
+
+    self.assertEqual(paths, ['/etc/sysconfig/my**'])
+
+    # Test globstar with suffix.
+    paths = path_helper.PathHelper.ExpandGlobStars('/etc/sysconfig/**.exe', '/')
+
+    self.assertEqual(len(paths), 1)
+
+    self.assertEqual(paths, ['/etc/sysconfig/**.exe'])
 
   def testExpandUsersVariablePath(self):
     """Tests the ExpandUsersVariablePath function."""
