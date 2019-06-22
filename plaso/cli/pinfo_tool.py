@@ -9,6 +9,8 @@ import json
 import os
 import uuid
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli import tools
@@ -18,7 +20,6 @@ from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.lib import timelib
 from plaso.serializer import json_serializer
 from plaso.storage import factory as storage_factory
 
@@ -499,12 +500,15 @@ class PinfoTool(
 
       start_time = 'N/A'
       if session.start_time is not None:
-        start_time = timelib.Timestamp.CopyToIsoFormat(session.start_time)
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=session.start_time)
+        start_time = date_time.CopyToDateTimeStringISO8601()
 
       completion_time = 'N/A'
       if session.completion_time is not None:
-        completion_time = timelib.Timestamp.CopyToIsoFormat(
-            session.completion_time)
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=session.completion_time)
+        completion_time = date_time.CopyToDateTimeStringISO8601()
 
       enabled_parser_names = 'N/A'
       if session.enabled_parser_names:
@@ -564,8 +568,10 @@ class PinfoTool(
         self._views_format_type, title='Sessions')
 
     for session in storage_reader.GetSessions():
-      start_time = timelib.Timestamp.CopyToIsoFormat(
-          session.start_time)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=session.start_time)
+      start_time = date_time.CopyToDateTimeStringISO8601()
+
       session_identifier = uuid.UUID(hex=session.identifier)
       session_identifier = '{0!s}'.format(session_identifier)
       table_view.AddRow([session_identifier, start_time])
@@ -652,8 +658,10 @@ class PinfoTool(
         self._views_format_type, title='Tasks')
 
     for task_start, _ in storage_reader.GetSessions():
-      start_time = timelib.Timestamp.CopyToIsoFormat(
-          task_start.timestamp)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=task_start.timestamp)
+      start_time = date_time.CopyToDateTimeStringISO8601()
+
       task_identifier = uuid.UUID(hex=task_start.identifier)
       task_identifier = '{0!s}'.format(task_identifier)
       table_view.AddRow([task_identifier, start_time])

@@ -3,9 +3,10 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.containers import interface
 from plaso.containers import manager
-from plaso.lib import timelib
 
 
 class AnalysisReport(interface.AttributeContainer):
@@ -62,10 +63,12 @@ class AnalysisReport(interface.AttributeContainer):
     string_list = []
     string_list.append('Report generated from: {0:s}'.format(self.plugin_name))
 
-    time_compiled = getattr(self, 'time_compiled', 0)
-    if time_compiled:
-      time_compiled = timelib.Timestamp.CopyToIsoFormat(time_compiled)
-      string_list.append('Generated on: {0:s}'.format(time_compiled))
+    time_compiled = getattr(self, 'time_compiled', None)
+    if time_compiled is not None:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=time_compiled)
+      date_time_string = date_time.CopyToDateTimeStringISO8601()
+      string_list.append('Generated on: {0:s}'.format(date_time_string))
 
     filter_string = getattr(self, 'filter_string', '')
     if filter_string:
