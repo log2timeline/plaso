@@ -142,7 +142,7 @@ There are some packages that declare **libewf2** as one of their dependencies. T
 
 See for instance [this issue](https://github.com/log2timeline/plaso/issues/301).
 
-The solution here is to remove the **libewf2** package from the system and replace it with **libewf** and **libewf2** packages from the GIFT PPA.
+The solution here is to remove the **libewf2** package from the system and replace it with the **libewf**  package from the GIFT PPA.
 
 ```bash
 $ sudo apt-get remove libewf2
