@@ -1085,9 +1085,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     generator = self._GetAttributeContainers(
         self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
     for stream_number, system_configuration in enumerate(generator):
-      # TODO: replace stream_number by session_identifier.
+      session_start = self._GetAttributeContainerByIndex(
+          self._CONTAINER_TYPE_SESSION_START, stream_number)
       knowledge_base.ReadSystemConfigurationArtifact(
-          system_configuration, session_identifier=stream_number)
+          system_configuration, session_identifier=session_start.identifier)
 
   def WritePreprocessingInformation(self, knowledge_base):
     """Writes preprocessing information.

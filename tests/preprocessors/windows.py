@@ -143,6 +143,28 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
     self.assertEqual(environment_variable.value, '%SystemDrive%\\ProgramData')
 
 
+class WindowsAvailableTimeZonesPluginTest(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Windows available time zones plugin."""
+
+  def testParseKey(self):
+    """Tests the _ParseKey function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    plugin = windows.WindowsAvailableTimeZonesPlugin()
+    knowledge_base_object = (
+        self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(plugin))
+
+    available_time_zones = sorted(
+        knowledge_base_object.available_time_zones,
+        key=lambda time_zone: time_zone.name)
+    self.assertIsNotNone(available_time_zones)
+    self.assertEqual(len(available_time_zones), 101)
+
+    self.assertEqual(available_time_zones[0].name, 'AUS Central Standard Time')
+
+
 class WindowsCodepagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Windows codepage plugin."""
 
@@ -377,13 +399,13 @@ class WindowsUserAccountsPluginTest(
     knowledge_base_object = (
         self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(plugin))
 
-    users = sorted(
+    user_accounts = sorted(
         knowledge_base_object.user_accounts,
         key=lambda user_account: user_account.identifier)
-    self.assertIsNotNone(users)
-    self.assertEqual(len(users), 11)
+    self.assertIsNotNone(user_accounts)
+    self.assertEqual(len(user_accounts), 11)
 
-    user_account = users[9]
+    user_account = user_accounts[9]
 
     expected_sid = 'S-1-5-21-2036804247-3058324640-2116585241-1114'
     self.assertEqual(user_account.identifier, expected_sid)

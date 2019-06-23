@@ -46,8 +46,7 @@ class HostnameArtifact(ArtifactAttributeContainer):
 
   Also see:
     https://en.wikipedia.org/wiki/Hostname
-    http://cybox.mitre.org/language/version2.1/xsddocs/objects/
-    Hostname_Object.html
+    Cybox / Stix Hostname Object
 
   Attributes:
     name (str): name of the host according to the naming schema.
@@ -226,6 +225,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   system installation e.g. Windows or Linux.
 
   Attributes:
+    available_time_zones (list[TimeZone]): available time zones.
     code_page (str): system code page.
     hostname (HostnameArtifact): hostname.
     keyboard_layout (str): keyboard layout.
@@ -247,6 +247,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
       time_zone (Optional[str]): system time zone.
     """
     super(SystemConfigurationArtifact, self).__init__()
+    self.available_time_zones = []
     self.code_page = code_page
     self.hostname = None
     self.keyboard_layout = None
@@ -257,12 +258,30 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     self.user_accounts = []
 
 
+class TimeZoneArtifact(ArtifactAttributeContainer):
+  """Time zone artifact attribute container.
+
+  Attributes:
+    name (str): name describing the time zone e.g. Greenwich Standard Time.
+  """
+  CONTAINER_TYPE = 'time_zone'
+
+  def __init__(self, name=None):
+    """Initializes a time zone artifact.
+
+    Args:
+      name (Optional[str]): name describing the time zone e.g. Greenwich
+          Standard Time.
+    """
+    super(TimeZoneArtifact, self).__init__()
+    self.name = name
+
+
 class UserAccountArtifact(ArtifactAttributeContainer):
   """User account artifact attribute container.
 
   Also see:
-    http://cybox.mitre.org/language/version2.1/xsddocs/objects/
-    User_Account_Object.html
+    Cybox / Stix User Account Object
 
   Attributes:
     full_name (str): name describing the user e.g. full name.
@@ -276,7 +295,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
   def __init__(
       self, full_name=None, group_identifier=None, identifier=None,
       path_separator='/', user_directory=None, username=None):
-    """Initializes an user artifact.
+    """Initializes an user account artifact.
 
     Args:
       full_name (Optional[str]): name describing the user e.g. full name.
@@ -311,4 +330,4 @@ class UserAccountArtifact(ArtifactAttributeContainer):
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
     EnvironmentVariableArtifact, HostnameArtifact, SystemConfigurationArtifact,
-    UserAccountArtifact])
+    TimeZoneArtifact, UserAccountArtifact])
