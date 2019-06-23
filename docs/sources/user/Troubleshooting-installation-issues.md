@@ -104,9 +104,9 @@ python-pyparsing:
         100 /var/lib/dpkg/status
 ```
 
-Here you can see an example of *python-pyparsing* that has version **2.0.2-1** installed instead of version **2.0.3-1**, which is required by plaso. To correct this you may have to specifically indicate the version you want to install.
+Here you can see an example of *python-pyparsing* that has version **2.0.2-1** installed instead of version **2.0.3-1**, which is required by Plaso. To correct this you may have to specifically indicate the version you want to install.
 
-```
+```bash
 $ sudo apt-get install python-pyparsing=2.0.3-1
 ```
 
@@ -142,7 +142,7 @@ There are some packages that declare **libewf2** as one of their dependencies. T
 
 See for instance [this issue](https://github.com/log2timeline/plaso/issues/301).
 
-The solution here is to remove the **libewf2** package from the system and replace it by **libewf** and **libewf2** packages from the GIFT PPA.
+The solution here is to remove the **libewf2** package from the system and replace it with the **libewf**  package from the GIFT PPA.
 
 ```bash
 $ sudo apt-get remove libewf2

@@ -1,6 +1,6 @@
 ## Dependency licenses
 
-Although plaso is licensed under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0), binary builds of plaso include third party code that have been made available under various licenses.
+Although Plaso is licensed under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0), binary builds of Plaso include third party code that have been made available under various licenses.
 
 ### Core dependencies
 
@@ -40,7 +40,7 @@ Dependency | License
 Dependency | License
 --- | ---
 [bencode](https://pypi.python.org/pypi/bencode) | [BitTorrent Open Source License](http://web.archive.org/web/20080213154112/http://www.bittorrent.com/bittorrent-open-source-license)
-[biplist](docs/sources/developer/Licenses-dependencies.md) | [BSD 3-clause license](http://opensource.org/licenses/BSD-3-Clause)
+[biplist](https://bitbucket.org/wooster/biplist/) | [BSD 3-clause license](http://opensource.org/licenses/BSD-3-Clause)
 [Libesedb and Python-bindings](https://github.com/libyal/libesedb/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libevt and Python-bindings](https://github.com/libyal/libevt/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libevtx and Python-bindings](https://github.com/libyal/libevtx/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
@@ -74,4 +74,4 @@ Dependencies not mentioned explicitly yet:
 * zlib (used in libqcow and libewf)
 * openssl (used in libqcow and libewf)
 * bzip2 (or part of python)
-* Visual studio runtime dlls
+* Visual studio runtime DLLs
