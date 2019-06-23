@@ -87,8 +87,9 @@ class EventExtractionWorker(object):
 
           * An exact match of a list of parsers, or a preset (see
             data/presets.yaml for the list of predefined presets).
-          * A name of a single parser (case insensitive), e.g. msiecf.
-          * A glob name for a single parser, e.g. '*msie*' (case insensitive).
+          * A name of a single parser (case insensitive), such as msiecf.
+          * A glob name for a single parser, such as '*msie*' (case
+            insensitive).
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
@@ -109,7 +110,7 @@ class EventExtractionWorker(object):
 
     The results of the analyzers are set in the parser mediator as attributes
     that are added to produced event objects. Note that some file systems
-    allow directories to have data streams, e.g. NTFS.
+    allow directories to have data streams, such as NTFS.
 
     Args:
       mediator (ParserMediator): mediates the interactions between

@@ -145,13 +145,13 @@ class ParserPresetsManager(object):
     return sorted(self._definitions.keys())
 
   def GetParsersByPreset(self, preset_name):
-    """Retrieves the parser names of specific preset.
+    """Retrieves the parser and plugin names of a specific preset.
 
     Args:
       preset_name (str): name of the preset.
 
     Returns:
-      list[str]: parser names in alphabetical order.
+      list[str]: parser and plugin names in alphabetical order.
 
     Raises:
       KeyError: if the preset does not exist.
@@ -200,8 +200,9 @@ class ParserPresetsManager(object):
     Returns:
       list[tuple]: containing:
 
-        str: preset name
-        str: comma separated parser names that are defined by the preset
+        str: preset name.
+        str: comma separated parser and plugin names that are defined by
+            the preset.
     """
     presets_information = []
     for name, parser_preset in sorted(self._definitions.items()):

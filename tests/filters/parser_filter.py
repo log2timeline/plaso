@@ -19,9 +19,7 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
 
   def testGetParserAndPluginsList(self):
     """Tests the _GetParserAndPluginsList function."""
-    presets_manager = parsers_presets.ParserPresetsManager()
-
-    test_helper = parser_filter.ParserFilterExpressionHelper(presets_manager)
+    test_helper = parser_filter.ParserFilterExpressionHelper()
 
     expression = test_helper._GetParserAndPluginsList(
         {'excluded': set(['*', 'plugin1'])})
@@ -29,9 +27,7 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
 
   def testJoinExpression(self):
     """Tests the _JoinExpression function."""
-    presets_manager = parsers_presets.ParserPresetsManager()
-
-    test_helper = parser_filter.ParserFilterExpressionHelper(presets_manager)
+    test_helper = parser_filter.ParserFilterExpressionHelper()
 
     expression = test_helper._JoinExpression({'excluded': set(['*'])}, {})
     self.assertEqual(expression, '!excluded')
@@ -75,7 +71,7 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
     presets_manager = parsers_presets.ParserPresetsManager()
     presets_manager.ReadFromFile(presets_file)
 
-    test_helper = parser_filter.ParserFilterExpressionHelper(presets_manager)
+    test_helper = parser_filter.ParserFilterExpressionHelper()
 
     expected_parser_filter_expression = ','.join(sorted([
         '!utmp',
@@ -118,18 +114,18 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
         'winjob',
         'winreg']))
 
-    parser_filter_expression = test_helper.ExpandPresets('win_gen,!utmp')
+    parser_filter_expression = test_helper.ExpandPresets(
+        presets_manager, 'win_gen,!utmp')
     self.assertEqual(
         parser_filter_expression, expected_parser_filter_expression)
 
-    parser_filter_expression = test_helper.ExpandPresets('olecf,!utmp')
+    parser_filter_expression = test_helper.ExpandPresets(
+        presets_manager, 'olecf,!utmp')
     self.assertEqual(parser_filter_expression, '!utmp,olecf')
 
   def testSplitExpression(self):
     """Tests the SplitExpression function."""
-    presets_manager = parsers_presets.ParserPresetsManager()
-
-    test_helper = parser_filter.ParserFilterExpressionHelper(presets_manager)
+    test_helper = parser_filter.ParserFilterExpressionHelper()
 
     excludes, includes = test_helper.SplitExpression('!excluded')
     self.assertEqual(excludes, {'excluded': set(['*'])})

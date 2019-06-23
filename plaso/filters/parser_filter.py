@@ -12,19 +12,11 @@ class ParserFilterExpressionHelper(object):
   the value of:
 
   * An exact match of a preset, which is a predefined list of parsers
-    (see data/presets.yaml for the list of predefined presets).
-  * A name of a single parser (case insensitive), e.g. msiecf.
-  * A glob name for a single parser, e.g. '*msie*' (case insensitive).
+    and/or plugins (see data/presets.yaml for the list of predefined
+    presets).
+  * A name of a single parser (case insensitive), such as msiecf.
+  * A glob name for a single parser, such as '*msie*' (case insensitive).
   """
-
-  def __init__(self, presets_manager):
-    """Initializes a helper for parser and plugin filter expressions.
-
-    Args:
-      presets_manager (ParserPresetsManager): a parser preset manager.
-    """
-    super(ParserFilterExpressionHelper, self).__init__()
-    self._presets_manager = presets_manager
 
   def _GetParserAndPluginsList(self, parsers_and_plugins):
     """Flattens the parsers and plugins dictionary into a list.
@@ -33,7 +25,7 @@ class ParserFilterExpressionHelper(object):
       parsers_and_plugins (dict[str, set[str]]): parsers and plugins.
 
     Returns:
-      list[str]: alphabetically sorted list of the parser and plugins.
+      list[str]: alphabetically sorted list of the parsers and plugins.
     """
     parser_filters = []
     for parser_name, plugins in sorted(parsers_and_plugins.items()):
@@ -53,15 +45,24 @@ class ParserFilterExpressionHelper(object):
       includes (dict[str, set[str]]): included parsers and plugins.
 
     Returns:
-      str: a parser filter expression or None to represent all parsers and
-           plugins.
+      str: a parser filter expression.
+
+          The parser filter expression is a comma separated value string that
+          denotes a list of parser names to include and/or exclude. Each entry
+          can have the value of:
+
+          * An exact match of a list of parsers, or a preset (see
+            data/presets.yaml for the list of predefined presets).
+          * A name of a single parser (case insensitive), such as msiecf.
+          * A glob name for a single parser, such as '*msie*' (case
+            insensitive).
 
     Raises:
       RuntimeError: if a specific plugin is excluded but no corresponding parser
           is included or if exclude and include parser filters overlap.
     """
-    excluded_parser_filters = self._GetParserAndPluginsList(excludes)
-    included_parser_filters = self._GetParserAndPluginsList(includes)
+    excluded_parsers_and_plugins = self._GetParserAndPluginsList(excludes)
+    included_parsers_and_plugins = self._GetParserAndPluginsList(includes)
 
     # Note that below set comprehension is used to determine the set of
     # excluded and included parsers.
@@ -77,44 +78,48 @@ class ParserFilterExpressionHelper(object):
           'Parser filters: {0:s} defined to be excluded but no corresponding '
           'include expression').format(','.join(missing_parser_filters)))
 
-    overlapping_parser_filters = set(included_parser_filters).intersection(
-        set(excluded_parser_filters))
+    overlapping_parser_filters = set(included_parsers_and_plugins).intersection(
+        set(excluded_parsers_and_plugins))
     if overlapping_parser_filters:
       raise RuntimeError((
           'Parser filters: {0:s} defined to be both included and '
-          'excludes').format(','.join(overlapping_parser_filters)))
+          'excluded').format(','.join(overlapping_parser_filters)))
 
     parser_filters = [
         '!{0:s}'.format(parser_filter)
-        for parser_filter in excluded_parser_filters]
-    parser_filters.extend(included_parser_filters)
+        for parser_filter in excluded_parsers_and_plugins]
+    parser_filters.extend(included_parsers_and_plugins)
     return ','.join(parser_filters)
 
-  def _ExpandPreset(self, preset_name, parsers_and_plugins):
+  def _ExpandPreset(self, presets_manager, preset_name, parsers_and_plugins):
     """Expands a preset in the parsers and plugins.
 
     This functions replaces the preset in parsers_and_plugins with the parser
     and plugin or preset names defined by the preset.
 
     Args:
-      preset_name (str): name of the peset to expand.
-      parsers_and_plugins (dict[str, set[str]]): parsers and plugins.
+      presets_manager (ParserPresetsManager): a parser preset manager, that
+          is used to resolve which parsers and/or plugins are defined by
+          presets.
+      preset_name (str): name of the preset to expand.
+      parsers_and_plugins (dict[str, set[str]]): parsers, plugins and presets.
 
     Raises:
-      RuntimeError: if the preset in parsers_and_plugins has plugins.
+      RuntimeError: if the plugins list of a preset in parsers_and_plugins,
+          contains plugin definitions other than '*'.
     """
     if preset_name not in parsers_and_plugins:
       return
 
     plugins = parsers_and_plugins.get(preset_name, None)
     if plugins != set(['*']):
-      print(plugins)
-      raise RuntimeError('Unsupported preset: {0:s} with plugins.'.format(
-          preset_name))
+      raise RuntimeError((
+          '{0:s} cannot be used as a preset name and plugin name at '
+          'same time.').format(preset_name))
 
     del parsers_and_plugins[preset_name]
 
-    for parser_filter in self._presets_manager.GetParsersByPreset(preset_name):
+    for parser_filter in presets_manager.GetParsersByPreset(preset_name):
       parser, _, plugin = parser_filter.partition('/')
       if not plugin:
         plugin = '*'
@@ -122,55 +127,87 @@ class ParserFilterExpressionHelper(object):
       parsers_and_plugins.setdefault(parser, set())
       parsers_and_plugins[parser].add(plugin)
 
-  def _ExpandPresets(self, preset_names, parsers_and_plugins):
+  def _ExpandPresets(self, presets_manager, preset_names, parsers_and_plugins):
     """Expands the presets in the parsers and plugins.
 
     This functions replaces the presets in parsers_and_plugins with the parser
     and plugin or preset names defined by the presets.
 
     Args:
+      presets_manager (ParserPresetsManager): a parser preset manager, that
+          is used to resolve which parsers and/or plugins are defined by
+          presets.
       preset_names (set[str]): names of the presets defined by the presets
           manager.
-      parsers_and_plugins (dict[str, set[str]]): parsers and plugins.
+      parsers_and_plugins (dict[str, set[str]]): parsers, plugins and presets.
     """
     for preset_name in preset_names:
-      self._ExpandPreset(preset_name, parsers_and_plugins)
+      self._ExpandPreset(presets_manager, preset_name, parsers_and_plugins)
 
-  def ExpandPresets(self, expression):
+  def ExpandPresets(self, presets_manager, expression):
     """Expands all presets in a parser filter expression.
 
     Args:
-      expression (str): the parser filter expression, where None
-          represents all parsers and plugins.
+      presets_manager (ParserPresetsManager): a parser preset manager, that
+          is used to resolve which parsers and/or plugins are defined by
+          presets.
+      expression (str): parser filter expression, where None represents all
+          parsers and plugins.
+
+          The parser filter expression is a comma separated value string that
+          denotes a list of parser names to include and/or exclude. Each entry
+          can have the value of:
+
+          * An exact match of a list of parsers, or a preset (see
+            data/presets.yaml for the list of predefined presets).
+          * A name of a single parser (case insensitive), such as msiecf.
+          * A glob name for a single parser, such as '*msie*' (case
+            insensitive).
 
     Returns:
       str: a parser filter expression where presets have been expanded or None
           to represent all parsers and plugins.
     """
-    preset_names = set(self._presets_manager.GetNames())
+    preset_names = set(presets_manager.GetNames())
 
     excludes, includes = self.SplitExpression(expression)
 
     while set(excludes.keys()).intersection(preset_names):
-      self._ExpandPresets(preset_names, excludes)
+      self._ExpandPresets(presets_manager, preset_names, excludes)
 
     while set(includes.keys()).intersection(preset_names):
-      self._ExpandPresets(preset_names, includes)
+      self._ExpandPresets(presets_manager, preset_names, includes)
 
     return self._JoinExpression(excludes, includes)
 
   def SplitExpression(self, expression):
-    """Determines the excluded and included parsers form an expression string.
+    """Determines the excluded and included parsers from an expression string.
 
     Args:
-      expression (str): the parser filter expression, where None
-          represents all parsers and plugins.
+      expression (str): parser filter expression, where None represents all
+          parsers and plugins.
+
+          The parser filter expression is a comma separated value string that
+          denotes a list of parser names to include and/or exclude. Each entry
+          can have the value of:
+
+          * An exact match of a list of parsers, or a preset (see
+            data/presets.yaml for the list of predefined presets).
+          * A name of a single parser (case insensitive), such as msiecf.
+          * A glob name for a single parser, such as '*msie*' (case
+            insensitive).
 
     Returns:
       tuple: contains:
 
-        excludes (dict[str, set[str]]): excluded parsers and plugins.
-        includes (dict[str, set[str]]): included parsers and plugins.
+        excludes (dict[str, set[str]]): excluded parsers and plugins,
+            the dictionary contains the names of plugins per parser name,
+            where '*' represents the parser itself and all its plugins.
+            A parser name can also be the name of a preset.
+        includes (dict[str, set[str]]): included parsers and plugins,
+            the dictionary contains the names of plugins per parser name,
+            where '*' represents the parser itself and all its plugins.
+            A parser name can also be the name of a preset.
     """
     if not expression:
       return {}, {}
@@ -178,20 +215,20 @@ class ParserFilterExpressionHelper(object):
     excludes = {}
     includes = {}
 
-    for parser_filter in expression.split(','):
-      parser_filter = parser_filter.strip()
-      if not parser_filter:
+    for expression_element in expression.split(','):
+      expression_element = expression_element.strip()
+      if not expression_element:
         continue
 
-      parser_filter = parser_filter.lower()
+      expression_element = expression_element.lower()
 
-      if parser_filter.startswith('!'):
-        parser_filter = parser_filter[1:]
+      if expression_element.startswith('!'):
+        expression_element = expression_element[1:]
         parsers_and_plugins = excludes
       else:
         parsers_and_plugins = includes
 
-      parser, _, plugin = parser_filter.partition('/')
+      parser, _, plugin = expression_element.partition('/')
       if not plugin:
         plugin = '*'
 

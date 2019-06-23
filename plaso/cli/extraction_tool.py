@@ -84,7 +84,7 @@ class ExtractionTool(
       ProcessingConfiguration: processing configuration.
 
     Raises:
-      BadConfigOption: if presets in the the parser filter expression could not
+      BadConfigOption: if presets in the parser filter expression could not
           be expanded.
     """
     parser_filter_expression = self._parser_filter_expression
@@ -111,12 +111,11 @@ class ExtractionTool(
             filter_expression))
         parser_filter_expression = filter_expression
 
-    parser_filter_helper = parser_filter.ParserFilterExpressionHelper(
-        self._presets_manager)
+    parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
 
     try:
       parser_filter_expression = parser_filter_helper.ExpandPresets(
-          parser_filter_expression)
+          self._presets_manager, parser_filter_expression)
     except RuntimeError as exception:
       raise errors.BadConfigOption((
           'Unable to expand presets in parser filter expression with '
