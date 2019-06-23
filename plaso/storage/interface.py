@@ -249,11 +249,10 @@ class BaseStore(object):
   def GetEvents(self):
     """Retrieves the events.
 
-    Yields:
-      EventObject: event.
+    Returns:
+      generator(Event): event  generator.
     """
-    for event in self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT):
-      yield event
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
 
   def GetEventSources(self):
     """Retrieves the event sources.
@@ -282,7 +281,7 @@ class BaseStore(object):
   def GetEventTags(self):
     """Retrieves the event tags.
 
-    Yields:
+    Returns:
       generator(EventTag): event tag generator.
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)

@@ -425,7 +425,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         if not task and event_source:
           task = self._task_manager.CreateTask(
               self._session_identifier,
-              self._processing_configuration.task_storage_format)
+              storage_format=self._processing_configuration.task_storage_format)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
           event_source = None
