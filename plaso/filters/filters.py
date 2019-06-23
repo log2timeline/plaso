@@ -7,6 +7,8 @@ import abc
 import logging
 import re
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.filters import helpers
 from plaso.lib import errors
 from plaso.lib import py2to3
@@ -220,12 +222,23 @@ class GenericBinaryOperator(BinaryOperator):
               attribute_name))
 
     if attribute_name in self._EVENT_ATTRIBUTE_NAMES:
-      return getattr(event, attribute_name, None)
+      attribute_value = getattr(event, attribute_name, None)
 
-    if attribute_name == 'tag':
-      return getattr(event_tag, 'labels', None)
+      # Make sure timestamp attribute values are (dfdatetime) date time objects.
+      # TODO: remove when timestamp values are (de)serialized as dfdatetime
+      # objects.
+      if attribute_name == 'timestamp' and not isinstance(
+          attribute_value, dfdatetime_posix_time.PosixTimeInMicroseconds):
+        attribute_value = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=attribute_value)
 
-    return getattr(event_data, attribute_name, None)
+    elif attribute_name == 'tag':
+      attribute_value = getattr(event_tag, 'labels', None)
+
+    else:
+      attribute_value = getattr(event_data, attribute_name, None)
+
+    return attribute_value
 
   def _GetValueByPath(self, path, event, event_data, event_tag):
     """Retrieves the value of a specific event attribute given a specific path.
