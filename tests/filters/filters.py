@@ -178,7 +178,8 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
 
     test_value = filter_object._GetValue(
         'timestamp', event, event_data, event_tag)
-    self.assertEqual(test_value, 5134324321)
+    self.assertIsNotNone(test_value)
+    self.assertEqual(test_value.timestamp, 5134324321)
 
     test_value = filter_object._GetValue('tag', event, event_data, event_tag)
     self.assertEqual(test_value, ['browser_search'])
@@ -199,7 +200,8 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
 
     test_value = filter_object._GetValueByPath(
         ['timestamp'], event, event_data, event_tag)
-    self.assertEqual(test_value, 5134324321)
+    self.assertIsNotNone(test_value)
+    self.assertEqual(test_value.timestamp, 5134324321)
 
     test_value = filter_object._GetValueByPath(
         ['tag'], event, event_data, event_tag)
