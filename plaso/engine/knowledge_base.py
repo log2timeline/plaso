@@ -22,11 +22,12 @@ import pytz  # pylint: disable=wrong-import-order
 class KnowledgeBase(object):
   """The knowledge base."""
 
-  CURRENT_SESSION = 0
+  _DEFAULT_ACTIVE_SESSION = '00000000000000000000000000000000'
 
   def __init__(self):
     """Initializes a knowledge base."""
     super(KnowledgeBase, self).__init__()
+    self._active_session = self._DEFAULT_ACTIVE_SESSION
     self._available_time_zones = {}
     self._codepage = 'cp1252'
     self._environment_variables = {}
@@ -38,7 +39,7 @@ class KnowledgeBase(object):
   @property
   def available_time_zones(self):
     """list[TimeZone]: available time zones of the current session."""
-    return self._available_time_zones.get(self.CURRENT_SESSION, {}).values()
+    return self._available_time_zones.get(self._active_session, {}).values()
 
   @property
   def codepage(self):
@@ -48,7 +49,7 @@ class KnowledgeBase(object):
   @property
   def hostname(self):
     """str: hostname of the current session."""
-    hostname_artifact = self._hostnames.get(self.CURRENT_SESSION, None)
+    hostname_artifact = self._hostnames.get(self._active_session, None)
     if not hostname_artifact:
       return ''
 
@@ -62,24 +63,26 @@ class KnowledgeBase(object):
   @property
   def user_accounts(self):
     """list[UserAccountArtifact]: user accounts of the current session."""
-    return self._user_accounts.get(self.CURRENT_SESSION, {}).values()
+    return self._user_accounts.get(self._active_session, {}).values()
 
   @property
   def year(self):
     """int: year of the current session."""
     return self.GetValue('year', default_value=0)
 
-  def AddAvailableTimeZone(self, time_zone, session_identifier=CURRENT_SESSION):
+  def AddAvailableTimeZone(self, time_zone, session_identifier=None):
     """Adds an available time zone.
 
     Args:
       time_zone (TimeZoneArtifact): time zone artifact.
       session_identifier (Optional[str])): session identifier, where
-          CURRENT_SESSION represents the active session.
+          None represents the active session.
 
     Raises:
       KeyError: if the time zone already exists.
     """
+    session_identifier = session_identifier or self._active_session
+
     if session_identifier not in self._available_time_zones:
       self._available_time_zones[session_identifier] = {}
 
@@ -89,17 +92,19 @@ class KnowledgeBase(object):
 
     available_time_zones[time_zone.name] = time_zone
 
-  def AddUserAccount(self, user_account, session_identifier=CURRENT_SESSION):
+  def AddUserAccount(self, user_account, session_identifier=None):
     """Adds an user account.
 
     Args:
       user_account (UserAccountArtifact): user account artifact.
       session_identifier (Optional[str])): session identifier, where
-          CURRENT_SESSION represents the active session.
+          None represents the active session.
 
     Raises:
       KeyError: if the user account already exists.
     """
+    session_identifier = session_identifier or self._active_session
+
     if session_identifier not in self._user_accounts:
       self._user_accounts[session_identifier] = {}
 
@@ -148,7 +153,7 @@ class KnowledgeBase(object):
     """
     return self._environment_variables.values()
 
-  def GetHostname(self, session_identifier=CURRENT_SESSION):
+  def GetHostname(self, session_identifier=None):
     """Retrieves the hostname related to the event.
 
     If the hostname is not stored in the event it is determined based
@@ -156,40 +161,31 @@ class KnowledgeBase(object):
 
     Args:
       session_identifier (Optional[str])): session identifier, where
-          CURRENT_SESSION represents the active session.
+          None represents the active session.
 
     Returns:
       str: hostname.
     """
+    session_identifier = session_identifier or self._active_session
+
     hostname_artifact = self._hostnames.get(session_identifier, None)
     if not hostname_artifact:
       return ''
 
     return hostname_artifact.name or ''
 
-  # TODO: remove this function it is incorrect.
-  def GetStoredHostname(self):
-    """Retrieves the stored hostname.
-
-    The hostname is determined based on the preprocessing information
-    that is stored inside the storage file.
-
-    Returns:
-      str: hostname.
-    """
-    store_number = len(self._hostnames)
-    return self._hostnames.get(store_number, None)
-
-  def GetSystemConfigurationArtifact(self, session_identifier=CURRENT_SESSION):
+  def GetSystemConfigurationArtifact(self, session_identifier=None):
     """Retrieves the knowledge base as a system configuration artifact.
 
     Args:
       session_identifier (Optional[str])): session identifier, where
-          CURRENT_SESSION represents the active session.
+          None represents the active session.
 
     Returns:
       SystemConfigurationArtifact: system configuration artifact.
     """
+    session_identifier = session_identifier or self._active_session
+
     system_configuration = artifacts.SystemConfigurationArtifact()
 
     system_configuration.code_page = self.GetValue(
@@ -228,17 +224,19 @@ class KnowledgeBase(object):
     return system_configuration
 
   def GetUsernameByIdentifier(
-      self, user_identifier, session_identifier=CURRENT_SESSION):
+      self, user_identifier, session_identifier=None):
     """Retrieves the username based on an user identifier.
 
     Args:
       user_identifier (str): user identifier, either a UID or SID.
       session_identifier (Optional[str])): session identifier, where
-          CURRENT_SESSION represents the active session.
+          None represents the active session.
 
     Returns:
       str: username.
     """
+    session_identifier = session_identifier or self._active_session
+
     user_accounts = self._user_accounts.get(session_identifier, {})
     user_account = user_accounts.get(user_identifier, None)
     if not user_account:
@@ -261,7 +259,7 @@ class KnowledgeBase(object):
     """
     path = path.lower()
 
-    user_accounts = self._user_accounts.get(self.CURRENT_SESSION, {})
+    user_accounts = self._user_accounts.get(self._active_session, {})
     for user_account in iter(user_accounts.values()):
       if not user_account.user_directory:
         continue
@@ -297,10 +295,10 @@ class KnowledgeBase(object):
     Returns:
       bool: True if the knowledge base contains user accounts.
     """
-    return self._user_accounts.get(self.CURRENT_SESSION, {}) != {}
+    return self._user_accounts.get(self._active_session, {}) != {}
 
   def ReadSystemConfigurationArtifact(
-      self, system_configuration, session_identifier=CURRENT_SESSION):
+      self, system_configuration, session_identifier=None):
     """Reads the knowledge base values from a system configuration artifact.
 
     Note that this overwrites existing values in the knowledge base.
@@ -309,8 +307,10 @@ class KnowledgeBase(object):
       system_configuration (SystemConfigurationArtifact): system configuration
           artifact.
       session_identifier (Optional[str])): session identifier, where
-          CURRENT_SESSION represents the active session.
+          None represents the active session.
     """
+    session_identifier = session_identifier or self._active_session
+
     if system_configuration.code_page:
       try:
         self.SetCodepage(system_configuration.code_page)
@@ -347,6 +347,15 @@ class KnowledgeBase(object):
         user_account.identifier: user_account
         for user_account in system_configuration.user_accounts}
 
+  def SetActiveSession(self, session_identifier):
+    """Sets the active session.
+
+    Args:
+      session_identifier (str): session identifier where None represents
+          the default active session.
+    """
+    self._active_session = session_identifier or self._DEFAULT_ACTIVE_SESSION
+
   def SetCodepage(self, codepage):
     """Sets the codepage.
 
@@ -372,14 +381,16 @@ class KnowledgeBase(object):
     name = environment_variable.name.upper()
     self._environment_variables[name] = environment_variable
 
-  def SetHostname(self, hostname, session_identifier=CURRENT_SESSION):
+  def SetHostname(self, hostname, session_identifier=None):
     """Sets a hostname.
 
     Args:
       hostname (HostnameArtifact): hostname artifact.
       session_identifier (Optional[str])): session identifier, where
-          CURRENT_SESSION represents the active session.
+          None represents the active session.
     """
+    session_identifier = session_identifier or self._active_session
+
     self._hostnames[session_identifier] = hostname
 
   def SetTimeZone(self, time_zone):
