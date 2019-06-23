@@ -66,7 +66,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
         '+-+-+-+-+-+-\n'
         '[Timestamp]:\n'
-        '  2012-06-27T18:17:01+00:00\n'
+        '  2012-06-27T18:17:01.000000Z\n'
         '\n'
         '[Pathspec]:\n'
         '  type: OS, location: {0:s}\n'

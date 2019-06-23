@@ -4,7 +4,6 @@
 
 from __future__ import unicode_literals
 
-import datetime
 import unittest
 
 from plaso.lib import errors
@@ -121,6 +120,15 @@ class TimeLibTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01Z')
 
+  def testCopyToIsoFormat(self):
+    """Test the CopyToIsoFormat function."""
+    timezone = pytz.timezone('CET')
+
+    timestamp = timelib.Timestamp.CopyFromString('2013-03-14 20:20:08.850041')
+    date_time_string = timelib.Timestamp.CopyToIsoFormat(
+        timestamp, timezone=timezone)
+    self.assertEqual(date_time_string, '2013-03-14T21:20:08.850041+01:00')
+
   def testMonthDict(self):
     """Test the month dict, both inside and outside of scope."""
     self.assertEqual(timelib.MONTH_DICT['nov'], 11)
@@ -194,16 +202,6 @@ class TimeLibTest(unittest.TestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-01-01 05:00:00')
     self.assertEqual(timestamp, expected_timestamp)
-
-  def testCopyToDatetime(self):
-    """Test the copy to datetime object."""
-    timezone = pytz.timezone('CET')
-
-    timestamp = timelib.Timestamp.CopyFromString('2013-03-14 20:20:08.850041')
-    datetime_object = timelib.Timestamp.CopyToDatetime(timestamp, timezone)
-    expected_datetime_object = datetime.datetime(
-        2013, 3, 14, 21, 20, 8, 850041, tzinfo=timezone)
-    self.assertEqual(datetime_object, expected_datetime_object)
 
   def testTimestampFromTimeString(self):
     """The the FromTimeString function."""

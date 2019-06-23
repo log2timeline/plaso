@@ -2,7 +2,7 @@
 """Time manipulation functions and variables.
 
 This module contain common methods that can be used to convert timestamps
-from various formats into number of micro seconds since January 1, 1970,
+from various formats into number of microseconds since January 1, 1970,
 00:00:00 UTC that is used internally to store timestamps.
 
 It also contains various functions to represent timestamps in a more
@@ -43,10 +43,10 @@ MONTH_DICT = {
 class Timestamp(object):
   """Class for converting timestamps to Plaso timestamps.
 
-    The Plaso timestamp is a 64-bit signed timestamp value containing:
-    micro seconds since 1970-01-01 00:00:00.
+  The Plaso timestamp is a 64-bit signed timestamp value containing:
+  microseconds since 1970-01-01 00:00:00.
 
-    The timestamp is not necessarily in UTC.
+  The timestamp is not necessarily in UTC.
   """
   # Timestamp that represents the timestamp representing not
   # a date and time value.
@@ -58,16 +58,15 @@ class Timestamp(object):
     """Copies a timestamp from a string containing a date and time value.
 
     Args:
-      time_string: A string containing a date and time value formatted as:
-                   YYYY-MM-DD hh:mm:ss.######[+-]##:##
-                   Where # are numeric digits ranging from 0 to 9 and the
-                   seconds fraction can be either 3 or 6 digits. The time
-                   of day, seconds fraction and timezone offset are optional.
-                   The default timezone is UTC.
+      time_string (str): a string containing a date and time value formatted as:
+          "YYYY-MM-DD hh:mm:ss.######[+-]##:##", where # are numeric digits
+          ranging from 0 to 9 and the seconds fraction can be either 3 or 6
+          digits. The time of day, seconds fraction and timezone offset are
+          optional. The default timezone is UTC.
 
     Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC.
+      int: timestamp which is an integer containing the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
 
     Raises:
       ValueError: if the time string is invalid or not supported.
@@ -203,38 +202,34 @@ class Timestamp(object):
     return ((timestamp + timezone_offset) * 1000000) + micro_seconds
 
   @classmethod
-  def CopyToDatetime(cls, timestamp, timezone, raise_error=False):
-    """Copies the timestamp to a datetime object.
+  def CopyToIsoFormat(cls, timestamp, timezone=pytz.UTC, raise_error=False):
+    """Copies the timestamp to an ISO 8601 formatted string.
 
     Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timezone: The timezone (pytz.timezone) object.
-      raise_error: Boolean that if set to True will not absorb an OverflowError
-                   if the timestamp is out of bounds. By default there will be
-                   no error raised.
+      timestamp (int): a timestamp containing the number of microseconds since
+          January 1, 1970, 00:00:00 UTC.
+      timezone (Optional[pytz.timezone]): time zone.
+      raise_error (Optional[bool]): True if an OverflowError should be raised
+          if the timestamp is out of bounds.
 
     Returns:
-      A datetime object (instance of datetime.datetime). A datetime object of
-      January 1, 1970 00:00:00 UTC is returned on error if raises_error is
-      not set.
+      str: date and time formatted in ISO 8601.
 
     Raises:
-      OverflowError: If raises_error is set to True and an overflow error
-          occurs.
-      ValueError: If raises_error is set to True and no timestamp value is
-          provided.
+      OverflowError: if the timestamp value is out of bounds and raise_error
+          is True.
+      ValueError: if the timestamp value is missing.
     """
     datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
 
     if not timestamp:
       if raise_error:
         raise ValueError('Missing timestamp value')
-      return datetime_object
+      return datetime_object.isoformat()
 
     try:
       datetime_object += datetime.timedelta(microseconds=timestamp)
-      return datetime_object.astimezone(timezone)
+      datetime_object = datetime_object.astimezone(timezone)
     except OverflowError as exception:
       if raise_error:
         raise
@@ -243,25 +238,6 @@ class Timestamp(object):
           'Unable to copy {0:d} to a datetime object with error: '
           '{1!s}').format(timestamp, exception))
 
-    return datetime_object
-
-  @classmethod
-  def CopyToIsoFormat(cls, timestamp, timezone=pytz.UTC, raise_error=False):
-    """Copies the timestamp to an ISO 8601 formatted string.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timezone: Optional timezone (instance of pytz.timezone).
-      raise_error: Boolean that if set to True will not absorb an OverflowError
-                   if the timestamp is out of bounds. By default there will be
-                   no error raised.
-
-    Returns:
-      A string containing an ISO 8601 formatted date and time.
-    """
-    datetime_object = cls.CopyToDatetime(
-        timestamp, timezone, raise_error=raise_error)
     return datetime_object.isoformat()
 
   @classmethod
@@ -286,7 +262,7 @@ class Timestamp(object):
                 is used when the timezone cannot be determined from the string.
 
     Returns:
-      The timestamp which is an integer containing the number of micro seconds
+      The timestamp which is an integer containing the number of microseconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
 
     Raises:
@@ -318,7 +294,7 @@ class Timestamp(object):
     """Retrieves the current time (now) as a timestamp in UTC.
 
     Returns:
-      The timestamp which is an integer containing the number of micro seconds
+      The timestamp which is an integer containing the number of microseconds
       since January 1, 1970, 00:00:00 UTC.
     """
     time_elements = time.gmtime()
@@ -330,13 +306,13 @@ class Timestamp(object):
 
     Args:
       timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+                 of microseconds since January 1, 1970, 00:00:00 UTC.
       timezone: The timezone (pytz.timezone) object.
       is_dst: A boolean to indicate the timestamp is corrected for daylight
               savings time (DST) only used for the DST transition period.
 
     Returns:
-      The timestamp which is an integer containing the number of micro seconds
+      The timestamp which is an integer containing the number of microseconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     if timezone and timezone != pytz.UTC:

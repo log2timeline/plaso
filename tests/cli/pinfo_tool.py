@@ -116,8 +116,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     format_version = '20190309'
     plaso_version = '20190429'
     session_identifier = '35242873-b939-4a86-a6ff-08c2fdadb946'
-    session_start_time = '2019-05-05T11:52:23.388630+00:00'
-    session_completion_time = '2019-05-05T11:52:26.078350+00:00'
+    session_start_time = '2019-05-05T11:52:23.388630Z'
+    session_completion_time = '2019-05-05T11:52:26.078350Z'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
