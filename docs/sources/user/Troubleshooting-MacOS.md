@@ -8,7 +8,7 @@ If you installed plaso via the installer script in the .dmg, the Mac OS X packag
 
 ## pyparsing errors
 
-Mac OS-X bundles its own version of pyparsing that is older than the version required by Plaso. Fix this by using the special wrapper scripts (log2timeline**.sh**, et. al.), or if you don't want to do that, manipulate PYTHONPATH so that the newer version is loaded. This is detailed on the [MacOS development page](../developer/Development-release-MacOS.md).
+Mac OS bundles its own version of pyparsing that is older than the version required by Plaso. Fix this by using the special wrapper scripts (log2timeline**.sh**, et. al.), or if you don't want to do that, manipulate PYTHONPATH so that the newer version is loaded. This is detailed on the [MacOS development page](../developer/Developing-MacOS.md).
 
 ## ImportError: cannot import name dependencies
 

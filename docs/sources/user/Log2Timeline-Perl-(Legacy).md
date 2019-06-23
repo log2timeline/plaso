@@ -1,4 +1,4 @@
-# Switching from Log2Timeline Perl (Legacy) to plaso
+# Switching from Log2Timeline Perl (Legacy) to Plaso
 
 This is a site that should contain information for those that are used to the 0.X branch of log2timeline, also known as Log2Timeline Perl or Log2Timeline legacy.
 

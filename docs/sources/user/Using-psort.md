@@ -273,7 +273,7 @@ It is possible to filter out the results **psort** provides using few different 
 
 The simplest filter is the time slice, where if you've discovered an interesting timestamp and would like to explore what occurred just prior and after that timestamp of interest. This can be achieved using the ``--slice DATE`` parameter, for example:
 
-```
+```bash
 $ psort.py -q --slice "2004-09-20 16:13:02" test.plaso 
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 2004-09-20T16:13:02+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://www.microsoft.com/windows/ie/getosver/javaxp.asp Number of hits: 2 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143661
