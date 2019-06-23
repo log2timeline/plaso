@@ -27,7 +27,9 @@ class ApacheAccessFormatterTest(test_lib.EventFormatterTestCase):
         'ip_address',
         'http_response_code',
         'http_request_referer',
-        'http_request_user_agent'
+        'http_request_user_agent',
+        'port_number',
+        'server_name'
     ]
 
     self._TestGetFormatStringAttributeNames(
