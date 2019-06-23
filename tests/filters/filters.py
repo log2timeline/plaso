@@ -205,29 +205,6 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
     test_value = filter_object._GetValue('tag', event, event_data, event_tag)
     self.assertEqual(test_value, ['browser_search'])
 
-  def testGetValueByPath(self):
-    """Tests the _GetValueByPath function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-
-    event_tag = events.EventTag(comment='comment')
-    event_tag.AddLabel('browser_search')
-
-    filter_object = filters.GenericBinaryOperator(arguments=['test_value', 1])
-
-    test_value = filter_object._GetValueByPath(
-        ['test_value'], event, event_data, event_tag)
-    self.assertEqual(test_value, 1)
-
-    test_value = filter_object._GetValueByPath(
-        ['timestamp'], event, event_data, event_tag)
-    self.assertIsNotNone(test_value)
-    self.assertEqual(test_value.timestamp, 5134324321)
-
-    test_value = filter_object._GetValueByPath(
-        ['tag'], event, event_data, event_tag)
-    self.assertEqual(test_value, ['browser_search'])
-
   # TODO: add tests for FlipBool function
 
 
