@@ -51,10 +51,31 @@ class TrueFilter(filters.Operator):
 class FilterTest(shared_test_lib.BaseTestCase):
   """Tests the filter."""
 
+  # pylint: disable=protected-access
+
   def testInitialize(self):
     """Tests the __init__ function."""
     filter_object = filters.Filter()
     self.assertIsNotNone(filter_object)
+
+  def testCopyValueToString(self):
+    """Tests the _CopyValueToString function."""
+    filter_object = filters.Filter()
+
+    string = filter_object._CopyValueToString(['1', '2', '3'])
+    self.assertEqual(string, '123')
+
+    string = filter_object._CopyValueToString([1, 2, 3])
+    self.assertEqual(string, '123')
+
+    string = filter_object._CopyValueToString(123)
+    self.assertEqual(string, '123')
+
+    string = filter_object._CopyValueToString(b'123')
+    self.assertEqual(string, '123')
+
+    string = filter_object._CopyValueToString('123')
+    self.assertEqual(string, '123')
 
 
 class AndFilterTest(shared_test_lib.BaseTestCase):

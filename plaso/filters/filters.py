@@ -4,12 +4,12 @@
 from __future__ import unicode_literals
 
 import abc
+import codecs
 import logging
 import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.filters import helpers
 from plaso.lib import errors
 from plaso.lib import py2to3
 
@@ -33,6 +33,26 @@ class Filter(object):
 
     super(Filter, self).__init__()
     self.args = arguments or []
+
+  def _CopyValueToString(self, value):
+    """Copies an event filter value to a string.
+
+    Args:
+      value (list|int|bytes|str): value to convert.
+
+    Returns:
+      str: string representation of the argument.
+    """
+    if isinstance(value, list):
+      value = [self._CopyValueToString(item) for item in value]
+      return ''.join(value)
+
+    if isinstance(value, py2to3.INTEGER_TYPES):
+      value = '{0:d}'.format(value)
+
+    if not isinstance(value, py2to3.UNICODE_TYPE):
+      return codecs.decode(value, 'utf8', 'ignore')
+    return value
 
   @abc.abstractmethod
   def Matches(self, event, event_data, event_tag):
@@ -490,7 +510,7 @@ class Regexp(GenericBinaryOperator):
     logging.debug('Compiled: {0!s}'.format(self.right_operand))
 
     try:
-      expression = helpers.GetUnicodeString(self.right_operand)
+      expression = self._CopyValueToString(self.right_operand)
       compiled_re = re.compile(expression, re.DOTALL)
     except re.error:
       raise ValueError('Regular expression "{0!s}" is malformed.'.format(
@@ -510,7 +530,7 @@ class Regexp(GenericBinaryOperator):
           otherwise.
     """
     try:
-      string_value = helpers.GetUnicodeString(event_value)
+      string_value = self._CopyValueToString(event_value)
       if self.compiled_re.search(string_value):
         return True
     except TypeError:
@@ -539,7 +559,7 @@ class RegexpInsensitive(Regexp):
     logging.debug('Compiled: {0!s}'.format(self.right_operand))
 
     try:
-      expression = helpers.GetUnicodeString(self.right_operand)
+      expression = self._CopyValueToString(self.right_operand)
       compiled_re = re.compile(expression, re.I | re.DOTALL)
     except re.error:
       raise ValueError('Regular expression "{0!s}" is malformed.'.format(
