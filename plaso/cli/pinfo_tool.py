@@ -256,7 +256,7 @@ class PinfoTool(
       analysis_reports_counter (collections.Counter): number of analysis
           reports per analysis plugin.
       session_identifier (Optional[str]): session identifier, formatted as
-          an UUID.
+          a UUID.
     """
     if not analysis_reports_counter:
       return
@@ -380,7 +380,7 @@ class PinfoTool(
       event_labels_counter (collections.Counter): number of event tags per
           label.
       session_identifier (Optional[str]): session identifier, formatted as
-          an UUID.
+          a UUID.
     """
     if not event_labels_counter:
       return
@@ -413,7 +413,7 @@ class PinfoTool(
       parsers_counter (collections.Counter): number of events per parser or
           parser plugin.
       session_identifier (Optional[str]): session identifier, formatted as
-          an UUID.
+          a UUID.
     """
     if not parsers_counter:
       self._output_writer.Write('No events stored.\n\n')
@@ -443,16 +443,20 @@ class PinfoTool(
     Args:
       storage_reader (StorageReader): storage reader.
       session_identifier (Optional[str]): session identifier, formatted as
-          an UUID.
+          a UUID.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
-    # The knowledge base requires the session identifier to be formatted in
-    # hexadecimal representation.
+    lookup_identifier = session_identifier
+    if lookup_identifier:
+      # The knowledge base requires the session identifier to be formatted in
+      # hexadecimal representation.
+      lookup_identifier = lookup_identifier.replace('-', '')
+
     system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
-        session_identifier=session_identifier.replace('-', ''))
+        session_identifier=lookup_identifier)
     if not system_configuration:
       return
 
@@ -519,7 +523,7 @@ class PinfoTool(
     Args:
       storage_reader (BaseStore): storage.
     """
-    for _, session in enumerate(storage_reader.GetSessions()):
+    for session in storage_reader.GetSessions():
       session_identifier = uuid.UUID(hex=session.identifier)
       session_identifier = '{0!s}'.format(session_identifier)
 

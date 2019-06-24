@@ -295,7 +295,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
   def __init__(
       self, full_name=None, group_identifier=None, identifier=None,
       path_separator='/', user_directory=None, username=None):
-    """Initializes an user account artifact.
+    """Initializes a user account artifact.
 
     Args:
       full_name (Optional[str]): name describing the user e.g. full name.
