@@ -14,6 +14,6 @@ Since the binaries were build using Visual Studio you will need to install the c
 * Python 2.7 Visual Studio 2008
 * Python 3.6 Visual Studio 2017
 
-The Visual C++ Redistributable package can be obtain from [Microsoft Download Center](https://www.microsoft.com/en-us/search/Results.aspx?q=Microsoft%20Visual%20C%2B%2B%20Redistributable%20Package&form=DLC).
+The Visual C++ Redistributable package can be obtained from [Microsoft Download Center](https://www.microsoft.com/en-us/search/Results.aspx?q=Microsoft%20Visual%20C%2B%2B%20Redistributable%20Package&form=DLC).
 
 Extract the ZIP file and you're ready to log2timeline.
