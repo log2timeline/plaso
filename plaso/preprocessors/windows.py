@@ -184,6 +184,32 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
           pass
 
 
+class WindowsAvailableTimeZonesPlugin(
+    interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
+  """The Windows available time zones plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'WindowsAvailableTimeZones'
+
+  def _ParseKey(self, knowledge_base, registry_key, value_name):
+    """Parses a Windows Registry key for a preprocessing attribute.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the Windows Registry value.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    time_zone_artifact = artifacts.TimeZoneArtifact(name=registry_key.name)
+
+    try:
+      knowledge_base.AddAvailableTimeZone(time_zone_artifact)
+    except KeyError:
+      # TODO: add and store preprocessing errors.
+      pass
+
+
 class WindowsCodepagePlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
   """The Windows codepage plugin."""
@@ -479,6 +505,7 @@ manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsAllUsersAppDataKnowledgeBasePlugin,
     WindowsAllUsersProfileEnvironmentVariablePlugin,
     WindowsAllUsersAppProfileKnowledgeBasePlugin,
+    WindowsAvailableTimeZonesPlugin,
     WindowsCodepagePlugin, WindowsHostnamePlugin,
     WindowsProgramDataEnvironmentVariablePlugin,
     WindowsProgramDataKnowledgeBasePlugin,

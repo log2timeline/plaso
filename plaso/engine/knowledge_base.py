@@ -27,12 +27,18 @@ class KnowledgeBase(object):
   def __init__(self):
     """Initializes a knowledge base."""
     super(KnowledgeBase, self).__init__()
+    self._available_time_zones = {}
     self._codepage = 'cp1252'
     self._environment_variables = {}
     self._hostnames = {}
     self._time_zone = pytz.UTC
     self._user_accounts = {}
     self._values = {}
+
+  @property
+  def available_time_zones(self):
+    """list[TimeZone]: available time zones of the current session."""
+    return self._available_time_zones.get(self.CURRENT_SESSION, {}).values()
 
   @property
   def codepage(self):
@@ -62,6 +68,26 @@ class KnowledgeBase(object):
   def year(self):
     """int: year of the current session."""
     return self.GetValue('year', default_value=0)
+
+  def AddAvailableTimeZone(self, time_zone, session_identifier=CURRENT_SESSION):
+    """Adds an available time zone.
+
+    Args:
+      time_zone (TimeZoneArtifact): time zone artifact.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
+
+    Raises:
+      KeyError: if the time zone already exists.
+    """
+    if session_identifier not in self._available_time_zones:
+      self._available_time_zones[session_identifier] = {}
+
+    available_time_zones = self._available_time_zones[session_identifier]
+    if time_zone.name in available_time_zones:
+      raise KeyError('Time zone: {0:s} already exists.'.format(time_zone.name))
+
+    available_time_zones[time_zone.name] = time_zone
 
   def AddUserAccount(self, user_account, session_identifier=CURRENT_SESSION):
     """Adds an user account.
@@ -187,6 +213,13 @@ class KnowledgeBase(object):
 
     system_configuration.time_zone = time_zone
 
+    available_time_zones = self._available_time_zones.get(
+        session_identifier, {})
+    # In Python 3 dict.values() returns a type dict_values, which will cause
+    # the JSON serializer to raise a TypeError.
+    system_configuration.available_time_zones = list(
+        available_time_zones.values())
+
     user_accounts = self._user_accounts.get(session_identifier, {})
     # In Python 3 dict.values() returns a type dict_values, which will cause
     # the JSON serializer to raise a TypeError.
@@ -306,8 +339,12 @@ class KnowledgeBase(object):
             'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 system_configuration.time_zone, self.timezone.zone))
 
+    self._available_time_zones[session_identifier] = {
+        time_zone.name: time_zone
+        for time_zone in system_configuration.available_time_zones}
+
     self._user_accounts[session_identifier] = {
-        user_account.username: user_account
+        user_account.identifier: user_account
         for user_account in system_configuration.user_accounts}
 
   def SetCodepage(self, codepage):

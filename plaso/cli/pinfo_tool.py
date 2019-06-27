@@ -255,7 +255,8 @@ class PinfoTool(
     Args:
       analysis_reports_counter (collections.Counter): number of analysis
           reports per analysis plugin.
-      session_identifier (Optional[str]): session identifier.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
     if not analysis_reports_counter:
       return
@@ -378,7 +379,8 @@ class PinfoTool(
     Args:
       event_labels_counter (collections.Counter): number of event tags per
           label.
-      session_identifier (Optional[str]): session identifier.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
     if not event_labels_counter:
       return
@@ -410,7 +412,8 @@ class PinfoTool(
     Args:
       parsers_counter (collections.Counter): number of events per parser or
           parser plugin.
-      session_identifier (Optional[str]): session identifier.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
     if not parsers_counter:
       self._output_writer.Write('No events stored.\n\n')
@@ -433,24 +436,34 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def _PrintPreprocessingInformation(self, storage_reader, session_number=None):
+  def _PrintPreprocessingInformation(
+      self, storage_reader, session_identifier=None):
     """Prints the details of the preprocessing information.
 
     Args:
       storage_reader (StorageReader): storage reader.
-      session_number (Optional[int]): session number.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
-    # TODO: replace session_number by session_identifier.
+    lookup_identifier = session_identifier
+    if lookup_identifier:
+      # The knowledge base requires the session identifier to be formatted in
+      # hexadecimal representation.
+      lookup_identifier = lookup_identifier.replace('-', '')
+
     system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
-        session_identifier=session_number)
+        session_identifier=lookup_identifier)
     if not system_configuration:
       return
 
     title = 'System configuration'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=title)
 
@@ -477,7 +490,23 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
+    title = 'Available time zones'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=['Name', ''], title=title)
+
+    for time_zone in system_configuration.available_time_zones:
+      table_view.AddRow([time_zone.name, ''])
+
+    table_view.Write(self._output_writer)
+
     title = 'User accounts'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
         column_names=['Username', 'User directory'], title=title)
@@ -494,7 +523,7 @@ class PinfoTool(
     Args:
       storage_reader (BaseStore): storage.
     """
-    for session_number, session in enumerate(storage_reader.GetSessions()):
+    for session in storage_reader.GetSessions():
       session_identifier = uuid.UUID(hex=session.identifier)
       session_identifier = '{0!s}'.format(session_identifier)
 
@@ -545,7 +574,8 @@ class PinfoTool(
       table_view.Write(self._output_writer)
 
       if self._verbose:
-        self._PrintPreprocessingInformation(storage_reader, session_number + 1)
+        self._PrintPreprocessingInformation(
+            storage_reader, session_identifier=session_identifier)
 
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
