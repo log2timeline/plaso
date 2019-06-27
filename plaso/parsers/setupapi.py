@@ -23,7 +23,7 @@ class SetupapiLogEventData(events.EventData):
     entry_type (str): log entry type such as "Device Install".
     section_start (str): date and time of the start of the log entry event.
     message (str): contents of the log entry.
-    section_end (str): date and time of the start of the log entry event.
+    # section_end (str): date and time of the start of the log entry event.
     exit_status (str): the exit status of the entry.
   """
 
@@ -64,15 +64,14 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
   )
 
   _SETUPAPI_LINE = (
-      pyparsing.SkipTo('>>>  [') +
+      pyparsing.SkipTo('>>>  [', include=True).suppress() +
       pyparsing.SkipTo(']').setResultsName('entry_type') +
-      pyparsing.SkipTo('>>>  Section start') +
+      pyparsing.SkipTo('>>>  Section start',include=True).suppress() +
       _SETUPAPI_DATE_TIME.setResultsName('start_time') +
       pyparsing.SkipTo('<<<  Section end ').setResultsName('message') +
       # _SETUPAPI_DATE_TIME.setResultsName('end_time') +
-      pyparsing.SkipTo('<<<  [Exit status: ') +
-      pyparsing.SkipTo(']').setResultsName('exit_status') +
-      pyparsing.ZeroOrMore(pyparsing.lineEnd()))
+      pyparsing.SkipTo('<<<  [Exit status: ', include=True).suppress() +
+      pyparsing.SkipTo(']').setResultsName('exit_status'))
 
   LINE_STRUCTURES = [
       ('logline', _SETUPAPI_LINE),
@@ -137,6 +136,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'start_time')
+    logger.debug('start_time: %s', time_elements_structure)
     try:
       datetime_iso8601 = self._GetISO8601String(time_elements_structure)
       date_time.CopyFromStringISO8601(datetime_iso8601)
@@ -192,7 +192,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
+    """try:
       structure = self._SETUPAPI_LINE.parseString(lines)
     except pyparsing.ParseException as exception:
       logger.debug('Not a Windows Setupapi log file: {0!s}'.format(exception))
@@ -210,6 +210,12 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
           'with error: {1!s}').format(date_time_string, exception))
       return False
 
+    return True
+    """
+    if '[Device Install Log]' not in lines:
+      return False
+    if '>>>  [' not in lines:
+      return False
     return True
 
 
