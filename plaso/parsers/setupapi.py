@@ -48,8 +48,8 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
 
   _ENCODING = 'utf-8'
 
-  # Increase the buffer size, as log messages are often several lines long.
-  BUFFER_SIZE = 16384
+  # Increase the buffer size, as log messages can be very long.
+  BUFFER_SIZE = 262144
 
   _SLASH = pyparsing.Literal('/').suppress()
 
@@ -71,7 +71,8 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.SkipTo('<<<  Section end ').setResultsName('message') +
       # _SETUPAPI_DATE_TIME.setResultsName('end_time') +
       pyparsing.SkipTo('<<<  [Exit status: ', include=True).suppress() +
-      pyparsing.SkipTo(']').setResultsName('exit_status'))
+      pyparsing.SkipTo(']').setResultsName('exit_status') +
+      pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
   LINE_STRUCTURES = [
       ('logline', _SETUPAPI_LINE),
@@ -91,7 +92,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
       ValueError: if the structure cannot be converted into a date time string.
     """
     # TODO: get timezone offset properly
-    time_zone_offset = '+00:00'
+    time_zone_offset = '+0000'
 
     try:
       time_zone_offset_hours = int(time_zone_offset[1:3], 10)
@@ -136,7 +137,6 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'start_time')
-    logger.debug('start_time: %s', time_elements_structure)
     try:
       datetime_iso8601 = self._GetISO8601String(time_elements_structure)
       date_time.CopyFromStringISO8601(datetime_iso8601)
@@ -192,7 +192,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    """try:
+    try:
       structure = self._SETUPAPI_LINE.parseString(lines)
     except pyparsing.ParseException as exception:
       logger.debug('Not a Windows Setupapi log file: {0!s}'.format(exception))
@@ -210,12 +210,6 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
           'with error: {1!s}').format(date_time_string, exception))
       return False
 
-    return True
-    """
-    if '[Device Install Log]' not in lines:
-      return False
-    if '>>>  [' not in lines:
-      return False
     return True
 
 
