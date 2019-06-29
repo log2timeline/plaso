@@ -32,8 +32,10 @@ class BencodeTest(test_lib.BencodePluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-08 15:31:20.000000')
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-    self.assertEqual(event.destination, '/Users/brian/Downloads')
-    self.assertEqual(event.seedtime, 4)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.destination, '/Users/brian/Downloads')
+    self.assertEqual(event_data.seedtime, 4)
 
     # Test on second event of first torrent.
     event = events[1]
@@ -41,8 +43,10 @@ class BencodeTest(test_lib.BencodePluginTestCase):
     self.CheckTimestamp(event.timestamp, '2013-11-08 18:24:24.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-    self.assertEqual(event.destination, '/Users/brian/Downloads')
-    self.assertEqual(event.seedtime, 4)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.destination, '/Users/brian/Downloads')
+    self.assertEqual(event_data.seedtime, 4)
 
     expected_message = (
         'Saved to /Users/brian/Downloads; '

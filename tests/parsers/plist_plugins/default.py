@@ -41,8 +41,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2012-11-02 01:21:38.997672')
 
-    self.assertEqual(event.root, '/DE-00-AD-00-BE-EF')
-    self.assertEqual(event.key, 'LastUsed')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.root, '/DE-00-AD-00-BE-EF')
+    self.assertEqual(event_data.key, 'LastUsed')
 
     expected_string = (
         '/DE-00-AD-00-BE-EF/LastUsed')
@@ -91,8 +92,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2011-04-07 17:56:53.524275')
 
-    self.assertEqual(event.root, '/DeviceCache/44-00-00-00-00-02')
-    self.assertEqual(event.key, 'LastNameUpdate')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.root, '/DeviceCache/44-00-00-00-00-02')
+    self.assertEqual(event_data.key, 'LastNameUpdate')
 
 
 if __name__ == '__main__':
