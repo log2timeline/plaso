@@ -55,7 +55,7 @@ PYTHON_DEPENDENCIES = {
     'pyqcow': ('get_version()', '20131204', None, True),
     'pyregf': ('get_version()', '20150315', None, True),
     'pyscca': ('get_version()', '20190605', None, True),
-    'pysigscan': ('get_version()', '20150627', None, True),
+    'pysigscan': ('get_version()', '20190629', None, True),
     'pysmdev': ('get_version()', '20140529', None, True),
     'pysmraw': ('get_version()', '20140612', None, True),
     'pytsk3': ('get_version()', '20160721', None, True),
