@@ -112,13 +112,16 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:key_value')
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.123521')
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
 
     expected_message = (
         '[{0:s}] '
@@ -132,16 +135,18 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
-    self.assertEqual(event.data_type, 'windows:registry:installation')
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_INSTALLATION)
 
-    self.assertEqual(event.key_path, key_path)
-    self.assertEqual(event.owner, 'A Concerned Citizen')
-    self.assertEqual(event.product_name, 'MyTestOS')
-    self.assertEqual(event.service_pack, 'Service Pack 1')
-    self.assertEqual(event.version, '5.1')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:installation')
+    self.assertEqual(event_data.key_path, key_path)
+    self.assertEqual(event_data.owner, 'A Concerned Citizen')
+    self.assertEqual(event_data.product_name, 'MyTestOS')
+    self.assertEqual(event_data.service_pack, 'Service Pack 1')
+    self.assertEqual(event_data.version, '5.1')
 
     expected_message = (
         'MyTestOS 5.1 Service Pack 1 '
@@ -173,12 +178,15 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2012-03-15 07:09:20.671875')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
+    self.assertEqual(event_data.parser, plugin.plugin_name)
 
-    self.assertEqual(event.data_type, 'windows:registry:key_value')
-    self.CheckTimestamp(event.timestamp, '2012-03-15 07:09:20.671875')
+    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
 
     expected_message = (
         '[{0:s}] '

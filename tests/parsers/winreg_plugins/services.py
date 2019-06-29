@@ -108,12 +108,14 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
+    self.assertEqual(event_data.parser, plugin.plugin_name)
 
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
-    self.assertEqual(event.data_type, 'windows:registry:service')
+    self.assertEqual(event_data.data_type, 'windows:registry:service')
 
     expected_message = (
         '[{0:s}] '
@@ -136,70 +138,83 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    events = []
-
-    # Select a few service subkeys to perform additional testing.
-    bits_events = None
-    mc_task_manager_events = None
-    rdp_video_miniport_events = None
-
     plugin = services.ServicesPlugin()
+
+    events = []
     for winreg_subkey in registry_key.GetSubkeys():
       storage_writer = self._ParseKeyWithPlugin(
           winreg_subkey, plugin, file_entry=test_file_entry)
 
       events_subkey = list(storage_writer.GetEvents())
-
-      events.extend(list(events_subkey))
-
-      if winreg_subkey.name == 'BITS':
-        bits_events = events_subkey
-      elif winreg_subkey.name == 'McTaskManager':
-        mc_task_manager_events = events_subkey
-      elif winreg_subkey.name == 'RdpVideoMiniport':
-        rdp_video_miniport_events = events_subkey
+      events.extend(events_subkey)
 
     self.assertEqual(len(events), 416)
 
     # Test the BITS subkey events.
+    winreg_subkey = registry_key.GetSubkeyByName('BITS')
+    bits_storage_writer = self._ParseKeyWithPlugin(
+        winreg_subkey, plugin, file_entry=test_file_entry)
+    bits_events = list(bits_storage_writer.GetEvents())
+
     self.assertEqual(len(bits_events), 1)
 
     event = bits_events[0]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
+    self.CheckTimestamp(event.timestamp, '2012-04-06 20:43:27.639075')
+
+    event_data = self._GetEventDataOfEvent(bits_storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.CheckTimestamp(event.timestamp, '2012-04-06 20:43:27.639075')
-    self.assertEqual(event.data_type, 'windows:registry:service')
-
-    self.assertEqual(event.service_type, 0x20)
-    self.assertEqual(event.start_type, 3)
-    self.assertEqual(event.service_dll, '%SystemRoot%\\System32\\qmgr.dll')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:service')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_data.service_type, 0x20)
+    self.assertEqual(event_data.start_type, 3)
+    self.assertEqual(event_data.service_dll, '%SystemRoot%\\System32\\qmgr.dll')
 
     # Test the McTaskManager subkey events.
+    winreg_subkey = registry_key.GetSubkeyByName('McTaskManager')
+    mc_task_manager_storage_writer = self._ParseKeyWithPlugin(
+        winreg_subkey, plugin, file_entry=test_file_entry)
+    mc_task_manager_events = list(mc_task_manager_storage_writer.GetEvents())
+
     self.assertEqual(len(mc_task_manager_events), 1)
 
     event = mc_task_manager_events[0]
 
     self.CheckTimestamp(event.timestamp, '2011-09-16 20:49:16.877416')
-    self.assertEqual(event.data_type, 'windows:registry:service')
 
-    self.assertEqual(event.service_type, 0x10)
-    self.assertTrue('DisplayName: [REG_SZ] McAfee Task Manager' in event.values)
+    event_data = self._GetEventDataOfEvent(
+        mc_task_manager_storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:service')
+
+    self.assertEqual(event_data.service_type, 0x10)
+    self.assertTrue(
+        'DisplayName: [REG_SZ] McAfee Task Manager' in event_data.values)
 
     # Test the RdpVideoMiniport subkey events.
+    winreg_subkey = registry_key.GetSubkeyByName('RdpVideoMiniport')
+    rdp_video_miniport_storage_writer = self._ParseKeyWithPlugin(
+        winreg_subkey, plugin, file_entry=test_file_entry)
+    rdp_video_miniport_events = list(
+        rdp_video_miniport_storage_writer.GetEvents())
+
     self.assertEqual(len(rdp_video_miniport_events), 1)
 
     event = rdp_video_miniport_events[0]
 
     self.CheckTimestamp(event.timestamp, '2011-09-17 13:37:59.347158')
-    self.assertEqual(event.data_type, 'windows:registry:service')
 
-    self.assertEqual(event.start_type, 3)
+    event_data = self._GetEventDataOfEvent(
+        rdp_video_miniport_storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:service')
+
+    self.assertEqual(event_data.start_type, 3)
     self.assertEqual(
-        event.image_path, 'System32\\drivers\\rdpvideominiport.sys')
+        event_data.image_path, 'System32\\drivers\\rdpvideominiport.sys')
 
 
 if __name__ == '__main__':

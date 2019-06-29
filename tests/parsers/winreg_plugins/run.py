@@ -77,13 +77,15 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
+    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:run')
-    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:run')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
@@ -113,13 +115,15 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
+    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:run')
-    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:run')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
@@ -148,13 +152,15 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
+    self.CheckTimestamp(event.timestamp, '2011-09-16 20:57:09.067576')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:run')
-    self.CheckTimestamp(event.timestamp, '2011-09-16 20:57:09.067576')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:run')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] '
@@ -189,13 +195,15 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
+    self.CheckTimestamp(event.timestamp, '2012-04-06 14:07:27.750000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:run')
-    self.CheckTimestamp(event.timestamp, '2012-04-06 14:07:27.750000')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:run')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
