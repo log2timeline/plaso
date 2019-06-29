@@ -32,11 +32,11 @@ class WinJobTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_application = (
         'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe')
-    self.assertEqual(event.application, expected_application)
-
-    self.assertEqual(event.username, 'Brian')
+    self.assertEqual(event_data.application, expected_application)
+    self.assertEqual(event_data.username, 'Brian')
 
     expected_comment = (
         'Keeps your Google software up to date. If this task is disabled or '
@@ -44,7 +44,7 @@ class WinJobTest(test_lib.ParserTestCase):
         'security vulnerabilities that may arise cannot be fixed and '
         'features may not work. This task uninstalls itself when there is '
         'no Google software using it.')
-    self.assertEqual(event.comment, expected_comment)
+    self.assertEqual(event_data.comment, expected_comment)
 
     # Parse second event. Same metadata; different timestamp event.
     event = events[1]
@@ -52,7 +52,8 @@ class WinJobTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2013-07-12 15:42:00.000000')
     self.assertEqual(event.timestamp_desc, 'Scheduled to start')
 
-    self.assertEqual(event.trigger_type, 1)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.trigger_type, 1)
 
     expected_message = (
         'Application: {0:s} /ua /installsource scheduler '

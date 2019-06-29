@@ -80,10 +80,11 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-14 20:36:37.222000')
 
-    self.assertEqual(event.agent, 'airportd[88]')
-    self.assertEqual(event.function, 'airportdProcessDLILEvent')
-    self.assertEqual(event.action, 'Interface en0 turn up.')
-    self.assertEqual(event.text, 'en0 attached (up)')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.agent, 'airportd[88]')
+    self.assertEqual(event_data.function, 'airportdProcessDLILEvent')
+    self.assertEqual(event_data.action, 'Interface en0 turn up.')
+    self.assertEqual(event_data.text, 'en0 attached (up)')
 
     expected_message = (
         'Action: Interface en0 turn up. '
@@ -99,9 +100,10 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-14 20:36:43.818000')
 
-    self.assertEqual(event.agent, 'airportd[88]')
-    self.assertEqual(event.function, '_doAutoJoin')
-    self.assertEqual(event.action, 'Wifi connected to SSID CampusNet')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.agent, 'airportd[88]')
+    self.assertEqual(event_data.function, '_doAutoJoin')
+    self.assertEqual(event_data.action, 'Wifi connected to SSID CampusNet')
 
     expected_text = (
         'Already associated to \u201cCampusNet\u201d. Bailing on auto-join.')
@@ -121,14 +123,15 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-14 21:52:09.883000')
 
-    self.assertEqual('airportd[88]', event.agent)
-    self.assertEqual('_processSystemPSKAssoc', event.function)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.agent, 'airportd[88]')
+    self.assertEqual(event_data.function, '_processSystemPSKAssoc')
 
     expected_action = (
         'New wifi configured. BSSID: 88:30:8a:7a:61:88, SSID: AndroidAP, '
         'Security: WPA2 Personal.')
 
-    self.assertEqual(event.action, expected_action)
+    self.assertEqual(event_data.action, expected_action)
 
     expected_text = (
         'No password for network <CWNetwork: 0x7fdfe970b250> '
@@ -146,6 +149,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     event = events[9]
 
     self.CheckTimestamp(event.timestamp, '2014-01-01 01:12:17.311000')
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -48,10 +48,11 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'Visited: testing@http://www.trafficfusionx.com/download/tfscrn2'
         '/funnycats.exe')
 
-    self.assertEqual(event.data_type, 'msiecf:url')
-    self.assertEqual(event.offset, 21376)
-    self.assertEqual(event.url, expected_url)
-    self.assertEqual(event.cache_directory_index, -2)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'msiecf:url')
+    self.assertEqual(event_data.offset, 21376)
+    self.assertEqual(event_data.url, expected_url)
+    self.assertEqual(event_data.cache_directory_index, -2)
 
     self.CheckTimestamp(event.timestamp, '2011-06-23 18:02:10.066000')
     self.assertEqual(
@@ -104,8 +105,10 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     event = events[3]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # Test cached file path.
-    self.assertEqual(event.data_type, 'msiecf:url')
+    self.assertEqual(event_data.data_type, 'msiecf:url')
 
     expected_message = (
         'Location: http://col.stc.s-msn.com/br/gbl/lg/csl/favicon.ico '
@@ -132,15 +135,17 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     event = events[16]
 
-    self.assertEqual(event.data_type, 'msiecf:leak')
     self.assertEqual(event.timestamp, 0)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-    self.assertEqual(event.cache_directory_index, 1)
-    self.assertEqual(event.cache_directory_name, 'VUQHQA73')
-    self.assertEqual(event.cached_file_size, 1966)
-    self.assertEqual(event.cached_filename, 'ADSAdClient31[1].htm')
-    self.assertEqual(event.recovered, False)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'msiecf:leak')
+    self.assertEqual(event_data.cache_directory_index, 1)
+    self.assertEqual(event_data.cache_directory_name, 'VUQHQA73')
+    self.assertEqual(event_data.cached_file_size, 1966)
+    self.assertEqual(event_data.cached_filename, 'ADSAdClient31[1].htm')
+    self.assertEqual(event_data.recovered, False)
 
     expected_message = (
         'Cached file: VUQHQA73\\ADSAdClient31[1].htm '
@@ -151,16 +156,17 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[21]
-    expected_url = (
-        'http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;sz=1x1;'
-        'pc=[TPAS_ID];ord=2642102')
-
-    self.assertEqual(event.data_type, 'msiecf:redirected')
     self.assertEqual(event.timestamp, 0)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-    self.assertEqual(event.url, expected_url)
-    self.assertEqual(event.recovered, False)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'msiecf:redirected')
+    expected_url = (
+        'http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;sz=1x1;'
+        'pc=[TPAS_ID];ord=2642102')
+    self.assertEqual(event_data.url, expected_url)
+    self.assertEqual(event_data.recovered, False)
 
     expected_message = 'Location: {0:s}'.format(expected_url)
     expected_short_message = (

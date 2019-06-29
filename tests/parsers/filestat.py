@@ -46,9 +46,10 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
-    self.assertEqual(event.file_size, 116)
-    self.assertEqual(event.inode, 15)
-    self.assertEqual(event.file_system_type, 'EXT2')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.file_size, 116)
+    self.assertEqual(event_data.inode, 15)
+    self.assertEqual(event_data.file_system_type, 'EXT2')
 
     expected_message = (
         'TSK:/passwords.txt '
@@ -82,8 +83,9 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.file_size, 1247)
-    self.assertIsNone(event.inode)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.file_size, 1247)
+    self.assertIsNone(event_data.inode)
 
     expected_message = (
         'ZIP:/syslog '
@@ -116,8 +118,9 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.file_size, 1247)
-    self.assertIsNone(event.inode)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.file_size, 1247)
+    self.assertIsNone(event_data.inode)
 
     test_path = os.path.join(os.getcwd(), 'test_data', 'syslog.gz')
     expected_message = (
@@ -152,8 +155,9 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.file_size, 1247)
-    self.assertIsNone(event.inode)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.file_size, 1247)
+    self.assertIsNone(event_data.inode)
 
     expected_message = (
         'TAR:/syslog '
@@ -189,8 +193,9 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.file_size, 1247)
-    self.assertIsNone(event.inode)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.file_size, 1247)
+    self.assertIsNone(event_data.inode)
 
     expected_message = (
         'TAR:/syslog '
@@ -219,8 +224,9 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.file_size, 10240)
-    self.assertIsNone(event.inode)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.file_size, 10240)
+    self.assertIsNone(event_data.inode)
 
     test_path = os.path.join(os.getcwd(), 'test_data', 'syslog.tgz')
     expected_message = (
@@ -258,8 +264,9 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.file_size, 1247)
-    self.assertIsNone(event.inode)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.file_size, 1247)
+    self.assertIsNone(event_data.inode)
 
     expected_message = (
         'ZIP:/syslog '

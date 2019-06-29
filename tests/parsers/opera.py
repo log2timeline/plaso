@@ -29,7 +29,8 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-11 23:45:27.000000')
 
-    self.assertEqual(event.entry_selection, 'Filled from autocomplete.')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.entry_selection, 'Filled from autocomplete.')
 
     expected_string = 'plaso.kiddaland.net (Filled from autocomplete.)'
 
@@ -39,7 +40,8 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-11 22:46:07.000000')
 
-    self.assertEqual(event.entry_selection, 'Manually typed.')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.entry_selection, 'Manually typed.')
 
     expected_string = 'theonion.com (Manually typed.)'
 
@@ -85,7 +87,8 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
         '10 Celebrities You Never Knew Were Abducted And Murdered '
         'By Andie MacDowell | The Onion - America\'s Finest News Source')
 
-    self.assertEqual(event.title, expected_title)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.title, expected_title)
 
 
 if __name__ == '__main__':

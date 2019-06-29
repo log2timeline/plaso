@@ -46,10 +46,11 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2012-11-30 10:47:29.000000')
 
-    self.assertEqual(event.user, 'davnads')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.user, 'davnads')
     expected_file = (
         'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')
-    self.assertEqual(event.file, expected_file)
+    self.assertEqual(event_data.file, expected_file)
 
     expected_message = (
         'Event Name: GL_EVENT_INFECTION; '

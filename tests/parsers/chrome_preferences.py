@@ -51,21 +51,22 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     event = events[6]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(
-        event.data_type, 'chrome:preferences:extension_installation')
+        event_data.data_type, 'chrome:preferences:extension_installation')
 
     self.CheckTimestamp(event.timestamp, '2014-11-05 18:31:24.154837')
 
     expected_id = 'mgndgikekgjfcpckkfioiadnlibdjbkf'
-    self.assertEqual(event.extension_id, expected_id)
+    self.assertEqual(event_data.extension_id, expected_id)
 
     expected_name = 'Chrome'
-    self.assertEqual(event.extension_name, expected_name)
+    self.assertEqual(event_data.extension_name, expected_name)
 
     expected_path = (
         'C:\\Program Files\\Google\\Chrome\\Application\\38.0.2125.111\\'
         'resources\\chrome_app')
-    self.assertEqual(event.path, expected_path)
+    self.assertEqual(event_data.path, expected_path)
 
     expected_message = (
         'CRX ID: {0:s} CRX Name: {1:s} Path: {2:s}'.format(

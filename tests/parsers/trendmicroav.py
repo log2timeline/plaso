@@ -37,8 +37,9 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
 
     # Test the third event.
 
-    self.assertEqual(event.path, 'C:\\temp\\')
-    self.assertEqual(event.filename, 'eicar.com_.gstmp')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.path, 'C:\\temp\\')
+    self.assertEqual(event_data.filename, 'eicar.com_.gstmp')
 
     expected_message = (
         r'Path: C:\temp\ File name: eicar.com_.gstmp '
@@ -64,9 +65,11 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
 
     # Test the third event.
     event = events[2]
-    self.assertEqual(event.url, 'http://www.eicar.org/download/eicar.com')
-    self.assertEqual(event.group_code, '4E')
-    self.assertEqual(event.credibility_score, 49)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.url, 'http://www.eicar.org/download/eicar.com')
+    self.assertEqual(event_data.group_code, '4E')
+    self.assertEqual(event_data.credibility_score, 49)
 
     expected_message = (
         'http://www.eicar.org/download/eicar.com '

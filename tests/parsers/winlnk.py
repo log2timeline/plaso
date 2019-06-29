@@ -39,23 +39,25 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # A shortcut event.
     event = events[0]
 
-    expected_string = '@%windir%\\system32\\migwiz\\wet.dll,-590'
-    self.assertEqual(event.description, expected_string)
-
-    expected_string = '.\\migwiz\\migwiz.exe'
-    self.assertEqual(event.relative_path, expected_string)
-
-    expected_string = '%windir%\\system32\\migwiz'
-    self.assertEqual(event.working_directory, expected_string)
-
-    expected_string = '%windir%\\system32\\migwiz\\migwiz.exe'
-    self.assertEqual(event.icon_location, expected_string)
-    self.assertEqual(event.env_var_location, expected_string)
-
     # The last accessed timestamp.
     self.CheckTimestamp(event.timestamp, '2009-07-13 23:29:02.849131')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    expected_string = '@%windir%\\system32\\migwiz\\wet.dll,-590'
+    self.assertEqual(event_data.description, expected_string)
+
+    expected_string = '.\\migwiz\\migwiz.exe'
+    self.assertEqual(event_data.relative_path, expected_string)
+
+    expected_string = '%windir%\\system32\\migwiz'
+    self.assertEqual(event_data.working_directory, expected_string)
+
+    expected_string = '%windir%\\system32\\migwiz\\migwiz.exe'
+    self.assertEqual(event_data.icon_location, expected_string)
+    self.assertEqual(event_data.env_var_location, expected_string)
 
     # The creation timestamp.
     event = events[1]
@@ -93,9 +95,11 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_uuid = '846ee3bb-7039-11de-9d20-001d09fa5a1c'
-    self.assertEqual(event.uuid, expected_uuid)
-    self.assertEqual(event.mac_address, '00:1d:09:fa:5a:1c')
+    self.assertEqual(event_data.uuid, expected_uuid)
+    self.assertEqual(event_data.mac_address, '00:1d:09:fa:5a:1c')
 
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""

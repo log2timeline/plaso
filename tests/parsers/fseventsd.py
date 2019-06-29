@@ -41,9 +41,10 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     # Do not check the timestamp since it is derived from the file entry.
 
-    self.assertEqual(event.path, '.Spotlight-V100/Store-V1')
-    self.assertEqual(event.event_identifier, 47747061)
-    self.assertEqual(event.flags, 0x01000080)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.path, '.Spotlight-V100/Store-V1')
+    self.assertEqual(event_data.event_identifier, 47747061)
+    self.assertEqual(event_data.flags, 0x01000080)
 
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
     expected_time = os_file_entry.modification_time
@@ -80,9 +81,10 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     # Do not check the timestamp since it is derived from the file entry.
 
-    self.assertEqual(event.path, 'Hi, Sierra')
-    self.assertEqual(event.event_identifier, 1706838)
-    self.assertEqual(event.flags, 0x01000008)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.path, 'Hi, Sierra')
+    self.assertEqual(event_data.event_identifier, 1706838)
+    self.assertEqual(event_data.flags, 0x01000008)
 
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
     expected_time = os_file_entry.modification_time

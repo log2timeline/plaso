@@ -75,9 +75,10 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     # is UTF-8.
     event = events[3]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_detail = (
         'No node found named Passport-Jméno-člena, no user name available,')
-    self.assertEqual(event.detail, expected_detail)
+    self.assertEqual(event_data.detail, expected_detail)
 
   def testParseLog(self):
     """Tests the Parse function on normal log."""
