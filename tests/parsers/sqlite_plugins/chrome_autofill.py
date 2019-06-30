@@ -33,9 +33,10 @@ class ChromeAutofillPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.field_name, 'repo')
-    self.assertEqual(event.value, 'log2timeline/plaso')
-    self.assertEqual(event.usage_count, 1)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.field_name, 'repo')
+    self.assertEqual(event_data.value, 'log2timeline/plaso')
+    self.assertEqual(event_data.usage_count, 1)
 
     expected_message = (
         'Form field name: repo '

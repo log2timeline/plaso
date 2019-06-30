@@ -33,12 +33,13 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_UNKNOWN)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_extension_id = 'ognampngfcbddbfemdapefohjiobgbdl'
-    self.assertEqual(event.extension_id, expected_extension_id)
+    self.assertEqual(event_data.extension_id, expected_extension_id)
 
-    self.assertEqual(event.action_type, 1)
-    self.assertEqual(event.activity_id, 48)
-    self.assertEqual(event.api_name, 'browserAction.onClicked')
+    self.assertEqual(event_data.action_type, 1)
+    self.assertEqual(event_data.activity_id, 48)
+    self.assertEqual(event_data.api_name, 'browserAction.onClicked')
 
     expected_message = (
         'Chrome extension: ognampngfcbddbfemdapefohjiobgbdl '

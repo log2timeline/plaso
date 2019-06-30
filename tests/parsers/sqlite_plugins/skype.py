@@ -47,15 +47,16 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     number_of_chats = 0
     number_of_account_events = 0
     for event in events:
-      if event.data_type == 'skype:event:call':
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type == 'skype:event:call':
         number_of_calls += 1
-      if event.data_type == 'skype:event:transferfile':
+      if event_data.data_type == 'skype:event:transferfile':
         number_of_files += 1
-      if event.data_type == 'skype:event:sms':
+      if event_data.data_type == 'skype:event:sms':
         number_of_sms += 1
-      if event.data_type == 'skype:event:chat':
+      if event_data.data_type == 'skype:event:chat':
         number_of_chats += 1
-      if event.data_type == 'skype:event:account':
+      if event_data.data_type == 'skype:event:account':
         number_of_account_events += 1
 
     self.assertEqual(number_of_files, 4)
@@ -78,63 +79,67 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     self.CheckTimestamp(sms_event.timestamp, '2013-07-01 22:14:22.000000')
 
+    sms_event_data = self._GetEventDataOfEvent(storage_writer, sms_event)
     text_sms = (
         'If you want I can copy '
         'some documents for you, '
         'if you can pay it... ;)')
-    self.assertEqual(sms_event.text, text_sms)
+    self.assertEqual(sms_event_data.text, text_sms)
+    self.assertEqual(sms_event_data.number, '+34123456789')
 
-    self.assertEqual(sms_event.number, '+34123456789')
+    file_event = events[18]
 
-    event_file = events[18]
+    self.CheckTimestamp(file_event.timestamp, '2013-10-24 21:49:35.000000')
 
-    self.CheckTimestamp(event_file.timestamp, '2013-10-24 21:49:35.000000')
-
-    action_type = 'GETSOLICITUDE'
-    self.assertEqual(event_file.action_type, action_type)
-    source = 'gen.beringer <Gen Beringer>'
-    self.assertEqual(event_file.source, source)
-    destination = 'european.bbq.competitor <European BBQ>'
-    self.assertEqual(event_file.destination, destination)
-    transferred_filename = 'secret-project.pdf'
-    self.assertEqual(event_file.transferred_filename, transferred_filename)
-    filepath = '/Users/gberinger/Desktop/secret-project.pdf'
-    self.assertEqual(event_file.transferred_filepath, filepath)
-    self.assertEqual(event_file.transferred_filesize, 69986)
+    file_event_data = self._GetEventDataOfEvent(storage_writer, file_event)
+    self.assertEqual(file_event_data.action_type, 'GETSOLICITUDE')
+    self.assertEqual(
+        file_event_data.source, 'gen.beringer <Gen Beringer>')
+    self.assertEqual(
+        file_event_data.destination, 'european.bbq.competitor <European BBQ>')
+    self.assertEqual(
+        file_event_data.transferred_filename, 'secret-project.pdf')
+    self.assertEqual(
+        file_event_data.transferred_filepath,
+        '/Users/gberinger/Desktop/secret-project.pdf')
+    self.assertEqual(file_event_data.transferred_filesize, 69986)
 
     chat_event = events[1]
 
     self.CheckTimestamp(chat_event.timestamp, '2013-07-30 21:27:11.000000')
 
-    title = 'European Competitor | need to know if you got it..'
-    self.assertEqual(chat_event.title, title)
-    expected_message = 'need to know if you got it this time.'
-    self.assertEqual(chat_event.text, expected_message)
-    from_account = 'Gen Beringer <gen.beringer>'
-    self.assertEqual(chat_event.from_account, from_account)
-    self.assertEqual(chat_event.to_account, 'european.bbq.competitor')
+    chat_event_data = self._GetEventDataOfEvent(storage_writer, chat_event)
+    self.assertEqual(
+        chat_event_data.title,
+        'European Competitor | need to know if you got it..')
+    self.assertEqual(
+        chat_event_data.text, 'need to know if you got it this time.')
+    self.assertEqual(
+        chat_event_data.from_account, 'Gen Beringer <gen.beringer>')
+    self.assertEqual(chat_event_data.to_account, 'european.bbq.competitor')
 
     chat_room_event = events[14]
 
     self.CheckTimestamp(chat_room_event.timestamp, '2013-10-27 15:29:19.000000')
 
-    title = 'European Competitor, Echo123'
-    self.assertEqual(chat_room_event.title, title)
-    expected_message = 'He is our new employee'
-    self.assertEqual(chat_room_event.text, expected_message)
-    from_account = 'European Competitor <european.bbq.competitor>'
-    self.assertEqual(chat_room_event.from_account, from_account)
-    to_account = 'gen.beringer, echo123'
-    self.assertEqual(chat_room_event.to_account, to_account)
+    chat_room_event_data = self._GetEventDataOfEvent(
+        storage_writer, chat_room_event)
+    self.assertEqual(chat_room_event_data.title, 'European Competitor, Echo123')
+    self.assertEqual(chat_room_event_data.text, 'He is our new employee')
+    self.assertEqual(
+        chat_room_event_data.from_account,
+        'European Competitor <european.bbq.competitor>')
+    self.assertEqual(chat_room_event_data.to_account, 'gen.beringer, echo123')
 
     call_event = events[22]
 
     self.CheckTimestamp(call_event.timestamp, '2013-07-01 22:12:17.000000')
 
-    self.assertEqual(call_event.dst_call, 'european.bbq.competitor')
-    self.assertEqual(call_event.src_call, 'gen.beringer')
-    self.assertEqual(call_event.user_start_call, False)
-    self.assertEqual(call_event.video_conference, False)
+    call_event_data = self._GetEventDataOfEvent(storage_writer, call_event)
+    self.assertEqual(call_event_data.dst_call, 'european.bbq.competitor')
+    self.assertEqual(call_event_data.src_call, 'gen.beringer')
+    self.assertEqual(call_event_data.user_start_call, False)
+    self.assertEqual(call_event_data.video_conference, False)
 
 
 if __name__ == '__main__':

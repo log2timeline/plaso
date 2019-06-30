@@ -28,7 +28,10 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     self.CheckTimestamp(event.timestamp, '2019-02-10 16:59:58.860665')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.bundle_identifier, 'com.apple.Installer-Progress')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(
+        event_data.bundle_identifier, 'com.apple.Installer-Progress')
 
     expected_message = (
         'Application com.apple.Installer-Progress executed for 1 seconds')
@@ -49,7 +52,9 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:30.668998')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.bundle_identifier, 'com.apple.Terminal')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.bundle_identifier, 'com.apple.Terminal')
 
     expected_message = (
         'Application com.apple.Terminal executed for 1041 seconds')
@@ -60,8 +65,10 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:20.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_END)
-    self.assertEqual(event.url, 'https://www.instagram.com/')
-    self.assertEqual(event.title, 'Instagram')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.url, 'https://www.instagram.com/')
+    self.assertEqual(event_data.title, 'Instagram')
 
     expected_message = (
         'Visited: https://www.instagram.com/ (Instagram) Duration: 0')

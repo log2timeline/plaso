@@ -33,11 +33,12 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-06 21:17:16.690000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_number = '5404561685'
-    self.assertEqual(event.number, expected_number)
+    self.assertEqual(event_data.number, expected_number)
 
     expected_type = 'MISSED'
-    self.assertEqual(event.call_type, expected_type)
+    self.assertEqual(event_data.call_type, expected_type)
 
     expected_message = (
         'MISSED '
@@ -57,7 +58,8 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(event.timestamp_desc, 'Call Ended')
 
-    self.assertEqual(event.duration, 639)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.duration, 639)
 
 
 if __name__ == '__main__':

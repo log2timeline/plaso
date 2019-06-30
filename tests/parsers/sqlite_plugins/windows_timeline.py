@@ -11,6 +11,7 @@ from plaso.parsers.sqlite_plugins import windows_timeline
 
 from tests.parsers.sqlite_plugins import test_lib
 
+
 class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
   """Tests for the Windows Timeline plugin."""
 
@@ -26,13 +27,15 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
     event = events[0]
 
-    self.assertEqual('windows:timeline:user_engaged', event.data_type)
     self.CheckTimestamp(event.timestamp, '2018-08-03 11:29:00.000000')
     self.assertEqual(
         definitions.TIME_DESCRIPTION_START, event.timestamp_desc)
-    self.assertEqual(9, event.active_duration_seconds)
-    self.assertEqual('ShellActivityMonitor', event.reporting_app)
-    self.assertEqual('c:\\python34\\python.exe', event.package_identifier)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:timeline:user_engaged')
+    self.assertEqual(event_data.active_duration_seconds, 9)
+    self.assertEqual(event_data.reporting_app, 'ShellActivityMonitor')
+    self.assertEqual(event_data.package_identifier, 'c:\\python34\\python.exe')
 
     expected_long_message = (
         'Package Identifier: c:\\python34\\python.exe '
@@ -42,15 +45,19 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         event, expected_long_message, expected_short_message)
 
     event = events[2]
-    self.assertEqual('windows:timeline:user_engaged', event.data_type)
+
     self.CheckTimestamp(event.timestamp, '2018-07-27 11:58:55.000000')
     self.assertEqual(
         definitions.TIME_DESCRIPTION_START, event.timestamp_desc)
-    self.assertEqual(11, event.active_duration_seconds)
-    self.assertEqual('ShellActivityMonitor', event.reporting_app)
-    self.assertEqual(
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:timeline:user_engaged')
+    self.assertEqual(event_data.active_duration_seconds, 11)
+    self.assertEqual(event_data.reporting_app, 'ShellActivityMonitor')
+    expected_package_identifier = (
         'c:\\users\\demouser\\appdata\\local\\programs\\python\\python37-32\\'
-        'python.exe', event.package_identifier)
+        'python.exe')
+    self.assertEqual(event_data.package_identifier, expected_package_identifier)
 
     expected_long_message = (
         'Package Identifier: c:\\users\\demouser\\appdata'
@@ -63,13 +70,17 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         event, expected_long_message, expected_short_message)
 
     event = events[80]
-    self.assertEqual('windows:timeline:generic', event.data_type)
+
     self.CheckTimestamp(event.timestamp, '2018-07-25 12:04:48.000000')
     self.assertEqual(
         definitions.TIME_DESCRIPTION_START, event.timestamp_desc)
-    self.assertEqual('Microsoft.SkyDrive.Desktop', event.package_identifier)
-    self.assertEqual('', event.description)
-    self.assertEqual('OneDrive', event.application_display_name)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:timeline:generic')
+    self.assertEqual(
+        event_data.package_identifier, 'Microsoft.SkyDrive.Desktop')
+    self.assertEqual(event_data.description, '')
+    self.assertEqual(event_data.application_display_name, 'OneDrive')
 
     expected_long_message = (
         'Application Display Name: OneDrive Package '
@@ -79,16 +90,19 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         event, expected_long_message, expected_short_message)
 
     event = events[96]
-    self.assertEqual('windows:timeline:generic', event.data_type)
+
     self.CheckTimestamp(event.timestamp, '2018-07-27 12:36:09.000000')
     self.assertEqual(
         definitions.TIME_DESCRIPTION_START, event.timestamp_desc)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:timeline:generic')
     self.assertEqual(
-        '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe',
-        event.package_identifier)
+        event_data.package_identifier,
+        '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe')
     self.assertEqual(
-        'C:\\Users\\demouser\\Desktop\\SCHEMA.txt', event.description)
-    self.assertEqual('Notepad', event.application_display_name)
+        event_data.description, 'C:\\Users\\demouser\\Desktop\\SCHEMA.txt')
+    self.assertEqual(event_data.application_display_name, 'Notepad')
 
     expected_long_message = (
         'Application Display Name: Notepad Package Identifier: '
@@ -98,6 +112,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe')
     self._TestGetMessageStrings(
         event, expected_long_message, expected_short_message)
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -33,16 +33,18 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_content = (
         '@CarolMovie wins BEST PICTURE at #NYFCC!!! CONGRATS #TeamCarol!!! '
         'Love love! #carolfilm https://t.co/ycy9cHPLZ7')
 
-    self.assertEqual(event.author_identifier, 2730978846)
-    self.assertEqual(event.content, expected_content)
-    self.assertEqual(event.favorited, 0)
-    self.assertEqual(event.identifier, 4)
-    self.assertEqual(event.retweeted, 0)
-    self.assertEqual(event.username, 'CarolMovieFans')
+    self.assertEqual(event_data.author_identifier, 2730978846)
+    self.assertEqual(event_data.content, expected_content)
+    self.assertEqual(event_data.favorited, 0)
+    self.assertEqual(event_data.identifier, 4)
+    self.assertEqual(event_data.retweeted, 0)
+    self.assertEqual(event_data.username, 'CarolMovieFans')
 
     expected_message = (
         'User: CarolMovieFans Status: @CarolMovie wins BEST PICTURE at '
@@ -61,8 +63,9 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.name, 'rosegold')
-    self.assertEqual(event.search_query, 'rosegold')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'rosegold')
+    self.assertEqual(event_data.search_query, 'rosegold')
 
     expected_message = 'Name: rosegold Query: rosegold'
 
@@ -78,28 +81,29 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.identifier, 62)
-    self.assertEqual(event.user_identifier, 14995801)
-    self.assertEqual(event.username, 'timbuk2')
-    self.assertEqual(event.name, 'Timbuk2')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.identifier, 62)
+    self.assertEqual(event_data.user_identifier, 14995801)
+    self.assertEqual(event_data.username, 'timbuk2')
+    self.assertEqual(event_data.name, 'Timbuk2')
 
     expected_description = (
         'Started in a San Francisco by bike messenger Rob Honeycutt, Timbuk2 '
         'has been making tough as hell messenger bags, backpacks and travel '
         'bags since 1989.')
 
-    self.assertEqual(event.description, expected_description)
-    self.assertEqual(event.web_url, 'http://t.co/Z0MZo7f2ne')
-    self.assertEqual(event.location, 'San Francisco, CA')
-    self.assertEqual(event.followers, 23582)
-    self.assertEqual(event.friends, 2725)
-    self.assertEqual(event.statuses, 18937)
+    self.assertEqual(event_data.description, expected_description)
+    self.assertEqual(event_data.web_url, 'http://t.co/Z0MZo7f2ne')
+    self.assertEqual(event_data.location, 'San Francisco, CA')
+    self.assertEqual(event_data.followers, 23582)
+    self.assertEqual(event_data.friends, 2725)
+    self.assertEqual(event_data.statuses, 18937)
 
     expected_image_url = (
         'https://pbs.twimg.com/profile_images/461846147129024512/'
         'FOKZJ7hB_normal.jpeg')
 
-    self.assertEqual(event.image_url, expected_image_url)
+    self.assertEqual(event_data.image_url, expected_image_url)
 
     expected_message = (
         'Screen name: timbuk2 Profile picture URL: https://pbs.twimg.com/'

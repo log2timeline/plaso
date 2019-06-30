@@ -31,7 +31,8 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-10-22 08:53:19.477000')
 
-    self.assertEqual(event.subject_uri, 'application://rhythmbox.desktop')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.subject_uri, 'application://rhythmbox.desktop')
 
     expected_message = 'application://rhythmbox.desktop'
     self._TestGetMessageStrings(event, expected_message, expected_message)

@@ -34,9 +34,10 @@ class KikMessageTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.username, 'ken.doh')
-    self.assertEqual(event.displayname, 'Ken Doh')
-    self.assertEqual(event.body, 'Hello')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'ken.doh')
+    self.assertEqual(event_data.displayname, 'Ken Doh')
+    self.assertEqual(event_data.body, 'Hello')
 
     expected_message = (
         'Username: ken.doh '
