@@ -22,7 +22,7 @@ class SetupapiLogEventData(events.EventData):
   Attributes:
     entry_type (str): log entry type such as "Device Install".
     section_start (str): date and time of the start of the log entry event.
-    message (str): contents of the log entry.
+    # message (str): contents of the log entry.
     # section_end (str): date and time of the start of the log entry event.
     exit_status (str): the exit status of the entry.
   """
@@ -34,7 +34,7 @@ class SetupapiLogEventData(events.EventData):
     super(SetupapiLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_type = None
     # self.start_time = None
-    self.message = None
+    # self.message = None
     # self.section_end = None
     self.exit_status = None
 
@@ -72,6 +72,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
       # _SETUPAPI_DATE_TIME.setResultsName('end_time') +
       pyparsing.SkipTo('<<<  [Exit status: ', include=True).suppress() +
       pyparsing.SkipTo(']').setResultsName('exit_status') +
+      pyparsing.SkipTo(pyparsing.lineEnd()) +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
   LINE_STRUCTURES = [
@@ -152,7 +153,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
 
     event_data = SetupapiLogEventData()
     event_data.entry_type = self._GetValueFromStructure(structure, 'entry_type')
-    event_data.message = self._GetValueFromStructure(structure, 'message')
+    # event_data.message = self._GetValueFromStructure(structure, 'message')
     # event_data.section_end = None
     event_data.exit_status = self._GetValueFromStructure(
         structure, 'exit_status')

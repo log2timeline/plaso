@@ -14,7 +14,7 @@ class SetupapiLogFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       '[{entry_type}',
-      '{message}',
+      # '{message}',
       '{exit_status}']
 
   FORMAT_STRING_SHORT_PIECES = ['{message}']
