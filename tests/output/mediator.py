@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.containers import artifacts
 from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
@@ -43,8 +44,11 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    self._output_mediator = mediator.OutputMediator(
-        knowledge_base_object, None)
+
+    hostname_artifact = artifacts.HostnameArtifact(name='myhost')
+    knowledge_base_object.SetHostname(hostname_artifact)
+
+    self._output_mediator = mediator.OutputMediator(knowledge_base_object, None)
 
   def testGetEventFormatter(self):
     """Tests the GetEventFormatter function."""
@@ -110,8 +114,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetStoredHostname(self):
     """Tests the GetStoredHostname function."""
-    stored_hostname = self._output_mediator.GetStoredHostname()
-    self.assertIsNone(stored_hostname)
+    hostname = self._output_mediator.GetStoredHostname()
+    self.assertEqual(hostname, 'myhost')
 
   def testGetUsername(self):
     """Tests the GetUsername function."""

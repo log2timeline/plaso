@@ -15,6 +15,8 @@ from tests import test_lib as shared_test_lib
 class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
   """Tests for the knowledge base."""
 
+  # pylint: disable=protected-access
+
   _MACOS_PATHS = [
       '/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions',
       ('/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions/'
@@ -295,6 +297,21 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
     hostname = knowledge_base_object.GetHostname()
     self.assertEqual(hostname, 'myhost.mydomain')
+
+  def testSetActiveSession(self):
+    """Tests the SetActiveSession function."""
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    knowledge_base_object.SetActiveSession('ddda05bedf324cbd99fa8c24b8a0037a')
+    self.assertEqual(
+        knowledge_base_object._active_session,
+        'ddda05bedf324cbd99fa8c24b8a0037a')
+
+    knowledge_base_object.SetActiveSession(
+        knowledge_base_object._DEFAULT_ACTIVE_SESSION)
+    self.assertEqual(
+        knowledge_base_object._active_session,
+        knowledge_base_object._DEFAULT_ACTIVE_SESSION)
 
   def testSetCodepage(self):
     """Tests the SetCodepage function."""
