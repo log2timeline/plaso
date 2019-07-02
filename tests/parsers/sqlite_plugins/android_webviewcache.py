@@ -30,12 +30,13 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-03-28 09:48:18.000000')
 
-    self.assertEqual(1821, event.content_length)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.content_length, 1821)
 
     expected_url = (
         'https://apps.skypeassets.com/static/'
         'skype.skypeloginstatic/css/print.css?_version=1.15')
-    self.assertEqual(expected_url, event.url)
+    self.assertEqual(event_data.url, expected_url)
 
     expected_message = (
         'URL: {0:s} '

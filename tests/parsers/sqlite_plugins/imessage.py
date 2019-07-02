@@ -34,9 +34,10 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.imessage_id, 'xxxxxx2015@icloud.com')
-    self.assertEqual(event.read_receipt, 1)
-    self.assertEqual(event.message_type, 0)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.imessage_id, 'xxxxxx2015@icloud.com')
+    self.assertEqual(event_data.read_receipt, 1)
+    self.assertEqual(event_data.message_type, 0)
 
     expected_text = 'Did you try to send me a message?'
     self.assertEqual(event.text, expected_text)

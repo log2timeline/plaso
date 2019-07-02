@@ -34,8 +34,9 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.address, '1 555-521-5554')
-    self.assertEqual(event.body, 'Yo Fred this is my new number.')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.address, '1 555-521-5554')
+    self.assertEqual(event_data.body, 'Yo Fred this is my new number.')
 
     expected_message = (
         'Type: SENT '

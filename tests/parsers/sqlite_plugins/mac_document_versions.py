@@ -34,20 +34,22 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.name, 'Spain is beautiful.rtf')
-    self.assertEqual(event.path, '/Users/moxilo/Documents')
-    self.assertEqual(event.user_sid, '501')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'Spain is beautiful.rtf')
+    self.assertEqual(event_data.path, '/Users/moxilo/Documents')
+    self.assertEqual(event_data.user_sid, '501')
     expected_version_path = (
         '/.DocumentRevisions-V100/PerUID/501/1/'
         'com.apple.documentVersions/'
         '08CFEB5A-5CDA-486F-AED5-EA35BF3EE4C2.rtf')
-    self.assertEqual(event.version_path, expected_version_path)
+    self.assertEqual(event_data.version_path, expected_version_path)
 
     expected_message = (
         'Version of [{0:s}] ({1:s}) stored in {2:s} by {3:s}'.format(
-            event.name, event.path, event.version_path, event.user_sid))
+            event_data.name, event_data.path, event_data.version_path,
+            event_data.user_sid))
     expected_short_message = 'Stored a document version of [{0:s}]'.format(
-        event.name)
+        event_data.name)
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 

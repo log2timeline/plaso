@@ -37,7 +37,8 @@ class KodiVideosTest(test_lib.SQLitePluginTestCase):
     expected_filename = (
         'plugin://plugin.video.youtube/play/?video_id=7WX0-O_ENlk')
 
-    self.assertEqual(event.filename, expected_filename)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.filename, expected_filename)
 
     expected_message = (
         'Video: plugin://plugin.video.youtube/play/?video_id=7WX0-O_ENlk '
