@@ -52,13 +52,15 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
+    self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307750')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:typedurls')
-    self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307750')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:typedurls')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] '
@@ -104,13 +106,15 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
+    self.CheckTimestamp(event.timestamp, '2010-11-10 07:58:15.811625')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:typedurls')
-    self.CheckTimestamp(event.timestamp, '2010-11-10 07:58:15.811625')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:typedurls')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] '

@@ -47,13 +47,14 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'task_scheduler:task_cache:entry')
     self.CheckTimestamp(event.timestamp, '2009-07-14 04:53:25.811618')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'task_scheduler:task_cache:entry')
     self.assertEqual(event.task_name, 'SynchronizeTime')
     self.assertEqual(
         event.task_identifier, '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}')
@@ -70,8 +71,11 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
-    self.assertEqual(event.data_type, 'task_scheduler:task_cache:entry')
     self.CheckTimestamp(event.timestamp, '2009-07-14 05:08:50.811627')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'task_scheduler:task_cache:entry')
 
     expected_message = (
         '[{0:s}] '

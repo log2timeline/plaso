@@ -80,12 +80,15 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:outlook_search_mru')
-    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(
+        event_data.data_type, 'windows:registry:outlook_search_mru')
 
     expected_message = (
         '[{0:s}] '

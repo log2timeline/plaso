@@ -77,11 +77,13 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
 
     expected_message = (
         '[{0:s}] '

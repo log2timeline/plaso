@@ -295,8 +295,11 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.data_type, 'windows:registry:winlogon')
     self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:winlogon')
 
     expected_message = (
         '[{0:s}\\Notify\\NavLogon] '
@@ -310,8 +313,11 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[13]
 
-    self.assertEqual(event.data_type, 'windows:registry:winlogon')
     self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:winlogon')
 
     expected_message = (
         '[{0:s}] '

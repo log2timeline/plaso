@@ -82,12 +82,14 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:mstsc:connection')
-    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:mstsc:connection')
 
     expected_message = (
         '[{0:s}\\myserver.com] '
@@ -98,8 +100,10 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
-    self.assertEqual(event.data_type, 'windows:registry:key_value')
     self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
 
     expected_message = (
         '[{0:s}] '
@@ -159,12 +163,14 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:mstsc:mru')
-    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:mstsc:mru')
 
     expected_message = (
         '[{0:s}] '

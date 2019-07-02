@@ -217,10 +217,13 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.data_type, 'windows:registry:network')
     self.CheckTimestamp(event.timestamp, '2014-05-06 17:02:19.795000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:network')
 
     expected_message = (
         'SSID: Network '
@@ -234,10 +237,13 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[3]
 
-    self.assertEqual(event.data_type, 'windows:registry:network')
     self.CheckTimestamp(event.timestamp, '2015-01-27 15:15:27.965000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:network')
 
     expected_message = (
         'SSID: My Awesome Wifi Hotspot '
