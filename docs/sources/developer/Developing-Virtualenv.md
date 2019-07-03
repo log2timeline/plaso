@@ -63,19 +63,15 @@ installable with homebrew:
 brew install gmp
 ```
 
-Skip ahear to running the `virtualenv plasoenv` command below
-before continuing as you need to setup the virtualenv first.
-
 Once setup, we need to add the paths for the system to locate
-the `gmp` library by running the below command to append to our
-virtual environment `activate` script:
+the `gmp` library. This is accomplished during the
+`pip install -r requirements.txt` stage of the next section.
+Before running the `pip install ...` command, please run:
 
 ```bash
-echo export CFLAGS="-I/usr/local/include -L/usr/local/lib" >> ./plasoenv/bin/activate
+export "CFLAGS=-I/usr/local/include -L/usr/local/lib"
 ```
 
-At this point you can activate the virtual environment and resume
-the virtualenv setup instructions below.
 
 ## Setting up Plaso in a virtualenv
 
