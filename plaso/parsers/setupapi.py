@@ -66,7 +66,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
   _SETUPAPI_LINE = (
       pyparsing.SkipTo('>>>  [', include=True).suppress() +
       pyparsing.SkipTo(']').setResultsName('entry_type') +
-      pyparsing.SkipTo('>>>  Section start',include=True).suppress() +
+      pyparsing.SkipTo('>>>  Section start', include=True).suppress() +
       _SETUPAPI_DATE_TIME.setResultsName('start_time') +
       pyparsing.SkipTo('<<<  Section end ').setResultsName('message') +
       # _SETUPAPI_DATE_TIME.setResultsName('end_time') +
