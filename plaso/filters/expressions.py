@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 import abc
 import logging
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.lib import errors
 from plaso.filters import filters
 from plaso.filters import helpers
@@ -213,15 +211,6 @@ class EventExpression(Expression):
         date_time_arguments.append(date_time)
 
       self.args = date_time_arguments
-
-    # TODO: determine how helpers.TimeRangeCache is used.
-    for argument in self.args:
-      if isinstance(argument, dfdatetime_posix_time.PosixTimeInMicroseconds):
-        if isinstance(operator, (
-            filters.LessEqualOperator, filters.LessThanOperator)):
-          helpers.TimeRangeCache.SetUpperTimestamp(argument.timestamp)
-        else:
-          helpers.TimeRangeCache.SetLowerTimestamp(argument.timestamp)
 
     arguments = [self.attribute]
     arguments.extend(self.args)

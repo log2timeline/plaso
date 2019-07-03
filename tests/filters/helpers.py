@@ -65,42 +65,5 @@ class GetUnicodeStringTest(shared_test_lib.BaseTestCase):
     self.assertEqual(string, '123')
 
 
-class TimeRangeCacheTest(shared_test_lib.BaseTestCase):
-  """Tests the TimeRangeCache helper."""
-
-  # pylint: disable=protected-access
-
-  def testGetTimeRange(self):
-    """Tests the GetTimeRange function."""
-    if hasattr(helpers.TimeRangeCache, '_lower'):
-      del helpers.TimeRangeCache._lower
-    if hasattr(helpers.TimeRangeCache, '_upper'):
-      del helpers.TimeRangeCache._upper
-
-    first, last = helpers.TimeRangeCache.GetTimeRange()
-    self.assertEqual(first, helpers.TimeRangeCache._INT64_MIN)
-    self.assertEqual(last, helpers.TimeRangeCache._INT64_MAX)
-
-  def testSetLowerTimestamp(self):
-    """Tests the SetLowerTimestamp function."""
-    helpers.TimeRangeCache.SetLowerTimestamp(1247527742849131)
-
-    first, last = helpers.TimeRangeCache.GetTimeRange()
-    self.assertEqual(first, 1247527742849131)
-    self.assertEqual(last, helpers.TimeRangeCache._INT64_MAX)
-
-    del helpers.TimeRangeCache._lower
-
-  def testSetUpperTimestamp(self):
-    """Tests the SetUpperTimestamp function."""
-    helpers.TimeRangeCache.SetUpperTimestamp(1247527742849131)
-
-    first, last = helpers.TimeRangeCache.GetTimeRange()
-    self.assertEqual(first, helpers.TimeRangeCache._INT64_MIN)
-    self.assertEqual(last, 1247527742849131)
-
-    del helpers.TimeRangeCache._upper
-
-
 if __name__ == "__main__":
   unittest.main()
