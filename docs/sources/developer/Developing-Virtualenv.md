@@ -60,8 +60,8 @@ brew install python@3
 ## Setting up Plaso in a virtualenv
 
 1. Create a virtualenv called 'plasoenv' `virtualenv plasoenv`
-2. Activate the virtualenv: `source ./plasoenv/bin/activate`
-3. Update pip (Note that using pip outside virtualenv is not recommended as it
+1. Activate the virtualenv: `source ./plasoenv/bin/activate`
+1. Update pip (Note that using pip outside virtualenv is not recommended as it
 ignores your systems package manager.): `pip install --upgrade pip`
 1. Install the Python requirements
     ```bash
