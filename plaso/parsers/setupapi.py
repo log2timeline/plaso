@@ -121,14 +121,14 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
           log entry.
     """
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-    # Setupapi logs record in local time
-    date_time.is_local_time = True
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'start_time')
     try:
       datetime_iso8601 = self._GetISO8601String(time_elements_structure)
       date_time.CopyFromStringISO8601(datetime_iso8601)
+      # Setupapi logs record in local time
+      date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_elements_structure))
