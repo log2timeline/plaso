@@ -13,13 +13,12 @@ class SetupapiLogFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'setupapi:log:line'
 
   FORMAT_STRING_PIECES = [
-      '[{entry_type}',
-      # '{message}',
-      '{exit_status}']
+      'Description: {entry_type} |',
+      'Exit status: {exit_status}']
 
-  FORMAT_STRING_SHORT_PIECES = ['{message}']
+  FORMAT_STRING_SHORT_PIECES = ['{entry_type}']
 
-  SOURCE_LONG = 'Windows Setupapi Log File'
+  SOURCE_LONG = 'Windows Setupapi Log'
   SOURCE_SHORT = 'LOG'
 
 

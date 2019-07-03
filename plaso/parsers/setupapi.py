@@ -33,7 +33,7 @@ class SetupapiLogEventData(events.EventData):
     """Initializes event data."""
     super(SetupapiLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_type = None
-    # self.start_time = None
+    # TODO: Add fields
     # self.message = None
     # self.section_end = None
     self.exit_status = None
@@ -92,17 +92,6 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ValueError: if the structure cannot be converted into a date time string.
     """
-    # TODO: get timezone offset properly
-    time_zone_offset = '+0000'
-
-    try:
-      time_zone_offset_hours = int(time_zone_offset[1:3], 10)
-      time_zone_offset_minutes = int(time_zone_offset[3:5], 10)
-    except (IndexError, TypeError, ValueError) as exception:
-      raise ValueError(
-          'unable to parse time zone offset with error: {0!s}.'.format(
-              exception))
-
     year = self._GetValueFromStructure(structure, 'year')
     month = self._GetValueFromStructure(structure, 'month')
     day_of_month = self._GetValueFromStructure(structure, 'day')
@@ -113,11 +102,8 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
 
     try:
       iso8601 = (
-          '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}'
-          '{7:s}{8:02d}:{9:02d}').format(
-              year, month, day_of_month, hours, minutes, seconds, microseconds,
-              time_zone_offset[0], time_zone_offset_hours,
-              time_zone_offset_minutes)
+          '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}').format(
+              year, month, day_of_month, hours, minutes, seconds, microseconds)
     except (TypeError, ValueError) as exception:
       raise ValueError(
           'unable to format date time string with error: {0!s}.'.format(
@@ -135,6 +121,8 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
           log entry.
     """
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+    # Setupapi logs record in local time
+    date_time.is_local_time = True
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'start_time')
