@@ -2,7 +2,7 @@
 
 For development purposes, Plaso can be installed using virtualenv.
 
-**Note that this is intended for development use only, and if you aren't 
+**Note that this is intended for development use only, and if you aren't
 comfortable debugging package installation, this is not for you.**
 
 ## Fedora
@@ -37,7 +37,20 @@ sudo apt-get install libyaml-dev liblzma-dev
 ## MacOS
 
 ### Installing virtualenv
-**TODO**
+
+If you have `pip` setup on your system, you can install
+`virtualenv` using:
+
+```bash
+pip install virtualenv
+```
+
+To install `pip`, either install a version of Python 3.6+ or,
+using [homebrew](https://brew.sh/), run:
+
+```bash
+brew install python@3
+```
 
 ### Installing build dependencies
 
@@ -47,8 +60,8 @@ sudo apt-get install libyaml-dev liblzma-dev
 ## Setting up Plaso in a virtualenv
 
 1. Create a virtualenv called 'plasoenv' `virtualenv plasoenv`
-1. Activate the virtualenv: `source ./plasoenv/bin/activate`
-1. Update pip (Note that using pip outside virtualenv is not recommended as it 
+2. Activate the virtualenv: `source ./plasoenv/bin/activate`
+3. Update pip (Note that using pip outside virtualenv is not recommended as it
 ignores your systems package manager.): `pip install --upgrade pip`
 1. Install the Python requirements
     ```bash
