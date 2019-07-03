@@ -56,6 +56,26 @@ brew install python@3
 
 **TODO**
 
+The `pycrypto` dependency requires the `gmp` library. This is
+installable with homebrew:
+
+```bash
+brew install gmp
+```
+
+Skip ahear to running the `virtualenv plasoenv` command below
+before continuing as you need to setup the virtualenv first.
+
+Once setup, we need to add the paths for the system to locate
+the `gmp` library by running the below command to append to our
+virtual environment `activate` script:
+
+```bash
+echo export CFLAGS="-I/usr/local/include -L/usr/local/lib" >> ./plasoenv/bin/activate
+```
+
+At this point you can activate the virtual environment and resume
+the virtualenv setup instructions below.
 
 ## Setting up Plaso in a virtualenv
 
