@@ -22,6 +22,7 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
+# pylint: disable=too-many-instance-attributes,too-few-public-methods
 class NTFSFileStatEventData(events.EventData):
   """NTFS file system stat event data.
 
@@ -35,6 +36,7 @@ class NTFSFileStatEventData(events.EventData):
     name (str): name associated with the stat event, e.g. that of
         a $FILE_NAME attribute or None if not available.
     parent_file_reference (int): NTFS file reference of the parent.
+    path_hint (str): A to the NTFS file constructed from each `parent_file_reference`
   """
 
   DATA_TYPE = 'fs:stat:ntfs'
@@ -49,6 +51,7 @@ class NTFSFileStatEventData(events.EventData):
     self.is_allocated = None
     self.name = None
     self.parent_file_reference = None
+    self.path_hint = None
 
 
 class NTFSUSNChangeEventData(events.EventData):
@@ -90,6 +93,12 @@ class NTFSMFTParser(interface.FileObjectParser):
   _MFT_ATTRIBUTE_STANDARD_INFORMATION = 0x00000010
   _MFT_ATTRIBUTE_FILE_NAME = 0x00000030
   _MFT_ATTRIBUTE_OBJECT_ID = 0x00000040
+  _PATH_SEPARATOR = '/'
+
+  def __init__(self):
+    """Intializes the NTFS MFT Parser"""
+    super(NTFSMFTParser, self).__init__()
+    self.path_info = dict()
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -158,6 +167,8 @@ class NTFSMFTParser(interface.FileObjectParser):
       name = getattr(mft_attribute, 'name', None)
       parent_file_reference = getattr(
           mft_attribute, 'parent_file_reference', None)
+      path_hint_list = self._GetPathHint(mft_entry.file_reference)
+      path_hint_list.reverse()
 
       event_data = NTFSFileStatEventData()
       event_data.attribute_type = mft_attribute.attribute_type
@@ -166,6 +177,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       event_data.is_allocated = mft_entry.is_allocated()
       event_data.name = name
       event_data.parent_file_reference = parent_file_reference
+      event_data.path_hint = self._PATH_SEPARATOR.join(path_hint_list)
 
       try:
         creation_time = mft_attribute.get_creation_time_as_integer()
@@ -275,6 +287,68 @@ class NTFSMFTParser(interface.FileObjectParser):
             'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
                 attribute_index, exception))
 
+  def _CollectMFTEntryPathInfo(self, mft_entry):
+    """Extracts data from a NFTS $MFT entry and makes note of the reference, name and parent
+
+    Args:
+      mft_entry (pyfsntfs.file_entry): MFT entry.
+
+    Raises:
+      IOError: if MFT is not readable
+    """
+
+    if mft_entry.is_empty() or mft_entry.base_record_file_reference != 0:
+      return
+
+    entry_reference = mft_entry.file_reference
+    entry_parent_reference = None
+    entry_name = None
+
+    for attribute_index in range(0, mft_entry.number_of_attributes):
+      mft_attribute = mft_entry.get_attribute(attribute_index)
+      if mft_attribute.attribute_type in [
+          self._MFT_ATTRIBUTE_STANDARD_INFORMATION,
+          self._MFT_ATTRIBUTE_FILE_NAME]:
+
+        if not entry_name:
+          entry_name = getattr(mft_attribute, 'name', None)
+        entry_parent_reference = getattr(
+            mft_attribute, 'parent_file_reference', None)
+
+    if entry_reference:
+      self.path_info[entry_reference] = (entry_name, entry_parent_reference)
+
+  def _GetPathHint(self, file_reference, path_parts=None):
+    """Constructs a path hint for a MFT entry for a given
+    `file_reference` by looking up the parents and appending them to
+    `path_parts`. For that reason the result is a list in reverse
+    order!
+
+    Args:
+      file_reference (int): The `file_reference` from a mft_entry
+
+    Returns:
+      list: List of parent path objects in reverse order
+    """
+
+    if path_parts is None:
+      path_parts = []
+
+    if not file_reference or file_reference not in self.path_info.keys():
+      return path_parts
+
+    (reference_name, parent_reference) = self.path_info[file_reference]
+
+    if reference_name is not None:
+      path_parts.append(reference_name)
+    elif parent_reference is not None:
+      path_parts.append('???')
+
+    if file_reference != parent_reference:
+      self._GetPathHint(parent_reference, path_parts)
+
+    return path_parts
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a NTFS $MFT metadata file-like object.
 
@@ -290,6 +364,16 @@ class NTFSMFTParser(interface.FileObjectParser):
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to open file with error: {0!s}'.format(exception))
+
+    # Collect path information in a first round of parsing
+    for entry_index in range(0, mft_metadata_file.number_of_file_entries):
+      try:
+        mft_entry = mft_metadata_file.get_file_entry(entry_index)
+        self._CollectMFTEntryPathInfo(mft_entry)
+      except IOError as exception:
+        # We ignore the exception as it will be raised again in the
+        # MFT entry processing below
+        pass
 
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
       try:
