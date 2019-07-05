@@ -242,19 +242,6 @@ class ParsersManager(object):
   def _GetParsers(cls, parser_filter_expression=None):
     """Retrieves the registered parsers and plugins.
 
-    Retrieves a dictionary of all registered parsers and associated plugins
-    from a parser filter string. The filter string can contain direct names of
-    parsers or plugins. The filter string can also negate selection if prepended
-    with an exclamation point, such as: "foo,!foo/bar" would include parser foo
-    but not include plugin bar. A list of specific included and excluded
-    plugins is also passed to each parser's class.
-
-    The two types of entries in the filter string:
-     * name of a parser: this would be the exact name of a single parser to
-       include (or exclude), such as foo;
-     * name of a plugin: if a plugin name is included the parent parser will be
-       included in the list of registered parsers;
-
     Args:
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
