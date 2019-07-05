@@ -20,25 +20,25 @@ class ParsersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--parsers PARSER_LIST]
+usage: cli_helper.py [--parsers PARSER_FILTER_EXPRESSION]
 
 Test argument parser.
 
 optional arguments:
-  --parsers PARSER_LIST
-                        Define a list of parsers to use by the tool. This is a
-                        comma separated list where each entry can be either a
-                        name of a parser or a parser list. Each entry can be
-                        prepended with an exclamation mark to negate the
-                        selection (exclude it). The list match is an exact
-                        match while an individual parser matching is a case
-                        insensitive substring match, with support for glob
-                        patterns. Examples would be: "reg" that matches the
-                        substring "reg" in all parser names or the glob
-                        pattern "sky[pd]" that would match all parsers that
-                        have the string "skyp" or "skyd" in its name. All
-                        matching is case insensitive. Use "--parsers list" or
-                        "--info" to list the available parsers.
+  --parsers PARSER_FILTER_EXPRESSION
+                        Define which parsers to use, or list available
+                        parsers. The expression is a comma separated value
+                        string where each value represents a preset, parser or
+                        plugin. Each value can be prepended with an
+                        exclamation mark to exclude the item. Preset matching
+                        is exact, while parser and plugin matching is case
+                        insensitive. Examples: "linux,!bash_history" enables
+                        the linux preset, without the bash_history parser.
+                        "sqlite, !sqlite/chrome_history" enables all sqlite
+                        plugins except for chrome_history". win7,syslog"
+                        enables the win7 preset, as well as the syslog parser.
+                        Use "--parsers list" or "--info" to list available
+                        presets, parsers and plugins.
 """
 
   def testAddArguments(self):

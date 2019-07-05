@@ -81,15 +81,11 @@ class EventExtractionWorker(object):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers should be used. See filters/parser_filter.py
+          for details of the expression syntax.
 
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          Note that preset names in this expression will not be expanded.
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
