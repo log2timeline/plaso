@@ -33,8 +33,8 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(['contacts2.db'], parser)
 
     for event in storage_writer.GetEvents():
-      chain = event.parser
-      self.assertEqual(1, chain.count('/'))
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(1, event_data.parser.count('/'))
 
   def testQueryDatabaseWithWAL(self):
     """Tests the Query function on a database with a WAL file."""

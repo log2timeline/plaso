@@ -44,10 +44,11 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-13 17:52:41.736713')
 
-    self.assertEqual(event.username, 'moxilo')
-    self.assertEqual(event.terminal, 'console')
-    self.assertEqual(event.type, 7)
-    self.assertEqual(event.hostname, 'localhost')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'moxilo')
+    self.assertEqual(event_data.terminal, 'console')
+    self.assertEqual(event_data.type, 7)
+    self.assertEqual(event_data.hostname, 'localhost')
 
     expected_message = (
         'User: moxilo '
@@ -67,9 +68,10 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-14 04:32:56.641464')
 
-    self.assertEqual(event.username, 'moxilo')
-    self.assertEqual(event.terminal, 'ttys002')
-    self.assertEqual(event.type, 8)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'moxilo')
+    self.assertEqual(event_data.terminal, 'ttys002')
+    self.assertEqual(event_data.type, 8)
 
     expected_message = (
         'User: moxilo '

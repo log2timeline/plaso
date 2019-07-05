@@ -29,21 +29,24 @@ class AmcacheParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '1992-06-19 22:22:17.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_full_path = (
         'c:\\users\\user\\appdata\\local\\temp\\chocolatey\\'
         'is-f4510.tmp\\idafree50.tmp')
-    self.assertEqual(event.full_path, expected_full_path)
+    self.assertEqual(event_data.full_path, expected_full_path)
 
     expected_sha1 = '82274eef0911a948f91425f5e5b0e730517fe75e'
-    self.assertEqual(event.sha1, expected_sha1)
+    self.assertEqual(event_data.sha1, expected_sha1)
 
     event = events[1148]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_program_name = 'FileInsight - File analysis tool'
-    self.assertEqual(event.name, expected_program_name)
+    self.assertEqual(event_data.name, expected_program_name)
 
     expected_publisher = 'McAfee Inc.'
-    self.assertEqual(event.publisher, expected_publisher)
+    self.assertEqual(event_data.publisher, expected_publisher)
 
     # TODO: add test for message string
 

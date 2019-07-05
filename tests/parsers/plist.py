@@ -37,9 +37,14 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 12)
 
-    timestamps, roots, keys = zip(
-        *[(event.timestamp, event.root, event.key)
-          for event in storage_writer.GetEvents()])
+    keys = set()
+    roots = set()
+    timestamps = set()
+    for event in storage_writer.GetEvents():
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      keys.add(event_data.key)
+      roots.add(event_data.root)
+      timestamps.add(event.timestamp)
 
     expected_timestamps = frozenset([
         1345251192528750, 1351827808261762, 1345251268370453,
@@ -47,8 +52,8 @@ class PlistParserTest(test_lib.ParserTestCase):
         1301012201414766, 1302199013524275, 1341957900020117,
         1350666391557044, 1350666385239662, 1341957896010535])
 
-    self.assertEqual(set(expected_timestamps), set(timestamps))
-    self.assertEqual(12, len(set(timestamps)))
+    self.assertEqual(len(timestamps), 12)
+    self.assertEqual(timestamps, expected_timestamps)
 
     expected_roots = frozenset([
         '/DeviceCache/00-0d-fd-00-00-00',
@@ -57,15 +62,15 @@ class PlistParserTest(test_lib.ParserTestCase):
         '/DeviceCache/44-00-00-00-00-02',
         '/DeviceCache/44-00-00-00-00-03',
         '/DeviceCache/44-00-00-00-00-04'])
-    self.assertTrue(expected_roots == set(roots))
-    self.assertEqual(6, len(set(roots)))
+    self.assertEqual(len(roots), 6)
+    self.assertEqual(roots, expected_roots)
 
     expected_keys = frozenset([
         'LastInquiryUpdate',
         'LastServicesUpdate',
         'LastNameUpdate'])
-    self.assertTrue(expected_keys == set(keys))
-    self.assertEqual(3, len(set(keys)))
+    self.assertEqual(len(keys), 3)
+    self.assertTrue(keys, expected_keys)
 
   def testParseWithTruncatedFile(self):
     """Tests the Parse function on a truncated plist file."""

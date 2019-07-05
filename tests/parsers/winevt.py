@@ -54,24 +54,25 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #                     security. Please ensure that you can contact the
     #                     server that authenticated you.\r\n (0xc0000388)"
 
-    self.assertEqual(event.record_number, 1392)
-    self.assertEqual(event.event_type, 2)
-    self.assertEqual(event.computer_name, 'WKS-WINXP32BIT')
-    self.assertEqual(event.source_name, 'LSASRV')
-    self.assertEqual(event.event_category, 3)
-    self.assertEqual(event.event_identifier, 40961)
-    self.assertEqual(event.strings[0], 'cifs/CONTROLLER')
+    self.CheckTimestamp(event.timestamp, '2011-07-27 06:41:47.000000')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.record_number, 1392)
+    self.assertEqual(event_data.event_type, 2)
+    self.assertEqual(event_data.computer_name, 'WKS-WINXP32BIT')
+    self.assertEqual(event_data.source_name, 'LSASRV')
+    self.assertEqual(event_data.event_category, 3)
+    self.assertEqual(event_data.event_identifier, 40961)
+    self.assertEqual(event_data.strings[0], 'cifs/CONTROLLER')
 
     expected_string = (
         '"The system detected a possible attempt to compromise security. '
         'Please ensure that you can contact the server that authenticated you.'
         '\r\n (0xc0000388)"')
 
-    self.assertEqual(event.strings[1], expected_string)
-
-    self.CheckTimestamp(event.timestamp, '2011-07-27 06:41:47.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+    self.assertEqual(event_data.strings[1], expected_string)
 
     expected_message = (
         '[40961 / 0xa001] '

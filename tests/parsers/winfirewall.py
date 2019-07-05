@@ -29,16 +29,18 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2005-04-11 08:06:02.000000')
 
-    self.assertEqual(event.source_ip, '123.45.78.90')
-    self.assertEqual(event.dest_ip, '123.156.78.90')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.source_ip, '123.45.78.90')
+    self.assertEqual(event_data.dest_ip, '123.156.78.90')
 
     event = events[7]
 
     self.CheckTimestamp(event.timestamp, '2005-04-11 08:06:26.000000')
 
-    self.assertEqual(event.size, 576)
-    self.assertEqual(event.flags, 'A')
-    self.assertEqual(event.tcp_ack, 987654321)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.size, 576)
+    self.assertEqual(event_data.flags, 'A')
+    self.assertEqual(event_data.tcp_ack, 987654321)
 
     expected_message = (
         'DROP [ TCP RECEIVE ] '
@@ -55,8 +57,9 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
     event = events[9]
 
-    self.assertEqual(event.icmp_type, 8)
-    self.assertEqual(event.icmp_code, 0)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.icmp_type, 8)
+    self.assertEqual(event_data.icmp_code, 0)
 
 
 if __name__ == '__main__':

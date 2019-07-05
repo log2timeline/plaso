@@ -79,9 +79,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The creation timestamp.
     event = events[0]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
@@ -90,9 +91,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The last modification timestamp.
     event = events[1]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
@@ -101,9 +103,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The last accessed timestamp.
     event = events[2]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
@@ -112,9 +115,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The entry modification timestamp.
     event = events[3]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
@@ -133,9 +137,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The creation timestamp.
     event = events[4]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(

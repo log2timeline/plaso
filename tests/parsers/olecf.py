@@ -37,8 +37,9 @@ class OLECFParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.data_type, 'olecf:item')
-    self.assertEqual(event.offset, 0)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'olecf:item')
+    self.assertEqual(event_data.offset, 0)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)

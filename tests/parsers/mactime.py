@@ -43,7 +43,8 @@ class MactimeTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
-    self.assertEqual(event.inode, 16)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.inode, 16)
 
     event = events[22]
 
@@ -56,9 +57,10 @@ class MactimeTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2012-05-25 15:59:45.000000')
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_CHANGE)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_filename = '/a_directory/another_file'
-    self.assertEqual(event.filename, expected_filename)
-    self.assertEqual(event.mode_as_string, 'r/rrw-------')
+    self.assertEqual(event_data.filename, expected_filename)
+    self.assertEqual(event_data.mode_as_string, 'r/rrw-------')
 
     self._TestGetMessageStrings(event, expected_filename, expected_filename)
 

@@ -29,13 +29,14 @@ class PlsRecallTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-06-18 19:50:00.550000')
 
-    self.assertEqual(event.sequence_number, 206)
-    self.assertEqual(event.username, 'tsltmp')
-    self.assertEqual(event.database_name, 'DB11')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.sequence_number, 206)
+    self.assertEqual(event_data.username, 'tsltmp')
+    self.assertEqual(event_data.database_name, 'DB11')
 
     # The test file actually has 'test_databae' in the SQL string.
     expected_query = 'SELECT * from test_databae where date > \'01/01/2012\''
-    self.assertEqual(event.query, expected_query)
+    self.assertEqual(event_data.query, expected_query)
 
     expected_message = (
         'Sequence number: 206 '
