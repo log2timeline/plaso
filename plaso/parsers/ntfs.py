@@ -36,7 +36,7 @@ class NTFSFileStatEventData(events.EventData):
     name (str): name associated with the stat event, e.g. that of
         a $FILE_NAME attribute or None if not available.
     parent_file_reference (int): NTFS file reference of the parent.
-    path_hint (str): A to the NTFS file constructed from each `parent_file_reference`
+    path_hint (str): A path to the NTFS file constructed from the `parent_file_reference`
   """
 
   DATA_TYPE = 'fs:stat:ntfs'
@@ -94,6 +94,7 @@ class NTFSMFTParser(interface.FileObjectParser):
   _MFT_ATTRIBUTE_FILE_NAME = 0x00000030
   _MFT_ATTRIBUTE_OBJECT_ID = 0x00000040
   _PATH_SEPARATOR = '/'
+  _PATH_NO_NAME_REPLACEMENT = '???'
 
   def __init__(self):
     """Intializes the NTFS MFT Parser"""
@@ -288,7 +289,8 @@ class NTFSMFTParser(interface.FileObjectParser):
                 attribute_index, exception))
 
   def _CollectMFTEntryPathInfo(self, mft_entry):
-    """Extracts data from a NFTS $MFT entry and makes note of the reference, name and parent
+    """Extracts data from a given $MFT entry and takes note of the
+    file reference, its name, and the parent
 
     Args:
       mft_entry (pyfsntfs.file_entry): MFT entry.
@@ -326,6 +328,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     Args:
       file_reference (int): The `file_reference` from a mft_entry
+      path_parts (list): A list that gets appended the path parts in recursive calls
 
     Returns:
       list: List of parent path objects in reverse order
@@ -342,7 +345,7 @@ class NTFSMFTParser(interface.FileObjectParser):
     if reference_name is not None:
       path_parts.append(reference_name)
     elif parent_reference is not None:
-      path_parts.append('???')
+      path_parts.append(self._PATH_NO_NAME_REPLACEMENT)
 
     if file_reference != parent_reference:
       self._GetPathHint(parent_reference, path_parts)
