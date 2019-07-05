@@ -260,47 +260,6 @@ class GenericBinaryOperator(BinaryOperator):
 
     return attribute_value
 
-  def _GetValueByPath(self, path, event, event_data, event_tag):
-    """Retrieves the value of a specific event attribute given a specific path.
-
-    Given a path such as ["pathspec", "inode"] it returns the value
-    event_data.pathspec.inode.
-
-    Args:
-      path (list[str]): object path to traverse, that contains the attribute
-          names.
-      event (EventObject): event to retrieve the value from.
-      event_data (EventData): event data to retrieve the value from.
-      event_tag (EventTag): event tag to retrieve the value from.
-
-    Returns:
-      object: attribute value or None if not available.
-    """
-    if isinstance(path, py2to3.STRING_TYPES):
-      path = path.split(self._OBJECT_PATH_SEPARATOR)
-
-    attribute_name = path[0].lower()
-    attribute_value = self._GetValue(
-        attribute_name, event, event_data, event_tag)
-
-    if attribute_value is None:
-      return None
-
-    if isinstance(attribute_value, dict):
-      if len(path) != 2:
-        logging.warning((
-            'Unsupported object path length: {0:d} for dictionary '
-            'value').format(len(path)))
-        return None
-
-      attribute_name = path[1].lower()
-      return attribute_value.get(attribute_name, None)
-
-    if len(path) == 1:
-      return attribute_value
-
-    return self._GetValueByPath(path[1:], None, attribute_value, None)
-
   def FlipBool(self):
     """Negates the internal boolean value attribute."""
     logging.debug('Negative matching.')
@@ -317,8 +276,7 @@ class GenericBinaryOperator(BinaryOperator):
     Returns:
       bool: True if the event, data and tag match the filter, False otherwise.
     """
-    path = self.left_operand.split('.')
-    value = self._GetValueByPath(path, event, event_data, event_tag)
+    value = self._GetValue(self.left_operand, event, event_data, event_tag)
 
     if value and self._CompareValue(value, self.right_operand):
       return self._bool_value

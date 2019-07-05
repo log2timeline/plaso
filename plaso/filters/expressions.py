@@ -104,6 +104,8 @@ class BinaryExpression(Expression):
       ParseError: if either left hand side or right hand side expression
           is not an instance of Expression.
     """
+    # TODO: add information about what lhs and rhs are to these error messages.
+    # https://github.com/log2timeline/plaso/pull/2498
     if not isinstance(lhs, Expression):
       raise errors.ParseError('Left hand side is not an expression')
 
