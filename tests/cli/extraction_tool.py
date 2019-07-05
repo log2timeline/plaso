@@ -8,7 +8,6 @@ import argparse
 import unittest
 
 from plaso.cli import extraction_tool
-from plaso.parsers import manager as parsers_manager
 
 from tests.cli import test_lib
 
@@ -66,11 +65,12 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
   def testListParsersAndPlugins(self):
     """Tests the ListParsersAndPlugins function."""
+    presets_file = self._GetTestFilePath(['presets.yaml'])
+    self._SkipIfPathNotExists(presets_file)
+
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = extraction_tool.ExtractionTool(output_writer=output_writer)
-
-    presets_file = self._GetTestFilePath(['presets.yaml'])
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
+    test_tool._presets_manager.ReadFromFile(presets_file)
 
     test_tool.ListParsersAndPlugins()
 
