@@ -1,3 +1,11 @@
 name: bam
 type: format
 description: Background Activity Moderator format
+---
+name: timestamp
+type: integer
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 8
+  units: bytes
