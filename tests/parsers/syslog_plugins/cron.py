@@ -37,7 +37,9 @@ class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
 
     self.assertEqual(event_data.username, 'root')
 
-    event = events[7]
+    event = events[8]
+
+    self.CheckTimestamp(event.timestamp, '2016-01-22 07:54:01.000000')
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.command, '/sbin/status.mycheck')

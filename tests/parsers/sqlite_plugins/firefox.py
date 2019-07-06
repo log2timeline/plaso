@@ -49,7 +49,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_data.url, expected_url)
 
     expected_title = 'Google News'
-    self.assertEqual(event.title, expected_title)
+    self.assertEqual(event_data.title, expected_title)
 
     expected_message = (
         '{0:s} ({1:s}) [count: 1] Host: news.google.com '
@@ -161,7 +161,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         event_data.data_type, 'firefox:places:bookmark_folder')
 
     expected_title = 'Latest Headlines'
-    self.assertEqual(event.title, expected_title)
+    self.assertEqual(event_data.title, expected_title)
 
     expected_message = expected_title
     expected_short_message = expected_title

@@ -293,13 +293,29 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    test_event_data1 = None
+    test_event_data2 = None
+    for event in events:
+      self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
-    self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(event_data.data_type, 'windows:registry:winlogon')
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.application == 'VmApplet':
+        test_event_data1 = event_data
+      elif (event_data.application == 'NavLogon' and
+            event_data.trigger == 'Logoff'):
+        test_event_data2 = event_data
 
-    self.assertEqual(event_data.data_type, 'windows:registry:winlogon')
+    expected_message = (
+        '[{0:s}] '
+        'Application: VmApplet '
+        'Command: SystemPropertiesPerformance.exe/pagefile '
+        'Trigger: Logon').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
+
+    self._TestGetMessageStrings(
+        test_event_data1, expected_message, expected_short_message)
 
     expected_message = (
         '[{0:s}\\Notify\\NavLogon] '
@@ -310,25 +326,7 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    event = events[13]
-
-    self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:winlogon')
-
-    expected_message = (
-        '[{0:s}] '
-        'Application: VmApplet '
-        'Command: SystemPropertiesPerformance.exe/pagefile '
-        'Trigger: Logon').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+        test_event_data2, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

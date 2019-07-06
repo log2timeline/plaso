@@ -55,9 +55,9 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'task_scheduler:task_cache:entry')
-    self.assertEqual(event.task_name, 'SynchronizeTime')
+    self.assertEqual(event_data.task_name, 'SynchronizeTime')
     self.assertEqual(
-        event.task_identifier, '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}')
+        event_data.task_identifier, '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}')
 
     expected_message = (
         '[{0:s}] '
