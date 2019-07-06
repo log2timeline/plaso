@@ -58,7 +58,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     expected_short_message = '.ebay.com (nonsession)'
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
     event = cookie_events[52]
     event_data = self._GetEventDataOfEvent(storage_writer, event)

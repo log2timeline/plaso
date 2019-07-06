@@ -54,7 +54,8 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_message = 'File Path: {0:s} Size: 184'.format(file_path)
 
-    self._TestGetMessageStrings(event, expected_message, file_path)
+    self._TestGetMessageStrings(
+        event_data, expected_message, file_path)
 
     event = cloud_entries[16]
 
@@ -77,7 +78,8 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
         'Type: DOCUMENT').format(expected_url)
     expected_short_message = '/Almenningur/Saklausa hliðin'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

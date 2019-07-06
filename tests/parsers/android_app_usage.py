@@ -44,7 +44,8 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
         'Package: com.sec.android.widgetapp.ap.hero.accuweather '
         'Component: com.sec.and...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[17]
 
@@ -62,7 +63,8 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
         'Package: com.google.android.gsf.login '
         'Component: com.google.android.gsf.login...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

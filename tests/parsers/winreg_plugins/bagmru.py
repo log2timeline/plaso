@@ -85,11 +85,14 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'Shell item path: <My Computer>').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2009-08-04 15:19:10.669625')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         '[{0:s}\\0] '
@@ -97,17 +100,21 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'Shell item path: <My Computer> C:\\').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[14]
 
     self.CheckTimestamp(event.timestamp, '2009-08-04 15:19:16.997750')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # The winreg_formatter will add a space after the key path even when there
     # is not text.
     expected_message = '[{0:s}\\0\\0\\0\\0\\0] '.format(key_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

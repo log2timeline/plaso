@@ -51,6 +51,9 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
 
     # Test full and short message formats.
     event = events[4]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'ContentAccess Releasing content request '
         '{4EA97AD6-E7E2-4583-92B9-21F532501337}')
@@ -59,7 +62,8 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
         'Releasing content request '
         '{4EA97AD6-E7E2-4583-92B9-21F532501337}')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

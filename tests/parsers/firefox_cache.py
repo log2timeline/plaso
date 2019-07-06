@@ -52,7 +52,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         '"HTTP:http://start.ubuntu.com/12.04/sprite.png"')
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
     for event in events:
       event_data = self._GetEventDataOfEvent(storage_writer, event)
@@ -140,6 +140,8 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2014-05-02 14:15:03.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'Fetched 1 time(s) '
         '[HTTP/1.1 200 OK] GET '
@@ -149,7 +151,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         '"HTTP:http://start.mozilla.org/en-US/"')
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testParseLegacyCache_002(self):
     """Test Firefox 3 cache file _CACHE_002_ parsing."""

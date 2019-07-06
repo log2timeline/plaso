@@ -48,7 +48,8 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     expected_string = (
         '/DE-00-AD-00-BE-EF/LastUsed')
 
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
   def testProcessMulti(self):
     """Tests Process on a plist containing five keys with date values."""

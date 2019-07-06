@@ -51,7 +51,8 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     expected_message = '/Accounts/email@domain.com {0:s}'.format(
         expected_description)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 

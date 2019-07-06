@@ -94,7 +94,8 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Action: Interface en0 turn up.')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[2]
 

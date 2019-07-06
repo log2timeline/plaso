@@ -124,7 +124,8 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'Index: 3 [MRU Value b]: c:/evil.exe').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 class TestMRUListShellItemListWindowsRegistryPlugin(
@@ -221,7 +222,8 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
             key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # A shell item event.
     event = events[0]
@@ -240,7 +242,8 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
         'CurrentVersi...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

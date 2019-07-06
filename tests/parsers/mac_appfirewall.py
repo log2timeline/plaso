@@ -49,7 +49,8 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         'Process name: Logging '
         'Status: Error')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[9]
 
@@ -72,7 +73,8 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         'Process name: Dropbox '
         'Status: Info')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check repeated lines.
     event = events[38]

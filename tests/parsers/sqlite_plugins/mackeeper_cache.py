@@ -30,6 +30,8 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-07-12 19:30:31.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'Chat Outgoing Message : I have received your system scan report and '
         'I will start analyzing it right now. [ URL: http://support.kromtech.'
@@ -42,7 +44,8 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
         'I have received your system scan report and I will start analyzing '
         'it right now.')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

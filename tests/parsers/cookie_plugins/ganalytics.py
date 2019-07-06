@@ -61,7 +61,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'maelt_med_kerfisbundnum_hydingum/')
     expected_short_message = 'http://ads.aha.is/ (__utmz)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
@@ -92,7 +93,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'used to find site: enders game')
     expected_short_message = 'http://imdb.com/ (__utmz)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check the UTMA Google Analytics event.
     event = events[41]
@@ -112,7 +114,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'Visitor ID: 1827102436')
     expected_short_message = 'http://assets.tumblr.com/ (__utma)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check the UTMB Google Analytics event.
     event = events[34]
@@ -131,7 +134,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         '154523900')
     expected_short_message = 'http://upressonline.com/ (__utmb)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

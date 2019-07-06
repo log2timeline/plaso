@@ -50,7 +50,8 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
 
     expected_string = '//passwordLastSetTime {}'.format(expected_description)
     expected_short = '{0:s}...'.format(expected_string[:77])
-    self._TestGetMessageStrings(event, expected_string, expected_short)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_short)
 
 
 if __name__ == '__main__':

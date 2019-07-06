@@ -44,7 +44,8 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         'GET /some/image/path/something.jpg '
         '[ 10.10.10.100 > 10.10.10.100 : 80 ]')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[5]
 
@@ -58,6 +59,8 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     event = events[1]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'GET /some/image/path/something.htm '
         '[ 22.22.22.200 > 10.10.10.100 : 80 ] '
@@ -69,7 +72,8 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         'GET /some/image/path/something.htm '
         '[ 22.22.22.200 > 10.10.10.100 : 80 ]')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[11]
     event_data = self._GetEventDataOfEvent(storage_writer, event)

@@ -67,7 +67,8 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
         'http://www.linkedin.com/ (leo_auth_token) Flags: [HTTP only] = False '
         '[Persistent] = True')
     expected_short_message = 'www.linkedin.com (leo_auth_token)'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check one of the visits to rubiconproject.com.
     event = events[379]
@@ -174,7 +175,8 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
         'http://google.com/gmail/about/ (__utma) '
         'Flags: [HTTP only] = False [Persistent] = True')
     expected_short_message = 'google.com (__utma)'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check one of the visits to fbi.gov for last accessed time.
     event = events[10]

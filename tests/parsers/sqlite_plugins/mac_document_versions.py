@@ -50,7 +50,8 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
             event_data.user_sid))
     expected_short_message = 'Stored a document version of [{0:s}]'.format(
         event_data.name)
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

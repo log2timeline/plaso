@@ -62,7 +62,8 @@ class UtmpParserTest(test_lib.ParserTestCase):
         'User: LOGIN '
         'PID: 1115 '
         'Status: LOGIN_PROCESS')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[12]
 
@@ -90,7 +91,8 @@ class UtmpParserTest(test_lib.ParserTestCase):
         'User: moxilo '
         'PID: 2684 '
         'Status: USER_PROCESS')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseWtmpFile(self):
     """Tests the Parse function on a wtmp file."""
@@ -129,7 +131,8 @@ class UtmpParserTest(test_lib.ParserTestCase):
         'User: userA '
         'PID: 20060 '
         'Status: USER_PROCESS')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
