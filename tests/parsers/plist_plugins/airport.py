@@ -36,13 +36,15 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(timestamps, expected_timestamps)
 
     event = events[0]
-    self.assertEqual(event.key, 'item')
-    self.assertEqual(event.root, '/RememberedNetworks')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.key, 'item')
+    self.assertEqual(event_data.root, '/RememberedNetworks')
 
     expected_description = (
         '[WiFi] Connected to network: <europa> using security '
         'WPA/WPA2 Personal')
-    self.assertEqual(event.desc, expected_description)
+    self.assertEqual(event_data.desc, expected_description)
 
     expected_message = '/RememberedNetworks/item {0:s}'.format(
         expected_description)

@@ -31,11 +31,12 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     event = events[567]
 
-    self.assertEqual(event.container_identifier, 1)
-
     self.CheckTimestamp(event.timestamp, '2014-05-12 07:30:25.486199')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.container_identifier, 1)
 
     expected_message = (
         'Name: Content '

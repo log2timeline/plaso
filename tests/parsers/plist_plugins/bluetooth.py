@@ -35,7 +35,9 @@ class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
     timestamps = []
     for event in events:
       timestamps.append(event.timestamp)
-      if event.desc.startswith('Paired'):
+
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.desc.startswith('Paired'):
         paired_events.append(event)
 
     # Ensure all 14 events and times from the plist are parsed correctly.
@@ -54,7 +56,10 @@ class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
 
     # One of the paired event descriptions should contain the string:
     # Paired:True Name:Apple Magic Trackpad 2.
-    paired_descriptions = [event.desc for event in paired_events]
+    paired_descriptions = []
+    for event in paired_events:
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      paired_descriptions.append(event_data.desc)
 
     self.assertTrue(
         'Paired:True Name:Apple Magic Trackpad 2' in paired_descriptions)

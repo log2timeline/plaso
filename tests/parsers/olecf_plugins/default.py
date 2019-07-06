@@ -33,7 +33,8 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.name, 'Root Entry')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'Root Entry')
 
     expected_string = (
         'Name: Root Entry')

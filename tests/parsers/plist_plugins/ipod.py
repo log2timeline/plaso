@@ -35,7 +35,8 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '1995-11-22 18:25:07.000000')
 
-    self.assertEqual(event.device_id, '0000A11300000000')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.device_id, '0000A11300000000')
 
     event = events[2]
 
@@ -54,11 +55,12 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
 
-    self.assertEqual(event.device_class, 'iPhone')
-    self.assertEqual(event.device_id, '4C6F6F6E65000000')
-    self.assertEqual(event.firmware_version, 256)
-    self.assertEqual(event.imei, '012345678901234')
-    self.assertEqual(event.use_count, 1)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.device_class, 'iPhone')
+    self.assertEqual(event_data.device_id, '4C6F6F6E65000000')
+    self.assertEqual(event_data.firmware_version, 256)
+    self.assertEqual(event_data.imei, '012345678901234')
+    self.assertEqual(event_data.use_count, 1)
 
 
 if __name__ == '__main__':

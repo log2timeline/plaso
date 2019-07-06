@@ -32,11 +32,13 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.usn_number, 9251162904)
-    self.assertEqual(event.identifier, 356)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.usn_number, 9251162904)
+    self.assertEqual(event_data.identifier, 356)
 
     filename = '?UP\\Favorites\\Links\\Lenovo'
-    self.assertEqual(event.original_filename, filename)
+    self.assertEqual(event_data.original_filename, filename)
 
     expected_message = (
         'Filename: {0:s} '
