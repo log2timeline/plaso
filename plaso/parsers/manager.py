@@ -59,7 +59,7 @@ class ParsersManager(object):
 
           This function does not support presets, and requires a parser filter
           expression where presets have been expanded.
-          
+
     Returns:
       tuple: containing:
 
