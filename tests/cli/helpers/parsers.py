@@ -30,9 +30,8 @@ optional arguments:
                         or show possible values. The expression is a comma
                         separated string where each element is a preset,
                         parser or plugin name. Each element can be prepended
-                        with an exclamation mark to exclude the item. Preset
-                        matching is case insensitive, while parser and plugin
-                        matching is exact. Examples: "linux,!bash_history"
+                        with an exclamation mark to exclude the item. Matching
+                        is case insensitive. Examples: "linux,!bash_history"
                         enables the linux preset, without the bash_history
                         parser. "sqlite, !sqlite/chrome_history" enables all
                         sqlite plugins except for chrome_history".
