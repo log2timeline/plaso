@@ -82,10 +82,11 @@ class EventExtractionWorker(object):
           where None represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
-          denotes which parsers should be used. See filters/parser_filter.py
-          for details of the expression syntax.
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          Note that preset names in this expression will not be expanded.
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False

@@ -29,17 +29,17 @@ class ParsersArgumentsHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         '--parsers', dest='parsers', type=str, action='store',
         default='', metavar='PARSER_FILTER_EXPRESSION', help=(
-            'Define which parsers to use, or list available parsers. The '
-            'expression is a comma separated value string where each value '
-            'represents a preset, parser or plugin. Each value can be '
-            'prepended with an exclamation mark to exclude the item. Preset '
-            'matching is exact, while parser and plugin matching is case '
-            'insensitive. Examples: "linux,!bash_history" enables the linux '
-            'preset, without the bash_history parser. "sqlite, '
-            '!sqlite/chrome_history" enables all sqlite plugins except for '
-            'chrome_history". win7,syslog" enables the win7 preset, as well '
-            'as the syslog parser. Use "--parsers list" or "--info" to list '
-            'available presets, parsers and plugins.'))
+            'Define which presets, parsers and/or plugins to use, or show '
+            'possible values. The expression is a comma separated string '
+            'where each element is a preset, parser or plugin name. Each '
+            'element can be prepended with an exclamation mark to exclude the '
+            'item. Preset matching is case insensitive, while parser and '
+            'plugin matching is exact. Examples: "linux,!bash_history" '
+            'enables the linux preset, without the bash_history parser. '
+            '"sqlite, !sqlite/chrome_history" enables all sqlite plugins '
+            'except for chrome_history". win7,syslog" enables the win7 '
+            'preset, as well as the syslog parser. Use "--parsers list" or '
+            '"--info" to list available presets, parsers and plugins.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):

@@ -77,10 +77,11 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
-          denotes which parsers should be used. See filters/parser_filter.py
-          for details of the expression syntax.
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          Note that preset names in this expression will not be expanded.
+          This function does not support presets, and requires a parser filter
+          expression where presets have been expanded.
 
     Returns:
       tuple: containing:
@@ -133,10 +134,11 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
-          denotes which parsers should be used. See filters/parser_filter.py
-          for details of the expression syntax.
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          Note that preset names in this expression will not be expanded.
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
 
     Returns:
       list[str]: parser and parser plugin names.
@@ -162,10 +164,11 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
-          denotes which parsers should be used. See filters/parser_filter.py
-          for details of the expression syntax.
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          Note that preset names in this expression will not be expanded.
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
 
     Returns:
       list[tuple[str, str]]: pairs of parser plugin names and descriptions.
@@ -205,10 +208,11 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
-          denotes which parsers should be used. See filters/parser_filter.py
-          for details of the expression syntax.
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          Note that preset names in this expression will not be expanded.
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
 
     Returns:
       dict[str, BaseParser]: parsers per name.
@@ -247,10 +251,11 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
-          denotes which parsers should be used. See filters/parser_filter.py
-          for details of the expression syntax.
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          Note that preset names in this expression will not be expanded.
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
 
     Yields:
       tuple: containing:

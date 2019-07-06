@@ -40,8 +40,8 @@ class EventExtractor(object):
           where None represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
-          denotes which parsers should be used. See filters/parser_filter.py
-          for details of the expression syntax.
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
     """
     super(EventExtractor, self).__init__()
     self._file_scanner = None
@@ -105,8 +105,8 @@ class EventExtractor(object):
           where None represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
-          denotes which parsers should be used. See filters/parser_filter.py
-          for details of the expression syntax.
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
     """
     self._formats_with_signatures, non_sigscan_parser_names = (
         parsers_manager.ParsersManager.GetFormatsWithSignatures(
