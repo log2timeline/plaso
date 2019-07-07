@@ -13,11 +13,11 @@ from plaso.containers import reports
 from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
+from plaso.storage import interface
 from plaso.storage import identifiers
-from plaso.storage import file_interface
 
 
-class SQLiteStorageMergeReader(file_interface.StorageFileMergeReader):
+class SQLiteStorageMergeReader(interface.StorageMergeReader):
   """SQLite-based storage file reader for merging."""
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
@@ -197,7 +197,7 @@ class SQLiteStorageMergeReader(file_interface.StorageFileMergeReader):
     """Prepares for the next container type.
 
     This method prepares the task storage for merging the next container type.
-    It set the active container type, its add method and active cursor
+    It sets the active container type, its add method and active cursor
     accordingly.
     """
     self._active_container_type = self._container_types.pop(0)

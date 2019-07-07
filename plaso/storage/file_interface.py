@@ -70,7 +70,7 @@ class SerializedAttributeContainerList(object):
     """Pops a serialized attribute container from the list.
 
     Returns:
-      bytes: serialized attribute container data.
+      bytes: serialized attribute container data or None if the list is empty.
     """
     try:
       serialized_data = self._list.pop(0)
@@ -103,38 +103,6 @@ class BaseStorageFile(interface.BaseStore):
     self._read_only = True
     self._serialized_attribute_containers = {}
     self._serializer = json_serializer.JSONAttributeContainerSerializer
-
-  def _DeserializeAttributeContainer(self, container_type, serialized_data):
-    """Deserializes an attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      serialized_data (bytes): serialized attribute container data.
-
-    Returns:
-      AttributeContainer: attribute container or None.
-
-    Raises:
-      IOError: if the serialized data cannot be decoded.
-      OSError: if the serialized data cannot be decoded.
-    """
-    if not serialized_data:
-      return None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(container_type)
-
-    try:
-      serialized_string = serialized_data.decode('utf-8')
-    except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(
-          exception))
-    attribute_container = self._serializer.ReadSerialized(serialized_string)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(container_type)
-
-    return attribute_container
 
   def _GetNumberOfSerializedAttributeContainers(self, container_type):
     """Retrieves the number of serialized attribute containers.
@@ -212,6 +180,16 @@ class BaseStorageFile(interface.BaseStore):
 
     return attribute_container_data
 
+  def _RaiseIfNotReadable(self):
+    """Raises if the storage file is not readable.
+
+     Raises:
+      IOError: when the storage file is closed.
+      OSError: when the storage file is closed.
+    """
+    if not self._is_open:
+      raise IOError('Unable to read from closed storage file.')
+
   def _RaiseIfNotWritable(self):
     """Raises if the storage file is not writable.
 
@@ -241,38 +219,6 @@ class StorageFileMergeReader(interface.StorageMergeReader):
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
-  def _DeserializeAttributeContainer(self, container_type, serialized_data):
-    """Deserializes an attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      serialized_data (bytes): serialized attribute container data.
-
-    Returns:
-      AttributeContainer: attribute container or None.
-
-    Raises:
-      IOError: if the serialized data cannot be decoded.
-      OSError: if the serialized data cannot be decoded.
-    """
-    if not serialized_data:
-      return None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(container_type)
-
-    try:
-      serialized_string = serialized_data.decode('utf-8')
-    except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(
-          exception))
-    attribute_container = self._serializer.ReadSerialized(serialized_string)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(container_type)
-
-    return attribute_container
-
 
 class StorageFileReader(interface.StorageReader):
   """File-based storage reader interface."""
@@ -287,25 +233,37 @@ class StorageFileReader(interface.StorageReader):
     self._path = path
     self._storage_file = None
 
-  @property
-  def format_version(self):
-    """int: format version or None if not set."""
+  def GetFormatVersion(self):
+    """Retrieves the format version of the underlying storage file.
+
+    Returns:
+      int: the format version, or None if not available.
+    """
     if self._storage_file:
       return self._storage_file.format_version
+
     return None
 
-  @property
-  def serialization_format(self):
-    """str: serialization format or None if not set."""
+  def GetSerializationFormat(self):
+    """Retrieves the serialization format of the underlying storage file.
+
+    Returns:
+      str: the serialization format, or None if not available.
+    """
     if self._storage_file:
       return self._storage_file.serialization_format
+
     return None
 
-  @property
-  def storage_type(self):
-    """str: storage type or None if not set."""
+  def GetStorageType(self):
+    """Retrieves the storage type of the underlying storage file.
+
+    Returns:
+      str: the storage type, or None if not available.
+    """
     if self._storage_file:
       return self._storage_file.storage_type
+
     return None
 
   def Close(self):
@@ -393,12 +351,20 @@ class StorageFileReader(interface.StorageReader):
     return self._storage_file.GetNumberOfAnalysisReports()
 
   def GetNumberOfEventSources(self):
-    """Retrieves the number event sources.
+    """Retrieves the number of event sources.
 
     Returns:
       int: number of event sources.
     """
     return self._storage_file.GetNumberOfEventSources()
+
+  def GetSessions(self):
+    """Retrieves the sessions.
+
+    Returns:
+      generator(Session): session generator.
+    """
+    return self._storage_file.GetSessions()
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
@@ -414,14 +380,6 @@ class StorageFileReader(interface.StorageReader):
       generator(EventObject): event generator.
     """
     return self._storage_file.GetSortedEvents(time_range=time_range)
-
-  def GetSessions(self):
-    """Retrieves the sessions.
-
-    Returns:
-      generator(Session): session generator.
-    """
-    return self._storage_file.GetSessions()
 
   def HasAnalysisReports(self):
     """Determines if a store contains analysis reports.
@@ -508,22 +466,21 @@ class StorageFileWriter(interface.StorageWriter):
     """
 
   @abc.abstractmethod
-  def _CreateTaskStorageMergeReader(self, path):
+  def _CreateTaskStorageMergeReader(self, task):
     """Creates a task storage merge reader.
 
     Args:
-      path (str): path to the task storage file that should be merged.
+      task (Task): task.
 
     Returns:
       StorageMergeReader: storage merge reader.
     """
 
   @abc.abstractmethod
-  def _CreateTaskStorageWriter(self, path, task):
+  def _CreateTaskStorageWriter(self, task):
     """Creates a task storage writer.
 
     Args:
-      path (str): path to the storage file.
       task (Task): task.
 
     Returns:
@@ -690,39 +647,6 @@ class StorageFileWriter(interface.StorageWriter):
       self._session.event_labels_counter[label] += 1
     self.number_of_event_tags += 1
 
-  def CheckTaskReadyForMerge(self, task):
-    """Checks if a task is ready for merging with this session storage.
-
-    If the task is ready to be merged, this method also sets the task's
-    storage file size.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      bool: True if the task is ready to be merged.
-
-    Raises:
-      IOError: if the storage type is not supported or
-      OSError: if the storage type is not supported or
-          if the temporary path for the task storage does not exist.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if not self._processed_task_storage_path:
-      raise IOError('Missing processed task storage path.')
-
-    processed_storage_file_path = self._GetProcessedStorageFilePath(task)
-
-    try:
-      stat_info = os.stat(processed_storage_file_path)
-    except (IOError, OSError):
-      return False
-
-    task.storage_file_size = stat_info.st_size
-    return True
-
   def Close(self):
     """Closes the storage writer.
 
@@ -734,27 +658,6 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._storage_file.Close()
     self._storage_file = None
-
-  def CreateTaskStorage(self, task):
-    """Creates a task storage.
-
-    The task storage is used to store attributes created by the task.
-
-    Args:
-      task(Task): task.
-
-    Returns:
-      StorageWriter: storage writer.
-
-    Raises:
-      IOError: if the storage type is not supported.
-      OSError: if the storage type is not supported.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    storage_file_path = self._GetTaskStorageFilePath(task)
-    return self._CreateTaskStorageWriter(storage_file_path, task)
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
@@ -895,23 +798,27 @@ class StorageFileWriter(interface.StorageWriter):
       task (Task): task.
 
     Raises:
-      IOError: if the storage type is not supported or
+      IOError: if the storage type or format is not supported or
           if the storage file cannot be renamed.
-      OSError: if the storage type is not supported or
+      OSError: if the storage type or format is not supported or
           if the storage file cannot be renamed.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    storage_file_path = self._GetTaskStorageFilePath(task)
-    processed_storage_file_path = self._GetProcessedStorageFilePath(task)
+    if not task.storage_format in definitions.STORAGE_FORMATS:
+      raise IOError('Unsupported storage format')
 
-    try:
-      os.rename(storage_file_path, processed_storage_file_path)
-    except OSError as exception:
-      raise IOError((
-          'Unable to rename task storage file: {0:s} with error: '
-          '{1!s}').format(storage_file_path, exception))
+    if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      storage_file_path = self._GetTaskStorageFilePath(task)
+      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
+
+      try:
+        os.rename(storage_file_path, processed_storage_file_path)
+      except OSError as exception:
+        raise IOError((
+            'Unable to rename task storage file: {0:s} with error: '
+            '{1!s}').format(storage_file_path, exception))
 
   def Open(self):
     """Opens the storage writer.
@@ -994,13 +901,16 @@ class StorageFileWriter(interface.StorageWriter):
       task (Task): task.
 
     Raises:
-      IOError: if the storage type is not supported or
+      IOError: if the storage type or format is not supported or
           if the storage file cannot be removed.
-      OSError: if the storage type is not supported or
+      OSError: if the storage type or format is not supported or
           if the storage file cannot be removed.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
+
+    if task.storage_format != definitions.STORAGE_FORMAT_SQLITE:
+      raise IOError('Unsupported storage format.')
 
     processed_storage_file_path = self._GetProcessedStorageFilePath(task)
 
@@ -1032,7 +942,7 @@ class StorageFileWriter(interface.StorageWriter):
       self._storage_file.SetStorageProfiler(storage_profiler)
 
   def StartMergeTaskStorage(self, task):
-    """Starts a merge of a task storage with the session storage.
+    """Starts a merge of a task store with the session storage.
 
     Args:
       task (Task): task.
@@ -1058,10 +968,11 @@ class StorageFileWriter(interface.StorageWriter):
 
     merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
 
-    if not os.path.isfile(merge_storage_file_path):
+    if (task.storage_format == definitions.STORAGE_FORMAT_SQLITE and not
+        os.path.isfile(merge_storage_file_path)):
       raise IOError('Merge task storage path is not a file.')
 
-    return self._CreateTaskStorageMergeReader(merge_storage_file_path)
+    return self._CreateTaskStorageMergeReader(task)
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.

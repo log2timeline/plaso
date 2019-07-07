@@ -210,11 +210,37 @@ class FakeStorageWriter(interface.StorageWriter):
     self._warnings.append(warning)
     self.number_of_warnings += 1
 
-  def CreateTaskStorage(self, task):
+  def CheckTaskReadyForMerge(self, task):
+    """Checks if a task is ready for merging into the session store.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      bool: True if the task is ready to be merged.
+
+    Raises:
+      IOError: if the task storage type is not supported or the storage writer
+          for the task does not exist.
+      OSError: if the task storage type is not supported or the storage writer
+          for the task does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    if task.identifier not in self._task_storage_writers:
+      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
+          task.identifier))
+
+    # For the fake storage tasks are always ready to be merged.
+    return True
+
+  def CreateTaskStorage(self, task, task_storage_format):
     """Creates a task storage.
 
     Args:
       task (Task): task.
+      task_storage_format (str): storage format to store task results.
 
     Returns:
       FakeStorageWriter: storage writer.

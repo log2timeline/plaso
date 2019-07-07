@@ -614,15 +614,18 @@ class PinfoTool(
     Args:
       storage_reader (StorageReader): storage reader.
     """
+    storage_type = storage_reader.GetStorageType()
+    serialization_format = storage_reader.GetSerializationFormat()
+    format_version = storage_reader.GetFormatVersion()
+
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Plaso Storage Information')
     table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
-    table_view.AddRow(['Format version', storage_reader.format_version])
-    table_view.AddRow(
-        ['Serialization format', storage_reader.serialization_format])
+    table_view.AddRow(['Format version', format_version])
+    table_view.AddRow(['Serialization format', serialization_format])
     table_view.Write(self._output_writer)
 
-    if storage_reader.storage_type == definitions.STORAGE_TYPE_SESSION:
+    if storage_type == definitions.STORAGE_TYPE_SESSION:
       self._PrintSessionsOverview(storage_reader)
       self._PrintSessionsDetails(storage_reader)
 
@@ -653,7 +656,7 @@ class PinfoTool(
 
       self._PrintAnalysisReportsDetails(storage_reader)
 
-    elif storage_reader.storage_type == definitions.STORAGE_TYPE_TASK:
+    elif storage_type == definitions.STORAGE_TYPE_TASK:
       self._PrintTasksInformation(storage_reader)
 
   def _PrintStorageInformationAsJSON(self, storage_reader):

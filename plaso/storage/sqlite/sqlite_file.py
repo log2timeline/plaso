@@ -7,12 +7,7 @@ import os
 import sqlite3
 import zlib
 
-from plaso.containers import artifacts
-from plaso.containers import event_sources
-from plaso.containers import events
-from plaso.containers import reports
 from plaso.containers import sessions
-from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import event_heaps
@@ -36,39 +31,11 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   # is able to read.
   _COMPATIBLE_FORMAT_VERSION = 20170707
 
-  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_ERROR = warnings.ExtractionError.CONTAINER_TYPE
-  _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
-  _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
-      artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
-  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
-
-  _CONTAINER_TYPES = (
-      _CONTAINER_TYPE_ANALYSIS_REPORT,
-      _CONTAINER_TYPE_EXTRACTION_ERROR,
-      _CONTAINER_TYPE_EXTRACTION_WARNING,
-      _CONTAINER_TYPE_EVENT,
-      _CONTAINER_TYPE_EVENT_DATA,
-      _CONTAINER_TYPE_EVENT_SOURCE,
-      _CONTAINER_TYPE_EVENT_TAG,
-      _CONTAINER_TYPE_SESSION_COMPLETION,
-      _CONTAINER_TYPE_SESSION_START,
-      _CONTAINER_TYPE_SYSTEM_CONFIGURATION,
-      _CONTAINER_TYPE_TASK_COMPLETION,
-      _CONTAINER_TYPE_TASK_START)
-
   # Container types that are referenced from other container types.
   _REFERENCED_CONTAINER_TYPES = (
-      _CONTAINER_TYPE_EVENT,
-      _CONTAINER_TYPE_EVENT_DATA,
-      _CONTAINER_TYPE_EVENT_SOURCE)
+      file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT,
+      file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT_DATA,
+      file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT_SOURCE)
 
   _CREATE_METADATA_TABLE_QUERY = (
       'CREATE TABLE metadata (key TEXT, value TEXT);')
@@ -129,12 +96,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
     self.storage_type = storage_type
 
-  def _AddAttributeContainer(self, container_type, attribute_container):
+  def _AddAttributeContainer(self, container_type, container):
     """Adds an attribute container.
 
     Args:
       container_type (str): attribute container type.
-      attribute_container (AttributeContainer): attribute container.
+      container (AttributeContainer): attribute container.
 
     Raises:
       IOError: if the attribute container cannot be serialized.
@@ -144,9 +111,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     identifier = identifiers.SQLTableIdentifier(
         container_type, container_list.next_sequence_number + 1)
-    attribute_container.SetIdentifier(identifier)
+    container.SetIdentifier(identifier)
 
-    serialized_data = self._SerializeAttributeContainer(attribute_container)
+    serialized_data = self._SerializeAttributeContainer(container)
 
     container_list.PushAttributeContainer(serialized_data)
 
@@ -230,7 +197,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       raise IOError('Unsupported storage type: {0:s}'.format(
           storage_type))
 
-  def _CountStoredAttributeContainers(self, container_type):
+  def _GetNumberOfAttributeContainers(self, container_type):
     """Counts the number of attribute containers of the given type.
 
     Args:
@@ -259,6 +226,27 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       return 0
 
     return row[0] or 0
+
+  def _GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves the container with a specific identifier.
+
+    Args:
+      container_type (str): container type.
+      identifier (SQLTableIdentifier): event data identifier.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      OSError: if an invalid identifier is provided.
+      IOError: if an invalid identifier is provided.
+    """
+    if not isinstance(identifier, identifiers.SQLTableIdentifier):
+      raise IOError('Unsupported event data identifier type: {0:s}'.format(
+          type(identifier)))
+
+    return self._GetAttributeContainerByIndex(
+        container_type, identifier.row_identifier - 1)
 
   def _GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
@@ -303,7 +291,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       attribute_container.SetIdentifier(identifier)
       return attribute_container
 
-    count = self._CountStoredAttributeContainers(container_type)
+    count = self._GetNumberOfAttributeContainers(container_type)
     index -= count
 
     serialized_data = self._GetSerializedAttributeContainerByIndex(
@@ -320,6 +308,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   # TODO: determine if this method should account for non-stored attribute
   # containers or that it is better to rename the method to
   # _GetStoredAttributeContainers.
+  # This method has sqlite-specific arguments for filtering and sorting.
+  # pylint: disable=arguments-differ
   def _GetAttributeContainers(
       self, container_type, filter_expression=None, order_by=None):
     """Retrieves a specific type of stored attribute containers.
@@ -384,7 +374,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       bool: True if the store contains the specified type of attribute
           containers.
     """
-    count = self._CountStoredAttributeContainers(container_type)
+    count = self._GetNumberOfAttributeContainers(container_type)
     return count > 0
 
   def _HasTable(self, table_name):
@@ -542,35 +532,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     value = self.storage_type
     self._cursor.execute(query, (key, value))
 
-  def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report.
-
-    Args:
-      analysis_report (AnalysisReport): analysis report.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    self._WriteAttributeContainer(analysis_report)
-
-  def AddWarning(self, warning):
-    """Adds an warning.
-
-    Args:
-      warning (ExtractionWarning): warning.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EXTRACTION_WARNING, warning)
-
   def AddEvent(self, event):
     """Adds an event.
 
@@ -597,35 +558,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     self._AddSerializedEvent(event)
 
-  def AddEventData(self, event_data):
-    """Adds event data.
-
-    Args:
-      event_data (EventData): event data.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_DATA, event_data)
-
-  def AddEventSource(self, event_source):
-    """Adds an event source.
-
-    Args:
-      event_source (EventSource): event source.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EVENT_SOURCE, event_source)
-
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
@@ -648,23 +580,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     event_tag.event_row_identifier = event_identifier.row_identifier
 
     self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
-
-  def AddEventTags(self, event_tags):
-    """Adds event tags.
-
-    Args:
-      event_tags (list[EventTag]): event tags.
-
-    Raises:
-      IOError: when the storage file is closed or read-only or
-          if the event tags cannot be serialized.
-      OSError: when the storage file is closed or read-only or
-          if the event tags cannot be serialized.
-    """
-    self._RaiseIfNotWritable()
-
-    for event_tag in event_tags:
-      self.AddEventTag(event_tag)
 
   @classmethod
   def CheckSupportedFormat(cls, path, check_readable_only=False):
@@ -702,7 +617,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     return result
 
   def Close(self):
-    """Closes the storage.
+    """Closes the file.
 
     Raises:
       IOError: if the storage file is already closed.
@@ -712,6 +627,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       raise IOError('Storage file already closed.')
 
     if not self._read_only:
+      self._WriteSerializedAttributeContainerList(
+          self._CONTAINER_TYPE_ANALYSIS_REPORT)
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EVENT_SOURCE)
       self._WriteSerializedAttributeContainerList(
@@ -731,14 +648,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       self._cursor = None
 
     self._is_open = False
-
-  def GetAnalysisReports(self):
-    """Retrieves the analysis reports.
-
-    Returns:
-      generator(AnalysisReport): analysis report generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
   def GetWarnings(self):
     """Retrieves the warnings.
@@ -773,7 +682,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   def GetEvents(self):
     """Retrieves the events.
 
-    Yield:
+    Yields:
       EventObject: event.
     """
     for event in self._GetAttributeContainers('event'):
@@ -785,26 +694,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         del event.event_data_row_identifier
 
       yield event
-
-  def GetEventData(self):
-    """Retrieves the event data.
-
-    Returns:
-      generator(EventData): event data generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA)
-
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
-
-    Args:
-      identifier (SQLTableIdentifier): event data identifier.
-
-    Returns:
-      EventData: event data or None if not available.
-    """
-    return self._GetAttributeContainerByIndex(
-        self._CONTAINER_TYPE_EVENT_DATA, identifier.row_identifier - 1)
 
   def GetEventSourceByIndex(self, index):
     """Retrieves a specific event source.
@@ -818,14 +707,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     return self._GetAttributeContainerByIndex(
         self._CONTAINER_TYPE_EVENT_SOURCE, index)
 
-  def GetEventSources(self):
-    """Retrieves the event sources.
-
-    Returns:
-      generator(EventSource): event source generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_SOURCE)
-
   def GetEventTagByIdentifier(self, identifier):
     """Retrieves a specific event tag.
 
@@ -834,7 +715,15 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     Returns:
       EventTag: event tag or None if not available.
+
+    Raises:
+      OSError: if an invalid identifier is provided.
+      IOError: if an invalid identifier is provided.
     """
+    if not isinstance(identifier, identifiers.SQLTableIdentifier):
+      raise IOError('Unsupported event data identifier type: {0:s}'.format(
+          type(identifier)))
+
     event_tag = self._GetAttributeContainerByIndex(
         self._CONTAINER_TYPE_EVENT_TAG, identifier.row_identifier - 1)
     if event_tag:
@@ -862,22 +751,13 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
       yield event_tag
 
-  def GetNumberOfAnalysisReports(self):
-    """Retrieves the number analysis reports.
-
-    Returns:
-      int: number of analysis reports.
-    """
-    return self._CountStoredAttributeContainers(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
   def GetNumberOfEventSources(self):
     """Retrieves the number event sources.
 
     Returns:
       int: number of event sources.
     """
-    number_of_event_sources = self._CountStoredAttributeContainers(
+    number_of_event_sources = self._GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
 
     number_of_event_sources += self._GetNumberOfSerializedAttributeContainers(
@@ -955,37 +835,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
       yield event
 
-  def HasAnalysisReports(self):
-    """Determines if a store contains analysis reports.
-
-    Returns:
-      bool: True if the store contains analysis reports.
-    """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
-  def HasWarnings(self):
-    """Determines if a store contains extraction warnings.
-
-    Returns:
-      bool: True if the store contains extraction warnings.
-    """
-    # To support older storage versions, check for the now deprecated
-    # extraction errors.
-    has_errors = self._HasAttributeContainers(
-        self._CONTAINER_TYPE_EXTRACTION_ERROR)
-    if has_errors:
-      return True
-
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
-  def HasEventTags(self):
-    """Determines if a store contains event tags.
-
-    Returns:
-      bool: True if the store contains event tags.
-    """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
-
   # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
     """Opens the storage.
@@ -1052,10 +901,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
       self._connection.commit()
 
-    last_session_start = self._CountStoredAttributeContainers(
+    last_session_start = self._GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_SESSION_START)
 
-    last_session_completion = self._CountStoredAttributeContainers(
+    last_session_completion = self._GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_SESSION_COMPLETION)
 
     # Initialize next_sequence_number based on the file contents so that
@@ -1063,112 +912,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     for container_type in self._REFERENCED_CONTAINER_TYPES:
       container_list = self._GetSerializedAttributeContainerList(container_type)
       container_list.next_sequence_number = (
-          self._CountStoredAttributeContainers(container_type))
+          self._GetNumberOfAttributeContainers(container_type))
 
     # TODO: handle open sessions.
     if last_session_start != last_session_completion:
       logger.warning('Detected unclosed session.')
 
     self._last_session = last_session_completion
-
-  def ReadPreprocessingInformation(self, knowledge_base):
-    """Reads preprocessing information.
-
-    The preprocessing information contains the system configuration which
-    contains information about various system specific configuration data,
-    for example the user accounts.
-
-    Args:
-      knowledge_base (KnowledgeBase): is used to store the preprocessing
-          information.
-    """
-    generator = self._GetAttributeContainers(
-        self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
-
-    session_identifier = None
-    for stream_number, system_configuration in enumerate(generator):
-      session_start = self._GetAttributeContainerByIndex(
-          self._CONTAINER_TYPE_SESSION_START, stream_number)
-      session_identifier = session_start.identifier
-
-      knowledge_base.ReadSystemConfigurationArtifact(
-          system_configuration, session_identifier=session_identifier)
-
-    knowledge_base.SetActiveSession(session_identifier)
-
-  def WritePreprocessingInformation(self, knowledge_base):
-    """Writes preprocessing information.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains the preprocessing information.
-
-    Raises:
-      IOError: if the storage type does not support writing preprocess
-          information or the storage file is closed or read-only.
-      OSError: if the storage type does not support writing preprocess
-          information or the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Preprocess information not supported by storage type.')
-
-    system_configuration = knowledge_base.GetSystemConfigurationArtifact()
-
-    self._WriteAttributeContainer(system_configuration)
-
-  def WriteSessionCompletion(self, session_completion):
-    """Writes session completion information.
-
-    Args:
-      session_completion (SessionCompletion): session completion information.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    self._WriteAttributeContainer(session_completion)
-
-  def WriteSessionStart(self, session_start):
-    """Writes session start information.
-
-    Args:
-      session_start (SessionStart): session start information.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    self._WriteAttributeContainer(session_start)
-
-  def WriteTaskCompletion(self, task_completion):
-    """Writes task completion information.
-
-    Args:
-      task_completion (TaskCompletion): task completion information.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    self._WriteAttributeContainer(task_completion)
-
-  def WriteTaskStart(self, task_start):
-    """Writes task start information.
-
-    Args:
-      task_start (TaskStart): task start information.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    self._WriteAttributeContainer(task_start)
