@@ -232,7 +232,7 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
           task.identifier))
 
-    # Tasks are always ready to be merged.
+    # For the fake storage tasks are always ready to be merged.
     return True
 
   def CreateTaskStorage(self, task, task_storage_format):
