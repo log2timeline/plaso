@@ -129,8 +129,8 @@ class ExtractionTool(
     if invalid_parser_elements:
       invalid_parser_names_string = ','.join(invalid_parser_elements)
       raise errors.BadConfigOption(
-          'Unknown element(s): "{0:s}" in parser filter '
-          'expression: {1:s}'.format(
+          'Unknown parser or plugin names in element(s): "{0:s}" of '
+          'parser filter expression: {1:s}'.format(
               invalid_parser_names_string, parser_filter_expression))
 
     # TODO: pass preferred_encoding.
