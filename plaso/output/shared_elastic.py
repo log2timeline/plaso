@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Shared code for Elasticsearch based output modules."""
+"""Shared functionality for Elasticsearch output modules."""
 
 from __future__ import unicode_literals
 
