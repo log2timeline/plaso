@@ -33,9 +33,9 @@ optional arguments:
                         with an exclamation mark to exclude the item. Matching
                         is case insensitive. Examples: "linux,!bash_history"
                         enables the linux preset, without the bash_history
-                        parser. "sqlite, !sqlite/chrome_history" enables all
+                        parser. "sqlite,!sqlite/chrome_history" enables all
                         sqlite plugins except for chrome_history".
-                        win7,syslog" enables the win7 preset, as well as the
+                        "win7,syslog" enables the win7 preset, as well as the
                         syslog parser. Use "--parsers list" or "--info" to
                         list available presets, parsers and plugins.
 """
