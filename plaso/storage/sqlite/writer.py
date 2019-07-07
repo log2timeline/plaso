@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Storage writer for SQLite storage files."""
+
 import os
 
 from plaso.lib import definitions
