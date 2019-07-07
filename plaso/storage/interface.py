@@ -54,7 +54,6 @@ class BaseStore(object):
       _CONTAINER_TYPE_TASK_COMPLETION,
       _CONTAINER_TYPE_TASK_START)
 
-
   def __init__(self):
     """Initializes a store."""
     super(BaseStore, self).__init__()
