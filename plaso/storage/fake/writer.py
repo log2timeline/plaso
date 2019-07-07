@@ -211,7 +211,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self.number_of_warnings += 1
 
   def CheckTaskReadyForMerge(self, task):
-    """Checks if a task is ready for merging into the store.
+    """Checks if a task is ready for merging into the session store.
 
     Args:
       task (Task): task.
