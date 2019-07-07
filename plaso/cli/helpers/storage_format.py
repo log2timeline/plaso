@@ -59,7 +59,8 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
-      BadConfigOption: if the storage format is not defined or supported.
+      BadConfigOption: if the storage format or task storage is not defined
+          or supported.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
