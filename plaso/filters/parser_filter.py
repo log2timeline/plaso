@@ -8,14 +8,17 @@ class ParserFilterExpressionHelper(object):
   """Helper for parser and plugin filter expressions.
 
   A parser filter expression is a comma separated value string that denotes
-  a list of parser names to include and/or exclude. Each entry can have
-  the value of:
+  which parsers and plugins should be used. Each element can contain either:
 
-  * An exact match of a preset, which is a predefined list of parsers
-    and/or plugins (see data/presets.yaml for the list of predefined
-    presets).
-  * A name of a single parser (case insensitive), such as msiecf.
-  * A glob name for a single parser, such as '*msie*' (case insensitive).
+  * The name of a preset (case sensitive), which is a predefined list of parsers
+    and/or plugins (see data/presets.yaml for the default presets).
+  * The name of a parser (case insensitive), for example 'msiecf'.
+  * The name of a plugin, prefixed with the parser name and a '/', for example
+    'sqlite/chrome_history'.
+
+  If the element begins with an exclamation mark ('!') the item will be
+  excluded from the set of enabled parsers and plugins, otherwise the element
+  will be included.
   """
 
   def _GetParserAndPluginsList(self, parsers_and_plugins):
@@ -47,15 +50,16 @@ class ParserFilterExpressionHelper(object):
     Returns:
       str: a parser filter expression.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+        A parser filter expression is a comma separated value string that
+        denotes which parsers should be used. Each element can contain either:
 
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+        * The name of a parser (case insensitive), for example 'msiecf'.
+        * The name of a plugin, prefixed with the parser name and a '/', for
+          example 'sqlite/chrome_history'.
+
+        If the element begins with an exclamation mark ('!') the item will be
+        excluded from the set of enabled parsers and plugins, otherwise the
+        element will be included.
 
     Raises:
       RuntimeError: if a specific plugin is excluded but no corresponding parser
@@ -154,15 +158,20 @@ class ParserFilterExpressionHelper(object):
       expression (str): parser filter expression, where None represents all
           parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. Each element can be
+          either:
 
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          * The name of a preset (case sensitive), which is a predefined list of
+            parsers and/or plugins (see data/presets.yaml for the default
+            presets).
+          * The name of a parser (case insensitive), for example 'msiecf'.
+          * The name of a plugin, prefixed with the parser name and a '/', for
+            example 'sqlite/chrome_history'.
+
+          If the element begins with an exclamation mark ('!') the item will
+          be excluded from the set of enabled parsers and plugins, otherwise
+          the element will be included.
 
     Returns:
       str: a parser filter expression where presets have been expanded or None
@@ -181,33 +190,43 @@ class ParserFilterExpressionHelper(object):
     return self._JoinExpression(excludes, includes)
 
   def SplitExpression(self, expression):
-    """Determines the excluded and included parsers from an expression string.
+    """Determines the excluded and included elements in an expression string.
+
+    This method will not expand presets, and preset names are treated like
+    parser names.
 
     Args:
       expression (str): parser filter expression, where None represents all
           parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. Each element can be
+          either:
 
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          * The name of a preset (case sensitive), which is a predefined list of
+            parsers and/or plugins (see data/presets.yaml for the default
+            presets).
+          * The name of a parser (case insensitive), for example 'msiecf'.
+          * The name of a plugin, prefixed with the parser name and a '/', for
+            example 'sqlite/chrome_history'.
+
+          If the element begins with an exclamation mark ('!') the item will
+          be excluded from the set of enabled parsers and plugins, otherwise
+          the element will be included.
 
     Returns:
       tuple: contains:
 
-        excludes (dict[str, set[str]]): excluded parsers and plugins,
-            the dictionary contains the names of plugins per parser name,
-            where '*' represents the parser itself and all its plugins.
-            A parser name can also be the name of a preset.
-        includes (dict[str, set[str]]): included parsers and plugins,
-            the dictionary contains the names of plugins per parser name,
-            where '*' represents the parser itself and all its plugins.
-            A parser name can also be the name of a preset.
+        excludes (dict[str, set[str]]): excluded presets, plugins and presets.
+            Dictionary keys are preset and/or parser names, and values are
+            sets containing plugin names to enable for a parser or an asterisk
+            character ('*') to represet all plugins, or that no specific
+            plugins were specified.
+        includes (dict[str, set[str]]): included presets, parsers and plugins.
+            Dictionary keys are preset and/or parser names, and values are
+            sets containing plugin names to enable for a parser or an asterisk
+            character ('*') to represet all plugins, or that no specific
+            plugins were specified.
     """
     if not expression:
       return {}, {}

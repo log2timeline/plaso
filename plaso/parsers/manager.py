@@ -76,13 +76,12 @@ class ParsersManager(object):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          This function does not support presets, and requires a parser filter
+          expression where presets have been expanded.
 
     Returns:
       tuple: containing:
@@ -134,13 +133,12 @@ class ParsersManager(object):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
 
     Returns:
       list[str]: parser and parser plugin names.
@@ -165,13 +163,12 @@ class ParsersManager(object):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
 
     Returns:
       list[tuple[str, str]]: pairs of parser plugin names and descriptions.
@@ -210,13 +207,12 @@ class ParsersManager(object):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
 
     Returns:
       dict[str, BaseParser]: parsers per name.
@@ -250,30 +246,16 @@ class ParsersManager(object):
   def _GetParsers(cls, parser_filter_expression=None):
     """Retrieves the registered parsers and plugins.
 
-    Retrieves a dictionary of all registered parsers and associated plugins
-    from a parser filter string. The filter string can contain direct names of
-    parsers or plugins. The filter string can also negate selection if prepended
-    with an exclamation point, such as: "foo,!foo/bar" would include parser foo
-    but not include plugin bar. A list of specific included and excluded
-    plugins is also passed to each parser's class.
-
-    The three types of entries in the filter string:
-     * name of a parser: this would be the exact name of a single parser to
-       include (or exclude), such as foo;
-     * name of a plugin: if a plugin name is included the parent parser will be
-       included in the list of registered parsers;
-
     Args:
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
 
     Yields:
       tuple: containing:
