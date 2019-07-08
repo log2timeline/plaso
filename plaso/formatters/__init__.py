@@ -105,6 +105,7 @@ from plaso.formatters import usbstor
 from plaso.formatters import userassist
 from plaso.formatters import utmp
 from plaso.formatters import utmpx
+from plaso.formatters import vsftpd
 from plaso.formatters import windows
 from plaso.formatters import windows_timeline
 from plaso.formatters import windows_version

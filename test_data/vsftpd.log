@@ -1,0 +1,25 @@
+Mon Jun  6 18:43:28 2016 [pid 2] CONNECT: Client "192.168.1.9"
+Mon Jun  6 18:43:32 2016 [pid 1] [jean] OK LOGIN: Client "192.168.1.9"
+Mon Jun  6 18:43:41 2016 [pid 3] [jean] OK MKDIR: Client "192.168.1.9", "/home/jean/trains"
+Mon Jun  6 18:43:59 2016 [pid 3] [jean] OK UPLOAD: Client "192.168.1.9", "/home/jean/trains/Caitlinpromo2.png", 1884648 bytes, 41264.44Kbyte/sec
+Mon Jun  6 18:43:59 2016 [pid 3] [jean] OK UPLOAD: Client "192.168.1.9", "/home/jean/trains/Thomas_142553k.jpg", 40120 bytes, 7308.28Kbyte/sec
+Mon Jun  6 18:43:59 2016 [pid 3] [jean] OK UPLOAD: Client "192.168.1.9", "/home/jean/trains/Thomas_et_ses_amis.JPG", 7664 bytes, 1826.35Kbyte/sec
+Mon Jun  6 18:43:59 2016 [pid 3] [jean] OK UPLOAD: Client "192.168.1.9", "/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", 49283 bytes, 15878.56Kbyte/sec
+Mon Jun  6 18:44:19 2016 [pid 3] [jean] FAIL DOWNLOAD: Client "192.168.1.9", "/home/jean/trains/Thomas*", 0.00Kbyte/sec
+Mon Jun  6 18:44:25 2016 [pid 3] [jean] OK DOWNLOAD: Client "192.168.1.9", "/home/jean/trains/Thomas_142553k.jpg", 40120 bytes, 14548.71Kbyte/sec
+Mon Jun  6 18:44:25 2016 [pid 3] [jean] OK DOWNLOAD: Client "192.168.1.9", "/home/jean/trains/Thomas_et_ses_amis.JPG", 7664 bytes, 4060.97Kbyte/sec
+Fri Jun 10 14:24:13 2016 [pid 2] CONNECT: Client "192.168.1.7"
+Fri Jun 10 14:24:13 2016 [pid 1] [jean] OK LOGIN: Client "192.168.1.7"
+Fri Jun 10 14:24:19 2016 [pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", "/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", 49283 bytes, 931.38Kbyte/sec
+Fri Jun 10 14:28:50 2016 [pid 2] CONNECT: Client "192.168.1.5"
+Fri Jun 10 14:28:50 2016 [pid 1] [ftp] OK LOGIN: Client "192.168.1.5", anon password "n"
+Fri Jun 10 14:28:50 2016 [pid 3] [ftp] OK UPLOAD: Client "192.168.1.5", "/photos/freedom_for_cat.jpg", 45019 bytes, 10048.88Kbyte/sec
+Fri Jun 10 14:28:50 2016 [pid 3] [ftp] OK UPLOAD: Client "192.168.1.5", "/photos/hack-me.jpg", 135044 bytes, 24083.07Kbyte/sec
+Fri Jun 10 14:28:50 2016 [pid 3] [ftp] OK UPLOAD: Client "192.168.1.5", "/photos/hacker_meow_in_action.png", 217591 bytes, 19888.73Kbyte/sec
+Fri Jun 10 14:28:50 2016 [pid 3] [ftp] OK UPLOAD: Client "192.168.1.5", "/photos/hackykitty.jpg", 58549 bytes, 10371.26Kbyte/sec
+Fri Jun 10 14:28:50 2016 [pid 3] [ftp] OK UPLOAD: Client "192.168.1.5", "/photos/kittylogger.jpg", 17635 bytes, 4590.00Kbyte/sec
+Fri Jun 10 14:28:50 2016 [pid 3] [ftp] OK UPLOAD: Client "192.168.1.5", "/photos/meow_wins.jpg", 12503 bytes, 4025.70Kbyte/sec
+Fri Jun 10 14:28:50 2016 [pid 3] [ftp] OK UPLOAD: Client "192.168.1.5", "/photos/we_will-we_will-hack_you!.jpg", 263728 bytes, 27782.83Kbyte/sec
+Fri Jun 10 14:31:00 2016 [pid 2] CONNECT: Client "192.168.1.7"
+Fri Jun 10 14:31:00 2016 [pid 1] [jean] OK LOGIN: Client "192.168.1.7"
+Fri Jun 10 14:31:12 2016 [pid 3] [jean] FAIL DOWNLOAD: Client "192.168.1.7", "/home/jean/photos/we_will-we_will-hack_you!.jpg", 0.00Kbyte/sec
