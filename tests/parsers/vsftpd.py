@@ -29,7 +29,10 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2016-06-10 14:24:19.000000')
 
-    expected_message = '[pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", "/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", 49283 bytes, 931.38Kbyte/sec'
+    expected_message = (
+        '[pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", '
+        '"/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", '
+        '49283 bytes, 931.38Kbyte/sec')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
