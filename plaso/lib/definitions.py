@@ -96,10 +96,10 @@ TASK_STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE])
 DEFAULT_STORAGE_FORMAT = STORAGE_FORMAT_SQLITE
 
 # The session storage contains the results of one or more sessions.
-# A typical session is e.g. a single run of a tool (log2timeline.py).
+# A typical session is a single run of a tool (log2timeline.py).
 # The task storage contains the results of one or more tasks. Tasks
-# are used to split work within a session. A typical task is e.g.
-# a single run of a worker process.
+# are used to split work within a session. A typical task is a single
+# run of a worker process.
 STORAGE_TYPE_SESSION = 'session'
 STORAGE_TYPE_TASK = 'task'
 

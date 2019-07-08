@@ -185,7 +185,8 @@ class SingleProcessEngine(engine.BaseEngine):
     """Updates the processing status.
 
     Args:
-      status (str): human readable status of the processing e.g. 'Idle'.
+      status (str): human readable status indication such as "Hashing" or
+          "Idle".
       display_name (str): human readable of the file entry currently being
           processed.
       number_of_consumed_sources (int): number of consumed sources.

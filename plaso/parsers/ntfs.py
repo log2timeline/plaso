@@ -26,13 +26,13 @@ class NTFSFileStatEventData(events.EventData):
   """NTFS file system stat event data.
 
   Attributes:
-    attribute_type (int): attribute type e.g. 0x00000030 which represents
-        $FILE_NAME.
+    attribute_type (int): attribute type for example "0x00000030", which
+        represents "$FILE_NAME".
     file_attribute_flags (int): NTFS file attribute flags.
     file_reference (int): NTFS file reference.
     file_system_type (str): file system type.
     is_allocated (bool): True if the MFT entry is allocated (marked as in use).
-    name (str): name associated with the stat event, e.g. that of
+    name (str): name associated with the stat event, for example that of
         a $FILE_NAME attribute or None if not available.
     parent_file_reference (int): NTFS file reference of the parent.
   """

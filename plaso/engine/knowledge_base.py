@@ -3,8 +3,8 @@
 
 The knowledge base is filled by user provided input and the pre-processing
 phase. It is intended to provide successive phases, like the parsing and
-analysis phases, with essential information like e.g. the timezone and
-codepage of the source data.
+analysis phases, with essential information like the timezone and codepage
+of the source data.
 """
 
 from __future__ import unicode_literals

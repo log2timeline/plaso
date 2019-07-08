@@ -562,7 +562,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           # TODO: find another way to do this that doesn't use an undocumented
           # API.
           pattern = codecs.escape_decode(pattern)[0]
-        # ValueError is raised e.g. when the patterns contains "\xg1".
+        # ValueError is raised when the patterns contains invalid escaped
+        # characters, such as "\xg1".
         except ValueError:
           logger.error(
               '[skipping] invalid pattern in line: {0:s}'.format(line))
