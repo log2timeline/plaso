@@ -33,7 +33,7 @@ class VsftpdEventData(events.EventData):
 
 
 class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses the vsftpd Log."""
+  """Parses the vsftpd log."""
 
   NAME = 'vsftpd'
   DESCRIPTION = 'Parser for vsftpd log files.'
@@ -126,7 +126,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
     self._ParseLogLine(parser_mediator, structure)
 
   def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a Sophos Anti-Virus log file.
+    """Verify that this file is a vsftpd log file.
 
     Args:
         parser_mediator (ParserMediator): mediates interactions between parsers
@@ -139,6 +139,10 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
+      logger.debug('Not a vsftpd log file')
+      return False
+
+    if (' [pid ' not in line) or (': Client ' not in line):
       logger.debug('Not a vsftpd log file')
       return False
 
