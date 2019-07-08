@@ -71,6 +71,8 @@ def Main():
     return False
 
   except (errors.BadConfigOption, errors.SourceScannerError) as exception:
+    # Display message on stdout as well as the log file.
+    print(exception)
     logging.error(exception)
     return False
 
