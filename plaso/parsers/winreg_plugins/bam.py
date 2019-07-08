@@ -36,6 +36,8 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
     dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Background Activity Moderator data Windows Registry plugin."""
 
+  # pylint: disable=useless-super-delegation
+
   NAME = 'bam'
   DESCRIPTION = 'Parser for Background Activity Moderator Registry data.'
 
