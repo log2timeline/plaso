@@ -20,7 +20,7 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
   """
 
   def testParseDevLog(self):
-    """Tests the Parse function on dev log."""
+    """Tests the Parse function on setupapi.dev.log."""
     parser = setupapi.SetupapiLogParser()
     storage_writer = self._ParseFile(['setupapi.dev.log'], parser)
 
@@ -73,7 +73,7 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   def testParseSetupLog(self):
-    """Tests the Parse function on setup log."""
+    """Tests the Parse function on setupapi.setup.log."""
     parser = setupapi.SetupapiLogParser()
     storage_writer = self._ParseFile(['setupapi.setup.log'], parser)
 

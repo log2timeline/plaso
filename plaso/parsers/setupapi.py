@@ -21,9 +21,7 @@ class SetupapiLogEventData(events.EventData):
 
   Attributes:
     entry_type (str): log entry type such as "Device Install".
-    section_start (str): date and time of the start of the log entry event.
-    # message (str): contents of the log entry.
-    # section_end (str): date and time of the start of the log entry event.
+    end_time (str): date and time of the start of the log entry event.
     exit_status (str): the exit status of the entry.
   """
 
@@ -33,9 +31,8 @@ class SetupapiLogEventData(events.EventData):
     """Initializes event data."""
     super(SetupapiLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_type = None
-    # TODO: Add fields
-    # self.message = None
-    # self.section_end = None
+    # TODO: Parse additional fields from the body setupapi messages
+    self.end_time = None
     self.exit_status = None
 
 
@@ -54,13 +51,18 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
   _SLASH = pyparsing.Literal('/').suppress()
 
   _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
+  _THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
   _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
 
   _SETUPAPI_DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS.setResultsName('year') + _SLASH +
-      _TWO_DIGITS.setResultsName('month') + _SLASH +
-      _TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS
+      _FOUR_DIGITS + _SLASH +
+      _TWO_DIGITS + _SLASH +
+      _TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS +
+      pyparsing.Word('.,', exact=1).suppress() +
+      _THREE_DIGITS
   )
 
   _SETUPAPI_LINE = (
@@ -69,7 +71,8 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.SkipTo('>>>  Section start', include=True).suppress() +
       _SETUPAPI_DATE_TIME.setResultsName('start_time') +
       pyparsing.SkipTo('<<<  Section end ').setResultsName('message') +
-      # _SETUPAPI_DATE_TIME.setResultsName('end_time') +
+      pyparsing.GoToColumn(17) +
+      _SETUPAPI_DATE_TIME.setResultsName('end_time') +
       pyparsing.SkipTo('<<<  [Exit status: ', include=True).suppress() +
       pyparsing.SkipTo(']').setResultsName('exit_status') +
       pyparsing.SkipTo(pyparsing.lineEnd()) +
@@ -78,38 +81,6 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
   LINE_STRUCTURES = [
       ('logline', _SETUPAPI_LINE),
   ]
-
-  def _GetISO8601String(self, structure):
-    """Retrieves an ISO 8601 date time string from the structure.
-
-    Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from a
-          log entry.
-
-    Returns:
-      str: ISO 8601 date time string.
-
-    Raises:
-      ValueError: if the structure cannot be converted into a date time string.
-    """
-    year = self._GetValueFromStructure(structure, 'year')
-    month = self._GetValueFromStructure(structure, 'month')
-    day_of_month = self._GetValueFromStructure(structure, 'day')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
-    microseconds = self._GetValueFromStructure(structure, 'microseconds')
-
-    try:
-      iso8601 = (
-          '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}').format(
-              year, month, day_of_month, hours, minutes, seconds, microseconds)
-    except (TypeError, ValueError) as exception:
-      raise ValueError(
-          'unable to format date time string with error: {0!s}.'.format(
-              exception))
-
-    return iso8601
 
   def _ParseRecordLogline(self, parser_mediator, structure):
     """Parses a logline record structure and produces events.
@@ -120,29 +91,27 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           log entry.
     """
-    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-
     time_elements_structure = self._GetValueFromStructure(
         structure, 'start_time')
     try:
-      datetime_iso8601 = self._GetISO8601String(time_elements_structure)
-      date_time.CopyFromStringISO8601(datetime_iso8601)
-      # Setupapi logs record in local time
-      date_time.is_local_time = True
+      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_structure)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_elements_structure))
       return
+    # Setupapi logs record in local time
+    date_time.is_local_time = True
 
-    # Replace newlines with spaces in structure.message to preserve output.
-    message = self._GetValueFromStructure(structure, 'message')
-    if message:
-      message = message.replace('\n', ' ')
+    # TODO: Fix timezone
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'end_time')
+    end_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+        time_elements_tuple=time_elements_structure)
 
     event_data = SetupapiLogEventData()
     event_data.entry_type = self._GetValueFromStructure(structure, 'entry_type')
-    # event_data.message = self._GetValueFromStructure(structure, 'message')
-    # event_data.section_end = None
+    event_data.end_time = end_time.CopyToDateTimeString()
     event_data.exit_status = self._GetValueFromStructure(
         structure, 'exit_status')
 
@@ -187,16 +156,22 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
       logger.debug('Not a Windows Setupapi log file: {0!s}'.format(exception))
       return False
 
-    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'start_time')
 
-    date_time_string = self._GetValueFromStructure(structure, 'start_time')
     try:
-      datetime_iso8601 = self._GetISO8601String(date_time_string)
-      date_time.CopyFromStringISO8601(datetime_iso8601)
+      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_structure)
     except ValueError as exception:
       logger.debug((
           'Not a Windows Setupapi log file, invalid date/time: {0!s} '
-          'with error: {1!s}').format(date_time_string, exception))
+          'with error: {1!s}').format(time_elements_structure, exception))
+      return False
+
+    if not date_time:
+      logger.debug((
+          'Not a Windows Setupapi log file, '
+          'invalid date/time: {0!s}').format(time_elements_structure))
       return False
 
     return True
