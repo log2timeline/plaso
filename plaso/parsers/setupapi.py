@@ -21,7 +21,7 @@ class SetupapiLogEventData(events.EventData):
 
   Attributes:
     entry_type (str): log entry type such as "Device Install".
-    entry_status (str): the exit status of the entry.
+    entry_status (str): the status of the entry.
   """
 
   DATA_TYPE = 'setupapi:log:line'
