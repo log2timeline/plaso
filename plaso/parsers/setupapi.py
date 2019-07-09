@@ -21,8 +21,7 @@ class SetupapiLogEventData(events.EventData):
 
   Attributes:
     entry_type (str): log entry type such as "Device Install".
-    end_time (str): date and time of the start of the log entry event.
-    exit_status (str): the exit status of the entry.
+    entry_status (str): the exit status of the entry.
   """
 
   DATA_TYPE = 'setupapi:log:line'
@@ -32,8 +31,7 @@ class SetupapiLogEventData(events.EventData):
     super(SetupapiLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_type = None
     # TODO: Parse additional fields from the body of setupapi messages
-    self.end_time = None
-    self.exit_status = None
+    self.entry_status = None
 
 
 class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
@@ -74,7 +72,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.GoToColumn(17) +
       _SETUPAPI_DATE_TIME.setResultsName('end_time') +
       pyparsing.SkipTo('<<<  [Exit status: ', include=True).suppress() +
-      pyparsing.SkipTo(']').setResultsName('exit_status') +
+      pyparsing.SkipTo(']').setResultsName('entry_status') +
       pyparsing.SkipTo(pyparsing.lineEnd()) +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
@@ -91,6 +89,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           log entry.
     """
+    time_zone = parser_mediator.timezone
     time_elements_structure = self._GetValueFromStructure(
         structure, 'start_time')
     try:
@@ -103,25 +102,34 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
           'invalid date time value: {0!s}'.format(time_elements_structure))
       return
 
-    time_zone = parser_mediator.timezone
+    event_data = SetupapiLogEventData()
+    event_data.entry_type = self._GetValueFromStructure(structure, 'entry_type')
+    event_data.entry_status = 'START'
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_START, time_zone=time_zone)
+
+    # Create event for the start of the setupapi section
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    event_data.entry_status = self._GetValueFromStructure(
+        structure, 'entry_status')
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'end_time')
-    # TODO: Convert to UTC
-    end_time = ' '.join((
-        '{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}.{6:03d}'.format(
-            *time_elements_structure),
-        time_zone.zone))
-
-    event_data = SetupapiLogEventData()
-    event_data.entry_type = self._GetValueFromStructure(structure, 'entry_type')
-    event_data.end_time = end_time
-    event_data.exit_status = self._GetValueFromStructure(
-        structure, 'exit_status')
+    try:
+      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_structure)
+      date_time.is_local_time = True
+    except ValueError:
+      parser_mediator.ProduceExtractionWarning(
+          'invalid date time value: {0!s}'.format(time_elements_structure))
+      return
 
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_ADDED, time_zone=time_zone)
+        date_time, definitions.TIME_DESCRIPTION_END, time_zone=time_zone)
 
+    # Create event for the end of the setupapi section
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):

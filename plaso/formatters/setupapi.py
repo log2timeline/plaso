@@ -14,10 +14,14 @@ class SetupapiLogFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       '{entry_type}',
-      '[{exit_status}',
-      '{end_time}]']
+      '{entry_status}']
 
-  FORMAT_STRING_SHORT_PIECES = ['{entry_type}']
+  # Reversing fields for short description to prevent truncating the status
+  FORMAT_STRING_SHORT_PIECES = [
+      '{entry_status}',
+      '{entry_type}']
+
+  FORMAT_STRING_SEPARATOR = ' - '
 
   SOURCE_LONG = 'Windows Setupapi Log'
   SOURCE_SHORT = 'LOG'
