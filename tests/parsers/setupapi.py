@@ -38,39 +38,46 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2016-10-05 11:16:03.747000')
 
     event = events[2]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     self.CheckTimestamp(event.timestamp, '2016-10-05 11:16:16.471000')
 
     expected_message = (
-        'Description: Device Install (Hardware initiated) - SWD\\IP_TUNNEL_VBUS'
-        '\\Teredo_Tunnel_Device | Exit status: SUCCESS')
+        'Device Install (Hardware initiated) - SWD\\IP_TUNNEL_VBUS'
+        '\\Teredo_Tunnel_Device [SUCCESS 2016-10-05 11:16:26.388 UTC]')
     expected_short_message = (
         'Device Install (Hardware initiated) - SWD\\IP_TUNNEL_VBUS'
         '\\Teredo_Tunnel_Device')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[28]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_message = (
-        'Description: Device Install (DiInstallDriver) - C:\\Windows\\System32'
+        'Device Install (DiInstallDriver) - C:\\Windows\\System32'
         '\\DriverStore\\FileRepository\\prnms003.inf_x86_8f17aac186c70ea6'
-        '\\prnms003.inf | Exit status: SUCCESS')
+        '\\prnms003.inf [SUCCESS 2016-10-12 03:36:30.998 UTC]')
     expected_short_message = (
         'Device Install (DiInstallDriver) - C:\\Windows\\System32\\DriverStore'
         '\\FileReposi...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[193]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     self.CheckTimestamp(event.timestamp, '2016-11-22 23:50:30.938000')
 
     expected_message = (
-        'Description: Device Install (Hardware initiated) - SWD\\WPDBUSENUM'
+        'Device Install (Hardware initiated) - SWD\\WPDBUSENUM'
         '\\_??_USBSTOR#Disk&Ven_Generic&Prod_Flash_Disk&Rev_8.07#99E2116A&0'
-        '#{53f56307-b6bf-11d0-94f2-00a0c91efb8b} | Exit status: SUCCESS')
+        '#{53f56307-b6bf-11d0-94f2-00a0c91efb8b} '
+        '[SUCCESS 2016-11-22 23:50:58.236 UTC]')
     expected_short_message = (
         'Device Install (Hardware initiated) - SWD\\WPDBUSENUM'
         '\\_??_USBSTOR#Disk&Ven_Gen...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseSetupLog(self):
     """Tests the Parse function on setupapi.setup.log."""
@@ -91,37 +98,45 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2015-11-22 17:53:28.973000')
 
     event = events[2]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     self.CheckTimestamp(event.timestamp, '2015-11-22 17:53:29.305000')
 
     expected_message = (
-        'Description: Setup Plug and Play Device Install '
-        '| Exit status: SUCCESS')
+        'Setup Plug and Play Device Install '
+        '[SUCCESS 2015-11-22 17:53:51.832 UTC]')
     expected_short_message = ('Setup Plug and Play Device Install')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[7]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
-        'Description: Setup online Device Install (Hardware initiated) - SW'
+        'Setup online Device Install (Hardware initiated) - SW'
         '\\{97ebaacc-95bd-11d0-a3ea-00a0c9223196}'
-        '\\{53172480-4791-11D0-A5D6-28DB04C10000} | Exit status: SUCCESS')
+        '\\{53172480-4791-11D0-A5D6-28DB04C10000} '
+        '[SUCCESS 2015-11-22 17:53:48.461 UTC]')
     expected_short_message = (
         'Setup online Device Install (Hardware initiated) - SW'
         '\\{97ebaacc-95bd-11d0-a3e...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[15]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     self.CheckTimestamp(event.timestamp, '2015-11-22 17:57:17.502000')
 
     expected_message = (
-        'Description: Setup Import Driver Package - C:\\Windows\\system32'
+        'Setup Import Driver Package - C:\\Windows\\system32'
         '\\spool\\tools\\Microsoft XPS Document Writer\\prnms001.Inf '
-        '| Exit status: SUCCESS')
+        '[SUCCESS 2015-11-22 17:57:17.704 UTC]')
     expected_short_message = (
         'Setup Import Driver Package - C:\\Windows\\system32\\spool'
         '\\tools\\Microsoft XPS D...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

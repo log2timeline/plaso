@@ -31,7 +31,7 @@ class SetupapiLogEventData(events.EventData):
     """Initializes event data."""
     super(SetupapiLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_type = None
-    # TODO: Parse additional fields from the body setupapi messages
+    # TODO: Parse additional fields from the body of setupapi messages
     self.end_time = None
     self.exit_status = None
 
@@ -96,27 +96,31 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_structure)
+      # Setupapi logs record in local time
+      date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_elements_structure))
       return
-    # Setupapi logs record in local time
-    date_time.is_local_time = True
 
-    # TODO: Fix timezone
+    time_zone = parser_mediator.timezone
+
     time_elements_structure = self._GetValueFromStructure(
         structure, 'end_time')
-    end_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-        time_elements_tuple=time_elements_structure)
+    # TODO: Convert to UTC
+    end_time = ' '.join((
+        '{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}.{6:03d}'.format(
+            *time_elements_structure),
+        time_zone.zone))
 
     event_data = SetupapiLogEventData()
     event_data.entry_type = self._GetValueFromStructure(structure, 'entry_type')
-    event_data.end_time = end_time.CopyToDateTimeString()
+    event_data.end_time = end_time
     event_data.exit_status = self._GetValueFromStructure(
         structure, 'exit_status')
 
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_ADDED)
+        date_time, definitions.TIME_DESCRIPTION_ADDED, time_zone=time_zone)
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
