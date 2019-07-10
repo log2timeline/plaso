@@ -10,7 +10,6 @@ codepage of the source data.
 from __future__ import unicode_literals
 
 import codecs
-import datetime
 
 from plaso.containers import artifacts
 from plaso.engine import logger
@@ -201,10 +200,8 @@ class KnowledgeBase(object):
     system_configuration.operating_system_version = self.GetValue(
         'operating_system_version')
 
-    date_time = datetime.datetime(2017, 1, 1)
-    time_zone = self._time_zone.tzname(date_time)
-
-    if time_zone and isinstance(time_zone, py2to3.BYTES_TYPE):
+    time_zone = self._time_zone.zone
+    if isinstance(time_zone, py2to3.BYTES_TYPE):
       time_zone = time_zone.decode('ascii')
 
     system_configuration.time_zone = time_zone
