@@ -95,7 +95,7 @@ class SetupapiLogParser(text_parser.PyparsingMultiLineTextParser):
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_structure)
-      # Setupapi logs record in local time
+      # Setupapi logs stores date and time values in local time.
       date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
