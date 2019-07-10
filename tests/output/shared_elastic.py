@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the shared code for Elasticsearch based output modules."""
+"""Tests for the shared functionality for Elasticsearch output modules."""
 
 from __future__ import unicode_literals
 
@@ -31,7 +31,7 @@ class TestElasticsearchOutputModule(
 
 @unittest.skipIf(shared_elastic.elasticsearch is None, 'missing elasticsearch')
 class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
-  """Tests for SharedElasticsearchOutputModule."""
+  """Tests the shared functionality for Elasticsearch output modules."""
 
   # pylint: disable=protected-access
 
