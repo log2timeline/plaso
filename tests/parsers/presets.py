@@ -42,6 +42,7 @@ class ParserPresetsManagerTest(shared_test_lib.BaseTestCase):
       'syslog',
       'systemd_journal',
       'utmp',
+      'vsftpd',
       'webhist',
       'xchatlog',
       'xchatscrollback',
