@@ -57,6 +57,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
       # have to make sure the drive letter is in the same case.
       expected_os_location = os.path.abspath('\\{0:s}'.format(
           os.path.join('cases', 'image.dd')))
+      expected_os_location = expected_os_location.replace('\\', '\\\\')
     else:
       expected_os_location = '{0:s}{1:s}'.format(
           os.path.sep, os.path.join('cases', 'image.dd'))
