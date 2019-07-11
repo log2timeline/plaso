@@ -1,6 +1,7 @@
 name: bam
 type: format
 description: Background Activity Moderator format
+urls: ["https://github.com/libyal/winreg-kb/blob/master/documentation/Background%20Activity%20Moderator%20key.asciidoc"]
 ---
 name: timestamp
 type: integer
@@ -8,4 +9,28 @@ attributes:
   byte_order: little-endian
   format: unsigned
   size: 8
+  units: bytes
+---
+name: uint64le
+type: integer
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: app_flag
+type: integer
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint32le
+type: integer
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 4
   units: bytes
