@@ -98,9 +98,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   def _OnCriticalError(self):
     """The process on critical error handler.
 
-    This method is called when the process encounters a critical error e.g.
-    a segfault. A sub class should override this method to do the necessary
-    actions before the original critical error signal handler it called.
+    This method is called when the process encounters a critical error for
+    example a segfault. A sub class should override this method to do the
+    necessary actions before the original critical error signal handler it
+    called.
 
     Be aware that the state of the process should not be trusted, as a
     significant part of memory could have been overwritten before a segfault.
@@ -290,7 +291,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     # We need to set the is running status explicitly to True in case
     # the process completes before the engine is able to determine
-    # the status of the process, e.g. in the unit tests.
+    # the status of the process, such as in the unit tests.
     self._status_is_running = True
 
     # Logging needs to be configured before the first output otherwise we

@@ -98,8 +98,8 @@ class SkypeTransferFileEventData(events.EventData):
   """Skype file transfer event data.
 
   Attributes:
-    action_type (str): action type e.g. GETSOLICITUDE, SENDSOLICITUDE,
-        ACCEPTED, FINISHED.
+    action_type (str): action type such as: "GETSOLICITUDE", "SENDSOLICITUDE",
+        "ACCEPTED" or "FINISHED".
     destination (str): account that received the file.
     source (str): account that sent the file.
     transferred_filename (str): name of the file transferred.

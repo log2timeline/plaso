@@ -9,8 +9,8 @@ type=AVC msg=audit(1105758604.519:420): avc: denied { getattr } for pid=5962
 comm="httpd" path="/home/auser/public_html" dev=sdb2 ino=921135
 
 Where msg=audit(1105758604.519:420) contains the number of seconds since
-January 1, 1970 00:00:00 UTC and the number of milliseconds after the dot e.g.
-seconds: 1105758604, milliseconds: 519.
+January 1, 1970 00:00:00 UTC and the number of milliseconds after the dot
+for example: "seconds: 1105758604, milliseconds: 519".
 
 The number after the timestamp (420 in the example) is a 'serial number'
 that can be used to correlate multiple logs generated from the same event.
@@ -19,8 +19,8 @@ References:
 
 * http://selinuxproject.org/page/NB_AL
 * http://blog.commandlinekungfu.com/2010/08/episode-106-epoch-fail.html
-* http://www.redhat.com/promo/summit/2010/presentations/
-taste_of_training/Summit_2010_SELinux.pdf
+* http://www.redhat.com/promo/summit/2010/presentations/taste_of_training/
+    Summit_2010_SELinux.pdf
 """
 
 from __future__ import unicode_literals

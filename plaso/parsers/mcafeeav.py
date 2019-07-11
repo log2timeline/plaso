@@ -58,7 +58,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
 
     The date and time are made up of two strings, the date and the time,
     separated by a tab. The time is in local time. The month and day can
-    be either 1 or 2 characters long, e.g.: 7/30/2013\\t10:22:48 AM
+    be either 1 or 2 characters long, for example: "7/30/2013\\t10:22:48 AM"
 
     Args:
       date (str): date.
