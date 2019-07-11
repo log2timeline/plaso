@@ -138,10 +138,9 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       if attribute_name in unformatted_attributes:
         # TODO: some pyparsing based parsers can generate empty bytes values
         # in Python 3.
-        if (isinstance(attribute_value, py2to3.BYTES_TYPE) and
-            attribute_value == b''):
+        if isinstance(attribute_value, py2to3.BYTES_TYPE):
           logging.debug((
-              'attribute: {0:s} of data type: {1:s} contains an empty bytes '
+              'attribute: {0:s} of data type: {1:s} contains a bytes '
               'value').format(attribute_name, event_data.data_type))
           attribute_value = ''
 

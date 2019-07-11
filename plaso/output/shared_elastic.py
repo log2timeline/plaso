@@ -3,8 +3,8 @@
 
 from __future__ import unicode_literals
 
-import os
 import logging
+import os
 
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
@@ -14,6 +14,7 @@ except ImportError:
   elasticsearch = None
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
@@ -157,6 +158,15 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
               attribute_value)
         except TypeError:
           continue
+
+      # TODO: some pyparsing based parsers can generate empty bytes values
+      # in Python 3.
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        logging.debug((
+            'attribute: {0:s} of data type: {1:s} contains a bytes '
+            'value').format(attribute_name, event_data.data_type))
+        attribute_value = ''
+
       event_values[attribute_name] = attribute_value
 
     # Add a string representation of the timestamp.
