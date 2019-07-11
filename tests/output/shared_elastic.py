@@ -39,7 +39,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
       {'data_type': 'syslog:line',
        'display_name': 'log/syslog.1',
        'filename': 'log/syslog.1',
-       'hostname': 'ubuntu',
+       'hostname': b'ubuntu',
        'my_number': 123,
        'some_additional_foo': True,
        'text': (

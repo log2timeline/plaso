@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import os
 import logging
 
@@ -14,6 +15,7 @@ except ImportError:
   elasticsearch = None
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
@@ -113,7 +115,9 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           body=self._event_documents, doc_type=self._document_type,
           index=self._index_name, request_timeout=self._DEFAULT_REQUEST_TIMEOUT)
 
-    except ValueError as exception:
+    except (
+        ValueError,
+        elasticsearch.exceptions.ElasticsearchException) as exception:
       # Ignore problematic events
       logger.warning('Unable to bulk insert with error: {0!s}'.format(
           exception))
@@ -158,6 +162,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
         except TypeError:
           continue
       event_values[attribute_name] = attribute_value
+
+      # The elasticsearch serializer cannot serialize bytes objects.
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        logger.warning(
+            'Found bytes value "{0!s}" for attribute "{1:s}" in event: {2!s}. '
+            'Value will be converted to UTF-8'.format(
+                attribute_value, attribute_name, event_values))
+        unicode_attribute_value = codecs.decode(
+            attribute_value, 'utf-8', 'replace')
+        event_values[attribute_name] = unicode_attribute_value
 
     # Add a string representation of the timestamp.
     try:
