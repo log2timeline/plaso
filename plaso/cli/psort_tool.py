@@ -531,6 +531,12 @@ class PsortTool(
       storage_writer = (
           storage_factory.StorageFactory.CreateStorageWriterForFile(
               session, self._storage_file_path))
+      if not storage_writer:
+        logger.error(
+            'Format of storage file: {0:s} not supported for writing'.format(
+                self._storage_file_path))
+        return
+
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine()
