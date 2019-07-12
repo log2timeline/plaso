@@ -537,7 +537,6 @@ class PsortTool(
                 self._storage_file_path))
         return
 
-
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine()
 
