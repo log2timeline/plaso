@@ -6,11 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-try:
-  from guppy import hpy
-except ImportError:
-  hpy = None
-
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 from dfvfs.helpers import fake_file_system_builder
@@ -172,14 +167,6 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     self.assertEqual(operating_system, 'Windows NT')
 
     test_engine.PreprocessSources(registry, [None])
-
-  def testSupportsGuppyMemoryProfiling(self):
-    """Tests the SupportsGuppyMemoryProfiling function."""
-    test_engine = engine.BaseEngine()
-
-    expected_result = hpy is not None
-    result = test_engine.SupportsGuppyMemoryProfiling()
-    self.assertEqual(result, expected_result)
 
 
 if __name__ == '__main__':
