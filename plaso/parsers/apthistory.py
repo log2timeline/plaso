@@ -21,6 +21,7 @@ class AptHistoryLogEventData(events.EventData):
 
   Attributes:
     requestor (str): user requesting the activity.
+    error (str): reported error.
     packages (str): list of packages being affected.
   """
 
@@ -30,6 +31,7 @@ class AptHistoryLogEventData(events.EventData):
     """Initializes event data."""
     super(AptHistoryLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.requestor = None
+    self.error = None
     self.packages = None
 
 
@@ -98,6 +100,8 @@ class AptHistoryLogParser(text_parser.PyparsingMultiLineTextParser):
     lines = message.split('\n')
 
     for line in lines:
+      if 'Error:' in line:
+        event_data.error = line
       if 'Requested-By:' in line:
         event_data.requestor = line
 

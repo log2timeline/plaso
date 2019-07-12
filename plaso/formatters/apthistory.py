@@ -12,9 +12,9 @@ class AptHistoryLogFormatter(interface.ConditionalEventFormatter):
 
   DATA_TYPE = 'apthistory:log:line'
 
-  # TODO: Format strings
   FORMAT_STRING_PIECES = [
       '{packages}',
+      '{error}',
       '{requestor}']
 
   FORMAT_STRING_SHORT_PIECES = ['{packages}']
