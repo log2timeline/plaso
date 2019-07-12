@@ -432,9 +432,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
           self._number_of_consumed_sources += 1
 
-          if self._guppy_memory_profiler:
-            self._guppy_memory_profiler.Sample()
-
         if task:
           if self._ScheduleTask(task):
             task_path_spec_string = task.path_spec.comparable.replace('\n', ' ')

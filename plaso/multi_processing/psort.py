@@ -206,7 +206,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # a deterministic way.
     self._export_event_heap = PsortEventHeap()
     self._export_event_timestamp = 0
-    self._guppy_memory_profiler = None
     self._knowledge_base = None
     self._memory_profiler = None
     self._merge_task = None

@@ -43,7 +43,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
     self._debug_output = False
     self._enable_sigsegv_handler = enable_sigsegv_handler
-    self._guppy_memory_profiler = None
     self._log_filename = None
     self._memory_profiler = None
     self._original_sigsegv_handler = None
@@ -181,11 +180,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     if not configuration:
       return
 
-    if configuration.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profilers.GuppyMemoryProfiler(
-          self._name, configuration)
-      self._guppy_memory_profiler.Start()
-
     if configuration.HaveProfileMemory():
       self._memory_profiler = profilers.MemoryProfiler(
           self._name, configuration)
@@ -230,11 +224,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
   def _StopProfiling(self):
     """Stops profiling."""
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-      self._guppy_memory_profiler.Stop()
-      self._guppy_memory_profiler = None
-
     if self._memory_profiler:
       self._memory_profiler.Stop()
       self._memory_profiler = None

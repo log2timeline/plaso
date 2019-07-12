@@ -151,9 +151,6 @@ class SingleProcessEngine(engine.BaseEngine):
           extraction_worker, parser_mediator, event_source.path_spec)
       number_of_consumed_sources += 1
 
-      if self._guppy_memory_profiler:
-        self._guppy_memory_profiler.Sample()
-
       self._UpdateStatus(
           extraction_worker.processing_status, self._current_display_name,
           number_of_consumed_sources, storage_writer)

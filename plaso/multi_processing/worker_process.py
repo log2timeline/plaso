@@ -297,9 +297,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           self._extraction_worker, self._parser_mediator, task.path_spec)
       self._number_of_consumed_sources += 1
 
-      if self._guppy_memory_profiler:
-        self._guppy_memory_profiler.Sample()
-
     finally:
       task_storage_writer.WriteTaskCompletion(aborted=self._abort)
 
