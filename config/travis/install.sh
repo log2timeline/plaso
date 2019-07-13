@@ -36,8 +36,8 @@ then
 
 	docker run --name=${CONTAINER_NAME} --detach -i registry.fedoraproject.org/fedora:${FEDORA_VERSION};
 
-	# Install dnf-plugins-core.
-	docker exec ${CONTAINER_NAME} dnf install -y dnf-plugins-core;
+	# Install dnf-plugins-core and langpacks-en.
+	docker exec ${CONTAINER_NAME} dnf install -y dnf-plugins-core langpacks-en;
 
 	# Add additional dnf repositories.
 	docker exec ${CONTAINER_NAME} dnf copr -y enable @gift/dev;
