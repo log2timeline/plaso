@@ -53,7 +53,8 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
 
     expected_short_message = 'Rouel Henry Status: Praying!'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test tango contact last access time event.
     event = events[57]
@@ -99,7 +100,8 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     expected_message = 'Conversation (DyGWr_010wQM_ozkIe-9Ww)'
     expected_short_message = 'Conversation (DyGWr_010wQM_ozkIe-9Ww)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test tango message creation time event
     event = events[21]
@@ -115,7 +117,8 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     expected_message = 'Outgoing Message (16777224)'
     expected_short_message = 'Outgoing Message (16777224)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test tango message sent time event
     event = events[22]

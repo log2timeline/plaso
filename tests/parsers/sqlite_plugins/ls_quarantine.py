@@ -50,6 +50,8 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-07-12 19:30:16.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         '[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'
         'speedtest.net.6/download.php?affid=460245286&trt=5&utm_campaign='
@@ -60,7 +62,8 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
         'http://mackeeperapp.zeobit.com/aff/speedtest.net.6/download.php?'
         'affid=4602452...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

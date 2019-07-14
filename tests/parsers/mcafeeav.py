@@ -62,7 +62,8 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
         'C:\\Windows\\System32\\procexp64.exe '
         'Action blocked : Terminate')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

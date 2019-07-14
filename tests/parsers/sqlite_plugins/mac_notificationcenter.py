@@ -43,7 +43,8 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'Content: KeePassXC can now be run')
     expected_short_message = (
         'Title: Santa, Content: KeePassXC can now be run')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[2]
     self.CheckTimestamp(event.timestamp, '2018-05-02 11:13:21.531085')
@@ -64,7 +65,8 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     expected_short_message = (
         'Title: Drive File Stream, Content: Drive File Stream is loading your '
         'files…')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[5]
     self.CheckTimestamp(event.timestamp, '2018-05-16 16:38:04.686080')
@@ -83,7 +85,8 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'Content: PyCharm can now be run')
     expected_short_message = (
         'Title: Santa, Content: PyCharm can now be run')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

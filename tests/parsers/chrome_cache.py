@@ -36,7 +36,8 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
 
     expected_message = 'Original URL: {0:s}'.format(expected_original_url)
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

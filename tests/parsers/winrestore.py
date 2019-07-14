@@ -44,7 +44,8 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
         'Restore point type: UNKNOWN').format(expected_description)
     expected_short_message = expected_description
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

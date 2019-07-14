@@ -38,7 +38,8 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     expected_message = '{0:s} (from drive: UNKNOWN)'.format(expected_filename)
     expected_short_message = 'Deleted file: {0:s}'.format(expected_filename)
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseWindows10(self):
     """Tests the Parse function on a Windows 10 RecycleBin file."""
@@ -62,7 +63,8 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     expected_message = '{0:s} (from drive: UNKNOWN)'.format(expected_filename)
     expected_short_message = 'Deleted file: {0:s}'.format(expected_filename)
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
@@ -91,6 +93,8 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     event = events[1]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'DC2 -> C:\\Documents and Settings\\Mr. Evil\\Desktop'
         '\\netstumblerinstaller_0_4_0.exe (from drive: C)')
@@ -98,7 +102,8 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
         'Deleted file: C:\\Documents and Settings\\Mr. Evil\\Desktop'
         '\\netstumblerinstaller...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[2]
 

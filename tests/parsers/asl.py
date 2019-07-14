@@ -74,7 +74,8 @@ class ASLParserTest(test_lib.ParserTestCase):
         'Sender: locationd '
         'Facility: com.apple.locationd')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

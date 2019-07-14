@@ -47,8 +47,10 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(event_data.root, '/')
     expected_description = 'Last MacOS 10.9.1 (13B42) full update.'
     self.assertEqual(event_data.desc, expected_description)
+
     expected_string = '// {0:s}'.format(expected_description)
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
 
 if __name__ == '__main__':

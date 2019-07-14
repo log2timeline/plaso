@@ -92,7 +92,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         '/autoRun').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessNtuserRunOnce(self):
     """Tests the Process function on a Run key."""
@@ -130,7 +131,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
             key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessSoftwareRun(self):
     """Tests the Process function on a Run key."""
@@ -172,7 +174,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         'VMwareUser.exe"').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessSoftwareRunOnce(self):
     """Tests the Process function on a RunOnce key."""
@@ -210,7 +213,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         '-k -rq').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

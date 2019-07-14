@@ -66,7 +66,8 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'RID: 500 '
         'Login count: 6')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test SAMUsersWindowsRegistryEvent.
     event = events[1]
@@ -90,7 +91,8 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'RID: 500 '
         'Login count: 6')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

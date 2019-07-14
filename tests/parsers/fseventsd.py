@@ -57,7 +57,8 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
         'Flags: 0x01000080 Event Identifier: 47747061')
     expected_short_message = (
         '.Spotlight-V100/Store-V1 DirectoryCreated, IsDirectory')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseV2(self):
     """Tests the Parse function on a version 2 file."""
@@ -96,7 +97,8 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
         'Flags: 0x01000008 '
         'Event Identifier: 1706838')
     expected_short_message = 'Hi, Sierra Renamed, IsDirectory'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

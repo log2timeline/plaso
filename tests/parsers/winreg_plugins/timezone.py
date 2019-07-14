@@ -151,7 +151,8 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'TimeZoneKeyName: W. Europe Standard Time').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
@@ -191,7 +192,8 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'TimeZoneKeyName: Eastern Standard Time').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

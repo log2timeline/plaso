@@ -53,7 +53,8 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         'DROP [TCP] 123.45.78.90 : 80 > 123.156.78.90 : 1774')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[9]
 

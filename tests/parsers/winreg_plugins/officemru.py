@@ -113,7 +113,8 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
             key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test OfficeMRUWindowsRegistryEvent.
     event = events[0]
@@ -135,7 +136,8 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         '[F00000000][T01CD0146EA1EADB0][O00000000]*'
         'C:\\Users\\nfury\\Documents\\StarFury\\S...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

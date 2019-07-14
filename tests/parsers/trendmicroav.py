@@ -46,7 +46,8 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
         r'Eicar_test_1 : Failure (clean), moved (Real-time scan)')
     expected_short_message = r'C:\temp\ eicar.com_.gstmp Failure (clean), moved'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testWebReputationParse(self):
     """Tests the Parse function."""
@@ -79,7 +80,8 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'http://www.eicar.org/download/eicar.com Malware Accomplice')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 if __name__ == '__main__':
   unittest.main()
