@@ -18,25 +18,24 @@ class BackgroundActivityModeratorEventData(events.EventData):
   """Background Activity Moderator event data.
 
   Attributes:
-    sid (str): user SID associated with entry.
-    bin (str): binary executed.
+    user_sid (str): user SID associated with entry.
+    binary_path (str): binary executed.
   """
 
   DATA_TYPE = 'windows:registry:bam'
 
   def __init__(self):
     """Initializes event data."""
-    super(BackgroundActivityModeratorEventData,
-          self).__init__(data_type=self.DATA_TYPE)
-    self.sid = None
-    self.bin = None
+    super(
+        BackgroundActivityModeratorEventData,
+        self).__init__(data_type=self.DATA_TYPE)
+    self.user_sid = None
+    self.binary_path = None
 
 
 class BackgroundActivityModeratorWindowsRegistryPlugin(
     dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Background Activity Moderator data Windows Registry plugin."""
-
-  # pylint: disable=useless-super-delegation
 
   NAME = 'bam'
   DESCRIPTION = 'Parser for Background Activity Moderator Registry data.'
@@ -49,11 +48,7 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\bam'
           '\\State\\UserSettings')])
 
-  _DEFINITION_FILE = 'bam.yaml'
-
-  def __init__(self):
-    """Initializes a Background Activity Moderator Registry plugin."""
-    super(BackgroundActivityModeratorWindowsRegistryPlugin, self).__init__()
+  _DEFINITION_FILE = 'filetime.yaml'
 
   def _ParseValue(self, registry_value):
     """Parses the registry value.
@@ -69,7 +64,7 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
     """
     try:
       date_time = self._ReadStructureFromByteStream(
-          registry_value, 0, self._GetDataTypeMap('timestamp'))
+          registry_value, 0, self._GetDataTypeMap('filetime'))
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
           'Unable to parse timestamp with error: {0!s}'.format(
@@ -99,8 +94,8 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
 
           if filetime:
             event_data = BackgroundActivityModeratorEventData()
-            event_data.sid = sid_key.name
-            event_data.bin = value.name
+            event_data.user_sid = sid_key.name
+            event_data.binary_path = value.name
 
             date_time = dfdatetime_filetime.Filetime(timestamp=filetime)
 

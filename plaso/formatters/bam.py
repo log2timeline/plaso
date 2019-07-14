@@ -13,10 +13,10 @@ class BackgroundActivityModeratorFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'windows:registry:bam'
 
   FORMAT_STRING_PIECES = [
-      '{bin}',
-      '[{sid}]']
+      '{binary_path}',
+      '[{user_sid}]']
 
-  FORMAT_STRING_SHORT_PIECES = ['{bin}']
+  FORMAT_STRING_SHORT_PIECES = ['{binary_path}']
 
   SOURCE_LONG = 'Background Activity Moderator Registry Entry'
   SOURCE_SHORT = 'REG'

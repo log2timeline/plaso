@@ -23,7 +23,7 @@ class BackgroundActivityModeratorFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = bam.BackgroundActivityModeratorFormatter()
 
-    expected_attribute_names = ['bin', 'sid']
+    expected_attribute_names = ['binary_path', 'user_sid']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

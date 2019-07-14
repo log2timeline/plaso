@@ -124,9 +124,9 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = '{0:s} [{1:s}]'.format(
-        event_data.bin, event_data.sid)
+        event_data.binary_path, event_data.user_sid)
     # TODO: Fix this check for long entries
-    expected_short_message = '{0:s}'.format(event_data.bin)
+    expected_short_message = '{0:s}'.format(event_data.binary_path)
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
