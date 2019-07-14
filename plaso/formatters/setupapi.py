@@ -14,11 +14,11 @@ class SetupapiLogFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       '{entry_type}',
-      '{entry_status}']
+      '{exit_status}']
 
   # Reversing fields for short description to prevent truncating the status
   FORMAT_STRING_SHORT_PIECES = [
-      '{entry_status}',
+      '{exit_status}',
       '{entry_type}']
 
   FORMAT_STRING_SEPARATOR = ' - '

@@ -229,14 +229,16 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
     function = self._GetValueFromStructure(structure, 'function')
     if function:
-      # Due to the use of CharsNotIn the function value can contain leading
-      # or trailing whitespace.
       function = function.strip()
+
+    text =  self._GetValueFromStructure(structure, 'text')
+    if text:
+      text = text.strip()
 
     event_data = MacWifiLogEventData()
     event_data.agent = self._GetValueFromStructure(structure, 'agent')
     event_data.function = function
-    event_data.text = self._GetValueFromStructure(structure, 'text')
+    event_data.text = text
 
     if key == 'known_function_logline':
       event_data.action = self._GetAction(
