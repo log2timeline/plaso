@@ -48,9 +48,6 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
 
   _ENCODING = 'utf-8'
 
-  # Increase the buffer size, as log messages can be very long.
-  BUFFER_SIZE = 262144
-
   _SLASH = pyparsing.Literal('/').suppress()
 
   _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
