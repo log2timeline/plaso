@@ -10,10 +10,11 @@ from plaso.formatters import manager
 class AptHistoryLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for an APT History log file event."""
 
-  DATA_TYPE = 'apthistory:log:line'
+  DATA_TYPE = 'apt:history:line'
 
   FORMAT_STRING_PIECES = [
       '{packages}',
+      '{command}',
       '{error}',
       '{requestor}']
 

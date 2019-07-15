@@ -6,9 +6,9 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import apthistory as _  # pylint: disable=unused-import
+from plaso.formatters import apt_history as _  # pylint: disable=unused-import
 from plaso.lib import errors
-from plaso.parsers import apthistory
+from plaso.parsers import apt_history
 
 from tests.parsers import test_lib
 
@@ -22,7 +22,7 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
 
   def testParseLog(self):
     """Tests the Parse function on apt_history.log."""
-    parser = apthistory.AptHistoryLogParser()
+    parser = apt_history.AptHistoryLogParser()
     storage_writer = self._ParseFile(['apt_history.log'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
@@ -156,10 +156,37 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
         'python-all-dev:amd64 (2.7.13-2, automatic), '
         'python3-pyasn1:amd64 (0.1.9-2, automatic), '
         'libstdc++-6-dev:amd64 (6.3.0-18+deb9u1, automatic), '
-        'liberror-perl:amd64 (0.17024-1, automatic)')
+        'liberror-perl:amd64 (0.17024-1, automatic) '
+        'Commandline: apt-get -y install python-pip python3-pip python-dev '
+        'python3-dev git tmux screen joe')
     expected_short_message = (
         'Install: libmpc3:amd64 (1.0.3-1+b2, automatic), '
         'manpages:amd64 (4.10-2, autom...')
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
+    event = events[4]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    expected_message = (
+        'Install: containerd.io:amd64 (1.2.6-3), '
+        'linux-headers-4.9.0-9-common:amd64 (4.9.168-1+deb9u3, automatic), '
+        'aufs-tools:amd64 (1:4.1+20161219-1, automatic), '
+        'aufs-dkms:amd64 (4.9+20161219-1, automatic), '
+        'cgroupfs-mount:amd64 (1.3, automatic), '
+        'linux-compiler-gcc-6-x86:amd64 (4.9.168-1+deb9u3, automatic), '
+        'dkms:amd64 (2.3-2, automatic), libltdl7:amd64 (2.4.6-2, automatic), '
+        'linux-headers-amd64:amd64 (4.9+80+deb9u7, automatic), '
+        'linux-kbuild-4.9:amd64 (4.9.168-1+deb9u3, automatic), '
+        'linux-headers-4.9.0-9-amd64:amd64 (4.9.168-1+deb9u3, automatic), '
+        'pigz:amd64 (2.3.4-1, automatic), '
+        'docker-ce:amd64 (5:18.09.7~3-0~debian-stretch), '
+        'docker-ce-cli:amd64 (5:18.09.7~3-0~debian-stretch) '
+        'Commandline: apt-get install -y docker-ce docker-ce-cli containerd.io '
+        'Error: Sub-process /usr/bin/dpkg returned an error code (1)')
+    expected_short_message = (
+        'Install: containerd.io:amd64 (1.2.6-3), '
+        'linux-headers-4.9.0-9-common:amd64 (4...')
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -167,6 +194,7 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_message = (
         'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5) '
+        'Commandline: apt-get remove volatility '
         'Requested-By: jxs (1005)')
     expected_short_message = (
         'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5)')
@@ -182,7 +210,8 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
         'Remove: python-distorm3:amd64 (3.3.4-2), '
         'python-imaging:amd64 (4.0.0-4), python-py:amd64 (1.4.32-3), '
         'python-openpyxl:amd64 (2.3.0-3), libdistorm3-3:amd64 (3.3.4-2), '
-        'python-jdcal:amd64 (1.0-1.2~deb9u1) Requested-By: jxs (1005)')
+        'python-jdcal:amd64 (1.0-1.2~deb9u1) Commandline: apt-get autoremove '
+        'Requested-By: jxs (1005)')
     expected_short_message = (
         'Remove: python-distorm3:amd64 (3.3.4-2), '
         'python-imaging:amd64 (4.0.0-4), pyth...')
@@ -191,7 +220,7 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
 
   def testParseInvalidLog(self):
     """Tests the Parse function on a non APT History log."""
-    parser = apthistory.AptHistoryLogParser()
+    parser = apt_history.AptHistoryLogParser()
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['setupapi.dev.log'], parser)
 

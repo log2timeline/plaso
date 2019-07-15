@@ -25,11 +25,12 @@ class AptHistoryLogEventData(events.EventData):
     packages (str): list of packages being affected.
   """
 
-  DATA_TYPE = 'apthistory:log:line'
+  DATA_TYPE = 'apt:history:line'
 
   def __init__(self):
     """Initializes event data."""
     super(AptHistoryLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.command = None
     self.requestor = None
     self.error = None
     self.packages = None
@@ -70,7 +71,7 @@ class AptHistoryLogParser(text_parser.PyparsingMultiLineTextParser):
       _APTHISTORY_DATE_TIME.setResultsName('end_date') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
-  LINE_STRUCTURES = [('logline', _APTHISTORY_LINE),]
+  LINE_STRUCTURES = [('logline', _APTHISTORY_LINE)]
 
   def _ParseRecordLogline(self, parser_mediator, structure):
     """Parses a logline record structure and produces events.
@@ -100,6 +101,8 @@ class AptHistoryLogParser(text_parser.PyparsingMultiLineTextParser):
     lines = message.split('\n')
 
     for line in lines:
+      if 'Commandline:' in line:
+        event_data.command = line
       if 'Error:' in line:
         event_data.error = line
       if 'Requested-By:' in line:

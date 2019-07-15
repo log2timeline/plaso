@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import apthistory
+from plaso.formatters import apt_history
 
 from tests.formatters import test_lib
 
@@ -16,15 +16,16 @@ class AptHistoryLogFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = apthistory.AptHistoryLogFormatter()
+    event_formatter = apt_history.AptHistoryLogFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = apthistory.AptHistoryLogFormatter()
+    event_formatter = apt_history.AptHistoryLogFormatter()
 
     expected_attribute_names = [
         'packages',
+        'command',
         'error',
         'requestor']
 

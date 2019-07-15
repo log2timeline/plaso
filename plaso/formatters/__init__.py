@@ -10,7 +10,7 @@ from plaso.formatters import android_webviewcache
 from plaso.formatters import apache_access
 from plaso.formatters import appcompatcache
 from plaso.formatters import appusage
-from plaso.formatters import apthistory
+from plaso.formatters import apt_history
 from plaso.formatters import asl
 from plaso.formatters import bagmru
 from plaso.formatters import bash_history
