@@ -231,7 +231,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     if function:
       function = function.strip()
 
-    text =  self._GetValueFromStructure(structure, 'text')
+    text = self._GetValueFromStructure(structure, 'text')
     if text:
       text = text.strip()
 

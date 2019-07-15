@@ -25,7 +25,7 @@ class SetupapiLogEventData(events.EventData):
 
   Attributes:
     entry_type (str): log entry type, for examaple "Device Install -
-        PCI\VEN_104C&DEV_8019&SUBSYS_8010104C&REV_00\3&61aaa01&0&38" or
+        PCI\\VEN_104C&DEV_8019&SUBSYS_8010104C&REV_00\\3&61aaa01&0&38" or
         "Sysprep Respecialize - {804b345a-ffd7-854c-a1b5-ca9598907846}".
     exit_status (str): the exit status of the logged operation.
   """
@@ -65,6 +65,9 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
       _THREE_DIGITS
   )
 
+  # Disable pylint due to long URLs for documenting structures.
+  # pylint: disable=line-too-long
+
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-header
   _LOG_HEADER_START = (
       pyparsing.Literal('[Device Install Log]') +
@@ -92,7 +95,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
   _SECTION_END = (
       pyparsing.Literal('<<<  Section end ').suppress() +
       _SETUPAPI_DATE_TIME.setResultsName('end_time') +
-    pyparsing.lineEnd())
+      pyparsing.lineEnd())
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
   _SECTION_END_EXIT_STATUS = (
@@ -125,6 +128,8 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal('[Boot Session:') +
       _SETUPAPI_DATE_TIME +
       pyparsing.Literal(']'))
+
+  # pylint: enable=line-too-long
 
   LINE_STRUCTURES = [
       ('ignorable_line', _BOOT_SESSION_LINE),
@@ -232,19 +237,19 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
     raise errors.ParseError(
         'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def VerifyStructure(self, parser_mediator, lines):
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a Windows Setupapi log file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      lines (str): one or more lines from the text file.
+      line (str): single line from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._LOG_HEADER_START.parseString(lines)
+      _ = self._LOG_HEADER_START.parseString(line)
     except pyparsing.ParseException as exception:
       logger.debug('Not a Windows Setupapi log file: {0!s}'.format(exception))
       return False
