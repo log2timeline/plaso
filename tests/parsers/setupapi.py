@@ -101,8 +101,8 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2015-11-22 17:53:29.305000')
 
-    expected_message = ('Setup Plug and Play Device Install')
-    expected_short_message = ('Setup Plug and Play Device Install')
+    expected_message = 'Setup Plug and Play Device Install'
+    expected_short_message = 'Setup Plug and Play Device Install'
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

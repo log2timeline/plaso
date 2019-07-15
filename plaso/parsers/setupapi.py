@@ -149,15 +149,15 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
     self._last_entry_type = None
 
   def _BuildDatetime(self, time_structure):
-    """Builds time elements from a setupapi time stamp.
+    """Builds time elements from a setupapi time_stamp field.
 
     Args:
       time_structure (pyparsing.ParseResults): structure of tokens derived from
-          a setupapi time stamp.
+          a setupapi time_stamp field.
 
     Returns:
       dfdatetime.TimeElements: date and time extracted from the value or None
-          if the value does not represent a valid string.
+          if the structure does not represent a valid date and time value.
     """
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
@@ -249,7 +249,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      _ = self._LOG_HEADER_START.parseString(line)
+      self._LOG_HEADER_START.parseString(line)
     except pyparsing.ParseException as exception:
       logger.debug('Not a Windows Setupapi log file: {0!s}'.format(exception))
       return False
