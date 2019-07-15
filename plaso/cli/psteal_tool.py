@@ -186,9 +186,9 @@ class PstealTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logger.error('Format of storage file: {0:s} not supported'.format(
-          self._storage_file_path))
-      return
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(
+              self._storage_file_path))
 
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
