@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import pefile
 
 from dfdatetime import posix_time as dfdatetime_posix_time
+from dfvfs.helpers import data_slice as dfvfs_data_slice
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -43,6 +44,12 @@ class PEParser(interface.FileObjectParser):
 
   NAME = 'pe'
   DESCRIPTION = 'Parser for Portable Executable (PE) files.'
+
+  _PE_DIRECTORIES = [
+      pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
+      pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_EXPORT'],
+      pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE'],
+      pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT']]
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -184,17 +191,13 @@ class PEParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    pe_data = file_object.read()
+    pe_data_slice = dfvfs_data_slice.DataSlice(file_object)
     try:
-      pefile_object = pefile.PE(data=pe_data, fast_load=True)
-      pefile_object.parse_data_directories(
-          directories=[
-              pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
-              pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_EXPORT'],
-              pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE'],
-              pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT'],])
-    except:
-      raise errors.UnableToParseFile()
+      pefile_object = pefile.PE(data=pe_data_slice, fast_load=True)
+      pefile_object.parse_data_directories(directories=self._PE_DIRECTORIES)
+    except Exception as exception:
+      raise errors.UnableToParseFile(
+          'Unable to read PE file with error: {0!s}'.format(exception))
 
     event_data = PEEventData()
     event_data.imphash = pefile_object.get_imphash()
