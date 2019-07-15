@@ -224,7 +224,8 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: Examine other versions of the file format and if this parser should
     # support them.
-    return line == '#Version: 1.5\n'
+    stripped_line = line.strip()
+    return stripped_line == '#Version: 1.5'
 
 
 manager.ParsersManager.RegisterParser(WinFirewallParser)
