@@ -7,7 +7,7 @@ http://forensicswiki.org/wiki/L2T_CSV
 
 from __future__ import unicode_literals
 
-import logging
+import codecs
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -136,14 +136,14 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     extra_attributes = []
     for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
       if attribute_name in unformatted_attributes:
-        # TODO: some pyparsing based parsers can generate empty bytes values
-        # in Python 3.
-        if (isinstance(attribute_value, py2to3.BYTES_TYPE) and
-            attribute_value == b''):
-          logging.debug((
-              'attribute: {0:s} of data type: {1:s} contains an empty bytes '
-              'value').format(attribute_name, event_data.data_type))
-          attribute_value = ''
+        # Some parsers have written bytes values to storage.
+        if isinstance(attribute_value, py2to3.BYTES_TYPE):
+          logger.warning(
+              'Found bytes value "{0!s}" for attribute "{1:s}" for data type: '
+              '{2!s}. Value will be converted to UTF-8'.format(
+                  attribute_value, attribute_name, event_data.data_type))
+          attribute_value = codecs.decode(
+              attribute_value, 'utf-8', 'replace')
 
         # With ! in {1!s} we force a string conversion since some of
         # the extra attributes values can be integer, float point or

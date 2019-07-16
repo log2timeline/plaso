@@ -165,6 +165,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
       # The elasticsearch serializer cannot serialize bytes objects.
       if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        # Some parsers have written bytes values to storage.
         logger.warning(
             'Found bytes value "{0!s}" for attribute "{1:s}" in event: {2!s}. '
             'Value will be converted to UTF-8'.format(
