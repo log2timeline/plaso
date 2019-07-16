@@ -244,8 +244,6 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
     self._remove = None
     self._upgrade = None
 
-    return
-
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
