@@ -14,9 +14,9 @@ class AptHistoryLogFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       '{packages}',
-      '{command}',
-      '{error}',
-      '{requestor}']
+      '[{command}]',
+      '[{error}]',
+      '[{requestor}]']
 
   FORMAT_STRING_SHORT_PIECES = ['{packages}']
 

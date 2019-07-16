@@ -157,8 +157,8 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
         'python3-pyasn1:amd64 (0.1.9-2, automatic), '
         'libstdc++-6-dev:amd64 (6.3.0-18+deb9u1, automatic), '
         'liberror-perl:amd64 (0.17024-1, automatic) '
-        'Commandline: apt-get -y install python-pip python3-pip python-dev '
-        'python3-dev git tmux screen joe')
+        '[Commandline: apt-get -y install python-pip python3-pip python-dev '
+        'python3-dev git tmux screen joe]')
     expected_short_message = (
         'Install: libmpc3:amd64 (1.0.3-1+b2, automatic), '
         'manpages:amd64 (4.10-2, autom...')
@@ -182,8 +182,8 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
         'pigz:amd64 (2.3.4-1, automatic), '
         'docker-ce:amd64 (5:18.09.7~3-0~debian-stretch), '
         'docker-ce-cli:amd64 (5:18.09.7~3-0~debian-stretch) '
-        'Commandline: apt-get install -y docker-ce docker-ce-cli containerd.io '
-        'Error: Sub-process /usr/bin/dpkg returned an error code (1)')
+        '[Commandline: apt-get install -y docker-ce docker-ce-cli containerd.io'
+        '] [Error: Sub-process /usr/bin/dpkg returned an error code (1)]')
     expected_short_message = (
         'Install: containerd.io:amd64 (1.2.6-3), '
         'linux-headers-4.9.0-9-common:amd64 (4...')
@@ -194,8 +194,8 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_message = (
         'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5) '
-        'Commandline: apt-get remove volatility '
-        'Requested-By: jxs (1005)')
+        '[Commandline: apt-get remove volatility] '
+        '[Requested-By: jxs (1005)]')
     expected_short_message = (
         'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5)')
     self._TestGetMessageStrings(
@@ -210,8 +210,8 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
         'Remove: python-distorm3:amd64 (3.3.4-2), '
         'python-imaging:amd64 (4.0.0-4), python-py:amd64 (1.4.32-3), '
         'python-openpyxl:amd64 (2.3.0-3), libdistorm3-3:amd64 (3.3.4-2), '
-        'python-jdcal:amd64 (1.0-1.2~deb9u1) Commandline: apt-get autoremove '
-        'Requested-By: jxs (1005)')
+        'python-jdcal:amd64 (1.0-1.2~deb9u1) [Commandline: apt-get autoremove] '
+        '[Requested-By: jxs (1005)]')
     expected_short_message = (
         'Remove: python-distorm3:amd64 (3.3.4-2), '
         'python-imaging:amd64 (4.0.0-4), pyth...')
