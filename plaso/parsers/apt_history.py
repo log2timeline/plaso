@@ -123,6 +123,129 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
     except ValueError:
       return None
 
+  def _ParseRecordStart(self, parser_mediator, structure):
+    """Parses the first line of a log record.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a log entry.
+    """
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'start_date')
+    self._date_time = self._BuildDateTime(time_elements_structure)
+    if not self._date_time:
+      parser_mediator.ProduceExtractionWarning(
+          'invalid date time value: {0!s}'.format(time_elements_structure))
+      return
+
+    self._event_data = AptHistoryLogEventData()
+    return
+
+  def _ParseRecordBody(self, structure):
+    """Parses a line of the body a log record.
+
+    Args:
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a log entry.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    if not self._date_time:
+      raise errors.ParseError('Unable to parse, record incomplete.')
+
+    # Command data
+    if structure[0] == 'Commandline:':
+      self._event_data.command = ''.join(structure)
+      return
+    if structure[0] == 'Error:':
+      self._event_data.error = ''.join(structure)
+      return
+    if structure[0] == 'Requested-By:':
+      self._event_data.requestor = ''.join(structure)
+      return
+
+    # Package lists
+    if structure[0] == 'Downgrade:':
+      self._downgrade = ''.join(structure)
+      return
+    if structure[0] == 'Install:':
+      self._install = ''.join(structure)
+      return
+    if structure[0] == 'Purge:':
+      self._purge = ''.join(structure)
+      return
+    if structure[0] == 'Remove:':
+      self._remove = ''.join(structure)
+      return
+    if structure[0] == 'Upgrade:':
+      self._upgrade = ''.join(structure)
+      return
+    return
+
+  def _ParseRecordEnd(self, parser_mediator):
+    """Parses the last line of a log record.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    if not self._date_time:
+      raise errors.ParseError('Unable to parse, record incomplete.')
+
+    # Create relevant events for record
+    if self._downgrade:
+      self._event_data.packages = self._downgrade
+      event = time_events.DateTimeValuesEvent(
+          self._date_time,
+          definitions.TIME_DESCRIPTION_DOWNGRADE,
+          time_zone=parser_mediator.timezone)
+      parser_mediator.ProduceEventWithEventData(event, self._event_data)
+    if self._install:
+      self._event_data.packages = self._install
+      event = time_events.DateTimeValuesEvent(
+          self._date_time,
+          definitions.TIME_DESCRIPTION_INSTALLATION,
+          time_zone=parser_mediator.timezone)
+      parser_mediator.ProduceEventWithEventData(event, self._event_data)
+    if self._purge:
+      self._event_data.packages = self._purge
+      event = time_events.DateTimeValuesEvent(
+          self._date_time,
+          definitions.TIME_DESCRIPTION_DELETED,
+          time_zone=parser_mediator.timezone)
+      parser_mediator.ProduceEventWithEventData(event, self._event_data)
+    if self._remove:
+      self._event_data.packages = self._remove
+      event = time_events.DateTimeValuesEvent(
+          self._date_time,
+          definitions.TIME_DESCRIPTION_DELETED,
+          time_zone=parser_mediator.timezone)
+      parser_mediator.ProduceEventWithEventData(event, self._event_data)
+    if self._upgrade:
+      self._event_data.packages = self._upgrade
+      event = time_events.DateTimeValuesEvent(
+          self._date_time,
+          definitions.TIME_DESCRIPTION_UPDATE,
+          time_zone=parser_mediator.timezone)
+      parser_mediator.ProduceEventWithEventData(event, self._event_data)
+
+    # Reset for next record
+    self._date_time = None
+    self._event_data = None
+    self._downgrade = None
+    self._install = None
+    self._purge = None
+    self._remove = None
+    self._upgrade = None
+
+    return
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
@@ -132,106 +255,17 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       key (str): identifier of the structure of tokens.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a log entry.
-
-    Raises:
-      ParseError: when the structure type is unknown.
     """
     if key == 'record_start':
-      time_elements_structure = self._GetValueFromStructure(
-          structure, 'start_date')
-      self._date_time = self._BuildDateTime(time_elements_structure)
-      if not self._date_time:
-        parser_mediator.ProduceExtractionWarning(
-            'invalid date time value: {0!s}'.format(time_elements_structure))
-        return
-
-      self._event_data = AptHistoryLogEventData()
+      self._ParseRecordStart(parser_mediator, structure)
       return
 
     if key == 'record_body':
-      if not self._date_time:
-        raise errors.ParseError('Unable to parse, record incomplete.')
-
-      # Command data
-      if structure[0] == 'Commandline:':
-        self._event_data.command = ''.join(structure)
-        return
-      if structure[0] == 'Error:':
-        self._event_data.error = ''.join(structure)
-        return
-      if structure[0] == 'Requested-By:':
-        self._event_data.requestor = ''.join(structure)
-        return
-
-      # Package lists
-      if structure[0] == 'Downgrade:':
-        self._downgrade = ''.join(structure)
-        return
-      if structure[0] == 'Install:':
-        self._install = ''.join(structure)
-        return
-      if structure[0] == 'Purge:':
-        self._purge = ''.join(structure)
-        return
-      if structure[0] == 'Remove:':
-        self._remove = ''.join(structure)
-        return
-      if structure[0] == 'Upgrade:':
-        self._upgrade = ''.join(structure)
-        return
-
+      self._ParseRecordBody(structure)
       return
 
     if key == 'record_end':
-      if not self._date_time:
-        raise errors.ParseError('Unable to parse, record incomplete.')
-
-      # Create relevant events for record
-      if self._downgrade:
-        self._event_data.packages = self._downgrade
-        event = time_events.DateTimeValuesEvent(
-            self._date_time,
-            definitions.TIME_DESCRIPTION_DOWNGRADE,
-            time_zone=parser_mediator.timezone)
-        parser_mediator.ProduceEventWithEventData(event, self._event_data)
-      if self._install:
-        self._event_data.packages = self._install
-        event = time_events.DateTimeValuesEvent(
-            self._date_time,
-            definitions.TIME_DESCRIPTION_INSTALLATION,
-            time_zone=parser_mediator.timezone)
-        parser_mediator.ProduceEventWithEventData(event, self._event_data)
-      if self._purge:
-        self._event_data.packages = self._purge
-        event = time_events.DateTimeValuesEvent(
-            self._date_time,
-            definitions.TIME_DESCRIPTION_DELETED,
-            time_zone=parser_mediator.timezone)
-        parser_mediator.ProduceEventWithEventData(event, self._event_data)
-      if self._remove:
-        self._event_data.packages = self._remove
-        event = time_events.DateTimeValuesEvent(
-            self._date_time,
-            definitions.TIME_DESCRIPTION_DELETED,
-            time_zone=parser_mediator.timezone)
-        parser_mediator.ProduceEventWithEventData(event, self._event_data)
-      if self._upgrade:
-        self._event_data.packages = self._upgrade
-        event = time_events.DateTimeValuesEvent(
-            self._date_time,
-            definitions.TIME_DESCRIPTION_UPDATE,
-            time_zone=parser_mediator.timezone)
-        parser_mediator.ProduceEventWithEventData(event, self._event_data)
-
-      # Reset for next record
-      self._date_time = None
-      self._event_data = None
-      self._downgrade = None
-      self._install = None
-      self._purge = None
-      self._remove = None
-      self._upgrade = None
-
+      self._ParseRecordEnd(parser_mediator)
       return
     return
 
