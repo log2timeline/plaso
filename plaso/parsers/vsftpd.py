@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import calendar
-
 import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -12,6 +10,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import text_parser
 from plaso.parsers import manager
@@ -61,20 +60,27 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
       ('logline', _LOG_LINE),
   ]
 
-  def _get_time_elements_tuple(self, structure):
+  def _GetTimeElementsTuple(self, structure):
     """
     Pulls datetime information from data_time structure and returns tuple
     for dfdatetime.time_elements
+
+    Args:
+        structure (pyparsing.ParseResults): structure of tokens derived from
+            a line of a text file.
+
+    Returns:
+      tuple: containing:
+        year (int): year.
+        month (int): month, where 1 represents January.
+        day_of_month (int): day of month, where 1 is the first day of the month.
+        hours (int): hours.
+        minutes (int): minutes.
+        seconds (int): seconds.
     """
-
-    year = self._GetValueFromStructure(structure, 'year')
-    month = list(calendar.month_abbr).index(
-        self._GetValueFromStructure(structure, 'month'))
-    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
-
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    _, month, day_of_month, hours, minutes, seconds, year = time_elements_tuple
+    month = timelib.MONTH_DICT.get(month.lower(), 0)
     return (year, month, day_of_month, hours, minutes, seconds)
 
 
@@ -87,8 +93,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
         structure (pyparsing.ParseResults): structure of tokens derived from
             a line of a text file.
     """
-    time_elements_tuple = self._get_time_elements_tuple(
-        self._GetValueFromStructure(structure, 'date_time'))
+    time_elements_tuple = self._GetTimeElementsTuple(structure)
     try:
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
@@ -146,8 +151,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
       logger.debug('Not a vsftpd log file')
       return False
 
-    time_elements_tuple = self._get_time_elements_tuple(
-        self._GetValueFromStructure(structure, 'date_time'))
+    time_elements_tuple = self._GetTimeElementsTuple(structure)
     try:
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
