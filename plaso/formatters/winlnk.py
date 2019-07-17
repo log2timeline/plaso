@@ -52,9 +52,10 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
 
     if not linked_path:
       linked_path = getattr(event_data, 'relative_path', None)
-      working_directory = getattr(event_data, 'working_directory', None)
-      if working_directory:
-        linked_path = '\\'.join([working_directory, linked_path])
+      if linked_path:
+        working_directory = getattr(event_data, 'working_directory', None)
+        if working_directory:
+          linked_path = '\\'.join([working_directory, linked_path])
 
     return linked_path or 'Unknown'
 
