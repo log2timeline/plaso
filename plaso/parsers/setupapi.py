@@ -215,6 +215,8 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
       if not end_time:
         parser_mediator.ProduceExtractionWarning(
             'invalid date time value: {0!s}'.format(time_structure))
+      # Store last end time so that an event with the data from the
+      # following exit status section can be created.
       self._last_end_time = end_time
       return
 
@@ -250,6 +252,9 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     try:
       self._LOG_HEADER_START.parseString(line)
+      # Reset stored values for parsing a new file.
+      self._last_end_time = None
+      self._last_entry_type = None
     except pyparsing.ParseException as exception:
       logger.debug('Not a Windows Setupapi log file: {0!s}'.format(exception))
       return False
