@@ -39,9 +39,10 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
       {'data_type': 'syslog:line',
        'display_name': 'log/syslog.1',
        'filename': 'log/syslog.1',
-       'hostname': b'ubuntu',
+       'hostname': 'ubuntu',
        'my_number': 123,
        'some_additional_foo': True,
+       'a_binary_field': b'binary',
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),

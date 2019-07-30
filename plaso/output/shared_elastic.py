@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import codecs
 import os
 import logging
 
@@ -163,16 +162,14 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           continue
       event_values[attribute_name] = attribute_value
 
-      # The elasticsearch serializer cannot serialize bytes objects.
       if isinstance(attribute_value, py2to3.BYTES_TYPE):
         # Some parsers have written bytes values to storage.
+        attribute_value = attribute_value.decode('utf-8', 'replace')
         logger.warning(
-            'Found bytes value "{0!s}" for attribute "{1:s}" in event: {2!s}. '
-            'Value will be converted to UTF-8'.format(
-                attribute_value, attribute_name, event_values))
-        unicode_attribute_value = codecs.decode(
-            attribute_value, 'utf-8', 'replace')
-        event_values[attribute_name] = unicode_attribute_value
+            'Found bytes value for attribute "{0:s}" for data type: '
+            '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
+                attribute_name, event_data.data_type, attribute_value))
+        event_values[attribute_name] = attribute_value
 
     # Add a string representation of the timestamp.
     try:

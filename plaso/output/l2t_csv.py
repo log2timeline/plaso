@@ -7,8 +7,6 @@ http://forensicswiki.org/wiki/L2T_CSV
 
 from __future__ import unicode_literals
 
-import codecs
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.formatters import manager as formatters_manager
@@ -138,12 +136,11 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       if attribute_name in unformatted_attributes:
         # Some parsers have written bytes values to storage.
         if isinstance(attribute_value, py2to3.BYTES_TYPE):
+          attribute_value = attribute_value.decode('utf-8', 'replace')
           logger.warning(
-              'Found bytes value "{0!s}" for attribute "{1:s}" for data type: '
-              '{2!s}. Value will be converted to UTF-8'.format(
-                  attribute_value, attribute_name, event_data.data_type))
-          attribute_value = codecs.decode(
-              attribute_value, 'utf-8', 'replace')
+              'Found bytes value for attribute "{0:s}" for data type: '
+              '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
+                  attribute_name, event_data.data_type, attribute_value))
 
         # With ! in {1!s} we force a string conversion since some of
         # the extra attributes values can be integer, float point or
