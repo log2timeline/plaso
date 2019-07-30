@@ -494,7 +494,8 @@ class PsortTool(
     """Processes a plaso storage file.
 
     Raises:
-      BadConfigOption: when a configuration parameter fails validation.
+      BadConfigOption: when a configuration parameter fails validation or the
+          storage file cannot be opened with read access.
       RuntimeError: if a non-recoverable situation is encountered.
     """
     self._CheckStorageFile(self._storage_file_path)
