@@ -1,6 +1,6 @@
 # Fedora Packaged Release 
 
-### Fedora 28, 29 and 30
+### Fedora 29 and 30
 
 **Note that other versions of Fedora are not supported at this time.**
 
