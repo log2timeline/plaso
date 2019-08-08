@@ -1,6 +1,11 @@
+stages:
+  - lint
+  - test
+  - end_to_end
 matrix:
   include:
   - name: "Pylint on Ubuntu Bionic (18.04) (Docker) with Python 3.6"
+    stage: lint
     env: [TARGET="pylint", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
@@ -112,6 +117,7 @@ matrix:
     sudo: required
     group: edge
   - name: "Jenkins on Ubuntu Bionic (18.04) (Docker) with Python 2.7"
+    stage: end_to_end
     env: [TARGET="jenkins2", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
@@ -122,6 +128,7 @@ matrix:
     services:
     - docker
   - name: "Jenkins on Ubuntu Bionic (18.04) (Docker) with Python 3.6"
+    stage: end_to_end
     env: [TARGET="jenkins3", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
