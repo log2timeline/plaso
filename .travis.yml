@@ -16,6 +16,7 @@ matrix:
     services:
     - docker
   - name: "Fedora Core 30 (Docker) with Python 2.7"
+    stage: test
     env: FEDORA_VERSION="30"
     os: linux
     dist: xenial
@@ -26,6 +27,7 @@ matrix:
     services:
     - docker
   - name: "Fedora Core 30 (Docker) with Python 3.7"
+    stage: test
     env: FEDORA_VERSION="30"
     os: linux
     dist: xenial
@@ -36,6 +38,7 @@ matrix:
     services:
     - docker
   - name: "Ubuntu Bionic (18.04) (Docker) with Python 2.7"
+    stage: test
     env: [TARGET="coverage", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
@@ -46,6 +49,7 @@ matrix:
     services:
     - docker
   - name: "Ubuntu Bionic (18.04) (Docker) with Python 3.6"
+    stage: test
     env: UBUNTU_VERSION="18.04"
     os: linux
     dist: xenial
@@ -56,6 +60,7 @@ matrix:
     services:
     - docker
   - name: "Ubuntu Bionic (18.04) (Docker) with Python 2.7 and tox"
+    stage: test
     env: [TOXENV="py27", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
@@ -66,6 +71,7 @@ matrix:
     services:
     - docker
   - name: "Ubuntu Bionic (18.04) (Docker) with Python 3.4 and tox"
+    stage: test
     env: [TOXENV="py34", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
@@ -76,6 +82,7 @@ matrix:
     services:
     - docker
   - name: "Ubuntu Bionic (18.04) (Docker) with Python 3.5 and tox"
+    stage: test
     env: [TOXENV="py35", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
@@ -86,6 +93,7 @@ matrix:
     services:
     - docker
   - name: "Ubuntu Bionic (18.04) (Docker) with Python 3.6 and tox"
+    stage: test
     env: [TOXENV="py36", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
@@ -96,6 +104,7 @@ matrix:
     services:
     - docker
   - name: "Ubuntu Bionic (18.04) (Docker) with Python 3.7 and tox"
+    stage: test
     env: [TOXENV="py37", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
@@ -106,11 +115,13 @@ matrix:
     services:
     - docker
   - name: "MacOS with Python 2.7.10"
+    stage: test
     env: [TARGET="macos-python27", PYTHONPATH="/Library/Python/2.7/site-packages/"]
     os: osx
     osx_image: xcode9.2
     language: generic
   - name: "Dockerfile"
+    stage: end_to_end
     env: TARGET="dockerfile"
     os: linux
     dist: xenial
