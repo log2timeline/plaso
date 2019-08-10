@@ -123,10 +123,13 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
 
-    expected_message = '{0:s} [{1:s}]'.format(
-        event_data.binary_path, event_data.user_sid)
-    # TODO: Fix this check for long entries
-    expected_short_message = '{0:s}'.format(event_data.binary_path)
+    expected_message = (
+        '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
+        'v1.0\\powershell.exe [S-1-5-21-321011808-3761883066-353627080-1000]')
+
+    expected_short_message = (
+        '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\v1.0'
+        '\\powershell.exe')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

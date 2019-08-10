@@ -18,8 +18,8 @@ class BackgroundActivityModeratorEventData(events.EventData):
   """Background Activity Moderator event data.
 
   Attributes:
-    user_sid (str): user SID associated with entry.
     binary_path (str): binary executed.
+    user_sid (str): user SID associated with entry.
   """
 
   DATA_TYPE = 'windows:registry:bam'
@@ -29,8 +29,8 @@ class BackgroundActivityModeratorEventData(events.EventData):
     super(
         BackgroundActivityModeratorEventData,
         self).__init__(data_type=self.DATA_TYPE)
-    self.user_sid = None
     self.binary_path = None
+    self.user_sid = None
 
 
 class BackgroundActivityModeratorWindowsRegistryPlugin(
@@ -63,14 +63,14 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
       ParseError: if the value data could not be parsed.
     """
     try:
-      date_time = self._ReadStructureFromByteStream(
+      timestamp = self._ReadStructureFromByteStream(
           registry_value, 0, self._GetDataTypeMap('filetime'))
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
           'Unable to parse timestamp with error: {0!s}'.format(
               exception))
 
-    return date_time
+    return timestamp
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -90,14 +90,14 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
     for sid_key in sid_keys:
       for value in sid_key.GetValues():
         if not value.name == 'Version' and not value.name == 'SequenceNumber':
-          filetime = self._ParseValue(value.data)
+          timestamp = self._ParseValue(value.data)
 
-          if filetime:
+          if timestamp:
             event_data = BackgroundActivityModeratorEventData()
-            event_data.user_sid = sid_key.name
             event_data.binary_path = value.name
+            event_data.user_sid = sid_key.name
 
-            date_time = dfdatetime_filetime.Filetime(timestamp=filetime)
+            date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
             event = time_events.DateTimeValuesEvent(
                 date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
