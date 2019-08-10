@@ -39,8 +39,8 @@ class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
       object: unserialized object.
     """
     # We use json.dumps to make sure the dict does not serialize into
-    # an invalid JSON string e.g. one that contains string prefixes
-    # like b'' or ''.
+    # an invalid JSON string such as one that contains Python string prefixes
+    # like b'' or u''.
     json_string = json.dumps(json_dict)
     unserialized_object = serializer_object.ReadSerialized(json_string)
 

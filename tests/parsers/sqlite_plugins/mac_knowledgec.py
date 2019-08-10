@@ -36,7 +36,8 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     expected_message = (
         'Application com.apple.Installer-Progress executed for 1 seconds')
     expected_short_message = 'Application com.apple.Installer-Progress'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessMojave(self):
     """Tests the Process function on a MacOS High Sierra database."""
@@ -59,7 +60,8 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     expected_message = (
         'Application com.apple.Terminal executed for 1041 seconds')
     expected_short_message = 'Application com.apple.Terminal'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[212]
     self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:20.000000')
@@ -73,7 +75,8 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     expected_message = (
         'Visited: https://www.instagram.com/ (Instagram) Duration: 0')
     expected_short_message = 'Safari: https://www.instagram.com/'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

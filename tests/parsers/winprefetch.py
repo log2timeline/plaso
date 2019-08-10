@@ -102,7 +102,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         '\\DEVICE\\HARDDISKVOLUME1 '
         'Origin: CMD.EXE-087B4001.pf')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
@@ -141,7 +142,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     expected_short_message = 'PING.EXE was run 14 time(s)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # The volume creation event.
     event = events[0]
@@ -200,7 +202,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     expected_short_message = 'WUAUCLT.EXE was run 25 time(s)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # The volume creation event.
     event = events[0]
@@ -221,7 +224,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         '\\DEVICE\\HARDDISKVOLUME1 '
         'Origin: WUAUCLT.EXE-830BCC14.pf')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""

@@ -44,7 +44,8 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
         'Status: READ '
         'Message: Yo Fred this is my new number.')
     expected_short_message = 'Yo Fred this is my new number.'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

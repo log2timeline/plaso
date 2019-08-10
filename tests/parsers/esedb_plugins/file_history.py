@@ -49,7 +49,8 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     expected_short_message = 'Filename: {0:s}'.format(filename)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

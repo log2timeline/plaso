@@ -61,12 +61,12 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
       self.CheckTimestamp(event.timestamp, expected_times[index])
 
       event_data = self._GetEventDataOfEvent(storage_writer, event)
-
       self.assertEqual(event_data.container_id, container_identifier)
       self.assertEqual(event_data.log_line, expected_log)
       self.assertEqual(event_data.log_source, 'stdout')
+
       self._TestGetMessageStrings(
-          event, expected_message, expected_short_message)
+          event_data, expected_message, expected_short_message)
 
   def testParseContainerConfig(self):
     """Tests the _ParseContainerConfigJSON function."""

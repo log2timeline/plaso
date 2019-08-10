@@ -43,7 +43,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
     self._debug_output = False
     self._enable_sigsegv_handler = enable_sigsegv_handler
-    self._guppy_memory_profiler = None
     self._log_filename = None
     self._memory_profiler = None
     self._original_sigsegv_handler = None
@@ -98,9 +97,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   def _OnCriticalError(self):
     """The process on critical error handler.
 
-    This method is called when the process encounters a critical error e.g.
-    a segfault. A sub class should override this method to do the necessary
-    actions before the original critical error signal handler it called.
+    This method is called when the process encounters a critical error for
+    example a segfault. A sub class should override this method to do the
+    necessary actions before the original critical error signal handler it
+    called.
 
     Be aware that the state of the process should not be trusted, as a
     significant part of memory could have been overwritten before a segfault.
@@ -181,11 +181,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     if not configuration:
       return
 
-    if configuration.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profilers.GuppyMemoryProfiler(
-          self._name, configuration)
-      self._guppy_memory_profiler.Start()
-
     if configuration.HaveProfileMemory():
       self._memory_profiler = profilers.MemoryProfiler(
           self._name, configuration)
@@ -230,11 +225,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
   def _StopProfiling(self):
     """Stops profiling."""
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-      self._guppy_memory_profiler.Stop()
-      self._guppy_memory_profiler = None
-
     if self._memory_profiler:
       self._memory_profiler.Stop()
       self._memory_profiler = None
@@ -290,7 +280,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     # We need to set the is running status explicitly to True in case
     # the process completes before the engine is able to determine
-    # the status of the process, e.g. in the unit tests.
+    # the status of the process, such as in the unit tests.
     self._status_is_running = True
 
     # Logging needs to be configured before the first output otherwise we

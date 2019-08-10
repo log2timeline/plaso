@@ -87,7 +87,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testProcessNtuserZones(self):
     """Tests the Process function on a Zones key."""
@@ -139,7 +139,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testProcessSoftwareLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
@@ -268,7 +268,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testProcessSoftwareZones(self):
     """Tests the Process function on a Zones key."""
@@ -401,7 +401,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -41,7 +41,8 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'URL: http://facebook.com/ '
         '[count: 2] http_non_get: False')
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

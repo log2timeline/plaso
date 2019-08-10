@@ -46,7 +46,8 @@ class PlsRecallTest(test_lib.ParserTestCase):
 
     expected_short_message = '206 tsltmp DB11 {0:s}'.format(expected_query)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -95,6 +95,58 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
   # TODO: add tests for GetFormatsWithSignatures.
 
+  def testCheckParserNames(self):
+    """Tests the CheckFilterExpression function."""
+    TestParserWithPlugins.RegisterPlugin(TestPlugin)
+    manager.ParsersManager.RegisterParser(TestParserWithPlugins)
+    manager.ParsersManager.RegisterParser(TestParser)
+
+    try:
+      expression_invalid_and_valid_names = 'non_existent,test_parser'
+      expected_valid_elements = set(['test_parser'])
+      expected_invalid_elements = set(['non_existent'])
+      valid_elements, invalid_elements = (
+          manager.ParsersManager.CheckFilterExpression(
+              expression_invalid_and_valid_names))
+      self.assertEqual(expected_valid_elements, valid_elements)
+      self.assertEqual(expected_invalid_elements, invalid_elements)
+
+      expression_invalid_and_valid_names_with_negation = (
+          '!test_parser,!non_existent')
+      expected_valid_elements = set(['!test_parser'])
+      expected_invalid_elements = set(['!non_existent'])
+      valid_elements, invalid_elements = (
+          manager.ParsersManager.CheckFilterExpression(
+              expression_invalid_and_valid_names_with_negation))
+      self.assertEqual(expected_valid_elements, valid_elements)
+      self.assertEqual(expected_invalid_elements, invalid_elements)
+
+      expression_with_plugins = (
+          '!test_parser_with_plugins/test_plugin,'
+          'test_parser_with_plugins/non_existent')
+      expected_valid_elements = set(['!test_parser_with_plugins/test_plugin'])
+      expected_invalid_elements = set(['test_parser_with_plugins/non_existent'])
+      valid_elements, invalid_elements = (
+          manager.ParsersManager.CheckFilterExpression(expression_with_plugins))
+      self.assertEqual(expected_valid_elements, valid_elements)
+      self.assertEqual(expected_invalid_elements, invalid_elements)
+
+      none_expression = None
+      all_parser_names = manager.ParsersManager._parser_classes.keys()
+      expected_valid_elements = set(all_parser_names)
+      expected_invalid_elements = set()
+      valid_elements, invalid_elements = (
+          manager.ParsersManager.CheckFilterExpression(
+              none_expression))
+      self.assertEqual(expected_valid_elements, valid_elements)
+      self.assertEqual(expected_invalid_elements, invalid_elements)
+
+    # Degister parsers to ensure unrelated tests don't fail.
+    finally:
+      manager.ParsersManager.DeregisterParser(TestParser)
+      manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
+      TestParserWithPlugins.DeregisterPlugin(TestPlugin)
+
   def testGetNamesOfParsersWithPlugins(self):
     """Tests the GetNamesOfParsersWithPlugins function."""
     parsers_names = manager.ParsersManager.GetNamesOfParsersWithPlugins()

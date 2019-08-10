@@ -33,20 +33,26 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2017-01-27 09:40:55.913258')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'test-VirtualBox [systemd, pid: 1] Started User Manager for '
         'UID 1000.')
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
     # This event uses XZ compressed data
     event = events[2098]
 
     self.CheckTimestamp(event.timestamp, '2017-02-06 16:24:32.564585')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = 'test-VirtualBox [root, pid: 22921] {0:s}'.format(
         'a' * 692)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseLZ4(self):
     """Tests the Parse function on a journal with LZ4 compressed events."""
@@ -63,13 +69,18 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2018-07-03 15:00:16.682340')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = 'testlol [systemd, pid: 822] Reached target Paths.'
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
     # This event uses LZ4 compressed data
     event = events[84]
 
     self.CheckTimestamp(event.timestamp, '2018-07-03 15:19:04.667807')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     # source: https://github.com/systemd/systemd/issues/6237
     # The text used in the test message was triplicated to make it long enough
@@ -81,7 +92,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
          'permitting numeric first characters is done on purpose: to avoid '
          'ambiguities between numeric UID and textual user names.'*3))
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
@@ -106,11 +118,14 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2016-10-24 13:20:01.063423')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'test-VirtualBox [systemd-journald, pid: 569] Runtime journal '
         '(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     self.assertEqual(storage_writer.number_of_warnings, 1)
 

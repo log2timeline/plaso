@@ -41,6 +41,7 @@ from plaso.parsers import safari_cookies
 from plaso.parsers import santa
 from plaso.parsers import sccm
 from plaso.parsers import selinux
+from plaso.parsers import setupapi
 from plaso.parsers import skydrivelog
 from plaso.parsers import sophos_av
 from plaso.parsers import sqlite

@@ -66,7 +66,8 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_message = (
         'http://s.greenqloud.com/ (__utma) Flags: [HTTP only]: False')
     expected_short_message = 's.greenqloud.com (__utma)'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check one of the visits to pubmatic.com.
     event = test_events[62]
@@ -83,7 +84,8 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_message = (
         'http://pubmatic.com/ (KRTBCOOKIE_391) Flags: [HTTP only]: False')
     expected_short_message = 'pubmatic.com (KRTBCOOKIE_391)'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

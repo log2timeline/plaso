@@ -33,7 +33,7 @@ class BasePlugin(object):
 
   # The name of the plugin. This is the name that is used in the registration
   # and used for parser/plugin selection, so this needs to be concise and unique
-  # for all plugins/parsers, e.g. 'Chrome', 'Safari', 'UserAssist', etc.
+  # for all plugins/parsers, such as 'Chrome', 'Safari' or 'UserAssist'.
   NAME = 'base_plugin'
 
   DESCRIPTION = ''

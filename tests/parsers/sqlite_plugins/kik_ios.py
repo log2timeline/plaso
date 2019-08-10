@@ -46,7 +46,8 @@ class KikMessageTest(test_lib.SQLitePluginTestCase):
         'Type: sent '
         'Message: Hello')
     expected_short_message = 'Hello'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -45,7 +45,8 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
         'Visited: {0:s} (Am\xedn\xf3s\xfdrur ) '
         'Visit Count: 1').format(expected_url)
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

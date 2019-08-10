@@ -39,15 +39,19 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     expected_string = (
         'Name: Root Entry')
 
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
     # Check one other entry.
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2013-05-16 02:29:49.704000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_string = 'Name: MsoDataStore'
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
 
 if __name__ == '__main__':

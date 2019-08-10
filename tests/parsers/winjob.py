@@ -63,7 +63,8 @@ class WinJobTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Application: {0:s} /ua /insta...').format(expected_application)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

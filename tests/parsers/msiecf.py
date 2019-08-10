@@ -85,7 +85,8 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'Location: Visited: testing@http://www.trafficfusionx.com/download'
         '/tfscrn2/fun...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseLeakAndRedirect(self):
     """Tests the Parse function with leak and redirected records."""
@@ -126,7 +127,8 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'Location: http://col.stc.s-msn.com/br/gbl/lg/csl/favicon.ico '
         'Cached file: R6Q...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[21]
     expected_url = (
@@ -153,7 +155,8 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Cached file: VUQHQA73\\ADSAdClient31[1].htm')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[21]
     self.assertEqual(event.timestamp, 0)
@@ -173,7 +176,8 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'Location: http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;'
         'sz=1x1;pc=[TPA...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

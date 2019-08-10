@@ -48,7 +48,7 @@ log2timeline.py --profilers=task_queue --profiling-directory=profile plaso.db im
 ## Profiling memory usage
 
 The memory usage of the worker processes used by log2timeline.py can be profiled
- with the memory profiler and/or guppy.
+ with the memory profiler.
 
 ### Profiling Python memory usage with the memory profiler
 
@@ -57,20 +57,6 @@ log2timeline.py with the following options:
 ```
 log2timeline.py --profilers=memory --profiling-directory=profile plaso.db image.raw
 ```
-
-### Profiling Python memory usage with guppy
-
-To profile Python memory usage with guppy you'll need to install 
-[guppy](https://pypi.python.org/pypi/guppy), version 0.1.10 or later is 
-recommended. If plaso detects that guppy is available it will enable the 
-`guppy` profiling option.
-
-Run log2timeline.py with the following options:
-```
-log2timeline.py --profilers=guppy --profiling_directory=profile --profiling-sample-rate=5000 plaso.dump image.raw
-```
-
-This will create a #.hpy file per worker, where # is the number of the worker.
 
 ## Graphing profiles
 
@@ -84,14 +70,6 @@ Requires matplotlib and numpy
 
 `./utils/plot-task-queue.py profile`
 
-### Guppy
-
-Guppy has a built-in profile browser to view the .hpy files e.g.
-```
-from guppy import hpy
-heapy = hpy()
-heapy.pb('0.hpy')
-```
 
 ### Also see
 

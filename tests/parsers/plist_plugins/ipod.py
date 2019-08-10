@@ -41,17 +41,6 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2013-10-09 19:27:54.000000')
-
-    expected_message = (
-        'Device ID: 4C6F6F6E65000000 '
-        'Type: iPhone [10016] '
-        'Connected 1 times '
-        'Serial nr: 526F676572 '
-        'IMEI [012345678901234]')
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
-
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
 
@@ -61,6 +50,17 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     self.assertEqual(event_data.firmware_version, 256)
     self.assertEqual(event_data.imei, '012345678901234')
     self.assertEqual(event_data.use_count, 1)
+
+    expected_message = (
+        'Device ID: 4C6F6F6E65000000 '
+        'Type: iPhone [10016] '
+        'Connected 1 times '
+        'Serial nr: 526F676572 '
+        'IMEI [012345678901234]')
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -45,19 +45,15 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_string = '@%windir%\\system32\\migwiz\\wet.dll,-590'
-    self.assertEqual(event_data.description, expected_string)
-
-    expected_string = '.\\migwiz\\migwiz.exe'
-    self.assertEqual(event_data.relative_path, expected_string)
-
-    expected_string = '%windir%\\system32\\migwiz'
-    self.assertEqual(event_data.working_directory, expected_string)
-
-    expected_string = '%windir%\\system32\\migwiz\\migwiz.exe'
-    self.assertEqual(event_data.icon_location, expected_string)
-    self.assertEqual(event_data.env_var_location, expected_string)
+    self.assertEqual(event_data.data_type, 'windows:lnk:link')
+    self.assertEqual(
+        event_data.description, '@%windir%\\system32\\migwiz\\wet.dll,-590')
+    self.assertEqual(event_data.relative_path, '.\\migwiz\\migwiz.exe')
+    self.assertEqual(event_data.working_directory, '%windir%\\system32\\migwiz')
+    self.assertEqual(
+        event_data.icon_location, '%windir%\\system32\\migwiz\\migwiz.exe')
+    self.assertEqual(
+        event_data.env_var_location, '%windir%\\system32\\migwiz\\migwiz.exe')
 
     # The creation timestamp.
     event = events[1]
@@ -73,6 +69,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:lnk:link')
+
     expected_message = (
         '[@%windir%\\system32\\migwiz\\wet.dll,-590] '
         'File size: 544768 '
@@ -86,7 +85,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         '[@%windir%\\system32\\migwiz\\wet.dll,-590] '
         '%windir%\\system32\\migwiz\\.\\migwiz\\mi...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # A distributed link tracking event.
     event = events[4]
@@ -114,6 +114,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # A shortcut event.
     event = events[16]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         '[Nero InfoTool provides you with information about the most '
         'important features of installed drives, inserted discs, installed '
@@ -139,12 +141,15 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         '[Nero InfoTool provides you with information about the most '
         'important feature...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # A shell item event.
     event = events[12]
 
     self.CheckTimestamp(event.timestamp, '2009-06-05 20:13:20.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         'Name: InfoTool.exe '
@@ -159,7 +164,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'NTFS file reference: 81349-1 '
         'Origin: NeroInfoTool.lnk')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

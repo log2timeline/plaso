@@ -128,7 +128,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'Group: [REG_SZ] Pnp Filter').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""

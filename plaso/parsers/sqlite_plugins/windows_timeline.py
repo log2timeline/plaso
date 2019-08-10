@@ -55,8 +55,8 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
     package_identifier (str): the package ID or location of the executable
         the user interacted with.
     reporting_app (str): the name of the application that reported the user's
-        interaction. This is the name of a monitoring tool, e.g.
-        ShellActivityMonitor
+        interaction. This is the name of a monitoring tool, for example
+        "ShellActivityMonitor".
     active_duration_seconds (int): the number of seconds the user spent
         interacting with the program.
   """

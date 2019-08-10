@@ -34,8 +34,8 @@ class AttributeContainer(object):
   a container of attributes with basic accessors and mutators.
 
   The CONTAINER_TYPE class attribute contains a string that identifies
-  the container type e.g. the container type "event" identifiers an event
-  object.
+  the container type, for example the container type "event" identifiers
+  an event object.
 
   Attributes are public class members of an serializable type. Protected
   and private class members are not to be serialized.

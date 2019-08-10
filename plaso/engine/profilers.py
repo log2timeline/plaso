@@ -8,11 +8,6 @@ import gzip
 import os
 import time
 
-try:
-  from guppy import hpy
-except ImportError:
-  hpy = None
-
 
 class CPUTimeMeasurement(object):
   """The CPU time measurement.
@@ -136,65 +131,6 @@ class CPUTimeProfiler(SampleFileProfiler):
           measurements.start_sample_time, profile_name,
           measurements.total_cpu_time)
       self._WritesString(sample)
-
-
-class GuppyMemoryProfiler(object):
-  """The guppy-based memory profiler."""
-
-  def __init__(self, identifier, configuration):
-    """Initializes a memory profiler.
-
-    Args:
-      identifier (str): unique name of the profile.
-      configuration (ProfilingConfiguration): profiling configuration.
-    """
-    super(GuppyMemoryProfiler, self).__init__()
-    self._identifier = identifier
-    self._path = configuration.directory
-    self._profiling_sample = 0
-    self._profiling_sample_rate = configuration.sample_rate
-    self._heapy = None
-    self._sample_file = '{0!s}.hpy'.format(identifier)
-
-    if self._path:
-      self._sample_file = os.path.join(self._path, self._sample_file)
-
-    if hpy:
-      self._heapy = hpy()
-
-  @classmethod
-  def IsSupported(cls):
-    """Determines if the profiler is supported.
-
-    Returns:
-      bool: True if the profiler is supported.
-    """
-    return hpy is not None
-
-  def Sample(self):
-    """Takes a sample for profiling."""
-    self._profiling_sample += 1
-
-    if self._profiling_sample >= self._profiling_sample_rate:
-      if self._heapy:
-        heap = self._heapy.heap()
-        heap.dump(self._sample_file)
-
-      self._profiling_sample = 0
-
-  def Start(self):
-    """Starts the profiler."""
-    if self._heapy:
-      self._heapy.setrelheap()
-
-      try:
-        os.remove(self._sample_file)
-      except OSError:
-        pass
-
-  def Stop(self):
-    """Stops the profiler."""
-    return
 
 
 class MemoryProfiler(SampleFileProfiler):
