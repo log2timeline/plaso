@@ -34,7 +34,11 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
         '"/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", '
         '49283 bytes, 931.38Kbyte/sec')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+    event_data = self._GetEventDataOfEvent(event)
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
