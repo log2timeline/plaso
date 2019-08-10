@@ -89,7 +89,7 @@ class ExtractionTool(
           be expanded or if an invalid parser or plugin name is specified.
     """
     parser_filter_expression = self._parser_filter_expression
-    if parser_filter_expression:
+    if not parser_filter_expression:
       operating_system_family = knowledge_base.GetValue('operating_system')
       operating_system_product = knowledge_base.GetValue(
           'operating_system_product')
