@@ -16,27 +16,28 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class AptHistoryLogEventData(events.EventData):
+class APTHistoryLogEventData(events.EventData):
   """APT History log event data.
 
   Attributes:
-    requestor (str): user requesting the activity.
+    command (str): command exectued
     error (str): reported error.
     packages (str): list of packages being affected.
+    requester (str): user requesting the activity.
   """
 
   DATA_TYPE = 'apt:history:line'
 
   def __init__(self):
     """Initializes event data."""
-    super(AptHistoryLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(APTHistoryLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.command = None
-    self.requestor = None
     self.error = None
     self.packages = None
+    self.requester = None
 
 
-class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
+class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses events from APT History log files."""
 
   NAME = 'apt_history'
@@ -93,7 +94,7 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
 
   def __init__(self):
     """Initializes an APT History parser."""
-    super(AptHistoryLogParser, self).__init__()
+    super(APTHistoryLogParser, self).__init__()
     self._date_time = None
     self._event_data = None
     self._downgrade = None
@@ -111,8 +112,8 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           derived from an APT History time stamp.
 
     Returns:
-      dfdatetime.TimeElements: date and time extracted from the value or None
-          if the value does not represent a valid string.
+      dfdatetime.TimeElements: date and time extracted from the structure or
+          None f the structure does not represent a valid string.
     """
     try:
       date_time = dfdatetime_time_elements.TimeElements(
@@ -140,11 +141,11 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           'invalid date time value: {0!s}'.format(time_elements_structure))
       return
 
-    self._event_data = AptHistoryLogEventData()
+    self._event_data = APTHistoryLogEventData()
     return
 
   def _ParseRecordBody(self, structure):
-    """Parses a line of the body a log record.
+    """Parses a line from the body of a log record.
 
     Args:
       structure (pyparsing.ParseResults): structure of tokens derived from
@@ -159,31 +160,28 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
     # Command data
     if structure[0] == 'Commandline:':
       self._event_data.command = ''.join(structure)
-      return
-    if structure[0] == 'Error:':
+
+    elif structure[0] == 'Error:':
       self._event_data.error = ''.join(structure)
-      return
-    if structure[0] == 'Requested-By:':
-      self._event_data.requestor = ''.join(structure)
-      return
+
+    elif structure[0] == 'Requested-By:':
+      self._event_data.requester = ''.join(structure)
 
     # Package lists
-    if structure[0] == 'Downgrade:':
+    elif structure[0] == 'Downgrade:':
       self._downgrade = ''.join(structure)
-      return
-    if structure[0] == 'Install:':
+
+    elif structure[0] == 'Install:':
       self._install = ''.join(structure)
-      return
-    if structure[0] == 'Purge:':
+
+    elif structure[0] == 'Purge:':
       self._purge = ''.join(structure)
-      return
-    if structure[0] == 'Remove:':
+
+    elif structure[0] == 'Remove:':
       self._remove = ''.join(structure)
-      return
-    if structure[0] == 'Upgrade:':
+
+    elif structure[0] == 'Upgrade:':
       self._upgrade = ''.join(structure)
-      return
-    return
 
   def _ParseRecordEnd(self, parser_mediator):
     """Parses the last line of a log record.
@@ -206,6 +204,7 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           definitions.TIME_DESCRIPTION_DOWNGRADE,
           time_zone=parser_mediator.timezone)
       parser_mediator.ProduceEventWithEventData(event, self._event_data)
+
     if self._install:
       self._event_data.packages = self._install
       event = time_events.DateTimeValuesEvent(
@@ -213,6 +212,7 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           definitions.TIME_DESCRIPTION_INSTALLATION,
           time_zone=parser_mediator.timezone)
       parser_mediator.ProduceEventWithEventData(event, self._event_data)
+
     if self._purge:
       self._event_data.packages = self._purge
       event = time_events.DateTimeValuesEvent(
@@ -220,6 +220,7 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           definitions.TIME_DESCRIPTION_DELETED,
           time_zone=parser_mediator.timezone)
       parser_mediator.ProduceEventWithEventData(event, self._event_data)
+
     if self._remove:
       self._event_data.packages = self._remove
       event = time_events.DateTimeValuesEvent(
@@ -227,6 +228,7 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           definitions.TIME_DESCRIPTION_DELETED,
           time_zone=parser_mediator.timezone)
       parser_mediator.ProduceEventWithEventData(event, self._event_data)
+
     if self._upgrade:
       self._event_data.packages = self._upgrade
       event = time_events.DateTimeValuesEvent(
@@ -235,10 +237,11 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           time_zone=parser_mediator.timezone)
       parser_mediator.ProduceEventWithEventData(event, self._event_data)
 
-    # Reset for next record
+  def _ResetState(self):
+    """Resets stored values in the parser."""
     self._date_time = None
-    self._event_data = None
     self._downgrade = None
+    self._event_data = None
     self._install = None
     self._purge = None
     self._remove = None
@@ -264,8 +267,12 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
 
     if key == 'record_end':
       self._ParseRecordEnd(parser_mediator)
+      # Reset for next record.
+      self._ResetState()
       return
-    return
+
+    raise errors.ParseError(
+        'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is an APT History log file.
@@ -280,6 +287,8 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     try:
       self._RECORD_START.parseString(line)
+      # Reset stored values for parsing a new file.
+      self._ResetState()
     except pyparsing.ParseException as exception:
       logger.debug('Not an APT History log file: {0!s}'.format(exception))
       return False
@@ -287,4 +296,5 @@ class AptHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(AptHistoryLogParser)
+
+manager.ParsersManager.RegisterParser(APTHistoryLogParser)

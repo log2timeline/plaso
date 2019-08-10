@@ -7,7 +7,7 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class AptHistoryLogFormatter(interface.ConditionalEventFormatter):
+class APTHistoryLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for an APT History log file event."""
 
   DATA_TYPE = 'apt:history:line'
@@ -16,7 +16,7 @@ class AptHistoryLogFormatter(interface.ConditionalEventFormatter):
       '{packages}',
       '[{command}]',
       '[{error}]',
-      '[{requestor}]']
+      '[{requester}]']
 
   FORMAT_STRING_SHORT_PIECES = ['{packages}']
 
@@ -24,4 +24,4 @@ class AptHistoryLogFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-manager.FormattersManager.RegisterFormatter(AptHistoryLogFormatter)
+manager.FormattersManager.RegisterFormatter(APTHistoryLogFormatter)

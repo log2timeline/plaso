@@ -13,7 +13,7 @@ from plaso.parsers import apt_history
 from tests.parsers import test_lib
 
 
-class AptHistoryLogUnitTest(test_lib.ParserTestCase):
+class APTHistoryLogUnitTest(test_lib.ParserTestCase):
   """Tests for the APT History log parser.
 
   Since APT History logs record in local time, these tests assume that the local
@@ -22,7 +22,7 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
 
   def testParseLog(self):
     """Tests the Parse function on apt_history.log."""
-    parser = apt_history.AptHistoryLogParser()
+    parser = apt_history.APTHistoryLogParser()
     storage_writer = self._ParseFile(['apt_history.log'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
@@ -220,7 +220,7 @@ class AptHistoryLogUnitTest(test_lib.ParserTestCase):
 
   def testParseInvalidLog(self):
     """Tests the Parse function on a non APT History log."""
-    parser = apt_history.AptHistoryLogParser()
+    parser = apt_history.APTHistoryLogParser()
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['setupapi.dev.log'], parser)
 
