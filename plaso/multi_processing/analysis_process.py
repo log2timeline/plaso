@@ -169,9 +169,6 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
         self._number_of_consumed_events += 1
 
-        if self._guppy_memory_profiler:
-          self._guppy_memory_profiler.Sample()
-
       logger.debug(
           '{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
               self._name, self._pid))

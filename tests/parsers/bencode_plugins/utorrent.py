@@ -30,9 +30,6 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_caption = 'plaso test'
-    expected_path = 'e:\\torrent\\files\\plaso test'
-
     # First test on when the torrent was added to the client.
     event = events[0]
 
@@ -40,8 +37,8 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.caption, expected_caption)
-    self.assertEqual(event_data.path, expected_path)
+    self.assertEqual(event_data.caption, 'plaso test')
+    self.assertEqual(event_data.path, 'e:\\torrent\\files\\plaso test')
     self.assertEqual(event_data.seedtime, 511)
 
     # Second test on when the torrent file was completely downloaded.
@@ -52,8 +49,8 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.caption, expected_caption)
-    self.assertEqual(event_data.path, expected_path)
+    self.assertEqual(event_data.caption, 'plaso test')
+    self.assertEqual(event_data.path, 'e:\\torrent\\files\\plaso test')
     self.assertEqual(event_data.seedtime, 511)
 
     # Third test on when the torrent was first modified.
@@ -64,8 +61,8 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.caption, expected_caption)
-    self.assertEqual(event_data.path, expected_path)
+    self.assertEqual(event_data.caption, 'plaso test')
+    self.assertEqual(event_data.path, 'e:\\torrent\\files\\plaso test')
     self.assertEqual(event_data.seedtime, 511)
 
     # Fourth test on when the torrent was again modified.
@@ -76,15 +73,16 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.caption, expected_caption)
-    self.assertEqual(event_data.path, expected_path)
+    self.assertEqual(event_data.caption, 'plaso test')
+    self.assertEqual(event_data.path, 'e:\\torrent\\files\\plaso test')
     self.assertEqual(event_data.seedtime, 511)
 
     expected_message = (
         'Torrent plaso test; Saved to e:\\torrent\\files\\plaso test; '
         'Minutes seeded: 511')
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

@@ -127,14 +127,6 @@ else:
             line = '%py2_install'
 
         elif line.startswith('%files'):
-          python_spec_file.extend([
-              '%package -n %{name}-tools',
-              'Requires: {0:s}-plaso >= %{{version}}'.format(
-                  python_package),
-              'Summary: Tools for plaso (log2timeline)',
-              '',
-              '%description -n %{name}-tools'])
-
           python_spec_file.extend(description)
 
           lines = [
@@ -212,6 +204,14 @@ else:
               '%description -n {0:s}-%{{name}}'.format(python_package)])
 
           python_spec_file.extend(description)
+
+          python_spec_file.extend([
+              '%package -n %{name}-tools',
+              'Requires: {0:s}-plaso >= %{{version}}'.format(
+                  python_package),
+              'Summary: Tools for plaso (log2timeline)',
+              '',
+              '%description -n %{name}-tools'])
 
         elif in_description:
           # Ignore leading white lines in the description.

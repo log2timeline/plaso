@@ -74,7 +74,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         'Screen name: BBCBreaking Description: Breaking news alerts and '
         'updates from t...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test first contact modification event.
     event = events[1]
@@ -120,7 +121,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         'Screen name: BBCBreaking Description: Breaking news alerts and '
         'updates from t...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test first status creation event.
     event = events[50]
@@ -146,7 +148,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     expected_short_message = (
         'Name: Heather Mahalik Message: Never forget. http://t.co/L7bjWue1A2')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test first status update event.
     event = events[51]
@@ -172,7 +175,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     expected_short_message = (
         'Name: Heather Mahalik Message: Never forget. http://t.co/L7bjWue1A2')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

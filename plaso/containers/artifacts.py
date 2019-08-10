@@ -20,9 +20,10 @@ class EnvironmentVariableArtifact(ArtifactAttributeContainer):
 
   Attributes:
     case_sensitive (bool): True if environment variable name is case sensitive.
-    name (str): environment variable name e.g. 'SystemRoot' as in
-        '%SystemRoot%' or 'HOME' in '$HOME'.
-    value (str): environment variable value e.g. 'C:\\Windows' or '/home/user'.
+    name (str): environment variable name such as "SystemRoot" as in
+        "%SystemRoot%" or "HOME" as in "$HOME".
+    value (str): environment variable value such as "C:\\Windows" or
+        "/home/user".
   """
   CONTAINER_TYPE = 'environment_variable'
 
@@ -50,7 +51,7 @@ class HostnameArtifact(ArtifactAttributeContainer):
 
   Attributes:
     name (str): name of the host according to the naming schema.
-    schema (str): naming schema e.g. DNS, NIS, SMB/NetBIOS.
+    schema (str): naming schema such as "DNS", "NIS", "SMB/NetBIOS".
   """
   CONTAINER_TYPE = 'hostname'
 
@@ -222,7 +223,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   """System configuration artifact attribute container.
 
   The system configuration contains the configuration data of a specific
-  system installation e.g. Windows or Linux.
+  system installation such as Windows or Linux.
 
   Attributes:
     available_time_zones (list[TimeZone]): available time zones.
@@ -262,7 +263,8 @@ class TimeZoneArtifact(ArtifactAttributeContainer):
   """Time zone artifact attribute container.
 
   Attributes:
-    name (str): name describing the time zone e.g. Greenwich Standard Time.
+    name (str): name describing the time zone for example Greenwich Standard
+        Time.
   """
   CONTAINER_TYPE = 'time_zone'
 
@@ -270,7 +272,7 @@ class TimeZoneArtifact(ArtifactAttributeContainer):
     """Initializes a time zone artifact.
 
     Args:
-      name (Optional[str]): name describing the time zone e.g. Greenwich
+      name (Optional[str]): name describing the time zone for example Greenwich
           Standard Time.
     """
     super(TimeZoneArtifact, self).__init__()
@@ -284,7 +286,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     Cybox / Stix User Account Object
 
   Attributes:
-    full_name (str): name describing the user e.g. full name.
+    full_name (str): name describing the user.
     group_identifier (str): identifier of the primary group the user is part of.
     identifier (str): user identifier.
     user_directory (str): path of the user (or home or profile) directory.
@@ -298,7 +300,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     """Initializes a user account artifact.
 
     Args:
-      full_name (Optional[str]): name describing the user e.g. full name.
+      full_name (Optional[str]): name describing the user.
       group_identifier (Optional[str]): identifier of the primary group
           the user is part of.
       identifier (Optional[str]): user identifier.
@@ -321,7 +323,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
 
     Returns:
       list[str]: path segments of the user directory or an empty list if no
-        user directory is set.
+          user directory is set.
     """
     if not self.user_directory:
       return []

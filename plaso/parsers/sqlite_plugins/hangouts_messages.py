@@ -2,10 +2,12 @@
 """This file contains a parser for the Google Hangouts Active Conversations DB.
 
 /data/com.google.android.talk/databases/babel.db
+
 This SQLite database is the conversation database for conversations,
- participant names, messages, and information about the Google Hangout event.
- There can be multiple babel.db databases, and each database name will be
- followed by an integer starting with 0 (e.g., babel0.db,babel1.db,babel3.db)..
+participant names, messages, and information about the Google Hangout event.
+There can be multiple babel.db databases, and each database name will be
+followed by an integer starting with 0, for example:
+"babel0.db,babel1.db,babel3.db".
 """
 
 from __future__ import unicode_literals
@@ -261,7 +263,6 @@ class HangoutsMessagePlugin(interface.SQLitePlugin):
           'logging_id TEXT, affinity_score REAL DEFAULT (0.0), '
           'is_in_same_domain INT DEFAULT (0))')}]
 
-
   def ParseMessagesRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an Messages row.
 
@@ -288,5 +289,6 @@ class HangoutsMessagePlugin(interface.SQLitePlugin):
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(HangoutsMessagePlugin)

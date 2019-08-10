@@ -49,7 +49,8 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
         'Service: iMessage '
         'Message Content: Did you try to send me a message?')
     expected_short_message = 'Did you try to send me a message?'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

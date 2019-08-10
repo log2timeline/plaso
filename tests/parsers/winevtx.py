@@ -120,7 +120,8 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         'Strings: [\'Windows Modules Installer\', \'stopped\', '
         '\'5400720075...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseTruncated(self):
     """Tests the Parse function on a truncated file."""

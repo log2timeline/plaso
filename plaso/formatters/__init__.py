@@ -82,6 +82,7 @@ from plaso.formatters import santa
 from plaso.formatters import sccm
 from plaso.formatters import selinux
 from plaso.formatters import services
+from plaso.formatters import setupapi
 from plaso.formatters import shell_items
 from plaso.formatters import shutdown
 from plaso.formatters import skydrivelog

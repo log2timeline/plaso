@@ -79,7 +79,7 @@ class PathHelper(object):
   @classmethod
   def _ExpandUsersVariablePathSegments(
       cls, path_segments, path_separator, user_accounts):
-    """Expands path segments with a users variable, e.g. %%users.homedir%%.
+    """Expands path segments with a users variable, such as %%users.homedir%%.
 
     Args:
       path_segments (list[str]): path segments.
@@ -204,7 +204,7 @@ class PathHelper(object):
 
   @classmethod
   def ExpandUsersVariablePath(cls, path, path_separator, user_accounts):
-    """Expands a path with a users variable, e.g. %%users.homedir%%.
+    """Expands a path with a users variable, such as %%users.homedir%%.
 
     Args:
       path (str): path with users variable.

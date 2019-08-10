@@ -55,7 +55,8 @@ class FileStatTest(test_lib.ParserTestCase):
         'TSK:/passwords.txt '
         'Type: file')
     expected_short_message = '/passwords.txt'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testZipFile(self):
     """Test a ZIP file."""
@@ -91,7 +92,8 @@ class FileStatTest(test_lib.ParserTestCase):
         'ZIP:/syslog '
         'Type: file')
     expected_short_message = '/syslog'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testGzipFile(self):
     """Test a GZIP file."""
@@ -127,7 +129,8 @@ class FileStatTest(test_lib.ParserTestCase):
         'GZIP:{0:s} '
         'Type: file').format(test_path)
     expected_short_message = self._GetShortMessage(test_path)
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testTarFile(self):
     """Test a TAR file."""
@@ -163,7 +166,8 @@ class FileStatTest(test_lib.ParserTestCase):
         'TAR:/syslog '
         'Type: file')
     expected_short_message = '/syslog'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testNestedFile(self):
     """Test a nested file."""
@@ -201,7 +205,8 @@ class FileStatTest(test_lib.ParserTestCase):
         'TAR:/syslog '
         'Type: file')
     expected_short_message = '/syslog'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     test_file_path = self._GetTestFilePath(['syslog.tgz'])
     self._SkipIfPathNotExists(test_file_path)
@@ -233,7 +238,8 @@ class FileStatTest(test_lib.ParserTestCase):
         'GZIP:{0:s} '
         'Type: file').format(test_path)
     expected_short_message = self._GetShortMessage(test_path)
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
@@ -272,7 +278,8 @@ class FileStatTest(test_lib.ParserTestCase):
         'ZIP:/syslog '
         'Type: file')
     expected_short_message = '/syslog'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

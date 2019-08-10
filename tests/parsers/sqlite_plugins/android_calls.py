@@ -46,7 +46,8 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
         'Name: Barney '
         'Duration: 0 seconds')
     expected_short_message = 'MISSED Call'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[3]
 

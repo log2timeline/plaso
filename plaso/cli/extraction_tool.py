@@ -86,7 +86,7 @@ class ExtractionTool(
 
     Raises:
       BadConfigOption: if presets in the parser filter expression could not
-          be expanded.
+          be expanded or if an invalid parser or plugin name is specified.
     """
     parser_filter_expression = self._parser_filter_expression
     if parser_filter_expression:
@@ -122,7 +122,16 @@ class ExtractionTool(
           'Unable to expand presets in parser filter expression with '
           'error: {0!s}').format(exception))
 
-    # TODO: validate parser names.
+    _, invalid_parser_elements = (
+        parsers_manager.ParsersManager.CheckFilterExpression(
+            parser_filter_expression))
+
+    if invalid_parser_elements:
+      invalid_parser_names_string = ','.join(invalid_parser_elements)
+      raise errors.BadConfigOption(
+          'Unknown parser or plugin names in element(s): "{0:s}" of '
+          'parser filter expression: {1:s}'.format(
+              invalid_parser_names_string, parser_filter_expression))
 
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()

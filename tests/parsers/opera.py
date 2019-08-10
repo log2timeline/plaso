@@ -34,7 +34,8 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     expected_string = 'plaso.kiddaland.net (Filled from autocomplete.)'
 
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
     event = events[3]
 
@@ -45,7 +46,8 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     expected_string = 'theonion.com (Manually typed.)'
 
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
 
 class OperaGlobalParserTest(test_lib.ParserTestCase):
@@ -65,6 +67,8 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-11 22:45:46.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'http://www.mbl.is/frettir/erlent/2013/11/11/'
         'karl_bretaprins_faer_ellilifeyri/ (Karl Bretaprins fær ellilífeyri'
@@ -73,7 +77,8 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
         'http://www.mbl.is/frettir/erlent/2013/11/11/'
         'karl_bretaprins_faer_ellilifeyri/...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[10]
 
@@ -82,6 +87,8 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
     event = events[16]
 
     self.CheckTimestamp(event.timestamp, '2013-11-11 22:46:16.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_title = (
         '10 Celebrities You Never Knew Were Abducted And Murdered '

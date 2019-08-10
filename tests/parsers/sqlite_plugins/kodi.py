@@ -44,7 +44,8 @@ class KodiVideosTest(test_lib.SQLitePluginTestCase):
         'Video: plugin://plugin.video.youtube/play/?video_id=7WX0-O_ENlk '
         'Play Count: 1')
     expected_short_message = expected_filename
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

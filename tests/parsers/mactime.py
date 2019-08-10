@@ -62,7 +62,8 @@ class MactimeTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.filename, expected_filename)
     self.assertEqual(event_data.mode_as_string, 'r/rrw-------')
 
-    self._TestGetMessageStrings(event, expected_filename, expected_filename)
+    self._TestGetMessageStrings(
+        event_data, expected_filename, expected_filename)
 
 
 if __name__ == '__main__':

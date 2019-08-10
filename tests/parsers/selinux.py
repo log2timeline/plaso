@@ -33,6 +33,8 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:01.174000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
         'auid=4294967295 new auid=0 old ses=4294967295 new ses=1165')
@@ -40,30 +42,39 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
         'auid=4294967295 new auid=...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test case: short date.
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:01.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_string = '[audit_type: SHORTDATE] check rounding'
 
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
     # Test case: no msg.
     event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:22.174000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_string = '[audit_type: NOMSG]'
 
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
     # Test case: under score.
     event = events[3]
 
     self.CheckTimestamp(event.timestamp, '2012-05-24 07:47:46.174000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         '[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
@@ -72,7 +83,8 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         '[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
         'auid=4294967295 new...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

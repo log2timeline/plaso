@@ -17,11 +17,11 @@ If ( -not $PythonPath )
 	If ( $Architecture -eq "win32" )
 	{
 		# Note that the backtick here is used as escape character.
-		$PythonPath = "C:\Python27` (x86)"
+		$PythonPath = "C:\Python37` (x86)"
 	}
 	Else
 	{
-		$PythonPath = "C:\Python27"
+		$PythonPath = "C:\Python37"
 	}
 }
 

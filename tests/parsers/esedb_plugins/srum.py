@@ -53,7 +53,8 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     expected_short_message = 'Memory Compression'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test event with data type windows:srum:network_connectivity
     event = events[0]
@@ -71,7 +72,8 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     expected_short_message = '1'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test event with data type windows:srum:network_usage
     event = events[14]
@@ -91,7 +93,8 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     expected_short_message = 'DiagTrack'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

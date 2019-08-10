@@ -79,7 +79,7 @@ class PathCollectionFiltersHelper(filters_helper.CollectionFiltersHelper):
             continue
 
           if path_segment[0] == '{' and path_segment[-1] == '}':
-            # Rewrite legacy path expansion attributes. e.g. {systemroot},
+            # Rewrite legacy path expansion attributes, such as {systemroot}
             # into %SystemRoot%.
             path_segment = '%{0:s}%'.format(path_segment[1:-1])
             path_segments[index] = path_segment

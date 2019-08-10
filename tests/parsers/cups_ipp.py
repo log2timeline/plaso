@@ -330,7 +330,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         'Application: LibreOffice '
         'Printer: RHULBW')
     expected_short_message = 'Job Name: Assignament 1'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 

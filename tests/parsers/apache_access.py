@@ -58,7 +58,8 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a HTTP/1.1 from: '
         '192.168.0.2')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test common log format parser event.
     event = events[3]
@@ -84,7 +85,8 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'GET /wp-content/themes/darkmode/header.php?install2 HTTP/1.1 from: '
         '10.0.0.1')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test the extraction warning.
     warnings = list(storage_writer.GetWarnings())
@@ -125,7 +127,8 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'GET /wp-content/themes/darkmode/evil.php HTTP/1.1 from: 192.168.0.2')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

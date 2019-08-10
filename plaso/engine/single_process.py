@@ -151,9 +151,6 @@ class SingleProcessEngine(engine.BaseEngine):
           extraction_worker, parser_mediator, event_source.path_spec)
       number_of_consumed_sources += 1
 
-      if self._guppy_memory_profiler:
-        self._guppy_memory_profiler.Sample()
-
       self._UpdateStatus(
           extraction_worker.processing_status, self._current_display_name,
           number_of_consumed_sources, storage_writer)
@@ -185,7 +182,8 @@ class SingleProcessEngine(engine.BaseEngine):
     """Updates the processing status.
 
     Args:
-      status (str): human readable status of the processing e.g. 'Idle'.
+      status (str): human readable status indication such as "Hashing" or
+          "Idle".
       display_name (str): human readable of the file entry currently being
           processed.
       number_of_consumed_sources (int): number of consumed sources.

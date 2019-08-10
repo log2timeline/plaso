@@ -39,13 +39,9 @@ class EventExtractor(object):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
-
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
     """
     super(EventExtractor, self).__init__()
     self._file_scanner = None
@@ -108,13 +104,9 @@ class EventExtractor(object):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
-
-          * A name of a single parser (case insensitive), such as msiecf.
-          * A glob name for a single parser, such as '*msie*' (case
-            insensitive).
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
     """
     self._formats_with_signatures, non_sigscan_parser_names = (
         parsers_manager.ParsersManager.GetFormatsWithSignatures(

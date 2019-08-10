@@ -29,6 +29,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-13 17:52:34.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'Status: BOOT_TIME '
         'Hostname: localhost '
@@ -38,7 +40,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 1 '
         'Status: BOOT_TIME')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 
@@ -62,7 +65,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 67 '
         'Status: USER_PROCESS')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[4]
 
@@ -85,7 +89,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 6899 '
         'Status: DEAD_PROCESS')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
