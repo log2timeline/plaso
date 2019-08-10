@@ -121,6 +121,8 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     event_index = 0
     event = events[event_index]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
         'v1.0\\powershell.exe [S-1-5-21-321011808-3761883066-353627080-1000]')
@@ -129,7 +131,8 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
         '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\v1.0'
         '\\powershell.exe')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
