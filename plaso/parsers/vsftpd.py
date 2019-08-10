@@ -32,13 +32,13 @@ class VsftpdEventData(events.EventData):
 
 
 class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses the vsftpd log."""
+  """Parses a vsftpd log."""
 
   NAME = 'vsftpd'
   DESCRIPTION = 'Parser for vsftpd log files.'
 
   _DATETIME_ELEMENTS = (
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('dow') +
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('day') +
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
           'day_of_month') +
@@ -49,7 +49,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('seconds') +
       text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year'))
 
-  # Note that the whitespace is suppressed by pyparsing.
+  # Whitespace is suppressed by pyparsing.
   _DATE_TIME = pyparsing.Group(_DATETIME_ELEMENTS)
 
   _LOG_LINE = (
@@ -61,13 +61,11 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
   ]
 
   def _GetTimeElementsTuple(self, structure):
-    """
-    Pulls datetime information from data_time structure and returns tuple
-    for dfdatetime.time_elements
+    """Retrieves a time elements tuple from the structure.
 
     Args:
         structure (pyparsing.ParseResults): structure of tokens derived from
-            a line of a text file.
+            a line of a vsftp log file.
 
     Returns:
       tuple: containing:
@@ -144,11 +142,9 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
-      logger.debug('Not a vsftpd log file')
       return False
 
     if (' [pid ' not in line) or (': Client ' not in line):
-      logger.debug('Not a vsftpd log file')
       return False
 
     time_elements_tuple = self._GetTimeElementsTuple(structure)
