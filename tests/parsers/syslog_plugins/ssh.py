@@ -47,7 +47,9 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
         'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
     self.assertEqual(expected_fingerprint, event_data.fingerprint)
 
-    event = events[2]
+    event = events[3]
+
+    self.CheckTimestamp(event.timestamp, '2016-03-11 22:55:30.000000')
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.data_type, 'syslog:ssh:failed_connection')
@@ -56,16 +58,21 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
 
     event = events[4]
 
+    self.CheckTimestamp(event.timestamp, '2016-03-11 22:55:31.000000')
+
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.data_type, 'syslog:ssh:opened_connection')
     self.assertEqual(event_data.address, '188.124.3.41')
 
     event = events[7]
 
+    self.CheckTimestamp(event.timestamp, '2016-03-11 22:55:34.000000')
+
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.address, '192.0.2.60')
     self.assertEqual(event_data.port, '20042')
     self.assertEqual(event_data.username, 'fred')
+
 
 if __name__ == '__main__':
   unittest.main()

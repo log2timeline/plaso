@@ -87,7 +87,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
         'http://rubiconproject.com/ (put_2249) Flags: [HTTP only] = False '
         '[Persistent] = True')
     self._TestGetMessageStrings(
-        event, expected_message, 'rubiconproject.com (put_2249)')
+        event_data, expected_message, 'rubiconproject.com (put_2249)')
 
     # Examine an event for a visit to a political blog site.
     event = events[444]
@@ -195,7 +195,7 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
         'http://fbi.gov/ (__cfduid) '
         'Flags: [HTTP only] = True [Persistent] = True')
     self._TestGetMessageStrings(
-        event, expected_message, 'fbi.gov (__cfduid)')
+        event_data, expected_message, 'fbi.gov (__cfduid)')
 
     # Examine an event for a cookie with a very large expire time.
     event = events[8]

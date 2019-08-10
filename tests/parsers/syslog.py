@@ -113,7 +113,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[1]
+    event = events[0]
 
     self.CheckTimestamp(event.timestamp, '2012-01-22 07:52:33.000000')
 
@@ -137,7 +137,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.assertIsNone(event_data.severity)
 
     # Testing year increment.
-    event = events[8]
+    event = events[9]
 
     self.CheckTimestamp(event.timestamp, '2013-03-23 23:01:18.000000')
 

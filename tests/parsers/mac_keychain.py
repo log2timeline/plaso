@@ -76,7 +76,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.ssgp_hash, expected_ssgp)
     self.assertEqual(event_data.where, 'plaso.kiddaland.net')
     self.assertEqual(event_data.protocol, 'http')
-    self.assertEqual(event.type_protocol, 'dflt')
+    self.assertEqual(event_data.type_protocol, 'dflt')
 
     expected_message = (
         'Name: plaso.kiddaland.net '

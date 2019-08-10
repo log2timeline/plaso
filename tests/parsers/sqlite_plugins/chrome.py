@@ -38,17 +38,15 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = 'http://start.ubuntu.com/10.04/Google/'
     self.assertEqual(event_data.url, expected_url)
-
-    expected_title = 'Ubuntu Start Page'
-    self.assertEqual(event_data.title, expected_title)
+    self.assertEqual(event_data.title, 'Ubuntu Start Page')
 
     expected_message = (
-        '{0:s} ({1:s}) [count: 0] '
+        '{0:s} '
+        '(Ubuntu Start Page) [count: 0] '
         'Visit Source: [SOURCE_FIREFOX_IMPORTED] Type: [LINK - User clicked '
         'a link] (URL not typed directly - no typed count)').format(
-            expected_url, expected_title)
-    expected_short_message = '{0:s} ({1:s})'.format(
-        expected_url, expected_title)
+            expected_url)
+    expected_short_message = '{0:s} (Ubuntu Start Page)'.format(expected_url)
 
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
@@ -106,9 +104,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
     self.assertEqual(event_data.url, expected_url)
-
-    expected_title = ''
-    self.assertEqual(event_data.title, expected_title)
+    self.assertEqual(event_data.title, '')
 
     expected_message = (
         '{0:s} '
@@ -169,9 +165,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
     self.assertEqual(event_data.url, expected_url)
-
-    expected_title = ''
-    self.assertEqual(event.title, expected_title)
+    self.assertEqual(event_data.title, '')
 
     expected_message = (
         '{0:s} '
@@ -232,9 +226,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
     self.assertEqual(event_data.url, expected_url)
-
-    expected_title = ''
-    self.assertEqual(event_data.title, expected_title)
+    self.assertEqual(event_data.title, '')
 
     expected_message = (
         '{0:s} '

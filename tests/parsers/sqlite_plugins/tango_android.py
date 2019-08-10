@@ -87,7 +87,7 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     # Test the first tango conversation event.
-    event = events[0]
+    event = events[2]
 
     self.CheckTimestamp(event.timestamp, '1970-01-01 00:00:00.000000')
     self.assertEqual(

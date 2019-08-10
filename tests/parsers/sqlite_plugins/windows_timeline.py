@@ -42,7 +42,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         'Active Duration (seconds): 9 Reporting App: ShellActivityMonitor')
     expected_short_message = 'c:\\python34\\python.exe'
     self._TestGetMessageStrings(
-        event, expected_long_message, expected_short_message)
+        event_data, expected_long_message, expected_short_message)
 
     event = events[2]
 
@@ -67,7 +67,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         'c:\\users\\demouser\\appdata\\local\\programs\\'
         'python\\python37-32\\python.exe')
     self._TestGetMessageStrings(
-        event, expected_long_message, expected_short_message)
+        event_data, expected_long_message, expected_short_message)
 
     event = events[80]
 
@@ -87,7 +87,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         'Identifier: Microsoft.SkyDrive.Desktop')
     expected_short_message = 'Microsoft.SkyDrive.Desktop'
     self._TestGetMessageStrings(
-        event, expected_long_message, expected_short_message)
+        event_data, expected_long_message, expected_short_message)
 
     event = events[96]
 
@@ -111,7 +111,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     expected_short_message = (
         '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe')
     self._TestGetMessageStrings(
-        event, expected_long_message, expected_short_message)
+        event_data, expected_long_message, expected_short_message)
 
 
 if __name__ == '__main__':
