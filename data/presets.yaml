@@ -20,6 +20,7 @@ description: Preset for Linux.
 operating_systems:
 - {family: Linux}
 parsers:
+- apt_history
 - bash_history
 - bencode
 - czip/oxml

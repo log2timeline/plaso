@@ -5,6 +5,7 @@ from plaso.parsers import asl
 from plaso.parsers import amcache
 from plaso.parsers import android_app_usage
 from plaso.parsers import apache_access
+from plaso.parsers import apt_history
 from plaso.parsers import bash_history
 from plaso.parsers import bencode_parser
 from plaso.parsers import bsm
