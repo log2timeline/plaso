@@ -38,6 +38,7 @@ parsers:
 - syslog
 - systemd_journal
 - utmp
+- vsftpd
 - webhist
 - xchatlog
 - xchatscrollback
