@@ -35,7 +35,7 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
         '49283 bytes, 931.38Kbyte/sec')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    event_data = self._GetEventDataOfEvent(event)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
