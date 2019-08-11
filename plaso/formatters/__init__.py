@@ -13,6 +13,7 @@ from plaso.formatters import appusage
 from plaso.formatters import apt_history
 from plaso.formatters import asl
 from plaso.formatters import bagmru
+from plaso.formatters import bam
 from plaso.formatters import bash_history
 from plaso.formatters import bencode_parser
 from plaso.formatters import bsm
