@@ -273,7 +273,7 @@ class WinEvtxParser(interface.FileObjectParser):
         evtx_record = evtx_file.get_record(record_index)
         self._ParseRecord(parser_mediator, record_index, evtx_record)
 
-      except IOError as exception:
+      except (IOError, ElementTree.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning(
             'unable to parse event record: {0:d} with error: {1!s}'.format(
                 record_index, exception))
