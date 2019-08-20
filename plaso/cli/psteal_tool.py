@@ -176,7 +176,8 @@ class PstealTool(
     """Analyzes events from a plaso storage file and generate a report.
 
     Raises:
-      BadConfigOption: when a configuration parameter fails validation.
+      BadConfigOption: when a configuration parameter fails validation or the
+          storage file cannot be opened with read access.
       RuntimeError: if a non-recoverable situation is encountered.
     """
     session = engine.BaseEngine.CreateSession(
@@ -186,9 +187,9 @@ class PstealTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logger.error('Format of storage file: {0:s} not supported'.format(
-          self._storage_file_path))
-      return
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(
+              self._storage_file_path))
 
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())

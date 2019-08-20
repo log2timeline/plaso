@@ -494,7 +494,8 @@ class PsortTool(
     """Processes a plaso storage file.
 
     Raises:
-      BadConfigOption: when a configuration parameter fails validation.
+      BadConfigOption: when a configuration parameter fails validation or the
+          storage file cannot be opened with read access.
       RuntimeError: if a non-recoverable situation is encountered.
     """
     self._CheckStorageFile(self._storage_file_path)
@@ -512,9 +513,9 @@ class PsortTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logger.error('Format of storage file: {0:s} not supported'.format(
-          self._storage_file_path))
-      return
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(
+              self._storage_file_path))
 
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
@@ -532,10 +533,9 @@ class PsortTool(
           storage_factory.StorageFactory.CreateStorageWriterForFile(
               session, self._storage_file_path))
       if not storage_writer:
-        logger.error(
+        raise errors.BadConfigOption(
             'Format of storage file: {0:s} not supported for writing'.format(
                 self._storage_file_path))
-        return
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine()
