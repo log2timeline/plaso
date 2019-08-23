@@ -228,8 +228,6 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     self._last_month = time_elements_tuple[1]
 
     function = self._GetValueFromStructure(structure, 'function')
-    if function:
-      function = function.strip()
 
     text = self._GetValueFromStructure(structure, 'text')
     if text:

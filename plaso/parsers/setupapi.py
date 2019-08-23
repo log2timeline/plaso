@@ -148,7 +148,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
     self._last_end_time = None
     self._last_entry_type = None
 
-  def _BuildDatetime(self, time_structure):
+  def _GetTimeElements(self, time_structure):
     """Builds time elements from a setupapi time_stamp field.
 
     Args:
@@ -192,7 +192,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
 
     if key == 'section_start':
       time_structure = self._GetValueFromStructure(structure, 'start_time')
-      start_time = self._BuildDatetime(time_structure)
+      start_time = self._GetTimeElements(time_structure)
       if not start_time:
         parser_mediator.ProduceExtractionWarning(
             'invalid date time value: {0!s}'.format(time_structure))
@@ -211,7 +211,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
 
     if key == 'section_end':
       time_structure = self._GetValueFromStructure(structure, 'end_time')
-      end_time = self._BuildDatetime(time_structure)
+      end_time = self._GetTimeElements(time_structure)
       if not end_time:
         parser_mediator.ProduceExtractionWarning(
             'invalid date time value: {0!s}'.format(time_structure))
