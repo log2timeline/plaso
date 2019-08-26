@@ -59,42 +59,51 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # Test path_hint with simple file (SAM)
     event = events[28745]
-    self.assertEqual(event.name, 'SAM')
-    self.assertEqual(event.path_hint, './WINDOWS/system32/config/SAM')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'SAM')
+    self.assertEqual(event_data.path_hint, './WINDOWS/system32/config/SAM')
 
     # Test path_hint with deleted file 'CAJA1S19.js'
     event = events[120480]
-    self.assertEqual(event.name, 'CAJA1S19.js')
-    self.assertEqual(event.path_hint, './Documents and Settings/Donald Blake/Local Settings/Temporary Internet Files/Content.IE5/9EUWFPZ1/CAJA1S19.js')
-    self.assertFalse(event.is_allocated)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'CAJA1S19.js')
+    self.assertEqual(
+        event_data.path_hint,
+        './Documents and Settings/Donald Blake/Local Settings/Temporary Internet Files/Content.IE5/9EUWFPZ1/CAJA1S19.js')  # pylint: disable=line-too-long
+    self.assertFalse(event_data.is_allocated)
 
     # Testing path_hint of orphaned entry '/session/menu.text.css'
-    event_file = events[125436]
-    file_parent_id = event_file.parent_file_reference & 0xffffffff
-    file_parent_seq = event_file.parent_file_reference >> 48
-    self.assertEqual(event_file.name, 'menu.text.css')
-    self.assertEqual(event_file.path_hint, '$Orphan/session/menu.text.css')
+    event = events[125436]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    file_parent_id = event_data.parent_file_reference & 0xffffffff
+    file_parent_seq = event_data.parent_file_reference >> 48
+    self.assertEqual(event_data.name, 'menu.text.css')
+    self.assertEqual(event_data.path_hint, '$Orphan/session/menu.text.css')
 
-    event_folder = events[125400]
-    folder_allocation = event_folder.is_allocated
-    folder_id = event_folder.file_reference & 0xffffffff
-    folder_seq = event_folder.file_reference >> 48
-    folder_parent_id = event_folder.parent_file_reference & 0xffffffff
-    folder_parent_seq = event_folder.parent_file_reference >> 48
-    self.assertEqual(event_folder.name, 'session')
-    self.assertEqual(event_folder.path_hint, '$Orphan/session')
+    event = events[125400]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    folder_allocation = event_data.is_allocated
+    folder_id = event_data.file_reference & 0xffffffff
+    folder_seq = event_data.file_reference >> 48
+    folder_parent_id = event_data.parent_file_reference & 0xffffffff
+    folder_parent_seq = event_data.parent_file_reference >> 48
+    self.assertEqual(event_data.name, 'session')
+    self.assertEqual(event_data.path_hint, '$Orphan/session')
     self.assertEqual(file_parent_id, folder_id)
     # Assert that the folders sequence is just one above the expected
     # sequence number from the file, and the folder is not allocated.
     # This is what to expect in this instance as it indicates the
     # folder in which the file resides was deleted but the file is
     # still associated, i.e. the folders' record was not reused
-    self.assertTrue(file_parent_seq == 1 and folder_seq == 2 and not folder_allocation)
+    self.assertTrue(file_parent_seq == 1
+                    and folder_seq == 2
+                    and not folder_allocation)
 
-    event_orphan = events[101097]
-    orphan_allocation = event_orphan.is_allocated
-    orphan_id = event_orphan.file_reference & 0xffffffff
-    orphan_seq = event_orphan.file_reference >> 48
+    event = events[101097]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    orphan_allocation = event_data.is_allocated
+    orphan_id = event_data.file_reference & 0xffffffff
+    orphan_seq = event_data.file_reference >> 48
     self.assertEqual(folder_parent_id, orphan_id)
     # Now assert that the sequence number of the parent (the folder
     # above 'session') is larger than the expected value and the
@@ -208,7 +217,12 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    self.assertEqual(events[243].path_hint, './System Volume Information/{3808876b-c176-4e48-b7ae-04046e6cc752}')
+    # Check that path hint is ok
+    event = events[243]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(
+        event_data.path_hint,
+        './System Volume Information/{3808876b-c176-4e48-b7ae-04046e6cc752}')
 
     # Note that the source file is a RAW (VMDK flat) image.
     test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
