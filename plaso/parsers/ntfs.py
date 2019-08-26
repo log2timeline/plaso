@@ -36,7 +36,8 @@ class NTFSFileStatEventData(events.EventData):
     name (str): name associated with the stat event, e.g. that of
         a $FILE_NAME attribute or None if not available.
     parent_file_reference (int): NTFS file reference of the parent.
-    path_hint (str): A path to the NTFS file constructed from the `parent_file_reference`
+    path_hint (str): A path to the NTFS file constructed from the
+        `parent_file_reference`
   """
 
   DATA_TYPE = 'fs:stat:ntfs'
@@ -181,11 +182,15 @@ class NTFSMFTParser(interface.FileObjectParser):
       if mft_attribute.attribute_type == self._MFT_ATTRIBUTE_FILE_NAME:
         parent_record_number = parent_file_reference & 0xffffffffffff
         parent_sequence_number = parent_file_reference >> 48
-        event_data.path_hint = self._GetPathForFile(parser_mediator, name, parent_record_number, parent_sequence_number)
-      elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_STANDARD_INFORMATION:
-        # On $SI attributes, we are opportunistic
-        name, parent_record_number, parent_sequence_number = self._GetNameAndParentFromEntry(mft_entry)
-        event_data.path_hint = self._GetPathForFile(parser_mediator, name, parent_record_number, parent_sequence_number)
+        event_data.path_hint = self._GetPathForFile(
+            parser_mediator, name, parent_record_number, parent_sequence_number)
+      else:
+        # Even though $SI attributes do not carry a name, we are
+        # opportunistic and use the most descriptive name available
+        (name, parent_record_number,
+         parent_sequence_number) = self._GetNameAndParentFromEntry(mft_entry)
+        event_data.path_hint = self._GetPathForFile(
+            parser_mediator, name, parent_record_number, parent_sequence_number)
 
       try:
         creation_time = mft_attribute.get_creation_time_as_integer()
@@ -311,8 +316,9 @@ class NTFSMFTParser(interface.FileObjectParser):
     for attribute_index in range(0, mft_entry.number_of_attributes):
       mft_attribute = mft_entry.get_attribute(attribute_index)
       if mft_attribute.attribute_type == self._MFT_ATTRIBUTE_FILE_NAME:
-        parent_record_number = mft_attribute.parent_file_reference & 0xFFFFFFFFFFFF
-        parent_sequence_number = mft_attribute.parent_file_reference >> 48
+        parent_file_reference = mft_attribute.parent_file_reference
+        parent_record_number = parent_file_reference & 0xFFFFFFFFFFFF
+        parent_sequence_number = parent_file_reference >> 48
         attribute_info.append((getattr(mft_attribute, 'name', ''),
                                attribute_index,
                                parent_record_number,
@@ -331,10 +337,12 @@ class NTFSMFTParser(interface.FileObjectParser):
     name's type:
 
     0x0: POSIX (Case sensitive; all unicode except '/' and NULL)
-    0x1: Win32 (Case insensitive; all unicode except '/', '\', ':', '>', '<', '?')
+    0x1: Win32 (Case insensitive; all unicode except '/', '\', ':',
+         '>', '<', '?')
     0x2: DOS (Case insensitive; all upper case and no special characters.
          Must be 8 or fewer for name, 3 or less for the extension)
-    0x3: Win32 & DOS (When the name is Win32 but does already fit in the DOS namespace)
+    0x3: Win32 & DOS (When the name is Win32 but does already fit in
+         the DOS namespace)
 
     Rule of precedence for this function is: "0x3 > 0x1 > 0x0 > 0x2".
     On same value entries, the lower attribute index wins
@@ -345,7 +353,8 @@ class NTFSMFTParser(interface.FileObjectParser):
     attribute index preference"
 
     Args:
-      attribute_infos (list[tuple]): A list of tuples produced by `_GetFNAttributeInfos`
+      attribute_infos (list[tuple]): A list of tuples produced by
+          `_GetFNAttributeInfos`
 
     Returns:
       tuple: A tuple of (name, parent_record_number, parent_sequence_number)
@@ -370,7 +379,8 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     # Go through the sorted attribute infos, first one that fulfills
     # our criteria wins (criteria being name must not be empty)
-    for attribute_name, _, attribute_parent_num, attribute_parent_seq in attribute_infos:
+    for (attribute_name, _, attribute_parent_num,
+         attribute_parent_seq) in attribute_infos:
       if attribute_name:
         name = attribute_name
         parent_record_number = attribute_parent_num
@@ -427,7 +437,8 @@ class NTFSMFTParser(interface.FileObjectParser):
         entry_allocated,
         self._GetFNAttributeInfos(mft_entry))
 
-  def _GetPathForFile(self, parser_mediator, filename, parent_record_number, parent_sequence_number):
+  def _GetPathForFile(self, parser_mediator, filename, parent_record_number,
+                      parent_sequence_number):
     """Crafts a full path for a given filename, given its parent
     record and sequence number.
 
@@ -445,14 +456,16 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     """
 
-    path_parents = self._ResolvePath(parser_mediator, parent_record_number, parent_sequence_number)
+    path_parents = self._ResolvePath(
+        parser_mediator, parent_record_number, parent_sequence_number)
     if not path_parents:
       return filename
     path_parents.reverse()
     path_parents.append(filename)
     return self._PATH_SEPARATOR.join(path_parents)
 
-  def _ResolvePath(self, parser_mediator, record_number, sequence_number, path_parts=None, used_records=None):
+  def _ResolvePath(self, parser_mediator, record_number, sequence_number,
+                   path_parts=None, used_records=None):
     """Constructs a path for an entry by looking up the
     `record_number`, comparing the expected `sequence_number` (for
     orphaned files). Crafts the parents by appending to a list, which
@@ -485,7 +498,8 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     # Get the info from the map for the next parent
     (parent_sequence_number, parent_entry_allocated,
-     parent_entry_attributes) = self.path_info.get(record_number, (None, None, ()))
+     parent_entry_attributes) = self.path_info.get(
+         record_number, (None, None, ()))
 
     # If the entry does not have a legitimate parent, it's orphaned.
     # This is the case when the parent sequence number is higher than
@@ -502,7 +516,9 @@ class NTFSMFTParser(interface.FileObjectParser):
       parser_mediator.ProduceExtractionWarning((
           '$MFT entry {0!s} is parent but carries multiple $FILE_NAME'
           'attributes with different parents!').format(record_number))
-    parent_name, parent_number, parent_sequence = self._GetNameAndParentFromAttributeInfos(parent_entry_attributes)
+    (parent_name, parent_number,
+     parent_sequence) = self._GetNameAndParentFromAttributeInfos(
+         parent_entry_attributes)
 
     if parent_name:
       path_parts.append(parent_name)
@@ -512,7 +528,8 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     if record_number != parent_number and parent_number not in used_records:
       used_records.add(parent_number)
-      self._ResolvePath(parser_mediator, parent_number, parent_sequence, path_parts, used_records)
+      self._ResolvePath(parser_mediator, parent_number, parent_sequence,
+                        path_parts, used_records)
     return path_parts
 
   def ParseFileObject(self, parser_mediator, file_object):
