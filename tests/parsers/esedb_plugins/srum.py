@@ -30,7 +30,8 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     data_types = collections.Counter()
     for event in events:
-      data_types[event.data_type] += 1
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      data_types[event_data.data_type] += 1
 
     self.assertEqual(len(data_types.keys()), 3)
     self.assertEqual(data_types['windows:srum:application_usage'], 16183)
@@ -38,46 +39,51 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     self.assertEqual(data_types['windows:srum:network_usage'], 1840)
 
     # Test event with data type windows:srum:application_usage
-    event = events[21]
+    event = events[92]
 
     self.CheckTimestamp(event.timestamp, '2017-11-05 11:32:00.000000')
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
 
-    self.assertEqual(event.data_type, 'windows:srum:application_usage')
-    self.assertEqual(event.identifier, 22167)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:srum:application_usage')
+    self.assertEqual(event_data.identifier, 22167)
 
     expected_message = (
         'Application: Memory Compression')
 
     expected_short_message = 'Memory Compression'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test event with data type windows:srum:network_connectivity
-    event = events[0]
+    event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2017-11-05 10:30:48.167971')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
 
-    self.assertEqual(event.data_type, 'windows:srum:network_connectivity')
-    self.assertEqual(event.identifier, 501)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:srum:network_connectivity')
+    self.assertEqual(event_data.identifier, 501)
 
     expected_message = (
         'Application: 1')
 
     expected_short_message = '1'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test event with data type windows:srum:network_usage
-    event = events[14]
+    event = events[8]
 
     self.CheckTimestamp(event.timestamp, '2017-11-05 11:32:00.000000')
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
 
-    self.assertEqual(event.data_type, 'windows:srum:network_usage')
-    self.assertEqual(event.identifier, 3495)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:srum:network_usage')
+    self.assertEqual(event_data.identifier, 3495)
 
     expected_message = (
         'Application: DiagTrack '
@@ -87,7 +93,8 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     expected_short_message = 'DiagTrack'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

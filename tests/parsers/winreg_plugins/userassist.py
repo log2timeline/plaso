@@ -84,7 +84,8 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         'Count: 14').format(key_path, expected_value_name)
     expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
@@ -134,7 +135,8 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
             key_path, expected_value_name)
     expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

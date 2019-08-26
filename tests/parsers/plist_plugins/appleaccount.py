@@ -39,29 +39,36 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(timestamps, expected_timestamps)
 
     event = events[0]
-    self.assertEqual(event.root, '/Accounts')
-    self.assertEqual(event.key, 'email@domain.com')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.root, '/Accounts')
+    self.assertEqual(event_data.key, 'email@domain.com')
 
     expected_description = (
         'Configured Apple account email@domain.com (Joaquin Moreno Garijo)')
-    self.assertEqual(event.desc, expected_description)
+    self.assertEqual(event_data.desc, expected_description)
 
     expected_message = '/Accounts/email@domain.com {0:s}'.format(
         expected_description)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_description = (
         'Connected Apple account '
         'email@domain.com (Joaquin Moreno Garijo)')
-    self.assertEqual(event.desc, expected_description)
+    self.assertEqual(event_data.desc, expected_description)
 
     event = events[2]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_description = (
         'Last validation Apple account '
         'email@domain.com (Joaquin Moreno Garijo)')
-    self.assertEqual(event.desc, expected_description)
+    self.assertEqual(event_data.desc, expected_description)
 
 
 if __name__ == '__main__':

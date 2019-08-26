@@ -75,7 +75,8 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
         'CurrentVe...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # The ProgramsCache list event.
     event = events[75]
@@ -116,7 +117,8 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         '19: Internet Explorer (No Add-ons).lnk]').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # The Windows Registry key event.
     event = events[76]
@@ -139,7 +141,8 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'StartMenu_Start_Time: [REG_BINARY] (8 bytes)').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""

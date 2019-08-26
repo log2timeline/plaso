@@ -131,7 +131,8 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'RegisteredOwner: [REG_SZ] A Concerned Citizen').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 
@@ -156,7 +157,8 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'MyTestOS 5.1 Service Pack 1 '
         'Origin: HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Win...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on a Windows Registry file."""
@@ -212,7 +214,8 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'SystemRoot: [REG_SZ] C:\\Windows').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

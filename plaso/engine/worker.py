@@ -81,14 +81,12 @@ class EventExtractionWorker(object):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
 
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
-          * A name of a single parser (case insensitive), e.g. msiecf.
-          * A glob name for a single parser, e.g. '*msie*' (case insensitive).
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
@@ -109,7 +107,7 @@ class EventExtractionWorker(object):
 
     The results of the analyzers are set in the parser mediator as attributes
     that are added to produced event objects. Note that some file systems
-    allow directories to have data streams, e.g. NTFS.
+    allow directories to have data streams, such as NTFS.
 
     Args:
       mediator (ParserMediator): mediates the interactions between

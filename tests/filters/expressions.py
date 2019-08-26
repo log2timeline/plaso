@@ -80,6 +80,37 @@ class EventExpressionTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
+  def testCopyValueToDateTime(self):
+    """Tests the _CopyValueToDateTime function."""
+    expression = expressions.EventExpression()
+
+    date_time = expression._CopyValueToDateTime('2009-07-13T23:29:02.849131')
+    self.assertIsNotNone(date_time)
+    self.assertEqual(date_time.timestamp, 1247527742849131)
+
+    date_time = expression._CopyValueToDateTime('2009-07-13')
+    self.assertIsNotNone(date_time)
+    self.assertEqual(date_time.timestamp, 1247443200000000)
+
+    date_time = expression._CopyValueToDateTime('2009-07-13 23:29:02')
+    self.assertIsNotNone(date_time)
+    self.assertEqual(date_time.timestamp, 1247527742000000)
+
+    date_time = expression._CopyValueToDateTime('2009-07-13 23:29:02.849131')
+    self.assertIsNotNone(date_time)
+    self.assertEqual(date_time.timestamp, 1247527742849131)
+
+    date_time = expression._CopyValueToDateTime('1247527742849131')
+    self.assertIsNotNone(date_time)
+    self.assertEqual(date_time.timestamp, 1247527742849131)
+
+    date_time = expression._CopyValueToDateTime(1247527742849131)
+    self.assertIsNotNone(date_time)
+    self.assertEqual(date_time.timestamp, 1247527742849131)
+
+    with self.assertRaises(ValueError):
+      expression._CopyValueToDateTime(None)
+
   def testCompile(self):
     """Tests the Compile function."""
     expression = expressions.EventExpression()

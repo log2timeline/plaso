@@ -40,7 +40,7 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_data.message_type, 0)
 
     expected_text = 'Did you try to send me a message?'
-    self.assertEqual(event.text, expected_text)
+    self.assertEqual(event_data.text, expected_text)
 
     expected_message = (
         'iMessage ID: xxxxxx2015@icloud.com '
@@ -49,7 +49,8 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
         'Service: iMessage '
         'Message Content: Did you try to send me a message?')
     expected_short_message = 'Did you try to send me a message?'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

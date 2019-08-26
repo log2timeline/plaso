@@ -19,7 +19,6 @@ class Token(object):
     actions (list[str]): list of method names in the EventFilterExpressionParser
         to call.
     next_state (str): next state we transition to if this Token matches.
-    re_str (str): regular expression to try and match from the current point.
     state (str): parser state within the token should be applied or None if
         the token should be applied regardless of the parser state.
   """

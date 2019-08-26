@@ -50,9 +50,9 @@ class StorageFactory(object):
     """Creates a storage writer.
 
     Args:
+      storage_format (str): storage format.
       session (Session): session the storage changes are part of.
       path (str): path to the storage file.
-      storage_format (str): storage format.
 
     Returns:
       StorageWriter: a storage writer or None if the storage file cannot be

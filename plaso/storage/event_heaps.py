@@ -3,16 +3,17 @@
 
 from __future__ import unicode_literals
 
-import abc
 import heapq
 
 
-class BaseEventHeap(object):
-  """Event heap interface."""
+# TODO: since this is only used by the fake storage implementation
+# move this class into the fake submodule.
+class EventHeap(object):
+  """Event heap."""
 
   def __init__(self):
     """Initializes an event heap."""
-    super(BaseEventHeap, self).__init__()
+    super(EventHeap, self).__init__()
     self._heap = []
 
   @property
@@ -20,14 +21,18 @@ class BaseEventHeap(object):
     """int: number of serialized events on the heap."""
     return len(self._heap)
 
-  # pylint: disable=redundant-returns-doc
-  @abc.abstractmethod
   def PopEvent(self):
     """Pops an event from the heap.
 
     Returns:
       EventObject: event.
     """
+    try:
+      _, _, _, _, event = heapq.heappop(self._heap)
+      return event
+
+    except IndexError:
+      return None
 
   def PopEvents(self):
     """Pops events from the heap.
@@ -40,48 +45,16 @@ class BaseEventHeap(object):
       yield event
       event = self.PopEvent()
 
-  @abc.abstractmethod
-  def PushEvent(self, event):
+  def PushEvent(self, event, event_index):
     """Pushes an event onto the heap.
 
     Args:
       event (EventObject): event.
-    """
-
-  def PushEvents(self, events):
-    """Pushes events onto the heap.
-
-    Args:
-      events list[EventObject]: events.
-    """
-    for event in events:
-      self.PushEvent(event)
-
-
-class EventHeap(BaseEventHeap):
-  """Event heap."""
-
-  def PopEvent(self):
-    """Pops an event from the heap.
-
-    Returns:
-      EventObject: event.
-    """
-    try:
-      _, _, _, event = heapq.heappop(self._heap)
-      return event
-
-    except IndexError:
-      return None
-
-  def PushEvent(self, event):
-    """Pushes an event onto the heap.
-
-    Args:
-      event (EventObject): event.
+      event_index (int): index of the event in the storage.
     """
     event_string = event.GetAttributeValuesString()
-    heap_values = (event.timestamp, event.timestamp_desc, event_string, event)
+    heap_values = (
+        event.timestamp, event.timestamp_desc, event_index, event_string, event)
     heapq.heappush(self._heap, heap_values)
 
 

@@ -30,8 +30,9 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-12-09 19:28:33.047000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(
-        event.component,
+        event_data.component,
         'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
 
     expected_message = (
@@ -43,13 +44,15 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
         'Package: com.sec.android.widgetapp.ap.hero.accuweather '
         'Component: com.sec.and...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[17]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.CheckTimestamp(event.timestamp, '2013-09-27 19:45:55.675000')
 
-    self.assertEqual(event.package, 'com.google.android.gsf.login')
+    self.assertEqual(event_data.package, 'com.google.android.gsf.login')
 
     expected_message = (
         'Package: '
@@ -60,7 +63,8 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
         'Package: com.google.android.gsf.login '
         'Component: com.google.android.gsf.login...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

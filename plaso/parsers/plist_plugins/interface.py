@@ -71,9 +71,9 @@ class PlistPlugin(plugins.BasePlugin):
     a single layer down from the root (same as the check for plugin
     applicability). This level is suitable for most cases.
 
-    For cases where there is variability in the name at the first level
-    (e.g. it is the MAC addresses of a device, or a UUID) it is possible to
-    override the depth limit and use GetKeys to fetch from a deeper level.
+    For cases where there is variability in the name at the first level, for
+    example the name is the MAC address of a device or a UUID, it is possible
+    to override the depth limit and use GetKeys to fetch from a deeper level.
 
     E.g.
     Top_Level (root):                                             # depth = 0

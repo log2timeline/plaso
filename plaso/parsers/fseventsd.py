@@ -45,7 +45,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
   Refer to http://nicoleibrahim.com/apple-fsevents-forensics/ for details.
   """
 
-  NAME = 'fsevents'
+  NAME = 'fseventsd'
 
   DESCRIPTION = 'Parser for fseventsd files.'
 

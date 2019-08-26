@@ -671,6 +671,7 @@ class StorageFileTestCase(TestCase):
     command.extend(analysis_options)
     command.extend(output_options)
     command.extend(logging_options)
+    command.extend(['--status-view', 'none'])
     command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
@@ -1137,13 +1138,13 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
       output_options = ['--output-format', 'null']
 
       if not self._RunPsort(
-          test_definition, temp_directory, source_path,
+          test_definition, temp_directory, storage_file,
           analysis_options=analysis_options, output_options=output_options):
         return False
 
       # Check if the resulting storage file can be read with psort.
       if not self._RunPsort(
-          test_definition, temp_directory, source_path,
+          test_definition, temp_directory, storage_file,
           output_options=test_definition.output_options):
         return False
 

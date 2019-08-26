@@ -27,7 +27,6 @@ parsers:
 - dpkg
 - filestat
 - gdrive_synclog
-- java_idx
 - olecf
 - pls_recall
 - popularity_contest
@@ -38,6 +37,7 @@ parsers:
 - syslog
 - systemd_journal
 - utmp
+- vsftpd
 - webhist
 - xchatlog
 - xchatscrollback
@@ -57,7 +57,6 @@ parsers:
 - filestat
 - fseventsd
 - gdrive_synclog
-- java_idx
 - mac_appfirewall_log
 - mac_keychain
 - mac_securityd

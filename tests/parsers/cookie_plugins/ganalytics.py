@@ -26,7 +26,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     """
     cookies = []
     for event in storage_writer.GetEvents():
-      if event.data_type.startswith('cookie:google:analytics'):
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type.startswith('cookie:google:analytics'):
         cookies.append(event)
     return cookies
 
@@ -44,11 +45,13 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-10-30 21:56:06.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     self.assertEqual(
-        event.utmcct,
+        event_data.utmcct,
         '/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/')
-    self.assertEqual(event.url, 'http://ads.aha.is/')
-    self.assertEqual(event.utmcsr, 'mbl.is')
+    self.assertEqual(event_data.url, 'http://ads.aha.is/')
+    self.assertEqual(event_data.utmcsr, 'mbl.is')
 
     expected_message = (
         'http://ads.aha.is/ (__utmz) Sessions: 1 Domain Hash: 137167072 '
@@ -58,7 +61,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'maelt_med_kerfisbundnum_hydingum/')
     expected_short_message = 'http://ads.aha.is/ (__utmz)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
@@ -76,9 +80,11 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
     # Check an UTMZ Google Analytics event.
     event = events[39]
-    self.assertEqual(event.utmctr, 'enders game')
-    self.assertEqual(event.domain_hash, '68898382')
-    self.assertEqual(event.sessions, 1)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.utmctr, 'enders game')
+    self.assertEqual(event_data.domain_hash, '68898382')
+    self.assertEqual(event_data.sessions, 1)
 
     expected_message = (
         'http://imdb.com/ (__utmz) Sessions: 1 Domain Hash: 68898382 '
@@ -87,17 +93,19 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'used to find site: enders game')
     expected_short_message = 'http://imdb.com/ (__utmz)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check the UTMA Google Analytics event.
     event = events[41]
 
     self.CheckTimestamp(event.timestamp, '2012-03-22 01:55:29.000000')
-
     self.assertEqual(event.timestamp_desc, 'Analytics Previous Time')
-    self.assertEqual(event.cookie_name, '__utma')
-    self.assertEqual(event.visitor_id, '1827102436')
-    self.assertEqual(event.sessions, 2)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.cookie_name, '__utma')
+    self.assertEqual(event_data.visitor_id, '1827102436')
+    self.assertEqual(event_data.sessions, 2)
 
     expected_message = (
         'http://assets.tumblr.com/ (__utma) '
@@ -106,25 +114,28 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'Visitor ID: 1827102436')
     expected_short_message = 'http://assets.tumblr.com/ (__utma)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check the UTMB Google Analytics event.
     event = events[34]
 
     self.CheckTimestamp(event.timestamp, '2012-03-22 01:48:30.000000')
-
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-    self.assertEqual(event.cookie_name, '__utmb')
-    self.assertEqual(event.domain_hash, '154523900')
-    self.assertEqual(event.pages_viewed, 1)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.cookie_name, '__utmb')
+    self.assertEqual(event_data.domain_hash, '154523900')
+    self.assertEqual(event_data.pages_viewed, 1)
 
     expected_message = (
         'http://upressonline.com/ (__utmb) Pages Viewed: 1 Domain Hash: '
         '154523900')
     expected_short_message = 'http://upressonline.com/ (__utmb)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

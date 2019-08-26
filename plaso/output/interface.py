@@ -152,11 +152,6 @@ class OutputModule(object):
 class LinearOutputModule(OutputModule):
   """Linear output module."""
 
-  # Need to suppress this since these classes do not implement the
-  # abstract method WriteEventBody, classes that inherit from one of these
-  # classes need to implement that function.
-  # pylint: disable=abstract-method
-
   def __init__(self, output_mediator):
     """Initializes a linear output module.
 
@@ -169,6 +164,16 @@ class LinearOutputModule(OutputModule):
     """
     super(LinearOutputModule, self).__init__(output_mediator)
     self._output_writer = None
+
+  @abc.abstractmethod
+  def WriteEventBody(self, event, event_data, event_tag):
+    """Writes event values to the output.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_tag (EventTag): event tag.
+    """
 
   def SetOutputWriter(self, output_writer):
     """Set the output writer.

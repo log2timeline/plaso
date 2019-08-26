@@ -45,9 +45,10 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-09-27 14:42:39.000000')
 
-    self.assertEqual(event.username, 'SOMEDOMAIN\\someUser')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'SOMEDOMAIN\\someUser')
     self.assertEqual(
-        event.filename, 'C:\\Windows\\System32\\procexp64.exe')
+        event_data.filename, 'C:\\Windows\\System32\\procexp64.exe')
 
     expected_message = (
         'File Name: C:\\Windows\\System32\\procexp64.exe '
@@ -61,7 +62,8 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
         'C:\\Windows\\System32\\procexp64.exe '
         'Action blocked : Terminate')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -26,21 +26,20 @@ class ParsersArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
     """
-    # TODO: rename option name to parser_filter_expression.
     argument_group.add_argument(
         '--parsers', dest='parsers', type=str, action='store',
-        default='', metavar='PARSER_LIST', help=(
-            'Define a list of parsers to use by the tool. This is a comma '
-            'separated list where each entry can be either a name of a parser '
-            'or a parser list. Each entry can be prepended with an '
-            'exclamation mark to negate the selection (exclude it). The list '
-            'match is an exact match while an individual parser matching is '
-            'a case insensitive substring match, with support for glob '
-            'patterns. Examples would be: "reg" that matches the substring '
-            '"reg" in all parser names or the glob pattern "sky[pd]" that '
-            'would match all parsers that have the string "skyp" or "skyd" '
-            'in its name. All matching is case insensitive. Use "--parsers '
-            'list" or "--info" to list the available parsers.'))
+        default='', metavar='PARSER_FILTER_EXPRESSION', help=(
+            'Define which presets, parsers and/or plugins to use, or show '
+            'possible values. The expression is a comma separated string '
+            'where each element is a preset, parser or plugin name. Each '
+            'element can be prepended with an exclamation mark to exclude the '
+            'item. Matching is case insensitive. Examples: "linux,'
+            '!bash_history" enables the linux preset, without the '
+            'bash_history parser. "sqlite,!sqlite/chrome_history" enables '
+            'all sqlite plugins except for chrome_history". "win7,syslog" '
+            'enables the win7 preset, as well as the syslog parser. Use '
+            '"--parsers list" or "--info" to list available presets, parsers '
+            'and plugins.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):

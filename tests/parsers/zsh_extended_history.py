@@ -28,14 +28,16 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2016-03-12 08:26:50.000000')
 
-    self.assertEqual(event.elapsed_seconds, 0)
-    self.assertEqual(event.command, 'cd plaso')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.elapsed_seconds, 0)
+    self.assertEqual(event_data.command, 'cd plaso')
 
     event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2016-03-26 11:54:53.000000')
 
-    self.assertEqual(event.command, 'echo dfgdfg \\\\\n& touch /tmp/afile')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.command, 'echo dfgdfg \\\\\n& touch /tmp/afile')
 
     event = events[3]
 

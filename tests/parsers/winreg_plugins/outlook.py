@@ -96,7 +96,8 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
         'username@example.com.ost: 0x00372bcf').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 # TODO: The catalog for Office 2013 (15.0) contains binary values not

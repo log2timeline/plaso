@@ -84,10 +84,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
        'filename': '/My Documents/goodfella/Documents/Hideout/myfile.txt',
        'hostname': 'Agrabah',
        'inode': 1245,
-       'mydict': {
-           'akeywithstuff': 'Here',
-           'another': 'value',
-           'value': 134},
        'parser': 'Weirdo',
        'text': (
            'User did a very bad thing, bad, bad thing that awoke Dr. Evil.'),
@@ -447,25 +443,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
     self._CheckIfExpressionMatches(
         'parser is not \'Weirdo\'', event, event_data, event_tag, False)
-
-    self._CheckIfExpressionMatches(
-        'mydict.value is 123', event, event_data, event_tag, False)
-
-    self._CheckIfExpressionMatches(
-        'mydict.akeywithstuff contains "ere"', event, event_data, event_tag,
-        True)
-
-    self._CheckIfExpressionMatches(
-        'mydict.value is 134', event, event_data, event_tag, True)
-
-    self._CheckIfExpressionMatches(
-        'mydict.value < 200', event, event_data, event_tag, True)
-
-    self._CheckIfExpressionMatches(
-        'mydict.another contains "val"', event, event_data, event_tag, True)
-
-    self._CheckIfExpressionMatches(
-        'mydict.notthere is 123', event, event_data, event_tag, False)
 
     self._CheckIfExpressionMatches(
         'tag contains \'browser_search\'', event, event_data, event_tag, True)

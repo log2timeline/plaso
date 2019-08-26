@@ -34,8 +34,9 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-12-28 04:35:47.000000')
 
-    self.assertEqual(event.key, 'passwordLastSetTime')
-    self.assertEqual(event.root, '/')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.key, 'passwordLastSetTime')
+    self.assertEqual(event_data.root, '/')
     expected_description = (
         'Last time user (501) changed the password: '
         '$ml$37313$fa6cac1869263baa85cffc5e77a3d4ee164b7'
@@ -45,11 +46,12 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
         'e0d819a1b0aba20646fd61345d98c0c9a411bfd1144dd4b'
         '3c40ec0f148b66d5b9ab014449f9b2e103928ef21db6e25'
         'b536a60ff17a84e985be3aa7ba3a4c16b34e0d1d2066ae178')
-    self.assertEqual(event.desc, expected_description)
+    self.assertEqual(event_data.desc, expected_description)
 
     expected_string = '//passwordLastSetTime {}'.format(expected_description)
     expected_short = '{0:s}...'.format(expected_string[:77])
-    self._TestGetMessageStrings(event, expected_string, expected_short)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_short)
 
 
 if __name__ == '__main__':

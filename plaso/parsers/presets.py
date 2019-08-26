@@ -144,6 +144,25 @@ class ParserPresetsManager(object):
     """
     return sorted(self._definitions.keys())
 
+  def GetParsersByPreset(self, preset_name):
+    """Retrieves the parser and plugin names of a specific preset.
+
+    Args:
+      preset_name (str): name of the preset.
+
+    Returns:
+      list[str]: parser and plugin names in alphabetical order.
+
+    Raises:
+      KeyError: if the preset does not exist.
+    """
+    lookup_name = preset_name.lower()
+    preset_definition = self._definitions.get(lookup_name, None)
+    if preset_definition is None:
+      raise KeyError('Preset: {0:s} is not defined'.format(preset_name))
+
+    return sorted(preset_definition.parsers)
+
   def GetPresetByName(self, name):
     """Retrieves a specific preset definition by name.
 
@@ -153,8 +172,8 @@ class ParserPresetsManager(object):
     Returns:
       ParserPreset: a parser preset or None if not available.
     """
-    name = name.lower()
-    return self._definitions.get(name, None)
+    lookup_name = name.lower()
+    return self._definitions.get(lookup_name, None)
 
   def GetPresetsByOperatingSystem(self, operating_system):
     """Retrieves preset definitions for a specific operating system.
@@ -175,14 +194,23 @@ class ParserPresetsManager(object):
 
     return preset_definitions
 
-  def GetPresets(self):
-    """Retrieves the preset definitions.
+  def GetPresetsInformation(self):
+    """Retrieves the presets information.
 
-    Yields:
-      ParserPreset: parser presets in alphabetical order by name.
+    Returns:
+      list[tuple]: containing:
+
+        str: preset name.
+        str: comma separated parser and plugin names that are defined by
+            the preset.
     """
-    for _, parser_preset in sorted(self._definitions.items()):
-      yield parser_preset
+    presets_information = []
+    for name, parser_preset in sorted(self._definitions.items()):
+      preset_information_tuple = (name, ', '.join(parser_preset.parsers))
+      # TODO: refactor to pass PresetDefinition.
+      presets_information.append(preset_information_tuple)
+
+    return presets_information
 
   def ReadFromFile(self, path):
     """Reads parser and parser plugin presets from a file.

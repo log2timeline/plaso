@@ -39,8 +39,9 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2014-04-21 14:13:35.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(
-        event.url, 'HTTP:http://start.ubuntu.com/12.04/sprite.png')
+        event_data.url, 'HTTP:http://start.ubuntu.com/12.04/sprite.png')
 
     expected_message = (
         'Fetched 2 time(s) '
@@ -51,10 +52,11 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         '"HTTP:http://start.ubuntu.com/12.04/sprite.png"')
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
     for event in events:
-      self.assertEqual(event.version, "1.19")
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(event_data.version, "1.19")
 
   def testParseCache_002(self):
     """Test Firefox 28 cache file _CACHE_002_ parsing."""
@@ -79,14 +81,16 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     event = events[5]
 
-    self.assertEqual(event.url, expected_url)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.url, expected_url)
 
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2014-04-21 14:10:58.000000')
 
     for event in events:
-      self.assertEqual(event.version, "1.19")
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(event_data.version, "1.19")
 
   def testParseCache_003(self):
     """Test Firefox 28 cache file _CACHE_003_ parsing."""
@@ -100,15 +104,17 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[7]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = (
         'HTTP:https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/'
         'jquery.min.js')
-    self.assertEqual(event.url, expected_url)
+    self.assertEqual(event_data.url, expected_url)
 
     self.CheckTimestamp(event.timestamp, '2014-04-21 14:11:07.000000')
 
     for event in events:
-      self.assertEqual(event.version, "1.19")
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(event_data.version, "1.19")
 
   def testParseAlternativeFilename(self):
     """Test Firefox 28 cache 003 file with alternative filename."""
@@ -134,6 +140,8 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2014-05-02 14:15:03.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'Fetched 1 time(s) '
         '[HTTP/1.1 200 OK] GET '
@@ -143,7 +151,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         '"HTTP:http://start.mozilla.org/en-US/"')
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testParseLegacyCache_002(self):
     """Test Firefox 3 cache file _CACHE_002_ parsing."""
@@ -196,14 +204,15 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2015-05-02 15:35:31.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = (
         ':https://tiles.cdn.mozilla.net/images/'
         '8acf9436e1b315f5f04b9435a518bcd1aef131f8.5663.png')
-    self.assertEqual(event.url, expected_url)
+    self.assertEqual(event_data.url, expected_url)
 
-    self.assertEqual(event.request_method, 'GET')
-    self.assertEqual(event.response_code, 'HTTP/1.1 200 OK')
-    self.assertEqual(event.fetch_count, 2)
+    self.assertEqual(event_data.request_method, 'GET')
+    self.assertEqual(event_data.response_code, 'HTTP/1.1 200 OK')
+    self.assertEqual(event_data.fetch_count, 2)
 
     event = events[1]
 

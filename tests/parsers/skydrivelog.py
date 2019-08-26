@@ -29,28 +29,36 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-07-25 16:03:23.291000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
         '2013-07-25-180323.291 PID=0x8f4 TID=0x718 ContinuedFrom=')
     expected_short_message = (
         'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
         '2013-07-25-180323.29...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2013-07-25 16:03:24.649000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         '[AUTH authapi.cpp(280) ERR] Sign in failed : '
         'DRX_E_AUTH_NO_VALID_CREDENTIALS,')
     expected_short_message = (
         'Sign in failed : DRX_E_AUTH_NO_VALID_CREDENTIALS,')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[18]
 
     self.CheckTimestamp(event.timestamp, '2013-08-01 21:27:44.124000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         '[WNS absconn.cpp(177) VRB] Received data from server,'
@@ -59,7 +67,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Received data from server,dwID=0x0;dwSize=0x3e;pbData=PNG 9 CON 48  '
         '<ping-res...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseErrorLogUnicode(self):
     """Tests the Parse function on Unicode error log."""
@@ -75,9 +84,10 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     # is UTF-8.
     event = events[3]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_detail = (
         'No node found named Passport-Jméno-člena, no user name available,')
-    self.assertEqual(event.detail, expected_detail)
+    self.assertEqual(event_data.detail, expected_detail)
 
   def testParseLog(self):
     """Tests the Parse function on normal log."""
@@ -101,6 +111,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-08-12 02:52:32.976000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         '[WNS absconn.cpp(177) VRB] Received data from server,dwID=0x0;'
         'dwSize=0x15a;pbData=GET 5 WNS 331 Context: 2891  <channel-response>'
@@ -112,11 +124,14 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Received data from server,dwID=0x0;dwSize=0x15a;pbData=GET 5 WNS '
         '331 Context:...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[13]
 
     self.CheckTimestamp(event.timestamp, '2013-08-12 03:18:57.232000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
@@ -124,11 +139,14 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
         '2013-08-11-231857.23...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[15]
 
     self.CheckTimestamp(event.timestamp, '2013-08-31 03:45:37.940000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         '[PAL cwinhttp.cpp(1581) VRB] ,output=GET <- /MyData/LiveFolders?'
@@ -139,7 +157,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         ',output=GET <- /MyData/LiveFolders?Filter=changes&InlineBlobs='
         'false&MaxItemCo...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
@@ -159,11 +178,14 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:28.999000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         '[global.cpp:626!logVersionInfo] (DETAIL) 17.0.2011.0627 (Ship)')
     expected_short_message = (
         '17.0.2011.0627 (Ship)')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 
@@ -177,13 +199,16 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:29.702000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'SyncToken = LM%3d12345678905670%3bID%3d1234567890E059C0!'
         '103%3bLR%3d12345678905623%3aEP%3d2')
     expected_short_message = (
         'SyncToken = LM%3d12345678905670%3bID%3d1234567890E059C0!'
         '103%3bLR%3d1234567890...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[4]
 
@@ -197,9 +222,12 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-08-01 21:28:46.742000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'SyncToken = Not a sync token (\xe0\xe8\xec\xf2\xf9)!')
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

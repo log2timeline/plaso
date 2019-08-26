@@ -10,8 +10,8 @@ matrix:
     python: 3.6
     services:
     - docker
-  - name: "Fedora Core 29 (Docker) with Python 2.7"
-    env: FEDORA_VERSION="29"
+  - name: "Fedora Core 30 (Docker) with Python 2.7"
+    env: FEDORA_VERSION="30"
     os: linux
     dist: xenial
     sudo: required
@@ -20,8 +20,8 @@ matrix:
     python: 2.7
     services:
     - docker
-  - name: "Fedora Core 29 (Docker) with Python 3.7"
-    env: FEDORA_VERSION="29"
+  - name: "Fedora Core 30 (Docker) with Python 3.7"
+    env: FEDORA_VERSION="30"
     os: linux
     dist: xenial
     sudo: required

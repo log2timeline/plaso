@@ -4,10 +4,18 @@
 from __future__ import unicode_literals
 
 import abc
+
+from plaso.containers import artifacts
+from plaso.containers import event_sources
+from plaso.containers import events
+from plaso.containers import reports
+from plaso.containers import sessions
+from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.lib import definitions
+from plaso.serializer import json_serializer
 
 
-# pylint: disable=redundant-returns-doc,redundant-yields-doc
 class BaseStore(object):
   """Storage interface.
 
@@ -17,6 +25,35 @@ class BaseStore(object):
     storage_type (str): storage type.
   """
 
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_ERROR = (
+      warnings.ExtractionError.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
+  _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
+      artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
+  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
+
+  _CONTAINER_TYPES = (
+      _CONTAINER_TYPE_ANALYSIS_REPORT,
+      _CONTAINER_TYPE_EXTRACTION_ERROR,
+      _CONTAINER_TYPE_EXTRACTION_WARNING,
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT_SOURCE,
+      _CONTAINER_TYPE_EVENT_TAG,
+      _CONTAINER_TYPE_SESSION_COMPLETION,
+      _CONTAINER_TYPE_SESSION_START,
+      _CONTAINER_TYPE_SYSTEM_CONFIGURATION,
+      _CONTAINER_TYPE_TASK_COMPLETION,
+      _CONTAINER_TYPE_TASK_START)
+
   def __init__(self):
     """Initializes a store."""
     super(BaseStore, self).__init__()
@@ -25,68 +62,177 @@ class BaseStore(object):
     self.storage_type = None
     self._serializers_profiler = None
     self._storage_profiler = None
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
 
   @abc.abstractmethod
+  def _AddAttributeContainer(self, container_type, container):
+    """Adds an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      container (AttributeContainer): attribute container.
+    """
+
+  @abc.abstractmethod
+  def _GetAttributeContainers(self, container_type):
+    """Yields attribute containers
+
+    Args:
+      container_type (str): container type attribute of the container being
+        added.
+
+    Yields:
+      AttributeContainer: attribute container.
+    """
+
+  @abc.abstractmethod
+  def _GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves the container with a specific identifier.
+
+    Args:
+      container_type (str): container type.
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      OSError: if an invalid identifier is provided.
+      IOError: if an invalid identifier is provided.
+    """
+
+  @abc.abstractmethod
+  def _RaiseIfNotWritable(self):
+    """Raises if the storage file is not writable.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
+    """
+
+  @abc.abstractmethod
+  def _RaiseIfNotReadable(self):
+    """Raises if the storage file is not readable.
+
+     Raises:
+       OSError: if the store cannot be read from.
+       IOError: if the store cannot be read from.
+    """
+
+  @abc.abstractmethod
+  def _HasAttributeContainers(self, container_type):
+    """Determines if a store contains a specific type of attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      bool: True if the store contains the specified type of attribute
+          containers.
+    """
+
+  @abc.abstractmethod
+  def _GetNumberOfAttributeContainers(self, container_type):
+    """Determines the number of containers of a type in the store.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      int: the number of containers in the store of the specified type.
+    """
+
+  @abc.abstractmethod
+  def _WriteAttributeContainer(self, attribute_container):
+    """Writes an attribute container to the store.
+
+    Args:
+      attribute_container (AttributeContainer): attribute container.
+    """
+
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
     """
+    self._RaiseIfNotWritable()
 
-  @abc.abstractmethod
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT, analysis_report)
+
   def AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): event.
     """
+    self._RaiseIfNotWritable()
 
-  @abc.abstractmethod
+    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT, event)
+
+  def AddEventData(self, event_data):
+    """Adds event data.
+
+    Args:
+      event_data (EventData): event data.
+    """
+    self._RaiseIfNotWritable()
+
+    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_DATA, event_data)
+
   def AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
     """
+    self._RaiseIfNotWritable()
 
-  @abc.abstractmethod
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EVENT_SOURCE, event_source)
+
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
     """
+    self._RaiseIfNotWritable()
 
-  @abc.abstractmethod
+    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
+
   def AddWarning(self, warning):
     """Adds a warning.
 
     Args:
       warning (ExtractionWarning): warning.
     """
+    self._RaiseIfNotWritable()
+
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING, warning)
 
   @abc.abstractmethod
   def Close(self):
-    """Closes the storage."""
+    """Closes the store."""
 
-  @abc.abstractmethod
   def GetAnalysisReports(self):
     """Retrieves the analysis reports.
 
-    Yields:
-      AnalysisReport: analysis report.
+    Returns:
+      generator(AnalysisReport): analysis report generator.
     """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-  @abc.abstractmethod
   def GetEventData(self):
     """Retrieves the event data.
 
-    Yields:
-      EventData: event data.
+    Returns:
+      generator(EventData): event data generator.
     """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA)
 
-  @abc.abstractmethod
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
 
@@ -96,24 +242,25 @@ class BaseStore(object):
     Returns:
       EventData: event data or None if not available.
     """
+    return self._GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA, identifier)
 
-  @abc.abstractmethod
   def GetEvents(self):
     """Retrieves the events.
 
-    Yields:
-      EventObject: event.
+    Returns:
+      generator(Event): event  generator.
     """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
 
-  @abc.abstractmethod
   def GetEventSources(self):
     """Retrieves the event sources.
 
-    Yields:
-      EventSource: event source.
+    Returns:
+      generator(EventSource): event source generator.
     """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_SOURCE)
 
-  @abc.abstractmethod
   def GetEventTagByIdentifier(self, identifier):
     """Retrieves a specific event tag.
 
@@ -122,23 +269,39 @@ class BaseStore(object):
 
     Returns:
       EventTag: event tag or None if not available.
-    """
 
-  @abc.abstractmethod
+    Raises:
+      OSError: if an invalid identifier is provided.
+      IOError: if an invalid identifier is provided.
+    """
+    return self._GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_TAG, identifier)
+
   def GetEventTags(self):
     """Retrieves the event tags.
 
-    Yields:
-      EventTag: event tag.
+    Returns:
+      generator(EventTag): event tag generator.
     """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
 
-  @abc.abstractmethod
+  def GetNumberOfAnalysisReports(self):
+    """Retrieves the number analysis reports.
+
+    Returns:
+      int: number of analysis reports.
+    """
+    return self._GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
+
   def GetNumberOfEventSources(self):
     """Retrieves the number event sources.
 
     Returns:
       int: number of event sources.
     """
+    return self._GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_SOURCE)
 
   @abc.abstractmethod
   def GetSessions(self):
@@ -152,8 +315,8 @@ class BaseStore(object):
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
-    This includes all events written to the storage including those pending
-    being flushed (written) to the storage.
+    This includes all events written to the store including those pending
+    being flushed (written) to the store.
 
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
@@ -171,35 +334,41 @@ class BaseStore(object):
       ExtractionWarning: warning.
     """
 
-  @abc.abstractmethod
   def HasAnalysisReports(self):
     """Determines if a store contains analysis reports.
 
     Returns:
       bool: True if the store contains analysis reports.
     """
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-  @abc.abstractmethod
   def HasWarnings(self):
     """Determines if a store contains extraction warnings.
 
     Returns:
       bool: True if the store contains extraction warnings.
     """
+    # To support older storage versions, check for the now deprecated
+    # extraction errors.
+    has_errors = self._HasAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_ERROR)
+    if has_errors:
+      return True
 
-  @abc.abstractmethod
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
+
   def HasEventTags(self):
     """Determines if a store contains event tags.
 
     Returns:
       bool: True if the store contains event tags.
     """
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
 
   @abc.abstractmethod
   def Open(self, **kwargs):
     """Opens the storage."""
 
-  @abc.abstractmethod
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
 
@@ -211,6 +380,10 @@ class BaseStore(object):
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
     """
+    generator = self._GetAttributeContainers(
+        self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
+    for system_configuration in generator:
+      knowledge_base.ReadSystemConfigurationArtifact(system_configuration)
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
@@ -228,45 +401,145 @@ class BaseStore(object):
     """
     self._storage_profiler = storage_profiler
 
-  @abc.abstractmethod
   def WritePreprocessingInformation(self, knowledge_base):
     """Writes preprocessing information.
 
     Args:
       knowledge_base (KnowledgeBase): contains the preprocessing information.
-    """
 
-  @abc.abstractmethod
+    Raises:
+      IOError: if the storage type does not support writing preprocess
+          information or the storage file is closed or read-only.
+      OSError: if the storage type does not support writing preprocess
+          information or the storage file is closed or read-only.
+    """
+    self._RaiseIfNotWritable()
+
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Preprocess information not supported by storage type.')
+
+    system_configuration = knowledge_base.GetSystemConfigurationArtifact()
+
+    self._WriteAttributeContainer(system_configuration)
+
   def WriteSessionCompletion(self, session_completion):
     """Writes session completion information.
 
     Args:
       session_completion (SessionCompletion): session completion information.
-    """
 
-  @abc.abstractmethod
+    Raises:
+      IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
+    """
+    self._RaiseIfNotWritable()
+
+    self._WriteAttributeContainer(session_completion)
+
   def WriteSessionStart(self, session_start):
     """Writes session start information.
 
     Args:
       session_start (SessionStart): session start information.
-    """
 
-  @abc.abstractmethod
+    Raises:
+      IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
+    """
+    self._RaiseIfNotWritable()
+
+    self._WriteAttributeContainer(session_start)
+
   def WriteTaskCompletion(self, task_completion):
     """Writes task completion information.
 
     Args:
       task_completion (TaskCompletion): task completion information.
-    """
 
-  @abc.abstractmethod
+    Raises:
+      IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
+    """
+    self._RaiseIfNotWritable()
+
+    self._WriteAttributeContainer(task_completion)
+
   def WriteTaskStart(self, task_start):
     """Writes task start information.
 
     Args:
       task_start (TaskStart): task start information.
+
+    Raises:
+      StorageNotReadableError: when the storage file is closed or read-only.
     """
+    self._RaiseIfNotWritable()
+
+    self._WriteAttributeContainer(task_start)
+
+  def _DeserializeAttributeContainer(self, container_type, serialized_data):
+    """Deserializes an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      serialized_data (bytes): serialized attribute container data.
+
+    Returns:
+      AttributeContainer: attribute container or None.
+
+    Raises:
+      IOError: if the serialized data cannot be decoded.
+      OSError: if the serialized data cannot be decoded.
+    """
+    if not serialized_data:
+      return None
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(container_type)
+
+    try:
+      serialized_string = serialized_data.decode('utf-8')
+    except UnicodeDecodeError as exception:
+      raise IOError('Unable to decode serialized data: {0!s}'.format(
+          exception))
+    attribute_container = self._serializer.ReadSerialized(serialized_string)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(container_type)
+
+    return attribute_container
+
+  def _SerializeAttributeContainer(self, attribute_container):
+    """Serializes an attribute container.
+
+    Args:
+      attribute_container (AttributeContainer): attribute container.
+
+    Returns:
+      bytes: serialized attribute container.
+
+    Raises:
+      IOError: if the attribute container cannot be serialized.
+      OSError: if the attribute container cannot be serialized.
+    """
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(
+          attribute_container.CONTAINER_TYPE)
+
+    try:
+      attribute_container_data = self._serializer.WriteSerialized(
+          attribute_container)
+      if not attribute_container_data:
+        raise IOError(
+            'Unable to serialize attribute container: {0:s}.'.format(
+                attribute_container.CONTAINER_TYPE))
+
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(
+            attribute_container.CONTAINER_TYPE)
+
+    return attribute_container_data
 
 
 class StorageMergeReader(object):
@@ -280,11 +553,45 @@ class StorageMergeReader(object):
     """
     super(StorageMergeReader, self).__init__()
     self._storage_writer = storage_writer
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+
+  def _DeserializeAttributeContainer(self, container_type, serialized_data):
+    """Deserializes an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      serialized_data (bytes): serialized attribute container data.
+
+    Returns:
+      AttributeContainer: attribute container or None.
+
+    Raises:
+      IOError: if the serialized data cannot be decoded.
+      OSError: if the serialized data cannot be decoded.
+    """
+    if not serialized_data:
+      return None
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(container_type)
+
+    try:
+      serialized_string = serialized_data.decode('utf-8')
+    except UnicodeDecodeError as exception:
+      raise IOError('Unable to decode serialized data: {0!s}'.format(
+          exception))
+    attribute_container = self._serializer.ReadSerialized(serialized_string)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(container_type)
+
+    return attribute_container
 
   @abc.abstractmethod
   def MergeAttributeContainers(
       self, callback=None, maximum_number_of_containers=0):
-    """Reads attribute containers from a task storage file into the writer.
+    """Reads attribute containers from a task store into the writer.
 
     Args:
       callback (function[StorageWriter, AttributeContainer]): function to call
@@ -309,18 +616,6 @@ class StorageReader(object):
   def __exit__(self, exception_type, value, traceback):
     """Make usable with "with" statement."""
     self.Close()
-
-  @abc.abstractproperty
-  def format_version(self):
-    """int: format version"""
-
-  @abc.abstractproperty
-  def serialization_format(self):
-    """str: serialization format."""
-
-  @abc.abstractproperty
-  def storage_type(self):
-    """str: storage type."""
 
   @abc.abstractmethod
   def Close(self):
@@ -541,6 +836,14 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
+  def AddEventData(self, event_data):
+    """Adds event data.
+
+    Args:
+      event_data (EventData): event data.
+    """
+
+  @abc.abstractmethod
   def AddEventSource(self, event_source):
     """Adds an event source.
 
@@ -568,15 +871,27 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
-  # pylint: disable=unused-argument
-  def CreateTaskStorage(self, task):
-    """Creates a task storage.
+  @abc.abstractmethod
+  def CheckTaskReadyForMerge(self, task):
+    """Checks if a task is ready for merging into the store.
 
     Args:
       task (Task): task.
 
     Returns:
-      StorageWriter: storage writer.
+      bool: True if the task is ready to be merged.
+    """
+
+  # pylint: disable=unused-argument
+  def CreateTaskStorage(self, task, task_storage_format):
+    """Creates a task store.
+
+    Args:
+      task (Task): task.
+      task_storage_format (str): storage format to store task results.
+
+    Returns:
+      StorageWriter: storage writer for the task store.
 
     Raises:
       NotImplementedError: since there is no implementation.

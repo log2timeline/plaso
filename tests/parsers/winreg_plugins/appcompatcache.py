@@ -315,7 +315,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessWindows2003(self):
     """Tests the Process function for Windows 2003 AppCompatCache data."""
@@ -343,7 +344,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -372,7 +374,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -412,7 +415,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -441,7 +445,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessWindows8_1(self):
     """Tests the Process function for Windows 8.1 AppCompatCache data."""
@@ -468,7 +473,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessWindows10(self):
     """Tests the Process function for Windows 10 AppCompatCache data."""
@@ -495,7 +501,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessWindows10Creator(self):
     """Tests the Process function for Windows 10 Creator AppCompatCache data."""
@@ -522,7 +529,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
