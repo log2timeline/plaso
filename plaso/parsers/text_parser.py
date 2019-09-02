@@ -358,7 +358,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
       return self._ReadLine(text_file_object, max_len=max_len, depth=depth + 1)
 
-    return line.strip()
+    return line
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a text file-like object using a pyparsing definition.

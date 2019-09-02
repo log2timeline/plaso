@@ -25,7 +25,7 @@ class SetupapiLogFormatterTest(test_lib.EventFormatterTestCase):
 
     expected_attribute_names = [
         'entry_type',
-        'entry_status']
+        'exit_status']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -113,6 +113,7 @@ parsers:
 - olecf
 - pe
 - prefetch
+- setupapi
 - sccm
 - skydrive_log
 - skydrive_log_old

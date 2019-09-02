@@ -44,10 +44,10 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
 
     expected_message = (
         'Device Install (Hardware initiated) - SWD\\IP_TUNNEL_VBUS'
-        '\\Teredo_Tunnel_Device - START')
+        '\\Teredo_Tunnel_Device')
     expected_short_message = (
-        'START - Device Install (Hardware initiated) - SWD\\IP_TUNNEL_VBUS'
-        '\\Teredo_Tunne...')
+        'Device Install (Hardware initiated) - SWD\\IP_TUNNEL_VBUS'
+        '\\Teredo_Tunnel_Device')
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -71,10 +71,10 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
     expected_message = (
         'Device Install (Hardware initiated) - SWD\\WPDBUSENUM'
         '\\_??_USBSTOR#Disk&Ven_Generic&Prod_Flash_Disk&Rev_8.07#99E2116A&0'
-        '#{53f56307-b6bf-11d0-94f2-00a0c91efb8b} - START')
+        '#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}')
     expected_short_message = (
-        'START - Device Install (Hardware initiated) - SWD\\WPDBUSENUM'
-        '\\_??_USBSTOR#Disk...')
+        'Device Install (Hardware initiated) - SWD\\WPDBUSENUM'
+        '\\_??_USBSTOR#Disk&Ven_Gen...')
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -101,8 +101,8 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2015-11-22 17:53:29.305000')
 
-    expected_message = ('Setup Plug and Play Device Install - START')
-    expected_short_message = ('START - Setup Plug and Play Device Install')
+    expected_message = 'Setup Plug and Play Device Install'
+    expected_short_message = 'Setup Plug and Play Device Install'
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -112,10 +112,10 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
     expected_message = (
         'Setup online Device Install (Hardware initiated) - SW'
         '\\{97ebaacc-95bd-11d0-a3ea-00a0c9223196}'
-        '\\{53172480-4791-11D0-A5D6-28DB04C10000} - START')
+        '\\{53172480-4791-11D0-A5D6-28DB04C10000}')
     expected_short_message = (
-        'START - Setup online Device Install (Hardware initiated) - SW'
-        '\\{97ebaacc-95bd-...')
+        'Setup online Device Install (Hardware initiated) - SW'
+        '\\{97ebaacc-95bd-11d0-a3e...')
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -126,10 +126,10 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
 
     expected_message = (
         'Setup Import Driver Package - C:\\Windows\\system32'
-        '\\spool\\tools\\Microsoft XPS Document Writer\\prnms001.Inf - START')
+        '\\spool\\tools\\Microsoft XPS Document Writer\\prnms001.Inf')
     expected_short_message = (
-        'START - Setup Import Driver Package - C:\\Windows\\system32\\spool'
-        '\\tools\\Microso...')
+        'Setup Import Driver Package - C:\\Windows\\system32\\spool'
+        '\\tools\\Microsoft XPS D...')
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
