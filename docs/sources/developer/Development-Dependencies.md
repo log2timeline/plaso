@@ -19,8 +19,8 @@ Some dependencies for Plaso are optional:
 
 ### Fedora
 
-**Note that these instructions assume you are running on Fedora 28, 29 
-or 30. Installing packages from the copr on other versions and/or distributions 
+**Note that these instructions assume you are running on Fedora 29 or 30.
+Installing packages from the copr on other versions and/or distributions 
 is not recommended.**
 
 The [GIFT copr](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) contains
