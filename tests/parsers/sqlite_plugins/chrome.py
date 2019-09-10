@@ -235,7 +235,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '(URL not typed directly - no typed count)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check the file downloaded event.
     event = events[1]
@@ -258,7 +259,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
             expected_url, expected_full_path)
     expected_short_message = '{0:s} downloaded (3080192 bytes)'.format(
         expected_full_path)
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcess59ExtraColumn(self):
     """Tests the Process function on a Google Chrome 59 History database,

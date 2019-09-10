@@ -14,6 +14,7 @@ from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import windows_version
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
