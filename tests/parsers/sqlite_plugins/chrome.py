@@ -248,10 +248,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
         'win32/plaso-20171231.1.win32.msi')
-    self.assertEqual(event.url, expected_url)
+    self.assertEqual(event_data.url, expected_url)
 
     expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
-    self.assertEqual(event.full_path, expected_full_path)
+    self.assertEqual(event_data.full_path, expected_full_path)
 
     expected_message = (
         '{0:s} ({1:s}). '
