@@ -19,7 +19,6 @@ class Token(object):
     actions (list[str]): list of method names in the EventFilterExpressionParser
         to call.
     next_state (str): next state we transition to if this Token matches.
-    re_str (str): regular expression to try and match from the current point.
     state (str): parser state within the token should be applied or None if
         the token should be applied regardless of the parser state.
   """
@@ -513,7 +512,6 @@ class EventFilterExpressionParser(object):
     """Default callback handler."""
     logging.debug('Default handler: {0!s}'.format(kwarg))
 
-  # pylint: disable=missing-raises-doc
   def HexEscape(self, string, match, **unused_kwargs):
     """Converts a hex escaped string.
 
@@ -587,7 +585,6 @@ class EventFilterExpressionParser(object):
       raise errors.ParseError('{0:s} is not a valid float.'.format(string))
     return self.InsertArg(float_value)
 
-  # pylint: disable=missing-raises-doc
   def InsertIntArg(self, string='', **unused_kwargs):
     """Inserts a decimal integer argument into the current expression.
 
@@ -600,7 +597,7 @@ class EventFilterExpressionParser(object):
           expression.
 
     Raises:
-      ParseError: TBD.
+      ParseError: if string does not contain a valid integer.
     """
     try:
       int_value = int(string)
@@ -608,7 +605,6 @@ class EventFilterExpressionParser(object):
       raise errors.ParseError('{0:s} is not a valid integer.'.format(string))
     return self.InsertArg(int_value)
 
-  # pylint: disable=missing-raises-doc
   def InsertInt16Arg(self, string='', **unused_kwargs):
     """Inserts a hexadecimal integer argument into the current expression.
 
@@ -621,7 +617,7 @@ class EventFilterExpressionParser(object):
           expression.
 
     Raises:
-      ParseError: TBD.
+      ParseError: if string does not contain a valid base16 formatted integer.
     """
     try:
       int_value = int(string, 16)

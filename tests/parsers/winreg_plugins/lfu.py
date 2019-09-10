@@ -118,40 +118,45 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:boot_execute')
-
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:boot_execute')
 
     expected_message = (
         '[{0:s}] '
         'BootExecute: autocheck autochk *').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 
-    self.assertEqual(event.data_type, 'windows:registry:key_value')
-
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
 
     expected_message = (
         '[{0:s}] '
-        'CriticalSectionTimeout: 2592000 '
-        'ExcludeFromKnownDlls: [] '
-        'GlobalFlag: 0 '
-        'HeapDeCommitFreeBlockThreshold: 0 '
-        'HeapDeCommitTotalFreeThreshold: 0 '
-        'HeapSegmentCommit: 0 '
-        'HeapSegmentReserve: 0 '
-        'NumberOfInitialSessions: 2').format(key_path)
+        'CriticalSectionTimeout: [REG_SZ] 2592000 '
+        'ExcludeFromKnownDlls: [REG_MULTI_SZ] [] '
+        'GlobalFlag: [REG_SZ] 0 '
+        'HeapDeCommitFreeBlockThreshold: [REG_SZ] 0 '
+        'HeapDeCommitTotalFreeThreshold: [REG_SZ] 0 '
+        'HeapSegmentCommit: [REG_SZ] 0 '
+        'HeapSegmentReserve: [REG_SZ] 0 '
+        'NumberOfInitialSessions: [REG_SZ] 2').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
@@ -209,13 +214,14 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:boot_verification')
-
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:boot_verification')
 
     expected_message = (
         '[{0:s}] '
@@ -223,7 +229,8 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
             key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -32,10 +32,11 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.restore_point_event_type, 102)
-    self.assertEqual(event.restore_point_type, 0)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.restore_point_event_type, 102)
+    self.assertEqual(event_data.restore_point_type, 0)
     expected_description = 'Software Distribution Service 3.0'
-    self.assertEqual(event.description, expected_description)
+    self.assertEqual(event_data.description, expected_description)
 
     expected_message = (
         '{0:s} '
@@ -43,7 +44,8 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
         'Restore point type: UNKNOWN').format(expected_description)
     expected_short_message = expected_description
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

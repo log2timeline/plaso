@@ -30,8 +30,11 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.CheckTimestamp(event.timestamp, '2018-05-02 10:59:18.930156')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.body, "KeePassXC can now be run")
-    self.assertEqual(event.bundle_name, "com.google.santagui")
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.body, "KeePassXC can now be run")
+    self.assertEqual(event_data.bundle_name, "com.google.santagui")
+
     expected_message = (
         'Title: Santa'
         ' '
@@ -40,14 +43,18 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'Content: KeePassXC can now be run')
     expected_short_message = (
         'Title: Santa, Content: KeePassXC can now be run')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[2]
     self.CheckTimestamp(event.timestamp, '2018-05-02 11:13:21.531085')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.title, "Drive File Stream")
-    self.assertEqual(event.bundle_name, "com.google.drivefs")
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.title, "Drive File Stream")
+    self.assertEqual(event_data.bundle_name, "com.google.drivefs")
+
     expected_message = (
         'Title: Drive File Stream'
         ' '
@@ -58,14 +65,18 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     expected_short_message = (
         'Title: Drive File Stream, Content: Drive File Stream is loading your '
         'files…')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[5]
     self.CheckTimestamp(event.timestamp, '2018-05-16 16:38:04.686080')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.body, "PyCharm can now be run")
-    self.assertEqual(event.bundle_name, "com.google.santagui")
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.body, "PyCharm can now be run")
+    self.assertEqual(event_data.bundle_name, "com.google.santagui")
+
     expected_message = (
         'Title: Santa'
         ' '
@@ -74,7 +85,9 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'Content: PyCharm can now be run')
     expected_short_message = (
         'Title: Santa, Content: PyCharm can now be run')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
 
 if __name__ == '__main__':
   unittest.main()

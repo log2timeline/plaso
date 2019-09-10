@@ -60,7 +60,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     expected_message = (
         'INFO [periodic_scheduler, pid: 13707] cleanup_logs: job completed')
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
     event = events[2]
 
@@ -97,7 +98,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         'INFO [aprocess] [  316.587330] cfg80211: This is a multi-line\t'
         'message that sc...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -111,7 +113,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[1]
+    event = events[0]
 
     self.CheckTimestamp(event.timestamp, '2012-01-22 07:52:33.000000')
 
@@ -123,7 +125,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     expected_message = (
         '[client, pid: 30840] INFO No new content in ímynd.dd.')
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
     event = events[6]
 
@@ -134,7 +137,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.assertIsNone(event_data.severity)
 
     # Testing year increment.
-    event = events[8]
+    event = events[9]
 
     self.CheckTimestamp(event.timestamp, '2013-03-23 23:01:18.000000')
 
@@ -163,7 +166,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '[aprocess, pid: 10100] This is a multi-line message that screws up'
         '\tmany syslo...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[14]
 
@@ -176,7 +180,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
         '[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
     expected_short_message = (
         '[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Testing non-leap year.
     parser = syslog.SyslogParser()

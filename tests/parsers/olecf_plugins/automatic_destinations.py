@@ -35,14 +35,14 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # Check a AutomaticDestinationsDestListEntryEvent.
     event = events[7]
 
-    self.assertEqual(event.offset, 32)
-    self.assertEqual(event.data_type, 'olecf:dest_list:entry')
-
     self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:38.997538')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.pin_status, -1)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'olecf:dest_list:entry')
+    self.assertEqual(event_data.offset, 32)
+    self.assertEqual(event_data.pin_status, -1)
 
     expected_message = (
         'Entry: 11 '
@@ -61,14 +61,15 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'Path: C:\\Users\\nfury\\Pictures\\The SHIELD')
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
     # Check a WinLnkLinkEvent.
     event = events[1]
 
-    self.assertEqual(event.data_type, 'windows:lnk:link')
-
     self.CheckTimestamp(event.timestamp, '2010-11-10 07:51:16.749125')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:lnk:link')
 
     expected_message = (
         '[Empty description] '
@@ -85,15 +86,16 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\Librarie...')
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
     # Check a WindowsDistributedLinkTrackingCreationEvent.
     event = events[5]
 
-    self.assertEqual(
-        event.data_type, 'windows:distributed_link_tracking:creation')
-
     self.CheckTimestamp(event.timestamp, '2012-03-31 23:01:03.527742')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(
+        event_data.data_type, 'windows:distributed_link_tracking:creation')
 
     expected_message = (
         '63eea867-7b85-11e1-8950-005056a50b40 '
@@ -105,7 +107,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'Origin: DestList entry at offset: 0x0000...')
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
@@ -127,14 +129,14 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # Check a WinLnkLinkEvent.
     event = events[1]
 
-    self.assertEqual(event.offset, 32)
-    self.assertEqual(event.data_type, 'olecf:dest_list:entry')
-
     self.CheckTimestamp(event.timestamp, '2016-01-17 13:08:08.247505')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.pin_status, -1)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'olecf:dest_list:entry')
+    self.assertEqual(event_data.offset, 32)
+    self.assertEqual(event_data.pin_status, -1)
 
     expected_message = (
         'Entry: 2 '
@@ -151,14 +153,17 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'Pin status: Unpinned '
         'Path: http://support.microsoft.com/kb/3124263')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check a WinLnkLinkEvent.
     event = events[0]
 
-    self.assertEqual(event.data_type, 'windows:lnk:link')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_NOT_A_TIME)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:lnk:link')
 
 
 if __name__ == '__main__':

@@ -310,17 +310,18 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.application, 'LibreOffice')
-    self.assertEqual(event.job_name, 'Assignament 1')
-    self.assertEqual(event.computer_name, 'localhost')
-    self.assertEqual(event.copies, 1)
-    self.assertEqual(event.doc_type, 'application/pdf')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.application, 'LibreOffice')
+    self.assertEqual(event_data.job_name, 'Assignament 1')
+    self.assertEqual(event_data.computer_name, 'localhost')
+    self.assertEqual(event_data.copies, 1)
+    self.assertEqual(event_data.doc_type, 'application/pdf')
     self.assertEqual(
-        event.job_id, 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a')
-    self.assertEqual(event.owner, 'Joaquin Moreno Garijo')
-    self.assertEqual(event.user, 'moxilo')
-    self.assertEqual(event.printer_id, 'RHULBW')
-    self.assertEqual(event.uri, 'ipp://localhost:631/printers/RHULBW')
+        event_data.job_id, 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a')
+    self.assertEqual(event_data.owner, 'Joaquin Moreno Garijo')
+    self.assertEqual(event_data.user, 'moxilo')
+    self.assertEqual(event_data.printer_id, 'RHULBW')
+    self.assertEqual(event_data.uri, 'ipp://localhost:631/printers/RHULBW')
 
     expected_message = (
         'User: moxilo '
@@ -329,7 +330,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         'Application: LibreOffice '
         'Printer: RHULBW')
     expected_short_message = 'Job Name: Assignament 1'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 

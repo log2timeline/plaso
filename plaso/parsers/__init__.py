@@ -5,6 +5,7 @@ from plaso.parsers import asl
 from plaso.parsers import amcache
 from plaso.parsers import android_app_usage
 from plaso.parsers import apache_access
+from plaso.parsers import apt_history
 from plaso.parsers import bash_history
 from plaso.parsers import bencode_parser
 from plaso.parsers import bsm
@@ -41,6 +42,7 @@ from plaso.parsers import safari_cookies
 from plaso.parsers import santa
 from plaso.parsers import sccm
 from plaso.parsers import selinux
+from plaso.parsers import setupapi
 from plaso.parsers import skydrivelog
 from plaso.parsers import sophos_av
 from plaso.parsers import sqlite
@@ -55,6 +57,7 @@ from plaso.parsers import syslog
 from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
+from plaso.parsers import vsftpd
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
 from plaso.parsers import winfirewall

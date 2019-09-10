@@ -1,4 +1,4 @@
-# Switching from Log2Timeline Perl (Legacy) to plaso
+# Switching from Log2Timeline Perl (Legacy) to Plaso
 
 This is a site that should contain information for those that are used to the 0.X branch of log2timeline, also known as Log2Timeline Perl or Log2Timeline legacy.
 
@@ -87,7 +87,7 @@ First of all there is quite a difference in the number of parameters, let's go s
 
 The equivalent call of the old tool of `-f list` can now be found using `--info`. That will print out all available parsers and plugins in the tool. One thing to take note of is the different concepts of either plugins or parsers. In the old tool there was just the notion of a parser, which purpose it was to parse a single file/artifact. However plaso introduces both plugins and parsers, and there is a distinction between the two. The parser understands and parses file formats whereas a plugin understands data inside file formats. So in the case of the Windows Registry the parser understands the file format of the registry and parses that, but it's the purpose of a plugin to read the actual key content and produce meaningful data of it. The same goes with SQLite databases, the parser understands how to read SQLite databases while the plugins understand the data in them, an example of a SQLite plugin is the Chrome History plugin, or the Firefox History plugin. Both are SQLite databases so the use the same parser, but the data stored in them is different, thus we need a plugin for that.
 
-To see the list of presets that are available use the `--info parameter`. The old tool allowed you to indicate which presets you wanted using the `-f` parameter. In the new version this same functionality is exposed as the `--parsers` parameter. The difference now is that now you can supply globs or patterns to match parser names (since they are longer than in the previous version). Example usage of this parameter is:
+To see the list of presets that are available use the `--info` parameter. The old tool allowed you to indicate which presets you wanted using the `-f` parameter. In the new version this same functionality is exposed as the `--parsers` parameter. Example usage of this parameter is:
 
     log2timeline.py --parsers "win7" /cases/timeline/myhost.dump image.dd
     log2timeline.py --parsers "win7,-winreg" /cases/timeline/myhost.dump image.dd

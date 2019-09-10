@@ -8,30 +8,16 @@
 
 ## Setting up and maintaining your development environment
 
-The first challenge you will encounter is setting up and maintaining your development environment.
+The first challenge you will encounter is setting up and maintaining your 
+development environment.
 
-Start by installing a development release on your platform:
+Start by setting up a development environment:
 
-* [Development installation in a VirtualEnv](Running-plaso-in-virtualenv.md)
-* [Development installation on Fedora Core](Development-release-Fedora-Core.md)
-* [Development installation on MacOS](Development-release-MacOS.md)
-* [Development installation on Fedora Core](Development-release-Ubuntu.md)
-* [Development installation on Windows](Development-release-Windows.md)
-
-
-## Building dependencies
-If you're feeling particularly brave, you can try building all the dependencies yourself.
-
-**Note that Plaso and some dependencies are currently actively under development keeping up with the development release is not for "the faint of heart".**
-
-* [Running the development release on Ubuntu Linux](Development-release-Ubuntu.md)
-  * [Building and installing dependencies on Ubuntu Linux](Dependencies---Ubuntu.md)
-* [Running the development release on Fedora Core Linux](Development-release-Fedora-Core.md)
-  * [Building and installing dependencies on Fedora Core Linux](Dependencies-Fedora-Core.md)
-* [Running the development release on MacOS](Development-release-MacOS.md)
-  * [Building and installing dependencies on MacOS](Dependencies-MacOS.md)
-* [Running the development release on Windows](Development-release-Windows.md)
-  * [Building and installing dependencies on Windows](Dependencies-Windows.md)
+* [Development environment in a VirtualEnv](Developing-Virtualenv.md)
+* [Development environment on Fedora](Developing-Fedora.md)
+* [Development environment on MacOS](Developing-MacOS.md)
+* [Development environment on Ubuntu](Developing-Ubuntu.md)
+* [Development environment on Windows](Developing-Windows.md)
 
 ## Getting Started
 
@@ -50,51 +36,75 @@ Overview of the general architecture of Plaso:
 
 ## Roadmap
 
-A high level roadmap can be found [here](../user/Releases-and-roadmap.md). Individual features are tracked as a github issue and labeled as "enhancement". A list of features can be found [here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
+A high level roadmap can be found [here](../user/Releases-and-roadmap.md). 
+Individual features are tracked as a github issue and labeled as "enhancement".
+A list of features we'd already like to add can be found 
+[here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
 
 ## Contributing Code
 
-Want to add a parser to Plaso and you are ready to go? Start by checking [here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement) if someone is already working on it. If you don't see anything there you can just go ahead and [create an issue on the github site](https://github.com/log2timeline/plaso/issues) and mark it as "enhancement". Assign the issue to yourself so that we can keep track on who is working on what.
+Want to add a parser to Plaso and you are ready to go? Start by checking 
+[here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement) 
+if someone is already working on it. If you don't see anything there you can 
+just go ahead and [create an issue on the github site](https://github.com/log2timeline/plaso/issues) 
+and mark it as "enhancement". Assign the issue to yourself so that we can keep 
+track on who is working on what.
 
-If you cannot program and still have a great idea for a feature please go ahead and create an issue and leave it unassigned, note that the priority will be who ever wants to work on it. Or consider this the idea opportunity to learn yourself Python programming.
+If you cannot program and still have a great idea for a feature please go ahead 
+and create an issue and leave it unassigned, note that the priority will be who 
+ever wants to work on it.
 
-Before you start writing the code, please review the following:
+Before you start writing  code, please review the following:
 
-* [Style guide](Style-guide.md). All code submitted to the project needs to follow this style guide.
-* [Code review](Codereview.md). All code that is submitted into the project needs to be reviewed by at least one other person.
-* [Adding a new dependency](https://github.com/log2timeline/l2tdocs/blob/master/process/Dependencies.md). If your code requires adding a new dependency please check out these instructions.
+* [Style guide](Style-guide.md). All code submitted to the project needs to 
+follow this style guide.
+* [Code review](https://github.com/log2timeline/l2tdocs/blob/master/process/Code%20review%20process.md). All code that is submitted into the project is
+ reviewed by at least one other person.
+* [Adding a new dependency](https://github.com/log2timeline/l2tdocs/blob/master/process/Dependencies.md). 
+If your code requires adding a new dependency please check out these instructions.
 
 ### Before you submit your first code review
 
-1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev), we recommend using the same account as step 1
-2. Install the required development tools like pylint, python-mock, sphinx
-3. Make sure to run all the tests inside the Plaso and the dfVFS codebase, and that they successfully complete on your development system
-4. Make sure your development system is set up correctly so that you can develop and test correctly.
-5. Make sure your email address and name are correctly set in git e.g.:
+1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev)
+and [Slack channel](https://github.com/open-source-dfir/slack), we recommend 
+using the same account as step 1
+1. Install the required development tools like pylint and python-mock
+1. Make sure to run all the tests in the Plaso codebase, and that they 
+successfully complete in your development environment 
+1. Make sure your development environment is set up correctly so that you can develop
+ and test correctly.
+1. Make sure your email address and name are correctly set in git. You can use 
+the following commands:
 ```
 git config --global user.name "Full Name"
 git config --global user.email name@example.com
 git config --global push.default matching
 ```
 
-Use `git config -l` to determine the current configuration.
-
+Use `git config -l` to see your current configuration.
 
 ### Core features changes
 
-Sometimes you need to make some change to the core of the Plaso codebase. In those cases we ask that contributors first create a short design doc explaining the rationale behind the change. The design doc needs to contain:
+Sometimes you need to make some change to the core of the Plaso codebase. 
+In those cases we ask that contributors first create a short design proposal 
+explaining the rationale behind the change. The design doc needs to contain:
 
-1. Describe the problem you are facing
-2. List the objectives of this change
-3. Mention what is in scope and what's not
-4. Describe the solution/proposal
+1. A description of the problem you are facing
+1. A list of the objectives of the change
+1. A discussion of what's in scope and what's not
+1. A descripton of your proposed the solution
 
-The preferred way of creating these design docs is to use Google Docs and send the link to the development mailing list so that it can be discussed further **before** starting to implement the code.
+The preferred way of creating these design docs is to use Google Docs and send
+the link to the development mailing list so that it can be discussed further 
+**before** starting to implement the code.
 
-The current design docs are [stored here](https://drive.google.com/folderview?id=0B3fBvzttpiiSQW16cFhNTUtXVGM&usp=sharing). You may not have access to that folder, so you may need to request access to it.
+The current design docs are 
+[stored here](https://drive.google.com/folderview?id=0B3fBvzttpiiSQW16cFhNTUtXVGM&usp=sharing). 
+You may not have access to that folder, so you may need to request access to it.
 
 ### Tests
 
-Tests are part of a maintainable code base. Code without sufficient test is very likely to be broken by a large rewrite/refactor.
+Tests are part of a maintainable code base. Code without sufficient test is very
+likely to be broken by a large rewrite/refactor.
 
-Some guidelines for writing tests: [Style guide - tests](Style-guide.html#tests)
+Plaso has specific guidelines for writing tests: [Style guide - tests](Style-guide.html#tests)

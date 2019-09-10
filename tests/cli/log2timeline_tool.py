@@ -36,14 +36,10 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 usage: log2timeline_test.py [--single_process]
                             [--temporary_directory DIRECTORY]
                             [--worker_memory_limit SIZE] [--workers WORKERS]
-                            [--disable_zeromq]
 
 Test argument parser.
 
 optional arguments:
-  --disable_zeromq, --disable-zeromq
-                        Disable queueing using ZeroMQ. A Multiprocessing queue
-                        will be used instead.
   --single_process, --single-process
                         Indicate that the tool should run in a single process.
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
@@ -63,14 +59,10 @@ optional arguments:
 usage: log2timeline_test.py [--single_process] [--process_memory_limit SIZE]
                             [--temporary_directory DIRECTORY]
                             [--worker_memory_limit SIZE] [--workers WORKERS]
-                            [--disable_zeromq]
 
 Test argument parser.
 
 optional arguments:
-  --disable_zeromq, --disable-zeromq
-                        Disable queueing using ZeroMQ. A Multiprocessing queue
-                        will be used instead.
   --process_memory_limit SIZE, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -181,7 +173,7 @@ optional arguments:
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    result = test_tool.ParseArguments()
+    result = test_tool.ParseArguments([])
     self.assertFalse(result)
 
     # TODO: check output.
@@ -203,6 +195,7 @@ optional arguments:
     options.source = test_file_path
     options.storage_file = 'storage.plaso'
     options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+    options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
     options.yara_rules_path = yara_rules_path
 
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
@@ -240,6 +233,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -272,6 +266,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -305,6 +300,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -337,6 +333,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -371,6 +368,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -404,6 +402,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -440,6 +439,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -476,6 +476,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -510,6 +511,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -541,6 +543,7 @@ optional arguments:
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 

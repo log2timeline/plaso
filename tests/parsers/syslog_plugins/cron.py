@@ -29,16 +29,21 @@ class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2015-03-11 19:26:39.000000')
 
-    self.assertEqual(event.data_type, 'syslog:cron:task_run')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'syslog:cron:task_run')
 
     expected_command = 'sleep $(( 1 * 60 )); touch /tmp/afile.txt'
-    self.assertEqual(event.command, expected_command)
+    self.assertEqual(event_data.command, expected_command)
 
-    self.assertEqual(event.username, 'root')
+    self.assertEqual(event_data.username, 'root')
 
-    event = events[7]
-    self.assertEqual(event.command, '/sbin/status.mycheck')
-    self.assertEqual(event.pid, 31067)
+    event = events[8]
+
+    self.CheckTimestamp(event.timestamp, '2016-01-22 07:54:01.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.command, '/sbin/status.mycheck')
+    self.assertEqual(event_data.pid, 31067)
 
 
 if __name__ == '__main__':

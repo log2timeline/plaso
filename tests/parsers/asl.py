@@ -29,17 +29,18 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-25 09:45:35.705481')
 
-    self.assertEqual(event.record_position, 442)
-    self.assertEqual(event.message_id, 101406)
-    self.assertEqual(event.computer_name, 'DarkTemplar-2.local')
-    self.assertEqual(event.sender, 'locationd')
-    self.assertEqual(event.facility, 'com.apple.locationd')
-    self.assertEqual(event.pid, 69)
-    self.assertEqual(event.user_sid, '205')
-    self.assertEqual(event.group_id, 205)
-    self.assertEqual(event.read_uid, 205)
-    self.assertEqual(event.read_gid, -1)
-    self.assertEqual(event.level, 4)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.record_position, 442)
+    self.assertEqual(event_data.message_id, 101406)
+    self.assertEqual(event_data.computer_name, 'DarkTemplar-2.local')
+    self.assertEqual(event_data.sender, 'locationd')
+    self.assertEqual(event_data.facility, 'com.apple.locationd')
+    self.assertEqual(event_data.pid, 69)
+    self.assertEqual(event_data.user_sid, '205')
+    self.assertEqual(event_data.group_id, 205)
+    self.assertEqual(event_data.read_uid, 205)
+    self.assertEqual(event_data.read_gid, -1)
+    self.assertEqual(event_data.level, 4)
 
     # Note that "compatiblity" is spelt incorrectly in the actual message being
     # tested here.
@@ -48,14 +49,14 @@ class ASLParserTest(test_lib.ParserTestCase):
         'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
         'mapping behavior in the near future.')
 
-    self.assertEqual(event.message, expected_message)
+    self.assertEqual(event_data.message, expected_message)
 
     expected_extra = (
         'CFLog Local Time: 2013-11-25 09:45:35.701, '
         'CFLog Thread: 1007, '
         'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51')
 
-    self.assertEqual(event.extra_information, expected_extra)
+    self.assertEqual(event_data.extra_information, expected_extra)
 
     expected_message = (
         'MessageID: 101406 '
@@ -73,7 +74,8 @@ class ASLParserTest(test_lib.ParserTestCase):
         'Sender: locationd '
         'Facility: com.apple.locationd')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

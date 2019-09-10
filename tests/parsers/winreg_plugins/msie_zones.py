@@ -62,12 +62,15 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:msie_zone_settings')
-    self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(
+        event_data.data_type, 'windows:registry:msie_zone_settings')
 
     expected_message = (
         '[{0:s}\\0 (My Computer)] '
@@ -84,7 +87,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testProcessNtuserZones(self):
     """Tests the Process function on a Zones key."""
@@ -107,12 +110,15 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:msie_zone_settings')
-    self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(
+        event_data.data_type, 'windows:registry:msie_zone_settings')
 
     expected_message = (
         '[{0:s}\\0 (My Computer)] '
@@ -133,7 +139,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testProcessSoftwareLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
@@ -156,12 +162,15 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:msie_zone_settings')
-    self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(
+        event_data.data_type, 'windows:registry:msie_zone_settings')
 
     expected_message = (
         '[{0:s}\\0 (My Computer)] '
@@ -259,7 +268,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
   def testProcessSoftwareZones(self):
     """Tests the Process function on a Zones key."""
@@ -282,12 +291,15 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:msie_zone_settings')
-    self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(
+        event_data.data_type, 'windows:registry:msie_zone_settings')
 
     expected_message = (
         '[{0:s}\\0 (My Computer)] '
@@ -389,7 +401,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

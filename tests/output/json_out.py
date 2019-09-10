@@ -12,6 +12,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import json_out
@@ -70,9 +71,15 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        test_lib.TestEventFormatter)
+
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
     self._output_module.WriteEventBody(event, event_data, None)
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        test_lib.TestEventFormatter)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-06-27 18:17:01')
@@ -94,6 +101,9 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
             'display_name': 'OS: /var/log/syslog.1',
             'hostname': 'ubuntu',
             'inode': 12345678,
+            'message': (
+                'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+                'session closed for user root)'),
             'pathspec': {
                 '__type__': 'PathSpec',
                 'type_indicator': 'TSK',

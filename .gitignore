@@ -35,6 +35,9 @@
 # Pycharm files
 /.idea
 
+# Visual Studio Code files
+/.vscode
+
 # Test files
 .coverage
 tests-coverage.txt

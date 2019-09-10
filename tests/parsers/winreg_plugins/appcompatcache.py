@@ -308,12 +308,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 0
     event = events[event_index]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_path = '\\??\\C:\\WINDOWS\\system32\\hticons.dll'
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event.key_path, event_index + 1, expected_path)
+        event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessWindows2003(self):
     """Tests the Process function for Windows 2003 AppCompatCache data."""
@@ -333,13 +336,16 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 0
     event = events[event_index]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_path = (
         '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event.key_path, event_index + 1, expected_path)
+        event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -361,12 +367,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 0
     event = events[event_index]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_path = '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event.key_path, event_index + 1, expected_path)
+        event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -394,17 +403,20 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2012-04-04 01:46:37.932964')
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_path = '\\??\\C:\\Windows\\PSEXESVC.EXE'
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event.key_path, event_index + 1, expected_path)
+        event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -426,12 +438,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 0
     event = events[event_index]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_path = 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event.key_path, event_index + 1, expected_path)
+        event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessWindows8_1(self):
     """Tests the Process function for Windows 8.1 AppCompatCache data."""
@@ -451,12 +466,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 0
     event = events[event_index]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_path = 'SYSVOL\\Windows\\System32\\dllhost.exe'
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event.key_path, event_index + 1, expected_path)
+        event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessWindows10(self):
     """Tests the Process function for Windows 10 AppCompatCache data."""
@@ -476,12 +494,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 0
     event = events[event_index]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_path = 'C:\\Windows\\system32\\MpSigStub.exe'
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event.key_path, event_index + 1, expected_path)
+        event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessWindows10Creator(self):
     """Tests the Process function for Windows 10 Creator AppCompatCache data."""
@@ -500,13 +521,16 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 0
     event = events[event_index]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_path = (
         'C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\nvstreg.exe')
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event.key_path, event_index + 1, expected_path)
+        event_data.key_path, event_index + 1, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

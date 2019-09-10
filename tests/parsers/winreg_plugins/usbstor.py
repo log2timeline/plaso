@@ -44,21 +44,22 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:usbstor')
     self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.640871')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    self.assertEqual(event.subkey_name, 'Disk&Ven_HP&Prod_v100w&Rev_1024')
-    self.assertEqual(event.device_type, 'Disk')
-    self.assertEqual(event.vendor, 'Ven_HP')
-    self.assertEqual(event.product, 'Prod_v100w')
-    self.assertEqual(event.revision, 'Rev_1024')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:usbstor')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_data.subkey_name, 'Disk&Ven_HP&Prod_v100w&Rev_1024')
+    self.assertEqual(event_data.device_type, 'Disk')
+    self.assertEqual(event_data.vendor, 'Ven_HP')
+    self.assertEqual(event_data.product, 'Prod_v100w')
+    self.assertEqual(event_data.revision, 'Rev_1024')
 
     expected_message = (
         '[{0:s}] '
@@ -71,7 +72,8 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         'Vendor: Ven_HP').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

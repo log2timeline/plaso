@@ -9,6 +9,8 @@ import json
 import os
 import uuid
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli import tools
@@ -18,8 +20,6 @@ from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.serializer import json_serializer
 from plaso.storage import factory as storage_factory
 
@@ -52,8 +52,8 @@ class PinfoTool(
     self._output_format = None
     self._process_memory_limit = None
     self._storage_file_path = None
-
     self._verbose = False
+
     self.compare_storage_information = False
 
   def _CalculateStorageCounters(self, storage_reader):
@@ -73,28 +73,17 @@ class PinfoTool(
     parsers_counter_error = False
 
     for session in storage_reader.GetSessions():
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.analysis_reports_counter, dict):
-        analysis_reports_counter += collections.Counter(
-            session.analysis_reports_counter)
-      elif isinstance(session.analysis_reports_counter, collections.Counter):
+      if isinstance(session.analysis_reports_counter, collections.Counter):
         analysis_reports_counter += session.analysis_reports_counter
       else:
         analysis_reports_counter_error = True
 
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.event_labels_counter, dict):
-        event_labels_counter += collections.Counter(
-            session.event_labels_counter)
-      elif isinstance(session.event_labels_counter, collections.Counter):
+      if isinstance(session.event_labels_counter, collections.Counter):
         event_labels_counter += session.event_labels_counter
       else:
         event_labels_counter_error = True
 
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.parsers_counter, dict):
-        parsers_counter += collections.Counter(session.parsers_counter)
-      elif isinstance(session.parsers_counter, collections.Counter):
+      if isinstance(session.parsers_counter, collections.Counter):
         parsers_counter += session.parsers_counter
       else:
         parsers_counter_error = True
@@ -266,7 +255,8 @@ class PinfoTool(
     Args:
       analysis_reports_counter (collections.Counter): number of analysis
           reports per analysis plugin.
-      session_identifier (Optional[str]): session identifier.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
     if not analysis_reports_counter:
       return
@@ -280,9 +270,8 @@ class PinfoTool(
         column_names=['Plugin name', 'Number of reports'], title=title)
 
     for key, value in sorted(analysis_reports_counter.items()):
-      if key == 'total':
-        continue
-      table_view.AddRow([key, value])
+      if key != 'total':
+        table_view.AddRow([key, value])
 
     try:
       total = analysis_reports_counter['total']
@@ -390,7 +379,8 @@ class PinfoTool(
     Args:
       event_labels_counter (collections.Counter): number of event tags per
           label.
-      session_identifier (Optional[str]): session identifier.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
     if not event_labels_counter:
       return
@@ -404,9 +394,8 @@ class PinfoTool(
         column_names=['Label', 'Number of event tags'], title=title)
 
     for key, value in sorted(event_labels_counter.items()):
-      if key == 'total':
-        continue
-      table_view.AddRow([key, value])
+      if key != 'total':
+        table_view.AddRow([key, value])
 
     try:
       total = event_labels_counter['total']
@@ -423,9 +412,11 @@ class PinfoTool(
     Args:
       parsers_counter (collections.Counter): number of events per parser or
           parser plugin.
-      session_identifier (Optional[str]): session identifier.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
     if not parsers_counter:
+      self._output_writer.Write('No events stored.\n\n')
       return
 
     title = 'Events generated per parser'
@@ -438,32 +429,41 @@ class PinfoTool(
         title=title)
 
     for key, value in sorted(parsers_counter.items()):
-      if key == 'total':
-        continue
-      table_view.AddRow([key, value])
+      if key != 'total':
+        table_view.AddRow([key, value])
 
     table_view.AddRow(['Total', parsers_counter['total']])
 
     table_view.Write(self._output_writer)
 
-  def _PrintPreprocessingInformation(self, storage_reader, session_number=None):
+  def _PrintPreprocessingInformation(
+      self, storage_reader, session_identifier=None):
     """Prints the details of the preprocessing information.
 
     Args:
       storage_reader (StorageReader): storage reader.
-      session_number (Optional[int]): session number.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
-    # TODO: replace session_number by session_identifier.
+    lookup_identifier = session_identifier
+    if lookup_identifier:
+      # The knowledge base requires the session identifier to be formatted in
+      # hexadecimal representation.
+      lookup_identifier = lookup_identifier.replace('-', '')
+
     system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
-        session_identifier=session_number)
+        session_identifier=lookup_identifier)
     if not system_configuration:
       return
 
     title = 'System configuration'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=title)
 
@@ -490,7 +490,23 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
+    title = 'Available time zones'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=['Name', ''], title=title)
+
+    for time_zone in system_configuration.available_time_zones:
+      table_view.AddRow([time_zone.name, ''])
+
+    table_view.Write(self._output_writer)
+
     title = 'User accounts'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
         column_names=['Username', 'User directory'], title=title)
@@ -507,18 +523,21 @@ class PinfoTool(
     Args:
       storage_reader (BaseStore): storage.
     """
-    for session_number, session in enumerate(storage_reader.GetSessions()):
+    for session in storage_reader.GetSessions():
       session_identifier = uuid.UUID(hex=session.identifier)
       session_identifier = '{0!s}'.format(session_identifier)
 
       start_time = 'N/A'
       if session.start_time is not None:
-        start_time = timelib.Timestamp.CopyToIsoFormat(session.start_time)
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=session.start_time)
+        start_time = date_time.CopyToDateTimeStringISO8601()
 
       completion_time = 'N/A'
       if session.completion_time is not None:
-        completion_time = timelib.Timestamp.CopyToIsoFormat(
-            session.completion_time)
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=session.completion_time)
+        completion_time = date_time.CopyToDateTimeStringISO8601()
 
       enabled_parser_names = 'N/A'
       if session.enabled_parser_names:
@@ -527,15 +546,13 @@ class PinfoTool(
       command_line_arguments = session.command_line_arguments or 'N/A'
       parser_filter_expression = session.parser_filter_expression or 'N/A'
       preferred_encoding = session.preferred_encoding or 'N/A'
-      # Workaround for some older Plaso releases writing preferred encoding as
-      # bytes.
-      if isinstance(preferred_encoding, py2to3.BYTES_TYPE):
-        preferred_encoding = preferred_encoding.decode('utf-8')
+
       if session.artifact_filters:
         artifact_filters_string = ', '.join(session.artifact_filters)
       else:
         artifact_filters_string = 'N/A'
       filter_file = session.filter_file or 'N/A'
+      number_of_event_sources = storage_reader.GetNumberOfEventSources()
 
       title = 'Session: {0:s}'.format(session_identifier)
       table_view = views.ViewsFactory.GetTableView(
@@ -552,11 +569,13 @@ class PinfoTool(
       table_view.AddRow(['Debug mode', session.debug_mode])
       table_view.AddRow(['Artifact filters', artifact_filters_string])
       table_view.AddRow(['Filter file', filter_file])
+      table_view.AddRow(['Number of event sources', number_of_event_sources])
 
       table_view.Write(self._output_writer)
 
       if self._verbose:
-        self._PrintPreprocessingInformation(storage_reader, session_number + 1)
+        self._PrintPreprocessingInformation(
+            storage_reader, session_identifier=session_identifier)
 
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
@@ -579,8 +598,10 @@ class PinfoTool(
         self._views_format_type, title='Sessions')
 
     for session in storage_reader.GetSessions():
-      start_time = timelib.Timestamp.CopyToIsoFormat(
-          session.start_time)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=session.start_time)
+      start_time = date_time.CopyToDateTimeStringISO8601()
+
       session_identifier = uuid.UUID(hex=session.identifier)
       session_identifier = '{0!s}'.format(session_identifier)
       table_view.AddRow([session_identifier, start_time])
@@ -593,15 +614,18 @@ class PinfoTool(
     Args:
       storage_reader (StorageReader): storage reader.
     """
+    storage_type = storage_reader.GetStorageType()
+    serialization_format = storage_reader.GetSerializationFormat()
+    format_version = storage_reader.GetFormatVersion()
+
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Plaso Storage Information')
     table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
-    table_view.AddRow(['Format version', storage_reader.format_version])
-    table_view.AddRow(
-        ['Serialization format', storage_reader.serialization_format])
+    table_view.AddRow(['Format version', format_version])
+    table_view.AddRow(['Serialization format', serialization_format])
     table_view.Write(self._output_writer)
 
-    if storage_reader.storage_type == definitions.STORAGE_TYPE_SESSION:
+    if storage_type == definitions.STORAGE_TYPE_SESSION:
       self._PrintSessionsOverview(storage_reader)
       self._PrintSessionsDetails(storage_reader)
 
@@ -632,7 +656,7 @@ class PinfoTool(
 
       self._PrintAnalysisReportsDetails(storage_reader)
 
-    elif storage_reader.storage_type == definitions.STORAGE_TYPE_TASK:
+    elif storage_type == definitions.STORAGE_TYPE_TASK:
       self._PrintTasksInformation(storage_reader)
 
   def _PrintStorageInformationAsJSON(self, storage_reader):
@@ -667,8 +691,10 @@ class PinfoTool(
         self._views_format_type, title='Tasks')
 
     for task_start, _ in storage_reader.GetSessions():
-      start_time = timelib.Timestamp.CopyToIsoFormat(
-          task_start.timestamp)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=task_start.timestamp)
+      start_time = date_time.CopyToDateTimeStringISO8601()
+
       task_identifier = uuid.UUID(hex=task_start.identifier)
       task_identifier = '{0!s}'.format(task_identifier)
       table_view.AddRow([task_identifier, start_time])
@@ -712,8 +738,11 @@ class PinfoTool(
 
     return result
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -753,7 +782,7 @@ class PinfoTool(
         help='Output filename.')
 
     try:
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.

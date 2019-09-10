@@ -121,15 +121,12 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
   if resource is None:
     _EXPECTED_PROCESSING_OPTIONS = """\
-usage: psort_test.py [--temporary_directory DIRECTORY] [--disable_zeromq]
+usage: psort_test.py [--temporary_directory DIRECTORY]
                      [--worker-memory-limit SIZE]
 
 Test argument parser.
 
 optional arguments:
-  --disable_zeromq, --disable-zeromq
-                        Disable queueing using ZeroMQ. A Multiprocessing queue
-                        will be used instead.
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
@@ -143,15 +140,12 @@ optional arguments:
   else:
     _EXPECTED_PROCESSING_OPTIONS = """\
 usage: psort_test.py [--process_memory_limit SIZE]
-                     [--temporary_directory DIRECTORY] [--disable_zeromq]
+                     [--temporary_directory DIRECTORY]
                      [--worker-memory-limit SIZE]
 
 Test argument parser.
 
 optional arguments:
-  --disable_zeromq, --disable-zeromq
-                        Disable queueing using ZeroMQ. A Multiprocessing queue
-                        will be used instead.
   --process_memory_limit SIZE, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -226,7 +220,7 @@ optional arguments:
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
-    result = test_tool.ParseArguments()
+    result = test_tool.ParseArguments([])
     self.assertFalse(result)
 
     # TODO: check output.

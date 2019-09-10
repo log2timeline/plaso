@@ -38,26 +38,27 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.screen_name, 'BBCBreaking')
-    self.assertEqual(event.name, 'BBC Breaking News')
-    self.assertEqual(event.location, 'London, UK')
-    self.assertEqual(event.following, 0)
-    self.assertEqual(event.followers_count, 19466932)
-    self.assertEqual(event.following_count, 3)
-    self.assertEqual(event.url, 'http://www.bbc.co.uk/news')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.screen_name, 'BBCBreaking')
+    self.assertEqual(event_data.name, 'BBC Breaking News')
+    self.assertEqual(event_data.location, 'London, UK')
+    self.assertEqual(event_data.following, 0)
+    self.assertEqual(event_data.followers_count, 19466932)
+    self.assertEqual(event_data.following_count, 3)
+    self.assertEqual(event_data.url, 'http://www.bbc.co.uk/news')
 
     expected_description = (
         'Breaking news alerts and updates from the BBC. For news, features, '
         'analysis follow @BBCWorld (international) or @BBCNews (UK). Latest '
         'sport news @BBCSport.')
 
-    self.assertEqual(event.description, expected_description)
+    self.assertEqual(event_data.description, expected_description)
 
     expected_profile_url = (
         'https://pbs.twimg.com/profile_images/'
         '460740982498013184/wIPwMwru_normal.png')
 
-    self.assertEqual(event.profile_url, expected_profile_url)
+    self.assertEqual(event_data.profile_url, expected_profile_url)
 
     expected_message = (
         'Screen name: BBCBreaking Profile picture URL: '
@@ -73,7 +74,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         'Screen name: BBCBreaking Description: Breaking news alerts and '
         'updates from t...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test first contact modification event.
     event = events[1]
@@ -83,26 +85,27 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
 
-    self.assertEqual(event.screen_name, 'BBCBreaking')
-    self.assertEqual(event.name, 'BBC Breaking News')
-    self.assertEqual(event.location, 'London, UK')
-    self.assertEqual(event.following, 0)
-    self.assertEqual(event.followers_count, 19466932)
-    self.assertEqual(event.following_count, 3)
-    self.assertEqual(event.url, 'http://www.bbc.co.uk/news')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.screen_name, 'BBCBreaking')
+    self.assertEqual(event_data.name, 'BBC Breaking News')
+    self.assertEqual(event_data.location, 'London, UK')
+    self.assertEqual(event_data.following, 0)
+    self.assertEqual(event_data.followers_count, 19466932)
+    self.assertEqual(event_data.following_count, 3)
+    self.assertEqual(event_data.url, 'http://www.bbc.co.uk/news')
 
     expected_description = (
         'Breaking news alerts and updates from the BBC. For news, features, '
         'analysis follow @BBCWorld (international) or @BBCNews (UK). Latest '
         'sport news @BBCSport.')
 
-    self.assertEqual(event.description, expected_description)
+    self.assertEqual(event_data.description, expected_description)
 
     expected_profile_url = (
         'https://pbs.twimg.com/profile_images/'
         '460740982498013184/wIPwMwru_normal.png')
 
-    self.assertEqual(event.profile_url, expected_profile_url)
+    self.assertEqual(event_data.profile_url, expected_profile_url)
 
     expected_message = (
         'Screen name: BBCBreaking Profile picture URL: '
@@ -118,7 +121,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         'Screen name: BBCBreaking Description: Breaking news alerts and '
         'updates from t...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test first status creation event.
     event = events[50]
@@ -128,12 +132,13 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.text, 'Never forget. http://t.co/L7bjWue1A2')
-    self.assertEqual(event.user_id, 475222380)
-    self.assertEqual(event.name, 'Heather Mahalik')
-    self.assertEqual(event.retweet_count, 2)
-    self.assertEqual(event.favorite_count, 3)
-    self.assertEqual(event.favorited, 0)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.text, 'Never forget. http://t.co/L7bjWue1A2')
+    self.assertEqual(event_data.user_id, 475222380)
+    self.assertEqual(event_data.name, 'Heather Mahalik')
+    self.assertEqual(event_data.retweet_count, 2)
+    self.assertEqual(event_data.favorite_count, 3)
+    self.assertEqual(event_data.favorited, 0)
 
     expected_message = (
         'Name: Heather Mahalik User Id: 475222380 Message: Never forget. '
@@ -143,7 +148,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     expected_short_message = (
         'Name: Heather Mahalik Message: Never forget. http://t.co/L7bjWue1A2')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test first status update event.
     event = events[51]
@@ -153,12 +159,13 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
 
-    self.assertEqual(event.text, 'Never forget. http://t.co/L7bjWue1A2')
-    self.assertEqual(event.user_id, 475222380)
-    self.assertEqual(event.name, 'Heather Mahalik')
-    self.assertEqual(event.retweet_count, 2)
-    self.assertEqual(event.favorite_count, 3)
-    self.assertEqual(event.favorited, 0)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.text, 'Never forget. http://t.co/L7bjWue1A2')
+    self.assertEqual(event_data.user_id, 475222380)
+    self.assertEqual(event_data.name, 'Heather Mahalik')
+    self.assertEqual(event_data.retweet_count, 2)
+    self.assertEqual(event_data.favorite_count, 3)
+    self.assertEqual(event_data.favorited, 0)
 
     expected_message = (
         'Name: Heather Mahalik User Id: 475222380 Message: Never forget. '
@@ -168,7 +175,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     expected_short_message = (
         'Name: Heather Mahalik Message: Never forget. http://t.co/L7bjWue1A2')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

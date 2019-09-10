@@ -562,7 +562,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           # TODO: find another way to do this that doesn't use an undocumented
           # API.
           pattern = codecs.escape_decode(pattern)[0]
-        # ValueError is raised e.g. when the patterns contains "\xg1".
+        # ValueError is raised when the patterns contains invalid escaped
+        # characters, such as "\xg1".
         except ValueError:
           logger.error(
               '[skipping] invalid pattern in line: {0:s}'.format(line))
@@ -663,8 +664,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         '\n'.join(textwrap.wrap(', '.join(sorted(identifiers)), 79)))
     self._output_writer.Write('\n\n')
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -712,7 +716,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             'plaso supports.'))
 
     try:
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.

@@ -5,11 +5,38 @@ from __future__ import unicode_literals
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
+
+
+class WindowsRegistryInstallationEventData(events.EventData):
+  """Windows installation event data attribute container.
+
+  Attributes:
+    build_number (str): Windows build number.
+    key_path (str): Windows Registry key path.
+    owner (str): registered owner.
+    product_name (str): product name.
+    service_pack (str): service pack.
+    version (str): Windows version.
+  """
+
+  DATA_TYPE = 'windows:registry:installation'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(WindowsRegistryInstallationEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.build_number = None
+    self.key_path = None
+    self.owner = None
+    self.product_name = None
+    self.service_pack = None
+    self.version = None
 
 
 class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
@@ -23,15 +50,6 @@ class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
           'CurrentVersion')])
 
-  _STRING_VALUE_NAME_STRINGS = {
-      'CSDVersion': 'service_pack',
-      'CurrentVersion': 'version',
-      'CurrentBuildNumber': 'build_number',
-      'ProductName': 'product_name',
-      'RegisteredOrganization': 'organization',
-      'RegisteredOwner': 'owner',
-  }
-
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
@@ -40,40 +58,19 @@ class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    installation_value = None
-    string_values = {}
-    for registry_value in registry_key.GetValues():
-      # Ignore the default value.
-      if not registry_value.name:
-        continue
+    values_dict = self._GetValuesFromKey(
+        registry_key, names_to_skip=['InstallDate'])
 
-      if (registry_value.name == 'InstallDate' and
-          registry_value.DataIsInteger()):
-        installation_value = registry_value
-        continue
-
-      # Ignore any value that is empty or that does not contain a string.
-      if not registry_value.data or not registry_value.DataIsString():
-        continue
-
-      string_value_name = self._STRING_VALUE_NAME_STRINGS.get(
-          registry_value.name, None)
-      if not string_value_name:
-        continue
-
-      string_values[string_value_name] = registry_value.GetDataAsObject()
-
-    values_dict = {}
-    values_dict['Owner'] = string_values.get('owner', '')
-    values_dict['Product name'] = string_values.get('product_name', '')
-    values_dict['Service pack'] = string_values.get('service_pack', '')
-    values_dict['Windows Version Information'] = string_values.get(
-        'version', '')
+    installation_time = None
+    registry_value = registry_key.GetValueByName('InstallDate')
+    if registry_value:
+      installation_time = registry_value.GetDataAsObject()
 
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path
-    event_data.offset = registry_key.offset
-    event_data.regvalue = values_dict
+    event_data.values = ' '.join([
+        '{0:s}: {1!s}'.format(name, value)
+        for name, value in sorted(values_dict.items())]) or None
 
     event = time_events.DateTimeValuesEvent(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -81,16 +78,30 @@ class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
 
     # TODO: if not present indicate anomaly of missing installation
     # date and time.
-    if installation_value:
-      event_data = windows_events.WindowsRegistryInstallationEventData()
+    if installation_time is not None:
+      event_data = WindowsRegistryInstallationEventData()
       event_data.key_path = registry_key.path
-      event_data.offset = registry_key.offset
-      event_data.owner = string_values.get('owner', None)
-      event_data.product_name = string_values.get('product_name', None)
-      event_data.service_pack = string_values.get('service_pack', None)
-      event_data.version = string_values.get('version', None)
 
-      installation_time = installation_value.GetDataAsObject()
+      registry_value = registry_key.GetValueByName('CurrentBuildNumber')
+      if registry_value:
+        event_data.build_number = registry_value.GetDataAsObject()
+
+      registry_value = registry_key.GetValueByName('RegisteredOwner')
+      if registry_value:
+        event_data.owner = registry_value.GetDataAsObject()
+
+      registry_value = registry_key.GetValueByName('ProductName')
+      if registry_value:
+        event_data.product_name = registry_value.GetDataAsObject()
+
+      registry_value = registry_key.GetValueByName('CSDVersion')
+      if registry_value:
+        event_data.service_pack = registry_value.GetDataAsObject()
+
+      registry_value = registry_key.GetValueByName('CurrentVersion')
+      if registry_value:
+        event_data.version = registry_value.GetDataAsObject()
+
       date_time = dfdatetime_posix_time.PosixTime(timestamp=installation_time)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_INSTALLATION)

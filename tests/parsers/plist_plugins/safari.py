@@ -36,14 +36,17 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
 
     event = events[9]
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_url = 'http://netverslun.sci-mx.is/aminosyrur'
-    self.assertEqual(event.url, expected_url)
+    self.assertEqual(event_data.url, expected_url)
 
     expected_message = (
         'Visited: {0:s} (Am\xedn\xf3s\xfdrur ) '
         'Visit Count: 1').format(expected_url)
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

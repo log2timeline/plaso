@@ -18,7 +18,7 @@ needed for the plugin.
 
 * Start by [installing the l2t_scaffolder
   tool](https://l2tscaffolder.readthedocs.io/en/latest/sources/user/Installation.html)
-* Have your git repo for plaso correctly setup (personal fork, see
+* Have your git repo for Plaso correctly setup (personal fork, see
   [here](Developers-Guide.html)).
 * Then follow the [usage
   instructions](https://l2tscaffolder.readthedocs.io/en/latest/sources/user/Using-The-Tool.html).
@@ -30,7 +30,7 @@ $ l2t_scaffolder.py plaso
 ```
 
 * After answering all questions a new feature branch will be created in your
-  plaso repository with all the files needed for the plugin.
+  Plaso repository with all the files needed for the plugin.
 
 ## Write minimal tests
 * Write a test that loads your plugin and parses a file.
@@ -49,8 +49,8 @@ $ l2t_scaffolder.py plaso
 * Add additional tests that test your plugin and formatter
 
 ## Register classes
-* Edit plaso/parsers/sqlite_plugins/__init__.py to correct alphabetical
+* Edit `plaso/parsers/sqlite_plugins/__init__.py` to correct alphabetical
   order of the imports.
-* Edit plaso/formatters/__init__.py to correct alphabetical order of imports.
+* Edit `plaso/formatters/__init__.py` to correct alphabetical order of imports.
 
 ## Code review/submit

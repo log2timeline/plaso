@@ -22,7 +22,7 @@ def Main():
   """
   tool = image_export_tool.ImageExportTool()
 
-  if not tool.ParseArguments():
+  if not tool.ParseArguments(sys.argv[1:]):
     return False
 
   if tool.show_troubleshooting:

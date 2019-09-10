@@ -1,0 +1,1357 @@
+[Device Install Log]
+     OS Version = 10.0.10240
+     Service Pack = 0.0
+     Suite = 0x0100
+     ProductType = 1
+     Architecture = amd64
+
+[BeginLog]
+
+[Boot Session: 2015/11/22 17:52:29.492]
+
+>>>  [Sysprep Specialize - {51198c35-bd73-bb4d-a3cb-65bd5f2ab9cb}]
+>>>  Section start 2015/11/22 17:53:16.599
+<<<  Section end 2015/11/22 17:53:52.849
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup Update Driver Package Signatures]
+>>>  Section start 2015/11/22 17:53:28.973
+     set: No driver package signatures to update.
+<<<  Section end 2015/11/22 17:53:29.305
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup Plug and Play Device Install]
+>>>  Section start 2015/11/22 17:53:29.305
+     set: ACPI\ACPI0003\0 -> Configured and started [cmbatt.inf:ACPI\ACPI0003,AcAdapter_Inst] (ConfigFlags = 0x00000000).
+     set: PCI\VEN_8086&DEV_2668&SUBSYS_76808384&REV_01\3&267A616A&1&28 -> Configured and started [hdaudbus.inf:PCI\CC_0403,HDAudio_Device.NT] (ConfigFlags = 0x00000000).
+     set: PCI\VEN_80EE&DEV_BEEF&SUBSYS_00000000&REV_00\3&267A616A&1&10 -> Setting CONFIGFLAG_REINSTALL on non-started device.
+     set: ROOT\VOLMGR\0000 -> Configured and started [volmgr.inf:ROOT\VOLMGR,Volmgr] (ConfigFlags = 0x00000000).
+     set: PCI\VEN_8086&DEV_100E&SUBSYS_001E8086&REV_02\3&267A616A&1&18 -> Setting CONFIGFLAG_REINSTALL on non-started device.
+     set: ROOT\BASICDISPLAY\0000 -> Configured and started [basicdisplay.inf:ROOT\BasicDisplay,MSBDD_Fallback] (ConfigFlags = 0x00000000).
+     set: SCSI\CDROM&VEN_VBOX&PROD_CD-ROM\4&3554261F&0&010000 -> Configured and started [cdrom.inf:GenCdRom,cdrom_install] (ConfigFlags = 0x00000000).
+     set: PCI\VEN_8086&DEV_265C&SUBSYS_00000000&REV_00\3&267A616A&1&58 -> Configured and started [usbport.inf:PCI\VEN_8086&DEV_265C,EHCI.Dev.NT] (ConfigFlags = 0x00000000).
+     set: ROOT\COMPOSITEBUS\0000 -> Configured and started [compositebus.inf:ROOT\CompositeBus,CompositeBus_Device.NT] (ConfigFlags = 0x00000000).
+     set: ROOT\VDRVROOT\0000 -> Configured and started [vdrvroot.inf:ROOT\vdrvroot,VDRVROOT] (ConfigFlags = 0x00000000).
+     set: ACPI\PNP0200\4&E03A844&0 -> Configured [machine.inf:*PNP0200,NO_DRV_X] (ConfigFlags = 0x00000000).
+     set: ROOT\SPACEPORT\0000 -> Configured and started [spaceport.inf:Root\Spaceport,Spaceport_Install] (ConfigFlags = 0x00000000).
+     set: USB\VID_80EE&PID_0021\5&35F564D4&0&1 -> Configured and started [input.inf:USB\Class_03,HID_Inst.NT] (ConfigFlags = 0x00000000).
+     set: ROOT\KDNIC\0000 -> Configured and started [kdnic.inf:root\kdnic,KdNic.ndi] (ConfigFlags = 0x00000000).
+     set: ACPI\AUTHENTICAMD_-_AMD64_FAMILY_21_MODEL_2_-_AMD_FX(TM)-6300_SIX-CORE_PROCESSOR_____________\_0 -> Configured and started [cpu.inf:ACPI\AuthenticAMD_-_AMD64,AmdPPM_Inst.NT] (ConfigFlags = 0x00000000).
+     set: PCI\VEN_8086&DEV_7000&SUBSYS_00000000&REV_00\3&267A616A&1&08 -> Configured and started [machine.inf:PCI\VEN_8086&DEV_7000,MSISADRV] (ConfigFlags = 0x00000000).
+     set: ROOT\UMBUS\0000 -> Configured and started [umbus.inf:root\umbus,UmBusRoot_Device.NT] (ConfigFlags = 0x00000000).
+     set: ROOT\ACPI_HAL\0000 -> Configured and started [hal.inf:acpiapic,ACPI_AMD64_HAL] (ConfigFlags = 0x00000000).
+     set: DISPLAY\DEFAULT_MONITOR\1&8713BCA&0&UID0 -> Configured and started [monitor.inf:MONITOR\Default_Monitor,NonPnPMonitor.Install] (ConfigFlags = 0x00000000).
+     set: STORAGE\VOLUME\{DAAAB795-9184-11E5-9BC1-806E6F6E6963}#0000000000100000 -> Configured and started [volume.inf:STORAGE\Volume,volume_install.NTamd64] (ConfigFlags = 0x00000000).
+     set: ACPI\PNP0A03\0 -> Configured and started [pci.inf:*PNP0A03,PCI_ROOT] (ConfigFlags = 0x00000000).
+     set: USB\ROOT_HUB\4&159A73F4&0 -> Configured and started [usbport.inf:USB\ROOT_HUB,ROOTHUB.Dev.NT] (ConfigFlags = 0x00000000).
+     set: USB\ROOT_HUB20\4&3749A296&0 -> Configured and started [usbport.inf:USB\ROOT_HUB20,ROOTHUB.Dev.NT] (ConfigFlags = 0x00000000).
+     set: ACPI_HAL\PNP0C08\0 -> Configured and started [acpi.inf:*PNP0C08,ACPI_Inst.NT] (ConfigFlags = 0x00000000).
+     set: ROOT\BASICRENDER\0000 -> Configured and started [basicrender.inf:ROOT\BasicRender,BasicRender] (ConfigFlags = 0x00000000).
+     set: HDAUDIO\FUNC_01&VEN_8384&DEV_7680&SUBSYS_83847680&REV_1034\4&22A99211&0&0001 -> Setting CONFIGFLAG_REINSTALL on non-started device.
+     set: ACPI\FIXEDBUTTON\2&DABA3FF&1 -> Configured and started [machine.inf:ACPI\FixedButton,NO_DRV] (ConfigFlags = 0x00000000).
+     set: ACPI\PNP0000\4&E03A844&0 -> Configured [machine.inf:*PNP0000,NO_DRV_PIC] (ConfigFlags = 0x00000000).
+     set: PCI\VEN_80EE&DEV_CAFE&SUBSYS_00000000&REV_00\3&267A616A&1&20 -> Configured [null] (ConfigFlags = 0x00000040).
+     set: PCI\VEN_8086&DEV_2829&SUBSYS_00000000&REV_02\3&267A616A&1&68 -> Configured and started [mshdc.inf:PCI\CC_010601,msahci_Inst] (ConfigFlags = 0x00000000).
+     set: SWD\MMDEVAPI\MICROSOFTGSWAVETABLESYNTH -> Configured and started [c_swdevice.inf:SWD\GenericRaw,SoftwareDevice] (ConfigFlags = 0x00000000).
+     set: ROOT\NDISVIRTUALBUS\0000 -> Configured and started [ndisvirtualbus.inf:ROOT\NdisVirtualBus,NdisVirtualBus_Device.NT] (ConfigFlags = 0x00000000).
+     set: PCI\VEN_106B&DEV_003F&SUBSYS_00000000&REV_00\3&267A616A&1&30 -> Configured and started [usbport.inf:PCI\CC_0C0310,OHCI.Dev.NT] (ConfigFlags = 0x00000000).
+     set: SCSI\DISK&VEN_VBOX&PROD_HARDDISK\4&3554261F&0&000000 -> Configured and started [disk.inf:GenDisk,disk_install.NT] (ConfigFlags = 0x00000000).
+     set: STORAGE\VOLUME\{DAAAB795-9184-11E5-9BC1-806E6F6E6963}#000000001F500000 -> Configured and started [volume.inf:STORAGE\Volume,volume_install.NTamd64] (ConfigFlags = 0x00000000).
+     set: PCI\VEN_8086&DEV_1237&SUBSYS_00000000&REV_02\3&267A616A&1&00 -> Configured and started [machine.inf:PCI\VEN_8086&DEV_1237,NO_DRV] (ConfigFlags = 0x00000000).
+     set: ROOT\MSSMBIOS\0000 -> Configured and started [mssmbios.inf:ROOT\mssmbios,MSSMBIOS_DRV] (ConfigFlags = 0x00000000).
+     set: ACPI\PNP0400\4&E03A844&0 -> Configured [msports.inf:*PNP0400,LptPort.NT] (ConfigFlags = 0x00000400).
+     set: ROOT\SYSTEM\0000 -> Configured and started [swenum.inf:ROOT\SWENUM,SWENUM] (ConfigFlags = 0x00000000).
+     set: ROOT\RDPBUS\0000 -> Configured and started [rdpbus.inf:ROOT\RDPBUS,RDPBUS] (ConfigFlags = 0x00000000).
+     set: ACPI\PNP0100\4&E03A844&0 -> Configured [machine.inf:*PNP0100,NO_DRV_X] (ConfigFlags = 0x00000000).
+     set: ACPI\PNP0F03\4&E03A844&0 -> Configured and started [msmouse.inf:*PNP0F03,PS2_Inst] (ConfigFlags = 0x00000000).
+     set: HID\VID_80EE&PID_0021\6&A8E1584&0&0000 -> Configured and started [msmouse.inf:HID_DEVICE_SYSTEM_MOUSE,HID_Mouse_Inst.NT] (ConfigFlags = 0x00000000).
+     set: ACPI\PNP0303\4&E03A844&0 -> Configured and started [keyboard.inf:*PNP0303,STANDARD_Inst] (ConfigFlags = 0x00000000).
+     set: DeviceInstall service already running. 17:53:29.337
+     set: Waiting for pending device installs... 17:53:29.337
+     set: Completed pending device installs. 17:53:51.832
+<<<  Section end 2015/11/22 17:53:51.832
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - PCI\VEN_80EE&DEV_BEEF&SUBSYS_00000000&REV_00\3&267a616a&1&10]
+>>>  Section start 2015/11/22 17:53:29.353
+     dvi: {Build Driver List} 17:53:29.457
+     dvi:      Searching for hardware ID(s):
+     dvi:           pci\ven_80ee&dev_beef&subsys_00000000&rev_00
+     dvi:           pci\ven_80ee&dev_beef&subsys_00000000
+     dvi:           pci\ven_80ee&dev_beef&rev_00
+     dvi:           pci\ven_80ee&dev_beef
+     dvi:           pci\ven_80ee&dev_beef&cc_030000
+     dvi:           pci\ven_80ee&dev_beef&cc_0300
+     dvi:      Searching for compatible ID(s):
+     dvi:           pci\ven_80ee&cc_030000
+     dvi:           pci\ven_80ee&cc_0300
+     dvi:           pci\ven_80ee
+     dvi:           pci\cc_030000
+     dvi:           pci\cc_0300
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - PCI\CC_0300
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\display.inf_amd64_54c15e45dc857c30\display.inf
+     dvi:           DevDesc      - Microsoft Basic Display Adapter
+     dvi:           Section      - MSBDA
+     dvi:           Rank         - 0x00fb2004
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:30.911
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:30.928
+     dvi:      Using exported function 'DisplayClassInstaller' in module 'C:\Windows\system32\DispCI.dll'.
+     dvi:      Class installer == DispCI.dll,DisplayClassInstaller
+     dvi:      Class installer: Enter 17:53:31.397
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:32.379
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e968-e325-11ce-bfc1-08002be10318}.
+     dvi:                {DIF_DESTROYPRIVATEDATA} 17:53:32.397
+     dvi:                     Class installer: Enter 17:53:32.397
+     dvi:                     Class installer: Exit
+     dvi:                     Default installer: Enter 17:53:32.957
+     dvi:                     Default installer: Exit
+     dvi:                {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:32.957
+     dvi:                Selected:
+     dvi:                     Description - [Microsoft Basic Display Adapter]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\display.inf_amd64_54c15e45dc857c30\display.inf]
+     dvi:                     Section     - [MSBDA]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:32.957
+     ndv: Waiting for previous device install to complete. 17:53:32.957
+     ndv: {Core Device Install} 17:53:35.145
+     ndv:      {Installing device - PCI\VEN_80EE&DEV_BEEF&SUBSYS_00000000&REV_00\3&267A616A&1&10} 17:53:35.145
+!    ndv:           Device class {4d36e968-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:35.145
+     dvi:                Using exported function 'DisplayClassInstaller' in module 'C:\Windows\system32\DispCI.dll'.
+     dvi:                Class installer == DispCI.dll,DisplayClassInstaller
+     dvi:                Class installer: Enter 17:53:35.161
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:35.832
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:35.832
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:35.832
+     dvi:                Class installer: Enter 17:53:35.832
+     dvi:                     {Build Driver List} 17:53:36.129
+!    dvi:                          Driver list already built
+     dvi:                     {Build Driver List - exit(0x00000000)} 17:53:36.129
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:36.708
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:36.723
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:36.723
+     dvi:                Reset Device: Resetting device configuration. 17:53:36.723
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:36.723
+     dvi:                Class installer: Enter 17:53:36.723
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:37.629
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:37.629
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:37.629
+     dvi:                Class installer: Enter 17:53:37.629
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:37.926
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:37.926
+     dvi:           {DIF_INSTALLDEVICE} 17:53:37.926
+     dvi:                Class installer: Enter 17:53:37.926
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=display.inf:10809047d4324726:MSBDA:10.0.10240.16384:pci\cc_0300
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=BasicDisplay,0x00000002,MSBDD_Fallback_Generic_Service_Inst,  (basicdisplay.inf line 63)
+     dvi:                          Add Service: Modified existing service 'BasicDisplay'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:39.035
+     dvi:                     Install Device: Configuring device class completed. 17:53:39.035
+     dvi:                     Install Device: Starting device. 17:53:39.035
+     dvi:                     Install Device: Starting device completed. 17:53:39.165
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:39.489
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:39.489
+     dvi:                Class installer: Enter 17:53:39.489
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:39.785
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:39.785
+     ndv:      {Installing device - exit(0x00000000)} 17:53:39.785
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:39.785
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:39.801
+     dvi:      Class installer: Enter 17:53:39.801
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:40.145
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:40.145
+<<<  Section end 2015/11/22 17:53:40.207
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - PCI\VEN_8086&DEV_100E&SUBSYS_001E8086&REV_02\3&267a616a&1&18]
+>>>  Section start 2015/11/22 17:53:29.395
+     dvi: {Build Driver List} 17:53:29.457
+     dvi:      Searching for hardware ID(s):
+     dvi:           pci\ven_8086&dev_100e&subsys_001e8086&rev_02
+     dvi:           pci\ven_8086&dev_100e&subsys_001e8086
+     dvi:           pci\ven_8086&dev_100e&cc_020000
+     dvi:           pci\ven_8086&dev_100e&cc_0200
+     dvi:      Searching for compatible ID(s):
+     dvi:           pci\ven_8086&dev_100e&rev_02
+     dvi:           pci\ven_8086&dev_100e
+     dvi:           pci\ven_8086&cc_020000
+     dvi:           pci\ven_8086&cc_0200
+     dvi:           pci\ven_8086
+     dvi:           pci\cc_020000
+     dvi:           pci\cc_0200
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - PCI\VEN_8086&DEV_100E&SUBSYS_001E8086
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\nete1g3e.inf_amd64_9c4d966af5423efc\nete1g3e.inf
+     dvi:           DevDesc      - Intel(R) PRO/1000 MT Desktop Adapter
+     dvi:           Section      - E100ECopper
+     dvi:           Rank         - 0x00ff0001
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 03/23/2010
+     dvi:           Version      - 8.4.13.0
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - PCI\VEN_8086&DEV_100E
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\nete1g3e.inf_amd64_9c4d966af5423efc\nete1g3e.inf
+     dvi:           DevDesc      - Intel(R) PRO/1000 MT Network Connection
+     dvi:           Section      - E100E
+     dvi:           Rank         - 0x00ff2001
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 03/23/2010
+     dvi:           Version      - 8.4.13.0
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:31.397
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:31.397
+     dvi:      Default installer: Enter 17:53:31.397
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e972-e325-11ce-bfc1-08002be10318}.
+     dvi:                Selected:
+     dvi:                     Description - [Intel(R) PRO/1000 MT Desktop Adapter]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\nete1g3e.inf_amd64_9c4d966af5423efc\nete1g3e.inf]
+     dvi:                     Section     - [E100ECopper]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:31.397
+     ndv: Waiting for previous device install to complete. 17:53:31.397
+     ndv: {Core Device Install} 17:53:32.739
+     ndv:      {Installing device - PCI\VEN_8086&DEV_100E&SUBSYS_001E8086&REV_02\3&267A616A&1&18} 17:53:32.739
+     sto:           {Configure Driver Package: C:\Windows\System32\DriverStore\FileRepository\nete1g3e.inf_amd64_9c4d966af5423efc\nete1g3e.inf}
+     sto:                Source Filter  = pci\ven_8086&dev_100e&subsys_001e8086
+     inf:                Class GUID     = {4d36e972-e325-11ce-bfc1-08002be10318}
+     inf:                Class Options  = Configurable
+     inf:                {Configure Driver: Intel(R) PRO/1000 MT Desktop Adapter}
+     inf:                     Section Name = E100ECopper
+     inf:                     {Add Service: E1G60}
+     inf:                          Start Type    = 3
+     inf:                          Service Type  = 1
+     inf:                          Error Control = 1
+     inf:                          Image Path    = \SystemRoot\System32\drivers\E1G6032E.sys
+     inf:                          Display Name  = Intel(R) PRO/1000 NDIS 6 Adapter Driver
+     inf:                          Group         = NDIS
+     inf:                          Created new service 'E1G60'.
+     inf:                     {Add Service: exit(0x00000000)}
+     inf:                     Hardware Id  = PCI\VEN_8086&DEV_100E&SUBSYS_001E8086
+     inf:                     {Configure Driver Configuration: E100ECopper}
+     inf:                          Service Name  = E1G60
+     inf:                          Config Flags  = 0x00000000
+     inf:                     {Configure Driver Configuration: exit(0x00000000)}
+     inf:                {Configure Driver: exit(0x00000000)}
+!    inf:                Needed section [PciIoSpaceNotRequired] found in included INF "pci.inf", not referenced from [E1027.Hw]. Code = 1313, Line = 481
+!    inf:                Needed section [PciIoSpaceNotRequired] found in included INF "pci.inf", not referenced from [E1079.Hw]. Code = 1313, Line = 555
+!    inf:                Needed section [PciIoSpaceNotRequired] found in included INF "pci.inf", not referenced from [E107A.Hw]. Code = 1313, Line = 576
+!    inf:                Needed section [PciIoSpaceNotRequired] found in included INF "pci.inf", not referenced from [E10B5.Hw]. Code = 1313, Line = 650
+     flq:                Hardlinking 'C:\Windows\System32\DriverStore\FileRepository\nete1g3e.inf_amd64_9c4d966af5423efc\E1G6032E.sys' to 'C:\Windows\System32\drivers\E1G6032E.sys'.
+     dvi:                Existing files modified, may need to restart related services.
+     sto:           {Configure Driver Package: exit(0x00000bc3)}
+     ndv:           Restart required for any devices using this driver.
+     dvi:           Install Device: Configuring device (nete1g3e.inf:pci\ven_8086&dev_100e&subsys_001e8086,E100ECopper). 17:53:34.973
+     dvi:           Install Device: Configuring device completed. 17:53:34.973
+     dvi:           {Restarting Devices} 17:53:34.973
+     dvi:                Restart: PCI\VEN_8086&DEV_100E&SUBSYS_001E8086&REV_02\3&267A616A&1&18
+     dvi:           {Restarting Devices exit} 17:53:35.129
+     ndv:      {Installing device - exit(0x00000000)} 17:53:35.145
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:35.145
+     ndv: Waiting for device post-install to complete. 17:53:35.145
+     ndv: Device post-install completed. 17:53:37.553
+<<<  Section end 2015/11/22 17:53:37.723
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - HDAUDIO\FUNC_01&VEN_8384&DEV_7680&SUBSYS_83847680&REV_1034\4&22a99211&0&0001]
+>>>  Section start 2015/11/22 17:53:29.426
+     dvi: {Build Driver List} 17:53:29.473
+     dvi:      Searching for hardware ID(s):
+     dvi:           hdaudio\func_01&ven_8384&dev_7680&subsys_83847680&rev_1034
+     dvi:           hdaudio\func_01&ven_8384&dev_7680&subsys_83847680
+     dvi:      Searching for compatible ID(s):
+     dvi:           hdaudio\func_01&ctlr_ven_8086&ctlr_dev_2668&ven_8384&dev_7680&rev_1034
+     dvi:           hdaudio\func_01&ctlr_ven_8086&ven_8384&dev_7680&rev_1034
+     dvi:           hdaudio\func_01&ven_8384&dev_7680&rev_1034
+     dvi:           hdaudio\func_01&ctlr_ven_8086&ctlr_dev_2668&ven_8384&dev_7680
+     dvi:           hdaudio\func_01&ctlr_ven_8086&ven_8384&dev_7680
+     dvi:           hdaudio\func_01&ven_8384&dev_7680
+     dvi:           hdaudio\func_01&ctlr_ven_8086&ctlr_dev_2668&ven_8384
+     dvi:           hdaudio\func_01&ctlr_ven_8086&ven_8384
+     dvi:           hdaudio\func_01&ven_8384
+     dvi:           hdaudio\func_01&ctlr_ven_8086&ctlr_dev_2668
+     dvi:           hdaudio\func_01&ctlr_ven_8086
+     dvi:           hdaudio\func_01&gf&ven_8384&dev_7680&subsys_83847680&rev_1034
+     dvi:           hdaudio\func_01
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - HDAUDIO\FUNC_01
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\hdaudio.inf_amd64_dab2294dc8af0030\hdaudio.inf
+     dvi:           DevDesc      - High Definition Audio Device
+     dvi:           Section      - HdAudModel
+     dvi:           Rank         - 0x00ff300c
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 07/09/2015
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:31.429
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:31.429
+     dvi:      Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:      Class installer == mmci.dll,MediaClassInstaller
+     dvi:      Class installer: Enter 17:53:33.381
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:33.396
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e96c-e325-11ce-bfc1-08002be10318}.
+     dvi:                {DIF_DESTROYPRIVATEDATA} 17:53:33.396
+     dvi:                     Class installer: Enter 17:53:33.396
+     dvi:                     Class installer: Exit
+     dvi:                     Default installer: Enter 17:53:33.396
+     dvi:                     Default installer: Exit
+     dvi:                {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:33.396
+     dvi:                Selected:
+     dvi:                     Description - [High Definition Audio Device]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\hdaudio.inf_amd64_dab2294dc8af0030\hdaudio.inf]
+     dvi:                     Section     - [HdAudModel]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:33.396
+     ndv: Waiting for previous device install to complete. 17:53:33.396
+     ndv: {Core Device Install} 17:53:39.785
+     ndv:      {Installing device - HDAUDIO\FUNC_01&VEN_8384&DEV_7680&SUBSYS_83847680&REV_1034\4&22A99211&0&0001} 17:53:39.801
+!    ndv:           Device class {4d36e96c-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:39.801
+     dvi:                Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:                Class installer == mmci.dll,MediaClassInstaller
+     dvi:                Class installer: Enter 17:53:39.942
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:39.942
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:39.942
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:39.942
+     dvi:                Class installer: Enter 17:53:39.942
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:39.942
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:40.521
+     flq:           File 'C:\Windows\system32\drivers\drmk.sys' pruned from copy.
+     flq:           File 'C:\Windows\system32\drivers\portcls.sys' pruned from copy.
+     flq:           Hardlinking 'C:\Windows\System32\DriverStore\FileRepository\hdaudio.inf_amd64_dab2294dc8af0030\HdAudio.sys' to 'C:\Windows\system32\DRIVERS\HdAudio.sys'.
+     flq:           Hardlinking 'C:\Windows\System32\DriverStore\FileRepository\wdmaudio.inf_amd64_256ad046a471df0d\WMALFXGFXDSP.dll' to 'C:\Windows\system32\WMALFXGFXDSP.dll'.
+     flq:           Hardlinking 'C:\Windows\System32\DriverStore\FileRepository\wdmaudio.inf_amd64_256ad046a471df0d\SysFxUI.dll' to 'C:\Windows\system32\SysFxUI.dll'.
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:41.723
+     dvi:                Reset Device: Resetting device configuration. 17:53:41.723
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:41.723
+     dvi:                Class installer: Enter 17:53:41.723
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:41.740
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:41.740
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:41.740
+     dvi:                Class installer: Enter 17:53:41.740
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:41.740
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:41.740
+     dvi:           {DIF_INSTALLDEVICE} 17:53:41.740
+     dvi:                Class installer: Enter 17:53:41.740
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=hdaudio.inf:db04a16ce4e8d6ee:HdAudModel:10.0.10240.16384:hdaudio\func_01
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=HdAudAddService,0x00000002,HdAud_Service_Install  (hdaudio.inf line 91)
+     dvi:                          Add Service: Created service 'HdAudAddService'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     sto:                     {Configure Driver Package: c:\windows\system32\driverstore\filerepository\hdaudio.inf_amd64_dab2294dc8af0030\hdaudio.inf}
+     sto:                          Source Filter  = HdAudModel
+     sto:                          Target Filter  = HDAUDIO\FUNC_01&VEN_8384&DEV_7680&SUBSYS_83847680&REV_1034\4&22A99211&0&0001
+     inf:                          Class GUID     = {4d36e96c-e325-11ce-bfc1-08002be10318}
+     inf:                          {Configure Driver: High Definition Audio Device}
+     inf:                               Section Name = HdAudModel
+     inf:                               {Configure Device: HDAUDIO\FUNC_01&VEN_8384&DEV_7680&SUBSYS_83847680&REV_1034\4&22A99211&0&0001}
+     inf:                               {Configure Device: exit(0x00000000)}
+     inf:                          {Configure Driver: exit(0x00000000)}
+     sto:                     {Configure Driver Package: exit(0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:41.903
+     dvi:                     Install Device: Configuring device class completed. 17:53:41.916
+     dvi:                     {Restarting Devices} 17:53:41.916
+     dvi:                          Restart: HDAUDIO\FUNC_01&VEN_8384&DEV_7680&SUBSYS_83847680&REV_1034\4&22A99211&0&0001
+     dvi:                     {Restarting Devices exit} 17:53:42.383
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:43.332
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:43.411
+     dvi:                Class installer: Enter 17:53:43.411
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:43.411
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:43.411
+     ndv:      {Installing device - exit(0x00000000)} 17:53:43.429
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:43.429
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:43.429
+     dvi:      Class installer: Enter 17:53:43.429
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:43.429
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:43.429
+<<<  Section end 2015/11/22 17:53:43.497
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - ACPI\PNP0400\4&e03a844&0]
+>>>  Section start 2015/11/22 17:53:29.473
+     dvi: {Build Driver List} 17:53:29.489
+     dvi:      Searching for hardware ID(s):
+     dvi:           acpi\ven_pnp&dev_0400
+     dvi:           acpi\pnp0400
+     dvi:           *pnp0400
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - *PNP0400
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\msports.inf_amd64_db43c0c39a11ad06\msports.inf
+     dvi:           DevDesc      - Printer Port
+     dvi:           Section      - LptPort.NT
+     dvi:           Rank         - 0x00ff0002
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:30.817
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:30.817
+     dvi:      Using exported function 'PortsClassInstaller' in module 'C:\Windows\system32\MsPorts.Dll'.
+     dvi:      Class installer == MsPorts.Dll,PortsClassInstaller
+     dvi:      Class installer: Enter 17:53:31.380
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:31.380
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device remains: {4d36e978-e325-11ce-bfc1-08002be10318}.
+     dvi:                Selected:
+     dvi:                     Description - [Printer Port]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\msports.inf_amd64_db43c0c39a11ad06\msports.inf]
+     dvi:                     Section     - [LptPort]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:31.380
+     ndv: {Core Device Install} 17:53:31.380
+     ndv:      {Installing device - ACPI\PNP0400\4&E03A844&0} 17:53:31.380
+!    ndv:           Device class {4d36e978-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:31.380
+     dvi:                Class installer: Enter 17:53:31.380
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:31.397
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:31.397
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:31.536
+     dvi:                Class installer: Enter 17:53:31.536
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:31.536
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:31.536
+     flq:           File 'C:\Windows\system32\DRIVERS\parport.sys' pruned from copy.
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:31.707
+     dvi:                Reset Device: Resetting device configuration. 17:53:31.707
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:31.707
+     dvi:                Class installer: Enter 17:53:31.707
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:31.707
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:31.724
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:31.724
+     dvi:                Class installer: Enter 17:53:31.724
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:31.724
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:31.724
+     dvi:           {DIF_INSTALLDEVICE} 17:53:31.724
+     dvi:                Class installer: Enter 17:53:31.724
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=msports.inf:10809047c11708a1:LptPort:10.0.10240.16384:*pnp0400
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=Parport,0x00000002,Parport_Service_Inst,Parport_EventLog_Inst  (msports.inf line 140)
+     dvi:                          Add Service: Modified existing service 'Parport'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:31.741
+     dvi:                     Install Device: Configuring device class completed. 17:53:31.741
+     dvi:                     Install Device: Starting device. 17:53:31.785
+     dvi:                     Install Device: Starting device completed. 17:53:32.279
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:32.279
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:32.279
+     dvi:                Class installer: Enter 17:53:32.279
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:32.279
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:32.279
+     ndv:      {Installing device - exit(0x00000000)} 17:53:32.739
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:32.739
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:32.785
+     dvi:      Class installer: Enter 17:53:32.785
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:32.785
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:32.801
+<<<  Section end 2015/11/22 17:53:32.895
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - SW\{97ebaacc-95bd-11d0-a3ea-00a0c9223196}\{53172480-4791-11D0-A5D6-28DB04C10000}]
+>>>  Section start 2015/11/22 17:53:43.429
+     dvi: {Build Driver List} 17:53:43.497
+     dvi:      Searching for hardware ID(s):
+     dvi:           sw\{97ebaacc-95bd-11d0-a3ea-00a0c9223196}
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - SW\{97ebaacc-95bd-11d0-a3ea-00a0c9223196}
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf
+     dvi:           DevDesc      - Microsoft Streaming Clock Proxy
+     dvi:           Section      - MSPCLOCK.NT
+     dvi:           Rank         - 0x00ff0000
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:47.181
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:47.181
+     dvi:      Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:      Class installer == mmci.dll,MediaClassInstaller
+     dvi:      Class installer: Enter 17:53:47.397
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:47.397
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e96c-e325-11ce-bfc1-08002be10318}.
+     dvi:                {DIF_DESTROYPRIVATEDATA} 17:53:47.397
+     dvi:                     Class installer: Enter 17:53:47.397
+     dvi:                     Class installer: Exit
+     dvi:                     Default installer: Enter 17:53:47.397
+     dvi:                     Default installer: Exit
+     dvi:                {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:47.397
+     dvi:                Selected:
+     dvi:                     Description - [Microsoft Streaming Clock Proxy]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf]
+     dvi:                     Section     - [MSPCLOCK]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:47.412
+     ndv: {Core Device Install} 17:53:47.412
+     ndv:      {Installing device - SW\{97EBAACC-95BD-11D0-A3EA-00A0C9223196}\{53172480-4791-11D0-A5D6-28DB04C10000}} 17:53:47.412
+!    ndv:           Device class {4d36e96c-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:47.412
+     dvi:                Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:                Class installer == mmci.dll,MediaClassInstaller
+     dvi:                Class installer: Enter 17:53:47.569
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:47.569
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:47.569
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:47.569
+     dvi:                Class installer: Enter 17:53:47.569
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:47.569
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:47.569
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:47.569
+     dvi:                Reset Device: Resetting device configuration. 17:53:47.569
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:47.569
+     dvi:                Class installer: Enter 17:53:47.569
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:47.569
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:47.569
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:47.569
+     dvi:                Class installer: Enter 17:53:47.569
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:47.569
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:47.569
+     dvi:           {DIF_INSTALLDEVICE} 17:53:47.569
+     dvi:                Class installer: Enter 17:53:47.569
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=ksfilter.inf:db04a16ce73684f9:MSPCLOCK:10.0.10240.16384:sw\{97ebaacc-95bd-11d0-a3ea-00a0c9223196}
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=MSPCLOCK,0x00000002,MSPCLOCK.ServiceInstall  (ksfilter.inf line 42)
+     dvi:                          Add Service: Created service 'MSPCLOCK'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     sto:                     {Configure Driver Package: c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf}
+     sto:                          Source Filter  = MSPCLOCK.NT
+     sto:                          Target Filter  = SW\{97EBAACC-95BD-11D0-A3EA-00A0C9223196}\{53172480-4791-11D0-A5D6-28DB04C10000}
+     inf:                          Class GUID     = {4d36e96c-e325-11ce-bfc1-08002be10318}
+     inf:                          {Configure Driver: Microsoft Streaming Clock Proxy}
+     inf:                               Section Name = MSPCLOCK.NT
+     inf:                               {Configure Device: SW\{97EBAACC-95BD-11D0-A3EA-00A0C9223196}\{53172480-4791-11D0-A5D6-28DB04C10000}}
+     inf:                               {Configure Device: exit(0x00000000)}
+     inf:                          {Configure Driver: exit(0x00000000)}
+     sto:                     {Configure Driver Package: exit(0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:47.668
+     dvi:                     Install Device: Configuring device class completed. 17:53:47.668
+     dvi:                     Install Device: Starting device. 17:53:47.682
+     dvi:                     Install Device: Starting device completed. 17:53:47.852
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:48.129
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:48.129
+     dvi:                Class installer: Enter 17:53:48.129
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.129
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:48.129
+     ndv:      {Installing device - exit(0x00000000)} 17:53:48.129
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:48.129
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:48.161
+     dvi:      Class installer: Enter 17:53:48.161
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:48.161
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:48.161
+<<<  Section end 2015/11/22 17:53:48.461
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - SW\{ddf4358e-bb2c-11d0-a42f-00a0c9223196}\{97EBAACB-95BD-11D0-A3EA-00A0C9223196}]
+>>>  Section start 2015/11/22 17:53:43.429
+     dvi: {Build Driver List} 17:53:43.497
+     dvi:      Searching for hardware ID(s):
+     dvi:           sw\{ddf4358e-bb2c-11d0-a42f-00a0c9223196}
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - SW\{DDF4358E-BB2C-11D0-A42F-00A0C9223196}
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf
+     dvi:           DevDesc      - Microsoft Streaming Quality Manager Proxy
+     dvi:           Section      - MSPQM.NT
+     dvi:           Rank         - 0x00ff0000
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:47.229
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:47.229
+     dvi:      Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:      Class installer == mmci.dll,MediaClassInstaller
+     dvi:      Class installer: Enter 17:53:47.429
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:47.429
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e96c-e325-11ce-bfc1-08002be10318}.
+     dvi:                {DIF_DESTROYPRIVATEDATA} 17:53:47.429
+     dvi:                     Class installer: Enter 17:53:47.429
+     dvi:                     Class installer: Exit
+     dvi:                     Default installer: Enter 17:53:47.429
+     dvi:                     Default installer: Exit
+     dvi:                {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:47.429
+     dvi:                Selected:
+     dvi:                     Description - [Microsoft Streaming Quality Manager Proxy]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf]
+     dvi:                     Section     - [MSPQM]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:47.429
+     ndv: Waiting for previous device install to complete. 17:53:47.429
+     ndv: {Core Device Install} 17:53:48.709
+     ndv:      {Installing device - SW\{DDF4358E-BB2C-11D0-A42F-00A0C9223196}\{97EBAACB-95BD-11D0-A3EA-00A0C9223196}} 17:53:48.709
+!    ndv:           Device class {4d36e96c-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:48.709
+     dvi:                Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:                Class installer == mmci.dll,MediaClassInstaller
+     dvi:                Class installer: Enter 17:53:48.709
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.709
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:48.725
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:48.725
+     dvi:                Class installer: Enter 17:53:48.725
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.725
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:48.725
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:48.725
+     dvi:                Reset Device: Resetting device configuration. 17:53:48.725
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:48.725
+     dvi:                Class installer: Enter 17:53:48.725
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.725
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:48.725
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:48.725
+     dvi:                Class installer: Enter 17:53:48.725
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.725
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:48.725
+     dvi:           {DIF_INSTALLDEVICE} 17:53:48.725
+     dvi:                Class installer: Enter 17:53:48.725
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=ksfilter.inf:db04a16c9051c531:MSPQM:10.0.10240.16384:sw\{ddf4358e-bb2c-11d0-a42f-00a0c9223196}
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=MSPQM,0x00000002,MSPQM.ServiceInstall  (ksfilter.inf line 63)
+     dvi:                          Add Service: Created service 'MSPQM'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     sto:                     {Configure Driver Package: c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf}
+     sto:                          Source Filter  = MSPQM.NT
+     sto:                          Target Filter  = SW\{DDF4358E-BB2C-11D0-A42F-00A0C9223196}\{97EBAACB-95BD-11D0-A3EA-00A0C9223196}
+     inf:                          Class GUID     = {4d36e96c-e325-11ce-bfc1-08002be10318}
+     inf:                          {Configure Driver: Microsoft Streaming Quality Manager Proxy}
+     inf:                               Section Name = MSPQM.NT
+     inf:                               {Configure Device: SW\{DDF4358E-BB2C-11D0-A42F-00A0C9223196}\{97EBAACB-95BD-11D0-A3EA-00A0C9223196}}
+     inf:                               {Configure Device: exit(0x00000000)}
+     inf:                          {Configure Driver: exit(0x00000000)}
+     sto:                     {Configure Driver Package: exit(0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:48.789
+     dvi:                     Install Device: Configuring device class completed. 17:53:48.789
+     dvi:                     Install Device: Starting device. 17:53:48.789
+     dvi:                     Install Device: Starting device completed. 17:53:48.945
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:49.132
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:49.132
+     dvi:                Class installer: Enter 17:53:49.132
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.132
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:49.132
+     ndv:      {Installing device - exit(0x00000000)} 17:53:49.132
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:49.132
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:49.165
+     dvi:      Class installer: Enter 17:53:49.165
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:49.165
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:49.165
+<<<  Section end 2015/11/22 17:53:49.410
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - SW\{96e080c7-143c-11d1-b40f-00a0c9223196}\{3C0D501A-140B-11D1-B40F-00A0C9223196}]
+>>>  Section start 2015/11/22 17:53:43.429
+     dvi: {Build Driver List} 17:53:43.497
+     dvi:      Searching for hardware ID(s):
+     dvi:           sw\{96e080c7-143c-11d1-b40f-00a0c9223196}
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - SW\{96E080C7-143C-11D1-B40F-00A0C9223196}
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf
+     dvi:           DevDesc      - Microsoft Streaming Service Proxy
+     dvi:           Section      - MSKSSRV.NT
+     dvi:           Rank         - 0x00ff0000
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:47.349
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:47.349
+     dvi:      Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:      Class installer == mmci.dll,MediaClassInstaller
+     dvi:      Class installer: Enter 17:53:47.397
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:47.463
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e96c-e325-11ce-bfc1-08002be10318}.
+     dvi:                {DIF_DESTROYPRIVATEDATA} 17:53:47.463
+     dvi:                     Class installer: Enter 17:53:47.463
+     dvi:                     Class installer: Exit
+     dvi:                     Default installer: Enter 17:53:47.463
+     dvi:                     Default installer: Exit
+     dvi:                {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:47.463
+     dvi:                Selected:
+     dvi:                     Description - [Microsoft Streaming Service Proxy]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf]
+     dvi:                     Section     - [MSKSSRV]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:47.463
+     ndv: Waiting for previous device install to complete. 17:53:47.463
+     ndv: {Core Device Install} 17:53:49.132
+     ndv:      {Installing device - SW\{96E080C7-143C-11D1-B40F-00A0C9223196}\{3C0D501A-140B-11D1-B40F-00A0C9223196}} 17:53:49.132
+!    ndv:           Device class {4d36e96c-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:49.132
+     dvi:                Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:                Class installer == mmci.dll,MediaClassInstaller
+     dvi:                Class installer: Enter 17:53:49.152
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.152
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:49.152
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:49.152
+     dvi:                Class installer: Enter 17:53:49.152
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.152
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:49.152
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:49.152
+     dvi:                Reset Device: Resetting device configuration. 17:53:49.152
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:49.152
+     dvi:                Class installer: Enter 17:53:49.152
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.152
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:49.152
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:49.152
+     dvi:                Class installer: Enter 17:53:49.152
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.152
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:49.165
+     dvi:           {DIF_INSTALLDEVICE} 17:53:49.165
+     dvi:                Class installer: Enter 17:53:49.165
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=ksfilter.inf:db04a16c31e7f3b4:MSKSSRV:10.0.10240.16384:sw\{96e080c7-143c-11d1-b40f-00a0c9223196}
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=MSKSSRV,0x00000002,MSKSSRV.ServiceInstall  (ksfilter.inf line 83)
+     dvi:                          Add Service: Created service 'MSKSSRV'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     sto:                     {Configure Driver Package: c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf}
+     sto:                          Source Filter  = MSKSSRV.NT
+     sto:                          Target Filter  = SW\{96E080C7-143C-11D1-B40F-00A0C9223196}\{3C0D501A-140B-11D1-B40F-00A0C9223196}
+     inf:                          Class GUID     = {4d36e96c-e325-11ce-bfc1-08002be10318}
+     inf:                          {Configure Driver: Microsoft Streaming Service Proxy}
+     inf:                               Section Name = MSKSSRV.NT
+     inf:                               {Configure Device: SW\{96E080C7-143C-11D1-B40F-00A0C9223196}\{3C0D501A-140B-11D1-B40F-00A0C9223196}}
+     inf:                               {Configure Device: exit(0x00000000)}
+     inf:                          {Configure Driver: exit(0x00000000)}
+     sto:                     {Configure Driver Package: exit(0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:49.197
+     dvi:                     Install Device: Configuring device class completed. 17:53:49.261
+     dvi:                     Install Device: Starting device. 17:53:49.261
+     dvi:                     Install Device: Starting device completed. 17:53:49.397
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:49.809
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:49.809
+     dvi:                Class installer: Enter 17:53:49.809
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.809
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:49.809
+     ndv:      {Installing device - exit(0x00000000)} 17:53:49.809
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:49.809
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:49.852
+     dvi:      Class installer: Enter 17:53:49.852
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:49.852
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:49.852
+<<<  Section end 2015/11/22 17:53:50.005
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - SW\{cfd669f1-9bc2-11d0-8299-0000f822fe8a}\{CF1DDA2C-9743-11D0-A3EE-00A0C9223196}]
+>>>  Section start 2015/11/22 17:53:43.513
+     dvi: {Build Driver List} 17:53:43.551
+     dvi:      Searching for hardware ID(s):
+     dvi:           sw\{cfd669f1-9bc2-11d0-8299-0000f822fe8a}
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - SW\{cfd669f1-9bc2-11d0-8299-0000f822fe8a}
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf
+     dvi:           DevDesc      - Microsoft Streaming Tee/Sink-to-Sink Converter
+     dvi:           Section      - MSTEE.NT
+     dvi:           Rank         - 0x00ff0000
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:47.257
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:47.257
+     dvi:      Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:      Class installer == mmci.dll,MediaClassInstaller
+     dvi:      Class installer: Enter 17:53:47.412
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:47.412
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e96c-e325-11ce-bfc1-08002be10318}.
+     dvi:                {DIF_DESTROYPRIVATEDATA} 17:53:47.412
+     dvi:                     Class installer: Enter 17:53:47.412
+     dvi:                     Class installer: Exit
+     dvi:                     Default installer: Enter 17:53:47.412
+     dvi:                     Default installer: Exit
+     dvi:                {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:47.412
+     dvi:                Selected:
+     dvi:                     Description - [Microsoft Streaming Tee/Sink-to-Sink Converter]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf]
+     dvi:                     Section     - [MSTEE]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:47.429
+     ndv: Waiting for previous device install to complete. 17:53:47.429
+     ndv: {Core Device Install} 17:53:48.129
+     ndv:      {Installing device - SW\{CFD669F1-9BC2-11D0-8299-0000F822FE8A}\{CF1DDA2C-9743-11D0-A3EE-00A0C9223196}} 17:53:48.129
+!    ndv:           Device class {4d36e96c-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:48.129
+     dvi:                Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:                Class installer == mmci.dll,MediaClassInstaller
+     dvi:                Class installer: Enter 17:53:48.129
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.129
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:48.129
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:48.145
+     dvi:                Class installer: Enter 17:53:48.145
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.145
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:48.145
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:48.145
+     dvi:                Reset Device: Resetting device configuration. 17:53:48.145
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:48.145
+     dvi:                Class installer: Enter 17:53:48.145
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.145
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:48.145
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:48.145
+     dvi:                Class installer: Enter 17:53:48.145
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.145
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:48.145
+     dvi:           {DIF_INSTALLDEVICE} 17:53:48.145
+     dvi:                Class installer: Enter 17:53:48.145
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=ksfilter.inf:db04a16c112de839:MSTEE:10.0.10240.16384:sw\{cfd669f1-9bc2-11d0-8299-0000f822fe8a}
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=MSTEE,0x00000002,MSTEE.ServiceInstall  (ksfilter.inf line 103)
+     dvi:                          Add Service: Created service 'MSTEE'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     sto:                     {Configure Driver Package: c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf}
+     sto:                          Source Filter  = MSTEE.NT
+     sto:                          Target Filter  = SW\{CFD669F1-9BC2-11D0-8299-0000F822FE8A}\{CF1DDA2C-9743-11D0-A3EE-00A0C9223196}
+     inf:                          Class GUID     = {4d36e96c-e325-11ce-bfc1-08002be10318}
+     inf:                          {Configure Driver: Microsoft Streaming Tee/Sink-to-Sink Converter}
+     inf:                               Section Name = MSTEE.NT
+     inf:                               {Configure Device: SW\{CFD669F1-9BC2-11D0-8299-0000F822FE8A}\{CF1DDA2C-9743-11D0-A3EE-00A0C9223196}}
+     inf:                               {Configure Device: exit(0x00000000)}
+     inf:                          {Configure Driver: exit(0x00000000)}
+     sto:                     {Configure Driver Package: exit(0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:48.257
+     dvi:                     Install Device: Configuring device class completed. 17:53:48.257
+     dvi:                     Install Device: Starting device. 17:53:48.257
+     dvi:                     Install Device: Starting device completed. 17:53:48.509
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:48.709
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:48.709
+     dvi:                Class installer: Enter 17:53:48.709
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:48.709
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:48.709
+     ndv:      {Installing device - exit(0x00000000)} 17:53:48.709
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:48.709
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:48.740
+     dvi:      Class installer: Enter 17:53:48.740
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:48.740
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:48.740
+<<<  Section end 2015/11/22 17:53:48.945
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - SW\{cfd669f1-9bc2-11d0-8299-0000f822fe8a}\{0A4252A0-7E70-11D0-A5D6-28DB04C10000}]
+>>>  Section start 2015/11/22 17:53:48.461
+     dvi: {Build Driver List} 17:53:48.557
+     dvi:      Searching for hardware ID(s):
+     dvi:           sw\{cfd669f1-9bc2-11d0-8299-0000f822fe8a}
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - SW\{cfd669f1-9bc2-11d0-8299-0000f822fe8a}
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf
+     dvi:           DevDesc      - Microsoft Streaming Tee/Sink-to-Sink Converter
+     dvi:           Section      - MSTEE.NT
+     dvi:           Rank         - 0x00ff0000
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:48.557
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:48.557
+     dvi:      Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:      Class installer == mmci.dll,MediaClassInstaller
+     dvi:      Class installer: Enter 17:53:48.557
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:48.572
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e96c-e325-11ce-bfc1-08002be10318}.
+     dvi:                {DIF_DESTROYPRIVATEDATA} 17:53:48.572
+     dvi:                     Class installer: Enter 17:53:48.572
+     dvi:                     Class installer: Exit
+     dvi:                     Default installer: Enter 17:53:48.572
+     dvi:                     Default installer: Exit
+     dvi:                {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:48.572
+     dvi:                Selected:
+     dvi:                     Description - [Microsoft Streaming Tee/Sink-to-Sink Converter]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf]
+     dvi:                     Section     - [MSTEE]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:48.572
+     ndv: Waiting for previous device install to complete. 17:53:48.572
+     ndv: {Core Device Install} 17:53:49.809
+     ndv:      {Installing device - SW\{CFD669F1-9BC2-11D0-8299-0000F822FE8A}\{0A4252A0-7E70-11D0-A5D6-28DB04C10000}} 17:53:49.809
+!    ndv:           Device class {4d36e96c-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:49.809
+     dvi:                Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:                Class installer == mmci.dll,MediaClassInstaller
+     dvi:                Class installer: Enter 17:53:49.809
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.809
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:49.809
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:49.809
+     dvi:                Class installer: Enter 17:53:49.809
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.825
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:49.825
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:49.825
+     dvi:                Reset Device: Resetting device configuration. 17:53:49.825
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:49.825
+     dvi:                Class installer: Enter 17:53:49.825
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.825
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:49.825
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:49.825
+     dvi:                Class installer: Enter 17:53:49.825
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:49.825
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:49.825
+     dvi:           {DIF_INSTALLDEVICE} 17:53:49.825
+     dvi:                Class installer: Enter 17:53:49.825
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=ksfilter.inf:db04a16c112de839:MSTEE:10.0.10240.16384:sw\{cfd669f1-9bc2-11d0-8299-0000f822fe8a}
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=MSTEE,0x00000002,MSTEE.ServiceInstall  (ksfilter.inf line 103)
+     dvi:                          Add Service: Modified existing service 'MSTEE'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     sto:                     {Configure Driver Package: c:\windows\system32\driverstore\filerepository\ksfilter.inf_amd64_d6963b5937e6d7a5\ksfilter.inf}
+     sto:                          Source Filter  = MSTEE.NT
+     sto:                          Target Filter  = SW\{CFD669F1-9BC2-11D0-8299-0000F822FE8A}\{0A4252A0-7E70-11D0-A5D6-28DB04C10000}
+     inf:                          Class GUID     = {4d36e96c-e325-11ce-bfc1-08002be10318}
+     inf:                          {Configure Driver: Microsoft Streaming Tee/Sink-to-Sink Converter}
+     inf:                               Section Name = MSTEE.NT
+     inf:                               {Configure Device: SW\{CFD669F1-9BC2-11D0-8299-0000F822FE8A}\{0A4252A0-7E70-11D0-A5D6-28DB04C10000}}
+     inf:                               {Configure Device: exit(0x00000000)}
+     inf:                          {Configure Driver: exit(0x00000000)}
+     sto:                     {Configure Driver Package: exit(0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:49.838
+     dvi:                     Install Device: Configuring device class completed. 17:53:49.897
+     dvi:                     Install Device: Starting device. 17:53:49.897
+     dvi:                     Install Device: Starting device completed. 17:53:49.989
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:50.364
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:50.364
+     dvi:                Class installer: Enter 17:53:50.364
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:50.364
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:50.364
+     ndv:      {Installing device - exit(0x00000000)} 17:53:50.364
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:50.364
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:50.381
+     dvi:      Class installer: Enter 17:53:50.381
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:50.381
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:50.381
+<<<  Section end 2015/11/22 17:53:50.397
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - SW\{eec12db6-ad9c-4168-8658-b03daef417fe}\{ABD61E00-9350-47e2-A632-4438B90C6641}]
+>>>  Section start 2015/11/22 17:53:48.989
+     dvi: {Build Driver List} 17:53:49.088
+     dvi:      Searching for hardware ID(s):
+     dvi:           sw\{eec12db6-ad9c-4168-8658-b03daef417fe}
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\wdmaudio.inf_amd64_256ad046a471df0d\wdmaudio.inf
+     dvi:           DevDesc      - Microsoft Trusted Audio Drivers
+     dvi:           Section      - WDM_DRMKAUD
+     dvi:           Rank         - 0x00ff0000
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 07/09/2015
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:53:49.103
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:53:49.103
+     dvi:      Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:      Class installer == mmci.dll,MediaClassInstaller
+     dvi:      Class installer: Enter 17:53:49.103
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:49.103
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {4d36e96c-e325-11ce-bfc1-08002be10318}.
+     dvi:                {DIF_DESTROYPRIVATEDATA} 17:53:49.103
+     dvi:                     Class installer: Enter 17:53:49.103
+     dvi:                     Class installer: Exit
+     dvi:                     Default installer: Enter 17:53:49.103
+     dvi:                     Default installer: Exit
+     dvi:                {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:49.103
+     dvi:                Selected:
+     dvi:                     Description - [Microsoft Trusted Audio Drivers]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\wdmaudio.inf_amd64_256ad046a471df0d\wdmaudio.inf]
+     dvi:                     Section     - [WDM_DRMKAUD]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:53:49.103
+     ndv: Waiting for previous device install to complete. 17:53:49.103
+     ndv: {Core Device Install} 17:53:50.364
+     ndv:      {Installing device - SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}\{ABD61E00-9350-47E2-A632-4438B90C6641}} 17:53:50.364
+!    ndv:           Device class {4d36e96c-e325-11ce-bfc1-08002be10318} is not configurable.
+     dvi:           {DIF_ALLOW_INSTALL} 17:53:50.364
+     dvi:                Using exported function 'MediaClassInstaller' in module 'C:\Windows\system32\mmci.dll'.
+     dvi:                Class installer == mmci.dll,MediaClassInstaller
+     dvi:                Class installer: Enter 17:53:50.364
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:50.364
+     dvi:                Default installer: Exit
+     dvi:           {DIF_ALLOW_INSTALL - exit(0xe000020e)} 17:53:50.381
+     dvi:           {DIF_INSTALLDEVICEFILES} 17:53:50.381
+     dvi:                Class installer: Enter 17:53:50.381
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:50.381
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLDEVICEFILES - exit(0x00000000)} 17:53:50.381
+     flq:           File 'C:\Windows\system32\drivers\drmk.sys' pruned from copy.
+     flq:           Hardlinking 'C:\Windows\System32\DriverStore\FileRepository\wdmaudio.inf_amd64_256ad046a471df0d\drmkaud.sys' to 'C:\Windows\system32\drivers\drmkaud.sys'.
+     dvi:           {DIF_REGISTER_COINSTALLERS} 17:53:51.292
+     dvi:                Reset Device: Resetting device configuration. 17:53:51.292
+     dvi:                Reset Device: Resetting device configuration completed. 17:53:51.292
+     dvi:                Class installer: Enter 17:53:51.292
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:51.292
+     dvi:                Default installer: Exit
+     dvi:           {DIF_REGISTER_COINSTALLERS - exit(0x00000000)} 17:53:51.292
+     dvi:           {DIF_INSTALLINTERFACES} 17:53:51.292
+     dvi:                Class installer: Enter 17:53:51.292
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:51.292
+     dvi:                Default installer: Exit
+     dvi:           {DIF_INSTALLINTERFACES - exit(0x00000000)} 17:53:51.292
+     dvi:           {DIF_INSTALLDEVICE} 17:53:51.292
+     dvi:                Class installer: Enter 17:53:51.292
+     dvi:                     {Install DEVICE}
+     dvi:                          {Writing Device Properties}
+     dvi:                               Strong Name=wdmaudio.inf:ed86ca11801f0e50:WDM_DRMKAUD:10.0.10240.16384:sw\{eec12db6-ad9c-4168-8658-b03daef417fe}
+     dvi:                          {Writing Device Properties - Complete}
+     inf:                          AddService=drmkaud,0x00000002,drmkaud_Service_Inst  (wdmaudio.inf line 145)
+     dvi:                          Add Service: Created service 'drmkaud'.
+     dvi:                     {Install DEVICE exit (0x00000000)}
+     sto:                     {Configure Driver Package: c:\windows\system32\driverstore\filerepository\wdmaudio.inf_amd64_256ad046a471df0d\wdmaudio.inf}
+     sto:                          Source Filter  = WDM_DRMKAUD
+     sto:                          Target Filter  = SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}\{ABD61E00-9350-47E2-A632-4438B90C6641}
+     inf:                          Class GUID     = {4d36e96c-e325-11ce-bfc1-08002be10318}
+     inf:                          {Configure Driver: Microsoft Trusted Audio Drivers}
+     inf:                               Section Name = WDM_DRMKAUD
+     inf:                               {Configure Device: SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}\{ABD61E00-9350-47E2-A632-4438B90C6641}}
+     inf:                               {Configure Device: exit(0x00000000)}
+     inf:                          {Configure Driver: exit(0x00000000)}
+     sto:                     {Configure Driver Package: exit(0x00000000)}
+     dvi:                     Install Device: Configuring device class. 17:53:51.325
+     dvi:                     Install Device: Configuring device class completed. 17:53:51.325
+     dvi:                     {Restarting Devices} 17:53:51.325
+     dvi:                          Restart: SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}\{ABD61E00-9350-47E2-A632-4438B90C6641}
+     dvi:                     {Restarting Devices exit} 17:53:51.509
+     dvi:                Class installer: Exit
+     dvi:           {DIF_INSTALLDEVICE - exit(0x00000000)} 17:53:51.661
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL} 17:53:51.661
+     dvi:                Class installer: Enter 17:53:51.661
+     dvi:                Class installer: Exit
+     dvi:                Default installer: Enter 17:53:51.661
+     dvi:                Default installer: Exit
+     dvi:           {DIF_NEWDEVICEWIZARD_FINISHINSTALL - exit(0xe000020e)} 17:53:51.661
+     ndv:      {Installing device - exit(0x00000000)} 17:53:51.661
+     ndv: {Core Device Install - exit(0x00000000)} 17:53:51.661
+     dvi: {DIF_DESTROYPRIVATEDATA} 17:53:51.661
+     dvi:      Class installer: Enter 17:53:51.661
+     dvi:      Class installer: Exit
+     dvi:      Default installer: Enter 17:53:51.661
+     dvi:      Default installer: Exit
+     dvi: {DIF_DESTROYPRIVATEDATA - exit(0xe000020e)} 17:53:51.661
+<<<  Section end 2015/11/22 17:53:51.832
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup online Device Install (Hardware initiated) - SWD\PRINTENUM\PrintQueues]
+>>>  Section start 2015/11/22 17:55:25.237
+     dvi: {Build Driver List} 17:55:25.256
+     dvi:      Searching for hardware ID(s):
+     dvi:           printenum\localprintqueue
+     dvi:      Searching for compatible ID(s):
+     dvi:           swd\genericraw
+     dvi:           swd\generic
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - SWD\GenericRaw
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\c_swdevice.inf_amd64_7d0967caf567eff0\c_swdevice.inf
+     dvi:           DevDesc      - Generic software device
+     dvi:           Section      - SoftwareDevice
+     dvi:           Rank         - 0x00ff3000
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi:      Created Driver Node:
+     dvi:           HardwareID   - PRINTENUM\LocalPrintQueue
+     dvi:           InfName      - C:\Windows\System32\DriverStore\FileRepository\printqueue.inf_amd64_d8df683074893f75\printqueue.inf
+     dvi:           DevDesc      - Local Print Queue
+     dvi:           Section      - NO_DRV_LOCAL
+     dvi:           Rank         - 0x00000000
+     dvi:           Signer Score - INBOX
+     dvi:           DrvDate      - 06/21/2006
+     dvi:           Version      - 10.0.10240.16384
+     dvi: {Build Driver List - exit(0x00000000)} 17:55:25.536
+     dvi: {DIF_SELECTBESTCOMPATDRV} 17:55:25.536
+     dvi:      Default installer: Enter 17:55:25.536
+     dvi:           {Select Best Driver}
+     dvi:                Class GUID of device changed to: {1ed2bbf9-11f0-4084-b21f-ad83a8e6dcdc}.
+     dvi:                Selected:
+     dvi:                     Description - [Local Print Queue]
+     dvi:                     InfFile     - [c:\windows\system32\driverstore\filerepository\printqueue.inf_amd64_d8df683074893f75\printqueue.inf]
+     dvi:                     Section     - [NO_DRV_LOCAL]
+     dvi:                Basic Driver Skipped:
+     dvi:                     Description - 'Generic software device'
+     dvi:                     InfFile     - C:\Windows\INF\c_swdevice.inf
+     dvi:                     Section     - [SoftwareDevice]
+     dvi:           {Select Best Driver - exit(0x00000000)}
+     dvi:      Default installer: Exit
+     dvi: {DIF_SELECTBESTCOMPATDRV - exit(0x00000000)} 17:55:25.536
+     ndv: {Core Device Install} 17:55:25.536
+     ndv:      {Installing device - SWD\PRINTENUM\PRINTQUEUES} 17:55:25.536
+     sto:           {Configure Driver Package: C:\Windows\System32\DriverStore\FileRepository\printqueue.inf_amd64_d8df683074893f75\printqueue.inf}
+     sto:                Source Filter  = printenum\localprintqueue
+     inf:                Class GUID     = {1ed2bbf9-11f0-4084-b21f-ad83a8e6dcdc}
+     inf:                Class Options  = Configurable
+     idb:                {Configure Device Setup Class: {1ed2bbf9-11f0-4084-b21f-ad83a8e6dcdc}}
+     idb:                     Updating existing class.
+     idb:                     Class Name = PrintQueue
+     idb:                {Configure Device Setup Class: exit(0x00000000)}
+     inf:                {Configure Driver: Local Print Queue}
+     inf:                     Section Name = NO_DRV_LOCAL
+     inf:                     Hardware Id  = PRINTENUM\LocalPrintQueue
+     inf:                     {Configure Driver Configuration: NO_DRV_LOCAL}
+     inf:                          Service Name  = <none>
+     inf:                          Config Flags  = 0x00000000
+     inf:                     {Configure Driver Configuration: exit(0x00000000)}
+     inf:                {Configure Driver: exit(0x00000000)}
+     sto:           {Configure Driver Package: exit(0x00000000)}
+     dvi:           Install Device: Configuring device (printqueue.inf:printenum\localprintqueue,NO_DRV_LOCAL). 17:55:25.551
+     dvi:           Install Device: Configuring device completed. 17:55:25.551
+     dvi:           Install Device: Removing device sub-tree. 17:55:25.551
+     dvi:           Install Device: Removing device sub-tree completed. 17:55:25.660
+     dvi:           Install Device: Restarting device. 17:55:25.660
+     dvi:           Install Device: Restarting device completed. 17:55:25.674
+     ndv:      {Installing device - exit(0x00000000)} 17:55:25.691
+     ndv: {Core Device Install - exit(0x00000000)} 17:55:25.691
+<<<  Section end 2015/11/22 17:55:25.691
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup Import Driver Package - C:\Windows\system32\spool\tools\Microsoft Print To PDF\prnms009.Inf]
+>>>  Section start 2015/11/22 17:57:13.548
+      cmd: C:\Windows\System32\spoolsv.exe
+     inf: Provider: Microsoft
+     inf: Class GUID: {4D36E979-E325-11CE-BFC1-08002BE10318}
+     inf: Driver Version: 06/21/2006,10.0.10240.16384
+     inf: Catalog File: prnms009.cat
+     pol: {Driver package policy check} 17:57:13.579
+     pol: {Driver package policy check - exit(0x00000000)} 17:57:13.579
+     sto: {Stage Driver Package: C:\Windows\system32\spool\tools\Microsoft Print To PDF\prnms009.Inf} 17:57:13.598
+     inf:      {Query Configurability: C:\Windows\system32\spool\tools\Microsoft Print To PDF\prnms009.Inf} 17:57:13.598
+     inf:           Driver package 'prnms009.Inf' is configurable.
+     inf:      {Query Configurability: exit(0x00000000)} 17:57:13.598
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft Print To PDF\prnms009.cat' to 'C:\Windows\System32\DriverStore\Temp\{3adb8423-6211-054c-bfab-8f3d74159a46}\prnms009.cat'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft Print To PDF\prnms009.Inf' to 'C:\Windows\System32\DriverStore\Temp\{3adb8423-6211-054c-bfab-8f3d74159a46}\prnms009.Inf'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft Print To PDF\MPDW-PDC.xml' to 'C:\Windows\System32\DriverStore\Temp\{3adb8423-6211-054c-bfab-8f3d74159a46}\MPDW-PDC.xml'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft Print To PDF\MPDW-manifest.ini' to 'C:\Windows\System32\DriverStore\Temp\{3adb8423-6211-054c-bfab-8f3d74159a46}\MPDW-manifest.ini'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft Print To PDF\MPDW-pipelineconfig.xml' to 'C:\Windows\System32\DriverStore\Temp\{3adb8423-6211-054c-bfab-8f3d74159a46}\MPDW-pipelineconfig.xml'.
+     sto:      {DRIVERSTORE IMPORT VALIDATE} 17:57:13.613
+     sig:           {_VERIFY_FILE_SIGNATURE} 17:57:13.689
+     sig:                Key      = prnms009.Inf
+     sig:                FilePath = C:\Windows\System32\DriverStore\Temp\{3adb8423-6211-054c-bfab-8f3d74159a46}\prnms009.Inf
+     sig:                Catalog  = C:\Windows\System32\DriverStore\Temp\{3adb8423-6211-054c-bfab-8f3d74159a46}\prnms009.cat
+     sig:                Success: File is signed in catalog.
+     sig:           {_VERIFY_FILE_SIGNATURE exit(0x00000000)} 17:57:13.719
+     sto:      {DRIVERSTORE IMPORT VALIDATE: exit(0x00000000)} 17:57:13.751
+     sig:      Signer Score = 0x0D000003
+     sig:      Signer Name  = Microsoft Windows
+     sto:      {DRIVERSTORE IMPORT BEGIN} 17:57:13.751
+     sto:      {DRIVERSTORE IMPORT BEGIN: exit(0x00000000)} 17:57:13.751
+     cpy:      {Copy Directory: C:\Windows\System32\DriverStore\Temp\{3adb8423-6211-054c-bfab-8f3d74159a46}} 17:57:13.751
+     cpy:           Target Path = C:\Windows\System32\DriverStore\FileRepository\prnms009.inf_amd64_20240386c0c1c147
+     cpy:      {Copy Directory: exit(0x00000000)} 17:57:13.751
+     idb:      {Register Driver Package: C:\Windows\System32\DriverStore\FileRepository\prnms009.inf_amd64_20240386c0c1c147\prnms009.Inf} 17:57:13.751
+     idb:           Created driver package object 'prnms009.inf_amd64_20240386c0c1c147' in DRIVERS database node.
+     idb:           Created driver INF file object 'oem0.inf' in DRIVERS database node.
+     idb:           Registered driver package 'prnms009.inf_amd64_20240386c0c1c147' with 'oem0.inf'.
+     idb:      {Register Driver Package: exit(0x00000000)} 17:57:13.769
+     idb:      {Publish Driver Package: C:\Windows\System32\DriverStore\FileRepository\prnms009.inf_amd64_20240386c0c1c147\prnms009.Inf} 17:57:13.769
+     idb:           Activating driver package 'prnms009.inf_amd64_20240386c0c1c147'.
+     cpy:           Published 'prnms009.inf_amd64_20240386c0c1c147\prnms009.inf' to 'oem0.inf'.
+     idb:           Indexed 2 device IDs for 'prnms009.inf_amd64_20240386c0c1c147'.
+     sto:           Flushed driver database node 'DRIVERS'. Time = 31 ms
+     sto:           Flushed driver database node 'SYSTEM'. Time = 16 ms
+     idb:      {Publish Driver Package: exit(0x00000000)} 17:57:13.813
+     sto:      {DRIVERSTORE IMPORT END} 17:57:13.813
+     sig:           Installed catalog 'prnms009.cat' as 'oem0.cat'.
+     sto:      {DRIVERSTORE IMPORT END: exit(0x00000000)} 17:57:17.235
+     sto: {Stage Driver Package: exit(0x00000000)} 17:57:17.235
+<<<  Section end 2015/11/22 17:57:17.251
+<<<  [Exit status: SUCCESS]
+
+
+>>>  [Setup Import Driver Package - C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\prnms001.Inf]
+>>>  Section start 2015/11/22 17:57:17.502
+      cmd: C:\Windows\System32\spoolsv.exe
+     inf: Provider: Microsoft
+     inf: Class GUID: {4D36E979-E325-11CE-BFC1-08002BE10318}
+     inf: Driver Version: 06/21/2006,10.0.10240.16384
+     inf: Catalog File: prnms001.cat
+     pol: {Driver package policy check} 17:57:17.532
+     pol: {Driver package policy check - exit(0x00000000)} 17:57:17.532
+     sto: {Stage Driver Package: C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\prnms001.Inf} 17:57:17.549
+     inf:      {Query Configurability: C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\prnms001.Inf} 17:57:17.549
+     inf:           Driver package 'prnms001.Inf' is configurable.
+     inf:      {Query Configurability: exit(0x00000000)} 17:57:17.549
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\prnms001.cat' to 'C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}\prnms001.cat'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\prnms001.Inf' to 'C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}\prnms001.Inf'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\mxdwdui.dll' to 'C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}\mxdwdui.dll'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\MXDW-manifest.ini' to 'C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}\MXDW-manifest.ini'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\MXDW.gpd' to 'C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}\MXDW.gpd'.
+     flq:      Copying 'C:\Windows\system32\spool\tools\Microsoft XPS Document Writer\MXDW-pipelineconfig.xml' to 'C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}\MXDW-pipelineconfig.xml'.
+     sto:      {DRIVERSTORE IMPORT VALIDATE} 17:57:17.563
+     sig:           {_VERIFY_FILE_SIGNATURE} 17:57:17.579
+     sig:                Key      = prnms001.Inf
+     sig:                FilePath = C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}\prnms001.Inf
+     sig:                Catalog  = C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}\prnms001.cat
+     sig:                Success: File is signed in catalog.
+     sig:           {_VERIFY_FILE_SIGNATURE exit(0x00000000)} 17:57:17.579
+     sto:      {DRIVERSTORE IMPORT VALIDATE: exit(0x00000000)} 17:57:17.598
+     sig:      Signer Score = 0x0D000003
+     sig:      Signer Name  = Microsoft Windows
+     sto:      {DRIVERSTORE IMPORT BEGIN} 17:57:17.598
+     sto:      {DRIVERSTORE IMPORT BEGIN: exit(0x00000000)} 17:57:17.598
+     cpy:      {Copy Directory: C:\Windows\System32\DriverStore\Temp\{50955587-0b06-4340-8448-215abeebb509}} 17:57:17.598
+     cpy:           Target Path = C:\Windows\System32\DriverStore\FileRepository\prnms001.inf_amd64_6f53fd7f71358cf2
+     cpy:      {Copy Directory: exit(0x00000000)} 17:57:17.598
+     idb:      {Register Driver Package: C:\Windows\System32\DriverStore\FileRepository\prnms001.inf_amd64_6f53fd7f71358cf2\prnms001.Inf} 17:57:17.598
+     idb:           Created driver package object 'prnms001.inf_amd64_6f53fd7f71358cf2' in DRIVERS database node.
+     idb:           Created driver INF file object 'oem1.inf' in DRIVERS database node.
+     idb:           Registered driver package 'prnms001.inf_amd64_6f53fd7f71358cf2' with 'oem1.inf'.
+     idb:      {Register Driver Package: exit(0x00000000)} 17:57:17.598
+     idb:      {Publish Driver Package: C:\Windows\System32\DriverStore\FileRepository\prnms001.inf_amd64_6f53fd7f71358cf2\prnms001.Inf} 17:57:17.598
+     idb:           Activating driver package 'prnms001.inf_amd64_6f53fd7f71358cf2'.
+     cpy:           Published 'prnms001.inf_amd64_6f53fd7f71358cf2\prnms001.inf' to 'oem1.inf'.
+     idb:           Indexed 2 device IDs for 'prnms001.inf_amd64_6f53fd7f71358cf2'.
+     sto:           Flushed driver database node 'DRIVERS'. Time = 47 ms
+     sto:           Flushed driver database node 'SYSTEM'. Time = 0 ms
+     idb:      {Publish Driver Package: exit(0x00000000)} 17:57:17.645
+     sto:      {DRIVERSTORE IMPORT END} 17:57:17.645
+     sig:           Installed catalog 'prnms001.cat' as 'oem1.cat'.
+     sto:      {DRIVERSTORE IMPORT END: exit(0x00000000)} 17:57:17.704
+     sto: {Stage Driver Package: exit(0x00000000)} 17:57:17.704
+<<<  Section end 2015/11/22 17:57:17.704
+<<<  [Exit status: SUCCESS]
+

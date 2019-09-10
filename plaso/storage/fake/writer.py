@@ -74,25 +74,6 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to write to closed storage writer.')
 
-  def _ReadEventDataIntoEvent(self, event):
-    """Reads the data into the event.
-
-    This function is intended to offer backwards compatible event behavior.
-
-    Args:
-      event (EventObject): event.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      return
-
-    event_data_identifier = event.GetEventDataIdentifier()
-    if event_data_identifier:
-      lookup_key = event_data_identifier.CopyToString()
-      event_data = self._event_data[lookup_key]
-
-      for attribute_name, attribute_value in event_data.GetAttributes():
-        setattr(event, attribute_name, attribute_value)
-
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
@@ -210,11 +191,37 @@ class FakeStorageWriter(interface.StorageWriter):
     self._warnings.append(warning)
     self.number_of_warnings += 1
 
-  def CreateTaskStorage(self, task):
+  def CheckTaskReadyForMerge(self, task):
+    """Checks if a task is ready for merging into the session store.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      bool: True if the task is ready to be merged.
+
+    Raises:
+      IOError: if the task storage type is not supported or the storage writer
+          for the task does not exist.
+      OSError: if the task storage type is not supported or the storage writer
+          for the task does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    if task.identifier not in self._task_storage_writers:
+      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
+          task.identifier))
+
+    # For the fake storage tasks are always ready to be merged.
+    return True
+
+  def CreateTaskStorage(self, task, task_storage_format):
     """Creates a task storage.
 
     Args:
       task (Task): task.
+      task_storage_format (str): storage format to store task results.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -254,14 +261,10 @@ class FakeStorageWriter(interface.StorageWriter):
   def GetEvents(self):
     """Retrieves the events.
 
-    Yields:
-      EventObject: event.
+    Returns:
+      generator(EventObject): event generator.
     """
-    for event in self._events:
-      # TODO: refactor this into psort.
-      self._ReadEventDataIntoEvent(event)
-
-      yield event
+    return iter(self._events)
 
   def GetEventData(self):
     """Retrieves the event data.
@@ -362,18 +365,15 @@ class FakeStorageWriter(interface.StorageWriter):
 
     event_heap = event_heaps.EventHeap()
 
-    for event in self._events:
+    for event_index, event in enumerate(self._events):
       if (time_range and (
           event.timestamp < time_range.start_timestamp or
           event.timestamp > time_range.end_timestamp)):
         continue
 
-      # Make a copy of the event before adding the event data.
-      event = copy.deepcopy(event)
-      # TODO: refactor this into psort.
-      self._ReadEventDataIntoEvent(event)
-
-      event_heap.PushEvent(event)
+      # The event index is used to ensure to sort events with the same date and
+      # time and description in the order they were added to the store.
+      event_heap.PushEvent(event, event_index)
 
     return iter(event_heap.PopEvents())
 

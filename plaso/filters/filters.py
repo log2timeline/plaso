@@ -4,10 +4,12 @@
 from __future__ import unicode_literals
 
 import abc
+import codecs
 import logging
 import re
 
-from plaso.filters import helpers
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.lib import errors
 from plaso.lib import py2to3
 
@@ -31,6 +33,26 @@ class Filter(object):
 
     super(Filter, self).__init__()
     self.args = arguments or []
+
+  def _CopyValueToString(self, value):
+    """Copies an event filter value to a string.
+
+    Args:
+      value (list|int|bytes|str): value to convert.
+
+    Returns:
+      str: string representation of the argument.
+    """
+    if isinstance(value, list):
+      value = [self._CopyValueToString(item) for item in value]
+      return ''.join(value)
+
+    if isinstance(value, py2to3.INTEGER_TYPES):
+      value = '{0:d}'.format(value)
+
+    if not isinstance(value, py2to3.UNICODE_TYPE):
+      return codecs.decode(value, 'utf8', 'ignore')
+    return value
 
   @abc.abstractmethod
   def Matches(self, event, event_data, event_tag):
@@ -221,46 +243,22 @@ class GenericBinaryOperator(BinaryOperator):
 
     if attribute_name in self._EVENT_ATTRIBUTE_NAMES:
       attribute_value = getattr(event, attribute_name, None)
+
+      # Make sure timestamp attribute values are (dfdatetime) date time objects.
+      # TODO: remove when timestamp values are (de)serialized as dfdatetime
+      # objects.
+      if attribute_name == 'timestamp' and not isinstance(
+          attribute_value, dfdatetime_posix_time.PosixTimeInMicroseconds):
+        attribute_value = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=attribute_value)
+
     elif attribute_name == 'tag':
       attribute_value = getattr(event_tag, 'labels', None)
+
     else:
       attribute_value = getattr(event_data, attribute_name, None)
 
-    if attribute_value and isinstance(attribute_value, dict):
-      return helpers.DictObject(attribute_value)
-
     return attribute_value
-
-  def _GetValueByPath(self, path, event, event_data, event_tag):
-    """Retrieves the value of a specific event attribute given a specific path.
-
-    Given a path such as ["pathspec", "inode"] it returns the value
-    event_data.pathspec.inode.
-
-    Args:
-      path (list[str]): object path to traverse, that contains the attribute
-          names.
-      event (EventObject): event to retrieve the value from.
-      event_data (EventData): event data to retrieve the value from.
-      event_tag (EventTag): event tag to retrieve the value from.
-
-    Returns:
-      object: attribute value or None if not available.
-    """
-    if isinstance(path, py2to3.STRING_TYPES):
-      path = path.split(self._OBJECT_PATH_SEPARATOR)
-
-    attribute_name = path[0].lower()
-    attribute_value = self._GetValue(
-        attribute_name, event, event_data, event_tag)
-
-    if attribute_value is None:
-      return None
-
-    if len(path) == 1 or isinstance(attribute_value, dict):
-      return attribute_value
-
-    return self._GetValueByPath(path[1:], None, attribute_value, None)
 
   def FlipBool(self):
     """Negates the internal boolean value attribute."""
@@ -278,8 +276,7 @@ class GenericBinaryOperator(BinaryOperator):
     Returns:
       bool: True if the event, data and tag match the filter, False otherwise.
     """
-    path = self.left_operand.split('.')
-    value = self._GetValueByPath(path, event, event_data, event_tag)
+    value = self._GetValue(self.left_operand, event, event_data, event_tag)
 
     if value and self._CompareValue(value, self.right_operand):
       return self._bool_value
@@ -471,7 +468,7 @@ class Regexp(GenericBinaryOperator):
     logging.debug('Compiled: {0!s}'.format(self.right_operand))
 
     try:
-      expression = helpers.GetUnicodeString(self.right_operand)
+      expression = self._CopyValueToString(self.right_operand)
       compiled_re = re.compile(expression, re.DOTALL)
     except re.error:
       raise ValueError('Regular expression "{0!s}" is malformed.'.format(
@@ -491,7 +488,7 @@ class Regexp(GenericBinaryOperator):
           otherwise.
     """
     try:
-      string_value = helpers.GetUnicodeString(event_value)
+      string_value = self._CopyValueToString(event_value)
       if self.compiled_re.search(string_value):
         return True
     except TypeError:
@@ -520,7 +517,7 @@ class RegexpInsensitive(Regexp):
     logging.debug('Compiled: {0!s}'.format(self.right_operand))
 
     try:
-      expression = helpers.GetUnicodeString(self.right_operand)
+      expression = self._CopyValueToString(self.right_operand)
       compiled_re = re.compile(expression, re.I | re.DOTALL)
     except re.error:
       raise ValueError('Regular expression "{0!s}" is malformed.'.format(

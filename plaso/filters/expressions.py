@@ -4,10 +4,13 @@
 from __future__ import unicode_literals
 
 import abc
+import logging
+
+from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.filters import filters
-from plaso.filters import helpers
 
 
 class Expression(object):
@@ -101,6 +104,8 @@ class BinaryExpression(Expression):
       ParseError: if either left hand side or right hand side expression
           is not an instance of Expression.
     """
+    # TODO: add information about what lhs and rhs are to these error messages.
+    # https://github.com/log2timeline/plaso/pull/2498
     if not isinstance(lhs, Expression):
       raise errors.ParseError('Left hand side is not an expression')
 
@@ -160,20 +165,53 @@ class EventExpression(Expression):
       'is': filters.EqualsOperator,
       'regexp': filters.Regexp}
 
-  # A simple dictionary used to swap attributes so other names can be used
-  # to reference some core attributes (implementation specific).
-  _SWAP_SOURCE = {
+  _EVENT_FILTER_ALIAS = {
       'date': 'timestamp',
       'datetime': 'timestamp',
-      'description_long': 'message',
-      'description': 'message',
-      'description_short': 'message_short',
       'time': 'timestamp'}
+
+  _DEPRECATED_EVENT_FILTER_ALIAS = frozenset([
+      'description_long', 'description', 'description_short'])
 
   def __init__(self):
     """Initializes an event expression."""
     super(EventExpression, self).__init__()
     self._bool_value = True
+
+  def _CopyValueToDateTime(self, value):
+    """Copies an event filter value to a date and time object.
+
+    Args:
+      value (str): event filter value.
+
+    Returns:
+      dfdatetime.PosixTimeInMicroseconds: date and time object.
+
+    Raises:
+      ValueError: if the value cannot be copied to a date and time object.
+    """
+    if not isinstance(value, py2to3.INTEGER_TYPES):
+      try:
+        value = int(value, 10)
+      except (TypeError, ValueError):
+        pass
+
+    if isinstance(value, py2to3.INTEGER_TYPES):
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=value)
+    else:
+      try:
+        # Adjust the ISO 8601 string so is rembles a Python date and time
+        # string.
+        if value and len(value) > 10 and value[10] == 'T':
+          value = ' '.join(value.split('T'))
+
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds()
+        date_time.CopyFromDateTimeString(value)
+      except (TypeError, ValueError):
+        raise ValueError('Unsupported timestamp value: {0!s}'.format(value))
+
+    return date_time
 
   def Compile(self):
     """Compiles the expression into a filter.
@@ -184,8 +222,10 @@ class EventExpression(Expression):
     Raises:
       ParseError: if the operator is missing or unknown.
     """
-    self.attribute = self._SWAP_SOURCE.get(self.attribute, self.attribute)
-    arguments = [self.attribute]
+    if self.attribute in self._DEPRECATED_EVENT_FILTER_ALIAS:
+      logging.warning(
+          'Event filter alias: "{0:s}" no longer supported'.format(
+              self.attribute))
 
     if not self.operator:
       raise errors.ParseError('Missing operator.')
@@ -195,24 +235,23 @@ class EventExpression(Expression):
     if not operator:
       raise errors.ParseError('Unknown operator: {0:s}.'.format(self.operator))
 
-    # Plaso specific implementation - if we are comparing a timestamp
-    # to a value, we use our specific implementation that compares
-    # timestamps in a "human readable" format.
+    self.attribute = self._EVENT_FILTER_ALIAS.get(
+        self.attribute, self.attribute)
+
+    # Convert date and time values to (dfdatetime) date time objects.
     if self.attribute == 'timestamp':
-      args = []
+      date_time_arguments = []
       for argument in self.args:
-        date_compare_object = helpers.DateCompareObject(argument)
-        args.append(date_compare_object)
-      self.args = args
+        try:
+          date_time = self._CopyValueToDateTime(argument)
+        except ValueError as exception:
+          raise errors.ParseError(exception)
 
-    for argument in self.args:
-      if isinstance(argument, helpers.DateCompareObject):
-        if isinstance(operator, (
-            filters.LessEqualOperator, filters.LessThanOperator)):
-          helpers.TimeRangeCache.SetUpperTimestamp(argument.data)
-        else:
-          helpers.TimeRangeCache.SetLowerTimestamp(argument.data)
+        date_time_arguments.append(date_time)
 
+      self.args = date_time_arguments
+
+    arguments = [self.attribute]
     arguments.extend(self.args)
     ops = operator(arguments=arguments)
     if not self._bool_value:

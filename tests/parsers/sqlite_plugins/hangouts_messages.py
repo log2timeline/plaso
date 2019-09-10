@@ -34,10 +34,11 @@ class HangoutsMessagesTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.body, 'How are you?')
-    self.assertEqual(event.message_status, 4)
-    self.assertEqual(event.message_type, 2)
-    self.assertEqual(event.sender, 'John Macron')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.body, 'How are you?')
+    self.assertEqual(event_data.message_status, 4)
+    self.assertEqual(event_data.message_type, 2)
+    self.assertEqual(event_data.sender, 'John Macron')
 
     expected_message = (
         'Sender: John Macron '
@@ -45,7 +46,8 @@ class HangoutsMessagesTest(test_lib.SQLitePluginTestCase):
         'Status: READ '
         'Type: RECEIVED')
     expected_short_message = 'How are you?'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

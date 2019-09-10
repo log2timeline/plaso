@@ -76,7 +76,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      number_of_containers = storage_file._CountStoredAttributeContainers(
+      number_of_containers = storage_file._GetNumberOfAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
       self.assertEqual(number_of_containers, 0)
 
@@ -85,19 +85,19 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file._WriteSerializedAttributeContainerList(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
 
-      number_of_containers = storage_file._CountStoredAttributeContainers(
+      number_of_containers = storage_file._GetNumberOfAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
       self.assertEqual(number_of_containers, 1)
 
       with self.assertRaises(ValueError):
-        storage_file._CountStoredAttributeContainers('bogus')
+        storage_file._GetNumberOfAttributeContainers('bogus')
 
       # Test for a supported container type that does not have a table
       # present in the storage file.
       query = 'DROP TABLE {0:s}'.format(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
       storage_file._cursor.execute(query)
-      number_of_containers = storage_file._CountStoredAttributeContainers(
+      number_of_containers = storage_file._GetNumberOfAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
       self.assertEqual(number_of_containers, 0)
 

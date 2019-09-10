@@ -26,6 +26,19 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
+  def _GetEventDataOfEvent(self, storage_writer, event):
+    """Retrieves the event data of an event.
+
+    Args:
+      storage_writer (FakeStorageWriter): storage writer.
+      event (EventObject): event.
+
+    Return:
+      EventData: event data corresponding to the event.
+    """
+    event_data_identifier = event.GetEventDataIdentifier()
+    return storage_writer.GetEventDataByIdentifier(event_data_identifier)
+
   def _GetTestFilePathSpec(self, path_segments):
     """Retrieves a path specification of a test file in the test data directory.
 
@@ -273,7 +286,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     empty_file_md5 = 'd41d8cd98f00b204e9800998ecf8427e'
     for event in storage_writer.GetSortedEvents():
-      md5_hash = getattr(event, 'md5_hash', None)
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+      md5_hash = getattr(event_data, 'md5_hash', None)
       self.assertEqual(md5_hash, empty_file_md5)
 
     storage_writer.Close()
@@ -303,7 +318,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     expected_yara_match = 'PEfileBasic,PEfile'
     for event in storage_writer.GetSortedEvents():
-      yara_match = getattr(event, 'yara_match', None)
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+      yara_match = getattr(event_data, 'yara_match', None)
       self.assertEqual(yara_match, expected_yara_match)
 
     storage_writer.Close()

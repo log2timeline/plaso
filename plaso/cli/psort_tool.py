@@ -91,7 +91,6 @@ class PsortTool(
     self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
-    self._use_zeromq = True
     self._worker_memory_limit = None
 
     self.list_analysis_plugins = False
@@ -307,8 +306,11 @@ class PsortTool(
             'If a worker process exceeds this limit is is killed by the main '
             '(foreman) process.'))
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -378,7 +380,7 @@ class PsortTool(
 
     try:
       # TODO: refactor how arguments is used in a more argparse way.
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.
@@ -492,7 +494,8 @@ class PsortTool(
     """Processes a plaso storage file.
 
     Raises:
-      BadConfigOption: when a configuration parameter fails validation.
+      BadConfigOption: when a configuration parameter fails validation or the
+          storage file cannot be opened with read access.
       RuntimeError: if a non-recoverable situation is encountered.
     """
     self._CheckStorageFile(self._storage_file_path)
@@ -510,9 +513,9 @@ class PsortTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logger.error('Format of storage file: {0:s} not supported'.format(
-          self._storage_file_path))
-      return
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(
+              self._storage_file_path))
 
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
@@ -529,10 +532,13 @@ class PsortTool(
       storage_writer = (
           storage_factory.StorageFactory.CreateStorageWriterForFile(
               session, self._storage_file_path))
+      if not storage_writer:
+        raise errors.BadConfigOption(
+            'Format of storage file: {0:s} not supported for writing'.format(
+                self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.AnalyzeEvents(
           self._knowledge_base, storage_writer, self._data_location,
@@ -552,8 +558,7 @@ class PsortTool(
               self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,

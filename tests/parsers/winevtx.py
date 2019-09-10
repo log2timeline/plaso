@@ -29,7 +29,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     #   Number of recovered records : 0
     #   Log type                    : System
 
-    self.assertEqual(storage_writer.number_of_events, 1601)
+    self.assertEqual(storage_writer.number_of_events, 3202)
 
     events = list(storage_writer.GetEvents())
 
@@ -47,26 +47,29 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.record_number, 12049)
-    expected_computer_name = 'WKS-WIN764BITB.shieldbase.local'
-    self.assertEqual(event.computer_name, expected_computer_name)
-    self.assertEqual(event.source_name, 'Microsoft-Windows-Eventlog')
-    self.assertEqual(event.event_level, 4)
-    self.assertEqual(event.event_identifier, 105)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.record_number, 12049)
+    self.assertEqual(
+        event_data.computer_name, 'WKS-WIN764BITB.shieldbase.local')
+    self.assertEqual(event_data.source_name, 'Microsoft-Windows-Eventlog')
+    self.assertEqual(event_data.event_level, 4)
+    self.assertEqual(event_data.event_identifier, 105)
 
-    self.assertEqual(event.strings[0], 'System')
+    self.assertEqual(event_data.strings[0], 'System')
 
     expected_string = (
         'C:\\Windows\\System32\\Winevt\\Logs\\'
         'Archive-System-2012-03-14-04-17-39-932.evtx')
 
-    self.assertEqual(event.strings[1], expected_string)
+    self.assertEqual(event_data.strings[1], expected_string)
 
-    event = events[1]
+    event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2012-03-14 04:17:38.276340')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_xml_string = (
         '<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/'
@@ -97,7 +100,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         '  </EventData>\n'
         '</Event>\n')
 
-    self.assertEqual(event.xml_string, expected_xml_string)
+    self.assertEqual(event_data.xml_string, expected_xml_string)
 
     expected_message = (
         '[7036 / 0x1b7c] '
@@ -117,7 +120,8 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         'Strings: [\'Windows Modules Installer\', \'stopped\', '
         '\'5400720075...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseTruncated(self):
     """Tests the Parse function on a truncated file."""
@@ -127,11 +131,13 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(['System2.evtx'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 194)
+    self.assertEqual(storage_writer.number_of_events, 388)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[178]
+    event = events[356]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_strings_parsed = [
         ('source_user_id', 'S-1-5-18'),
@@ -141,12 +147,14 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         ('target_user_id', 'S-1-5-18'),
         ('target_user_name', 'SYSTEM')]
 
-    strings_parsed = sorted(event.strings_parsed.items())
+    strings_parsed = sorted(event_data.strings_parsed.items())
     self.assertEqual(strings_parsed, expected_strings_parsed)
 
-    self.assertEqual(event.event_identifier, 4624)
+    self.assertEqual(event_data.event_identifier, 4624)
 
-    event = events[180]
+    event = events[360]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_strings_parsed = [
         ('source_user_id', 'S-1-5-21-1539974973-2753941131-3212641383-1000'),
@@ -155,10 +163,10 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         ('target_machine_name', 'DC1.internal.greendale.edu'),
         ('target_user_name', 'administrator')]
 
-    strings_parsed = sorted(event.strings_parsed.items())
+    strings_parsed = sorted(event_data.strings_parsed.items())
     self.assertEqual(strings_parsed, expected_strings_parsed)
 
-    self.assertEqual(event.event_identifier, 4648)
+    self.assertEqual(event_data.event_identifier, 4648)
 
 
 if __name__ == '__main__':

@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import re
-
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.engine import logger
@@ -81,7 +79,7 @@ class PathHelper(object):
   @classmethod
   def _ExpandUsersVariablePathSegments(
       cls, path_segments, path_separator, user_accounts):
-    """Expands path segments with a users variable, e.g. %%users.homedir%%.
+    """Expands path segments with a users variable, such as %%users.homedir%%.
 
     Args:
       path_segments (list[str]): path segments.
@@ -144,51 +142,15 @@ class PathHelper(object):
     return path_segment in ('%%ENVIRON_SYSTEMDRIVE%%', '%SYSTEMDRIVE%')
 
   @classmethod
-  def AppendPathEntries(
-      cls, path, path_separator, number_of_wildcards, skip_first):
-    """Appends glob wildcards to a path.
+  def ExpandGlobStars(cls, path, path_separator):
+    """Expands globstars "**" in a path.
 
-    This function will append glob wildcards "*" to a path, returning paths
-    with an additional glob wildcard up to the specified number. E.g. given
-    the path "/tmp" and a number of 2 wildcards, this function will return
-    "tmp/*", "tmp/*/*". When skip_first is true the path with the first
-    wildcard is not returned as a result.
+    A globstar "**" will recursively match all files and zero or more
+    directories and subdirectories.
 
-    Args:
-      path (str): path to append glob wildcards to.
-      path_separator (str): path segment separator.
-      number_of_wildcards (int): number of glob wildcards to append.
-      skip_first (bool): True if the the first path with glob wildcard should
-          be skipped as a result.
-
-    Returns:
-      list[str]: paths with glob wildcards.
-    """
-    if path[-1] == path_separator:
-      path = path[:-1]
-
-    if skip_first:
-      path = ''.join([path, path_separator, '*'])
-      number_of_wildcards -= 1
-
-    paths = []
-    for _ in range(0, number_of_wildcards):
-      path = ''.join([path, path_separator, '*'])
-      paths.append(path)
-
-    return paths
-
-  @classmethod
-  def ExpandRecursiveGlobs(cls, path, path_separator):
-    """Expands recursive like globs present in an artifact path.
-
-    If a path ends in '**', with up to two optional digits such as '**10',
-    the '**' will recursively match all files and zero or more directories
-    from the specified path. The optional digits indicate the recursion depth.
-    By default recursion depth is 10 directories.
-
-    If the glob is followed by the specified path segment separator, only
-    directories and subdirectories will be matched.
+    By default the maximum recursion depth is 10 subdirectories, a numeric
+    values after the globstar, such as "**5", can be used to define the maximum
+    recursion depth.
 
     Args:
       path (str): path to be expanded.
@@ -197,30 +159,52 @@ class PathHelper(object):
     Returns:
       list[str]: String path expanded for each glob.
     """
-    glob_regex = r'(.*)?{0:s}\*\*(\d{{1,2}})?({0:s})?$'.format(
-        re.escape(path_separator))
+    expanded_paths = []
 
-    match = re.search(glob_regex, path)
-    if not match:
-      return [path]
+    path_segments = path.split(path_separator)
+    last_segment_index = len(path_segments) - 1
+    for segment_index, path_segment in enumerate(path_segments):
+      recursion_depth = None
+      if path_segment.startswith('**'):
+        if len(path_segment) == 2:
+          recursion_depth = 10
+        else:
+          try:
+            recursion_depth = int(path_segment[2:], 10)
+          except (TypeError, ValueError):
+            logger.warning((
+                'Globstar with suffix "{0:s}" in path "{1:s}" not '
+                'supported.').format(path_segment, path))
 
-    skip_first = False
-    if match.group(3):
-      skip_first = True
-    if match.group(2):
-      iterations = int(match.group(2))
-    else:
-      iterations = cls._RECURSIVE_GLOB_LIMIT
-      logger.warning((
-          'Path "{0:s}" contains fully recursive glob, limiting to 10 '
-          'levels').format(path))
+      elif '**' in path_segment:
+        logger.warning((
+            'Globstar with prefix "{0:s}" in path "{1:s}" not '
+            'supported.').format(path_segment, path))
 
-    return cls.AppendPathEntries(
-        match.group(1), path_separator, iterations, skip_first)
+      if recursion_depth is not None:
+        if recursion_depth <= 1 or recursion_depth > cls._RECURSIVE_GLOB_LIMIT:
+          logger.warning((
+              'Globstar "{0:s}" in path "{1:s}" exceed recursion maximum '
+              'recursion depth, limiting to: {2:d}.').format(
+                  path_segment, path, cls._RECURSIVE_GLOB_LIMIT))
+          recursion_depth = cls._RECURSIVE_GLOB_LIMIT
+
+        next_segment_index = segment_index + 1
+        for expanded_path_segment in [
+            ['*'] * depth for depth in range(1, recursion_depth + 1)]:
+          expanded_path_segments = list(path_segments[:segment_index])
+          expanded_path_segments.extend(expanded_path_segment)
+          if next_segment_index <= last_segment_index:
+            expanded_path_segments.extend(path_segments[next_segment_index:])
+
+          expanded_path = path_separator.join(expanded_path_segments)
+          expanded_paths.append(expanded_path)
+
+    return expanded_paths or [path]
 
   @classmethod
   def ExpandUsersVariablePath(cls, path, path_separator, user_accounts):
-    """Expands a path with a users variable, e.g. %%users.homedir%%.
+    """Expands a path with a users variable, such as %%users.homedir%%.
 
     Args:
       path (str): path with users variable.

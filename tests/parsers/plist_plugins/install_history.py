@@ -38,8 +38,10 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(timestamps, expected_timestamps)
 
     event = events[0]
-    self.assertEqual(event.key, '')
-    self.assertEqual(event.root, '/item')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.key, '')
+    self.assertEqual(event_data.root, '/item')
 
     expected_description = (
         'Installation of [OS X 10.9 (13A603)] using [OS X Installer]. '
@@ -52,11 +54,12 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
         'com.apple.pkg.JavaEssentials, com.apple.pkg.OxfordDictionaries, '
         'com.apple.pkg.X11redirect, com.apple.pkg.OSInstall, '
         'com.apple.pkg.update.compatibility.2013.001.')
-    self.assertEqual(event.desc, expected_description)
+    self.assertEqual(event_data.desc, expected_description)
 
     expected_message = '/item/ {0:s}'.format(expected_description)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

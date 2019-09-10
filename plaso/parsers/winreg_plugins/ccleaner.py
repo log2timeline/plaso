@@ -63,7 +63,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
   * (App)Thumbnail Cache [REG_SZ]
   * CookiesToSave [REG_SZ]
   * UpdateKey [REG_SZ], contains a date and time formatted as:
-      "MM/DD/YYYY hh:mm:ss [A|P]M" e.g. "07/13/2013 10:03:14 AM";
+      "MM/DD/YYYY hh:mm:ss [A|P]M", for example "07/13/2013 10:03:14 AM";
   * WINDOW_HEIGHT [REG_SZ], contains the windows height in number of pixels;
   * WINDOW_LEFT [REG_SZ]
   * WINDOW_MAX [REG_SZ]
@@ -81,8 +81,8 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner')])
 
-  # Date and time string in the form: MM/DD/YYYY hh:mm:ss [A|P]M
-  # e.g. 07/13/2013 10:03:14 AM
+  # Date and time string formatted as: "MM/DD/YYYY hh:mm:ss [A|P]M"
+  # for example "07/13/2013 10:03:14 AM"
   # TODO: determine if this is true for other locales.
   _UPDATE_DATE_TIME_RE = re.compile(
       r'([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]) '

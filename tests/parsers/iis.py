@@ -29,9 +29,10 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-07-30 00:00:00.000000')
 
-    self.assertEqual(event.source_ip, '10.10.10.100')
-    self.assertEqual(event.dest_ip, '10.10.10.100')
-    self.assertEqual(event.dest_port, 80)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.source_ip, '10.10.10.100')
+    self.assertEqual(event_data.dest_ip, '10.10.10.100')
+    self.assertEqual(event_data.dest_port, 80)
 
     expected_message = (
         'GET /some/image/path/something.jpg '
@@ -43,18 +44,22 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         'GET /some/image/path/something.jpg '
         '[ 10.10.10.100 > 10.10.10.100 : 80 ]')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[5]
 
     self.CheckTimestamp(event.timestamp, '2013-07-30 00:00:05.000000')
 
-    self.assertEqual(event.http_method, 'GET')
-    self.assertEqual(event.http_status, 200)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.http_method, 'GET')
+    self.assertEqual(event_data.http_status, 200)
     self.assertEqual(
-        event.requested_uri_stem, '/some/image/path/something.jpg')
+        event_data.requested_uri_stem, '/some/image/path/something.jpg')
 
     event = events[1]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         'GET /some/image/path/something.htm '
@@ -67,11 +72,13 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         'GET /some/image/path/something.htm '
         '[ 22.22.22.200 > 10.10.10.100 : 80 ]')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[11]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_query_string = 'ID=ERROR[`cat%20passwd|echo`]'
-    self.assertEqual(expected_query_string, event.cs_uri_query)
+    self.assertEqual(expected_query_string, event_data.cs_uri_query)
 
   def testParseWithoutDate(self):
     """Tests the Parse function with logs without a date column."""
@@ -87,7 +94,8 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-07-30 00:00:03.000000')
 
-    self.assertEqual(event.protocol_version, 'HTTP/1.1')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.protocol_version, 'HTTP/1.1')
 
 
 if __name__ == '__main__':

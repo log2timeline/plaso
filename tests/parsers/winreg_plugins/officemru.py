@@ -84,16 +84,17 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[5]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:office_mru_list')
     self.CheckTimestamp(event.timestamp, '2012-03-13 18:27:15.089802')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:office_mru_list')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] '
@@ -112,15 +113,19 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
             key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test OfficeMRUWindowsRegistryEvent.
     event = events[0]
 
-    self.assertEqual(event.data_type, 'windows:registry:office_mru')
     self.CheckTimestamp(event.timestamp, '2012-03-13 18:27:15.083000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:office_mru')
 
     expected_message = (
         '[{0:s}] '
@@ -131,7 +136,8 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         '[F00000000][T01CD0146EA1EADB0][O00000000]*'
         'C:\\Users\\nfury\\Documents\\StarFury\\S...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

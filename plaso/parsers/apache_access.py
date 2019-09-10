@@ -29,7 +29,9 @@ class ApacheAccessEventData(events.EventData):
     http_response_bytes (int): http response bytes size without headers.
     http_response_code (int): http response code from server.
     ip_address (str): IPv4 or IPv6 addresses.
+    port_number (int): canonical port of the server serving the request.
     remote_name (str): remote logname (from identd, if supplied).
+    server_name (str): canonical hostname of the server serving the request.
     user_name (str): logged user name.
   """
 
@@ -44,7 +46,9 @@ class ApacheAccessEventData(events.EventData):
     self.http_response_bytes = None
     self.http_response_code = None
     self.ip_address = None
+    self.port_number = None
     self.remote_name = None
+    self.server_name = None
     self.user_name = None
 
 
@@ -81,6 +85,9 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.SkipTo('"').setResultsName('http_request') +
       pyparsing.Suppress('"'))
 
+  _PORT_NUMBER = text_parser.PyparsingConstants.INTEGER.setResultsName(
+      'port_number')
+
   _REMOTE_NAME = (
       pyparsing.Word(pyparsing.alphanums) |
       pyparsing.Literal('-')).setResultsName('remote_name')
@@ -93,6 +100,10 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Suppress('"') +
       pyparsing.SkipTo('"').setResultsName('referer') +
       pyparsing.Suppress('"'))
+
+  _SERVER_NAME = (
+      pyparsing.Word(pyparsing.alphanums + '-' + '.').setResultsName(
+          'server_name'))
 
   _USER_AGENT = (
       pyparsing.Suppress('"') +
@@ -129,9 +140,28 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       _USER_AGENT +
       pyparsing.lineEnd())
 
+  # "vhost_combined" format as used by Debian and related distributions.
+  # "%v:%p %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
+  _VHOST_COMBINED_LOG_FORMAT = (
+      _SERVER_NAME +
+      pyparsing.Suppress(':') +
+      _PORT_NUMBER +
+      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
+      _REMOTE_NAME +
+      _USER_NAME +
+      _DATE_TIME +
+      _HTTP_REQUEST +
+      text_parser.PyparsingConstants.INTEGER.setResultsName('response_code') +
+      _RESPONSE_BYTES +
+      _REFERER +
+      _USER_AGENT +
+      pyparsing.lineEnd()
+  )
+
   LINE_STRUCTURES = [
       ('combined_log_format', _COMBINED_LOG_FORMAT_LINE),
-      ('common_log_format', _COMMON_LOG_FORMAT_LINE)]
+      ('common_log_format', _COMMON_LOG_FORMAT_LINE),
+      ('vhost_combined_log_format', _VHOST_COMBINED_LOG_FORMAT)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -231,11 +261,17 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
     event_data.http_response_bytes = self._GetValueFromStructure(
         structure, 'response_bytes')
 
-    if key == 'combined_log_format':
+    if key in ('combined_log_format', 'vhost_combined_log_format'):
       event_data.http_request_referer = self._GetValueFromStructure(
           structure, 'referer')
       event_data.http_request_user_agent = self._GetValueFromStructure(
           structure, 'user_agent')
+
+    if key == 'vhost_combined_log_format':
+      event_data.server_name = self._GetValueFromStructure(
+          structure, 'server_name')
+      event_data.port_number = self._GetValueFromStructure(
+          structure, 'port_number')
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 

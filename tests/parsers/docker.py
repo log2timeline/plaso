@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.lib import definitions
 from plaso.parsers import docker
 
 from tests.parsers import test_lib
@@ -59,11 +60,13 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
     for index, event in enumerate(events):
       self.CheckTimestamp(event.timestamp, expected_times[index])
 
-      self.assertEqual(event.container_id, container_identifier)
-      self.assertEqual(event.log_line, expected_log)
-      self.assertEqual(event.log_source, 'stdout')
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(event_data.container_id, container_identifier)
+      self.assertEqual(event_data.log_line, expected_log)
+      self.assertEqual(event_data.log_source, 'stdout')
+
       self._TestGetMessageStrings(
-          event, expected_message, expected_short_message)
+          event_data, expected_message, expected_short_message)
 
   def testParseContainerConfig(self):
     """Tests the _ParseContainerConfigJSON function."""
@@ -84,17 +87,21 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2016-01-07 16:49:08.674873')
 
-    self.assertEqual(event.action, 'Container Started')
-    self.assertEqual(event.container_id, container_identifier)
-    self.assertEqual(event.container_name, 'e7d0b7ea5ccf')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.action, 'Container Started')
+    self.assertEqual(event_data.container_id, container_identifier)
+    self.assertEqual(event_data.container_name, 'e7d0b7ea5ccf')
 
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2016-01-07 16:49:08.507979')
 
-    self.assertEqual(event.action, 'Container Created')
-    self.assertEqual(event.container_id, container_identifier)
-    self.assertEqual(event.container_name, 'e7d0b7ea5ccf')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.action, 'Container Created')
+    self.assertEqual(event_data.container_id, container_identifier)
+    self.assertEqual(event_data.container_name, 'e7d0b7ea5ccf')
 
   def testParseLayerConfig(self):
     """Tests the _ParseLayerConfigJSON function."""
@@ -112,13 +119,17 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2015-10-12 17:27:03.079273')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_command = (
         '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
         '/etc/apt/sources.list')
-    self.assertEqual(event.command, expected_command)
-    self.assertEqual(event.layer_id, layer_identifier)
-    self.assertEqual(event.timestamp, 1444670823079273)
-    self.assertEqual(event.timestamp_desc, 'Creation Time')
+    self.assertEqual(event_data.command, expected_command)
+    self.assertEqual(event_data.layer_id, layer_identifier)
 
 
 if __name__ == '__main__':

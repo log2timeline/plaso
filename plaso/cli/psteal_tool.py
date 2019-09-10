@@ -176,7 +176,8 @@ class PstealTool(
     """Analyzes events from a plaso storage file and generate a report.
 
     Raises:
-      BadConfigOption: when a configuration parameter fails validation.
+      BadConfigOption: when a configuration parameter fails validation or the
+          storage file cannot be opened with read access.
       RuntimeError: if a non-recoverable situation is encountered.
     """
     session = engine.BaseEngine.CreateSession(
@@ -186,9 +187,9 @@ class PstealTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logger.error('Format of storage file: {0:s} not supported'.format(
-          self._storage_file_path))
-      return
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(
+              self._storage_file_path))
 
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
@@ -210,8 +211,7 @@ class PstealTool(
               self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      analysis_engine = psort.PsortMultiProcessEngine()
 
       analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
@@ -297,8 +297,7 @@ class PstealTool(
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
     else:
-      extraction_engine = multi_process_engine.TaskMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+      extraction_engine = multi_process_engine.TaskMultiProcessEngine()
 
     # If the source is a directory or a storage media image
     # run pre-processing.
@@ -341,8 +340,11 @@ class PstealTool(
 
     self._status_view.PrintExtractionSummary(processing_status)
 
-  def ParseArguments(self):
+  def ParseArguments(self, arguments):
     """Parses the command line arguments.
+
+    Args:
+      arguments (list[str]): command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
@@ -404,7 +406,7 @@ class PstealTool(
     self.AddProcessingOptions(processing_group)
 
     try:
-      options = argument_parser.parse_args()
+      options = argument_parser.parse_args(arguments)
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.

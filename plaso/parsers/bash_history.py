@@ -35,7 +35,7 @@ class BashHistoryEventData(events.EventData):
 class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from Bash history files."""
 
-  NAME = 'bash'
+  NAME = 'bash_history'
 
   DESCRIPTION = 'Parser for Bash history files'
 

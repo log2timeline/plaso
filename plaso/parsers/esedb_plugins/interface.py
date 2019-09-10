@@ -354,7 +354,7 @@ class ESEDBPlugin(plugins.BasePlugin):
     if database is None:
       raise ValueError('Invalid database.')
 
-    for table_name, callback_method in iter(self._tables.items()):
+    for table_name, callback_method in sorted(self._tables.items()):
       if parser_mediator.abort:
         break
 

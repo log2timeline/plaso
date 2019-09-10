@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Shared code for Elasticsearch based output modules."""
+"""Shared functionality for Elasticsearch output modules."""
 
 from __future__ import unicode_literals
 
@@ -14,6 +14,7 @@ except ImportError:
   elasticsearch = None
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
@@ -113,7 +114,9 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           body=self._event_documents, doc_type=self._document_type,
           index=self._index_name, request_timeout=self._DEFAULT_REQUEST_TIMEOUT)
 
-    except ValueError as exception:
+    except (
+        ValueError,
+        elasticsearch.exceptions.ElasticsearchException) as exception:
       # Ignore problematic events
       logger.warning('Unable to bulk insert with error: {0!s}'.format(
           exception))
@@ -146,6 +149,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     event_values = {}
     for attribute_name, attribute_value in event_data.GetAttributes():
+      # TODO: remove regvalue, which is kept for backwards compatibility.
       # Ignore the regvalue attribute as it cause issues when indexing.
       if attribute_name == 'regvalue':
         continue
@@ -157,6 +161,15 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
         except TypeError:
           continue
       event_values[attribute_name] = attribute_value
+
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        # Some parsers have written bytes values to storage.
+        attribute_value = attribute_value.decode('utf-8', 'replace')
+        logger.warning(
+            'Found bytes value for attribute "{0:s}" for data type: '
+            '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
+                attribute_name, event_data.data_type, attribute_value))
+        event_values[attribute_name] = attribute_value
 
     # Add a string representation of the timestamp.
     try:

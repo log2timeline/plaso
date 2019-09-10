@@ -43,17 +43,18 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[3]
 
-    self.assertEqual(event.pathspec, test_file_entry.path_spec)
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event.parser, plugin.plugin_name)
-
-    self.assertEqual(event.data_type, 'windows:registry:usb')
     self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.625247')
 
-    self.assertEqual(event.subkey_name, 'VID_0E0F&PID_0002')
-    self.assertEqual(event.vendor, 'VID_0E0F')
-    self.assertEqual(event.product, 'PID_0002')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEqual(event_data.parser, plugin.plugin_name)
+    self.assertEqual(event_data.data_type, 'windows:registry:usb')
+    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_data.subkey_name, 'VID_0E0F&PID_0002')
+    self.assertEqual(event_data.vendor, 'VID_0E0F')
+    self.assertEqual(event_data.product, 'PID_0002')
 
     expected_message = (
         '[{0:s}] '
@@ -63,7 +64,8 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
         'Vendor: VID_0E0F').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -314,8 +314,8 @@ class ParserMediator(object):
     """Retrieves an estimate of the year.
 
     This function determines the year in the following manner:
-    * see if the user provided a preferred year;
-    * see if knowledge base defines a year e.g. derived from preprocessing;
+    * determine if the user provided a preferred year;
+    * determine if knowledge base defines a year derived from preprocessing;
     * determine the year based on the file entry metadata;
     * default to the current year;
 

@@ -179,7 +179,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     # Test ParseArguments with no output file nor source.
-    result = test_tool.ParseArguments()
+    result = test_tool.ParseArguments([])
     self.assertFalse(result)
     output = output_writer.ReadOutput()
     expected_error = 'ERROR: Output format: dynamic requires an output file'

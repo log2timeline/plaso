@@ -10,8 +10,10 @@ from plaso.formatters import android_webviewcache
 from plaso.formatters import apache_access
 from plaso.formatters import appcompatcache
 from plaso.formatters import appusage
+from plaso.formatters import apt_history
 from plaso.formatters import asl
 from plaso.formatters import bagmru
+from plaso.formatters import bam
 from plaso.formatters import bash_history
 from plaso.formatters import bencode_parser
 from plaso.formatters import bsm
@@ -71,6 +73,7 @@ from plaso.formatters import pe
 from plaso.formatters import plist
 from plaso.formatters import pls_recall
 from plaso.formatters import popcontest
+from plaso.formatters import programscache
 from plaso.formatters import recycler
 from plaso.formatters import run
 from plaso.formatters import safari
@@ -80,6 +83,7 @@ from plaso.formatters import santa
 from plaso.formatters import sccm
 from plaso.formatters import selinux
 from plaso.formatters import services
+from plaso.formatters import setupapi
 from plaso.formatters import shell_items
 from plaso.formatters import shutdown
 from plaso.formatters import skydrivelog
@@ -104,8 +108,10 @@ from plaso.formatters import usbstor
 from plaso.formatters import userassist
 from plaso.formatters import utmp
 from plaso.formatters import utmpx
+from plaso.formatters import vsftpd
 from plaso.formatters import windows
 from plaso.formatters import windows_timeline
+from plaso.formatters import windows_version
 from plaso.formatters import winevt
 from plaso.formatters import winevtx
 from plaso.formatters import winfirewall

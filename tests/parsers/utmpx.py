@@ -29,6 +29,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-13 17:52:34.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'Status: BOOT_TIME '
         'Hostname: localhost '
@@ -38,16 +40,18 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 1 '
         'Status: BOOT_TIME')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2013-11-13 17:52:41.736713')
 
-    self.assertEqual(event.username, 'moxilo')
-    self.assertEqual(event.terminal, 'console')
-    self.assertEqual(event.type, 7)
-    self.assertEqual(event.hostname, 'localhost')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'moxilo')
+    self.assertEqual(event_data.terminal, 'console')
+    self.assertEqual(event_data.type, 7)
+    self.assertEqual(event_data.hostname, 'localhost')
 
     expected_message = (
         'User: moxilo '
@@ -61,15 +65,17 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 67 '
         'Status: USER_PROCESS')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[4]
 
     self.CheckTimestamp(event.timestamp, '2013-11-14 04:32:56.641464')
 
-    self.assertEqual(event.username, 'moxilo')
-    self.assertEqual(event.terminal, 'ttys002')
-    self.assertEqual(event.type, 8)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'moxilo')
+    self.assertEqual(event_data.terminal, 'ttys002')
+    self.assertEqual(event_data.type, 8)
 
     expected_message = (
         'User: moxilo '
@@ -83,7 +89,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 6899 '
         'Status: DEAD_PROCESS')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

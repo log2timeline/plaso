@@ -29,20 +29,23 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:56.000000')
 
-    self.assertEqual(event.data_type, 'pe:compilation:compilation_time')
-    self.assertEqual(event.pe_type, 'Executable (EXE)')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'pe:compilation:compilation_time')
+    self.assertEqual(event_data.pe_type, 'Executable (EXE)')
 
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:55.000000')
 
-    self.assertEqual(event.data_type, 'pe:import:import_time')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'pe:import:import_time')
 
     event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:54.000000')
 
-    self.assertEqual(event.data_type, 'pe:delay_import:import_time')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'pe:delay_import:import_time')
 
   def testParseFileObjectOnDriver(self):
     """Tests the ParseFileObject on a PE driver (SYS) file."""
@@ -58,7 +61,8 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:54.000000')
 
-    self.assertEqual(event.pe_type, 'Driver (SYS)')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.pe_type, 'Driver (SYS)')
 
 
 if __name__ == '__main__':

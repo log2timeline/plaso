@@ -84,8 +84,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
        'filename': '/My Documents/goodfella/Documents/Hideout/myfile.txt',
        'hostname': 'Agrabah',
        'inode': 1245,
-       'mydict': {
-           'value': 134, 'another': 'value', 'A Key (with stuff)': 'Here'},
        'parser': 'Weirdo',
        'text': (
            'User did a very bad thing, bad, bad thing that awoke Dr. Evil.'),
@@ -411,28 +409,34 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     self._CheckIfExpressionMatches(
         'filename contains \'GoodFella\'', event, event_data, event_tag, True)
 
-    # Test date filtering.
+    # Test timestamp filtering.
     self._CheckIfExpressionMatches(
-        'date >= \'2015-11-18\'', event, event_data, event_tag, True)
+        'timestamp >= \'2015-11-18\'', event, event_data, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'date < \'2015-11-19\'', event, event_data, event_tag, True)
+        'timestamp < \'2015-11-19\'', event, event_data, event_tag, True)
 
-    self._CheckIfExpressionMatches((
-        'date < \'2015-11-18T01:15:44.341\' and '
-        'date > \'2015-11-18 01:15:42\''), event, event_data, event_tag, True)
+    expression = (
+        'timestamp < \'2015-11-18T01:15:44.341\' and '
+        'timestamp > \'2015-11-18 01:15:42\'')
 
     self._CheckIfExpressionMatches(
-        'date > \'2015-11-19\'', event, event_data, event_tag, False)
+        expression, event, event_data, event_tag, True)
+
+    self._CheckIfExpressionMatches(
+        'timestamp > \'2015-11-19\'', event, event_data, event_tag, False)
 
     # Perform few attribute tests.
     self._CheckIfExpressionMatches(
         'filename not contains \'sometext\'', event, event_data, event_tag,
         True)
 
-    self._CheckIfExpressionMatches((
-        'timestamp_desc CONTAINS \'written\' AND date > \'2015-11-18\' AND '
-        'date < \'2015-11-25 12:56:21\''), event, event_data, event_tag, True)
+    expression = (
+        'timestamp_desc CONTAINS \'written\' AND timestamp > \'2015-11-18\' '
+        'AND timestamp < \'2015-11-25 12:56:21\'')
+
+    self._CheckIfExpressionMatches(
+        expression, event, event_data, event_tag, True)
 
     self._CheckIfExpressionMatches(
         'parser is not \'Made\'', event, event_data, event_tag, True)
@@ -441,32 +445,9 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         'parser is not \'Weirdo\'', event, event_data, event_tag, False)
 
     self._CheckIfExpressionMatches(
-        'mydict.value is 123', event, event_data, event_tag, False)
-
-    self._CheckIfExpressionMatches(
-        'mydict.akeywithstuff contains "ere"', event, event_data, event_tag,
-        True)
-
-    self._CheckIfExpressionMatches(
-        'mydict.value is 134', event, event_data, event_tag, True)
-
-    self._CheckIfExpressionMatches(
-        'mydict.value < 200', event, event_data, event_tag, True)
-
-    self._CheckIfExpressionMatches(
-        'mydict.another contains "val"', event, event_data, event_tag, True)
-
-    self._CheckIfExpressionMatches(
-        'mydict.notthere is 123', event, event_data, event_tag, False)
-
-    self._CheckIfExpressionMatches(
         'tag contains \'browser_search\'', event, event_data, event_tag, True)
 
     # Test multiple attributes.
-    self._CheckIfExpressionMatches(
-        'description_long regexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'',
-        event, event_data, event_tag, False)
-
     self._CheckIfExpressionMatches(
         'text iregexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'', event,
         event_data, event_tag, True)

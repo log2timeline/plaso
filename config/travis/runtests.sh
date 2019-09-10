@@ -11,7 +11,7 @@ set -e;
 if test -n "${FEDORA_VERSION}";
 then
 	CONTAINER_NAME="fedora${FEDORA_VERSION}";
-	CONTAINER_OPTIONS="-e LANG=en_US.UTF-8";
+	CONTAINER_OPTIONS="-e LANG=C.utf8";
 
 	if test -n "${TOXENV}";
 	then

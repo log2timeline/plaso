@@ -137,6 +137,9 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.data_type, 'windows:registry:timezone')
     self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:registry:timezone')
+
     expected_message = (
         '[{0:s}] '
         'ActiveTimeBias: -60 '
@@ -149,7 +152,8 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'TimeZoneKeyName: W. Europe Standard Time').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
@@ -175,6 +179,9 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.data_type, 'windows:registry:timezone')
     self.CheckTimestamp(event.timestamp, '2012-03-11 07:00:00.000642')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:registry:timezone')
+
     expected_message = (
         '[{0:s}] '
         'ActiveTimeBias: 240 '
@@ -187,7 +194,8 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'TimeZoneKeyName: Eastern Standard Time').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

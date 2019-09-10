@@ -37,17 +37,19 @@ class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
 
     event = events[1]
 
-    self.assertEqual(event.key, '')
-    self.assertEqual(event.root, '/Stores')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.key, '')
+    self.assertEqual(event_data.root, '/Stores')
 
     expected_description = (
         'Spotlight Volume 4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD '
         '(/.MobileBackups) activated.')
-    self.assertEqual(event.desc, expected_description)
+    self.assertEqual(event_data.desc, expected_description)
 
     expected_message = '/Stores/ {0:s}'.format(expected_description)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

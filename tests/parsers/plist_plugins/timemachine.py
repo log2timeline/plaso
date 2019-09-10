@@ -40,18 +40,21 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(timestamps, expected_timestamps)
 
     event = events[0]
-    self.assertEqual(event.root, '/Destinations')
-    self.assertEqual(event.key, 'item/SnapshotDates')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.root, '/Destinations')
+    self.assertEqual(event_data.key, 'item/SnapshotDates')
 
     expected_description = (
         'TimeMachine Backup in BackUpFast '
         '(5B33C22B-A4A1-4024-A2F5-C9979C4AAAAA)')
-    self.assertEqual(event.desc, expected_description)
+    self.assertEqual(event_data.desc, expected_description)
 
     expected_message = '/Destinations/item/SnapshotDates {0:s}'.format(
         expected_description)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

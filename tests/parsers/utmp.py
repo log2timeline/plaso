@@ -26,23 +26,28 @@ class UtmpParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    self.assertEqual(event.terminal, 'system boot')
-    self.assertEqual(event.type, 2)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.terminal, 'system boot')
+    self.assertEqual(event_data.type, 2)
 
     event = events[1]
-    self.assertEqual(event.type, 1)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.type, 1)
 
     event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2013-12-13 14:45:09.000000')
 
-    self.assertEqual(event.username, 'LOGIN')
-    self.assertEqual(event.hostname, 'localhost')
-    self.assertEqual(event.terminal, 'tty4')
-    self.assertEqual(event.type, 6)
-    self.assertEqual(event.exit_status, 0)
-    self.assertEqual(event.pid, 1115)
-    self.assertEqual(event.terminal_identifier, 52)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'LOGIN')
+    self.assertEqual(event_data.hostname, 'localhost')
+    self.assertEqual(event_data.terminal, 'tty4')
+    self.assertEqual(event_data.type, 6)
+    self.assertEqual(event_data.exit_status, 0)
+    self.assertEqual(event_data.pid, 1115)
+    self.assertEqual(event_data.terminal_identifier, 52)
 
     expected_message = (
         'User: LOGIN '
@@ -57,19 +62,21 @@ class UtmpParserTest(test_lib.ParserTestCase):
         'User: LOGIN '
         'PID: 1115 '
         'Status: LOGIN_PROCESS')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[12]
 
     self.CheckTimestamp(event.timestamp, '2013-12-18 22:46:56.305504')
 
-    self.assertEqual(event.username, 'moxilo')
-    self.assertEqual(event.hostname, 'localhost')
-    self.assertEqual(event.terminal, 'pts/4')
-    self.assertEqual(event.type, 7)
-    self.assertEqual(event.exit_status, 0)
-    self.assertEqual(event.pid, 2684)
-    self.assertEqual(event.terminal_identifier, 13359)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'moxilo')
+    self.assertEqual(event_data.hostname, 'localhost')
+    self.assertEqual(event_data.terminal, 'pts/4')
+    self.assertEqual(event_data.type, 7)
+    self.assertEqual(event_data.exit_status, 0)
+    self.assertEqual(event_data.pid, 2684)
+    self.assertEqual(event_data.terminal_identifier, 13359)
 
     expected_message = (
         'User: moxilo '
@@ -84,7 +91,8 @@ class UtmpParserTest(test_lib.ParserTestCase):
         'User: moxilo '
         'PID: 2684 '
         'Status: USER_PROCESS')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseWtmpFile(self):
     """Tests the Parse function on a wtmp file."""
@@ -100,14 +108,15 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2011-12-01 17:36:38.432935')
 
-    self.assertEqual(event.username, 'userA')
-    self.assertEqual(event.hostname, '10.10.122.1')
-    self.assertEqual(event.terminal, 'pts/32')
-    self.assertEqual(event.type, 7)
-    self.assertEqual(event.ip_address, '10.10.122.1')
-    self.assertEqual(event.exit_status, 0)
-    self.assertEqual(event.pid, 20060)
-    self.assertEqual(event.terminal_identifier, 842084211)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.username, 'userA')
+    self.assertEqual(event_data.hostname, '10.10.122.1')
+    self.assertEqual(event_data.terminal, 'pts/32')
+    self.assertEqual(event_data.type, 7)
+    self.assertEqual(event_data.ip_address, '10.10.122.1')
+    self.assertEqual(event_data.exit_status, 0)
+    self.assertEqual(event_data.pid, 20060)
+    self.assertEqual(event_data.terminal_identifier, 842084211)
 
     expected_message = (
         'User: userA '
@@ -122,7 +131,8 @@ class UtmpParserTest(test_lib.ParserTestCase):
         'User: userA '
         'PID: 20060 '
         'Status: USER_PROCESS')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

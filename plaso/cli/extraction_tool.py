@@ -13,6 +13,7 @@ from plaso import analyzers  # pylint: disable=unused-import
 # The following import makes sure the parsers are registered.
 from plaso import parsers  # pylint: disable=unused-import
 
+from plaso.containers import artifacts
 from plaso.cli import logger
 from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
@@ -20,9 +21,11 @@ from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
+from plaso.filters import parser_filter
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import manager as parsers_manager
+from plaso.parsers import presets as parsers_presets
 
 
 class ExtractionTool(
@@ -57,6 +60,7 @@ class ExtractionTool(
     self._parser_filter_expression = None
     self._preferred_year = None
     self._presets_file = None
+    self._presets_manager = parsers_presets.ParserPresetsManager()
     self._process_archives = False
     self._process_compressed_streams = True
     self._process_memory_limit = None
@@ -65,9 +69,9 @@ class ExtractionTool(
     self._single_process_mode = False
     self._storage_file_path = None
     self._storage_format = definitions.STORAGE_FORMAT_SQLITE
+    self._task_storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._temporary_directory = None
     self._text_prepend = None
-    self._use_zeromq = True
     self._yara_rules_string = None
 
   def _CreateProcessingConfiguration(self, knowledge_base):
@@ -81,9 +85,54 @@ class ExtractionTool(
       ProcessingConfiguration: processing configuration.
 
     Raises:
-      BadConfigOption: if more than 1 parser and parser plugins preset
-          was found for the detected operating system.
+      BadConfigOption: if presets in the parser filter expression could not
+          be expanded or if an invalid parser or plugin name is specified.
     """
+    parser_filter_expression = self._parser_filter_expression
+    if not parser_filter_expression:
+      operating_system_family = knowledge_base.GetValue('operating_system')
+      operating_system_product = knowledge_base.GetValue(
+          'operating_system_product')
+      operating_system_version = knowledge_base.GetValue(
+          'operating_system_version')
+
+      operating_system_artifact = artifacts.OperatingSystemArtifact(
+          family=operating_system_family, product=operating_system_product,
+          version=operating_system_version)
+
+      preset_definitions = self._presets_manager.GetPresetsByOperatingSystem(
+          operating_system_artifact)
+
+      if preset_definitions:
+        preset_names = [
+            preset_definition.name for preset_definition in preset_definitions]
+        filter_expression = ','.join(preset_names)
+
+        logger.info('Parser filter expression set to: {0:s}'.format(
+            filter_expression))
+        parser_filter_expression = filter_expression
+
+    parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
+
+    try:
+      parser_filter_expression = parser_filter_helper.ExpandPresets(
+          self._presets_manager, parser_filter_expression)
+    except RuntimeError as exception:
+      raise errors.BadConfigOption((
+          'Unable to expand presets in parser filter expression with '
+          'error: {0!s}').format(exception))
+
+    _, invalid_parser_elements = (
+        parsers_manager.ParsersManager.CheckFilterExpression(
+            parser_filter_expression))
+
+    if invalid_parser_elements:
+      invalid_parser_names_string = ','.join(invalid_parser_elements)
+      raise errors.BadConfigOption(
+          'Unknown parser or plugin names in element(s): "{0:s}" of '
+          'parser filter expression: {1:s}'.format(
+              invalid_parser_names_string, parser_filter_expression))
+
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()
     configuration.artifact_filters = self._artifact_filters
@@ -100,32 +149,13 @@ class ExtractionTool(
     configuration.filter_file = self._filter_file
     configuration.input_source.mount_path = self._mount_path
     configuration.log_filename = self._log_file
-    configuration.parser_filter_expression = self._parser_filter_expression
+    configuration.parser_filter_expression = parser_filter_expression
     configuration.preferred_year = self._preferred_year
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.sample_rate = self._profiling_sample_rate
     configuration.profiling.profilers = self._profilers
+    configuration.task_storage_format = self._task_storage_format
     configuration.temporary_directory = self._temporary_directory
-
-    if not configuration.parser_filter_expression:
-      operating_system = knowledge_base.GetValue('operating_system')
-      operating_system_product = knowledge_base.GetValue(
-          'operating_system_product')
-      operating_system_version = knowledge_base.GetValue(
-          'operating_system_version')
-      preset_definitions = (
-          parsers_manager.ParsersManager.GetPresetsForOperatingSystem(
-              operating_system, operating_system_product,
-              operating_system_version))
-
-      if preset_definitions:
-        preset_names = [
-            preset_definition.name for preset_definition in preset_definitions]
-        filter_expression = ','.join(preset_names)
-
-        logger.info('Parser filter expression set to: {0:s}'.format(
-            filter_expression))
-        configuration.parser_filter_expression = filter_expression
 
     return configuration
 
@@ -205,7 +235,7 @@ class ExtractionTool(
           'No such parser presets file: {0:s}.'.format(self._presets_file))
 
     try:
-      parsers_manager.ParsersManager.ReadPresetsFromFile(self._presets_file)
+      self._presets_manager.ReadFromFile(self._presets_file)
     except errors.MalformedPresetError as exception:
       raise errors.BadConfigOption(
           'Unable to read presets from file with error: {0!s}'.format(
@@ -313,7 +343,7 @@ class ExtractionTool(
 
       title = '{0:s} ({1:s})'.format(title, presets_file)
 
-    presets_information = parsers_manager.ParsersManager.GetPresetsInformation()
+    presets_information = self._presets_manager.GetPresetsInformation()
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, column_names=['Name', 'Parsers and plugins'],

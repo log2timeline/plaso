@@ -43,6 +43,8 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         '9fe44b69-2709-11dc-a06b-db3099beae3c '
         'MAC address: db:30:99:be:ae:3c '
@@ -52,7 +54,8 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         '9fe44b69-2709-11dc-a06b-db3099beae3c '
         'Origin: $MFT: 462-1')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
@@ -79,46 +82,50 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The creation timestamp.
     event = events[0]
 
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
-
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
+
     # The last modification timestamp.
     event = events[1]
-
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
+
     # The last accessed timestamp.
     event = events[2]
-
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
+
     # The entry modification timestamp.
     event = events[3]
-
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
 
     expected_message = (
         'TSK:/$MFT '
@@ -128,18 +135,20 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '/$MFT 0-1 $STANDARD_INFORMATION')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # The creation timestamp.
     event = events[4]
 
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event.is_allocated, bool)
-    self.assertTrue(event.is_allocated)
-
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_data.is_allocated, bool)
+    self.assertTrue(event_data.is_allocated)
 
     expected_message = (
         'TSK:/$MFT '
@@ -151,7 +160,8 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '/$MFT 0-1 $FILE_NAME')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Note that the source file is a RAW (VMDK flat) image.
     test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
@@ -205,6 +215,8 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'Nieuw - Tekstdocument.txt '
         'File reference: 30-1 '
@@ -214,7 +226,8 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     expected_short_message = (
         'Nieuw - Tekstdocument.txt 30-1 USN_REASON_FILE_CREATE')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

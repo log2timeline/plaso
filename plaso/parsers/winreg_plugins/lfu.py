@@ -72,12 +72,10 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = self._GetValuesFromKey(registry_key)
     image_path = None
-    for name, value in dict(values_dict).items():
-      if name.lower() == 'imagepath':
-        image_path = value
-        del values_dict[name]
+    registry_value = registry_key.GetValueByName('ImagePath')
+    if registry_value:
+      image_path = registry_value.GetDataAsObject()
 
     if image_path:
       event_data = WindowsBootVerificationEventData()
@@ -88,12 +86,14 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
           registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+    values_dict = self._GetValuesFromKey(
+        registry_key, names_to_skip=['ImagePath'])
     if values_dict:
       event_data = windows_events.WindowsRegistryEventData()
       event_data.key_path = registry_key.path
       event_data.values = ' '.join([
           '{0:s}: {1!s}'.format(name, value)
-          for name, value in sorted(values_dict.items())])
+          for name, value in sorted(values_dict.items())]) or None
 
       event = time_events.DateTimeValuesEvent(
           registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -123,36 +123,35 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = self._GetValuesFromKey(registry_key)
+    values_dict = self._GetValuesFromKey(
+        registry_key, names_to_skip=['BootExecute'])
+
     boot_execute = None
-    for name, value in dict(values_dict).items():
-      if name.lower() == 'bootexecute':
-        boot_execute = value
-        del values_dict[name]
-
-    if boot_execute:
-      registry_value = registry_key.GetValueByName('BootExecute')
-
+    registry_value = registry_key.GetValueByName('BootExecute')
+    if registry_value:
       # MSDN: claims that the data type of this value is REG_BINARY
-      # although REG_MULTI_SZ is known to be used as well.
-      if (not registry_value.DataIsString() and
-          not registry_value.DataIsMultiString() and
-          not registry_value.DataIsBinaryData()):
+      # although REG_MULTI_SZ is known to be used.
+      if registry_value.DataIsString():
+        boot_execute = registry_value.GetDataAsObject()
+      elif registry_value.DataIsMultiString():
+        boot_execute = ', '.join([
+            value for value in registry_value.GetDataAsObject() or []])
+      else:
         error_string = (
             'Key: {0:s}, value: BootExecute: unsupported value data type: '
             '{1:s}.').format(
                 registry_key.path, registry_value.data_type_string)
         parser_mediator.ProduceExtractionWarning(error_string)
 
-      else:
-        event_data = WindowsBootExecuteEventData()
-        event_data.key_path = registry_key.path
-        event_data.value = boot_execute
+    if boot_execute:
+      event_data = WindowsBootExecuteEventData()
+      event_data.key_path = registry_key.path
+      event_data.value = boot_execute
 
-        event = time_events.DateTimeValuesEvent(
-            registry_key.last_written_time,
-            definitions.TIME_DESCRIPTION_WRITTEN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      event = time_events.DateTimeValuesEvent(
+          registry_key.last_written_time,
+          definitions.TIME_DESCRIPTION_WRITTEN)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if values_dict:
       event_data = windows_events.WindowsRegistryEventData()

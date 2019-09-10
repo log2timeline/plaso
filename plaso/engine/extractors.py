@@ -36,17 +36,12 @@ class EventExtractor(object):
     """Initializes an event extractor.
 
     Args:
-      parser_filter_expression (Optional[str]): the parser filter expression,
-          None represents all parsers and plugins.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
-
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
-          * A name of a single parser (case insensitive), e.g. msiecf.
-          * A glob name for a single parser, e.g. '*msie*' (case insensitive).
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
     """
     super(EventExtractor, self).__init__()
     self._file_scanner = None
@@ -106,17 +101,12 @@ class EventExtractor(object):
     """Initializes the parser objects.
 
     Args:
-      parser_filter_expression (Optional[str]): the parser filter expression,
-          None represents all parsers and plugins.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
 
-          The parser filter expression is a comma separated value string that
-          denotes a list of parser names to include and/or exclude. Each entry
-          can have the value of:
-
-          * An exact match of a list of parsers, or a preset (see
-            data/presets.yaml for the list of predefined presets).
-          * A name of a single parser (case insensitive), e.g. msiecf.
-          * A glob name for a single parser, e.g. '*msie*' (case insensitive).
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
     """
     self._formats_with_signatures, non_sigscan_parser_names = (
         parsers_manager.ParsersManager.GetFormatsWithSignatures(
@@ -161,8 +151,7 @@ class EventExtractor(object):
     """
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
-      raise RuntimeError(
-          'Unable to retrieve file-like object from file entry.')
+      raise RuntimeError('Unable to retrieve file-like object from file entry.')
 
     try:
       self._ParseFileEntryWithParser(
@@ -326,7 +315,7 @@ class EventExtractor(object):
       file_object.close()
 
   def ParseFileEntryMetadata(self, parser_mediator, file_entry):
-    """Parses the file entry metadata e.g. file system data.
+    """Parses the file entry metadata such as file system data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -486,6 +475,9 @@ class PathSpecExtractor(object):
 
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in the directory.
+
+    Raises:
+      MaximumRecursionDepth: when the maximum recursion depth is reached.
     """
     if depth >= self._MAXIMUM_DEPTH:
       raise errors.MaximumRecursionDepth('Maximum recursion depth reached.')

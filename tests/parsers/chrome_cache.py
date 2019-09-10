@@ -29,13 +29,15 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2014-04-30 16:44:36.226091')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_original_url = (
         'https://s.ytimg.com/yts/imgbin/player-common-vfliLfqPT.webp')
-    self.assertEqual(event.original_url, expected_original_url)
+    self.assertEqual(event_data.original_url, expected_original_url)
 
     expected_message = 'Original URL: {0:s}'.format(expected_original_url)
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

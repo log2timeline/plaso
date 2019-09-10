@@ -24,7 +24,8 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
 
     cookie_events = []
     for event in storage_writer.GetEvents():
-      if event.data_type == 'safari:cookie:entry':
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type == 'safari:cookie:entry':
         cookie_events.append(event)
 
     # There should be:
@@ -37,9 +38,10 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(cookie_events), 182)
 
     event = cookie_events[3]
-    self.assertEqual(event.flags, 5)
-    self.assertEqual(event.url, 'accounts.google.com')
-    self.assertEqual(event.cookie_name, 'GAPS')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.flags, 5)
+    self.assertEqual(event_data.url, 'accounts.google.com')
+    self.assertEqual(event_data.cookie_name, 'GAPS')
 
     event = cookie_events[48]
 
@@ -47,26 +49,28 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.flags, 0)
-    self.assertEqual(event.cookie_name, 'nonsession')
-    self.assertEqual(event.path, '/')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.flags, 0)
+    self.assertEqual(event_data.cookie_name, 'nonsession')
+    self.assertEqual(event_data.path, '/')
 
     expected_message = '.ebay.com </> (nonsession)'
     expected_short_message = '.ebay.com (nonsession)'
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
     event = cookie_events[52]
-    self.assertEqual(event.cookie_name, 'fpc')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.cookie_name, 'fpc')
     value = (
         'd=0dTg3Ou32s3MrAJ2iHjFph100Tw3E1HTfDOTly0GfJ2g4W.mXpy54F9fjBFfXMw4YyW'
         'AG2cT2FVSqOvGGi_Y1OPrngmNvpKPPyz5gIUP6x_EQeM7bR3jsrg_F1UXVOgu6JgkFwqO'
         '5uHrv4HiL05qb.85Bl.V__HZI5wpAGOGPz1XHhY5mOMH.g.pkVDLli36W2iuYwA-&v=2')
-    self.assertEqual(event.cookie_value, value)
+    self.assertEqual(event_data.cookie_value, value)
 
-    self.assertEqual(event.path, '/')
-    self.assertEqual(event.url, '.www.yahoo.com')
+    self.assertEqual(event_data.path, '/')
+    self.assertEqual(event_data.url, '.www.yahoo.com')
 
 
 if __name__ == '__main__':

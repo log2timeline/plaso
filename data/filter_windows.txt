@@ -19,7 +19,7 @@
 # File system metadata files.
 /[$]MFT
 /[$]LogFile
-/[$]Extend/$UsnJrnl
+/[$]Extend/[$]UsnJrnl
 # Recycle Bin and Recycler.
 /[$]Recycle.Bin
 /[$]Recycle.Bin/.+

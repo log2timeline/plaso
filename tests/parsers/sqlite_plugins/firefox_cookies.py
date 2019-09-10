@@ -41,7 +41,8 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     #
     # In total: 93 * 3 + 15 + 5 + 5 = 304 events.
     for event in storage_writer.GetEvents():
-      if event.data_type == 'firefox:cookie:entry':
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type == 'firefox:cookie:entry':
         test_events.append(event)
       else:
         extra_objects.append(event)
@@ -56,15 +57,17 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_EXPIRATION)
 
-    self.assertEqual(event.host, 's.greenqloud.com')
-    self.assertEqual(event.cookie_name, '__utma')
-    self.assertFalse(event.httponly)
-    self.assertEqual(event.url, 'http://s.greenqloud.com/')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.host, 's.greenqloud.com')
+    self.assertEqual(event_data.cookie_name, '__utma')
+    self.assertFalse(event_data.httponly)
+    self.assertEqual(event_data.url, 'http://s.greenqloud.com/')
 
     expected_message = (
         'http://s.greenqloud.com/ (__utma) Flags: [HTTP only]: False')
     expected_short_message = 's.greenqloud.com (__utma)'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check one of the visits to pubmatic.com.
     event = test_events[62]
@@ -73,14 +76,16 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_EXPIRATION)
 
-    self.assertEqual(event.url, 'http://pubmatic.com/')
-    self.assertEqual(event.path, '/')
-    self.assertFalse(event.secure)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.url, 'http://pubmatic.com/')
+    self.assertEqual(event_data.path, '/')
+    self.assertFalse(event_data.secure)
 
     expected_message = (
         'http://pubmatic.com/ (KRTBCOOKIE_391) Flags: [HTTP only]: False')
     expected_short_message = 'pubmatic.com (KRTBCOOKIE_391)'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

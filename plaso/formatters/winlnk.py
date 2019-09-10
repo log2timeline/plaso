@@ -44,23 +44,20 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
       event_data (EventData): event_data data.
 
     Returns:
-      str: linked path.
+      str: linked path or "Unknown" if not set.
     """
-    if hasattr(event_data, 'local_path'):
-      return event_data.local_path
+    linked_path = getattr(event_data, 'local_path', None)
+    if not linked_path:
+      linked_path = getattr(event_data, 'network_path', None)
 
-    if hasattr(event_data, 'network_path'):
-      return event_data.network_path
+    if not linked_path:
+      linked_path = getattr(event_data, 'relative_path', None)
+      if linked_path:
+        working_directory = getattr(event_data, 'working_directory', None)
+        if working_directory:
+          linked_path = '\\'.join([working_directory, linked_path])
 
-    if hasattr(event_data, 'relative_path'):
-      paths = []
-      if hasattr(event_data, 'working_directory'):
-        paths.append(event_data.working_directory)
-      paths.append(event_data.relative_path)
-
-      return '\\'.join(paths)
-
-    return 'Unknown'
+    return linked_path or 'Unknown'
 
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):

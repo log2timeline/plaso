@@ -32,11 +32,12 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-11-02 04:07:35.000000')
 
-    self.assertEqual(event.agent, 'socketfilterfw[112]')
-    self.assertEqual(event.computer_name, 'DarkTemplar-2.local')
-    self.assertEqual(event.status, 'Error')
-    self.assertEqual(event.process_name, 'Logging')
-    self.assertEqual(event.action, 'creating /var/log/appfirewall.log')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.agent, 'socketfilterfw[112]')
+    self.assertEqual(event_data.computer_name, 'DarkTemplar-2.local')
+    self.assertEqual(event_data.status, 'Error')
+    self.assertEqual(event_data.process_name, 'Logging')
+    self.assertEqual(event_data.action, 'creating /var/log/appfirewall.log')
 
     expected_message = (
         'Computer: DarkTemplar-2.local '
@@ -48,17 +49,19 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         'Process name: Logging '
         'Status: Error')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[9]
 
     self.CheckTimestamp(event.timestamp, '2013-11-03 13:25:15.000000')
 
-    self.assertEqual(event.agent, 'socketfilterfw[87]')
-    self.assertEqual(event.computer_name, 'DarkTemplar-2.local')
-    self.assertEqual(event.status, 'Info')
-    self.assertEqual(event.process_name, 'Dropbox')
-    self.assertEqual(event.action, 'Allow TCP LISTEN  (in:0 out:1)')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.agent, 'socketfilterfw[87]')
+    self.assertEqual(event_data.computer_name, 'DarkTemplar-2.local')
+    self.assertEqual(event_data.status, 'Info')
+    self.assertEqual(event_data.process_name, 'Dropbox')
+    self.assertEqual(event_data.action, 'Allow TCP LISTEN  (in:0 out:1)')
 
     expected_message = (
         'Computer: DarkTemplar-2.local '
@@ -70,18 +73,24 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         'Process name: Dropbox '
         'Status: Info')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check repeated lines.
     event = events[38]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     repeated_event = events[39]
-    self.assertEqual(event.agent, repeated_event.agent)
+    repeated_event_data = self._GetEventDataOfEvent(
+        storage_writer, repeated_event)
+
+    self.assertEqual(event_data.agent, repeated_event_data.agent)
     self.assertEqual(
-        event.computer_name, repeated_event.computer_name)
-    self.assertEqual(event.status, repeated_event.status)
+        event_data.computer_name, repeated_event_data.computer_name)
+    self.assertEqual(event_data.status, repeated_event_data.status)
     self.assertEqual(
-        event.process_name, repeated_event.process_name)
-    self.assertEqual(event.action, repeated_event.action)
+        event_data.process_name, repeated_event_data.process_name)
+    self.assertEqual(event_data.action, repeated_event_data.action)
 
     # Year changes.
     event = events[45]

@@ -84,7 +84,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    result = test_tool.ParseArguments()
+    result = test_tool.ParseArguments([])
     self.assertFalse(result)
 
     # TODO: check output.
@@ -116,8 +116,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     format_version = '20190309'
     plaso_version = '20190429'
     session_identifier = '35242873-b939-4a86-a6ff-08c2fdadb946'
-    session_start_time = '2019-05-05T11:52:23.388630+00:00'
-    session_completion_time = '2019-05-05T11:52:26.078350+00:00'
+    session_start_time = '2019-05-05T11:52:23.388630Z'
+    session_completion_time = '2019-05-05T11:52:26.078350Z'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
@@ -206,6 +206,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     table_view.AddRow(['Debug mode', 'False'])
     table_view.AddRow(['Artifact filters', 'N/A'])
     table_view.AddRow(['Filter file', 'N/A'])
+    table_view.AddRow(['Number of event sources', '2'])
     table_view.Write(output_writer)
 
     table_view = cli_views.ViewsFactory.GetTableView(

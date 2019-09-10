@@ -7,12 +7,15 @@ from collections import namedtuple
 
 import pyevtx
 
+from defusedxml import ElementTree
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -61,17 +64,6 @@ class WinEvtxParser(interface.FileObjectParser):
   NAME = 'winevtx'
   DESCRIPTION = 'Parser for Windows XML EventLog (EVTX) files.'
 
-  @classmethod
-  def GetFormatSpecification(cls):
-    """Retrieves the format specification.
-
-    Returns:
-      FormatSpecification: format specification.
-    """
-    format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'ElfFile\x00', offset=0)
-    return format_specification
-
   # Mapping from evtx_record.strings entries to meaningful names.
   # This mapping is different for each event_identifier.
   # TODO: make this more generic in context of #158.
@@ -96,7 +88,44 @@ class WinEvtxParser(interface.FileObjectParser):
       ]
   }
 
-  def _GetEventData(
+  def _GetCreationTimeFromXMLString(
+      self, parser_mediator, record_index, xml_string):
+    """Retrieves the creationg time from the XML string.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      record_index (int): event record index.
+      xml_string (str): event XML string.
+
+    Returns:
+      str: creation date and time formatted as ISO 8601 or None if not
+          available.
+    """
+    if py2to3.PY_2:
+      xml_string = xml_string.encode('utf-8')
+
+    xml_root = ElementTree.fromstring(xml_string)
+
+    system_xml_element = xml_root.find(
+        '{http://schemas.microsoft.com/win/2004/08/events/event}System')
+    if system_xml_element is None:
+      parser_mediator.ProduceExtractionWarning(
+          'missing System XML element in event record: {0:d}'.format(
+              record_index))
+      return None
+
+    time_created_xml_element = system_xml_element.find(
+        '{http://schemas.microsoft.com/win/2004/08/events/event}TimeCreated')
+    if time_created_xml_element is None:
+      parser_mediator.ProduceExtractionWarning(
+          'missing TimeCreated XML element in event record: {0:d}'.format(
+              record_index))
+      return None
+
+    return time_created_xml_element.get('SystemTime')
+
+  def _GetEventDataFromRecord(
       self, parser_mediator, record_index, evtx_record, recovered=False):
     """Extract data from a Windows XML EventLog (EVTX) record.
 
@@ -184,7 +213,7 @@ class WinEvtxParser(interface.FileObjectParser):
       evtx_record (pyevtx.record): event record.
       recovered (Optional[bool]): True if the record was recovered.
     """
-    event_data = self._GetEventData(
+    event_data = self._GetEventDataFromRecord(
         parser_mediator, record_index, evtx_record, recovered=recovered)
 
     try:
@@ -196,7 +225,7 @@ class WinEvtxParser(interface.FileObjectParser):
 
       written_time = None
 
-    if not written_time:
+    if written_time is None:
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(timestamp=written_time)
@@ -204,6 +233,24 @@ class WinEvtxParser(interface.FileObjectParser):
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    creation_time_string = self._GetCreationTimeFromXMLString(
+        parser_mediator, record_index, event_data.xml_string)
+    if creation_time_string:
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+
+      try:
+        date_time.CopyFromStringISO8601(creation_time_string)
+      except ValueError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unsupported creation time: {0:s} with error: {1!s}.'.format(
+                creation_time_string, exception))
+        date_time = None
+
+      if date_time:
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseRecords(self, parser_mediator, evtx_file):
     """Parses Windows XML EventLog (EVTX) records.
@@ -226,7 +273,7 @@ class WinEvtxParser(interface.FileObjectParser):
         evtx_record = evtx_file.get_record(record_index)
         self._ParseRecord(parser_mediator, record_index, evtx_record)
 
-      except IOError as exception:
+      except (IOError, ElementTree.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning(
             'unable to parse event record: {0:d} with error: {1!s}'.format(
                 record_index, exception))
@@ -244,6 +291,17 @@ class WinEvtxParser(interface.FileObjectParser):
         parser_mediator.ProduceExtractionWarning((
             'unable to parse recovered event record: {0:d} with error: '
             '{1!s}').format(record_index, exception))
+
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'ElfFile\x00', offset=0)
+    return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows XML EventLog (EVTX) file-like object.

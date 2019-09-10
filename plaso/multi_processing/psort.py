@@ -18,7 +18,6 @@ from plaso.lib import py2to3
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import logger
-from plaso.multi_processing import multi_process_queue
 from plaso.storage import event_tag_index
 from plaso.storage import time_range as storage_time_range
 
@@ -193,13 +192,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   _QUEUE_TIMEOUT = 10 * 60
 
-  def __init__(self, use_zeromq=True):
-    """Initializes an engine object.
-
-    Args:
-      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
-          instead of Python's multiprocessing queue.
-    """
+  def __init__(self):
+    """Initializes a psort multi-processing engine."""
     super(PsortMultiProcessEngine, self).__init__()
     self._analysis_plugins = {}
     self._completed_analysis_processes = set()
@@ -212,7 +206,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # a deterministic way.
     self._export_event_heap = PsortEventHeap()
     self._export_event_timestamp = 0
-    self._guppy_memory_profiler = None
     self._knowledge_base = None
     self._memory_profiler = None
     self._merge_task = None
@@ -231,7 +224,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._serializers_profiler = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
-    self._use_zeromq = use_zeromq
     self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
   def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
@@ -311,6 +303,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
         # TODO: temporary solution.
         task = tasks.Task()
+        task.storage_format = definitions.STORAGE_FORMAT_SQLITE
         task.identifier = plugin_name
 
         merge_ready = storage_writer.CheckTaskReadyForMerge(task)
@@ -678,18 +671,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     logger.debug('Stopping analysis processes.')
     self._StopMonitoringProcesses()
 
-    # Note that multiprocessing.Queue is very sensitive regarding
-    # blocking on either a get or a put. So we try to prevent using
-    # any blocking behavior.
-
     if abort:
       # Signal all the processes to abort.
       self._AbortTerminate()
-
-    if not self._use_zeromq:
-      logger.debug('Emptying queues.')
-      for event_queue in self._event_queues.values():
-        event_queue.Empty()
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue new items.
@@ -817,28 +801,19 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       logger.error('Missing analysis plugin: {0:s}'.format(process_name))
       return None
 
-    if self._use_zeromq:
-      queue_name = '{0:s} output event queue'.format(process_name)
-      output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
-          name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT)
-      # Open the queue so it can bind to a random port, and we can get the
-      # port number to use in the input queue.
-      output_event_queue.Open()
-
-    else:
-      output_event_queue = multi_process_queue.MultiProcessingQueue(
-          timeout=self._QUEUE_TIMEOUT)
+    queue_name = '{0:s} output event queue'.format(process_name)
+    output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
+        name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT)
+    # Open the queue so it can bind to a random port, and we can get the
+    # port number to use in the input queue.
+    output_event_queue.Open()
 
     self._event_queues[process_name] = output_event_queue
 
-    if self._use_zeromq:
-      queue_name = '{0:s} input event queue'.format(process_name)
-      input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
-          name=queue_name, delay_open=True, port=output_event_queue.port,
-          timeout_seconds=self._QUEUE_TIMEOUT)
-
-    else:
-      input_event_queue = output_event_queue
+    queue_name = '{0:s} input event queue'.format(process_name)
+    input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
+        name=queue_name, delay_open=True, port=output_event_queue.port,
+        timeout_seconds=self._QUEUE_TIMEOUT)
 
     process = analysis_process.AnalysisProcess(
         input_event_queue, storage_writer, self._knowledge_base,

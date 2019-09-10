@@ -32,11 +32,11 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.data_type, 'bsm:event')
-
     self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:20.000381')
 
-    self.assertEqual(event.event_type, 45029)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'bsm:event')
+    self.assertEqual(event_data.event_type, 45029)
 
     expected_extra_tokens = [
         {'AUT_TEXT': {
@@ -48,20 +48,21 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'error': 'Success',
             'token_status': 0}}]
 
-    self.assertEqual(event.extra_tokens, expected_extra_tokens)
+    self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
         'call_status': 0,
         'error': 'Success',
         'token_status': 0
     }
-    self.assertEqual(event.return_value, expected_return_value)
+    self.assertEqual(event_data.return_value, expected_return_value)
 
     event = events[15]
 
     self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:26.000171')
 
-    self.assertEqual(event.event_type, 45023)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.event_type, 45023)
 
     expected_extra_tokens = [
         {'AUT_SUBJECT32': {
@@ -82,20 +83,21 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'error': 'UNKNOWN',
             'token_status': 255}}]
 
-    self.assertEqual(event.extra_tokens, expected_extra_tokens)
+    self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
         'call_status': 5000,
         'error': 'UNKNOWN',
         'token_status': 255
     }
-    self.assertEqual(event.return_value, expected_return_value)
+    self.assertEqual(event_data.return_value, expected_return_value)
 
     event = events[31]
 
     self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:26.000530')
 
-    self.assertEqual(event.event_type, 45025)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.event_type, 45025)
     expected_extra_tokens = [
         {'AUT_SUBJECT32': {
             'aid': -1,
@@ -115,20 +117,21 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'call_status': 0,
             'error': 'Success',
             'token_status': 0}}]
-    self.assertEqual(event.extra_tokens, expected_extra_tokens)
+    self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
         'call_status': 0,
         'error': 'Success',
         'token_status': 0
     }
-    self.assertEqual(event.return_value, expected_return_value)
+    self.assertEqual(event_data.return_value, expected_return_value)
 
     event = events[50]
 
     self.CheckTimestamp(event.timestamp, '2013-11-04 18:37:36.000399')
 
-    self.assertEqual(event.event_type, 44903)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.event_type, 44903)
 
     expected_extra_tokens = [
         {'AUT_ARG64': {
@@ -157,14 +160,14 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'call_status': 0,
             'error': 'Success',
             'token_status': 0}}]
-    self.assertEqual(event.extra_tokens, expected_extra_tokens)
+    self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
         'call_status': 0,
         'error': 'Success',
         'token_status': 0
     }
-    self.assertEqual(event.return_value, expected_return_value)
+    self.assertEqual(event_data.return_value, expected_return_value)
 
 
 class OpenBSMParserTest(test_lib.ParserTestCase):
@@ -267,11 +270,11 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
             'token_status': 7}}]
     ]
 
-    for event_index in range(0, 19):
+    for event_index, expected_extra_tokens_dict in enumerate(
+        expected_extra_tokens):
       event = events[event_index]
-      expected_extra_tokens_dict = expected_extra_tokens[event_index]
-      extra_tokens_dict = getattr(event, 'extra_tokens', {})
-      self.assertEqual(extra_tokens_dict, expected_extra_tokens_dict)
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(event_data.extra_tokens, expected_extra_tokens_dict)
 
 
 if __name__ == '__main__':

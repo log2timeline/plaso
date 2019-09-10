@@ -56,7 +56,7 @@ class ProcessStatus(object):
     number_of_produced_warnings_delta (int): number of warnings produced by
         the process since the last status update.
     pid (int): process identifier (PID).
-    status (str): human readable status indication e.g. 'Hashing', 'Idle'.
+    status (str): human readable status indication such as "Hashing" or "Idle".
     used_memory (int): size of used memory in bytes.
   """
 
@@ -351,7 +351,8 @@ class ProcessingStatus(object):
     Args:
       process_status (ProcessStatus): process status.
       identifier (str): process identifier.
-      status (str): human readable status of the process e.g. 'Idle'.
+      status (str): human readable status indication such as "Hashing" or
+          "Idle".
       pid (int): process identifier (PID).
       used_memory (int): size of used memory in bytes.
       display_name (str): human readable of the file entry currently being
@@ -414,7 +415,8 @@ class ProcessingStatus(object):
 
     Args:
       identifier (str): foreman identifier.
-      status (str): human readable status of the foreman e.g. 'Idle'.
+      status (str): human readable status indication such as "Hashing" or
+          "Idle".
       pid (int): process identifier (PID).
       used_memory (int): size of used memory in bytes.
       display_name (str): human readable of the file entry currently being
@@ -479,7 +481,8 @@ class ProcessingStatus(object):
 
     Args:
       identifier (str): worker identifier.
-      status (str): human readable status of the worker e.g. 'Idle'.
+      status (str): human readable status indication such as "Hashing" or
+          "Idle".
       pid (int): process identifier (PID).
       used_memory (int): size of used memory in bytes.
       display_name (str): human readable of the file entry currently being

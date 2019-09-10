@@ -123,12 +123,14 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._status = definitions.STATUS_INDICATOR_ANALYZING
 
     task = tasks.Task()
+    task.storage_format = definitions.STORAGE_FORMAT_SQLITE
     # TODO: temporary solution.
     task.identifier = self._analysis_plugin.plugin_name
 
     self._task = task
 
-    storage_writer = self._storage_writer.CreateTaskStorage(task)
+    storage_writer = self._storage_writer.CreateTaskStorage(
+        task, definitions.STORAGE_FORMAT_SQLITE)
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
@@ -166,9 +168,6 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         self._ProcessEvent(self._analysis_mediator, *queued_object)
 
         self._number_of_consumed_events += 1
-
-        if self._guppy_memory_profiler:
-          self._guppy_memory_profiler.Sample()
 
       logger.debug(
           '{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(

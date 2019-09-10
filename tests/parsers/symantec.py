@@ -46,10 +46,11 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2012-11-30 10:47:29.000000')
 
-    self.assertEqual(event.user, 'davnads')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.user, 'davnads')
     expected_file = (
         'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')
-    self.assertEqual(event.file, expected_file)
+    self.assertEqual(event_data.file, expected_file)
 
     expected_message = (
         'Event Name: GL_EVENT_INFECTION; '
@@ -67,7 +68,8 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
         'W32.Changeup!gen33; '
         'Unknown; ...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

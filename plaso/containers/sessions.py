@@ -36,8 +36,8 @@ class Session(interface.AttributeContainer):
     preferred_encoding (str): preferred encoding.
     preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred year.
-    product_name (str): name of the product that created the session
-        e.g. 'log2timeline'.
+    product_name (str): name of the product that created the session for
+        example "log2timeline".
     product_version (str): version of the product that created the session.
     start_time (int): time that the session was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
@@ -201,8 +201,8 @@ class SessionStart(interface.AttributeContainer):
     preferred_encoding (str): preferred encoding.
     preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred year.
-    product_name (str): name of the product that created the session
-        e.g. 'log2timeline'.
+    product_name (str): name of the product that created the session for
+        example "log2timeline".
     product_version (str): version of the product that created the session.
     timestamp (int): time that the session was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.

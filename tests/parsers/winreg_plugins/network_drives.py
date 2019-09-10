@@ -159,6 +159,9 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.data_type, 'windows:registry:network_drive')
     self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'windows:registry:network_drive')
+
     expected_message = (
         '[{0:s}] '
         'DriveLetter: H '
@@ -167,7 +170,8 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
         'Type: Mapped Drive').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

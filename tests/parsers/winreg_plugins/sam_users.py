@@ -44,14 +44,16 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.data_type, 'windows:registry:sam_users')
     self.CheckTimestamp(event.timestamp, '2014-09-24 03:36:06.358837')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    self.assertEqual(event.account_rid, 500)
-    self.assertEqual(event.login_count, 6)
-    self.assertEqual(event.username, 'Administrator')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:sam_users')
+    self.assertEqual(event_data.account_rid, 500)
+    self.assertEqual(event_data.login_count, 6)
+    self.assertEqual(event_data.username, 'Administrator')
 
     expected_message = (
         '[{0:s}] '
@@ -64,15 +66,19 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'RID: 500 '
         'Login count: 6')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test SAMUsersWindowsRegistryEvent.
     event = events[1]
 
-    self.assertEqual(event.data_type, 'windows:registry:sam_users')
     self.CheckTimestamp(event.timestamp, '2010-11-20 21:48:12.569244')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_LOGIN)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'windows:registry:sam_users')
 
     expected_message = (
         '[{0:s}] '
@@ -85,7 +91,8 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'RID: 500 '
         'Login count: 6')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

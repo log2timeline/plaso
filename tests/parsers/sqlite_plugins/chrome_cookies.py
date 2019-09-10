@@ -28,7 +28,8 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     extra_objects = []
 
     for event in storage_writer.GetEvents():
-      if event.data_type == 'chrome:cookie:entry':
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type == 'chrome:cookie:entry':
         events.append(event)
       else:
         extra_objects.append(event)
@@ -52,16 +53,18 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
-    self.assertEqual(event.host, 'www.linkedin.com')
-    self.assertEqual(event.cookie_name, 'leo_auth_token')
-    self.assertFalse(event.httponly)
-    self.assertEqual(event.url, 'http://www.linkedin.com/')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.host, 'www.linkedin.com')
+    self.assertEqual(event_data.cookie_name, 'leo_auth_token')
+    self.assertFalse(event_data.httponly)
+    self.assertEqual(event_data.url, 'http://www.linkedin.com/')
 
     expected_message = (
         'http://www.linkedin.com/ (leo_auth_token) Flags: [HTTP only] = False '
         '[Persistent] = True')
     expected_short_message = 'www.linkedin.com (leo_auth_token)'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check one of the visits to rubiconproject.com.
     event = events[379]
@@ -70,26 +73,28 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
-    self.assertEqual(event.url, 'http://rubiconproject.com/')
-    self.assertEqual(event.path, '/')
-    self.assertFalse(event.secure)
-    self.assertTrue(event.persistent)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.url, 'http://rubiconproject.com/')
+    self.assertEqual(event_data.path, '/')
+    self.assertFalse(event_data.secure)
+    self.assertTrue(event_data.persistent)
 
     expected_message = (
         'http://rubiconproject.com/ (put_2249) Flags: [HTTP only] = False '
         '[Persistent] = True')
     self._TestGetMessageStrings(
-        event, expected_message, 'rubiconproject.com (put_2249)')
+        event_data, expected_message, 'rubiconproject.com (put_2249)')
 
     # Examine an event for a visit to a political blog site.
     event = events[444]
 
     self.CheckTimestamp(event.timestamp, '2012-03-22 01:47:21.012022')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(
-        event.path,
+        event_data.path,
         '/2012/03/21/romney-tries-to-clean-up-etch-a-sketch-mess/')
-    self.assertEqual(event.host, 'politicalticker.blogs.cnn.com')
+    self.assertEqual(event_data.host, 'politicalticker.blogs.cnn.com')
 
     # Examine a cookie that has an autologin entry.
     event = events[1425]
@@ -98,12 +103,13 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.host, 'marvel.com')
-    self.assertEqual(event.cookie_name, 'autologin[timeout]')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.host, 'marvel.com')
+    self.assertEqual(event_data.cookie_name, 'autologin[timeout]')
 
     # This particular cookie value represents a timeout value that corresponds
     # to the expiration date of the cookie.
-    self.assertEqual(event.data, '1364824322')
+    self.assertEqual(event_data.data, '1364824322')
 
     # Examine a cookie expiry event.
     event = events[2]
@@ -127,7 +133,8 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     extra_objects = []
 
     for event in storage_writer.GetEvents():
-      if event.data_type == 'chrome:cookie:entry':
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type == 'chrome:cookie:entry':
         events.append(event)
       else:
         extra_objects.append(event)
@@ -150,16 +157,18 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.host, 'google.com')
-    self.assertEqual(event.cookie_name, '__utma')
-    self.assertFalse(event.httponly)
-    self.assertEqual(event.url, 'http://google.com/gmail/about/')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.host, 'google.com')
+    self.assertEqual(event_data.cookie_name, '__utma')
+    self.assertFalse(event_data.httponly)
+    self.assertEqual(event_data.url, 'http://google.com/gmail/about/')
 
     expected_message = (
         'http://google.com/gmail/about/ (__utma) '
         'Flags: [HTTP only] = False [Persistent] = True')
     expected_short_message = 'google.com (__utma)'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check one of the visits to fbi.gov for last accessed time.
     event = events[10]
@@ -168,22 +177,25 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
-    self.assertEqual(event.url, 'http://fbi.gov/')
-    self.assertEqual(event.path, '/')
-    self.assertFalse(event.secure)
-    self.assertTrue(event.persistent)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.url, 'http://fbi.gov/')
+    self.assertEqual(event_data.path, '/')
+    self.assertFalse(event_data.secure)
+    self.assertTrue(event_data.persistent)
 
     expected_message = (
         'http://fbi.gov/ (__cfduid) '
         'Flags: [HTTP only] = True [Persistent] = True')
     self._TestGetMessageStrings(
-        event, expected_message, 'fbi.gov (__cfduid)')
+        event_data, expected_message, 'fbi.gov (__cfduid)')
 
     # Examine an event for a cookie with a very large expire time.
     event = events[8]
 
     self.CheckTimestamp(event.timestamp, '9999-08-17 12:26:28.000000')
-    self.assertEqual(event.host, 'projects.fivethirtyeight.com')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.host, 'projects.fivethirtyeight.com')
 
 
 if __name__ == '__main__':
