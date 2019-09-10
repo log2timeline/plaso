@@ -245,6 +245,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
         'win32/plaso-20171231.1.win32.msi')
