@@ -826,8 +826,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           self._source_path_specs, self._destination_path,
           self._output_writer, skip_duplicates=self._skip_duplicates)
 
-    with open(os.path.join(self._destination_path, 'hashes.csv'), 'w',
-              newline='') as csv_file:
+    with open(os.path.join(self._destination_path, 'hashes.csv'),
+              'w') as csv_file:
       self._report_writer = csv.DictWriter(
           csv_file, fieldnames=['sha256', 'filepath'])
       self._report_writer.writeheader()
