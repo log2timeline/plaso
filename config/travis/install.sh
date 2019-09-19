@@ -17,7 +17,7 @@ DPKG_PYTHON3_DEPENDENCIES="libbde-python3 libesedb-python3 libevt-python3 libevt
 
 DPKG_PYTHON3_TEST_DEPENDENCIES="python3-distutils python3-mock python3-pbr python3-setuptools";
 
-RPM_PYTHON2_DEPENDENCIES="libbde-python2 libesedb-python2 libevt-python2 libevtx-python2 libewf-python2 libfsapfs-python2 libfsntfs-python2 libfvde-python2 libfwnt-python2 libfwsi-python2 liblnk-python2 libmsiecf-python2 libolecf-python2 libqcow-python2 libregf-python2 libscca-python2 libsigscan-python2 libsmdev-python2 libsmraw-python2 libvhdi-python2 libvmdk-python2 libvshadow-python2 libvslvm-python2 python2-XlsxWriter python2-artifacts python2-backports-lzma python2-bencode python2-biplist python2-certifi python2-chardet python2-crypto python2-dateutil python2-defusedxml python2-dfdatetime python2-dfvfs python2-dfwinreg python2-dtfabric python2-elasticsearch python2-future python2-idna python2-lz4 python2-pefile python2-psutil python2-pyparsing python2-pysqlite python2-pytsk3 python2-pytz python2-pyyaml python2-requests python2-six python2-urllib3 python2-yara-3.10.0 python2-zmq";
+RPM_PYTHON2_DEPENDENCIES="libbde-python2 libesedb-python2 libevt-python2 libevtx-python2 libewf-python2 libfsapfs-python2 libfsntfs-python2 libfvde-python2 libfwnt-python2 libfwsi-python2 liblnk-python2 libmsiecf-python2 libolecf-python2 libqcow-python2 libregf-python2 libscca-python2 libsigscan-python2 libsmdev-python2 libsmraw-python2 libvhdi-python2 libvmdk-python2 libvshadow-python2 libvslvm-python2 python2-XlsxWriter python2-artifacts python2-backports-lzma python2-bencode python2-biplist python2-certifi python2-chardet python2-crypto python2-dateutil python2-defusedxml python2-dfdatetime python2-dfvfs python2-dfwinreg python2-dtfabric python2-elasticsearch python2-future python2-idna python2-lz4 python2-pefile python2-psutil python2-pyparsing python2-pysqlite python2-pytsk3 python2-pytz python2-pyyaml python2-requests python2-six python2-urllib3 python2-yara python2-zmq";
 
 RPM_PYTHON2_TEST_DEPENDENCIES="python2-funcsigs python2-mock python2-pbr python2-setuptools";
 
@@ -37,10 +37,10 @@ then
 	docker run --name=${CONTAINER_NAME} --detach -i registry.fedoraproject.org/fedora:${FEDORA_VERSION};
 
 	# Install dnf-plugins-core and langpacks-en.
-	docker exec ${CONTAINER_NAME} dnf install -y dnf-plugins-core langpacks-en;
+	docker exec ${CONTAINER_NAME} dnf install -q -y dnf-plugins-core langpacks-en;
 
 	# Add additional dnf repositories.
-	docker exec ${CONTAINER_NAME} dnf copr -y enable @gift/dev;
+	docker exec ${CONTAINER_NAME} dnf copr -q -y enable @gift/dev;
 
 	if test -n "${TOXENV}";
 	then
@@ -74,7 +74,7 @@ then
 
 	# Install add-apt-repository and locale-gen.
 	docker exec ${CONTAINER_NAME} apt-get update -q;
-	docker exec -e "DEBIAN_FRONTEND=noninteractive" ${CONTAINER_NAME} sh -c "apt-get install -y locales software-properties-common";
+	docker exec -e "DEBIAN_FRONTEND=noninteractive" ${CONTAINER_NAME} sh -c "apt-get install -q -y locales software-properties-common";
 
 	# Add additional apt repositories.
 	if test -n "${TOXENV}";
@@ -122,7 +122,7 @@ then
 			fi
 		fi
 	fi
-	docker exec -e "DEBIAN_FRONTEND=noninteractive" ${CONTAINER_NAME} sh -c "apt-get install -y ${DPKG_PACKAGES}";
+	docker exec -e "DEBIAN_FRONTEND=noninteractive" ${CONTAINER_NAME} sh -c "apt-get install -q -y ${DPKG_PACKAGES}";
 
 	docker cp ../plaso ${CONTAINER_NAME}:/
 
