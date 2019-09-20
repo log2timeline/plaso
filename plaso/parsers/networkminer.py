@@ -17,8 +17,6 @@ from plaso.lib import py2to3
 from plaso.formatters import trendmicroav as formatter
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
-import logging
-import pdb
 
 class NetworkMinerEventData(events.EventData):
 	"""NetworkMiner event Data.
@@ -82,20 +80,15 @@ class NetworkMinerParser(dsv_parser.DSVParser):
 		
 
 			try:
-				#pdb.set_trace()
 				timestamp = row.get('timestamp', None)
-				#time = time[:27]+time[27:]
-				logging.error('time is %s',(timestamp))
-			
-				timestamp = date_time.CopyFromStringISO8601(timestamp)
-				logging.error('returned %s', timestamp)
+				date_time.CopyFromStringISO8601(timestamp)
+
 			except ValueError:
-				logging.error('afsf')
 				parser_mediator.ProduceExtractionWarning(
 			      'invalid date time value')
 				return
 			event = time_events.DateTimeValuesEvent(
-			timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+			date_time, definitions.TIME_DESCRIPTION_WRITTEN)
 			parser_mediator.ProduceEventWithEventData(event, event_data)
 	def VerifyRow(self, parser_mediator, row):
 		"""Verifies if a line of the file is in the expected format.
@@ -108,8 +101,6 @@ class NetworkMinerParser(dsv_parser.DSVParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-		logging.error(len(row))
-		logging.error(self.MIN_COLUMNS)
 		if len(row) != self.MIN_COLUMNS:
 			return False
 

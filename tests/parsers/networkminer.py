@@ -17,8 +17,8 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
 		parser = networkminer.NetworkMinerParser()
 		storage_writer = self._ParseFile(['networkminer.pcap.FileInfos.csv'], parser)
 
-		#self.assertEqual(storage_writer.number_of_warnings, 0)
-		self.assertEqual(storage_writer.number_of_events, 5)
+		self.assertEqual(storage_writer.number_of_warnings, 0)
+		self.assertEqual(storage_writer.number_of_events, 4)
 
 if __name__ == '__main__':
   unittest.main()
