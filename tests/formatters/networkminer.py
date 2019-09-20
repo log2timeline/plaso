@@ -22,23 +22,18 @@ class NetworkMinerFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = networkminer.NetworkminerEventFormatter()
 
     expected_attribute_names = [
-        'event_map',
-        'category_map',
-        'virus',
-        'file',
-        'action0_map',
-        'action1_map',
-        'action2_map',
-        'description',
-        'scanid',
-        'event_data',
-        'remote_machine',
-        'remote_machine_ip']
+        'source_ip',
+        'source_port',
+        'destination_ip',
+        'destination_port',
+        'filename',
+        'file_path',
+        'file_size',
+        'file_md5',
+        'file_details']
 
-    #self._TestGetFormatStringAttributeNames(
-     #   event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+    self._TestGetFormatStringAttributeNames(
+        event_formatter, expected_attribute_names)
 
 
 if __name__ == '__main__':

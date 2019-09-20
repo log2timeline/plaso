@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """Parser for NetworkMiner output files."""
 
@@ -26,17 +25,17 @@ class NetworkMinerEventData(events.EventData):
 	source_port (str): Originating port number.
 	destination_ip (str): Destination IP address.
 	destination_port (str): Destination port number.
-	time_stamp (dfdatetime): time 
+	time_stamp (dfdatetime): time
 	filename (string): Name of the file.
 	file_path (string): File path to where it was downloaded.
 	file_size (string): Size of the file.
 	file_md5 (string): MD5 hash of the file.
 	file_details (string): Details about the file.
 	"""
-	DATA_TYPE = "scanner:networkminer:fileinfos" 
+	DATA_TYPE = "scanner:networkminer:fileinfos"
 
 	def __init__(self):
-		super(NetworkMinerEventData, self).__init__()
+		super(NetworkMinerEventData, self).__init__(data_type=self.DATA_TYPE)
 		self.source_ip = None
 		self.source_port = None
 		self.destination_ip = None
@@ -49,14 +48,14 @@ class NetworkMinerEventData(events.EventData):
 
 class NetworkMinerParser(dsv_parser.DSVParser):
 	"""Parser class for networkminer fileinfos."""
-	
+
 	NAME = 'networkminer_fileinfo'
 	DESCRIPTION = 'Parser for NetworkMiner .fileinfos csv.'
 
 	COLUMNS = (
-		'source_ip', 'source_port', 'destination_ip', 'destination_port', 
+		'source_ip', 'source_port', 'destination_ip', 'destination_port',
 		'filename', 'file_path','file_size', 'unused', 'file_md5', 'unused2',
-		'unused3', 'unused4', 'timestamp')
+		'file_details', 'unused4', 'timestamp')
 
 	MIN_COLUMNS = 13
 
@@ -70,14 +69,15 @@ class NetworkMinerParser(dsv_parser.DSVParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
 		event_data = NetworkMinerEventData()
-		date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-		
-		
+
+
+
 		if row.get('timestamp', None) != "Timestamp":
-			for field in ('source_ip', 'source_port', 'destination_ip', 'destination_port', 
-	      'filename', 'file_path', 'file_size', 'file_md5'):
+			date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+			for field in ('source_ip', 'source_port', 'destination_ip',
+				'destination_port', 'filename', 'file_path', 'file_size', 'file_md5',
+				'file_details'):
 				setattr(event_data, field, row[field])
-		
 
 			try:
 				timestamp = row.get('timestamp', None)
@@ -104,17 +104,16 @@ class NetworkMinerParser(dsv_parser.DSVParser):
 		if len(row) != self.MIN_COLUMNS:
 			return False
 
-		return True
+
     # Check the date format!
     # If it doesn't parse, then this isn't a Trend Micro AV log.
-		# date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-		# try:
-		# 	date_time.CopyFromStringISO8601(row.get('timestamp', None))
-		# except ValueError:
-		#   return False
+		if row.get('timestamp', None) != "Timestamp":
+			date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+			try:
+				date_time.CopyFromStringISO8601(row.get('timestamp', None))
+			except ValueError:
+			  return False
 
-   
+		return True
+
 manager.ParsersManager.RegisterParser(NetworkMinerParser)
-
-
-		
