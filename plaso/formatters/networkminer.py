@@ -12,22 +12,22 @@ class NetworkminerEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = "scanner:networkminer:fileinfos"
 
   FORMAT_STRING_PIECES = [
-    'Source IP: {source_ip}',
-    'Source Port: {source_port}',
-    'Destination IP: {destination_ip}',
-    'Destination Port: {destination_port}',
-    '{filename}',
-    '{file_path}',
-    '{file_size}',
-    '{file_md5}',
-    '{file_details}']
+      'Source IP: {source_ip}',
+      'Source Port: {source_port}',
+      'Destination IP: {destination_ip}',
+      'Destination Port: {destination_port}',
+      '{filename}',
+      '{file_path}',
+      '{file_size}',
+      '{file_md5}',
+      '{file_details}']
 
   FORMAT_STRING_SHORT_PIECES = [
-    'Source IP: {source_ip}',
-    'Destination IP: {destination_ip}',
-    '{filename}',
-    '{file_path}',
-    '{file_md5}']
+      'Source IP: {source_ip}',
+      'Destination IP: {destination_ip}',
+      '{filename}',
+      '{file_path}',
+      '{file_md5}']
   SOURCE_LONG = 'NetworkMiner fileinfos Log'
   SOURCE_SHORT = 'NetworkMiner'
 
