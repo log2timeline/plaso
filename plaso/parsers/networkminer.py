@@ -82,7 +82,7 @@ class NetworkMinerParser(dsv_parser.DSVParser):
             'invalid date time value')
         return
       event = time_events.DateTimeValuesEvent(
-      date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.
