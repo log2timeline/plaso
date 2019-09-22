@@ -69,8 +69,8 @@ class NetworkMinerParser(dsv_parser.DSVParser):
     if row.get('timestamp', None) != "Timestamp":
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       for field in ('source_ip', 'source_port', 'destination_ip',
-                  'destination_port', 'filename', 'file_path', 'file_size',
-                  'file_md5', 'file_details'):
+                    'destination_port', 'filename', 'file_path', 'file_size',
+                    'file_md5', 'file_details'):
         setattr(event_data, field, row[field])
 
       try:
