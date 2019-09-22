@@ -47,13 +47,13 @@ class NetworkMinerParser(dsv_parser.DSVParser):
   DESCRIPTION = 'Parser for NetworkMiner .fileinfos csv.'
 
   COLUMNS = (
-    'source_ip', 'source_port', 'destination_ip', 'destination_port',
-    'filename', 'file_path', 'file_size', 'unused', 'file_md5', 'unused2',
-    'file_details', 'unused4', 'timestamp')
+      'source_ip', 'source_port', 'destination_ip', 'destination_port',
+      'filename', 'file_path', 'file_size', 'unused', 'file_md5', 'unused2',
+      'file_details', 'unused4', 'timestamp')
 
   MIN_COLUMNS = 13
 
-  def ParseRow (self, parser_mediator, row_offset, row):
+  def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
 
     Args:
@@ -69,8 +69,8 @@ class NetworkMinerParser(dsv_parser.DSVParser):
     if row.get('timestamp', None) != "Timestamp":
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       for field in ('source_ip', 'source_port', 'destination_ip',
-        'destination_port', 'filename', 'file_path', 'file_size', 'file_md5',
-        'file_details'):
+                  'destination_port', 'filename', 'file_path', 'file_size',
+                  'file_md5', 'file_details'):
         setattr(event_data, field, row[field])
 
       try:
@@ -82,7 +82,7 @@ class NetworkMinerParser(dsv_parser.DSVParser):
             'invalid date time value')
         return
       event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.
@@ -96,7 +96,7 @@ class NetworkMinerParser(dsv_parser.DSVParser):
       bool: True if this is the correct parser, False otherwise.
     """
     if len(row) != self.MIN_COLUMNS:
-    	return False
+      return False
 
 
     # Check the date format!
