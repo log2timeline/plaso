@@ -51,7 +51,7 @@ class NetworkMinerParser(dsv_parser.DSVParser):
     'filename', 'file_path', 'file_size', 'unused', 'file_md5', 'unused2',
     'file_details', 'unused4', 'timestamp')
 
-	MIN_COLUMNS = 13
+  MIN_COLUMNS = 13
 
   def ParseRow (self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
