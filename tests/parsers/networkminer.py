@@ -12,12 +12,13 @@ from tests.parsers import test_lib
 
 
 class NetworkMinerUnitTest(test_lib.ParserTestCase):
+	"""Tests for the Trend Micro AV Log parser."""
 
 	def testParse(self):
 		"""Tests the Parse function."""
 		parser = networkminer.NetworkMinerParser()
-		storage_writer = self._ParseFile(['networkminer.pcap.FileInfos.csv'], 
-			parser)
+		storage_writer = self._ParseFile(['networkminer.pcap.FileInfos.csv'],
+															parser)
 
 		self.assertEqual(storage_writer.number_of_warnings, 0)
 		self.assertEqual(storage_writer.number_of_events, 4)
@@ -34,22 +35,21 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
 		self.assertEqual(event_data.filename, 'index.html')
 
 		expected_message = (
-			'Source IP: 111.123.124.11 ' 
+			'Source IP: 111.123.124.11 '
 			'Source Port: TCP 80 '
 			'Destination IP: 192.168.151.130 '
 			'Destination Port: TCP 48304 '
-			'index.html D:\case-export\AssembledFiles\index.html '
+			'index.html D:\\case-export\\AssembledFiles\\index.html '
 			'98 500 B '
 			'abdb151dfd5775c05b47c0f4ea1cd3d7 '
 			'travelocity.com/')
-	
+
 		short_message = (
 			'Source IP: 111.123.124.11 '
-		 	'Destination IP: 192.168.151.130 ' 
-		 	'index.html D:\case-...')
+		 	'Destination IP: 192.168.151.130 '
+		 	'index.html D:\\case-...')
 			
-		self._TestGetMessageStrings(
-			event_data, expected_message, short_message)
+		self._TestGetMessageStrings(event_data, expected_message, short_message)
 
 if __name__ == '__main__':
   unittest.main()
