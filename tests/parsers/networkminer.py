@@ -48,7 +48,6 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
         'Source IP: 111.123.124.11 '
         'Destination IP: 192.168.151.130 '
         'index.html D:\\case-...')
-
     self._TestGetMessageStrings(event_data, expected_message, short_message)
 
 if __name__ == '__main__':
