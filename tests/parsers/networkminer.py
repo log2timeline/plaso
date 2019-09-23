@@ -18,7 +18,7 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     parser = networkminer.NetworkMinerParser()
     storage_writer = self._ParseFile(['networkminer.pcap.FileInfos.csv'],
-        parser)
+                                     parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
@@ -48,7 +48,7 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
         'Source IP: 111.123.124.11 '
         'Destination IP: 192.168.151.130 '
         'index.html D:\\case-...')
-      
+
     self._TestGetMessageStrings(event_data, expected_message, short_message)
 
 if __name__ == '__main__':
