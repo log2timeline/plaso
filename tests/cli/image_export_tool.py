@@ -336,7 +336,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'a_directory'),
           os.path.join(temp_directory, 'a_directory', 'a_file'),
-          os.path.join(temp_directory, 'hashes.csv')])
+          os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
@@ -367,7 +367,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'passwords.txt'),
-          os.path.join(temp_directory, 'hashes.csv')])
+          os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
@@ -399,7 +399,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'a_directory'),
           os.path.join(temp_directory, 'a_directory', 'another_file'),
-          os.path.join(temp_directory, 'hashes.csv')])
+          os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
@@ -437,7 +437,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
           os.path.join(temp_directory, 'a_directory'),
           os.path.join(temp_directory, 'a_directory', 'another_file'),
           os.path.join(temp_directory, 'a_directory', 'a_file'),
-          os.path.join(temp_directory, 'hashes.csv')])
+          os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
 
@@ -471,7 +471,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
           os.path.join(temp_directory, 'a_directory'),
           os.path.join(temp_directory, 'a_directory', 'another_file'),
           os.path.join(temp_directory, 'a_directory', 'a_file'),
-          os.path.join(temp_directory, 'hashes.csv')])
+          os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
 
@@ -506,7 +506,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
           os.path.join(temp_directory, 'a_directory', 'another_file'),
           os.path.join(temp_directory, 'a_directory', 'a_file'),
           os.path.join(temp_directory, 'passwords.txt'),
-          os.path.join(temp_directory, 'hashes.csv')])
+          os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
 
@@ -539,7 +539,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'logs'),
           os.path.join(temp_directory, 'logs', 'sys.tgz'),
-          os.path.join(temp_directory, 'hashes.csv')])
+          os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)

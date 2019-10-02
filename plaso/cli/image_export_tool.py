@@ -5,8 +5,9 @@ from __future__ import unicode_literals
 
 import argparse
 import codecs
-import csv
+import collections
 import io
+import json
 import os
 import textwrap
 
@@ -92,7 +93,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._filter_file = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_memory_limit = None
-    self._report_output = {}
+    self._report_output = collections.defaultdict(list)
     self._report_writer = None
     self._resolver_context = context.Context()
     self._skip_duplicates = True
@@ -240,12 +241,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     target_path = os.path.join(target_directory, target_filename)
 
-    if digest in self._report_output:
-      self._report_output[digest] += ';/' + target_path.replace(
-          destination_path, '')
-    else:
-      self._report_output[digest] = "/" + target_path.replace(
-          destination_path, '')
+    self._report_output[digest].append(target_path.replace(
+        destination_path+'/', ''))
 
     if skip_duplicates:
       if not digest:
@@ -826,13 +823,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           self._source_path_specs, self._destination_path,
           self._output_writer, skip_duplicates=self._skip_duplicates)
 
-    with open(os.path.join(self._destination_path, 'hashes.csv'),
-              'w') as csv_file:
-      self._report_writer = csv.DictWriter(
-          csv_file, fieldnames=['sha256', 'filepath'])
-      self._report_writer.writeheader()
-      for sha256, filepath in self._report_output.items():
-        self._report_writer.writerow({'sha256': sha256, 'filepath': filepath})
+    json_data = []
+
+    with open(os.path.join(
+        self._destination_path, 'hashes.json'), 'w') as write_file:
+      for sha256, paths in self._report_output.items():
+        json_data.append({"sha256": sha256, "paths": paths})
+      json.dump(json_data, write_file)
 
     self._output_writer.Write('Export completed.\n')
     self._output_writer.Write('\n')
