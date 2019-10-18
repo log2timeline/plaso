@@ -231,9 +231,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     try:
       digest = self._CalculateDigestHash(file_entry, data_stream_name)
     except (IOError, dfvfs_errors.BackEndError) as exception:
-      output_writer.Write((
+      logger.error((
           '[skipping] unable to read content of file entry: {0:s} '
-          'with error: {1!s}\n').format(display_name, exception))
+          'with error: {1!s}').format(display_name, exception))
       return
 
     target_directory, target_filename = self._CreateSanitizedDestination(
@@ -246,16 +246,16 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     if skip_duplicates:
       if not digest:
-        output_writer.Write(
-            '[skipping] unable to read content of file entry: {0:s}\n'.format(
+        logger.error(
+            '[skipping] unable to read content of file entry: {0:s}'.format(
                 display_name))
         return
 
       duplicate_display_name = self._digests.get(digest, None)
       if duplicate_display_name:
-        output_writer.Write((
+        logger.warning((
             '[skipping] file entry: {0:s} is a duplicate of: {1:s} with '
-            'digest: {2:s}\n').format(
+            'digest: {2:s}').format(
                 display_name, duplicate_display_name, digest))
         return
 
@@ -265,18 +265,18 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       os.makedirs(target_directory)
 
     if os.path.exists(target_path):
-      output_writer.Write((
+      logger.warning((
           '[skipping] unable to export contents of file entry: {0:s} '
-          'because exported file: {1:s} already exists.\n').format(
+          'because exported file: {1:s} already exists.').format(
               display_name, target_path))
       return
 
     try:
       self._WriteFileEntry(file_entry, data_stream_name, target_path)
     except (IOError, dfvfs_errors.BackEndError) as exception:
-      output_writer.Write((
+      logger.error((
           '[skipping] unable to export contents of file entry: {0:s} '
-          'with error: {1!s}\n').format(display_name, exception))
+          'with error: {1!s}').format(display_name, exception))
 
       try:
         os.remove(target_path)
