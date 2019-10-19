@@ -340,14 +340,22 @@ class StatusView(object):
       processing_status (ProcessingStatus): processing status.
     """
     if not processing_status:
-      processing_time = '00:00:00'
+      processing_time = 0
     else:
       processing_time = time.time() - processing_status.start_time
-      time_struct = time.gmtime(processing_time)
-      processing_time = time.strftime('%H:%M:%S', time_struct)
+    days, remainder = divmod(int(processing_time), 24 * 60 * 60)
+    hours, remainder = divmod(remainder, 60 * 60)
+    minutes, seconds = divmod(remainder, 60)
+    if days == 0:
+      days = ''
+    elif days == 1:
+      days = '1 day, '
+    else:
+      days = '{0:d} days, '.format(days)
 
     self._output_writer.Write(
-        'Processing time\t\t: {0:s}\n'.format(processing_time))
+        'Processing time\t\t: {0:s}{1:02d}:{2:02d}:{3:02d}\n'.format(
+            days, hours, minutes, seconds))
 
   def _PrintTasksStatus(self, processing_status):
     """Prints the status of the tasks.
