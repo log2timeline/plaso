@@ -210,7 +210,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
 
   def _ExtractDataStream(
-      self, file_entry, data_stream_name, destination_path, output_writer,
+      self, file_entry, data_stream_name, destination_path,
       skip_duplicates=True):
     """Extracts a data stream.
 
@@ -218,7 +218,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       file_entry (dfvfs.FileEntry): file entry containing the data stream.
       data_stream_name (str): name of the data stream.
       destination_path (str): path where the extracted files should be stored.
-      output_writer (CLIOutputWriter): output writer.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
