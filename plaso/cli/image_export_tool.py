@@ -205,8 +205,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     for path_spec in path_spec_generator:
       self._ExtractFileEntry(
-          path_spec, destination_path, output_writer,
-          skip_duplicates=skip_duplicates)
+          path_spec, destination_path, skip_duplicates=skip_duplicates)
 
 
   def _ExtractDataStream(
@@ -283,13 +282,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         pass
 
   def _ExtractFileEntry(
-      self, path_spec, destination_path, output_writer, skip_duplicates=True):
+      self, path_spec, destination_path, skip_duplicates=True):
     """Extracts a file entry.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification of the source file.
       destination_path (str): path where the extracted files should be stored.
-      output_writer (CLIOutputWriter): output writer.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
@@ -308,15 +306,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       if self._abort:
         break
       self._ExtractDataStream(
-          file_entry, data_stream.name, destination_path, output_writer,
+          file_entry, data_stream.name, destination_path,
           skip_duplicates=skip_duplicates)
 
       file_entry_processed = True
 
     if not file_entry_processed:
       self._ExtractDataStream(
-          file_entry, '', destination_path, output_writer,
-          skip_duplicates=skip_duplicates)
+          file_entry, '', destination_path, skip_duplicates=skip_duplicates)
 
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(
@@ -375,8 +372,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       for path_spec in searcher.Find(find_specs=(
           filters_helper.included_file_system_find_specs)):
         self._ExtractFileEntry(
-            path_spec, destination_path, output_writer,
-            skip_duplicates=skip_duplicates)
+            path_spec, destination_path, skip_duplicates=skip_duplicates)
 
       file_system.Close()
 
