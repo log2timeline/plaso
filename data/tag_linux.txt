@@ -5,7 +5,9 @@ application_execution
 
 login
   reporter is 'login' AND (body contains 'session opened' OR body contains 'logged in' OR body contains 'ROOT LOGIN')
+  reporter is 'sshd' AND (body contains 'Starting session' OR body contains 'session opened')
   data_type is 'selinux:line' AND audit_type is 'LOGIN'
+  data_type is 'linux:utmp:event' AND type == 7
 
 login_failed
   data_type is 'syslog:line' AND body contains 'pam_tally2'
@@ -15,10 +17,25 @@ login_failed
 
 logout
   reporter is 'login' AND body contains 'session closed'
+  reporter is 'sshd' AND (body contains 'session closed' OR body contains 'Close session')
   reporter is 'systemd-logind' AND body contains 'logged out'
+  # This will also flag dead gettys that init kills during shutdown/reboot (at least with SysV init)
+  data_type is 'linux:utmp:event' AND type == 8 AND terminal != '' AND pid != 0
+
+session_start
+  reporter is 'systemd-logind' and body contains 'New session'
+
+session_stop
+  reporter is 'systemd-logind' and body contains 'Removed session'
 
 boot
-  data_type is 'linux:utmp:event' AND terminal is 'system boot'
+  data_type is 'linux:utmp:event' AND terminal is 'system boot' AND username is 'reboot' AND type == 2
+
+shutdown
+  data_type is 'linux:utmp:event' AND (terminal is '~~' OR terminal is 'system boot') and type == 1 and username is 'shutdown'
+
+runlevel
+  data_type is 'linux:utmp:event' AND type == 1 AND username is 'runlevel'
 
 device_connection
   reporter is 'kernel' AND body contains 'New USB device found'
