@@ -20,6 +20,7 @@ description: Preset for Linux.
 operating_systems:
 - {family: Linux}
 parsers:
+- apt_history
 - bash_history
 - bencode
 - czip/oxml
@@ -37,6 +38,7 @@ parsers:
 - syslog
 - systemd_journal
 - utmp
+- vsftpd
 - webhist
 - xchatlog
 - xchatscrollback
@@ -111,6 +113,7 @@ parsers:
 - olecf
 - pe
 - prefetch
+- setupapi
 - sccm
 - skydrive_log
 - skydrive_log_old

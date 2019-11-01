@@ -41,6 +41,8 @@ class BencodeTest(test_lib.BencodePluginTestCase):
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2013-11-08 18:24:24.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
 
@@ -52,7 +54,8 @@ class BencodeTest(test_lib.BencodePluginTestCase):
         'Saved to /Users/brian/Downloads; '
         'Minutes seeded: 4')
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

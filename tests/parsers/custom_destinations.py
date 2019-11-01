@@ -49,6 +49,8 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         '[@%systemroot%\\system32\\oobefldr.dll,-1262] '
         'File size: 11776 '
@@ -66,12 +68,15 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         '[@%systemroot%\\system32\\oobefldr.dll,-1262] '
         'C:\\Windows\\System32\\GettingStarte...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # A shell item event.
     event = events[18]
 
     self.CheckTimestamp(event.timestamp, '2010-11-10 07:41:04.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         'Name: System32 '
@@ -85,12 +90,15 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'NTFS file reference: 2331-1 '
         'Origin: 5afe4de1b92fc382.customDes...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # A distributed link tracking event.
     event = events[12]
 
     self.CheckTimestamp(event.timestamp, '2010-11-10 19:08:32.656260')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         'e9215b24-ecfd-11df-a81c-000c29031e1e '
@@ -101,7 +109,8 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'e9215b24-ecfd-11df-a81c-000c29031e1e '
         'Origin: 5afe4de1b92fc382.customDestinati...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

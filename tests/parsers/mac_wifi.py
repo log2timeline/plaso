@@ -32,36 +32,39 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2017-01-02 00:10:15.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(
-        event.text,
+        event_data.text,
         'test-macbookpro newsyslog[50498]: logfile turned over')
 
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2017-01-02 00:11:02.378000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_text = (
         '<kernel> wl0: powerChange: *** '
         'BONJOUR/MDNS OFFLOADS ARE NOT RUNNING.')
-    self.assertEqual(event.text, expected_text)
+    self.assertEqual(event_data.text, expected_text)
 
     event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2017-01-02 07:41:01.371000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_string = (
         '<kernel> wl0: leaveModulePoweredForOffloads: Wi-Fi will stay on.')
-    self.assertEqual(event.text, expected_string)
+    self.assertEqual(event_data.text, expected_string)
 
     event = events[5]
 
     self.CheckTimestamp(event.timestamp, '2017-01-02 07:41:02.207000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_text = (
         '<kernel> Setting BTCoex Config: enable_2G:1, profile_2g:0, '
         'enable_5G:1, profile_5G:0')
-
-    self.assertEqual(event.text, expected_text)
+    self.assertEqual(event_data.text, expected_text)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -94,7 +97,8 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Action: Interface en0 turn up.')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[2]
 
@@ -107,17 +111,17 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     expected_text = (
         'Already associated to \u201cCampusNet\u201d. Bailing on auto-join.')
-    self.assertEqual(event.text, expected_text)
+    self.assertEqual(event_data.text, expected_text)
 
     event = events[3]
 
     self.CheckTimestamp(event.timestamp, '2013-11-14 21:50:52.395000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_string = (
         '<airportd[88]> _handleLinkEvent: Unable to process link event, '
         'op mode request returned -3903 (Operation not supported)')
-
-    self.assertEqual(event.text, expected_string)
+    self.assertEqual(event_data.text, expected_string)
 
     event = events[6]
 
@@ -130,7 +134,6 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     expected_action = (
         'New wifi configured. BSSID: 88:30:8a:7a:61:88, SSID: AndroidAP, '
         'Security: WPA2 Personal.')
-
     self.assertEqual(event_data.action, expected_action)
 
     expected_text = (
@@ -139,8 +142,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         'Personal, rssi=-21, channel=<CWChannel: 0x7fdfe9712870> '
         '[channelNumber=11(2GHz), channelWidth={20MHz}], ibss=0] '
         'in the system keychain')
-
-    self.assertEqual(event.text, expected_text)
+    self.assertEqual(event_data.text, expected_text)
 
     event = events[8]
 

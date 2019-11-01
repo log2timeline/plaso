@@ -7,7 +7,9 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.output import interface
+from plaso.output import logger
 
 
 class Shared4n6TimeOutputModule(interface.OutputModule):
@@ -159,6 +161,13 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     extra_attributes = []
     for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
       if attribute_name in unformatted_attributes:
+        # Some parsers have written bytes values to storage.
+        if isinstance(attribute_value, py2to3.BYTES_TYPE):
+          attribute_value = attribute_value.decode('utf-8', 'replace')
+          logger.warning(
+              'Found bytes value for attribute "{0:s}" for data type: '
+              '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
+                  attribute_name, event_data.data_type, attribute_value))
         extra_attributes.append('{0:s}: {1!s} '.format(
             attribute_name, attribute_value))
 

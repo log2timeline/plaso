@@ -55,7 +55,8 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
         'User: CarolMovieFans Status: @CarolMovie wins BEST PICTURE at '
         '#NYFCC!!! CONGR...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test search event data
     event = events[837]
@@ -71,7 +72,8 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
 
     expected_short_message = 'Query: rosegold'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test all three timestamps for contact event data.
 
@@ -118,7 +120,8 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
         'Screen name: timbuk2 Description: Started in a San Francisco by bike '
         'messenge...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test friended time.
     event = events[581]

@@ -179,6 +179,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
     fields = self._GetValueFromStructure(structure, 'fields', default_value='')
+    fields = fields.strip()
     fields = fields.split(' ')
 
     log_line_structure = pyparsing.Empty()

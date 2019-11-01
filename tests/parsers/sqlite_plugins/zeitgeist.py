@@ -35,7 +35,8 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_data.subject_uri, 'application://rhythmbox.desktop')
 
     expected_message = 'application://rhythmbox.desktop'
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

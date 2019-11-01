@@ -47,7 +47,8 @@ class SantaUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'ALLOW process: /Applications/Skype.app/Contents/MacOS/Skype')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # File operation event log
     event = events[159]
@@ -73,7 +74,8 @@ class SantaUnitTest(test_lib.ParserTestCase):
         '/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder')
     expected_short_message = 'File WRITE on: /Users/qwerty/newfile'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Disk mounts event log.
     event = events[38]
@@ -97,7 +99,8 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'Santa DISKAPPEAR for (/Users/qwerty/Downloads/Skype-8.28.0.41.dmg)')
     expected_short_message = 'DISKAPPEAR Skype'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Test Disk event created from appearance timestamp.
     event = events[35]

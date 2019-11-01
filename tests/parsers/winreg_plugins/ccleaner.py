@@ -56,7 +56,8 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = 'Origin: {0:s}'.format(key_path)
 
-    self._TestGetMessageStrings(event, expected_message, expected_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message)
 
     event = events[1]
 
@@ -87,7 +88,8 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

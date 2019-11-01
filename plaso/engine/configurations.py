@@ -101,7 +101,6 @@ class ProfilingConfiguration(interface.AttributeContainer):
     profilers (set(str)): names of the profilers to enable.
         Supported profilers are:
 
-        * 'guppy', which profiles memory usage using guppy;
         * 'memory', which profiles memory usage;
         * 'parsers', which profiles CPU time consumed by individual parsers;
         * 'processing', which profiles CPU time consumed by different parts of
@@ -120,14 +119,6 @@ class ProfilingConfiguration(interface.AttributeContainer):
     self.directory = None
     self.profilers = set()
     self.sample_rate = 1000
-
-  def HaveProfileMemoryGuppy(self):
-    """Determines if memory profiling with guppy is configured.
-
-    Returns:
-      bool: True if memory profiling with guppy is configured.
-    """
-    return 'guppy' in self.profilers
 
   def HaveProfileMemory(self):
     """Determines if memory profiling is configured.

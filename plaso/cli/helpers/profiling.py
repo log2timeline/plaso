@@ -9,7 +9,6 @@ from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
 from plaso.lib import errors
-from plaso.engine import engine
 
 
 class ProfilingArgumentsHelper(interface.ArgumentsHelper):
@@ -28,10 +27,6 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
       'storage': 'Profile storage reads and writes',
       'task_queue': 'Profile task queue status (multi-processing only)',
       'tasks': 'Profile the status of tasks (multi-processing only)'}
-
-  if engine.BaseEngine.SupportsGuppyMemoryProfiling():
-    PROFILERS_INFORMATION['guppy'] = (
-        'Profile memory usage per process using guppy')
 
   @classmethod
   def AddArguments(cls, argument_group):

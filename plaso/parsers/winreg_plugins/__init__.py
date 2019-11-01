@@ -3,6 +3,7 @@
 
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import bagmru
+from plaso.parsers.winreg_plugins import bam
 from plaso.parsers.winreg_plugins import ccleaner
 from plaso.parsers.winreg_plugins import default
 from plaso.parsers.winreg_plugins import lfu

@@ -47,7 +47,6 @@ class BaseEngine(object):
     """Initializes an engine."""
     super(BaseEngine, self).__init__()
     self._abort = False
-    self._guppy_memory_profiler = None
     self._memory_profiler = None
     self._name = 'Main'
     self._processing_status = processing_status.ProcessingStatus()
@@ -124,11 +123,6 @@ class BaseEngine(object):
     if not configuration:
       return
 
-    if configuration.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profilers.GuppyMemoryProfiler(
-          self._name, configuration)
-      self._guppy_memory_profiler.Start()
-
     if configuration.HaveProfileMemory():
       self._memory_profiler = profilers.MemoryProfiler(
           self._name, configuration)
@@ -158,11 +152,6 @@ class BaseEngine(object):
 
   def _StopProfiling(self):
     """Stops profiling."""
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-      self._guppy_memory_profiler.Stop()
-      self._guppy_memory_profiler = None
-
     if self._memory_profiler:
       self._memory_profiler.Stop()
       self._memory_profiler = None
@@ -292,15 +281,6 @@ class BaseEngine(object):
           ', '.join(detected_operating_systems)))
       self.knowledge_base.SetValue(
           'operating_system', detected_operating_systems[0])
-
-  @classmethod
-  def SupportsGuppyMemoryProfiling(cls):
-    """Determines if memory profiling with guppy is supported.
-
-    Returns:
-      bool: True if memory profiling with guppy is supported.
-    """
-    return profilers.GuppyMemoryProfiler.IsSupported()
 
   def BuildCollectionFilters(
       self, artifact_definitions_path, custom_artifacts_path,

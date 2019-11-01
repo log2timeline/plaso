@@ -53,7 +53,8 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Text: securityd_xpc_dictionary_handler '
         'EscrowSecurityAl[3273] DeviceInCircle ...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     event = events[1]
 

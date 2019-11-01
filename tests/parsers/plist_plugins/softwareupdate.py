@@ -30,7 +30,9 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    event = events[1]
+
+    self.CheckTimestamp(event.timestamp, '2014-01-06 17:43:48.000000')
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.key, '')
@@ -40,15 +42,19 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
         'update, pending 1: RAWCameraUpdate5.03(031-2664).')
     self.assertEqual(event_data.desc, expected_description)
 
-    event = events[1]
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2014-01-06 17:43:48.000000')
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.key, '')
     self.assertEqual(event_data.root, '/')
     expected_description = 'Last MacOS 10.9.1 (13B42) full update.'
     self.assertEqual(event_data.desc, expected_description)
+
     expected_string = '// {0:s}'.format(expected_description)
-    self._TestGetMessageStrings(event, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_data, expected_string, expected_string)
 
 
 if __name__ == '__main__':

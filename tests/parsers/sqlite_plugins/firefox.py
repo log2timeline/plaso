@@ -49,7 +49,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_data.url, expected_url)
 
     expected_title = 'Google News'
-    self.assertEqual(event.title, expected_title)
+    self.assertEqual(event_data.title, expected_title)
 
     expected_message = (
         '{0:s} ({1:s}) [count: 1] Host: news.google.com '
@@ -57,7 +57,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
             expected_url, expected_title)
     expected_short_message = 'URL: {0:s}'.format(expected_url)
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check the first bookmark event.
     event = events[1]
@@ -98,7 +99,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'Bookmarked Recently Bookmarked '
         '(place:folder=BOOKMARKS_MENU&folder=UNFILED_BO...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check the first bookmark annotation event.
     event = events[183]
@@ -133,7 +135,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         '[{0:s}] ({1:s})').format(
             expected_title, expected_url)
     expected_short_message = 'Bookmark Annotation: Recent Tags'
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
     # Check the second last bookmark folder event.
     event = events[200]
@@ -158,11 +161,12 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         event_data.data_type, 'firefox:places:bookmark_folder')
 
     expected_title = 'Latest Headlines'
-    self.assertEqual(event.title, expected_title)
+    self.assertEqual(event_data.title, expected_title)
 
     expected_message = expected_title
     expected_short_message = expected_title
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
@@ -195,12 +199,15 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-10-30 21:57:11.281942')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
     expected_message = (
         'http://code.google.com/p/plaso [count: 1] Host: code.google.com '
         '(URL not typed directly) Transition: TYPED')
     expected_short_message = 'URL: http://code.google.com/p/plaso'
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):

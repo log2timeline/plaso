@@ -61,7 +61,8 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     # TODO: add support for:
     #    'Total edit time (secs): 0 '
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
@@ -100,7 +101,8 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     expected_short_message = (
         'Company: KPMG')
 
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
