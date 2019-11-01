@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import io
+import json
 import os
 import unittest
 
@@ -387,7 +388,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     options.artifact_definitions_path = test_artifacts_path
     options.image = test_file_path
     options.names_string = 'another_file'
-    options.quiet = True
+    options.quiet = False
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.path = temp_directory
@@ -402,6 +403,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
           os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
+
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourcesExtractWithFilter(self):
@@ -542,7 +544,54 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
           os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
+
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
+
+  def testOutputJsonFile(self):
+    """Tests the content of the output JSON file."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['ext4_with_binaries.dd'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+    options.artifact_definitions_path = test_artifacts_path
+    options.image = test_file_path
+    options.signature_identifiers = 'elf'
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.path = temp_directory
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ProcessSources()
+
+      expected_json_data = [{
+          "sha256":
+          "553c231c45eda751710eabb479d08668f70464c14e60064190a7ec206f26b5f5",
+          "paths": ["bin/bzcat"]
+      }, {
+          "sha256":
+          "a106276270db8d3fe80a96dbb52f14f23f42a29bea12c68ac0f88d2e916471af",
+          "paths": ["bin/echo", "home/echo"]
+      }, {
+          "sha256":
+          "e21de6c5af94fa9d4e7f3295c8d25b93ab3d2d65982f5ef53c801669cc82dc47",
+          "paths": ["sbin/visudo"]
+      }, {
+          "sha256":
+          "129f4d0e36b38742fdfa8f1ea9a014818e4ce5c41d4a889435aecee58a1c7c39",
+          "paths": ["sbin/tune2fs"]
+      }]
+
+      with open(os.path.join(temp_directory, 'hashes.json')) as json_file:
+        json_data = json.load(json_file)
+
+      self.assertEqual(json_data, expected_json_data)
 
 
 if __name__ == '__main__':

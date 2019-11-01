@@ -71,6 +71,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   _SPECIFICATION_FILE_ENCODING = 'utf-8'
 
+  _HASHES_FILENAME = 'hashes.json'
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -93,8 +95,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._filter_file = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_memory_limit = None
-    self._report_output = collections.defaultdict(list)
-    self._report_writer = None
+    self._paths_by_hash = collections.defaultdict(list)
     self._resolver_context = context.Context()
     self._skip_duplicates = True
     self._source_type = None
@@ -234,21 +235,20 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           'with error: {1!s}').format(display_name, exception))
       return
 
+    if not digest:
+      logger.error(
+          '[skipping] unable to read content of file entry: {0:s}'.format(
+              display_name))
+      return
+
     target_directory, target_filename = self._CreateSanitizedDestination(
         file_entry, file_entry.path_spec, data_stream_name, destination_path)
 
     target_path = os.path.join(target_directory, target_filename)
-
-    self._report_output[digest].append(target_path.replace(
-        destination_path+'/', ''))
+    path = target_path.replace(destination_path + '/', '')
+    self._paths_by_hash[digest].append(path)
 
     if skip_duplicates:
-      if not digest:
-        logger.error(
-            '[skipping] unable to read content of file entry: {0:s}'.format(
-                display_name))
-        return
-
       duplicate_display_name = self._digests.get(digest, None)
       if duplicate_display_name:
         logger.warning((
@@ -821,8 +821,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     json_data = []
 
     with open(os.path.join(
-        self._destination_path, 'hashes.json'), 'w') as write_file:
-      for sha256, paths in self._report_output.items():
+        self._destination_path, self._HASHES_FILENAME), 'w') as write_file:
+      for sha256, paths in self._paths_by_hash.items():
         json_data.append({"sha256": sha256, "paths": paths})
       json.dump(json_data, write_file)
 
