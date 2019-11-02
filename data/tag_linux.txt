@@ -14,6 +14,7 @@ login_failed
   reporter is 'sshd' AND body contains 'uthentication failure'
   data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND body contains 'res=failed'
   data_type is 'selinux:line' AND audit_type is 'ANOM_LOGIN_FAILURES'
+  reporter is 'xscreensaver' AND body contains 'FAILED LOGIN'
 
 logout
   reporter is 'login' AND body contains 'session closed'
