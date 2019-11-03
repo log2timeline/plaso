@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for NetworkMiner output files."""
+"""Parser for NetworkMiner fileinfos files."""
 
 from __future__ import unicode_literals
 
@@ -14,37 +14,36 @@ from plaso.parsers import manager
 class NetworkMinerEventData(events.EventData):
   """NetworkMiner event Data.
 
-	Attributes:
-	source_ip (str): Originating IP address.
-	source_port (str): Originating port number.
-	destination_ip (str): Destination IP address.
-	destination_port (str): Destination port number.
-	time_stamp (dfdatetime): time
-	filename (string): Name of the file.
-	file_path (string): File path to where it was downloaded.
-	file_size (string): Size of the file.
-	file_md5 (string): MD5 hash of the file.
-	file_details (string): Details about the file.
+  Attributes:
+    destination_ip (str): Destination IP address.
+    destination_port (str): Destination port number.
+    file_details (string): Details about the file.
+    file_md5 (string): MD5 hash of the file.
+    file_path (string): File path to where it was downloaded.
+    file_size (string): Size of the file.
+    filename (string): Name of the file.
+    source_ip (str): Originating IP address.
+    source_port (str): Originating port number.
 	"""
-  DATA_TYPE = "scanner:networkminer:fileinfos"
+  DATA_TYPE = 'networkminer:fileinfos:file'
 
   def __init__(self):
     super(NetworkMinerEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.source_ip = None
-    self.source_port = None
     self.destination_ip = None
     self.destination_port = None
-    self.filename = None
+    self.file_details = None
+    self.file_md5 = None
     self.file_path = None
     self.file_size = None
-    self.file_md5 = None
-    self.file_details = None
+    self.filename = None
+    self.source_ip = None
+    self.source_port = None
 
 class NetworkMinerParser(dsv_parser.DSVParser):
-  """Parser class for networkminer fileinfos."""
+  """Parser class for NetworkMiner fileinfos."""
 
   NAME = 'networkminer_fileinfo'
-  DESCRIPTION = 'Parser for NetworkMiner .fileinfos csv.'
+  DESCRIPTION = 'Parser for NetworkMiner .fileinfos files.'
 
   COLUMNS = (
       'source_ip', 'source_port', 'destination_ip', 'destination_port',
@@ -64,13 +63,12 @@ class NetworkMinerParser(dsv_parser.DSVParser):
     """
     event_data = NetworkMinerEventData()
 
-
-
-    if row.get('timestamp', None) != "Timestamp":
+    if row.get('timestamp', None) != 'Timestamp':
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      for field in ('source_ip', 'source_port', 'destination_ip',
-                    'destination_port', 'filename', 'file_path', 'file_size',
-                    'file_md5', 'file_details'):
+      for field in (
+          'source_ip', 'source_port', 'destination_ip',
+          'destination_port', 'filename', 'file_path', 'file_size', 'file_md5',
+          'file_details'):
         setattr(event_data, field, row[field])
 
       try:
@@ -78,12 +76,13 @@ class NetworkMinerParser(dsv_parser.DSVParser):
         date_time.CopyFromStringISO8601(timestamp)
 
       except ValueError:
-        parser_mediator.ProduceExtractionWarning(
-            'invalid date time value')
+        parser_mediator.ProduceExtractionWarning('invalid date time value')
         return
+
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
+
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.
 
@@ -98,10 +97,9 @@ class NetworkMinerParser(dsv_parser.DSVParser):
     if len(row) != self.MIN_COLUMNS:
       return False
 
-
-    # Check the date format!
-    # If it doesn't parse, then this isn't a Trend Micro AV log.
-    if row.get('timestamp', None) != "Timestamp":
+    # Check the date format
+    # If it doesn't parse, then this isn't a NetworkMiner fileinfos file.
+    if row.get('timestamp', None) != 'Timestamp':
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       try:
         date_time.CopyFromStringISO8601(row.get('timestamp', None))
