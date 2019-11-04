@@ -591,6 +591,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       with open(os.path.join(temp_directory, 'hashes.json')) as json_file:
         json_data = json.load(json_file)
 
+      json_data.sort(key=lambda d: d['sha256'])
+      expected_json_data.sort(key=lambda d: d['sha256'])
       self.assertEqual(json_data, expected_json_data)
 
 
