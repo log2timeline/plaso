@@ -12,7 +12,7 @@ To get a full list of parameters that can be passed to the tool use the ``-h`` o
 image_export.py IMAGE 
 ```
 
-Command above will extract all unqiue allocated files and generate hashes.json file to ``export/`` directory, which is relative to the folder where you run ``image_export.py`` from. File ``hashes.json`` will contain list of unique hashes of extracted files. In case there are any duplicates, the file will contain paths to all duplicate files.
+Command above will extract all unique allocated files and generate hashes.json file to ``export/`` directory, which is relative to the folder where you run ``image_export.py`` from. File ``hashes.json`` will contain list of unique hashes of extracted files. In case there are any duplicates, the file will contain paths to all duplicate files.
 
 There are several ways to define how you want to limit the amount files to extract:
  + Based on path, filename or extension name
