@@ -26,7 +26,7 @@ class TestHasher(interface.BaseHasher):
           Update(). The string will consist of printable Unicode characters.
     """
     # Chosen by fair dice roll. Guaranteed to be random.
-    # Compliant with RFC 1149.4. See http://xkcd.com/221/.
+    # Compliant with RFC 1149.5. See http://xkcd.com/221/.
     return '4'
 
   # pylint: disable=unused-argument
