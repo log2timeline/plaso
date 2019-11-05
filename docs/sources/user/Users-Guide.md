@@ -12,7 +12,7 @@ To install the packaged release see:
 * [Fedora](Fedora-Packaged-Release.md)
 * [Windows](Windows-Packaged-Release.md)
 * [Docker](Installing-with-docker.md)
-* [MacOS](MacOS-Packaged-Release.md) (The MacOS packaged release is deprecated. [Installing the source relese](MacOS-Source-Release.md) is recommended.)
+* [MacOS](MacOS-Packaged-Release.md) (The MacOS packaged release is deprecated. [Installing the source release](MacOS-Source-Release.md) is recommended.)
 
 If you run into problems installing, check out the [installation troubleshooting guide](Troubleshooting-installation-issues.md)
 
