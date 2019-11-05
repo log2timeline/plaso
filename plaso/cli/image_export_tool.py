@@ -244,8 +244,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     target_directory, target_filename = self._CreateSanitizedDestination(
         file_entry, file_entry.path_spec, data_stream_name, destination_path)
 
+    # If does not exists, append path separator to have consistant behaviour.
+    if not destination_path.endswith(os.path.sep):
+      destination_path = destination_path + os.path.sep
+
     target_path = os.path.join(target_directory, target_filename)
-    path = target_path.replace(destination_path + '/', '')
+    path = target_path.lstrip(destination_path)
     self._paths_by_hash[digest].append(path)
 
     if skip_duplicates:
