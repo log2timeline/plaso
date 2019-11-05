@@ -254,11 +254,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self._paths_by_hash[digest].append(path)
 
-    print('destination_path:', destination_path)
-    print('target_path:', target_path)
-    print('path:', path)
-    print('')
-
     if skip_duplicates:
       duplicate_display_name = self._digests.get(digest, None)
       if duplicate_display_name:
