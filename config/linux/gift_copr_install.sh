@@ -118,8 +118,7 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libvshadow-debuginfo
                     libvshadow-python2-debuginfo
                     libvslvm-debuginfo
-                    libvslvm-python2-debuginfo
-                    python-guppy";
+                    libvslvm-python2-debuginfo";
 
 sudo dnf install dnf-plugins-core
 sudo dnf copr -y enable @gift/dev
