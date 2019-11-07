@@ -24,11 +24,11 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     # Windows Event Log (EVT) information:
     #	Version                     : 1.1
     #	Number of records           : 6063
-    #	Number of recovered records : 437
+    #	Number of recovered records : 438
     #	Log type                    : System
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, (6063 + 437) * 2)
+    self.assertEqual(storage_writer.number_of_events, (6063 + 438) * 2)
 
     events = list(storage_writer.GetEvents())
 
