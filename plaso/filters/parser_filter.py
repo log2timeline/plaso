@@ -43,6 +43,8 @@ class ParserFilterExpressionHelper(object):
   def _JoinExpression(self, excludes, includes):
     """Creates an expression string of the excluded and included parsers.
 
+    Note that exclusion takes precedence over inclusion.
+
     Args:
       excludes (dict[str, set[str]]): excluded parsers and plugins.
       includes (dict[str, set[str]]): included parsers and plugins.
@@ -63,7 +65,7 @@ class ParserFilterExpressionHelper(object):
 
     Raises:
       RuntimeError: if a specific plugin is excluded but no corresponding parser
-          is included or if exclude and include parser filters overlap.
+          is included.
     """
     excluded_parsers_and_plugins = self._GetParserAndPluginsList(excludes)
     included_parsers_and_plugins = self._GetParserAndPluginsList(includes)
@@ -77,7 +79,7 @@ class ParserFilterExpressionHelper(object):
     missing_parser_filters = excluded_parsers.difference(included_parsers)
     if missing_parser_filters:
       missing_parser_filters = self._GetParserAndPluginsList({
-          name:  excludes[name] for name in missing_parser_filters})
+          name: excludes[name] for name in missing_parser_filters})
       raise RuntimeError((
           'Parser filters: {0:s} defined to be excluded but no corresponding '
           'include expression').format(','.join(missing_parser_filters)))
@@ -85,9 +87,8 @@ class ParserFilterExpressionHelper(object):
     overlapping_parser_filters = set(included_parsers_and_plugins).intersection(
         set(excluded_parsers_and_plugins))
     if overlapping_parser_filters:
-      raise RuntimeError((
-          'Parser filters: {0:s} defined to be both included and '
-          'excluded').format(','.join(overlapping_parser_filters)))
+      included_parsers_and_plugins = sorted(
+          set(included_parsers_and_plugins) - overlapping_parser_filters)
 
     parser_filters = [
         '!{0:s}'.format(parser_filter)
