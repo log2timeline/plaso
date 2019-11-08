@@ -5,7 +5,9 @@ from __future__ import unicode_literals
 
 import argparse
 import codecs
+import collections
 import io
+import json
 import os
 import textwrap
 
@@ -69,6 +71,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   _SPECIFICATION_FILE_ENCODING = 'utf-8'
 
+  _HASHES_FILENAME = 'hashes.json'
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -91,6 +95,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._filter_file = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_memory_limit = None
+    self._paths_by_hash = collections.defaultdict(list)
     self._resolver_context = context.Context()
     self._skip_duplicates = True
     self._source_type = None
@@ -201,11 +206,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     for path_spec in path_spec_generator:
       self._ExtractFileEntry(
-          path_spec, destination_path, output_writer,
-          skip_duplicates=skip_duplicates)
+          path_spec, destination_path, skip_duplicates=skip_duplicates)
+
 
   def _ExtractDataStream(
-      self, file_entry, data_stream_name, destination_path, output_writer,
+      self, file_entry, data_stream_name, destination_path,
       skip_duplicates=True):
     """Extracts a data stream.
 
@@ -213,7 +218,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       file_entry (dfvfs.FileEntry): file entry containing the data stream.
       data_stream_name (str): name of the data stream.
       destination_path (str): path where the extracted files should be stored.
-      output_writer (CLIOutputWriter): output writer.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
@@ -223,52 +227,60 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         file_entry.path_spec)
 
+    try:
+      digest = self._CalculateDigestHash(file_entry, data_stream_name)
+    except (IOError, dfvfs_errors.BackEndError) as exception:
+      logger.error((
+          '[skipping] unable to read content of file entry: {0:s} '
+          'with error: {1!s}').format(display_name, exception))
+      return
+
+    if not digest:
+      logger.error(
+          '[skipping] unable to read content of file entry: {0:s}'.format(
+              display_name))
+      return
+
+    target_directory, target_filename = self._CreateSanitizedDestination(
+        file_entry, file_entry.path_spec, data_stream_name, destination_path)
+
+    # If does not exist, append path separator to have consistant behaviour.
+    if not destination_path.endswith(os.path.sep):
+      destination_path = destination_path + os.path.sep
+
+    target_path = os.path.join(target_directory, target_filename)
+    if target_path.startswith(destination_path):
+      path = target_path[len(destination_path):]
+
+    self._paths_by_hash[digest].append(path)
+
     if skip_duplicates:
-      try:
-        digest = self._CalculateDigestHash(file_entry, data_stream_name)
-      except (IOError, dfvfs_errors.BackEndError) as exception:
-        output_writer.Write((
-            '[skipping] unable to read content of file entry: {0:s} '
-            'with error: {1!s}\n').format(display_name, exception))
-        return
-
-      if not digest:
-        output_writer.Write(
-            '[skipping] unable to read content of file entry: {0:s}\n'.format(
-                display_name))
-        return
-
       duplicate_display_name = self._digests.get(digest, None)
       if duplicate_display_name:
-        output_writer.Write((
+        logger.warning((
             '[skipping] file entry: {0:s} is a duplicate of: {1:s} with '
-            'digest: {2:s}\n').format(
+            'digest: {2:s}').format(
                 display_name, duplicate_display_name, digest))
         return
 
       self._digests[digest] = display_name
 
-    target_directory, target_filename = self._CreateSanitizedDestination(
-        file_entry, file_entry.path_spec, data_stream_name, destination_path)
-
     if not os.path.isdir(target_directory):
       os.makedirs(target_directory)
 
-    target_path = os.path.join(target_directory, target_filename)
-
     if os.path.exists(target_path):
-      output_writer.Write((
+      logger.warning((
           '[skipping] unable to export contents of file entry: {0:s} '
-          'because exported file: {1:s} already exists.\n').format(
+          'because exported file: {1:s} already exists.').format(
               display_name, target_path))
       return
 
     try:
       self._WriteFileEntry(file_entry, data_stream_name, target_path)
     except (IOError, dfvfs_errors.BackEndError) as exception:
-      output_writer.Write((
+      logger.error((
           '[skipping] unable to export contents of file entry: {0:s} '
-          'with error: {1!s}\n').format(display_name, exception))
+          'with error: {1!s}').format(display_name, exception))
 
       try:
         os.remove(target_path)
@@ -276,13 +288,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         pass
 
   def _ExtractFileEntry(
-      self, path_spec, destination_path, output_writer, skip_duplicates=True):
+      self, path_spec, destination_path, skip_duplicates=True):
     """Extracts a file entry.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification of the source file.
       destination_path (str): path where the extracted files should be stored.
-      output_writer (CLIOutputWriter): output writer.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
@@ -300,17 +311,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     for data_stream in file_entry.data_streams:
       if self._abort:
         break
-
       self._ExtractDataStream(
-          file_entry, data_stream.name, destination_path, output_writer,
+          file_entry, data_stream.name, destination_path,
           skip_duplicates=skip_duplicates)
 
       file_entry_processed = True
 
     if not file_entry_processed:
       self._ExtractDataStream(
-          file_entry, '', destination_path, output_writer,
-          skip_duplicates=skip_duplicates)
+          file_entry, '', destination_path, skip_duplicates=skip_duplicates)
 
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(
@@ -369,8 +378,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       for path_spec in searcher.Find(find_specs=(
           filters_helper.included_file_system_find_specs)):
         self._ExtractFileEntry(
-            path_spec, destination_path, output_writer,
-            skip_duplicates=skip_duplicates)
+            path_spec, destination_path, skip_duplicates=skip_duplicates)
 
       file_system.Close()
 
@@ -807,14 +815,22 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     if self._artifact_filters or self._filter_file:
       self._ExtractWithFilter(
-          self._source_path_specs, self._destination_path, self._output_writer,
-          self._artifact_filters, self._filter_file,
+          self._source_path_specs, self._destination_path,
+          self._output_writer, self._artifact_filters, self._filter_file,
           self._artifact_definitions_path, self._custom_artifacts_path,
           skip_duplicates=self._skip_duplicates)
     else:
       self._Extract(
-          self._source_path_specs, self._destination_path, self._output_writer,
-          skip_duplicates=self._skip_duplicates)
+          self._source_path_specs, self._destination_path,
+          self._output_writer, skip_duplicates=self._skip_duplicates)
+
+    json_data = []
+
+    with open(os.path.join(
+        self._destination_path, self._HASHES_FILENAME), 'w') as write_file:
+      for sha256, paths in self._paths_by_hash.items():
+        json_data.append({"sha256": sha256, "paths": paths})
+      json.dump(json_data, write_file)
 
     self._output_writer.Write('Export completed.\n')
     self._output_writer.Write('\n')
