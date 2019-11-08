@@ -16,26 +16,6 @@ environment:
     MACHINE_TYPE: "amd64"
     PYTHON: "C:\\Python37-x64"
     PYTHON_VERSION: "3.7"
-  - TARGET: pyinstaller
-    MACHINE_TYPE: "x86"
-    PYTHON: "C:\\Python27"
-    PYTHON_VERSION: "2.7"
-  - TARGET: pyinstaller
-    MACHINE_TYPE: "amd64"
-    PYTHON: "C:\\Python27-x64"
-    PYTHON_VERSION: "2.7"
-  - TARGET: pyinstaller
-    MACHINE_TYPE: "x86"
-    PYTHON: "C:\\Python37"
-    PYTHON_VERSION: "3.7"
-  - TARGET: pyinstaller
-    MACHINE_TYPE: "amd64"
-    PYTHON: "C:\\Python37-x64"
-    PYTHON_VERSION: "3.7"
-
-matrix:
-  allow_failures:
-  - TARGET: pyinstaller
 
 install:
 - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
@@ -65,16 +45,9 @@ install:
     mkdir dependencies &&
     set PYTHONPATH=..\l2tdevtools &&
     "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type %MACHINE_TYPE% --msi-targetdir "%PYTHON%" --track dev PyYAML XlsxWriter artifacts bencode biplist certifi chardet dateutil defusedxml dfdatetime dfvfs dfwinreg dtfabric elasticsearch-py future idna libbde libesedb libevt libevtx libewf libfsapfs libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lz4 mock pbr pefile psutil pycrypto pyparsing pytsk3 pytz pyzmq requests six urllib3 yara-python )
-- cmd: if [%TARGET%]==[pyinstaller] (
-    git clone -b master git://github.com/pyinstaller/pyinstaller.git ..\pyinstaller &&
-    "%PYTHON%\\python.exe" -m pip install altgraph dis3 pywin32-ctypes )
 
 build: off
 
 test_script:
 - cmd: if [%TARGET%]==[unittests] (
     "%PYTHON%\\python.exe" run_tests.py )
-- ps: If ($env:TARGET -eq "pyinstaller") {
-    .\config\windows\make_release.ps1 -Architecture "${env:MACHINE_TYPE}" -PythonPath "${env:PYTHON}" }
-- cmd: if [%TARGET%]==[pyinstaller] (
-    config\windows\make_check.bat )
