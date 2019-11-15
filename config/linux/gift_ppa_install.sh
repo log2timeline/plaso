@@ -119,8 +119,7 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvshadow-dbg
                     libvshadow-python-dbg
                     libvslvm-dbg
-                    libvslvm-python-dbg
-                    python-guppy";
+                    libvslvm-python-dbg";
 
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
