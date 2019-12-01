@@ -47,7 +47,7 @@ class NTFSFileStatEventFormatterTest(test_lib.EventFormatterTestCase):
 
     expected_attribute_names = [
         'attribute_name', 'display_name', 'file_reference', 'name',
-        'parent_file_reference', 'unallocated']
+        'parent_file_reference', 'path_hints', 'unallocated']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
