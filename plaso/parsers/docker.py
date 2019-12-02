@@ -293,7 +293,9 @@ class DockerJSONParser(interface.FileObjectParser):
     split_path = file_system.SplitPath(json_file_path)
     try:
       if 'containers' in split_path:
-        if 'config.json' in split_path:
+        #if 'config.json' in split_path:
+        #Change because the name can be config.v2.json ...
+        if split_path and split_path[-1].startswith('config') and split_path[-1].endswith('.json'):
           self._ParseContainerConfigJSON(parser_mediator, file_object)
         if json_file_path.endswith('-json.log'):
           self._ParseContainerLogJSON(parser_mediator, file_object)
