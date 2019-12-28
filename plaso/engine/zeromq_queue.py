@@ -657,7 +657,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
       if self._zmq_thread:
         logger.debug('[{0:s}] Waiting for thread to exit.'.format(self.name))
         self._zmq_thread.join(timeout=self.timeout_seconds)
-        if self._zmq_thread.isAlive():
+        if self._zmq_thread.is_alive():
           logger.error((
               '{0:s} ZMQ responder thread did not exit within timeout').format(
                   self.name))
