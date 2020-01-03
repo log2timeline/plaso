@@ -78,16 +78,9 @@ then
 
 elif test "${TRAVIS_OS_NAME}" = "osx";
 then
-	PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py;
+	# Set the following environment variables to build pycrypto.
+	export CFLAGS="-I/usr/local/include -L/usr/local/lib";
+	export TOX_TESTENV_PASSENV="CFLAGS";
 
-	python ./setup.py build
-
-	python ./setup.py sdist
-
-	python ./setup.py bdist
-
-	if test -f tests/end-to-end.py;
-	then
-		PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
-	fi
+	tox -e ${TOXENV};
 fi
