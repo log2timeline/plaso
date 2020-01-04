@@ -10,8 +10,8 @@ matrix:
     python: 3.6
     services:
     - docker
-  - name: "Fedora Core 30 (Docker) with Python 3.7"
-    env: FEDORA_VERSION="30"
+  - name: "Fedora Core 31 (Docker) with Python 3.7"
+    env: FEDORA_VERSION="31"
     os: linux
     dist: xenial
     sudo: required
@@ -63,7 +63,7 @@ matrix:
   - name: "MacOS 10.14 with Python 3.7 (tox)"
     env: TOXENV="py37"
     os: osx
-    osx_image: xcode11
+    osx_image: xcode10
     language: generic
   - name: "Dockerfile"
     env: TARGET="dockerfile"
@@ -71,16 +71,6 @@ matrix:
     dist: xenial
     sudo: required
     group: edge
-  - name: "Jenkins on Ubuntu Bionic (18.04) (Docker) with Python 2.7"
-    env: [TARGET="jenkins2", UBUNTU_VERSION="18.04"]
-    os: linux
-    dist: xenial
-    sudo: required
-    group: edge
-    language: python
-    python: 2.7
-    services:
-    - docker
   - name: "Jenkins on Ubuntu Bionic (18.04) (Docker) with Python 3.6"
     env: [TARGET="jenkins3", UBUNTU_VERSION="18.04"]
     os: linux
@@ -94,4 +84,4 @@ matrix:
 install:
 - ./config/travis/install.sh
 script:
-- ./config/travis/run_with_timeout.sh 30 ./config/travis/runtests.sh
+- ./config/travis/run_with_timeout.sh 45 ./config/travis/runtests.sh

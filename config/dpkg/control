@@ -2,26 +2,15 @@ Source: plaso
 Section: python
 Priority: extra
 Maintainer: Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>
-Build-Depends: debhelper (>= 9), dh-python, python-all (>= 2.7~), python-setuptools, python3-all (>= 3.4~), python3-setuptools
-Standards-Version: 3.9.5
-X-Python-Version: >= 2.7
-X-Python3-Version: >= 3.4
+Build-Depends: debhelper (>= 9), dh-python, python3-all (>= 3.5~), python3-setuptools
+Standards-Version: 4.1.4
+X-Python3-Version: >= 3.5
 Homepage: https://github.com/log2timeline/plaso
 
 Package: plaso-data
 Architecture: all
 Depends: ${misc:Depends}
 Description: Data files for plaso (log2timeline)
- Plaso (log2timeline) is a framework to create super timelines. Its
- purpose is to extract timestamps from various files found on typical
- computer systems and aggregate them.
-
-Package: python-plaso
-Architecture: all
-Depends: plaso-data (>= ${binary:Version}), libbde-python (>= 20140531), libesedb-python (>= 20150409), libevt-python (>= 20191104), libevtx-python (>= 20141112), libewf-python (>= 20131210), libfsapfs-python (>= 20181205), libfsntfs-python (>= 20151130), libfvde-python (>= 20160719), libfwnt-python (>= 20180117), libfwsi-python (>= 20150606), liblnk-python (>= 20150830), libmsiecf-python (>= 20150314), libolecf-python (>= 20151223), libqcow-python (>= 20131204), libregf-python (>= 20150315), libscca-python (>= 20190605), libsigscan-python (>= 20190629), libsmdev-python (>= 20140529), libsmraw-python (>= 20140612), libvhdi-python (>= 20131210), libvmdk-python (>= 20140421), libvshadow-python (>= 20160109), libvslvm-python (>= 20160109), python-artifacts (>= 20190305), python-backports.lzma, python-bencode, python-biplist (>= 1.0.3), python-certifi (>= 2016.9.26), python-chardet (>= 2.0.1), python-crypto (>= 2.6), python-dateutil (>= 1.5), python-defusedxml (>= 0.5.0), python-dfdatetime (>= 20180704), python-dfvfs (>= 20190713), python-dfwinreg (>= 20180712), python-dtfabric (>= 20181128), python-elasticsearch (>= 6.0), python-future (>= 0.16.0), python-idna (>= 2.5), python-lz4 (>= 0.10.0), python-pefile (>= 2018.8.8), python-psutil (>= 5.4.3), python-pyparsing (>= 2.3.0), python-pysqlite2, python-pytsk3 (>= 20160721), python-requests (>= 2.18.0), python-six (>= 1.1.0), python-tz, python-urllib3 (>= 1.21.1), python-xlsxwriter (>= 0.9.3), python-yaml (>= 3.10), python-yara (>= 3.4.0), python-zmq (>= 2.1.11), ${python:Depends}, ${misc:Depends}
-Conflicts: plaso
-Replaces: plaso
-Description: Python 2 module of plaso (log2timeline)
  Plaso (log2timeline) is a framework to create super timelines. Its
  purpose is to extract timestamps from various files found on typical
  computer systems and aggregate them.
