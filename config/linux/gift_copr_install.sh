@@ -56,6 +56,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-pytsk3
                       python3-pytz
                       python3-pyyaml
+                      python3-redis
                       python3-requests
                       python3-six
                       python3-urllib3
@@ -65,6 +66,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python3-mock
                    python3-pbr
+                   python3-fakeredis
                    python3-setuptools";
 
 # Additional dependencies for development, alphabetized, one per line.

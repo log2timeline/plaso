@@ -7,6 +7,9 @@ from plaso.lib import definitions
 from plaso.storage import file_interface
 from plaso.storage.sqlite import merge_reader
 from plaso.storage.sqlite import sqlite_file
+from plaso.storage.redis import merge_reader as redis_merge_reader
+from plaso.storage.redis import writer as redis_writer
+from plaso.storage.redis import reader as redis_reader
 
 
 class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
@@ -34,6 +37,10 @@ class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
 
     if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       writer = self._CreateTaskStorageWriter(task)
+
+    elif task_storage_format == definitions.STORAGE_FORMAT_REDIS:
+      writer = redis_writer.RedisStorageWriter(
+          self._session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
     else:
       raise IOError('Unsupported storage format: {0:s}'.format(
@@ -67,8 +74,30 @@ class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
     if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
       return self._CheckSQLiteTaskStoreReadyForMerge(task)
 
+    if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+      return self._CheckRedisTaskStoreReadyForMerge(task)
+
     raise IOError(
         'Unsupported storage format: {0:s}'.format(task.storage_format))
+
+  def _CheckRedisTaskStoreReadyForMerge(self, task):
+    """Checks if a Redis task is ready for merging with this session storage.
+
+    If the task is ready to be merged, this method also sets the task's
+    storage file size.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      bool: True if the task is ready to be merged.
+    """
+    reader = redis_reader.RedisStorageReader(task)
+    reader.Open()
+    is_ready = reader.IsFinalized()
+    reader.Close()
+    task.storage_file_size = 1000
+    return is_ready
 
   def _CheckSQLiteTaskStoreReadyForMerge(self, task):
     """Checks if a SQLite task is ready for merging with this session storage.
@@ -109,6 +138,9 @@ class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
     Returns:
       StorageMergeReader: storage merge reader.
     """
+    if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+      return redis_merge_reader.RedisMergeReader(self, task)
+
     path = self._GetMergeTaskStorageFilePath(task)
     return merge_reader.SQLiteStorageMergeReader(self, path)
 

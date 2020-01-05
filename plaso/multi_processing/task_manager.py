@@ -449,6 +449,7 @@ class TaskManager(object):
       bool: True if there are tasks that are active, ready to be merged or
           need to be retried.
     """
+    logger.debug('Checking for pending tasks')
     with self._lock:
       self._AbandonInactiveProcessingTasks()
 

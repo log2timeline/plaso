@@ -11,6 +11,7 @@ import tempfile
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import interface
+from plaso.storage.redis import redis_store
 
 
 class SerializedAttributeContainerList(object):
@@ -812,7 +813,7 @@ class StorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    if not task.storage_format in definitions.STORAGE_FORMATS:
+    if not task.storage_format in definitions.SESSION_STORAGE_FORMATS:
       raise IOError('Unsupported storage format')
 
     if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
@@ -825,6 +826,10 @@ class StorageFileWriter(interface.StorageWriter):
         raise IOError((
             'Unable to rename task storage file: {0:s} with error: '
             '{1!s}').format(storage_file_path, exception))
+
+    elif task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+      # Redis task stores do not need finalization.
+      pass
 
   def Open(self):
     """Opens the storage writer.
@@ -868,17 +873,24 @@ class StorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
-    processed_storage_file_path = self._GetProcessedStorageFilePath(task)
+    if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+      task.storage_file_size = 1000
+      redis_store.RedisStore.MarkTaskAsMerging(
+          task.identifier, self._session.identifier)
+      return
 
-    task.storage_file_size = os.path.getsize(processed_storage_file_path)
+    if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
+      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
 
-    try:
-      os.rename(processed_storage_file_path, merge_storage_file_path)
-    except OSError as exception:
-      raise IOError((
-          'Unable to rename task storage file: {0:s} with error: '
-          '{1!s}').format(processed_storage_file_path, exception))
+      task.storage_file_size = os.path.getsize(processed_storage_file_path)
+
+      try:
+        os.rename(processed_storage_file_path, merge_storage_file_path)
+      except OSError as exception:
+        raise IOError((
+            'Unable to rename task storage file: {0:s} with error: '
+            '{1!s}').format(processed_storage_file_path, exception))
 
   def ReadSystemConfiguration(self, knowledge_base):
     """Reads system configuration information.
@@ -913,17 +925,21 @@ class StorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    if task.storage_format != definitions.STORAGE_FORMAT_SQLITE:
+    if task.storage_format not in definitions.TASK_STORAGE_FORMATS:
       raise IOError('Unsupported storage format.')
 
-    processed_storage_file_path = self._GetProcessedStorageFilePath(task)
+    # if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+    #   redis_store.RedisStore.RemoveTaskStore(task)
 
-    try:
-      os.remove(processed_storage_file_path)
-    except OSError as exception:
-      raise IOError((
-          'Unable to remove task storage file: {0:s} with error: '
-          '{1!s}').format(processed_storage_file_path, exception))
+    if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
+
+      try:
+        os.remove(processed_storage_file_path)
+      except OSError as exception:
+        raise IOError((
+            'Unable to remove task storage file: {0:s} with error: '
+            '{1!s}').format(processed_storage_file_path, exception))
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.

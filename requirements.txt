@@ -48,6 +48,7 @@ python-dateutil >= 1.5
 pytsk3 >= 20160721
 pytz
 pyzmq >= 2.1.11
+redis
 requests >= 2.18.0
 six >= 1.1.0
 urllib3 >= 1.21.1
