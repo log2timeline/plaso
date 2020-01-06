@@ -372,8 +372,9 @@ class ESEDBPlugin(plugins.BasePlugin):
 
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
-        logger.warning('[{0:s}] missing table: {1:s}'.format(
-            self.NAME, table_name))
+        if table_name not in self.OPTIONAL_TABLES:
+          logger.warning('[{0:s}] missing table: {1:s}'.format(
+              self.NAME, table_name))
         continue
 
       # The database is passed in case the database contains table names

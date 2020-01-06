@@ -127,15 +127,39 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
   REQUIRED_TABLES = {
       'Containers': 'ParseContainersTable',
-      'LeakFiles': 'ParseLeakFilesTable',
-      'Partitions': 'ParsePartitionsTable'}
+      'LeakFiles': 'ParseLeakFilesTable'}
+
+  OPTIONAL_TABLES = {
+      'Partitions': 'ParsePartitionsTable',
+      'PartitionsEx': 'ParsePartitionsTable'}
 
   _CONTAINER_TABLE_VALUE_MAPPINGS = {
-      'RequestHeaders': '_ConvertValueBinaryDataToStringAscii',
-      'ResponseHeaders': '_ConvertValueBinaryDataToStringAscii'}
+      'RequestHeaders': '_ConvertHeadersValues',
+      'ResponseHeaders': '_ConvertHeadersValues'}
 
   _SUPPORTED_CONTAINER_NAMES = frozenset([
       'Content', 'Cookies', 'History', 'iedownload'])
+
+  _IGNORED_CONTAINER_NAMES = frozenset([
+      'MicrosoftEdge_DNTException', 'MicrosoftEdge_EmieSiteList',
+      'MicrosoftEdge_EmieUserList'])
+
+  def _ConvertHeadersValues(self, value):
+    """Converts a headers value into a string.
+
+    Args:
+      value (bytes): binary data value containing the headers as an ASCII string
+          or None.
+
+    Returns:
+      str: string representation of headers value or None.
+    """
+    if value:
+      value = value.decode('ascii')
+      header_values = [value.strip() for value in value.split('\r\n') if value]
+      return '[{0:s}]'.format('; '.join(header_values))
+
+    return None
 
   def _ParseContainerTable(self, parser_mediator, table, container_name):
     """Parses a Container_# table.
@@ -259,7 +283,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
   def ParseContainersTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
-    """Parses the Containers table.
+    """Parses a Containers table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -309,6 +333,12 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       if not container_identifier or not container_name:
         continue
 
+      if container_name in self._IGNORED_CONTAINER_NAMES:
+        parser_mediator.ProduceExtractionWarning(
+            'Skipped container (ContainerId: {0:d}, Name: {1:s})'.format(
+                container_identifier, container_name))
+        continue
+
       table_name = 'Container_{0:d}'.format(container_identifier)
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
@@ -320,7 +350,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
   def ParseLeakFilesTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
-    """Parses the LeakFiles table.
+    """Parses a LeakFiles table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -357,7 +387,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
   def ParsePartitionsTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
-    """Parses the Partitions table.
+    """Parses a Partitions or PartitionsEx table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
