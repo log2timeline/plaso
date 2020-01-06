@@ -73,3 +73,72 @@ Install plaso:
 python3 setup.py build
 sudo python3 setup.py install
 ```
+
+## Troubleshooting
+
+Some Python dependencies fail to compile with the error:
+
+```
+  clang: warning: no such sysroot directory: '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk' [-Wmissing-sysroot]
+  ...
+  #include <stdio.h>
+           ^~~~~~~~~
+  1 error generated.
+  error: command 'clang' failed with exit status 1
+```
+
+It is likely that the Python interpreter was built using a specific MacOS SDK.
+Make sure that version of the MacOS SDK is installed on your system, in the
+example above this is MacOS SDK 10.14.
+
+
+Pycrypto fails to build with the error:
+
+```
+    src/_fastmath.c:36:11: fatal error: 'gmp.h' file not found
+    # include <gmp.h>
+              ^~~~~~~
+    1 error generated.
+    error: command 'clang' failed with exit status 1
+    ----------------------------------------
+```
+
+Make sure you have gmp installed:
+
+```
+brew install gmp
+```
+
+And your build environment knows where to find its development files:
+
+```
+export CFLAGS="-I/usr/local/include ${CFLAGS}";
+export LDFLAGS="-L/usr/local/lib ${LDFLAGS}";
+```
+
+
+Yara-python fails to build with the error:
+
+```
+    In file included from yara/libyara/libyara.c:45:
+    yara/libyara/crypto.h:38:10: fatal error: 'openssl/crypto.h' file not found
+    #include <openssl/crypto.h>
+             ^~~~~~~~~~~~~~~~~~
+    1 error generated.
+    error: command 'clang' failed with exit status 1
+    ----------------------------------------
+```
+
+Make sure you have openssl installed:
+
+```
+brew install openssl
+```
+
+And your build environment knows where to find its development files:
+
+```
+export CFLAGS="-I/usr/local/opt/openssl@1.1/include ${CFLAGS}";
+export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib ${LDFLAGS}";
+```
+
