@@ -7,7 +7,6 @@ import os
 import sqlite3
 import zlib
 
-from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import event_heaps
@@ -87,7 +86,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     super(SQLiteStorageFile, self).__init__()
     self._connection = None
     self._cursor = None
-    self._last_session = 0
     self._maximum_buffer_size = maximum_buffer_size
     self._serialized_event_heap = event_heaps.SerializedEventHeap()
 

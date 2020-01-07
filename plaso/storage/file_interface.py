@@ -831,6 +831,7 @@ class StorageFileWriter(interface.StorageWriter):
       # Redis task stores do not need finalization.
       pass
 
+  # pylint: disable=arguments-differ
   def Open(self):
     """Opens the storage writer.
 

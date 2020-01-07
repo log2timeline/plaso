@@ -392,8 +392,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
-    self._output_writer.Write('Session: {0:s}'.format(session.identifier))
-
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
         self._storage_format, session, self._storage_file_path)
     if not storage_writer:

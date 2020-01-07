@@ -259,8 +259,9 @@ class RedisMergeReader(interface.StorageMergeReader):
       self._container_types = self._GetContainerTypes()
 
     number_of_containers = 0
-    while (self._active_cursor or len(self._container_types) != 0 or len(
-        self._active_extra_containers) != 0):
+    while (self._active_cursor or
+           self._container_types or
+           self._active_extra_containers):
       if not self._active_cursor and not self._active_extra_containers:
         self._PrepareForNextContainerType()
 

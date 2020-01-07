@@ -60,6 +60,7 @@ class BaseStore(object):
     self.format_version = None
     self.serialization_format = None
     self.storage_type = None
+    self._last_session = 0
     self._serializers_profiler = None
     self._storage_profiler = None
     self._serializer = json_serializer.JSONAttributeContainerSerializer
@@ -265,7 +266,7 @@ class BaseStore(object):
     """Retrieves the events.
 
     Returns:
-      generator(Event): event  generator.
+      generator(Event): event generator.
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
 
@@ -370,8 +371,8 @@ class BaseStore(object):
   def GetWarnings(self):
     """Retrieves the warnings.
 
-    Yields:
-      ExtractionWarning: warning.
+    Returns:
+      generator(ExtractionWarning): warning generator.
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
