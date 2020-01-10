@@ -6,13 +6,15 @@ First determine which version of plaso is must suitable to your needs, for more 
 
 ### Installing the packaged release
 
-To install the packaged release see:
+To get plaso up and running quickly:
 
-* [Ubuntu](Ubuntu-Packaged-Release.md)
-* [Fedora](Fedora-Packaged-Release.md)
-* [Windows](Windows-Packaged-Release.md)
 * [Docker](Installing-with-docker.md)
-* [MacOS](MacOS-Packaged-Release.md) (The MacOS packaged release is deprecated. [Installing the source release](MacOS-Source-Release.md) is recommended.)
+
+Alternative options:
+
+* [Fedora](Fedora-Packaged-Release.md)
+* [MacOS](MacOS-Source-Release.md)
+* [Ubuntu](Ubuntu-Packaged-Release.md)
 
 If you run into problems installing, check out the [installation troubleshooting guide](Troubleshooting-installation-issues.md)
 
