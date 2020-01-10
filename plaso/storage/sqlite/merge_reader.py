@@ -88,15 +88,17 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
       self._add_container_type_methods[container_type] = method
 
-  def _AddAnalysisReport(self, analysis_report):
+  def _AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
     """
-    self._storage_writer.AddAnalysisReport(analysis_report)
+    self._storage_writer.AddAnalysisReport(
+        analysis_report, serialized_data=serialized_data)
 
-  def _AddEvent(self, event):
+  # pylint: disable=unused-argument
+  def _AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
@@ -115,43 +117,46 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     self._storage_writer.AddEvent(event)
 
-  def _AddEventData(self, event_data):
+  def _AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
+      serialized_data (bytes): serialized form of the event data.
     """
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
-    self._storage_writer.AddEventData(event_data)
+    self._storage_writer.AddEventData(event_data,
+        serialized_data=serialized_data)
 
     identifier = event_data.GetIdentifier()
     self._event_data_identifier_mappings[lookup_key] = identifier
 
-  def _AddEventSource(self, event_source):
+  def _AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
     """
-    self._storage_writer.AddEventSource(event_source)
+    self._storage_writer.AddEventSource(
+        event_source, serialized_data=serialized_data)
 
-  def _AddEventTag(self, event_tag):
+  def _AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
     """
-    self._storage_writer.AddEventTag(event_tag)
+    self._storage_writer.AddEventTag(event_tag, serialized_data=serialized_data)
 
-  def _AddWarning(self, warning):
+  def _AddWarning(self, warning, serialized_data=None):
     """Adds a warning.
 
     Args:
       warning (ExtractionWarning): warning.
     """
-    self._storage_writer.AddWarning(warning)
+    self._storage_writer.AddWarning(warning, serialized_data=serialized_data)
 
   def _Close(self):
     """Closes the task storage after reading."""
@@ -277,7 +282,8 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
         if callback:
           callback(self._storage_writer, attribute_container)
 
-        self._add_active_container_method(attribute_container)
+        self._add_active_container_method(
+            attribute_container, serialized_data=serialized_data)
 
         number_of_containers += 1
 

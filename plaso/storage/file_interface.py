@@ -548,7 +548,7 @@ class StorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError('Unable to write to closed storage writer.')
 
-  def AddAnalysisReport(self, analysis_report):
+  def AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
     Args:
@@ -560,14 +560,15 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddAnalysisReport(analysis_report)
+    self._storage_file.AddAnalysisReport(
+        analysis_report, serialized_data=serialized_data)
 
     report_identifier = analysis_report.plugin_name
     self._session.analysis_reports_counter['total'] += 1
     self._session.analysis_reports_counter[report_identifier] += 1
     self.number_of_analysis_reports += 1
 
-  def AddWarning(self, warning):
+  def AddWarning(self, warning, serialized_data=None):
     """Adds an warning.
 
     Args:
@@ -582,11 +583,12 @@ class StorageFileWriter(interface.StorageWriter):
     self._storage_file.AddWarning(warning)
     self.number_of_warnings += 1
 
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): an event.
+      serialized_data (bytes): serialized form of the event.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -599,11 +601,12 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._UpdateCounters(event)
 
-  def AddEventData(self, event_data):
+  def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
+      serialized_data (bytes): serialized form of the event data.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -611,9 +614,9 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventData(event_data)
+    self._storage_file.AddEventData(event_data, serialized_data=serialized_data)
 
-  def AddEventSource(self, event_source):
+  def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
     Args:
@@ -625,10 +628,11 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventSource(event_source)
+    self._storage_file.AddEventSource(
+        event_source, serialized_data=serialized_data)
     self.number_of_event_sources += 1
 
-  def AddEventTag(self, event_tag):
+  def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:

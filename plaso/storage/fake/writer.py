@@ -90,11 +90,12 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self.analysis_reports.append(analysis_report)
 
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): event.
+      serialized_data (bytes): serialized form of the event.
 
     Raises:
       IOError: when the storage writer is closed or
@@ -117,11 +118,12 @@ class FakeStorageWriter(interface.StorageWriter):
     self._events.append(event)
     self.number_of_events += 1
 
-  def AddEventData(self, event_data):
+  def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
+      serialized_data (bytes): serialized form of the event data.
 
     Raises:
       IOError: when the storage writer is closed.
