@@ -107,7 +107,7 @@ class RedisMergeReader(interface.StorageMergeReader):
     """Adds an event source.
 
     Args:
-      event_source (EventSource): event source.
+      event_source (EventSource): event source.F
     """
     self._storage_writer.AddEventSource(event_source)
 
