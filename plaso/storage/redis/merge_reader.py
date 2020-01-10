@@ -48,12 +48,14 @@ class RedisMergeReader(interface.StorageMergeReader):
       _CONTAINER_TYPE_EXTRACTION_ERROR: '_AddError',
   }
 
-  def __init__(self, storage_writer, task):
+  def __init__(self, storage_writer, task, redis_client=None):
     """Initializes a redis storage merge reader.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       task (Task): the task whose store is being merged.
+      redis_client (Optional[Redis]): redis client to query. If specified, no
+          new client will be created.
 
     Raises:
       RuntimeError: if an add container method is missing.
@@ -67,7 +69,7 @@ class RedisMergeReader(interface.StorageMergeReader):
         definitions.STORAGE_TYPE_TASK,
         session_identifier=task.session_identifier,
         task_identifier=task.identifier)
-    self._store.Open()
+    self._store.Open(redis_client=redis_client)
     self._event_data_identifier_mappings = {}
     self._add_container_type_methods = {}
     self._active_extra_containers = []

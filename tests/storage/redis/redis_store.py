@@ -32,7 +32,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
       Redis: a redis client.
     """
     try:
-      redis_client = redis.from_url('redis://localhost/0', socket_timeout=60)
+      redis_client = redis.from_url('redis://127.0.0.1/0', socket_timeout=60)
       redis_client.ping()
     except redis.exceptions.ConnectionError:
       redis_client = fakeredis.FakeStrictRedis()

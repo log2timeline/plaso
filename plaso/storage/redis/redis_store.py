@@ -63,9 +63,9 @@ class RedisStore(interface.BaseStore):
   def _SetClientName(cls, redis_client, name):
     """Attempts to sets a redis client name.
 
-    This method ignores errors from the redis server, as setting the name is
-    not a critical function, and it is the not current supported by the
-    fakeredis test library
+    This method ignores errors from the redis server or exceptions
+    indicating the method is missing, as setting the name is not a critical
+    function, and it is not currently supported by the fakeredis test library.
 
     Args:
       redis_client (Redis): an open redis client.
@@ -73,7 +73,7 @@ class RedisStore(interface.BaseStore):
     """
     try:
       redis_client.client_setname(name)
-    except redis.ResponseError:
+    except (AttributeError, redis.ResponseError):
       logger.debug('Unable to set redis client name: {0:s}'.format(name))
 
   def _AddAttributeContainer(self, container_type, container):
@@ -232,7 +232,7 @@ class RedisStore(interface.BaseStore):
     identifier = event.GetIdentifier()
     string_identifier = identifier.CopyToString()
     self._redis_client.zincrby(
-        event_index_name, event.timestamp, string_identifier)
+        event_index_name, string_identifier, event.timestamp)
 
   def Close(self):
     """Closes the store."""
@@ -265,7 +265,7 @@ class RedisStore(interface.BaseStore):
           event data identifier.
     """
     self._RaiseIfNotWritable()
-    if len(container_identifiers) == 0:
+    if not container_identifiers:
       # If there's no list of identifiers, there's no need to delete anything.
       return
     container_key = self._GenerateRedisKey(container_type)
@@ -327,7 +327,7 @@ class RedisStore(interface.BaseStore):
           self._CONTAINER_TYPE_EVENT, event_identifier)
 
   # pylint: disable=arguments-differ
-  def Open(self, redis_client=None, url='redis://localhost/0'):
+  def Open(self, redis_client=None, url='redis://127.0.0.1/0'):
     """Opens the store.
 
     Args:
@@ -372,7 +372,7 @@ class RedisStore(interface.BaseStore):
 
   @classmethod
   def ScanForProcessedTasks(
-      cls, session_identifier, url='redis://localhost/0', redis_client=None):
+      cls, session_identifier, url='redis://127.0.0.1/0', redis_client=None):
     """Scans a redis database for processed tasks.
 
     Args:
@@ -402,7 +402,7 @@ class RedisStore(interface.BaseStore):
 
   @classmethod
   def MarkTaskAsMerging(
-      cls, task_identifier, session_identifier, url='redis://localhost/0',
+      cls, task_identifier, session_identifier, url='redis://127.0.0.1/0',
       redis_client=None):
     """Marks a finalized task as pending merge.
 

@@ -397,7 +397,7 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
           task.identifier))
 
-  def Open(self):
+  def Open(self, **unused_kwargs):
     """Opens the storage writer.
 
     Raises:
