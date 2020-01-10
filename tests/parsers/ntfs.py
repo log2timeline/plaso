@@ -37,7 +37,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # A distributed link tracking event.
-    event = events[3684]
+    event = events[3680]
 
     self.CheckTimestamp(event.timestamp, '2007-06-30 12:58:40.500004')
     self.assertEqual(
@@ -56,6 +56,33 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
+
+    # Test path hints of a regular file.
+    event = events[28741]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'SAM')
+
+    expected_path_hints = ['\\WINDOWS\\system32\\config\\SAM']
+    self.assertEqual(event_data.path_hints, expected_path_hints)
+
+    # Test path hints of a deleted file.
+    event = events[120476]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'CAJA1S19.js')
+    self.assertFalse(event_data.is_allocated)
+
+    expected_path_hints = [(
+        '\\Documents and Settings\\Donald Blake\\Local Settings\\'
+        'Temporary Internet Files\\Content.IE5\\9EUWFPZ1\\CAJA1S19.js')]
+    self.assertEqual(event_data.path_hints, expected_path_hints)
+
+    # Testing path hint of orphaned file.
+    event = events[125432]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'menu.text.css')
+
+    expected_path_hints = ['$Orphan\\session\\menu.text.css']
+    self.assertEqual(event_data.path_hints, expected_path_hints)
 
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
@@ -116,7 +143,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertTrue(event_data.is_allocated)
 
     # The entry modification timestamp.
-    event = events[3]
+    event = events[7]
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
@@ -130,7 +157,8 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_message = (
         'TSK:/$MFT '
         'File reference: 0-1 '
-        'Attribute name: $STANDARD_INFORMATION')
+        'Attribute name: $STANDARD_INFORMATION '
+        'Path hints: \\$MFT')
 
     expected_short_message = (
         '/$MFT 0-1 $STANDARD_INFORMATION')
@@ -139,7 +167,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         event_data, expected_message, expected_short_message)
 
     # The creation timestamp.
-    event = events[4]
+    event = events[0]
 
     self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
@@ -155,10 +183,76 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         'File reference: 0-1 '
         'Attribute name: $FILE_NAME '
         'Name: $MFT '
-        'Parent file reference: 5-5')
+        'Parent file reference: 5-5 '
+        'Path hints: \\$MFT')
 
     expected_short_message = (
         '/$MFT 0-1 $FILE_NAME')
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
+    event = events[251]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    expected_path_hints = [
+        '\\System Volume Information\\{3808876b-c176-4e48-b7ae-04046e6cc752}']
+
+    self.assertEqual(event_data.path_hints, expected_path_hints)
+
+    expected_message = (
+        'TSK:/$MFT '
+        'File reference: 38-1 '
+        'Attribute name: $STANDARD_INFORMATION '
+        'Path hints: \\System Volume Information\\'
+        '{3808876b-c176-4e48-b7ae-04046e6cc752}')
+
+    expected_short_message = (
+        '/$MFT 38-1 $STANDARD_INFORMATION')
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
+    event = events[240]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    expected_path_hints = ['\\System Volume Information\\{38088~1']
+    self.assertEqual(event_data.path_hints, expected_path_hints)
+
+    expected_message = (
+        'TSK:/$MFT '
+        'File reference: 38-1 '
+        'Attribute name: $FILE_NAME '
+        'Name: {38088~1 '
+        'Parent file reference: 36-1 '
+        'Path hints: \\System Volume Information\\{38088~1')
+
+    expected_short_message = (
+        '/$MFT 38-1 $FILE_NAME')
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
+    event = events[244]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    expected_path_hints = [
+        '\\System Volume Information\\{3808876b-c176-4e48-b7ae-04046e6cc752}']
+    self.assertEqual(event_data.path_hints, expected_path_hints)
+
+    expected_message = (
+        'TSK:/$MFT '
+        'File reference: 38-1 '
+        'Attribute name: $FILE_NAME '
+        'Name: {3808876b-c176-4e48-b7ae-04046e6cc752} '
+        'Parent file reference: 36-1 '
+        'Path hints: \\System Volume Information\\'
+        '{3808876b-c176-4e48-b7ae-04046e6cc752}')
+
+    expected_short_message = (
+        '/$MFT 38-1 $FILE_NAME')
 
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)

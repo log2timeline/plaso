@@ -35,6 +35,7 @@ class NTFSFileStatEventData(events.EventData):
     name (str): name associated with the stat event, for example that of
         a $FILE_NAME attribute or None if not available.
     parent_file_reference (int): NTFS file reference of the parent.
+    path_hints (list[str]): hints about the full path of the file.
   """
 
   DATA_TYPE = 'fs:stat:ntfs'
@@ -49,6 +50,7 @@ class NTFSFileStatEventData(events.EventData):
     self.is_allocated = None
     self.name = None
     self.parent_file_reference = None
+    self.path_hints = None
 
 
 class NTFSUSNChangeEventData(events.EventData):
@@ -90,6 +92,8 @@ class NTFSMFTParser(interface.FileObjectParser):
   _MFT_ATTRIBUTE_STANDARD_INFORMATION = 0x00000010
   _MFT_ATTRIBUTE_FILE_NAME = 0x00000030
   _MFT_ATTRIBUTE_OBJECT_ID = 0x00000040
+
+  _NAMESPACE_DOS = 2
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -137,8 +141,92 @@ class NTFSMFTParser(interface.FileObjectParser):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def _ParseMFTAttribute(self, parser_mediator, mft_entry, mft_attribute):
-    """Extract data from a NFTS $MFT attribute.
+  def _ParseFileStatAttribute(
+      self, parser_mediator, mft_entry, mft_attribute, path_hints):
+    """Extract data from a NFTS $STANDARD_INFORMATION or $FILE_NAME attribute.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      mft_entry (pyfsntfs.file_entry): MFT entry.
+      mft_attribute (pyfsntfs.attribute): MFT attribute.
+      path_hints (list[str]): hints about the full path of the file.
+    """
+    event_data = NTFSFileStatEventData()
+    event_data.attribute_type = mft_attribute.attribute_type
+    event_data.file_reference = mft_entry.file_reference
+    event_data.is_allocated = mft_entry.is_allocated()
+    event_data.path_hints = path_hints
+
+    if mft_attribute.attribute_type == self._MFT_ATTRIBUTE_FILE_NAME:
+      event_data.file_attribute_flags = mft_attribute.file_attribute_flags
+      event_data.name = mft_attribute.name
+      event_data.parent_file_reference = mft_attribute.parent_file_reference
+
+    try:
+      creation_time = mft_attribute.get_creation_time_as_integer()
+    except OverflowError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'unable to read the creation timestamp from MFT attribute: '
+          '0x{0:08x} with error: {1!s}').format(
+              mft_attribute.attribute_type, exception))
+      creation_time = None
+
+    if creation_time is not None:
+      date_time = self._GetDateTime(creation_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    try:
+      modification_time = mft_attribute.get_modification_time_as_integer()
+    except OverflowError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'unable to read the modification timestamp from MFT attribute: '
+          '0x{0:08x} with error: {1!s}').format(
+              mft_attribute.attribute_type, exception))
+      modification_time = None
+
+    if modification_time is not None:
+      date_time = self._GetDateTime(modification_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    try:
+      access_time = mft_attribute.get_access_time_as_integer()
+    except OverflowError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'unable to read the access timestamp from MFT attribute: '
+          '0x{0:08x} with error: {1!s}').format(
+              exception, mft_attribute.attribute_type))
+      access_time = None
+
+    if access_time is not None:
+      date_time = self._GetDateTime(access_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    try:
+      entry_modification_time = (
+          mft_attribute.get_entry_modification_time_as_integer())
+    except OverflowError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'unable to read the entry modification timestamp from MFT '
+          'attribute: 0x{0:08x} with error: {1!s}').format(
+              mft_attribute.attribute_type, exception))
+      entry_modification_time = None
+
+    if entry_modification_time is not None:
+      date_time = self._GetDateTime(entry_modification_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def _ParseObjectIDAttribute(
+      self, parser_mediator, mft_entry, mft_attribute):
+    """Extract data from a NFTS $OBJECT_ID attribute.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -146,116 +234,33 @@ class NTFSMFTParser(interface.FileObjectParser):
       mft_entry (pyfsntfs.file_entry): MFT entry.
       mft_attribute (pyfsntfs.attribute): MFT attribute.
     """
-    if mft_entry.is_empty() or mft_entry.base_record_file_reference != 0:
-      return
+    display_name = '$MFT: {0:d}-{1:d}'.format(
+        mft_entry.file_reference & 0xffffffffffff,
+        mft_entry.file_reference >> 48)
 
-    if mft_attribute.attribute_type in [
-        self._MFT_ATTRIBUTE_STANDARD_INFORMATION,
-        self._MFT_ATTRIBUTE_FILE_NAME]:
-
-      file_attribute_flags = getattr(
-          mft_attribute, 'file_attribute_flags', None)
-      name = getattr(mft_attribute, 'name', None)
-      parent_file_reference = getattr(
-          mft_attribute, 'parent_file_reference', None)
-
-      event_data = NTFSFileStatEventData()
-      event_data.attribute_type = mft_attribute.attribute_type
-      event_data.file_attribute_flags = file_attribute_flags
-      event_data.file_reference = mft_entry.file_reference
-      event_data.is_allocated = mft_entry.is_allocated()
-      event_data.name = name
-      event_data.parent_file_reference = parent_file_reference
-
+    if mft_attribute.droid_file_identifier:
       try:
-        creation_time = mft_attribute.get_creation_time_as_integer()
-      except OverflowError as exception:
+        self._ParseDistributedTrackingIdentifier(
+            parser_mediator, mft_attribute.droid_file_identifier,
+            display_name)
+
+      except (TypeError, ValueError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to read the creation timestamp from MFT attribute: '
+            'unable to read droid file identifier from attribute: 0x{0:08x} '
+            'with error: {1!s}').format(
+                mft_attribute.attribute_type, exception))
+
+    if mft_attribute.birth_droid_file_identifier:
+      try:
+        self._ParseDistributedTrackingIdentifier(
+            parser_mediator, mft_attribute.droid_file_identifier,
+            display_name)
+
+      except (TypeError, ValueError) as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to read birth droid file identifier from attribute: '
             '0x{0:08x} with error: {1!s}').format(
                 mft_attribute.attribute_type, exception))
-        creation_time = None
-
-      if creation_time is not None:
-        date_time = self._GetDateTime(creation_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_CREATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      try:
-        modification_time = mft_attribute.get_modification_time_as_integer()
-      except OverflowError as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'unable to read the modification timestamp from MFT attribute: '
-            '0x{0:08x} with error: {1!s}').format(
-                mft_attribute.attribute_type, exception))
-        modification_time = None
-
-      if modification_time is not None:
-        date_time = self._GetDateTime(modification_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      try:
-        access_time = mft_attribute.get_access_time_as_integer()
-      except OverflowError as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'unable to read the access timestamp from MFT attribute: '
-            '0x{0:08x} with error: {1!s}').format(
-                exception, mft_attribute.attribute_type))
-        access_time = None
-
-      if access_time is not None:
-        date_time = self._GetDateTime(access_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      try:
-        entry_modification_time = (
-            mft_attribute.get_entry_modification_time_as_integer())
-      except OverflowError as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'unable to read the entry modification timestamp from MFT '
-            'attribute: 0x{0:08x} with error: {1!s}').format(
-                mft_attribute.attribute_type, exception))
-        entry_modification_time = None
-
-      if entry_modification_time is not None:
-        date_time = self._GetDateTime(entry_modification_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_OBJECT_ID:
-      display_name = '$MFT: {0:d}-{1:d}'.format(
-          mft_entry.file_reference & 0xffffffffffff,
-          mft_entry.file_reference >> 48)
-
-      if mft_attribute.droid_file_identifier:
-        try:
-          self._ParseDistributedTrackingIdentifier(
-              parser_mediator, mft_attribute.droid_file_identifier,
-              display_name)
-
-        except (TypeError, ValueError) as exception:
-          parser_mediator.ProduceExtractionWarning((
-              'unable to read droid file identifier from attribute: 0x{0:08x} '
-              'with error: {1!s}').format(
-                  mft_attribute.attribute_type, exception))
-
-      if mft_attribute.birth_droid_file_identifier:
-        try:
-          self._ParseDistributedTrackingIdentifier(
-              parser_mediator, mft_attribute.droid_file_identifier,
-              display_name)
-
-        except (TypeError, ValueError) as exception:
-          parser_mediator.ProduceExtractionWarning((
-              'unable to read birth droid file identifier from attribute: '
-              '0x{0:08x} with error: {1!s}').format(
-                  mft_attribute.attribute_type, exception))
 
   def _ParseMFTEntry(self, parser_mediator, mft_entry):
     """Extracts data from a NFTS $MFT entry.
@@ -265,15 +270,42 @@ class NTFSMFTParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       mft_entry (pyfsntfs.file_entry): MFT entry.
     """
+    path_hints = []
+    standard_information_attribute = None
+    standard_information_attribute_index = None
     for attribute_index in range(0, mft_entry.number_of_attributes):
       try:
         mft_attribute = mft_entry.get_attribute(attribute_index)
-        self._ParseMFTAttribute(parser_mediator, mft_entry, mft_attribute)
+        if mft_attribute.attribute_type == (
+            self._MFT_ATTRIBUTE_STANDARD_INFORMATION):
+          standard_information_attribute = mft_attribute
+          standard_information_attribute_index = attribute_index
+
+        elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_FILE_NAME:
+          path_hint = mft_entry.get_path_hint(attribute_index)
+          self._ParseFileStatAttribute(
+              parser_mediator, mft_entry, mft_attribute, [path_hint])
+          if mft_attribute.namespace != self._NAMESPACE_DOS:
+            path_hints.append(path_hint)
+
+        elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_OBJECT_ID:
+          self._ParseObjectIDAttribute(
+              parser_mediator, mft_entry, mft_attribute)
 
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
             'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
                 attribute_index, exception))
+
+    if standard_information_attribute:
+      try:
+        self._ParseFileStatAttribute(
+            parser_mediator, mft_entry, standard_information_attribute,
+            path_hints)
+      except IOError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
+                standard_information_attribute_index, exception))
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a NTFS $MFT metadata file-like object.
@@ -294,7 +326,9 @@ class NTFSMFTParser(interface.FileObjectParser):
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
       try:
         mft_entry = mft_metadata_file.get_file_entry(entry_index)
-        self._ParseMFTEntry(parser_mediator, mft_entry)
+        if (not mft_entry.is_empty() and
+            mft_entry.base_record_file_reference == 0):
+          self._ParseMFTEntry(parser_mediator, mft_entry)
 
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
