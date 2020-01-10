@@ -13,9 +13,6 @@
 - [ ] [Update GIFT COPR](https://github.com/log2timeline/l2tdocs/blob/master/process/GIFT%20COPR.md)
   - Build Fedora source rpms: `PYTHONPATH=. ./tools/build.py --preset plaso srpm`
   - Update GIFT COPR testing, dev, stable
-- [ ] [Update l2tbinaries](https://github.com/log2timeline/l2tdocs/blob/master/process/l2tbinaries.md) macos
-  - Build MacOS binaries: `PYTHONPATH=. ./tools/build.py --preset plaso pkg`
-  - update l2tbinaries, testing, dev, stable
 - [ ] [Update l2tbinaries](https://github.com/log2timeline/l2tdocs/blob/master/process/l2tbinaries.md) win32
   - Build 32-bit Windows binaries: `PYTHONPATH=. ./tools/build.py --preset plaso msi`
   - update l2tbinaries, testing, dev, stable
