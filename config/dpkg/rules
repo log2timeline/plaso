@@ -1,11 +1,13 @@
 #!/usr/bin/make -f
 
 %:
-	dh $@ --buildsystem=python_distutils --with=python2,python3
+	dh $@ --buildsystem=python_distutils --with=python3
 
 .PHONY: override_dh_auto_clean
 override_dh_auto_clean:
-	dh_auto_clean
+	set -ex; for python in $(shell py3versions -r); do \
+		$$python setup.py clean -a; \
+	done;
 	rm -rf build plaso.egg-info/SOURCES.txt plaso.egg-info/PKG-INFO
 
 .PHONY: override_dh_auto_build
