@@ -124,14 +124,6 @@ plaso.cli.helpers.manager module
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.mysql\_4n6time\_output module
------------------------------------------------
-
-.. automodule:: plaso.cli.helpers.mysql_4n6time_output
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.cli.helpers.nsrlsvr\_analysis module
 ------------------------------------------
 
@@ -184,22 +176,6 @@ plaso.cli.helpers.sessionize\_analysis module
 ---------------------------------------------
 
 .. automodule:: plaso.cli.helpers.sessionize_analysis
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.cli.helpers.shared\_4n6time\_output module
-------------------------------------------------
-
-.. automodule:: plaso.cli.helpers.shared_4n6time_output
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.cli.helpers.sqlite\_4n6time\_output module
-------------------------------------------------
-
-.. automodule:: plaso.cli.helpers.sqlite_4n6time_output
     :members:
     :undoc-members:
     :show-inheritance:
