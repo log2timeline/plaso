@@ -257,6 +257,21 @@ class CLITool(object):
             'default to UTC. Use "-z list" to see a list of available '
             'timezones.'))
 
+  def CheckOutDated(self):
+    """Checks if the version of plaso is outdated and warns the user."""
+    version_date_time = datetime.datetime(
+        int(plaso.__version__[0:4], 10),
+        int(plaso.__version__[4:6], 10),
+        int(plaso.__version__[6:8], 10))
+    date_time_delta = datetime.datetime.utcnow() - version_date_time
+
+    if date_time_delta.days > 180:
+      logger.warning('This version of plaso is more than 6 months old.')
+
+      print('WARNING the version of plaso you are using is more than 6 months')
+      print('old. We strongly recommend to update it.')
+      print('')
+
   def GetCommandLineArguments(self):
     """Retrieves the command line arguments.
 

@@ -38,6 +38,11 @@ def Main():
           'Troubleshooting.html')
     return True
 
+  try:
+    tool.CheckOutDated()
+  except KeyboardInterrupt:
+    return False
+
   if tool.list_signature_identifiers:
     tool.ListSignatureIdentifiers()
     return True

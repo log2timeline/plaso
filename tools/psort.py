@@ -43,6 +43,11 @@ def Main():
           'Troubleshooting.html')
     return True
 
+  try:
+    tool.CheckOutDated()
+  except KeyboardInterrupt:
+    return False
+
   have_list_option = False
   if tool.list_analysis_plugins:
     tool.ListAnalysisPlugins()
