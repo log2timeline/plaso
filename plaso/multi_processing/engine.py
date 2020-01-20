@@ -393,7 +393,7 @@ class MultiProcessEngine(engine.BaseEngine):
   def _StopStatusUpdateThread(self):
     """Stops the status update thread."""
     self._status_update_active = False
-    if self._status_update_thread.isAlive():
+    if self._status_update_thread.is_alive():
       self._status_update_thread.join()
     self._status_update_thread = None
 
