@@ -115,6 +115,7 @@ class PstealTool(
     self._time_slice = None
     self._use_time_slicer = False
 
+    self.dependencies_check = True
     self.list_hashers = False
     self.list_language_identifiers = False
     self.list_output_modules = False
@@ -357,10 +358,17 @@ class PstealTool(
 
     self.AddBasicOptions(argument_parser)
 
+    data_location_group = argument_parser.add_argument_group(
+        'data location arguments')
+
+    argument_helper_names = ['artifact_definitions', 'data_location']
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        data_location_group, names=argument_helper_names)
+
     extraction_group = argument_parser.add_argument_group(
         'extraction arguments')
 
-    argument_helper_names = ['extraction']
+    argument_helper_names = ['extraction', 'hashers', 'parsers']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         extraction_group, names=argument_helper_names)
 
@@ -375,6 +383,11 @@ class PstealTool(
 
     info_group = argument_parser.add_argument_group('informational arguments')
 
+    info_group.add_argument(
+        '--no_dependencies_check', '--no-dependencies-check',
+        dest='dependencies_check', action='store_false', default=True,
+        help='Disable the dependencies check.')
+
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         info_group, names=['status_view'])
 
@@ -382,9 +395,6 @@ class PstealTool(
     input_group.add_argument(
         '--source', dest='source', action='store',
         type=str, help='The source to process')
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        input_group, names=['data_location'])
 
     output_group = argument_parser.add_argument_group('output arguments')
 
@@ -457,6 +467,8 @@ class PstealTool(
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
     self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
+
+    self.dependencies_check = getattr(options, 'dependencies_check', True)
 
     # Check the list options first otherwise required options will raise.
     if (self.list_hashers or self.list_language_identifiers or
