@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""File containing a Windows Registry plugin to parse the Amcache Hive."""
+"""File containing a Windows Registry plugin to parse the AMCache.hve file."""
 
 from __future__ import unicode_literals
 
@@ -7,6 +7,7 @@ import pyregf
 
 from dfdatetime import filetime
 from dfdatetime import posix_time
+from dfwinreg import definitions as dfwinreg_definitions
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -14,132 +15,292 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class AmcacheEventData(events.EventData):
-  """Amcache event data.
+class AMCacheFileEventData(events.EventData):
+  """AMCache file event data.
 
   Attributes:
-    full_path (str): full path of file
-    sha1 (str): sha1 of file
-    productname (str): product name file belongs to
-    companyname (str): company name that created product file belongs to
-    fileversion (str): version of file
-    languagecode (int): language code of file
-    filesize (int): size of file in bytes
-    filedescription (str): description of file
-    linkerts (int): unix timestamp when file was linked
-    lastmodifiedts (int): filetime timestamp of last modified datetime of file
-    createdtd (int): filetime timestamp of created datetime of file
-    programid (str): GUID of entry under Root/Program key file belongs to
+    company_name (str): company name that created product file belongs to.
+    file_description (str): description of file.
+    file_reference (int): file system file reference, for example 9-1 (MFT
+        entry - sequence number).
+    file_size (int): size of file in bytes.
+    file_version (str): version of file.
+    full_path (str): full path of file.
+    language_code (int): language code of file.
+    product_name (str): product name file belongs to.
+    program_identifier (str): GUID of entry under Root/Program key file belongs
+        to.
+    sha1 (str): SHA-1 of file.
   """
 
   DATA_TYPE = 'windows:registry:amcache'
 
   def __init__(self):
     """Initializes event data."""
-    super(AmcacheEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(AMCacheFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.company_name = None
+    self.file_description = None
+    self.file_reference = None
+    self.file_size = None
+    self.file_version = None
     self.full_path = None
+    self.language_code = None
+    self.product_name = None
+    self.program_identifier = None
     self.sha1 = None
-    self.productname = None
-    self.companyname = None
-    self.fileversion = None
-    self.languagecode = None
-    self.filesize = None
-    self.filedescription = None
-    self.linkerts = None
-    self.lastmodifiedts = None
-    self.createdts = None
-    self.programid = None
 
-class AmcacheProgramEventData(events.EventData):
-  """Amcache programs event data.
+class AMCacheProgramEventData(events.EventData):
+  """AMCache programs event data.
 
   Attributes:
-    name (str): name of installed program
-    version (str): version of program
-    publisher (str): publisher of program
-    languagecode (int): languagecode of program
-    entrytype (str): type of entry (usually AddRemoveProgram)
-    uninstallkey (str): unicode string of uninstall registry key for program
-    filepath (str): file path of installed program
-    productcode (str): product code of program
-    packagecode (str): package code of program
-    msiproductcode (str): MSI product code of program
-    msipackagecode (str): MSI package code of program
-    files (str): list of files belonging to program
+    entry_type (str): type of entry (usually AddRemoveProgram).
+    file_paths (str): file paths of installed program.
+    files (str): list of files belonging to program.
+    language_code (int): language_code of program.
+    msi_package_code (str): MSI package code of program.
+    msi_product_code (str): MSI product code of program.
+    name (str): name of installed program.
+    package_code (str): package code of program.
+    product_code (str): product code of program.
+    publisher (str): publisher of program.
+    uninstall_key (str): unicode string of uninstall registry key for program.
+    version (str): version of program.
   """
 
   DATA_TYPE = 'windows:registry:amcache:programs'
 
   def __init__(self):
     """Initializes event data."""
-    super(AmcacheProgramEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.name = None
-    self.version = None
-    self.publisher = None
-    self.languagecode = None
-    self.entrytype = None
-    self.uninstallkey = None
-    self.filepaths = None
-    self.productcode = None
-    self.packagecode = None
-    self.msiproductcode = None
-    self.msipackagecode = None
+    super(AMCacheProgramEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.entry_type = None
+    self.file_paths = None
     self.files = None
+    self.language_code = None
+    self.msi_package_code = None
+    self.msi_product_code = None
+    self.name = None
+    self.package_code = None
+    self.product_code = None
+    self.publisher = None
+    self.uninstall_key = None
+    self.version = None
 
-class AmcacheParser(interface.FileObjectParser):
-  """Amcache Registry plugin for recently run programs."""
+class AMCacheParser(interface.FileObjectParser):
+  """AMCache Registry plugin for recently run programs."""
 
   NAME = 'amcache'
-  DESCRIPTION = 'Parser for Amcache Registry entries.'
+  DESCRIPTION = 'Parser for AMCache Registry entries.'
 
-  URLS = [
-      ('http://www.swiftforensics.com/2013/12/'
-       'amcachehve-in-windows-8-goldmine-for.html')]
+  # Contains: {value name: attribute name}
+  _FILE_REFERENCE_KEY_VALUES = {
+      '0': 'product_name',
+      '1': 'company_name',
+      '3': 'language_code',
+      '5': 'file_version',
+      '6': 'file_size',
+      'c': 'file_description',
+      '15': 'full_path',
+      '100': 'program_identifier',
+      '101': 'sha1'}
 
-  _AMCACHE_SHA1 = "101"
-  _AMCACHE_DATETIME = "17"
-  _AMCACHE_FULL_PATH = "15"
-  _AMCACHE_ROOT_FILE_KEY = "Root\\File"
-  _AMCACHE_ROOT_PROGRAM_KEY = "Root\\Programs"
-  _AMCACHE_PRODUCTNAME = "0"
-  _AMCACHE_COMPANYNAME = "1"
-  _AMCACHE_FILEVERSION = "5"
-  _AMCACHE_LANGUAGECODE = "3"
-  _AMCACHE_FILESIZE = "6"
-  _AMCACHE_FILEDESCRIPTION = "c"
-  _AMCACHE_LINKERTS = "f"
-  _AMCACHE_LASTMODIFIEDTS = "11"
-  _AMCACHE_CREATEDTS = "12"
-  _AMCACHE_PROGRAMID = "100"
+  _AMCACHE_COMPILATION_TIME = 'f'
+  _AMCACHE_FILE_MODIFICATION_TIME = '11'
+  _AMCACHE_FILE_CREATION_TIME = '12'
+  _AMCACHE_ENTRY_WRITE_TIME = '17'
 
-  _AMCACHE_P_INSTALLDATE = "a"
-  _AMCACHE_P_NAME = "0"
-  _AMCACHE_P_VERSION = "1"
-  _AMCACHE_P_PUBLISHER = "2"
-  _AMCACHE_P_LANGUAGECODE = "3"
-  _AMCACHE_P_ENTRYTYPE = "6"
-  _AMCACHE_P_UNINSTALLKEY = "7"
-  _AMCACHE_P_FILEPATHS = "d"
-  _AMCACHE_P_PRODUCTCODE = "f"
-  _AMCACHE_P_PACKAGECODE = "10"
-  _AMCACHE_P_MSIPRODUCTCODE = "11"
-  _AMCACHE_P_MSIPACKAGECODE = "12"
-  _AMCACHE_P_FILES = "Files"
+  _AMCACHE_P_INSTALLATION_TIME = 'a'
+
+  _AMCACHE_P_FILES = 'Files'
+
+  _PRODUCT_KEY_VALUES = {
+      '0': 'name',
+      '1': 'version',
+      '2': 'publisher',
+      '3': 'language_code',
+      '6': 'entry_type',
+      '7': 'uninstall_key',
+      'd': 'file_paths',
+      'f': 'product_code',
+      '10': 'package_code',
+      '11': 'msi_product_code',
+      '12': 'msi_package_code',
+  }
 
   #TODO Add GetFormatSpecification when issues are fixed with adding
   #     multiple parsers for the same file format (in this case regf files)
   #     AddNewSignature ->
   #     b'\x41\x00\x6d\x00\x63\x00\x61\x00\x63\x00\x68\x00\x65', offset=88
 
+  def _GetValueDataAsObject(self, parser_mediator, value):
+    """Retrieves the value data as an object.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      value (pyregf_value): value.
+
+    Returns:
+      object: data as a Python type or None if the value cannot be read.
+    """
+    try:
+      if value.type in (
+          dfwinreg_definitions.REG_SZ,
+          dfwinreg_definitions.REG_EXPAND_SZ,
+          dfwinreg_definitions.REG_LINK):
+        value_data = value.get_data_as_string()
+
+      elif value.type in (
+          dfwinreg_definitions.REG_DWORD,
+          dfwinreg_definitions.REG_DWORD_BIG_ENDIAN,
+          dfwinreg_definitions.REG_QWORD):
+        value_data = value.get_data_as_integer()
+
+      elif value.type == dfwinreg_definitions.REG_MULTI_SZ:
+        value_data = list(value.get_data_as_multi_string())
+
+      else:
+        value_data = value.data
+
+    except (IOError, OverflowError) as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'Unable to read data from value: {0:s} with error: {1!s}'.format(
+              value.name, exception))
+      return None
+
+    return value_data
+
+  def _ParseFileKey(self, parser_mediator, file_key):
+    """Parses a Root\\File key.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_key (pyregf.key): the File key.
+    """
+    for volume_key in file_key.sub_keys:
+      for file_reference_key in volume_key.sub_keys:
+        self._ParseFileReferenceKey(parser_mediator, file_reference_key)
+
+  def _ParseFileReferenceKey(self, parser_mediator, file_reference_key):
+    """Parses a file reference key (sub key of Root\\File\\%VOLUME%) for events.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_reference_key (pyregf.key): file reference key.
+    """
+    event_data = AMCacheFileEventData()
+
+    try:
+      if '0000' in file_reference_key.name:
+        # A NTFS file is a combination of MFT entry and sequence number.
+        sequence_number, mft_entry = file_reference_key.name.split('0000')
+        mft_entry = int(mft_entry, 16)
+        sequence_number = int(sequence_number, 16)
+        event_data.file_reference = '{0:d}-{1:d}'.format(
+            mft_entry, sequence_number)
+      else:
+        # A FAT file is a single number.
+        file_reference = int(file_reference_key.name, 16)
+        event_data.file_reference = '{0:d}'.format(file_reference)
+
+    except ValueError:
+      pass
+
+    for value_name, attribute_name in self._FILE_REFERENCE_KEY_VALUES.items():
+      value = file_reference_key.get_value_by_name(value_name)
+      if not value:
+        continue
+
+      value_data = self._GetValueDataAsObject(parser_mediator, value)
+      if attribute_name == 'sha1' and value_data.startswith('0000'):
+        # Strip off the 4 leading zero's from the sha1 hash.
+        value_data = value_data[4:]
+
+      setattr(event_data, attribute_name, value_data)
+
+    amcache_time_value = file_reference_key.get_value_by_name(
+        self._AMCACHE_ENTRY_WRITE_TIME)
+    if amcache_time_value:
+      amcache_time = filetime.Filetime(amcache_time_value.get_data_as_integer())
+      event = time_events.DateTimeValuesEvent(
+          amcache_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    creation_time_value = file_reference_key.get_value_by_name(
+        self._AMCACHE_FILE_CREATION_TIME)
+    if creation_time_value:
+      creation_time = filetime.Filetime(
+          creation_time_value.get_data_as_integer())
+      event = time_events.DateTimeValuesEvent(
+          creation_time, definitions.TIME_DESCRIPTION_CREATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    modification_time_value = file_reference_key.get_value_by_name(
+        self._AMCACHE_FILE_MODIFICATION_TIME)
+    if modification_time_value:
+      modification_time = filetime.Filetime(
+          modification_time_value.get_data_as_integer())
+      event = time_events.DateTimeValuesEvent(
+          modification_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    compilation_time_value = file_reference_key.get_value_by_name(
+        self._AMCACHE_COMPILATION_TIME)
+    if compilation_time_value:
+      link_time = posix_time.PosixTime(
+          compilation_time_value.get_data_as_integer())
+      event = time_events.DateTimeValuesEvent(
+          link_time, definitions.TIME_DESCRIPTION_CHANGE)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def _ParseProgramKey(self, parser_mediator, program_key):
+    """Parses a program key (a sub key of Root\\Programs) for events.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      program_key (pyregf_key): program key.
+    """
+    event_data = AMCacheProgramEventData()
+
+    for value_name, attribute_name in self._PRODUCT_KEY_VALUES.items():
+      value = program_key.get_value_by_name(value_name)
+      if not value:
+        continue
+
+      value_data = self._GetValueDataAsObject(parser_mediator, value)
+      setattr(event_data, attribute_name, value_data)
+
+    installation_time_value = program_key.get_value_by_name(
+        self._AMCACHE_P_INSTALLATION_TIME)
+    if installation_time_value:
+      installation_time = posix_time.PosixTime(
+          installation_time_value.get_data_as_integer())
+      event = time_events.DateTimeValuesEvent(
+          installation_time, definitions.TIME_DESCRIPTION_INSTALLATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def _ParseProgramsKey(self, parser_mediator, programs_key):
+    """Parses a Root\\Programs key.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      programs_key (pyregf.key): the Programs key.
+    """
+    for program_key in programs_key.sub_keys:
+      self._ParseProgramKey(parser_mediator, program_key)
+
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses an Amcache.hve file for events.
+    """Parses an AMCache.hve file-like object for events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
     """
-    regf_file = pyregf.file() # pylint: disable=no-member
+    regf_file = pyregf.file()
     try:
       regf_file.open_file_object(file_object)
     except IOError:
@@ -147,185 +308,17 @@ class AmcacheParser(interface.FileObjectParser):
       # fixing of handling multiple parsers for the same file format.
       return
 
-    root_key = regf_file.get_root_key()
-    if root_key is None:
-      regf_file.close()
-      return
+    root_key = regf_file.get_key_by_path('Root')
+    if root_key:
+      file_key = root_key.get_sub_key_by_path('File')
+      if file_key:
+        self._ParseFileKey(parser_mediator, file_key)
 
-    root_file_key = root_key.get_sub_key_by_path(self._AMCACHE_ROOT_FILE_KEY)
-    if root_file_key is None:
-      regf_file.close()
-      return
-
-    for volume_key in root_file_key.sub_keys:
-      for am_entry in volume_key.sub_keys:
-        self._ProcessAMCacheFileKey(am_entry, parser_mediator)
-
-    root_program_key = root_key.get_sub_key_by_path(
-        self._AMCACHE_ROOT_PROGRAM_KEY)
-    if root_program_key is None:
-      regf_file.close()
-      return
-
-    for am_entry in root_program_key.sub_keys:
-      self._ProcessAMCacheProgramKey(am_entry, parser_mediator)
+      programs_key = root_key.get_sub_key_by_path('Programs')
+      if programs_key:
+        self._ParseProgramsKey(parser_mediator, programs_key)
 
     regf_file.close()
 
-  def _ProcessAMCacheProgramKey(self, am_entry, parser_mediator):
-    """Parses an Amcache Root/Programs key for events.
 
-    Args:
-      am_entry (pyregf.key): amcache Programs key.
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-    """
-    amcache_datetime = am_entry.get_value_by_name(
-        self._AMCACHE_P_INSTALLDATE).get_data_as_integer()
-    event_data = AmcacheProgramEventData()
-
-    name = am_entry.get_value_by_name(self._AMCACHE_P_NAME)
-    if name:
-      event_data.name = name.get_data_as_string()
-
-    version = am_entry.get_value_by_name(self._AMCACHE_P_VERSION)
-    if version:
-      event_data.version = version.get_data_as_string()
-
-    publisher = am_entry.get_value_by_name(self._AMCACHE_P_PUBLISHER)
-    if publisher:
-      event_data.publisher = publisher.get_data_as_string()
-
-    languagecode = am_entry.get_value_by_name(self._AMCACHE_P_LANGUAGECODE)
-    if languagecode:
-      event_data.languagecode = languagecode.get_data_as_string()
-
-    entrytype = am_entry.get_value_by_name(self._AMCACHE_P_ENTRYTYPE)
-    if entrytype:
-      event_data.entrytype = entrytype.get_data_as_string()
-
-    uninstallkey = am_entry.get_value_by_name(self._AMCACHE_P_UNINSTALLKEY)
-    if uninstallkey:
-      uninstallkey = uninstallkey.get_data()
-      uninstallkey = uninstallkey.decode('utf-16-LE')
-      event_data.uninstallkey = uninstallkey
-
-    filepaths = am_entry.get_value_by_name(self._AMCACHE_P_FILEPATHS)
-    if filepaths:
-      filepaths = filepaths.get_data()
-      filepaths = filepaths.decode('utf-16-LE')
-      event_data.filepaths = filepaths
-
-    productcode = am_entry.get_value_by_name(self._AMCACHE_P_PRODUCTCODE)
-    if productcode:
-      event_data.productcode = productcode.get_data_as_string()
-
-    packagecode = am_entry.get_value_by_name(self._AMCACHE_P_PACKAGECODE)
-    if packagecode:
-      event_data.packagecode = packagecode.get_data_as_string()
-
-    msiproductcode = am_entry.get_value_by_name(self._AMCACHE_P_MSIPRODUCTCODE)
-    if msiproductcode:
-      msiproductcode = msiproductcode.get_data()
-      msiproductcode = msiproductcode.decode('utf-16-LE')
-      event_data.msiproductcode = msiproductcode
-
-    msipackagecode = am_entry.get_value_by_name(self._AMCACHE_P_MSIPACKAGECODE)
-    if msipackagecode:
-      msipackagecode = msipackagecode.get_data()
-      msipackagecode = msipackagecode.decode('utf-16-LE')
-      event_data.msipackagecode = msipackagecode
-
-    files = am_entry.get_value_by_name(self._AMCACHE_P_FILES)
-    if files:
-      files = files.get_data()
-      files = files.decode('utf-16-LE')
-      event_data.files = files
-
-    event = time_events.DateTimeValuesEvent(
-        posix_time.PosixTime(amcache_datetime),
-        definitions.TIME_DESCRIPTION_INSTALLATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-  def _ProcessAMCacheFileKey(self, am_entry, parser_mediator):
-    """"Parses an Amcache Root/File key for events.
-
-    Args:
-      am_entry (pyregf.key): amcache File key.
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-    """
-    amcache_datetime = am_entry.get_value_by_name(
-        self._AMCACHE_DATETIME).get_data_as_integer()
-    event_data = AmcacheEventData()
-
-    event_data.full_path = am_entry.get_value_by_name(
-        self._AMCACHE_FULL_PATH).get_data_as_string()
-    # Strip off the 4 leading zero's from the sha1 hash.
-    event_data.sha1 = am_entry.get_value_by_name(
-        self._AMCACHE_SHA1).get_data_as_string()[4:]
-
-    productname = am_entry.get_value_by_name(self._AMCACHE_PRODUCTNAME)
-    if productname:
-      event_data.productname = productname.get_data_as_string()
-
-    companyname = am_entry.get_value_by_name(self._AMCACHE_COMPANYNAME)
-    if companyname:
-      event_data.companyname = companyname.get_data_as_string()
-
-    fileversion = am_entry.get_value_by_name(self._AMCACHE_FILEVERSION)
-    if fileversion:
-      event_data.fileversion = fileversion.get_data_as_string()
-
-    languagecode = am_entry.get_value_by_name(self._AMCACHE_LANGUAGECODE)
-    if languagecode:
-      event_data.languagecode = languagecode.get_data_as_integer()
-
-    filesize = am_entry.get_value_by_name(self._AMCACHE_FILESIZE)
-    if filesize:
-      event_data.filesize = filesize.get_data_as_integer()
-
-    filedescription = am_entry.get_value_by_name(self._AMCACHE_FILEDESCRIPTION)
-    if filedescription:
-      event_data.filedescription = filedescription.get_data_as_string()
-
-    linkerts = am_entry.get_value_by_name(self._AMCACHE_LINKERTS)
-    if linkerts:
-      event_data.linkerts = linkerts.get_data_as_integer()
-
-    lastmodifiedts = am_entry.get_value_by_name(self._AMCACHE_LASTMODIFIEDTS)
-    if lastmodifiedts:
-      event_data.lastmodifiedts = lastmodifiedts.get_data_as_integer()
-
-    createdts = am_entry.get_value_by_name(self._AMCACHE_CREATEDTS)
-    if createdts:
-      event_data.createdts = createdts.get_data_as_integer()
-
-    programid = am_entry.get_value_by_name(self._AMCACHE_PROGRAMID)
-    if programid:
-      event_data.programid = programid.get_data_as_string()
-
-    event = time_events.DateTimeValuesEvent(
-        filetime.Filetime(amcache_datetime),
-        definitions.TIME_DESCRIPTION_MODIFICATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if event_data.createdts:
-      event = time_events.DateTimeValuesEvent(
-          filetime.Filetime(event_data.createdts),
-          definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if event_data.lastmodifiedts:
-      event = time_events.DateTimeValuesEvent(
-          filetime.Filetime(event_data.lastmodifiedts),
-          definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if event_data.linkerts:
-      event = time_events.DateTimeValuesEvent(
-          posix_time.PosixTime(event_data.linkerts),
-          definitions.TIME_DESCRIPTION_CHANGE)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-manager.ParsersManager.RegisterParser(AmcacheParser)
+manager.ParsersManager.RegisterParser(AMCacheParser)

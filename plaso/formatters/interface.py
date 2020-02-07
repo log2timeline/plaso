@@ -220,16 +220,20 @@ class ConditionalEventFormatter(EventFormatter):
   FORMAT_STRING_SEPARATOR = ' '
 
   def __init__(self):
-    """Initializes the conditional formatter.
+    """Initializes the conditional formatter."""
+    super(ConditionalEventFormatter, self).__init__()
+    self._format_string_pieces_map = []
+    self._format_string_short_pieces_map = []
 
-    A map is build of the string pieces and their corresponding attribute
+  def _CreateFormatStringMaps(self):
+    """Creates the format string maps.
+
+    Maps are build of the string pieces and their corresponding attribute
     name to optimize conditional string formatting.
 
     Raises:
       RuntimeError: when an invalid format string piece is encountered.
     """
-    super(ConditionalEventFormatter, self).__init__()
-
     # The format string can be defined as:
     # {name}, {name:format}, {name!conversion}, {name!conversion:format}
     regexp = re.compile('{[a-z][a-zA-Z0-9_]*[!]?[^:}]*[:]?[^}]*}')
@@ -279,7 +283,13 @@ class ConditionalEventFormatter(EventFormatter):
 
     Returns:
       tuple(str, str): formatted message string and short message string.
+
+    Raises:
+      RuntimeError: when an invalid format string piece is encountered.
     """
+    if not self._format_string_pieces_map:
+      self._CreateFormatStringMaps()
+
     # Using getattr here to make sure the attribute is not set to None.
     # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
     string_pieces = []
@@ -341,6 +351,7 @@ class ConditionalEventFormatter(EventFormatter):
       tuple(str, str): formatted message string and short message string.
 
     Raises:
+      RuntimeError: when an invalid format string piece is encountered.
       WrongFormatter: if the event data cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_data.data_type:
