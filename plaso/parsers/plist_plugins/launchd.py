@@ -82,7 +82,7 @@ class LaunchdPlugin(interface.PlistPlugin):
     group_name = top_level.get('GroupName')
 
     event_data = plist_event.PlistTimeEventData()
-    event_data.desc = ('Launchd service config {0:s} points to {1:s} with'
+    event_data.desc = ('Launchd service config {0:s} points to {1:s} with '
                        'user:{2:s} group:{3:s}').format(label, command,
                                                         user_name, group_name)
     event_data.key = 'launchdServiceConfig'
