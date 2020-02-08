@@ -32,7 +32,8 @@ class LaunchdPluginTest(test_lib.PlistPluginTestCase):
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.key, 'launchdServiceConfig')
     self.assertEqual(event_data.root, '/')
-    expected_desc = 'Launchd service config com.foobar.test points to /Test --flag arg1 with user:nobody group:nobody'
+    expected_desc = ('Launchd service config com.foobar.test points to /Test '
+                     '--flag arg1 with user:nobody group:nobody')
     self.assertEqual(event_data.desc, expected_desc)
 
 
