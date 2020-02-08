@@ -8,7 +8,6 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
-# from plaso.lib import errors
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
