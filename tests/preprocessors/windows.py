@@ -183,6 +183,8 @@ class WindowsCodepagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
 class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Windows hostname plugin."""
 
+  # pylint: disable=protected-access
+
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
     test_file_path = self._GetTestFilePath(['SYSTEM'])
@@ -193,6 +195,9 @@ class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         self._RunPreprocessorPluginOnWindowsRegistryValueSystem(plugin))
 
     self.assertEqual(knowledge_base_object.hostname, 'WKS-WIN732BITA')
+
+    value_data = ['MyHost', '']
+    plugin._ParseValueData(knowledge_base_object, value_data)
 
 
 class WindowsProgramDataEnvironmentVariablePluginTest(
