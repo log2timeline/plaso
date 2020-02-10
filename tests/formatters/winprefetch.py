@@ -26,7 +26,7 @@ class WinPrefetchExecutionFormatterTest(test_lib.EventFormatterTestCase):
     expected_attribute_names = [
         'executable',
         'run_count',
-        'path',
+        'path_hints',
         'prefetch_hash',
         'volumes_string']
 

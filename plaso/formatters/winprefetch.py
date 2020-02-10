@@ -17,7 +17,7 @@ class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
       'Prefetch',
       '[{executable}] was executed -',
       'run count {run_count}',
-      'path: {path}',
+      'path hints: {path_hints}',
       'hash: 0x{prefetch_hash:08X}',
       '{volumes_string}']
 
@@ -72,6 +72,10 @@ class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
 
     if volumes_strings:
       event_values['volumes_string'] = ', '.join(volumes_strings)
+
+    path_hints = event_values.get('path_hints', [])
+    if path_hints:
+      event_values['path_hints'] = '; '.join(path_hints)
 
     return self._ConditionalFormatMessages(event_values)
 
