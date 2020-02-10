@@ -74,9 +74,9 @@ It sometimes happen that the tests fail with an import error e.g.
 ImportError: Failed to import test module:
 plaso.parsers.winreg_plugins.shutdown_test
 Traceback (most recent call last):
-  File "/usr/lib64/python2.7/unittest/loader.py", line 254, in _find_tests
+  File "/usr/lib64/python3.7/unittest/loader.py", line 254, in _find_tests
     module = self._get_module_from_name(name)
-  File "/usr/lib64/python2.7/unittest/loader.py", line 232, in
+  File "/usr/lib64/python3.7/unittest/loader.py", line 232, in
 _get_module_from_name
     __import__(name)
   File "./plaso/parsers/__init__.py", line 4, in <module>
