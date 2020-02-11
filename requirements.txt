@@ -27,6 +27,7 @@ libfvde-python >= 20160719
 libfwnt-python >= 20180117
 libfwsi-python >= 20150606
 liblnk-python >= 20150830
+libluksde-python >= 20200101
 libmsiecf-python >= 20150314
 libolecf-python >= 20151223
 libqcow-python >= 20131204
