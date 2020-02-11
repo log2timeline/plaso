@@ -27,6 +27,7 @@ from plaso.lib import errors
 def Main():
   """The main function."""
   tool = psteal_tool.PstealTool()
+
   if not tool.ParseArguments(sys.argv[1:]):
     return False
 
@@ -42,6 +43,11 @@ def Main():
     print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
           'Troubleshooting.html')
     return True
+
+  try:
+    tool.CheckOutDated()
+  except KeyboardInterrupt:
+    return False
 
   have_list_option = False
 

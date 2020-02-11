@@ -135,6 +135,12 @@ optional arguments:
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)
 
+  def testCheckOutDated(self):
+    """Tests the CheckOutDated function."""
+    cli_tool = tools.CLITool()
+
+    cli_tool.CheckOutDated()
+
   def testGetCommandLineArguments(self):
     """Tests the GetCommandLineArguments function."""
     cli_tool = tools.CLITool()
