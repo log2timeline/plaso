@@ -49,6 +49,7 @@ PYTHON_DEPENDENCIES = {
     'pyfwnt': ('get_version()', '20180117', None, True),
     'pyfwsi': ('get_version()', '20150606', None, True),
     'pylnk': ('get_version()', '20150830', None, True),
+    'pyluksde': ('get_version()', '20200101', None, True),
     'pymsiecf': ('get_version()', '20150314', None, True),
     'pyolecf': ('get_version()', '20151223', None, True),
     'pyparsing': ('__version__', '2.3.0', None, True),

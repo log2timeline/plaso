@@ -1,28 +1,5 @@
 #!/usr/bin/make -f
 
 %:
-	dh $@ --buildsystem=python_distutils --with=python3
+	dh $@ --buildsystem=pybuild --with=python3
 
-.PHONY: override_dh_auto_clean
-override_dh_auto_clean:
-	set -ex; for python in $(shell py3versions -r); do \
-		$$python setup.py clean -a; \
-	done;
-	rm -rf build plaso.egg-info/SOURCES.txt plaso.egg-info/PKG-INFO
-	find . -name __pycache__ -type d -exec rm -rf {} \; || true
-
-.PHONY: override_dh_auto_build
-override_dh_auto_build:
-	set -ex; for python in $(shell py3versions -r); do \
-		$$python setup.py build; \
-	done;
-
-.PHONY: override_dh_auto_install
-override_dh_auto_install:
-	set -ex; for python in $(shell py3versions -r); do \
-		$$python setup.py install --root=$(CURDIR) --install-layout=deb; \
-	done;
-
-.PHONY: override_dh_python3
-override_dh_python3:
-	dh_python3 -p plaso-tools --shebang=/usr/bin/python3

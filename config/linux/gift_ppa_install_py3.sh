@@ -19,6 +19,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libfwnt-python3
                       libfwsi-python3
                       liblnk-python3
+                      libluksde-python3
                       libmsiecf-python3
                       libolecf-python3
                       libqcow-python3
@@ -95,6 +96,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libfwsi-python3-dbg
                     liblnk-dbg
                     liblnk-python3-dbg
+                    libluksde-dbg
+                    libluksde-python3-dbg
                     libmsiecf-dbg
                     libmsiecf-python3-dbg
                     libolecf-dbg
