@@ -178,6 +178,7 @@ class BaseStore(object):
 
     Args:
       event_data (EventData): event data.
+      serialized_data (Optional[bytes]): serialized form of the event data.
     """
     self._RaiseIfNotWritable()
 
@@ -190,17 +191,20 @@ class BaseStore(object):
 
     Args:
       event_source (EventSource): event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
     """
     self._RaiseIfNotWritable()
 
     self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EVENT_SOURCE, event_source, serialized_data=serialized_data)
+        self._CONTAINER_TYPE_EVENT_SOURCE, event_source,
+        serialized_data=serialized_data)
 
   def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
     self._RaiseIfNotWritable()
 
@@ -829,6 +833,7 @@ class StorageWriter(object):
 
     Args:
       analysis_report (AnalysisReport): a report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
 
   @abc.abstractmethod
@@ -837,7 +842,7 @@ class StorageWriter(object):
 
     Args:
       event(EventObject): an event.
-      serialized_event (bytes): serialized form of the event.
+      serialized_data (Optional[bytes]): serialized form of the event.
     """
 
   @abc.abstractmethod
@@ -846,7 +851,7 @@ class StorageWriter(object):
 
     Args:
       event_data (EventData): event data.
-      serialized_event_data (bytes): serialized form of the event data.
+      serialized_data (Optional[bytes]): serialized form of the event data.
     """
 
   @abc.abstractmethod

@@ -138,6 +138,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     Args:
       event_source (EventSource): event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
     """
     self._storage_writer.AddEventSource(
         event_source, serialized_data=serialized_data)
@@ -147,6 +148,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     Args:
       event_tag (EventTag): event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
     self._storage_writer.AddEventTag(event_tag, serialized_data=serialized_data)
 
@@ -155,6 +157,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     Args:
       warning (ExtractionWarning): warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
     """
     self._storage_writer.AddWarning(warning, serialized_data=serialized_data)
 
