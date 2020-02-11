@@ -13,14 +13,12 @@ from plaso.cli.helpers import extraction
 from plaso.cli.helpers import filter_file
 from plaso.cli.helpers import hashers
 from plaso.cli.helpers import language
-from plaso.cli.helpers import mysql_4n6time_output
 from plaso.cli.helpers import nsrlsvr_analysis
 from plaso.cli.helpers import output_modules
 from plaso.cli.helpers import parsers
 from plaso.cli.helpers import profiling
 from plaso.cli.helpers import process_resources
 from plaso.cli.helpers import sessionize_analysis
-from plaso.cli.helpers import sqlite_4n6time_output
 from plaso.cli.helpers import status_view
 from plaso.cli.helpers import storage_file
 from plaso.cli.helpers import storage_format
@@ -39,4 +37,3 @@ from plaso.cli.helpers import workers
 # CLI helpers in other modules.
 # from plaso.cli.helpers import database_config
 # from plaso.cli.helpers import server_config
-# from plaso.cli.helpers import shared_4n6time_output
