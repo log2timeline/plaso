@@ -553,6 +553,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     Args:
       analysis_report (AnalysisReport): analysis report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -573,6 +574,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     Args:
       warning (ExtractionWarning): an extraction warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -580,7 +582,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddWarning(warning)
+    self._storage_file.AddWarning(warning, serialized_data=serialized_data)
     self.number_of_warnings += 1
 
   def AddEvent(self, event, serialized_data=None):
@@ -588,7 +590,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     Args:
       event (EventObject): an event.
-      serialized_data (bytes): serialized form of the event.
+      serialized_data (Optional[bytes]): serialized form of the event.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -606,7 +608,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     Args:
       event_data (EventData): event data.
-      serialized_data (bytes): serialized form of the event data.
+      serialized_data (Optional[bytes]): serialized form of the event data.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -621,6 +623,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     Args:
       event_source (EventSource): an event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -637,6 +640,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     Args:
       event_tag (EventTag): an event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -644,7 +648,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventTag(event_tag)
+    self._storage_file.AddEventTag(event_tag, serialized_data=serialized_data)
 
     self._session.event_labels_counter['total'] += 1
     for label in event_tag.labels:

@@ -74,11 +74,12 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to write to closed storage writer.')
 
-  def AddAnalysisReport(self, analysis_report):
+  def AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -137,11 +138,12 @@ class FakeStorageWriter(interface.StorageWriter):
     lookup_key = identifier.CopyToString()
     self._event_data[lookup_key] = event_data
 
-  def AddEventSource(self, event_source):
+  def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -154,11 +156,12 @@ class FakeStorageWriter(interface.StorageWriter):
     self._event_sources.append(event_source)
     self.number_of_event_sources += 1
 
-  def AddEventTag(self, event_tag):
+  def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -176,11 +179,12 @@ class FakeStorageWriter(interface.StorageWriter):
     self._event_tags.append(event_tag)
     self.number_of_event_tags += 1
 
-  def AddWarning(self, warning):
+  def AddWarning(self, warning, serialized_data=None):
     """Adds a warnings.
 
     Args:
       warning (ExtractionWarning): warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
 
     Raises:
       IOError: when the storage writer is closed.

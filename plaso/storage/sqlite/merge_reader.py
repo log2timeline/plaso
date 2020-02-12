@@ -93,16 +93,20 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     Args:
       analysis_report (AnalysisReport): analysis report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
     self._storage_writer.AddAnalysisReport(
         analysis_report, serialized_data=serialized_data)
 
+  # The serialized form of the event is not used, as this method modifies the
+  # event.
   # pylint: disable=unused-argument
   def _AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): event.
+      serialized_data (Optional[bytes]): serialized form of the event.
     """
     if hasattr(event, 'event_data_row_identifier'):
       event_data_identifier = identifiers.SQLTableIdentifier(
@@ -127,8 +131,8 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
-    self._storage_writer.AddEventData(event_data,
-        serialized_data=serialized_data)
+    self._storage_writer.AddEventData(
+        event_data, serialized_data=serialized_data)
 
     identifier = event_data.GetIdentifier()
     self._event_data_identifier_mappings[lookup_key] = identifier

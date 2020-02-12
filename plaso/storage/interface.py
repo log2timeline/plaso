@@ -72,7 +72,7 @@ class BaseStore(object):
     Args:
       container_type (str): attribute container type.
       container (AttributeContainer): attribute container.
-      serialized_data (bytes): serialized form of the container.
+      serialized_data (Optional[bytes]): serialized form of the container.
     """
 
   @abc.abstractmethod
@@ -152,26 +152,30 @@ class BaseStore(object):
       attribute_container (AttributeContainer): attribute container.
     """
 
-  def AddAnalysisReport(self, analysis_report):
+  def AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(self._CONTAINER_TYPE_ANALYSIS_REPORT,
-        analysis_report)
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT, analysis_report,
+        serialized_data=serialized_data)
 
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): event.
+      serialized_data (Optional[bytes]): serialized form of the event.
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT, event)
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EVENT, event, serialized_data=serialized_data)
 
   def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
@@ -208,18 +212,22 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EVENT_TAG, event_tag,
+        serialized_data=serialized_data)
 
-  def AddWarning(self, warning):
+  def AddWarning(self, warning, serialized_data=None):
     """Adds a warning.
 
     Args:
       warning (ExtractionWarning): warning.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EXTRACTION_WARNING,
-        warning)
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING, warning,
+        serialized_data=serialized_data)
 
   @abc.abstractmethod
   def Close(self):
@@ -860,6 +868,7 @@ class StorageWriter(object):
 
     Args:
       event_source (EventSource): an event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
     """
 
   @abc.abstractmethod
@@ -868,6 +877,7 @@ class StorageWriter(object):
 
     Args:
       event_tag (EventTag): an event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
 
   @abc.abstractmethod
@@ -876,6 +886,7 @@ class StorageWriter(object):
 
     Args:
       warning (ExtractionWarning): a warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
     """
 
   @abc.abstractmethod

@@ -433,6 +433,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     Args:
       attribute_container (AttributeContainer): attribute container.
+      serialized_data (Optional[bytes]): serialized form of the attribute
+          container.
     """
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       timestamp, serialized_data = self._serialized_event_heap.PopEvent()
@@ -548,11 +550,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     value = self.storage_type
     self._cursor.execute(query, (key, value))
 
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): event.
+      serialized_data (Optional[bytes]): serialized form of the event.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -574,11 +577,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     self._AddSerializedEvent(event)
 
-  def AddEventTag(self, event_tag):
+  def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
 
     Raises:
       IOError: when the storage file is closed or read-only or
