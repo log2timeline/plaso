@@ -14,7 +14,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-PROJECT_PATH = os.path.normpath(
+PROJECT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..'))
 
 def GetTestFilePath(path_segments):
@@ -35,8 +35,8 @@ class BaseTestCase(unittest.TestCase):
   """The base test case."""
 
   _PROJECT_PATH = PROJECT_PATH
-  _DATA_PATH = os.path.join(_PROJECT_PATH, 'data')
-  _TEST_DATA_PATH = os.path.join(_PROJECT_PATH, 'test_data')
+  _DATA_PATH = os.path.abspath(os.path.join(_PROJECT_PATH, 'data'))
+  _TEST_DATA_PATH = os.path.abspath(os.path.join(_PROJECT_PATH, 'test_data'))
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
