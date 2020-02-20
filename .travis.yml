@@ -11,7 +11,6 @@ jobs:
     python: 3.8
     services:
     - docker
-    - redis-server
   - name: "Fedora 31 (Docker) with Python 3.7"
     env: FEDORA_VERSION="31"
     group: edge
@@ -90,7 +89,6 @@ jobs:
     python: 3.6
     services:
     - docker
-    - redis-server
 install:
 - ./config/travis/install.sh
 script:

@@ -232,7 +232,7 @@ class RedisStore(interface.BaseStore):
     identifier = event.GetIdentifier()
     string_identifier = identifier.CopyToString()
     self._redis_client.zincrby(
-        event_index_name, string_identifier, event.timestamp)
+        event_index_name, event.timestamp, string_identifier)
 
   def Close(self):
     """Closes the store."""
