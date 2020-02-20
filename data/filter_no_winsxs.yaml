@@ -1,0 +1,5 @@
+description: Exclude WinSxS
+type: exclude
+path_separator: '\'
+paths:
+- '%SystemRoot%\\WinSxS'
