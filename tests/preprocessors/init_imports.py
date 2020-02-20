@@ -13,7 +13,8 @@ from tests import test_lib
 class PreprocessorsImportTest(test_lib.ImportCheckTestCase):
   """Tests that preprocessor classes are imported correctly."""
 
-  _PREPROCESSORS_PATH = os.path.join(os.getcwd(), 'plaso', 'preprocessors')
+  _PREPROCESSORS_PATH = os.path.join(
+      test_lib.PROJECT_PATH, 'plaso', 'preprocessors')
   _IGNORABLE_FILES = frozenset([
       'logger.py', 'manager.py', 'mediator.py', 'interface.py'])
 

@@ -13,7 +13,7 @@ from tests import test_lib
 class OutputImportTest(test_lib.ImportCheckTestCase):
   """Tests that analysis plugin classes are imported correctly."""
 
-  _OUTPUT_PATH = os.path.join(os.getcwd(), 'plaso', 'output')
+  _OUTPUT_PATH = os.path.join(test_lib.PROJECT_PATH, 'plaso', 'output')
   _IGNORABLE_FILES = frozenset([
       'logger.py', 'manager.py', 'mediator.py', 'interface.py',
       'shared_elastic.py', 'shared_json.py'])

@@ -14,7 +14,7 @@ from tests import test_lib
 class AnalyzersImportTest(test_lib.ImportCheckTestCase):
   """Tests that analyzer and hasher classes are imported correctly."""
 
-  _ANALYZERS_PATH = os.path.join(os.getcwd(), 'plaso', 'analyzers')
+  _ANALYZERS_PATH = os.path.join(test_lib.PROJECT_PATH, 'plaso', 'analyzers')
   _IGNORABLE_FILES = frozenset(['logger.py', 'manager.py', 'interface.py'])
 
   def testAnalyzersImported(self):

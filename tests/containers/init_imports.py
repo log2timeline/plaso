@@ -13,7 +13,7 @@ from tests import test_lib
 class ContainersImportTest(test_lib.ImportCheckTestCase):
   """Tests that container classes are imported correctly."""
 
-  _CONTAINERS_PATH = os.path.join(os.getcwd(), 'plaso', 'containers')
+  _CONTAINERS_PATH = os.path.join(test_lib.PROJECT_PATH, 'plaso', 'containers')
   _IGNORABLE_FILES = frozenset(['manager.py', 'interface.py'])
 
   def testContainersImported(self):

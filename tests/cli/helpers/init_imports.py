@@ -13,7 +13,8 @@ from tests import test_lib
 class CLIHelperImportTest(test_lib.ImportCheckTestCase):
   """Tests that CLI helper classes are imported correctly."""
 
-  _CLI_HELPERS_PATH = os.path.join(os.getcwd(), 'plaso', 'cli', 'helpers')
+  _CLI_HELPERS_PATH = os.path.join(
+      test_lib.PROJECT_PATH, 'plaso', 'cli', 'helpers')
   _IGNORABLE_FILES = frozenset(['manager.py', 'interface.py'])
 
   def testCLIHelpersImported(self):

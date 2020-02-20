@@ -13,7 +13,7 @@ from tests import test_lib
 class FormattersImportTest(test_lib.ImportCheckTestCase):
   """Tests that CLI helper classes are imported correctly."""
 
-  _CLI_HELPERS_PATH = os.path.join(os.getcwd(), 'plaso', 'formatters')
+  _CLI_HELPERS_PATH = os.path.join(test_lib.PROJECT_PATH, 'plaso', 'formatters')
   _IGNORABLE_FILES = frozenset([
       'default.py', 'interface.py', 'logger.py', 'manager.py', 'mediator.py',
       'winevt_rc.py', 'yaml_formatters_file.py'])

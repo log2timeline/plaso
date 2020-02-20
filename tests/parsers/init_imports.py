@@ -14,7 +14,7 @@ from tests import test_lib
 class ParserImportTest(test_lib.ImportCheckTestCase):
   """Tests that parser classes are imported correctly."""
 
-  _PARSERS_PATH = os.path.join(os.getcwd(), 'plaso', 'parsers')
+  _PARSERS_PATH = os.path.join(test_lib.PROJECT_PATH, 'plaso', 'parsers')
   _IGNORABLE_FILES = frozenset([
       'dtfabric_parser.py', 'dtfabric_plugin.py', 'logger.py', 'manager.py',
       'presets.py', 'mediator.py', 'interface.py', 'plugins.py'])
