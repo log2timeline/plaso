@@ -84,14 +84,6 @@ plaso.output.mediator module
     :undoc-members:
     :show-inheritance:
 
-plaso.output.mysql\_4n6time module
-----------------------------------
-
-.. automodule:: plaso.output.mysql_4n6time
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.output.null module
 ------------------------
 
@@ -108,26 +100,10 @@ plaso.output.rawpy module
     :undoc-members:
     :show-inheritance:
 
-plaso.output.shared\_4n6time module
------------------------------------
-
-.. automodule:: plaso.output.shared_4n6time
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.output.shared\_elastic module
 -----------------------------------
 
 .. automodule:: plaso.output.shared_elastic
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.output.sqlite\_4n6time module
------------------------------------
-
-.. automodule:: plaso.output.sqlite_4n6time
     :members:
     :undoc-members:
     :show-inheritance:

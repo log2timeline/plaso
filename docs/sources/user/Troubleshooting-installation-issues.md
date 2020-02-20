@@ -46,7 +46,7 @@ In [2]: pyewf.get_version()
 Out[2]: u'20140608'
 
 In [3]: pyewf.__file__
-Out[3]: '/usr/lib/python2.7/dist-packages/pyewf.so'
+Out[3]: '/usr/lib/python3.7/dist-packages/pyewf.so'
 ```
 
 Import the Python module of the dependency that was showing an error status. Check its version, if it is part of the [libyal](https://github.com/libyal) collection use the ``LIBRARY.get_version()`` to get the version information, other Python modules can store their version information differently, a commonly used convention is ``LIBRARY.__version__``.
@@ -58,8 +58,8 @@ The Python module can originate from another Debian package or from a source ins
 To find out which package a Python module belongs to run:
 
 ```bash
-$ dpkg -S /usr/lib/python2.7/dist-packages/pyewf.so
-libewf-python: /usr/lib/python2.7/dist-packages/pyewf.so
+$ dpkg -S /usr/lib/python3.7/dist-packages/pyewf.so
+libewf-python: /usr/lib/python3.7/dist-packages/pyewf.so
 ```
 
 Another example here is *pyparsing*:
@@ -71,22 +71,22 @@ In [2]: pyparsing.__version__
 Out[2]: '2.0.3'
 
 In [3]: pyparsing.__file__
-Out[3]: '/usr/lib/python2.7/dist-packages/pyparsing.pyc'
+Out[3]: '/usr/lib/python3.7/dist-packages/pyparsing.pyc'
 
 ```
 
 In this case the Python module is the ".pyc" file, which is not included in the dpkg package:
 
 ```bash
-$ dpkg -S /usr/lib/python2.7/dist-packages/pyparsing.pyc
-dpkg-query: no path found matching pattern /usr/lib/python2.7/dist-packages/pyparsing.pyc
+$ dpkg -S /usr/lib/python3.7/dist-packages/pyparsing.pyc
+dpkg-query: no path found matching pattern /usr/lib/python3.7/dist-packages/pyparsing.pyc
 ```
 
 ".pyc" is a "compiled" version of the Python code ".py", these are typically not distributed by packages but generated on your system at installation or first execution time. Therefore in order to find out which package this Python module belongs to remove the final "c" so it becomes ".py" instead of ".pyc", e.g.:
 
 ```bash
-$ dpkg -S /usr/lib/python2.7/dist-packages/pyparsing.py
-python-pyparsing: /usr/lib/python2.7/dist-packages/pyparsing.py
+$ dpkg -S /usr/lib/python3.7/dist-packages/pyparsing.py
+python-pyparsing: /usr/lib/python3.7/dist-packages/pyparsing.py
 ```
 
 Once the package has been identified that contains the out-of-date dependency the next step is to see if it is truly at the latest version.
@@ -121,7 +121,7 @@ The following traceback:
 Traceback (most recent call last):
 File "/usr/bin/log2timeline.py", line 28, in <module>
 from plaso.frontend import frontend
-File "/usr/lib/python2.7/dist-packages/plaso/frontend/frontend.py", line 36, in <module>
+File "/usr/lib/python3.7/dist-packages/plaso/frontend/frontend.py", line 36, in <module>
 ...
 pyparsing.lineEnd())
 TypeError: __call__() takes exactly 2 arguments (1 given)

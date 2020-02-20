@@ -23,7 +23,6 @@ do
 done
 
 # Remove debug, test and yet unused dependencies.
-rm -f config/licenses/LICENSE.guppy
 rm -f config/licenses/LICENSE.libexe
 rm -f config/licenses/LICENSE.libwrc
 rm -f config/licenses/LICENSE.mock

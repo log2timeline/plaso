@@ -30,8 +30,6 @@ To see a list of all supported output modules use the ``-o list`` switch:
 $ psort.py -o list
 
 ******************************** Output Modules ********************************
-4n6time_mysql : MySQL database output for the 4n6time tool.
-4n6time_sqlite : Saves the data in a SQLite database, used by the tool 4n6time.
    dynamic : Dynamic selection of fields for a separated value output format.
    elastic : Saves the events into an ElasticSearch database.
       json : Saves the events into a JSON format.
@@ -49,7 +47,6 @@ If you are missing any optional dependencies not all output modules may be avail
 
 ```
 ******************************** Output Modules ********************************
-4n6time_sqlite : Saves the data in a SQLite database, used by the tool 4n6time.
    dynamic : Dynamic selection of fields for a separated value output format.
       json : Saves the events into a JSON format.
  json_line : Saves the events into a JSON line format.
@@ -61,7 +58,6 @@ If you are missing any optional dependencies not all output modules may be avail
 --------------------------------------------------------------------------------
 
 *************************** Disabled Output Modules ****************************
-4n6time_mysql : MySQL database output for the 4n6time tool.
    elastic : Saves the events into an ElasticSearch database.
 timesketch : Create a Timesketch timeline.
 --------------------------------------------------------------------------------

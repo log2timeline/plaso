@@ -1,12 +1,10 @@
 # Plaso in a Docker container
 
-## Install Docker on Ubuntu
+## Install Docker
 
-```
-apt-get install docker.io
-```
+To install docker see: https://docs.docker.com/install/
 
-## Build an image
+## Obtaining a plaso docker image
 
 ### From Docker Hub
 
@@ -22,7 +20,7 @@ $ cd plaso/config/docker
 $ docker build -f Dockerfile .
 ```
 
-## Export the Plaso docker image to a non-internet connected system
+## Copying the Plaso docker image to a non-Internet connected system
 
 Figure out the name of the docker image you want to run, using the IMAGE ID
 (docker images will list all the images you have installed) if you've built

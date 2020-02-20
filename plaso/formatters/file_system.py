@@ -111,7 +111,8 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
       'Attribute name: {attribute_name}',
       'Name: {name}',
       'Parent file reference: {parent_file_reference}',
-      '({unallocated})']
+      '({unallocated})',
+      'Path hints: {path_hints}']
 
   FORMAT_STRING_SHORT_PIECES = [
       '{filename}',
@@ -162,6 +163,10 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
 
     if not event_values.get('is_allocated', False):
       event_values['unallocated'] = 'unallocated'
+
+    path_hints = event_values.get('path_hints', [])
+    if path_hints:
+      event_values['path_hints'] = ';'.join(path_hints)
 
     return self._ConditionalFormatMessages(event_values)
 

@@ -13,7 +13,6 @@ Plaso depends on various other projects. So thanks to the authors
 and others involved with these projects:
 * Python and modules
 * libyaml
-* PyInstaller
 * the SleuthKit
 * pytsk
 * Hachoir (not included in binary release)
@@ -134,6 +133,9 @@ Copied with permission from the GRR project: https://github.com/google/grr
 Copied with permission granted by Jerome Marty.
 * WUAUCLT.EXE-830BCC14.pf
 
+Copied with permission granted by Antoine Brodin.
+* PartitionsEx-WebCacheV01.dat
+
 Copied with permission granted by Rob Lee.
 Copyright SANS Institute - Digital Forensics and Incident Response.
 * 1b4dd67f29cb1962.automaticDestinations-ms
@@ -146,3 +148,6 @@ Copyright SANS Institute - Digital Forensics and Incident Response.
 * SysEvent.Evt
 * System.evtx
 * Windows.edb
+
+Copied with permission granted by Ange Albertini.
+* test_driver.sys

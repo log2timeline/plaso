@@ -37,6 +37,11 @@ def Main():
           'Troubleshooting.html')
     return True
 
+  try:
+    tool.CheckOutDated()
+  except KeyboardInterrupt:
+    return False
+
   result = True
   try:
     if tool.compare_storage_information:

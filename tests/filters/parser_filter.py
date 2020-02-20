@@ -119,6 +119,51 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
     self.assertEqual(
         parser_filter_expression, expected_parser_filter_expression)
 
+    expected_parser_filter_expression = ','.join(sorted([
+        '!sccm',
+        'bencode',
+        'binary_cookies',
+        'chrome_cache',
+        'chrome_preferences',
+        'czip/oxml',
+        'esedb',
+        'esedb/msie_webcache',
+        'filestat',
+        'firefox_cache',
+        'gdrive_synclog',
+        'java_idx',
+        'lnk',
+        'mcafee_protection',
+        'msiecf',
+        'olecf',
+        'opera_global',
+        'opera_typed_history',
+        'pe',
+        'plist/safari_history',
+        'prefetch',
+        'skydrive_log',
+        'skydrive_log_old',
+        'sqlite/chrome_27_history',
+        'sqlite/chrome_8_history',
+        'sqlite/chrome_autofill',
+        'sqlite/chrome_cookies',
+        'sqlite/chrome_extension_activity',
+        'sqlite/firefox_cookies',
+        'sqlite/firefox_downloads',
+        'sqlite/firefox_history',
+        'sqlite/google_drive',
+        'sqlite/skype',
+        'symantec_scanlog',
+        'usnjrnl',
+        'winfirewall',
+        'winjob',
+        'winreg']))
+
+    parser_filter_expression = test_helper.ExpandPresets(
+        presets_manager, 'win_gen,!sccm')
+    self.assertEqual(
+        parser_filter_expression, expected_parser_filter_expression)
+
     parser_filter_expression = test_helper.ExpandPresets(
         presets_manager, 'olecf,!utmp')
     self.assertEqual(parser_filter_expression, '!utmp,olecf')

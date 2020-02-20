@@ -8,65 +8,64 @@ set -e
 
 # Dependencies for running plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
-PYTHON2_DEPENDENCIES="libbde-python2
-                      libesedb-python2
-                      libevt-python2
-                      libevtx-python2
-                      libewf-python2
-                      libfsapfs-python2
-                      libfsntfs-python2
-                      libfvde-python2
-                      libfwnt-python2
-                      libfwsi-python2
-                      liblnk-python2
-                      libmsiecf-python2
-                      libolecf-python2
-                      libqcow-python2
-                      libregf-python2
-                      libscca-python2
-                      libsigscan-python2
-                      libsmdev-python2
-                      libsmraw-python2
-                      libvhdi-python2
-                      libvmdk-python2
-                      libvshadow-python2
-                      libvslvm-python2
-                      python2-XlsxWriter
-                      python2-artifacts
-                      python2-backports-lzma
-                      python2-bencode
-                      python2-biplist
-                      python2-certifi
-                      python2-chardet
-                      python2-crypto
-                      python2-dateutil
-                      python2-defusedxml
-                      python2-dfdatetime
-                      python2-dfvfs
-                      python2-dfwinreg
-                      python2-dtfabric
-                      python2-elasticsearch
-                      python2-future
-                      python2-idna
-                      python2-lz4
-                      python2-pefile
-                      python2-psutil
-                      python2-pyparsing
-                      python2-pysqlite
-                      python2-pytsk3
-                      python2-pytz
-                      python2-pyyaml
-                      python2-requests
-                      python2-six
-                      python2-urllib3
-                      python2-yara
-                      python2-zmq";
+PYTHON3_DEPENDENCIES="libbde-python3
+                      libesedb-python3
+                      libevt-python3
+                      libevtx-python3
+                      libewf-python3
+                      libfsapfs-python3
+                      libfsntfs-python3
+                      libfvde-python3
+                      libfwnt-python3
+                      libfwsi-python3
+                      liblnk-python3
+                      libluksde-python3
+                      libmsiecf-python3
+                      libolecf-python3
+                      libqcow-python3
+                      libregf-python3
+                      libscca-python3
+                      libsigscan-python3
+                      libsmdev-python3
+                      libsmraw-python3
+                      libvhdi-python3
+                      libvmdk-python3
+                      libvshadow-python3
+                      libvslvm-python3
+                      python3-XlsxWriter
+                      python3-artifacts
+                      python3-bencode
+                      python3-biplist
+                      python3-certifi
+                      python3-cffi
+                      python3-chardet
+                      python3-cryptography
+                      python3-dateutil
+                      python3-defusedxml
+                      python3-dfdatetime
+                      python3-dfvfs
+                      python3-dfwinreg
+                      python3-dtfabric
+                      python3-elasticsearch
+                      python3-future
+                      python3-idna
+                      python3-lz4
+                      python3-pefile
+                      python3-psutil
+                      python3-pyparsing
+                      python3-pytsk3
+                      python3-pytz
+                      python3-pyyaml
+                      python3-requests
+                      python3-six
+                      python3-urllib3
+                      python3-yara
+                      python3-zmq";
 
 # Additional dependencies for running tests, alphabetized, one per line.
-TEST_DEPENDENCIES="python2-funcsigs
-                   python2-mock
-                   python2-pbr
-                   python2-setuptools";
+TEST_DEPENDENCIES="python3-mock
+                   python3-pbr
+                   python3-setuptools";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
@@ -74,56 +73,57 @@ DEVELOPMENT_DEPENDENCIES="pylint
 
 # Additional dependencies for debugging, alphabetized, one per line.
 DEBUG_DEPENDENCIES="libbde-debuginfo
-                    libbde-python2-debuginfo
+                    libbde-python3-debuginfo
                     libesedb-debuginfo
-                    libesedb-python2-debuginfo
+                    libesedb-python3-debuginfo
                     libevt-debuginfo
-                    libevt-python2-debuginfo
+                    libevt-python3-debuginfo
                     libevtx-debuginfo
-                    libevtx-python2-debuginfo
+                    libevtx-python3-debuginfo
                     libewf-debuginfo
-                    libewf-python2-debuginfo
+                    libewf-python3-debuginfo
                     libfsapfs-debuginfo
-                    libfsapfs-python2-debuginfo
+                    libfsapfs-python3-debuginfo
                     libfsntfs-debuginfo
-                    libfsntfs-python2-debuginfo
+                    libfsntfs-python3-debuginfo
                     libfvde-debuginfo
-                    libfvde-python2-debuginfo
+                    libfvde-python3-debuginfo
                     libfwnt-debuginfo
-                    libfwnt-python2-debuginfo
+                    libfwnt-python3-debuginfo
                     libfwsi-debuginfo
-                    libfwsi-python2-debuginfo
+                    libfwsi-python3-debuginfo
                     liblnk-debuginfo
-                    liblnk-python2-debuginfo
+                    liblnk-python3-debuginfo
+                    libluksde-debuginfo
+                    libluksde-python3-debuginfo
                     libmsiecf-debuginfo
-                    libmsiecf-python2-debuginfo
+                    libmsiecf-python3-debuginfo
                     libolecf-debuginfo
-                    libolecf-python2-debuginfo
+                    libolecf-python3-debuginfo
                     libqcow-debuginfo
-                    libqcow-python2-debuginfo
+                    libqcow-python3-debuginfo
                     libregf-debuginfo
-                    libregf-python2-debuginfo
+                    libregf-python3-debuginfo
                     libscca-debuginfo
-                    libscca-python2-debuginfo
+                    libscca-python3-debuginfo
                     libsigscan-debuginfo
-                    libsigscan-python2-debuginfo
+                    libsigscan-python3-debuginfo
                     libsmdev-debuginfo
-                    libsmdev-python2-debuginfo
+                    libsmdev-python3-debuginfo
                     libsmraw-debuginfo
-                    libsmraw-python2-debuginfo
+                    libsmraw-python3-debuginfo
                     libvhdi-debuginfo
-                    libvhdi-python2-debuginfo
+                    libvhdi-python3-debuginfo
                     libvmdk-debuginfo
-                    libvmdk-python2-debuginfo
+                    libvmdk-python3-debuginfo
                     libvshadow-debuginfo
-                    libvshadow-python2-debuginfo
+                    libvshadow-python3-debuginfo
                     libvslvm-debuginfo
-                    libvslvm-python2-debuginfo
-                    python-guppy";
+                    libvslvm-python3-debuginfo";
 
 sudo dnf install dnf-plugins-core
 sudo dnf copr -y enable @gift/dev
-sudo dnf install -y ${PYTHON2_DEPENDENCIES}
+sudo dnf install -y ${PYTHON3_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]]; then
     sudo dnf install -y ${DEBUG_DEPENDENCIES}
