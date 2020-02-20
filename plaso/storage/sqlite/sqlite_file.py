@@ -599,6 +599,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     event_tag.event_row_identifier = event_identifier.row_identifier
 
+    # The serialized form of the event tag is not used, as this method modifies
+    # the event tag.
     self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
 
   @classmethod
