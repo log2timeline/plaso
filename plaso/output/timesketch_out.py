@@ -50,9 +50,7 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     with self._timesketch.app_context():
       search_index = timesketch_sketch.SearchIndex.query.filter_by(
           index_name=self._index_name).first()
-      search_index.status.remove(search_index.status[0])
-      timesketch_db_session.add(search_index)
-      timesketch_db_session.commit()
+      search_index.set_status('ready')
 
   def GetMissingArguments(self):
     """Retrieves a list of arguments that are missing from the input.

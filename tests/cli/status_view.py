@@ -5,6 +5,10 @@
 from __future__ import unicode_literals
 
 import unittest
+try:
+  import mock  # pylint: disable=import-error
+except ImportError:
+  from unittest import mock
 import sys
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -21,6 +25,25 @@ class StatusViewTest(test_lib.CLIToolTestCase):
   """Tests for the status view."""
 
   # pylint: disable=protected-access
+
+  def _MockTime(self):
+    """Mock function to simulate time.time()
+
+    Returns:
+      int: stored time via self._mocked_time"""
+    return self._mocked_time
+
+  def setUp(self):
+    """Makes preparations before running an individual test."""
+
+    self.mock_time = mock.patch(
+        'plaso.cli.status_view.time.time', self._MockTime)
+    self._mocked_time = 0
+    self.mock_time.start()
+
+  def tearDown(self):
+    """Cleans up after running an individual test."""
+    self.mock_time.stop()
 
   def _CheckOutput(self, output, expected_output):
     """Compares the output against the expected output.
@@ -155,7 +178,40 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
     self._CheckOutput(output, expected_output)
 
-  # TODO: add tests for _PrintProcessingTime
+  def testPrintProcessingTime(self):
+    """Tests the _PrintProcessingTime function."""
+    output_writer = test_lib.TestOutputWriter()
+
+    process_status = processing_status.ProcessingStatus()
+
+    test_view = status_view.StatusView(output_writer, 'test_tool')
+    test_view.SetSourceInformation(
+        '/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
+
+    process_status.start_time = 0
+    test_view._PrintProcessingTime(process_status)
+    expected_output = 'Processing time\t\t: 00:00:00\n'
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, expected_output)
+
+    self._mocked_time = 12 * 60 * 60 + 31 * 60 +15
+    test_view._PrintProcessingTime(process_status)
+    expected_output = 'Processing time\t\t: 12:31:15\n'
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, expected_output)
+
+    self._mocked_time = 24 * 60 * 60
+    test_view._PrintProcessingTime(process_status)
+    expected_output = 'Processing time\t\t: 1 day, 00:00:00\n'
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, expected_output)
+
+    self._mocked_time = 5 * 24 * 60 * 60 + 5 * 60 * 60 + 61
+    test_view._PrintProcessingTime(process_status)
+    expected_output = 'Processing time\t\t: 5 days, 05:01:01\n'
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, expected_output)
+
   # TODO: add tests for _PrintTasksStatus
   # TODO: add tests for GetAnalysisStatusUpdateCallback
   # TODO: add tests for GetExtractionStatusUpdateCallback

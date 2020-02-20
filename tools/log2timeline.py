@@ -22,10 +22,6 @@ def Main():
   if not tool.ParseArguments(sys.argv[1:]):
     return False
 
-  if tool.show_info:
-    tool.ShowInfo()
-    return True
-
   if tool.show_troubleshooting:
     print('Using Python version {0!s}'.format(sys.version))
     print()
@@ -37,6 +33,15 @@ def Main():
 
     print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
           'Troubleshooting.html')
+    return True
+
+  try:
+    tool.CheckOutDated()
+  except KeyboardInterrupt:
+    return False
+
+  if tool.show_info:
+    tool.ShowInfo()
     return True
 
   have_list_option = False

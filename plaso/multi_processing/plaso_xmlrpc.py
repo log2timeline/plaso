@@ -147,7 +147,7 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
     """Stops the process status RPC server."""
     self._Close()
 
-    if self._rpc_thread.isAlive():
+    if self._rpc_thread.is_alive():
       self._rpc_thread.join()
     self._rpc_thread = None
 

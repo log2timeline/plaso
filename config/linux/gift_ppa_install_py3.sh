@@ -19,6 +19,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libfwnt-python3
                       libfwsi-python3
                       liblnk-python3
+                      libluksde-python3
                       libmsiecf-python3
                       libolecf-python3
                       libqcow-python3
@@ -35,8 +36,9 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-bencode
                       python3-biplist
                       python3-certifi
+                      python3-cffi
                       python3-chardet
-                      python3-crypto
+                      python3-cryptography
                       python3-dateutil
                       python3-defusedxml
                       python3-dfdatetime
@@ -61,7 +63,8 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-zmq";
 
 # Additional dependencies for running tests, alphabetized, one per line.
-TEST_DEPENDENCIES="python3-distutils
+TEST_DEPENDENCIES="python3-coverage
+                   python3-distutils
                    python3-mock
                    python3-pbr
                    python3-setuptools";
@@ -93,6 +96,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libfwsi-python3-dbg
                     liblnk-dbg
                     liblnk-python3-dbg
+                    libluksde-dbg
+                    libluksde-python3-dbg
                     libmsiecf-dbg
                     libmsiecf-python3-dbg
                     libolecf-dbg

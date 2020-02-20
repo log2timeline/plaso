@@ -9,7 +9,8 @@ The syntax has changed somewhat from the older version, the largest user facing 
  * Parser names have changed (number of new parsers yet some that have not yet been ported).
  * Parameters have changed considerably and options are different, **so please read this page**.
  * The post-processing tool is no longer called l2t_process, it is now named **psort**.
- * The name plaso can come up in the discussion, that is the name of the new backend (as an opposed to Log2Timeline which is the old Perl backend). Hence plaso refers to the backend, log2timeline to the CLI based front-end of the tool. There are other front-ends to the tool though, for instance [timesketch](http://www.timesketch.org/) and [4n6time](http://forensicswiki.org/wiki/4n6time).
+ * The name plaso can come up in the discussion, that is the name of the new backend (as an opposed to Log2Timeline which is the old Perl backend). Hence plaso refers to the backend, log2timeline to the CLI based front-end of the tool.
+ There are other front-ends to the tool though, for instance [timesketch](http://www.timesketch.org/).
 
 
 Let's go over the old and new method of collecting a timeline from a simple image file.

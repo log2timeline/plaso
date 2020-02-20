@@ -181,7 +181,8 @@ class StorageMediaTool(tools.CLITool):
       if self._volumes == 'all':
         volumes = range(1, volume_system.number_of_volumes + 1)
       else:
-        volumes = self._volumes
+        volumes = self._ParseVolumeIdentifiersString(
+            self._volumes, prefix='apfs')
 
       selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
           volume_system, volumes, prefix='apfs')
@@ -234,7 +235,8 @@ class StorageMediaTool(tools.CLITool):
       if self._partitions == 'all':
         partitions = range(1, volume_system.number_of_volumes + 1)
       else:
-        partitions = self._partitions
+        partitions = self._ParseVolumeIdentifiersString(
+            self._partitions, prefix='p')
 
       selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
           volume_system, partitions, prefix='p')
@@ -284,7 +286,8 @@ class StorageMediaTool(tools.CLITool):
       if self._vss_stores == 'all':
         vss_stores = range(1, volume_system.number_of_volumes + 1)
       else:
-        vss_stores = self._vss_stores
+        vss_stores = self._ParseVolumeIdentifiersString(
+            self._vss_stores, prefix='vss')
 
       selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
           volume_system, vss_stores, prefix='vss')

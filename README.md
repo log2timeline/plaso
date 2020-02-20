@@ -29,9 +29,9 @@ And is moving to support:
 
 ### Project status
 
-[Travis-CI](https://travis-ci.org/) | [AppVeyor](https://ci.appveyor.com) | [Codecov](https://codecov.io/) | [ReadTheDocs](https://readthedocs.org)
+[Travis-CI](https://travis-ci.com/) | [AppVeyor](https://ci.appveyor.com) | [Codecov](https://codecov.io/) | [ReadTheDocs](https://readthedocs.org)
 --- | --- | --- | --- 
-[![Build Status](https://travis-ci.org/log2timeline/plaso.svg?branch=master)](https://travis-ci.org/log2timeline/plaso) | [![Build status](https://ci.appveyor.com/api/projects/status/7slp4uexetn8bomg?svg=true)](https://ci.appveyor.com/project/log2timeline/plaso) | [![codecov](https://codecov.io/gh/log2timeline/plaso/branch/master/graph/badge.svg)](https://codecov.io/gh/log2timeline/plaso) | [![Documentation Status](https://readthedocs.org/projects/plaso/badge/?version=latest)](https://plaso.readthedocs.io/en/latest/?badge=latest)  
+[![Build Status](https://travis-ci.com/log2timeline/plaso.svg?branch=master)](https://travis-ci.com/log2timeline/plaso) | [![Build status](https://ci.appveyor.com/api/projects/status/7slp4uexetn8bomg?svg=true)](https://ci.appveyor.com/project/log2timeline/plaso) | [![codecov](https://codecov.io/gh/log2timeline/plaso/branch/master/graph/badge.svg)](https://codecov.io/gh/log2timeline/plaso) | [![Documentation Status](https://readthedocs.org/projects/plaso/badge/?version=latest)](https://plaso.readthedocs.io/en/latest/?badge=latest)  
 
 ### Also see
 
