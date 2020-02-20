@@ -126,7 +126,8 @@ class RedisMergeReader(interface.StorageMergeReader):
       event (EventObject): event.
     """
     if hasattr(event, 'event_data_row_identifier'):
-      event_data_identifier = identifiers.RedisKeyIdentifier(
+      event_data_identifier = identifiers.SQLTableIdentifier(
+          self._CONTAINER_TYPE_EVENT_DATA,
           event.event_data_row_identifier)
       lookup_key = event_data_identifier.CopyToString()
 
@@ -148,8 +149,8 @@ class RedisMergeReader(interface.StorageMergeReader):
 
     self._storage_writer.AddEventData(event_data)
 
-    identifier = event_data.GetIdentifier()
-    self._event_data_identifier_mappings[lookup_key] = identifier
+    post_write_identifier = event_data.GetIdentifier()
+    self._event_data_identifier_mappings[lookup_key] = post_write_identifier
 
   def _PrepareForNextContainerType(self):
     """Prepares for the next container type.
