@@ -37,13 +37,13 @@ class KodiMyVideosPlugin(interface.SQLitePlugin):
   NAME = 'kodi'
   DESCRIPTION = 'Parser for Kodi MyVideos.db files.'
 
-  # Define the needed queries.
-  QUERIES = [
-      ('SELECT idFile,strFilename,playCount,lastPlayed FROM files;',
-       'ParseVideoRow')]
+  REQUIRED_STRUCTURE = {
+      'files': frozenset([
+          'idFile', 'strFilename', 'playCount', 'lastPlayed'])}
 
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['files'])
+  QUERIES = [
+      ('SELECT idFile, strFilename, playCount, lastPlayed FROM files',
+       'ParseVideoRow')]
 
   SCHEMAS = [{
       'actor': (

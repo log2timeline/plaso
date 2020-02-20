@@ -55,14 +55,15 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   NAME = 'appusage'
   DESCRIPTION = 'Parser for MacOS application usage SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'application_usage': frozenset([
+          'last_time', 'event', 'bundle_id', 'app_version', 'app_path',
+          'number_times'])}
+
   QUERIES = [(
       ('SELECT last_time, event, bundle_id, app_version, app_path, '
        'number_times FROM application_usage ORDER BY last_time'),
       'ParseApplicationUsageRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['application_usage'])
 
   SCHEMAS = [{
       'application_usage': (

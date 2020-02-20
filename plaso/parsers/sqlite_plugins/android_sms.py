@@ -42,13 +42,13 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
   NAME = 'android_sms'
   DESCRIPTION = 'Parser for Android text messages SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'sms': frozenset([
+          '_id', 'address', 'date', 'read', 'type', 'body'])}
+
   QUERIES = [
       ('SELECT _id AS id, address, date, read, type, body FROM sms',
        'ParseSmsRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['sms'])
 
   SCHEMAS = [{
       'addr': (

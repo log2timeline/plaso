@@ -49,6 +49,13 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   NAME = 'safari_history'
   DESCRIPTION = 'Parser for Safari history SQLite database files.'
 
+  REQUIRED_STRUCTURE = {
+      'history_items': frozenset([
+          'id', 'url', 'visit_count']),
+      'history_visits': frozenset([
+          'id', 'history_item', 'visit_time', 'redirect_destination', 'title',
+          'http_non_get', 'redirect_source'])}
+
   QUERIES = [
       (('SELECT history_items.id, history_items.url, history_items.visit'
         '_count, history_visits.id AS visit_id, history_visits.history_item,'
@@ -59,8 +66,6 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
         'WHERE history_items.id = history_visits.history_item '
         'ORDER BY history_visits.visit_time'), 'ParsePageVisitRow')
   ]
-
-  REQUIRED_TABLES = frozenset(['history_items', 'history_visits'])
 
   SCHEMAS = [{
       'history_client_versions': (

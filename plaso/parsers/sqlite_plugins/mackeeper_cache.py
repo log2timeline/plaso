@@ -52,17 +52,18 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
   NAME = 'mackeeper_cache'
   DESCRIPTION = 'Parser for MacKeeper Cache SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'cfurl_cache_blob_data': frozenset([]),
+      'cfurl_cache_receiver_data': frozenset([
+          'entry_ID', 'receiver_data', 'entry_ID']),
+      'cfurl_cache_response': frozenset([
+          'request_key', 'time_stamp', 'entry_ID'])}
+
   QUERIES = [((
       'SELECT d.entry_ID AS id, d.receiver_data AS data, r.request_key, '
       'r.time_stamp AS time_string FROM cfurl_cache_receiver_data d, '
       'cfurl_cache_response r WHERE r.entry_ID = '
       'd.entry_ID'), 'ParseReceiverData')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset([
-      'cfurl_cache_blob_data', 'cfurl_cache_receiver_data',
-      'cfurl_cache_response'])
 
   SCHEMAS = [{
       'cfurl_cache_blob_data': (

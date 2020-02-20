@@ -48,14 +48,17 @@ class HangoutsMessagePlugin(interface.SQLitePlugin):
   NAME = 'hangouts_messages'
   DESCRIPTION = 'Parser for Google Hangouts Messages SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'blocked_people': frozenset([]),
+      'messages': frozenset([
+          '_id', 'text', 'timestamp', 'status', 'type', 'author_chat_id']),
+      'participants': frozenset([
+          'full_name', 'chat_id'])}
+
   QUERIES = [
       ('SELECT messages._id, participants.full_name, text, messages.timestamp,'
        'status, type FROM messages INNER JOIN participants ON '
        'messages.author_chat_id=participants.chat_id;', 'ParseMessagesRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['messages', 'blocked_people', 'participants'])
 
   SCHEMAS = [{
       'android_metadata': (

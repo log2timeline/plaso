@@ -186,6 +186,16 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
   DESCRIPTION = (
       'Parser for Google Chrome 8 - 25 history SQLite database files.')
 
+  REQUIRED_STRUCTURE = {
+      'downloads': frozenset([
+          'id', 'full_path', 'received_bytes', 'total_bytes', 'url',
+          'start_time']),
+      'urls': frozenset([
+          'id', 'url', 'title', 'visit_count', 'typed_count',
+          'last_visit_time', 'hidden']),
+      'visits': frozenset([
+          'visit_time', 'from_visit', 'transition', 'id'])}
+
   QUERIES = [
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
         'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'
@@ -193,11 +203,7 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         'AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER '
         'BY visits.visit_time'), 'ParseLastVisitedRow'),
       (('SELECT id, full_path, url, start_time, received_bytes, '
-        'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
-
-  REQUIRED_TABLES = frozenset([
-      'downloads', 'keyword_search_terms', 'meta', 'urls', 'visits',
-      'visit_source', 'presentation'])
+        'total_bytes FROM downloads'), 'ParseFileDownloadedRow')]
 
   _SCHEMA_8 = {
       'downloads': (
@@ -384,6 +390,17 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
   DESCRIPTION = (
       'Parser for Google Chrome 27 and up history SQLite database files.')
 
+  REQUIRED_STRUCTURE = {
+      'downloads': frozenset([
+          'id', 'target_path', 'received_bytes', 'total_bytes', 'start_time']),
+      'downloads_url_chains': frozenset([
+          'id', 'url']),
+      'urls': frozenset([
+          'id', 'url', 'title', 'visit_count', 'typed_count',
+          'last_visit_time', 'hidden']),
+      'visits': frozenset([
+          'visit_time', 'from_visit', 'transition', 'id'])}
+
   QUERIES = [
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
         'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'
@@ -395,10 +412,6 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         'downloads.received_bytes, downloads.total_bytes FROM downloads,'
         ' downloads_url_chains WHERE downloads.id = '
         'downloads_url_chains.id'), 'ParseFileDownloadedRow')]
-
-  REQUIRED_TABLES = frozenset([
-      'downloads', 'downloads_url_chains', 'keyword_search_terms', 'meta',
-      'urls', 'visits', 'visit_source'])
 
   _SCHEMA_27 = {
       'downloads': (

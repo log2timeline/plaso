@@ -43,15 +43,16 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
   NAME = 'ls_quarantine'
   DESCRIPTION = 'Parser for LS quarantine events SQLite database files.'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'LSQuarantineEvent': frozenset([
+          'LSQuarantineTimestamp', 'LSQuarantineAgentName',
+          'LSQuarantineOriginURLString', 'LSQuarantineDataURLString'])}
+
   QUERIES = [
       (('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
         'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
         'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
         'ORDER BY Time'), 'ParseLSQuarantineRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
 
   SCHEMAS = [{
       'LSQuarantineEvent': (

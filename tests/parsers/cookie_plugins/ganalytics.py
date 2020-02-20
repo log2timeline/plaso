@@ -66,12 +66,12 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
-    plugin = chrome_cookies.ChromeCookiePlugin()
+    plugin = chrome_cookies.Chrome17CookiePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['cookies.db'], plugin)
     events = self._GetAnalyticsCookieEvents(storage_writer)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
 
     # The cookie database contains 560 entries in total. Out of them
     # there are 75 events created by the Google Analytics plugin.

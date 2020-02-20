@@ -77,6 +77,12 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
   NAME = 'windows_timeline'
   DESCRIPTION = 'Parser for the Windows Timeline SQLite database'
 
+  REQUIRED_STRUCTURE = {
+      'Activity': frozenset([
+          'StartTime', 'Payload', 'PackageName', 'Id', 'AppId']),
+      'Activity_PackageId': frozenset([
+          'ActivityId'])}
+
   QUERIES = [
       (('SELECT StartTime, Payload, PackageName FROM Activity '
         'INNER JOIN Activity_PackageId ON Activity.Id = '
@@ -84,8 +90,6 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
         ' AND Platform = "packageid"'), 'ParseUserEngagedRow'),
       (('SELECT StartTime, Payload, AppId FROM Activity '
         'WHERE instr(Payload, "UserEngaged") = 0'), 'ParseGenericRow')]
-
-  REQUIRED_TABLES = frozenset(['Activity', 'Activity_PackageId'])
 
   SCHEMAS = [{
       'Activity': (
