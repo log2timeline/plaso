@@ -16,7 +16,7 @@ class FormattersImportTest(test_lib.ImportCheckTestCase):
   _CLI_HELPERS_PATH = os.path.join(os.getcwd(), 'plaso', 'formatters')
   _IGNORABLE_FILES = frozenset([
       'default.py', 'interface.py', 'logger.py', 'manager.py', 'mediator.py',
-      'winevt_rc.py'])
+      'winevt_rc.py', 'yaml_formatters_file.py'])
 
   def testFormattersImported(self):
     """Tests that all parsers are imported."""

@@ -89,7 +89,7 @@ class YAMLFilterFile(object):
         paths=paths)
 
   def _ReadFromFileObject(self, file_object):
-    """Reads the path filters from the YAML-based filter file-like object.
+    """Reads the path filters from a file-like object.
 
     Args:
       file_object (file): filter file-like object.
