@@ -92,10 +92,10 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     mappings = {
         'properties': {
             'timesketch_label': {
-              'type': 'nested'
+                'type': 'nested'
             },
             'datetime': {
-              'type': 'date'
+                'type': 'date'
             }
         }
     }
