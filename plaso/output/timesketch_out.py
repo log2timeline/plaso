@@ -90,14 +90,19 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     # This cannot be static because we use the value of self._document_type
     # from arguments.
     mappings = {
-        self._document_type: {
-            'properties': {
-                'timesketch_label': {
-                    'type': 'nested'
-                }
-            }
+      'properties': {
+        'timesketch_label': {
+          'type': 'nested'
+        },
+        'datetime': {
+          'type': 'date'
         }
+      }
     }
+
+    # TODO: Remove once Elasticsearch v6.x is deprecated.
+    if self.GetClientMajorVersion() < 7:
+      mappings = {self._document_type: mappings}
 
     # Get Elasticsearch host and port from Timesketch configuration.
     with self._timesketch.app_context():
