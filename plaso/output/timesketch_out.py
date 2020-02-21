@@ -90,14 +90,14 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     # This cannot be static because we use the value of self._document_type
     # from arguments.
     mappings = {
-      'properties': {
-        'timesketch_label': {
-          'type': 'nested'
-        },
-        'datetime': {
-          'type': 'date'
+        'properties': {
+            'timesketch_label': {
+              'type': 'nested'
+            },
+            'datetime': {
+              'type': 'date'
+            }
         }
-      }
     }
 
     # TODO: Remove once Elasticsearch v6.x is deprecated.
