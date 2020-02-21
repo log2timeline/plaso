@@ -107,15 +107,12 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """Inserts the buffered event documents into Elasticsearch."""
     try:
       # pylint: disable=unexpected-keyword-arg
-      # pylint does not recognizes request_timeout as a valid kwarg. According
-      # to http://elasticsearch-py.readthedocs.io/en/master/api.html#timeout
-      # it should be supported.
-      bulk_args = dict(
-        body=self._event_documents, index=self._index_name,
-        request_timeout=self._DEFAULT_REQUEST_TIMEOUT)
+      bulk_args = {
+          'body': self._event_documents, 'index': self._index_name,
+          'request_timeout': self._DEFAULT_REQUEST_TIMEOUT}
 
       # TODO: Remove once Elasticsearch v6.x is deprecated.
-      if self.GetClientMajorVersion() < 7:
+      if self._GetClientMajorVersion() < 7:
         bulk_args['doc_type'] = self._document_type
 
       self._client.bulk(**bulk_args)
@@ -237,7 +234,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     event_document = {'index': {'_index': self._index_name}}
 
     # TODO: Remove once Elasticsearch v6.x is deprecated.
-    if self.GetClientMajorVersion() < 7:
+    if self._GetClientMajorVersion() < 7:
       event_document['index']['_type'] = self._document_type
 
     event_values = self._GetSanitizedEventValues(event, event_data, event_tag)
@@ -258,12 +255,11 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     self._client = None
 
-  def GetClientMajorVersion(self):
+  def _GetClientMajorVersion(self):
     """Get the major version of the Elasticsearch client library.
 
     Returns:
       int: Major version number.
-
     """
     return elasticsearch.__version__[0]
 
