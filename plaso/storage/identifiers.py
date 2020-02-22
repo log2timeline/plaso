@@ -106,19 +106,20 @@ class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
 
     return None
 
+
 class RedisKeyIdentifier(containers_interface.AttributeContainerIdentifier):
   """Redis key attribute container identifier.
 
   The identifier is used to uniquely identify attribute containers. Where
   for example an attribute container is stored as a JSON serialized data in
-  a redis instance.
+  a Redis instance.
 
   Attributes:
     identifier (int): unique identifier of a container.
   """
 
   def __init__(self, identifier=None):
-    """"Initializes a redis key identifier."""
+    """"Initializes a Redis key identifier."""
     super(RedisKeyIdentifier, self).__init__()
     if identifier:
       self.identifier = uuid.UUID(identifier)

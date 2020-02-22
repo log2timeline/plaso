@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the redis storage."""
+"""Tests for the Redis storage."""
 
 from __future__ import unicode_literals
 
@@ -24,12 +24,12 @@ class RedisStoreTest(test_lib.StorageTestCase):
   # pylint: disable=protected-access
 
   def _GetRedisClient(self):
-    """Creates a redis client for testing.
+    """Creates a Redis client for testing.
 
     This method will attempt to use the
 
     Returns:
-      Redis: a redis client.
+      Redis: a Redis client.
     """
     try:
       redis_client = redis.from_url('redis://127.0.0.1/0', socket_timeout=60)
@@ -132,6 +132,26 @@ class RedisStoreTest(test_lib.StorageTestCase):
     retrieved_event_datas = list(
         store._GetAttributeContainers(store._CONTAINER_TYPE_EVENT_DATA))
     self.assertEqual(len(retrieved_event_datas), 4)
+
+    store.Close()
+
+  def testGetSerializedAttributeContainers(self):
+    """Tests the GetSerializedAttributeContainers method."""
+    store = redis_store.RedisStore()
+    redis_client = self._GetRedisClient()
+    store.Open(redis_client=redis_client)
+
+    for _, event_data in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      store.AddEventData(event_data)
+
+    cursor, serialized_containers = store.GetSerializedAttributeContainers(
+        'event_data', 0, 0)
+    self.assertEqual(len(serialized_containers), 4)
+    for serialized_container in serialized_containers:
+      self.assertIsInstance(serialized_container, bytes)
+    self.assertIsInstance(cursor, int)
+
 
     store.Close()
 

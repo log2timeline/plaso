@@ -49,12 +49,12 @@ class RedisMergeReader(interface.StorageMergeReader):
   }
 
   def __init__(self, storage_writer, task, redis_client=None):
-    """Initializes a redis storage merge reader.
+    """Initializes a Redis storage merge reader.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       task (Task): the task whose store is being merged.
-      redis_client (Optional[Redis]): redis client to query. If specified, no
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
 
     Raises:
@@ -63,7 +63,7 @@ class RedisMergeReader(interface.StorageMergeReader):
     super(RedisMergeReader, self).__init__(storage_writer)
     self._active_container_type = None
     self._container_types = []
-    self._active_cursor = None
+    self._active_cursor = 0
     self._add_active_container_method = None
     self._store = redis_store.RedisStore(
         definitions.STORAGE_TYPE_TASK,
@@ -164,7 +164,7 @@ class RedisMergeReader(interface.StorageMergeReader):
     self._add_active_container_method = self._add_container_type_methods.get(
         self._active_container_type)
 
-    self._active_cursor = None
+    self._active_cursor = 0
 
   def _GetContainerTypes(self):
     """Retrieves the container types to merge.
@@ -193,26 +193,18 @@ class RedisMergeReader(interface.StorageMergeReader):
       container_type (str): attribute container type.
       callback (function[StorageWriter, AttributeContainer]): function to call
           after each attribute container is deserialized.
-      cursor (int): redis cursor for scanning items.
+      cursor (int): Redis cursor for scanning items.
       maximum_number_of_items (Optional[int]): maximum number of
           containers to retrieve, where 0 represent no limit.
 
     Returns:
       list(AttributeContainer): attribute containers from Redis.
     """
-    # pylint: disable=protected-access
-    name = self._store._GenerateRedisKey(container_type)
-
-    # Redis treats None as meaning "no limit", not 0.
-    if maximum_number_of_items == 0:
-      maximum_number_of_items = None
-
     if not cursor:
       cursor = 0
 
-    # pylint: disable=protected-access
-    cursor, items = self._store._redis_client.hscan(
-        name, cursor=cursor, count=maximum_number_of_items)
+    cursor, items = self._store.GetSerializedAttributeContainers(
+        container_type, cursor, maximum_number_of_items)
 
     containers = []
     identifiers_to_delete = []
@@ -238,8 +230,7 @@ class RedisMergeReader(interface.StorageMergeReader):
     if maximum_number_of_items:
       self._active_extra_containers = containers[maximum_number_of_items:]
 
-    containers = containers[:maximum_number_of_items]
-    return containers
+    return containers[:maximum_number_of_items]
 
   def MergeAttributeContainers(
       self, callback=None, maximum_number_of_containers=0):
@@ -274,7 +265,7 @@ class RedisMergeReader(interface.StorageMergeReader):
           maximum_number_of_items=maximum_number_of_containers)
 
       if not containers:
-        self._active_cursor = None
+        self._active_cursor = 0
         continue
 
       for container in containers:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the merge reader for redis stores."""
+"""Tests for the merge reader for Redis stores."""
 from __future__ import unicode_literals
 
 import os
@@ -21,15 +21,15 @@ from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
 class RedisMergeReaderTest(test_lib.StorageTestCase):
-  """Tests for the redis store reader for merging."""
+  """Tests for the Redis store reader for merging."""
 
   def _GetRedisClient(self):
-    """Creates a redis client for testing.
+    """Creates a Redis client for testing.
 
     This method will attempt to use the
 
     Returns:
-      Redis: a redis client.
+      Redis: a Redis client.
     """
     try:
       redis_client = redis.from_url('redis://127.0.0.1/0', socket_timeout=60)
@@ -44,7 +44,7 @@ class RedisMergeReaderTest(test_lib.StorageTestCase):
 
     Args:
       session (Session): session the task store is part of.
-      redis_client (Optional[Redis]): redis client to query. If specified, no
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
 
     Returns:

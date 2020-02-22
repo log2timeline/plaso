@@ -193,7 +193,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       storage_writer (StorageWriter): storage writer for a session storage used
           to merge task storage.
     """
-    # logger.debug('Starting merge check')
     if self._processing_profiler:
       self._processing_profiler.StartTiming('merge_check')
 
@@ -305,8 +304,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
       self._number_of_produced_warnings = storage_writer.number_of_warnings
-
-    # logger.debug('Finished merging')
 
   def _ProcessSources(
       self, source_path_specs, storage_writer):

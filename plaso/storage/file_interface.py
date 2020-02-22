@@ -816,6 +816,7 @@ class StorageFileWriter(interface.StorageWriter):
     if not task.storage_format in definitions.SESSION_STORAGE_FORMATS:
       raise IOError('Unsupported storage format')
 
+    # Not that Redis task stores do not need finalization.
     if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
       storage_file_path = self._GetTaskStorageFilePath(task)
       processed_storage_file_path = self._GetProcessedStorageFilePath(task)
@@ -826,10 +827,6 @@ class StorageFileWriter(interface.StorageWriter):
         raise IOError((
             'Unable to rename task storage file: {0:s} with error: '
             '{1!s}').format(storage_file_path, exception))
-
-    elif task.storage_format == definitions.STORAGE_FORMAT_REDIS:
-      # Redis task stores do not need finalization.
-      pass
 
   def Open(self, **unused_kwargs):
     """Opens the storage writer.
@@ -873,13 +870,15 @@ class StorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+    if task.storage_format not in definitions.TASK_STORAGE_FORMATS:
+      raise IOError('Unsupported storage format.')
+
+    elif task.storage_format == definitions.STORAGE_FORMAT_REDIS:
       task.storage_file_size = 1000
       redis_store.RedisStore.MarkTaskAsMerging(
           task.identifier, self._session.identifier)
-      return
 
-    if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
+    elif task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
       merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
       processed_storage_file_path = self._GetProcessedStorageFilePath(task)
 
@@ -927,9 +926,6 @@ class StorageFileWriter(interface.StorageWriter):
 
     if task.storage_format not in definitions.TASK_STORAGE_FORMATS:
       raise IOError('Unsupported storage format.')
-
-    # if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
-    #   redis_store.RedisStore.RemoveTaskStore(task)
 
     if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
       processed_storage_file_path = self._GetProcessedStorageFilePath(task)

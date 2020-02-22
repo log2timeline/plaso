@@ -19,7 +19,7 @@ from plaso.storage import logger
 class RedisStore(interface.BaseStore):
   """Redis store.
 
-  Attribute containers are stored as redis Hashes.
+  Attribute containers are stored as Redis Hashes.
   All keys are prefixed with the session identifier to avoid collisions.
   Event identifiers are also stored in an index to enable sorting.
   """
@@ -34,7 +34,7 @@ class RedisStore(interface.BaseStore):
   def __init__(
       self, storage_type=definitions.STORAGE_TYPE_TASK,
       session_identifier=None, task_identifier=None):
-    """Initializes a redis store.
+    """Initializes a Redis store.
 
     Args:
       storage_type (Optional[str]): storage type.
@@ -61,20 +61,22 @@ class RedisStore(interface.BaseStore):
 
   @classmethod
   def _SetClientName(cls, redis_client, name):
-    """Attempts to sets a redis client name.
+    """Attempts to sets a Redis client name.
 
-    This method ignores errors from the redis server or exceptions
+    This method ignores errors from the Redis server or exceptions
     indicating the method is missing, as setting the name is not a critical
     function, and it is not currently supported by the fakeredis test library.
 
     Args:
-      redis_client (Redis): an open redis client.
+      redis_client (Redis): an open Redis client.
       name (str): name to set.
     """
     try:
       redis_client.client_setname(name)
-    except (AttributeError, redis.ResponseError):
-      logger.debug('Unable to set redis client name: {0:s}'.format(name))
+    except (AttributeError, redis.ResponseError) as exception:
+      logger.debug(
+          'Unable to set redis client name: {0:s} with error {1!s}'.format(
+              name, exception))
 
   def _AddAttributeContainer(self, container_type, container):
     """Adds an attribute container to the store.
@@ -96,13 +98,13 @@ class RedisStore(interface.BaseStore):
     self._redis_client.hset(container_key, string_identifier, serialized_data)
 
   def _GenerateRedisKey(self, subkey):
-    """Generates a redis key inside the appropriate namespace.
+    """Generates a Redis key inside the appropriate namespace.
 
     Args:
-      subkey (str): redis key to be prefixed with the namespace value.
+      subkey (str): Redis key to be prefixed with the namespace value.
 
     Returns:
-      str: a redis key name.
+      str: a Redis key name.
     """
     return '{0:s}-{1:s}-{2:s}'.format(
         self._session_identifier, self._task_identifier, subkey)
@@ -326,14 +328,38 @@ class RedisStore(interface.BaseStore):
       yield self._GetAttributeContainerByIdentifier(
           self._CONTAINER_TYPE_EVENT, event_identifier)
 
+  def GetSerializedAttributeContainers(
+      self, container_type, cursor, maximum_number_of_items):
+    """Fetches serialized attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+      cursor (int): Redis cursor.
+      maximum_number_of_items (int): maximum number of containers to
+          retrieve, where 0 represent no limit.
+
+    Returns:
+      tuple: containing:
+        int: Redis cursor.
+        list[bytes]: serialized attribute containers.
+    """
+    name = self._GenerateRedisKey(container_type)
+    # Redis treats None as meaning "no limit", not 0.
+    if maximum_number_of_items == 0:
+      maximum_number_of_items = None
+
+    cursor, items = self._redis_client.hscan(
+        name, cursor=cursor, count=maximum_number_of_items)
+    return cursor, items
+
   # pylint: disable=arguments-differ
   def Open(self, redis_client=None, url='redis://127.0.0.1/0'):
     """Opens the store.
 
     Args:
-      redis_client (Optional[Redis]): redis client to query. If specified, no
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
-      url (Optional[str]): URL for the redis database. If no client is specified
+      url (Optional[str]): URL for the Redis database. If no client is specified
         a new client will be opened connected to this database.
 
     Raises:
@@ -373,13 +399,13 @@ class RedisStore(interface.BaseStore):
   @classmethod
   def ScanForProcessedTasks(
       cls, session_identifier, url='redis://127.0.0.1/0', redis_client=None):
-    """Scans a redis database for processed tasks.
+    """Scans a Redis database for processed tasks.
 
     Args:
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
-      url (Optional[str]): url for a redis database.
-      redis_client (Optional[Redis]): redis client to query. If specified, no
+      url (Optional[str]): url for a Redis database.
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
 
     Returns:
@@ -410,8 +436,8 @@ class RedisStore(interface.BaseStore):
       task_identifier (str): identifier of the task.
       session_identifier (Optional[str]): session identifier, formatted as
             a UUID.
-      url (Optional[str]): url for a redis database.
-      redis_client (Optional[Redis]): redis client to query. If specified, no
+      url (Optional[str]): url for a Redis database.
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
 
     Raises:

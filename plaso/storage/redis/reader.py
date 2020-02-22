@@ -6,10 +6,16 @@ from plaso.lib import definitions
 from plaso.storage.redis import redis_store
 from plaso.storage import interface
 
+
 class RedisStorageReader(interface.StorageReader):
   """Redis storage file reader."""
 
   def __init__(self, task):
+    """Initializes a Redis Storage Reader.
+
+    Args:
+      task (Task): the Task whose results the store contains.
+    """
     super(RedisStorageReader, self).__init__()
     self._store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK,
@@ -35,11 +41,10 @@ class RedisStorageReader(interface.StorageReader):
   def GetAnalysisReports(self):
     """Retrieves the analysis reports.
 
-    Yields:
-      AnalysisReport: analysis report.
+    Returns:
+      generator(AnalysisReport): analysis report generator.
     """
-    for report in self._store.GetAnalysisReports():
-      yield report
+    return self._store.GetAnalysisReports()
 
   def GetEventData(self):
     """Retrieves the event data.
@@ -177,7 +182,7 @@ class RedisStorageReader(interface.StorageReader):
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
     """
-    # Not implemented by the redis store, as it is a task store only.
+    # Not implemented by the Redis store, as it is a task store only.
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
