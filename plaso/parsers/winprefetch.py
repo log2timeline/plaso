@@ -25,7 +25,7 @@ class WinPrefetchExecutionEventData(events.EventData):
     format_version (int): format version.
     mapped_files (list[str]): mapped filenames.
     number_of_volumes (int): number of volumes.
-    path (str): path to the executable.
+    path_hints (list[str]): possible full paths to the executable.
     prefetch_hash (int): prefetch hash.
     run_count (int): run count.
     volume_device_paths (list[str]): volume device paths.
@@ -41,7 +41,7 @@ class WinPrefetchExecutionEventData(events.EventData):
     self.executable = None
     self.mapped_files = None
     self.number_of_volumes = None
-    self.path = None
+    self.path_hints = None
     self.prefetch_hash = None
     self.run_count = None
     self.version = None
@@ -94,7 +94,7 @@ class WinPrefetchParser(interface.FileObjectParser):
 
     volume_serial_numbers = []
     volume_device_paths = []
-    path = ''
+    path_hints = []
 
     for volume_information in iter(scca_file.volumes):
       volume_serial_number = volume_information.serial_number
@@ -122,6 +122,7 @@ class WinPrefetchParser(interface.FileObjectParser):
         if (filename.startswith(volume_device_path) and
             filename.endswith(executable_filename)):
           _, _, path = filename.partition(volume_device_path)
+          path_hints.append(path)
 
     mapped_files = []
     for entry_index, file_metrics in enumerate(scca_file.file_metrics_entries):
@@ -145,7 +146,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     event_data.executable = executable_filename
     event_data.mapped_files = mapped_files
     event_data.number_of_volumes = number_of_volumes
-    event_data.path = path
+    event_data.path_hints = path_hints
     event_data.prefetch_hash = prefetch_hash
     event_data.run_count = run_count
     event_data.version = format_version

@@ -127,15 +127,15 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.version, 23)
     self.assertEqual(event_data.executable, 'PING.EXE')
     self.assertEqual(event_data.prefetch_hash, 0xb29f6629)
-    self.assertEqual(event_data.path, '\\WINDOWS\\SYSTEM32\\PING.EXE')
+    self.assertEqual(event_data.path_hints, ['\\WINDOWS\\SYSTEM32\\PING.EXE'])
     self.assertEqual(event_data.run_count, 14)
     self.assertEqual(
         event_data.volume_device_paths[0], '\\DEVICE\\HARDDISKVOLUME1')
     self.assertEqual(event_data.volume_serial_numbers[0], 0xac036525)
 
     expected_message = (
-        'Prefetch [PING.EXE] was executed - run count 14 path: '
-        '\\WINDOWS\\SYSTEM32\\PING.EXE '
+        'Prefetch [PING.EXE] was executed - run count 14 '
+        'path hints: \\WINDOWS\\SYSTEM32\\PING.EXE '
         'hash: 0xB29F6629 '
         'volume: 1 [serial number: 0xAC036525, '
         'device path: \\DEVICE\\HARDDISKVOLUME1]')
@@ -179,15 +179,16 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_data.executable, 'WUAUCLT.EXE')
     self.assertEqual(event_data.prefetch_hash, 0x830bcc14)
-    self.assertEqual(event_data.path, '\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE')
+    self.assertEqual(
+        event_data.path_hints, ['\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE'])
     self.assertEqual(event_data.run_count, 25)
     self.assertEqual(
         event_data.volume_device_paths[0], '\\DEVICE\\HARDDISKVOLUME1')
     self.assertEqual(event_data.volume_serial_numbers[0], 0xac036525)
 
     expected_message = (
-        'Prefetch [WUAUCLT.EXE] was executed - run count 25 path: '
-        '\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE '
+        'Prefetch [WUAUCLT.EXE] was executed - run count 25 '
+        'path hints: \\WINDOWS\\SYSTEM32\\WUAUCLT.EXE '
         'hash: 0x830BCC14 '
         'volume: 1 [serial number: 0xAC036525, '
         'device path: \\DEVICE\\HARDDISKVOLUME1], '
