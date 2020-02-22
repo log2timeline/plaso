@@ -29,6 +29,7 @@ from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.filters import event_filter
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.lib import timelib
@@ -61,6 +62,8 @@ class PsortTool(
       'Application to read, filter and process output from a plaso storage '
       'file.')
 
+  _FORMATTERS_FILE_NAME = 'formatters.yaml'
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -79,6 +82,7 @@ class PsortTool(
     self._deduplicate_events = True
     self._event_filter_expression = None
     self._event_filter = None
+    self._formatters_file = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._preferred_language = 'en-US'
@@ -284,6 +288,26 @@ class PsortTool(
 
       table_view.Write(self._output_writer)
 
+  def _ReadEventFormattersFromFile(self):
+    """Reads the event formatters the formatters.yaml file.
+
+    Raises:
+      BadConfigOption: if the event formatters file cannot be read.
+    """
+    self._formatters_file = os.path.join(
+        self._data_location, self._FORMATTERS_FILE_NAME)
+    if not os.path.isfile(self._formatters_file):
+      raise errors.BadConfigOption(
+          'No such event formatters file: {0:s}.'.format(self._formatters_file))
+
+    try:
+      formatters_manager.FormattersManager.ReadFormattersFromFile(
+          self._formatters_file)
+    except KeyError as exception:
+      raise errors.BadConfigOption(
+          'Unable to read event formatters from file with error: {0!s}'.format(
+              exception))
+
   def AddProcessingOptions(self, argument_group):
     """Adds processing options to the argument group
 
@@ -456,6 +480,8 @@ class PsortTool(
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
+
+    self._ReadEventFormattersFromFile()
 
     self._ParseLogFileOptions(options)
 

@@ -238,7 +238,7 @@ class ExtractionTool(
       self._presets_manager.ReadFromFile(self._presets_file)
     except errors.MalformedPresetError as exception:
       raise errors.BadConfigOption(
-          'Unable to read presets from file with error: {0!s}'.format(
+          'Unable to read parser presets from file with error: {0!s}'.format(
               exception))
 
   def _SetExtractionParsersAndPlugins(self, configuration, session):

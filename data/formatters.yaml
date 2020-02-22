@@ -1,0 +1,41 @@
+# Event formatters.
+
+type: 'conditional'
+data_type: 'windows:registry:amcache'
+message:
+- 'path: {full_path}'
+- 'sha1: {sha1}'
+- 'productname: {productname}'
+- 'companyname: {companyname}'
+- 'fileversion: {fileversion}'
+- 'languagecode: {languagecode}'
+- 'filesize: {filesize}'
+- 'filedescription: {filedescription}'
+- 'linkerts: {linkerts}'
+- 'lastmodifiedts: {lastmodifiedts}'
+- 'createdts: {createdts}'
+- 'programid: {programid}'
+short_message:
+- 'path: {full_path}'
+short_source: 'AMCACHE'
+source: 'Amcache Registry Entry'
+---
+type: 'conditional'
+data_type: 'windows:registry:amcache:programs'
+message:
+- 'name: {name}'
+- 'version: {version}'
+- 'publisher: {publisher}'
+- 'languagecode: {languagecode}'
+- 'entrytype: {entrytype}'
+- 'uninstallkey: {uninstallkey}'
+- 'filepaths: {filepaths}'
+- 'productcode: {productcode}'
+- 'packagecode: {packagecode}'
+- 'msiproductcode: {msiproductcode}'
+- 'msipackagecode: {msipackagecode}'
+- 'files: {files}'
+short_message:
+- 'name: {name}'
+short_source: 'AMCACHEPROGRAM'
+source: 'Amcache Programs Registry Entry'

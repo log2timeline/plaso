@@ -35,20 +35,17 @@ class AmcacheParserTest(test_lib.ParserTestCase):
         'is-f4510.tmp\\idafree50.tmp')
     self.assertEqual(event_data.full_path, expected_full_path)
 
-    expected_sha1 = '82274eef0911a948f91425f5e5b0e730517fe75e'
-    self.assertEqual(event_data.sha1, expected_sha1)
+    self.assertEqual(
+        event_data.sha1, '82274eef0911a948f91425f5e5b0e730517fe75e')
 
     event = events[1148]
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.name, 'FileInsight - File analysis tool')
+    self.assertEqual(event_data.publisher, 'McAfee Inc.')
 
-    expected_program_name = 'FileInsight - File analysis tool'
-    self.assertEqual(event_data.name, expected_program_name)
-
-    expected_publisher = 'McAfee Inc.'
-    self.assertEqual(event_data.publisher, expected_publisher)
-
-    # TODO: add test for message string
+    expected_message = 'name: FileInsight - File analysis tool'
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
   def testParseWithSystem(self):
     """Tests the Parse function with a SYSTEM Registry file."""
