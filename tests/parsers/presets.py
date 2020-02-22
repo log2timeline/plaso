@@ -168,7 +168,8 @@ class ParserPresetsManagerTest(shared_test_lib.BaseTestCase):
 class PresetsDataTest(shared_test_lib.BaseTestCase):
   """Tests for the default preset files."""
 
-  def testParsersandPresets(self):
+  def testParsersAndPresets(self):
+    """Tests that all parsers/plugins in the default presets are valid."""
     presets_file_path = os.path.join(self._DATA_PATH, 'presets.yaml')
 
     preset_manager = presets.ParserPresetsManager()
