@@ -10,9 +10,10 @@ parsers:
 - sqlite/android_sms
 - sqlite/android_webview
 - sqlite/android_webviewcache
-- sqlite/chrome_27_history
 - sqlite/chrome_8_history
-- sqlite/chrome_cookies
+- sqlite/chrome_17_cookies
+- sqlite/chrome_27_history
+- sqlite/chrome_66_cookies
 - sqlite/skype
 ---
 name: linux
@@ -91,10 +92,11 @@ parsers:
 - opera_global
 - opera_typed_history
 - plist/safari_history
-- sqlite/chrome_27_history
 - sqlite/chrome_8_history
+- sqlite/chrome_17_cookies
+- sqlite/chrome_27_history
+- sqlite/chrome_66_cookies
 - sqlite/chrome_autofill
-- sqlite/chrome_cookies
 - sqlite/chrome_extension_activity
 - sqlite/firefox_cookies
 - sqlite/firefox_downloads
