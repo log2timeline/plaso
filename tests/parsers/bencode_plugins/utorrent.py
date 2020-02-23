@@ -6,10 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import bencode_parser as _
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import bencode_parser
 
 from tests.parsers.bencode_plugins import test_lib
@@ -81,8 +78,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
         'Torrent plaso test; Saved to e:\\torrent\\files\\plaso test; '
         'Minutes seeded: 511')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

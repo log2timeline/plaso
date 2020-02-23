@@ -2,20 +2,15 @@
 """This file contains an import statement for each formatter."""
 
 from plaso.formatters import asl
-from plaso.formatters import bencode_parser
 from plaso.formatters import bsm
 from plaso.formatters import ccleaner
 from plaso.formatters import chrome
-from plaso.formatters import chrome_autofill
 from plaso.formatters import chrome_cache
-from plaso.formatters import chrome_cookies
 from plaso.formatters import chrome_extension_activity
 from plaso.formatters import chrome_preferences
-from plaso.formatters import cron
 from plaso.formatters import cups_ipp
 from plaso.formatters import docker
 from plaso.formatters import dpkg
-from plaso.formatters import file_history
 from plaso.formatters import file_system
 from plaso.formatters import firefox
 from plaso.formatters import firefox_cache
