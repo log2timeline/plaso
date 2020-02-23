@@ -107,15 +107,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """Inserts the buffered event documents into Elasticsearch."""
     try:
       # pylint: disable=unexpected-keyword-arg
-      bulk_args = {
-          'body': self._event_documents, 'index': self._index_name,
+      bulk_arguments = {
+          'body': self._event_documents,
+          'index': self._index_name,
           'request_timeout': self._DEFAULT_REQUEST_TIMEOUT}
 
       # TODO: Remove once Elasticsearch v6.x is deprecated.
       if self._GetClientMajorVersion() < 7:
-        bulk_args['doc_type'] = self._document_type
+        bulk_arguments['doc_type'] = self._document_type
 
-      self._client.bulk(**bulk_args)
+      self._client.bulk(**bulk_arguments)
 
     except (
         ValueError,
