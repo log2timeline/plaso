@@ -20,8 +20,8 @@ class AndroidAppUsageEventData(events.EventData):
   """Android Application event data.
 
   Attributes:
-    package_name (str): name of the Android application.
-    component_name (str): name of the individual component of the application.
+    package (str): name of the Android application.
+    component (str): name of the individual component of the application.
   """
 
   DATA_TYPE = 'android:event:last_resume_time'

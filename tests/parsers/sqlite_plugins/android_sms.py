@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import android_sms as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import android_sms
 
