@@ -107,12 +107,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """Inserts the buffered event documents into Elasticsearch."""
     try:
       # pylint: disable=unexpected-keyword-arg
-      # pylint does not recognizes request_timeout as a valid kwarg. According
-      # to http://elasticsearch-py.readthedocs.io/en/master/api.html#timeout
-      # it should be supported.
-      self._client.bulk(
-          body=self._event_documents, doc_type=self._document_type,
-          index=self._index_name, request_timeout=self._DEFAULT_REQUEST_TIMEOUT)
+      bulk_arguments = {
+          'body': self._event_documents,
+          'index': self._index_name,
+          'request_timeout': self._DEFAULT_REQUEST_TIMEOUT}
+
+      # TODO: Remove once Elasticsearch v6.x is deprecated.
+      if self._GetClientMajorVersion() < 7:
+        bulk_arguments['doc_type'] = self._document_type
+
+      self._client.bulk(**bulk_arguments)
 
     except (
         ValueError,
@@ -228,8 +232,12 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       event_data (EventData): event data.
       event_tag (EventTag): event tag.
     """
-    event_document = {'index': {
-        '_index': self._index_name, '_type': self._document_type}}
+    event_document = {'index': {'_index': self._index_name}}
+
+    # TODO: Remove once Elasticsearch v6.x is deprecated.
+    if self._GetClientMajorVersion() < 7:
+      event_document['index']['_type'] = self._document_type
+
     event_values = self._GetSanitizedEventValues(event, event_data, event_tag)
 
     self._event_documents.append(event_document)
@@ -247,6 +255,14 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._FlushEvents()
 
     self._client = None
+
+  def _GetClientMajorVersion(self):
+    """Get the major version of the Elasticsearch client library.
+
+    Returns:
+      int: Major version number.
+    """
+    return elasticsearch.__version__[0]
 
   def SetDocumentType(self, document_type):
     """Sets the document type.
