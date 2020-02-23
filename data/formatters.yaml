@@ -61,6 +61,48 @@ short_source: 'WebViewCache'
 source: 'Android WebViewCache'
 ---
 type: 'conditional'
+data_type: 'apache:access'
+message:
+- 'http_request: {http_request}'
+- 'from: {ip_address}'
+- 'code: {http_response_code}'
+- 'referer: {http_request_referer}'
+- 'user_agent: {http_request_user_agent}'
+- 'server_name: {server_name}'
+- 'port: {port_number}'
+short_message:
+- '{http_request}'
+- 'from: {ip_address}'
+short_source: 'LOG'
+source: 'Apache Access'
+---
+type: 'conditional'
+data_type: 'apt:history:line'
+message:
+- '{packages}'
+- '[{command}]'
+- '[{error}]'
+- '[{requester}]'
+short_message:
+- '{packages}'
+short_source: 'LOG'
+source: 'APT History Log'
+---
+type: 'basic'
+data_type: 'bash:history:command'
+message: 'Command executed: {command}'
+short_message: '{command}'
+short_source: 'LOG'
+source: 'Bash History'
+---
+type: 'basic'
+data_type: 'macosx:application_usage'
+message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
+short_message: '{application} ({count} time(s))'
+short_source: 'LOG'
+source: 'Application Usage'
+---
+type: 'conditional'
 data_type: 'windows:registry:amcache'
 message:
 - 'path: {full_path}'
@@ -97,3 +139,31 @@ short_message:
 - 'name: {name}'
 short_source: 'AMCACHEPROGRAM'
 source: 'Amcache Programs Registry Entry'
+---
+type: 'conditional'
+data_type: 'windows:registry:appcompatcache'
+message:
+- '[{key_path}]'
+- 'Cached entry: {entry_index}'
+- 'Path: {path}'
+short_message:
+- 'Path: {path}'
+short_source: 'REG'
+source: 'AppCompatCache Registry Entry'
+---
+type: 'basic'
+data_type: 'windows:registry:bagmru'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : BagMRU'
+---
+type: 'conditional'
+data_type: 'windows:registry:bam'
+message:
+- '{binary_path}'
+- '[{user_sid}]'
+short_message:
+- '{binary_path}'
+short_source: 'REG'
+source: 'Background Activity Moderator Registry Entry'
