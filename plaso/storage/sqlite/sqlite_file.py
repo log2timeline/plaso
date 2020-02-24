@@ -114,7 +114,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     identifier = identifiers.SQLTableIdentifier(
         container_type, container_list.next_sequence_number + 1)
 
-    # This modifies container, but the identifier is explicitly not to be
+    # This modifies the container, but the identifier is explicitly not to be
     # serialized, so it's safe to still used the already serialized form of
     # the container.
     container.SetIdentifier(identifier)
@@ -142,7 +142,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         self._CONTAINER_TYPE_EVENT,
         self._serialized_event_heap.number_of_events + 1)
 
-    # This modifies container, but the identifier is explicitly not to be
+    # This modifies the event, but the identifier is explicitly not to be
     # serialized, so it's safe to still used the already serialized form of
     # the container.
     event.SetIdentifier(identifier)
