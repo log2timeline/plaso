@@ -208,7 +208,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         formatters_directory_path)
 
     formatter_mediator = formatters_mediator.FormatterMediator(
-        data_location=self._DATA_PATH)
+        data_location=shared_test_lib.DATA_PATH)
     message, message_short = (
         formatters_manager.FormattersManager.GetMessageStrings(
             formatter_mediator, event_data))

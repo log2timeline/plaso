@@ -15,6 +15,7 @@ from plaso.lib import definitions
 from plaso.parsers import filestat
 
 from tests.parsers import test_lib
+from tests import test_lib as shared_test_lib
 
 
 class FileStatTest(test_lib.ParserTestCase):
@@ -124,7 +125,7 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.file_size, 1247)
     self.assertIsNone(event_data.inode)
 
-    test_path = os.path.join(self._TEST_DATA_PATH, 'syslog.gz')
+    test_path = os.path.join(shared_test_lib.TEST_DATA_PATH, 'syslog.gz')
     expected_message = (
         'GZIP:{0:s} '
         'Type: file').format(test_path)
@@ -233,7 +234,7 @@ class FileStatTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.file_size, 10240)
     self.assertIsNone(event_data.inode)
 
-    test_path = os.path.join(self._TEST_DATA_PATH, 'syslog.tgz')
+    test_path = os.path.join(shared_test_lib.TEST_DATA_PATH, 'syslog.tgz')
     expected_message = (
         'GZIP:{0:s} '
         'Type: file').format(test_path)

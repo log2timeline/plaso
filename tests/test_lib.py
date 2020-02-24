@@ -14,8 +14,20 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-PROJECT_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..'))
+# The path to top of the Plaso source tree.
+PROJECT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# The paths below are all derived from the project path directory.
+# They are enumerated explicitly here so that they can be overwritten for
+# compatibility with different build systems.
+ANALYSIS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'analysis')
+ANALYZERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'analyzers')
+CLI_HELPERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'cli', 'helpers')
+CONTAINERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'containers')
+DATA_PATH = os.path.join(PROJECT_PATH, 'data')
+OUTPUT_PATH = os.path.join(PROJECT_PATH, 'plaso', 'output')
+PARSERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'parsers')
+PREPROCESSORS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'preprocessors')
+TEST_DATA_PATH = os.path.join(PROJECT_PATH, 'test_data')
 
 def GetTestFilePath(path_segments):
   """Retrieves the path of a test file in the test data directory.
@@ -28,15 +40,11 @@ def GetTestFilePath(path_segments):
   """
   # Note that we need to pass the individual path segments to os.path.join
   # and not a list.
-  return os.path.join(PROJECT_PATH, 'test_data', *path_segments)
+  return os.path.join(TEST_DATA_PATH, *path_segments)
 
 
 class BaseTestCase(unittest.TestCase):
   """The base test case."""
-
-  _PROJECT_PATH = PROJECT_PATH
-  _DATA_PATH = os.path.abspath(os.path.join(_PROJECT_PATH, 'data'))
-  _TEST_DATA_PATH = os.path.abspath(os.path.join(_PROJECT_PATH, 'test_data'))
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
@@ -86,7 +94,7 @@ class BaseTestCase(unittest.TestCase):
     """
     # Note that we need to pass the individual path segments to os.path.join
     # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
+    return os.path.join(TEST_DATA_PATH, *path_segments)
 
   def _SkipIfPathNotExists(self, path):
     """Skips the test if the path does not exist.
