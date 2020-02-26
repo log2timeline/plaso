@@ -21,7 +21,7 @@ class AMCacheFileEventData(events.EventData):
   Attributes:
     company_name (str): company name that created product file belongs to.
     file_description (str): description of file.
-    file_reference (int): file system file reference, for example 9-1 (MFT
+    file_reference (str): file system file reference, for example 9-1 (MFT
         entry - sequence number).
     file_size (int): size of file in bytes.
     file_version (str): version of file.
@@ -204,7 +204,7 @@ class AMCacheParser(interface.FileObjectParser):
         file_reference = int(file_reference_key.name, 16)
         event_data.file_reference = '{0:d}'.format(file_reference)
 
-    except ValueError:
+    except (ValueError, TypeError):
       pass
 
     for value_name, attribute_name in self._FILE_REFERENCE_KEY_VALUES.items():

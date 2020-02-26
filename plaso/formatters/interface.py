@@ -228,7 +228,7 @@ class ConditionalEventFormatter(EventFormatter):
   def _CreateFormatStringMaps(self):
     """Creates the format string maps.
 
-    Maps are build of the string pieces and their corresponding attribute
+    Maps are built of the string pieces and their corresponding attribute
     name to optimize conditional string formatting.
 
     Raises:
