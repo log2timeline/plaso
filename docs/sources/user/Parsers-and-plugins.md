@@ -110,6 +110,7 @@ Name | Description
 airport | Parser for Airport plist files.
 apple_id | Parser for Apple account information plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
+launchd_plist | Parser for Launchd plist files.
 macosx_bluetooth | Parser for Bluetooth plist files.
 macosx_install_history | Parser for installation history plist files.
 macuser | Parser for MacOS user plist files.
@@ -129,10 +130,11 @@ android_sms | Parser for Android text messages SQLite database files.
 android_webview | Parser for Android WebView databases
 android_webviewcache | Parser for Android WebViewCache databases
 appusage | Parser for MacOS application usage SQLite database files.
+chrome_17_cookies | Parser for Chrome 17 - 65 cookies SQLite database files.
 chrome_27_history | Parser for Google Chrome 27 and up history SQLite database files.
+chrome_66_cookies | Parser for Chrome 66+ cookies SQLite database files.
 chrome_8_history | Parser for Google Chrome 8 - 25 history SQLite database files.
 chrome_autofill | Parser for Chrome autofill SQLite database files.
-chrome_cookies | Parser for Chrome cookies SQLite database files.
 chrome_extension_activity | Parser for Chrome extension activity SQLite database files.
 firefox_cookies | Parser for Firefox cookies SQLite database files.
 firefox_downloads | Parser for Firefox downloads SQLite database files.
@@ -208,10 +210,10 @@ winreg_default | Parser for Registry data.
 
 Name | Parsers and plugins
 --- | ---
-android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_27_history, sqlite/chrome_8_history, sqlite/chrome_cookies, sqlite/skype
+android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
 linux | apt_history, bash_history, bencode, czip/oxml, dockerjson, dpkg, filestat, gdrive_synclog, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, vsftpd, webhist, xchatlog, xchatscrollback, zsh_extended_history
 macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
-webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_27_history, sqlite/chrome_8_history, sqlite/chrome_autofill, sqlite/chrome_cookies, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history
+webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history
 win7 | amcache, custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
 win7_slow | mft, win7
 win_gen | bencode, czip/oxml, esedb, filestat, gdrive_synclog, lnk, mcafee_protection, olecf, pe, prefetch, setupapi, sccm, skydrive_log, skydrive_log_old, sqlite/google_drive, sqlite/skype, symantec_scanlog, usnjrnl, webhist, winfirewall, winjob, winreg
