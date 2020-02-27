@@ -96,6 +96,8 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the conditional event formatter."""
 
+  # pylint: disable=protected-access
+
   _TEST_EVENTS = [
       {'data_type': 'test:event:conditional',
        'description': 'this is beyond words',
@@ -104,13 +106,14 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
        'timestamp': 1335791207939596,
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
-  def testInitialization(self):
-    """Tests the initialization."""
+  def testCreateFormatStringMaps(self):
+    """Tests the _CreateFormatStringMaps function."""
     event_formatter = ConditionalTestEventFormatter()
-    self.assertIsNotNone(event_formatter)
+    event_formatter._CreateFormatStringMaps()
 
     with self.assertRaises(RuntimeError):
-      BrokenConditionalEventFormatter()
+      event_formatter = BrokenConditionalEventFormatter()
+      event_formatter._CreateFormatStringMaps()
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Amcache Registry plugin."""
+"""Tests for the AMCache Registry plugin."""
 
 from __future__ import unicode_literals
 
@@ -11,12 +11,12 @@ from plaso.parsers import amcache
 from tests.parsers import test_lib
 
 
-class AmcacheParserTest(test_lib.ParserTestCase):
-  """Tests for the Amcache Registry plugin."""
+class AMCacheParserTest(test_lib.ParserTestCase):
+  """Tests for the AMCache Registry plugin."""
 
   def testParse(self):
     """Tests the Parse function."""
-    parser = amcache.AmcacheParser()
+    parser = amcache.AMCacheParser()
 
     storage_writer = self._ParseFile(['Amcache.hve'], parser)
 
@@ -44,12 +44,22 @@ class AmcacheParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.name, 'FileInsight - File analysis tool')
     self.assertEqual(event_data.publisher, 'McAfee Inc.')
 
-    expected_message = 'name: FileInsight - File analysis tool'
-    self._TestGetMessageStrings(event_data, expected_message, expected_message)
+    expected_message = (
+        'name: FileInsight - File analysis tool '
+        'publisher: McAfee Inc. '
+        'entry_type: AddRemoveProgram '
+        'uninstall_key: [\'HKEY_LOCAL_MACHINE\\\\Software\\\\Wow6432Node\\\\'
+        'Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\FileInsight\'] '
+        'file_paths: [\'c:\\\\program files (x86)\\\\fileinsight\\\\plugins\', '
+        '\'c:\\\\program files (x86)\\\\fileinsight\\\\plugins\\\\'
+        'anomaly chart\', \'c:\\\\program files (x86)\\\\fileinsight\']')
+    expected_short_message = 'name: FileInsight - File analysis tool'
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseWithSystem(self):
     """Tests the Parse function with a SYSTEM Registry file."""
-    parser = amcache.AmcacheParser()
+    parser = amcache.AMCacheParser()
 
     storage_writer = self._ParseFile(['SYSTEM'], parser)
 
