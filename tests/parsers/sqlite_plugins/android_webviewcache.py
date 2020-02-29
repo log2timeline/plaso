@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import android_webviewcache as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import android_webviewcache
 
 from tests.parsers.sqlite_plugins import test_lib

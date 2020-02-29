@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import android_app_usage as _  # pylint: disable=unused-import
 from plaso.parsers import android_app_usage
 
 from tests.parsers import test_lib
@@ -36,10 +35,8 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
         'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
 
     expected_message = (
-        'Package: '
-        'com.sec.android.widgetapp.ap.hero.accuweather '
-        'Component: '
-        'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
+        'Package: com.sec.android.widgetapp.ap.hero.accuweather '
+        'Component: com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
     expected_short_message = (
         'Package: com.sec.android.widgetapp.ap.hero.accuweather '
         'Component: com.sec.and...')
@@ -55,10 +52,8 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.package, 'com.google.android.gsf.login')
 
     expected_message = (
-        'Package: '
-        'com.google.android.gsf.login '
-        'Component: '
-        'com.google.android.gsf.login.NameActivity')
+        'Package: com.google.android.gsf.login '
+        'Component: com.google.android.gsf.login.NameActivity')
     expected_short_message = (
         'Package: com.google.android.gsf.login '
         'Component: com.google.android.gsf.login...')

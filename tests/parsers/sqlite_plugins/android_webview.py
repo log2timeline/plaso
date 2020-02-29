@@ -36,6 +36,11 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
         'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER=')
     self.assertEqual(event_data.data, expected_data)
 
+    expected_message = (
+        'Path: / '
+        'Secure: False')
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
+
 
 if __name__ == '__main__':
   unittest.main()
