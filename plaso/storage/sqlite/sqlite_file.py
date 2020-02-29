@@ -96,12 +96,14 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
     self.storage_type = storage_type
 
-  def _AddAttributeContainer(self, container_type, container):
+  def _AddAttributeContainer(
+      self, container_type, container, serialized_data=None):
     """Adds an attribute container.
 
     Args:
       container_type (str): attribute container type.
       container (AttributeContainer): attribute container.
+      serialized_data (bytes): serialized form of the container.
 
     Raises:
       IOError: if the attribute container cannot be serialized.
@@ -111,20 +113,26 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     identifier = identifiers.SQLTableIdentifier(
         container_type, container_list.next_sequence_number + 1)
+
+    # This modifies the container, but the identifier is explicitly not to be
+    # serialized, so it's safe to still used the already serialized form of
+    # the container.
     container.SetIdentifier(identifier)
 
-    serialized_data = self._SerializeAttributeContainer(container)
+    if not serialized_data:
+      serialized_data = self._SerializeAttributeContainer(container)
 
     container_list.PushAttributeContainer(serialized_data)
 
     if container_list.data_size > self._maximum_buffer_size:
       self._WriteSerializedAttributeContainerList(container_type)
 
-  def _AddSerializedEvent(self, event):
+  def _AddSerializedEvent(self, event, serialized_data=None):
     """Adds an serialized event.
 
     Args:
       event (EventObject): event.
+      serialized_data (bytes): serialized form of the event.
 
     Raises:
       IOError: if the event cannot be serialized.
@@ -133,9 +141,14 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     identifier = identifiers.SQLTableIdentifier(
         self._CONTAINER_TYPE_EVENT,
         self._serialized_event_heap.number_of_events + 1)
+
+    # This modifies the event, but the identifier is explicitly not to be
+    # serialized, so it's safe to still used the already serialized form of
+    # the container.
     event.SetIdentifier(identifier)
 
-    serialized_data = self._SerializeAttributeContainer(event)
+    if not serialized_data:
+      serialized_data = self._SerializeAttributeContainer(event)
 
     self._serialized_event_heap.PushEvent(event.timestamp, serialized_data)
 
@@ -412,18 +425,23 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self.serialization_format = metadata_values['serialization_format']
     self.storage_type = metadata_values['storage_type']
 
-  def _WriteAttributeContainer(self, attribute_container):
+  def _WriteAttributeContainer(
+      self, attribute_container, serialized_data=None):
     """Writes an attribute container.
 
     The table for the container type must exist.
 
     Args:
       attribute_container (AttributeContainer): attribute container.
+      serialized_data (Optional[bytes]): serialized form of the attribute
+          container.
     """
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       timestamp, serialized_data = self._serialized_event_heap.PopEvent()
     else:
-      serialized_data = self._SerializeAttributeContainer(attribute_container)
+      if not serialized_data:
+        serialized_data = self._SerializeAttributeContainer(
+            attribute_container)
 
     if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
       compressed_data = zlib.compress(serialized_data)
@@ -532,11 +550,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     value = self.storage_type
     self._cursor.execute(query, (key, value))
 
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): event.
+      serialized_data (Optional[bytes]): serialized form of the event.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -558,11 +577,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     self._AddSerializedEvent(event)
 
-  def AddEventTag(self, event_tag):
+  def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -579,6 +599,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     event_tag.event_row_identifier = event_identifier.row_identifier
 
+    # The serialized form of the event tag is not used, as this method modifies
+    # the event tag.
     self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
 
   @classmethod

@@ -65,12 +65,14 @@ class BaseStore(object):
     self._serializer = json_serializer.JSONAttributeContainerSerializer
 
   @abc.abstractmethod
-  def _AddAttributeContainer(self, container_type, container):
+  def _AddAttributeContainer(
+      self, container_type, container, serialized_data=None):
     """Adds an attribute container.
 
     Args:
       container_type (str): attribute container type.
       container (AttributeContainer): attribute container.
+      serialized_data (Optional[bytes]): serialized form of the container.
     """
 
   @abc.abstractmethod
@@ -150,68 +152,82 @@ class BaseStore(object):
       attribute_container (AttributeContainer): attribute container.
     """
 
-  def AddAnalysisReport(self, analysis_report):
+  def AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
     self._RaiseIfNotWritable()
 
     self._AddAttributeContainer(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT, analysis_report)
+        self._CONTAINER_TYPE_ANALYSIS_REPORT, analysis_report,
+        serialized_data=serialized_data)
 
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): event.
+      serialized_data (Optional[bytes]): serialized form of the event.
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT, event)
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EVENT, event, serialized_data=serialized_data)
 
-  def AddEventData(self, event_data):
+  def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
+      serialized_data (Optional[bytes]): serialized form of the event data.
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_DATA, event_data)
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EVENT_DATA, event_data,
+        serialized_data=serialized_data)
 
-  def AddEventSource(self, event_source):
+  def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
     """
     self._RaiseIfNotWritable()
 
     self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EVENT_SOURCE, event_source)
+        self._CONTAINER_TYPE_EVENT_SOURCE, event_source,
+        serialized_data=serialized_data)
 
-  def AddEventTag(self, event_tag):
+  def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
-
-  def AddWarning(self, warning):
-    """Adds a warning.
-
-    Args:
-      warning (ExtractionWarning): warning.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
     self._RaiseIfNotWritable()
 
     self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EXTRACTION_WARNING, warning)
+        self._CONTAINER_TYPE_EVENT_TAG, event_tag,
+        serialized_data=serialized_data)
+
+  def AddWarning(self, warning, serialized_data=None):
+    """Adds a warning.
+
+    Args:
+      warning (ExtractionWarning): warning.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
+    """
+    self._RaiseIfNotWritable()
+
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING, warning,
+        serialized_data=serialized_data)
 
   @abc.abstractmethod
   def Close(self):
@@ -820,51 +836,57 @@ class StorageWriter(object):
     self.number_of_warnings = 0
 
   @abc.abstractmethod
-  def AddAnalysisReport(self, analysis_report):
+  def AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): a report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
 
   @abc.abstractmethod
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event(EventObject): an event.
+      serialized_data (Optional[bytes]): serialized form of the event.
     """
 
   @abc.abstractmethod
-  def AddEventData(self, event_data):
+  def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
+      serialized_data (Optional[bytes]): serialized form of the event data.
     """
 
   @abc.abstractmethod
-  def AddEventSource(self, event_source):
+  def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
     Args:
       event_source (EventSource): an event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
     """
 
   @abc.abstractmethod
-  def AddEventTag(self, event_tag):
+  def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): an event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
 
   @abc.abstractmethod
-  def AddWarning(self, warning):
+  def AddWarning(self, warning, serialized_data=None):
     """Adds an warning.
 
     Args:
       warning (ExtractionWarning): a warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
     """
 
   @abc.abstractmethod
