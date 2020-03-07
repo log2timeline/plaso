@@ -49,6 +49,15 @@ def Main():
     else:
       tool.PrintStorageInformation()
 
+  # Writing to stdout and stderr will raise BrokenPipeError if it
+  # receives a SIGPIPE.
+  except BrokenPipeError:
+    pass
+
+  except (KeyboardInterrupt, errors.UserAbort):
+    logging.warning('Aborted by user.')
+    return False
+
   except errors.BadConfigOption as exception:
     logging.warning(exception)
     return False

@@ -71,6 +71,11 @@ def Main():
   try:
     tool.ProcessStorage()
 
+  # Writing to stdout and stderr will raise BrokenPipeError if it
+  # receives a SIGPIPE.
+  except BrokenPipeError:
+    pass
+
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')
     return False
