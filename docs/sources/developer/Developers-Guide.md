@@ -14,6 +14,7 @@ development environment.
 Start by setting up a development environment:
 
 * [Development environment in a VirtualEnv](Developing-Virtualenv.md)
+* [Development environment in a Docker Container](Developing-Docker.md)
 * [Development environment on Fedora](Developing-Fedora.md)
 * [Development environment on MacOS](Developing-MacOS.md)
 * [Development environment on Ubuntu](Developing-Ubuntu.md)
