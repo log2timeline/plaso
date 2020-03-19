@@ -36,6 +36,7 @@ class WinEvtxRecordEventData(events.EventData):
     strings_parsed ([dict]): parsed information from event strings.
     user_sid (str): user security identifier (SID) stored in the event record.
     xml_string (str): XML representation of the event.
+    xml ([dict]): parsed information from XML string.
   """
 
   DATA_TYPE = 'windows:evtx:record'
@@ -54,6 +55,7 @@ class WinEvtxRecordEventData(events.EventData):
     self.strings_parsed = None
     self.user_sid = None
     self.xml_string = None
+    self.xml = None
 
 
 class WinEvtxParser(interface.FileObjectParser):
@@ -200,6 +202,9 @@ class WinEvtxParser(interface.FileObjectParser):
 
     event_data.xml_string = evtx_record.xml_string
 
+    tree = ElementTree.fromstring(event_data.xml_string)
+    event_data.xml = self._ElementTreeToDict(tree)
+
     return event_data
 
   def _ParseRecord(
@@ -291,6 +296,50 @@ class WinEvtxParser(interface.FileObjectParser):
         parser_mediator.ProduceExtractionWarning((
             'unable to parse recovered event record: {0:d} with error: '
             '{1!s}').format(record_index, exception))
+
+  def _ElementTreeToDict(
+          self, e):
+    t = self._ElementTagName(e)
+    d = {t : {}}
+
+    for c in e.getchildren():
+      ct = self._ElementTagName(c)
+      cd = self._ElementTreeToDict(c)
+
+      if isinstance(cd[ct], dict) and "Name" in cd[ct]:
+        if len(cd[ct]) == 2 and "#text" in cd[ct]:
+          cd = {cd[ct]["Name"] : cd[ct]["#text"]}
+          ct = list(cd.keys())[0]
+        elif len(cd[ct]) == 1:
+          cd = {cd[ct]["Name"] : ""}
+          ct = list(cd.keys())[0]
+
+      if ct in d[t].keys():
+        if not isinstance(d[t][ct], list):
+          d[t][ct] = [d[t][ct]]
+        d[t][ct].append(cd[ct])
+      else:
+        d[t][ct] = cd[ct]
+
+    for k, v in e.attrib.items():
+      if k in d[t].keys():
+        if not isinstance(d[t][k], list):
+          d[t][k] = [d[t][k]]
+        d[t][k].append(v)
+      else:
+        d[t][k] = v
+
+    if e.text and e.text.strip():
+      if d[t]:
+        d[t]["#text"] = e.text
+      else:
+        d[t] = e.text
+
+    return d
+
+  def _ElementTagName(
+          self, element):
+    return element.tag.split("}")[1]
 
   @classmethod
   def GetFormatSpecification(cls):
