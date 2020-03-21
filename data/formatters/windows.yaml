@@ -1,0 +1,88 @@
+# Windows related event formatters.
+
+type: 'conditional'
+data_type: 'windows:registry:amcache'
+message:
+- 'path: {full_path}'
+- 'file_reference: {file_reference}'
+- 'sha1: {sha1}'
+- 'product_name: {product_name}'
+- 'company_name: {company_name}'
+- 'file_version: {file_version}'
+- 'language_code: {language_code}'
+- 'file_size: {file_size}'
+- 'file_description: {file_description}'
+- 'program_identifier: {program_identifier}'
+short_message:
+- 'path: {full_path}'
+short_source: 'AMCACHE'
+source: 'Amcache Registry Entry'
+---
+type: 'conditional'
+data_type: 'windows:registry:amcache:programs'
+message:
+- 'name: {name}'
+- 'version: {version}'
+- 'publisher: {publisher}'
+- 'language_code: {language_code}'
+- 'entry_type: {entry_type}'
+- 'uninstall_key: {uninstall_key}'
+- 'file_paths: {file_paths}'
+- 'product_code: {product_code}'
+- 'package_code: {package_code}'
+- 'msi_product_code: {msi_product_code}'
+- 'msi_package_code: {msi_package_code}'
+- 'files: {files}'
+short_message:
+- 'name: {name}'
+short_source: 'AMCACHEPROGRAM'
+source: 'Amcache Programs Registry Entry'
+---
+type: 'conditional'
+data_type: 'windows:registry:appcompatcache'
+message:
+- '[{key_path}]'
+- 'Cached entry: {entry_index}'
+- 'Path: {path}'
+short_message:
+- 'Path: {path}'
+short_source: 'REG'
+source: 'AppCompatCache Registry Entry'
+---
+type: 'basic'
+data_type: 'windows:registry:bagmru'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : BagMRU'
+---
+type: 'conditional'
+data_type: 'windows:registry:bam'
+message:
+- '{binary_path}'
+- '[{user_sid}]'
+short_message:
+- '{binary_path}'
+short_source: 'REG'
+source: 'Background Activity Moderator Registry Entry'
+---
+type: 'basic'
+data_type: 'windows:registry:timezone'
+message: '[{key_path}] {configuration}'
+short_message: '[{key_path}] {configuration}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:typedurls'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : Typed URLs'
+---
+type: 'basic'
+data_type: 'winrar:history'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : WinRAR History'
