@@ -11,6 +11,7 @@ from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.cli.helpers import profiling
+from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
@@ -68,6 +69,47 @@ class AnalysisPluginOptions(object):
       description = '{0:s} [{1:s}]'.format(description, type_string)
       table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
+
+
+class FormattersOptions(object):
+  """Formatters options mix-in."""
+
+  _FORMATTERS_DIRECTORY_NAME = 'formatters'
+  _FORMATTERS_FILE_NAME = 'formatters.yaml'
+
+  # pylint: disable=no-member
+
+  def _ReadEventFormatters(self):
+    """Reads the event formatters from a formatters file or directory.
+
+    Raises:
+      BadConfigOption: if the event formatters file or directory cannot be read.
+    """
+    formatters_directory = os.path.join(
+        self._data_location, self._FORMATTERS_DIRECTORY_NAME)
+    formatters_file = os.path.join(
+        self._data_location, self._FORMATTERS_FILE_NAME)
+
+    if os.path.isdir(formatters_directory):
+      try:
+        formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+            formatters_directory)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read event formatters from directory: {0:s} with error: '
+            '{1!s}').format(formatters_directory, exception))
+
+    elif os.path.isfile(formatters_file):
+      try:
+        formatters_manager.FormattersManager.ReadFormattersFromFile(
+            formatters_file)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read event formatters from file: {0:s} with error: '
+            '{1!s}').format(formatters_file, exception))
+
+    else:
+      raise errors.BadConfigOption('Missing formatters file and directory.')
 
 
 class HashersOptions(object):

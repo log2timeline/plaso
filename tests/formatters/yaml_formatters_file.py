@@ -24,7 +24,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
 
     formatter = test_formatters_file._ReadFormatterDefinition({
         'type': 'conditional',
-        'data_type': 'fs:stat',
+        'data_type': 'test:fs:stat',
         'message': [
             '{display_name}',
             'Type: {file_entry_type}',
@@ -35,7 +35,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
         'source': 'File system'})
 
     self.assertIsNotNone(formatter)
-    self.assertEqual(formatter.DATA_TYPE, 'fs:stat')
+    self.assertEqual(formatter.DATA_TYPE, 'test:fs:stat')
 
     with self.assertRaises(errors.ParseError):
       test_formatters_file._ReadFormatterDefinition({})
@@ -49,12 +49,12 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(errors.ParseError):
       test_formatters_file._ReadFormatterDefinition({
           'type': 'conditional',
-          'data_type': 'fs:stat'})
+          'data_type': 'test:fs:stat'})
 
     with self.assertRaises(errors.ParseError):
       test_formatters_file._ReadFormatterDefinition({
           'type': 'conditional',
-          'data_type': 'fs:stat',
+          'data_type': 'test:fs:stat',
           'message': [
               '{display_name}',
               'Type: {file_entry_type}',
@@ -63,7 +63,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(errors.ParseError):
       test_formatters_file._ReadFormatterDefinition({
           'type': 'conditional',
-          'data_type': 'fs:stat',
+          'data_type': 'test:fs:stat',
           'message': [
               '{display_name}',
               'Type: {file_entry_type}',
@@ -74,7 +74,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(errors.ParseError):
       test_formatters_file._ReadFormatterDefinition({
           'type': 'conditional',
-          'data_type': 'fs:stat',
+          'data_type': 'test:fs:stat',
           'message': [
               '{display_name}',
               'Type: {file_entry_type}',
@@ -109,7 +109,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(formatters), 1)
 
-    self.assertEqual(formatters[0].DATA_TYPE, 'fs:stat')
+    self.assertEqual(formatters[0].DATA_TYPE, 'test:fs:stat')
 
 
 if __name__ == '__main__':

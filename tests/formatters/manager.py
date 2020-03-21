@@ -20,6 +20,8 @@ from tests.formatters import test_lib
 class FormattersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the event formatters manager."""
 
+  # pylint: disable=protected-access
+
   _TEST_EVENTS = [
       {'data_type': 'test:event',
        'filename': 'c:/Users/joesmith/NTUSER.DAT',
@@ -88,9 +90,62 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
        'username': 'johndoe'}]
 
+  def testReadFormattersFile(self):
+    """Tests the _ReadFormattersFile function."""
+    test_file_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    manager.FormattersManager.Reset()
+    number_of_formatters = len(manager.FormattersManager._formatter_classes)
+
+    manager.FormattersManager._ReadFormattersFile(test_file_path)
+    self.assertEqual(
+        len(manager.FormattersManager._formatter_classes),
+        number_of_formatters + 1)
+
+    manager.FormattersManager.Reset()
+    self.assertEqual(
+        len(manager.FormattersManager._formatter_classes),
+        number_of_formatters)
+
+  def testReadFormattersFromDirectory(self):
+    """Tests the ReadFormattersFromDirectory function."""
+    test_directory_path = self._GetTestFilePath(['formatters'])
+    self._SkipIfPathNotExists(test_directory_path)
+
+    manager.FormattersManager.Reset()
+    number_of_formatters = len(manager.FormattersManager._formatter_classes)
+
+    manager.FormattersManager.ReadFormattersFromDirectory(test_directory_path)
+    self.assertEqual(
+        len(manager.FormattersManager._formatter_classes),
+        number_of_formatters + 1)
+
+    manager.FormattersManager.Reset()
+    self.assertEqual(
+        len(manager.FormattersManager._formatter_classes),
+        number_of_formatters)
+
+  def testReadFormattersFromFile(self):
+    """Tests the ReadFormattersFromFile function."""
+    test_file_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    manager.FormattersManager.Reset()
+    number_of_formatters = len(manager.FormattersManager._formatter_classes)
+
+    manager.FormattersManager.ReadFormattersFromFile(test_file_path)
+    self.assertEqual(
+        len(manager.FormattersManager._formatter_classes),
+        number_of_formatters + 1)
+
+    manager.FormattersManager.Reset()
+    self.assertEqual(
+        len(manager.FormattersManager._formatter_classes),
+        number_of_formatters)
+
   def testFormatterRegistration(self):
     """Tests the RegisterFormatter and DeregisterFormatter functions."""
-    # pylint: disable=protected-access
     number_of_formatters = len(manager.FormattersManager._formatter_classes)
 
     manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)

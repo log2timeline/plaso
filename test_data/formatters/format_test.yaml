@@ -1,7 +1,7 @@
 # YAML-based formatters file for testing format features.
 
 type: 'conditional'
-data_type: 'fs:stat'
+data_type: 'test:fs:stat'
 message:
 - '{display_name}'
 - 'Type: {file_entry_type}'
