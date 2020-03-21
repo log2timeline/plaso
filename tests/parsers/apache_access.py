@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import apache_access as _  # pylint: disable=unused-import
 from plaso.parsers import apache_access
 
 from tests.parsers import test_lib

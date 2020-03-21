@@ -49,6 +49,12 @@ class BashHistoryTest(test_lib.ParserTestCase):
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.command, '/usr/local/bin/splunk -p 8080')
 
+    expected_message = 'Command executed: /usr/local/bin/splunk -p 8080'
+    expected_short_message = '/usr/local/bin/splunk -p 8080'
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
   def testParsingExtractionDesync(self):
     """Tests that the parser correctly handles a desynchronized file.
 
@@ -67,8 +73,6 @@ class BashHistoryTest(test_lib.ParserTestCase):
     parser = bash_history.BashHistoryParser()
     storage_writer = self._ParseFile(['bash_history'], parser)
     self._TestEventsFromFile(storage_writer)
-
-    # TODO: add test for message string
 
 
 if __name__ == '__main__':
