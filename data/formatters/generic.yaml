@@ -105,13 +105,6 @@ short_message:
 short_source: 'LOG'
 source: 'File History Namespace'
 ---
-type: 'basic'
-data_type: 'macosx:application_usage'
-message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
-short_message: '{application} ({count} time(s))'
-short_source: 'LOG'
-source: 'Application Usage'
----
 type: 'conditional'
 data_type: 'p2p:bittorrent:transmission'
 message:

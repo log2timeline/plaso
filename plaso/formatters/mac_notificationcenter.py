@@ -7,6 +7,7 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
 
+
 class MacNotificationCenterFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MacOS Notification Center event. """
 
@@ -58,5 +59,6 @@ class MacNotificationCenterFormatter(interface.ConditionalEventFormatter):
           self._BOOLEAN_PRETTY_PRINT.get(presented, 'UNKNOWN'))
 
     return self._ConditionalFormatMessages(event_values)
+
 
 manager.FormattersManager.RegisterFormatter(MacNotificationCenterFormatter)

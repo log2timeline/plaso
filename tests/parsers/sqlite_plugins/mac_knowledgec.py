@@ -16,7 +16,7 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacOS KnowledgeC database."""
 
   def testProcessHighSierra(self):
-    """Tests the Process function on a MacOS High Sierra database."""
+    """Tests the Process function on a MacOS 10.13 database."""
     plugin = mac_knowledgec.MacKnowledgeCPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_knowledgec-10.13.db'], plugin)
@@ -40,7 +40,7 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
         event_data, expected_message, expected_short_message)
 
   def testProcessMojave(self):
-    """Tests the Process function on a MacOS High Sierra database."""
+    """Tests the Process function on a MacOS 10.14 database."""
     plugin = mac_knowledgec.MacKnowledgeCPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_knowledgec-10.14.db'], plugin)
