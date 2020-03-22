@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import winfirewall as _  # pylint: disable=unused-import
 from plaso.parsers import winfirewall
 
 from tests.parsers import test_lib

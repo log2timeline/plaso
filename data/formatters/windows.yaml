@@ -17,6 +17,66 @@ short_source: 'LOG'
 source: 'System'
 ---
 type: 'conditional'
+data_type: 'windows:distributed_link_tracking:creation'
+message:
+- '{uuid}'
+- 'MAC address: {mac_address}'
+- 'Origin: {origin}'
+short_message:
+- '{uuid}'
+- 'Origin: {origin}'
+short_source: 'LOG'
+source: 'System'
+---
+# TODO: Add more "elegant" formatting, as in transform ICMP code/type into
+# a more human readable format as well as translating the additional info
+# column (meaning may depend on action field).
+type: 'conditional'
+data_type: 'windows:firewall:log_entry'
+message:
+- '{action}'
+- '['
+- '{protocol}'
+- '{path}'
+- ']'
+- 'From: {source_ip}'
+- ':{source_port}'
+- '>'
+- '{dest_ip}'
+- ':{dest_port}'
+- 'Size (bytes): {size}'
+- 'Flags [{flags}]'
+- 'TCP Seq Number: {tcp_seq}'
+- 'TCP ACK Number: {tcp_ack}'
+- 'TCP Window Size (bytes): {tcp_win}'
+- 'ICMP type: {icmp_type}'
+- 'ICMP code: {icmp_code}'
+- 'Additional info: {info}'
+short_message:
+- '{action}'
+- '[{protocol}]'
+- '{source_ip}'
+- ': {source_port}'
+- '>'
+- '{dest_ip}'
+- ': {dest_port}'
+short_source: 'LOG'
+source: 'Windows Firewall Log'
+---
+type: 'conditional'
+data_type: 'windows:registry:explorer:programcache'
+message:
+- 'Key: {key_path}'
+- 'Value: {value_name}'
+- 'Entries: [{entries}]'
+short_message:
+- 'Key: {key_path}'
+- 'Value: {value_name}'
+- 'Entries: [{entries}]'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
 data_type: 'windows:registry:amcache'
 message:
 - 'path: {full_path}'
@@ -133,6 +193,44 @@ short_message:
 short_source: 'REG'
 source: 'Registry Key'
 ---
+type: 'basic'
+data_type: 'windows:registry:mrulist'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : MRUList'
+---
+type: 'basic'
+data_type: 'windows:registry:mrulistex'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : MRUListEx'
+---
+type: 'basic'
+data_type: 'windows:registry:msie_zone_settings'
+message: '[{key_path}] {settings}'
+short_message: '[{key_path}] {settings}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:network'
+message:
+- 'SSID: {ssid}'
+- 'Description: {description}'
+- 'Connection Type: {connection_type}'
+- 'Default Gateway Mac: {default_gateway_mac}'
+- 'DNS Suffix: {dns_suffix}'
+short_message:
+- 'SSID: {ssid}'
+- 'Description: {description}'
+- 'Connection Type: {connection_type}'
+- 'Default Gateway Mac: {default_gateway_mac}'
+- 'DNS Suffix: {dns_suffix}'
+short_source: 'LOG'
+source: 'System: Network Connection'
+---
 type: 'conditional'
 data_type: 'windows:registry:network_drive'
 message:
@@ -197,6 +295,33 @@ short_message:
 short_source: 'REG'
 source: 'Registry Key: User Account Information'
 ---
+type: 'conditional'
+data_type: 'windows:registry:shutdown'
+message:
+- '[{key_path}]'
+- 'Description: {value_name}'
+short_message:
+- '{value_name}'
+short_source: 'REG'
+source: 'Registry Key Shutdown Entry'
+---
+type: 'conditional'
+data_type: 'windows:registry:mstsc:connection'
+message:
+- '[{key_path}]'
+- 'Username hint: {username}'
+short_message:
+- '[{key_path}]'
+short_source: 'REG'
+source: 'Registry Key : RDP Connection'
+---
+type: 'basic'
+data_type: 'windows:registry:mstsc:mru'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : RDP Connection'
+---
 type: 'basic'
 data_type: 'windows:registry:timezone'
 message: '[{key_path}] {configuration}'
@@ -252,6 +377,21 @@ short_source: 'REG'
 source: 'Registry Key : USBStor Entries'
 ---
 type: 'conditional'
+data_type: 'windows:registry:userassist'
+message:
+- '[{key_path}]'
+- 'UserAssist entry: {entry_index}'
+- 'Value name: {value_name}'
+- 'Count: {number_of_executions}'
+- 'Application focus count: {application_focus_count}'
+- 'Application focus duration: {application_focus_duration}'
+short_message:
+- '{value_name}'
+- 'Count: {number_of_executions}'
+short_source: 'REG'
+source: 'Registry Key: UserAssist'
+---
+type: 'conditional'
 data_type: 'windows:registry:winlogon'
 message:
 - '[{key_path}]'
@@ -274,3 +414,68 @@ message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
 short_source: 'REG'
 source: 'Registry Key : WinRAR History'
+---
+type: 'conditional'
+data_type: 'windows:srum:application_usage'
+message:
+- 'Application: {application}'
+short_message:
+- '{application}'
+short_source: 'LOG'
+source: 'System Resource Usage Monitor'
+---
+type: 'conditional'
+data_type: 'windows:srum:network_usage'
+message:
+- 'Application: {application}'
+- 'Bytes received: {bytes_received}'
+- 'Bytes sent: {bytes_sent}'
+- 'Interface LUID: {interface_luid}'
+- 'User identifier: {user_identifier}'
+short_message:
+- '{application}'
+short_source: 'LOG'
+source: 'System Resource Usage Monitor'
+---
+type: 'conditional'
+data_type: 'windows:srum:network_connectivity'
+message:
+- 'Application: {application}'
+short_message:
+- '{application}'
+short_source: 'LOG'
+source: 'System Resource Usage Monitor'
+---
+type: 'conditional'
+data_type: 'windows:timeline:generic'
+message:
+- 'Application Display Name: {application_display_name}'
+- 'Package Identifier: {package_identifier}'
+- 'Description: {description}'
+short_message:
+- '{package_identifier}'
+short_source: 'Windows Timeline'
+source: 'Windows Timeline - Generic'
+---
+type: 'conditional'
+data_type: 'windows:timeline:user_engaged'
+message:
+- 'Package Identifier: {package_identifier}'
+- 'Active Duration (seconds): {active_duration_seconds}'
+- 'Reporting App: {reporting_app}'
+short_message:
+- '{package_identifier}'
+short_source: 'Windows Timeline'
+source: 'Windows Timeline - User Engaged'
+---
+type: 'conditional'
+data_type: 'windows:volume:creation'
+message:
+- '{device_path}'
+- 'Serial number: 0x{serial_number:08X}'
+- 'Origin: {origin}'
+short_message:
+- '{device_path}'
+- 'Origin: {origin}'
+short_source: 'LOG'
+source: 'System'
