@@ -11,30 +11,6 @@ from plaso.formatters import chrome
 from tests.formatters import test_lib
 
 
-class ChromeFileDownloadFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Chrome file download event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = chrome.ChromeFileDownloadFormatter()
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = chrome.ChromeFileDownloadFormatter()
-
-    expected_attribute_names = [
-        'url',
-        'full_path',
-        'received_bytes',
-        'total_bytes']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
-
-
 class ChromePageVisitedFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the Chrome page visited event formatter."""
 

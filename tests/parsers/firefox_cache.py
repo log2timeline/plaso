@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import firefox_cache as _  # pylint: disable=unused-import
 from plaso.lib import errors
 from plaso.parsers import firefox_cache
 

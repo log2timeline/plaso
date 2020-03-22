@@ -8,53 +8,6 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class FirefoxBookmarkAnnotationFormatter(interface.ConditionalEventFormatter):
-  """The Firefox bookmark annotation event formatter."""
-
-  DATA_TYPE = 'firefox:places:bookmark_annotation'
-
-  FORMAT_STRING_PIECES = [
-      'Bookmark Annotation: [{content}]',
-      'to bookmark [{title}]',
-      '({url})']
-
-  FORMAT_STRING_SHORT_PIECES = ['Bookmark Annotation: {title}']
-
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
-
-class FirefoxBookmarkFolderFormatter(interface.EventFormatter):
-  """The Firefox bookmark folder event formatter."""
-
-  DATA_TYPE = 'firefox:places:bookmark_folder'
-
-  FORMAT_STRING = '{title}'
-
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
-
-class FirefoxBookmarkFormatter(interface.ConditionalEventFormatter):
-  """The Firefox URL bookmark event formatter."""
-
-  DATA_TYPE = 'firefox:places:bookmark'
-
-  FORMAT_STRING_PIECES = [
-      'Bookmark {type}',
-      '{title}',
-      '({url})',
-      '[{places_title}]',
-      'visit count {visit_count}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Bookmarked {title}',
-      '({url})']
-
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
-
 class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
   """The Firefox page visited event formatter."""
 
@@ -127,21 +80,4 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-class FirefoxDowloadFormatter(interface.EventFormatter):
-  """The Firefox download event formatter."""
-
-  DATA_TYPE = 'firefox:downloads:download'
-
-  FORMAT_STRING = (
-      '{url} ({full_path}). Received: {received_bytes} bytes '
-      'out of: {total_bytes} bytes.')
-  FORMAT_STRING_SHORT = '{full_path} downloaded ({received_bytes} bytes)'
-
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
-
-manager.FormattersManager.RegisterFormatters([
-    FirefoxBookmarkAnnotationFormatter, FirefoxBookmarkFolderFormatter,
-    FirefoxBookmarkFormatter, FirefoxPageVisitFormatter,
-    FirefoxDowloadFormatter])
+manager.FormattersManager.RegisterFormatter(FirefoxPageVisitFormatter)

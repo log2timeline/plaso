@@ -1,0 +1,147 @@
+# Web browser related event formatters.
+
+type: 'conditional'
+data_type: 'chrome:autofill:entry'
+message:
+- 'Form field name: {field_name}'
+- 'Entered value: {value}'
+- 'Times used: {usage_count}'
+short_message:
+- '{field_name}:'
+- '{value}'
+- '({usage_count})'
+short_source: 'WEBHIST'
+source: 'Chrome Autofill'
+---
+type: 'conditional'
+data_type: 'chrome:cache:entry'
+message:
+- 'Original URL: {original_url}'
+short_message:
+- 'Original URL: {original_url}'
+short_source: 'WEBHIST'
+source: 'Chrome Cache'
+---
+type: 'conditional'
+data_type: 'chrome:cookie:entry'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Flags:'
+- '[HTTP only] = {httponly}'
+- '[Persistent] = {persistent}'
+short_message:
+- '{host}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Chrome Cookies'
+---
+type: 'conditional'
+data_type: 'chrome:history:file_downloaded'
+message:
+- '{url}'
+- '({full_path}).'
+- 'Received: {received_bytes} bytes'
+- 'out of: {total_bytes} bytes.'
+short_message:
+- '{full_path} downloaded'
+- '({received_bytes} bytes)'
+short_source: 'WEBHIST'
+source: 'Chrome History'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:clear_history'
+message:
+- '{message}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'Chrome History Deletion'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:extensions_autoupdater'
+message:
+- '{message}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'Chrome Extensions Autoupdater'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:extension_installation'
+message:
+- 'CRX ID: {extension_id}'
+- 'CRX Name: {extension_name}'
+- 'Path: {path}'
+short_message:
+- '{extension_id}'
+- '{path}'
+short_source: 'LOG'
+source: 'Chrome Extension Installation'
+---
+type: 'conditional'
+data_type: 'firefox:cache:record'
+message:
+- 'Fetched {fetch_count} time(s)'
+- '[{response_code}]'
+- '{request_method}'
+- '"{url}"'
+short_message:
+- '[{response_code}]'
+- '{request_method}'
+- '"{url}"'
+short_source: 'WEBHIST'
+source: 'Firefox Cache'
+---
+type: 'conditional'
+data_type: 'firefox:cookie:entry'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Flags:'
+- '[HTTP only]: {httponly}'
+- '(GA analysis: {ga_data})'
+short_message:
+- '{host}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Firefox Cache'
+---
+type: 'conditional'
+data_type: 'firefox:places:bookmark'
+message:
+- 'Bookmark {type}'
+- '{title}'
+- '({url})'
+- '[{places_title}]'
+- 'visit count {visit_count}'
+short_message:
+- 'Bookmarked {title}'
+- '({url})'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'conditional'
+data_type: 'firefox:places:bookmark_annotation'
+message:
+- 'Bookmark Annotation: [{content}]'
+- 'to bookmark [{title}]'
+- '({url})'
+short_message:
+- 'Bookmark Annotation: {title}'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'basic'
+data_type: 'firefox:places:bookmark_folder'
+message: '{title}'
+short_message: '{title}'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'basic'
+data_type: 'firefox:downloads:download'
+message: '{url} ({full_path}). Received: {received_bytes} bytes out of: {total_bytes} bytes.'
+short_message: '{full_path} downloaded ({received_bytes} bytes)'
+short_source: 'WEBHIST'
+source: 'Firefox History'
