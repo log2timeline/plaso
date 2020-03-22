@@ -10,7 +10,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import outlook
 
 from tests.parsers.winreg_plugins import test_lib
