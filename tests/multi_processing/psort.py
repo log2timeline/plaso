@@ -497,10 +497,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_writer = cli_test_lib.TestBinaryOutputWriter()
 
-    formatters_file_path = os.path.join(self._DATA_PATH, 'formatters.yaml')
     formatters_manager.FormattersManager.Reset()
-    formatters_manager.FormattersManager.ReadFormattersFromFile(
-        formatters_file_path)
+    formatters_directory_path = os.path.join(self._DATA_PATH, 'formatters')
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     formatter_mediator = formatters_mediator.FormatterMediator()
     formatter_mediator.SetPreferredLanguageIdentifier('en-US')

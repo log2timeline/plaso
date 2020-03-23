@@ -205,9 +205,9 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       expected_message (str): expected message string.
       expected_short_message (str): expected short message string.
     """
-    formatters_file_path = os.path.join(self._DATA_PATH, 'formatters.yaml')
-    formatters_manager.FormattersManager.ReadFormattersFromFile(
-        formatters_file_path)
+    formatters_directory_path = os.path.join(self._DATA_PATH, 'formatters')
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     formatter_mediator = formatters_mediator.FormatterMediator(
         data_location=self._DATA_PATH)
