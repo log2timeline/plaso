@@ -86,6 +86,7 @@ class RedisStore(interface.BaseStore):
       container_type (Type): container type attribute of the container being
           added.
       container (AttributeContainer): unserialized attribute container.
+      serialized_data (Optional[bytes]): serialized form of the container.
     """
     self._RaiseIfNotWritable()
 
