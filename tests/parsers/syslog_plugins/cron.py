@@ -45,6 +45,15 @@ class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
     self.assertEqual(event_data.command, '/sbin/status.mycheck')
     self.assertEqual(event_data.pid, 31067)
 
+    expected_message = (
+        'Cron ran: /sbin/status.mycheck '
+        'for user: root '
+        'pid: 31067')
+    expected_short_message = '(root) CMD (/sbin/status.mycheck)'
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
 
 if __name__ == '__main__':
   unittest.main()

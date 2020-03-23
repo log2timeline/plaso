@@ -30,6 +30,7 @@ class YAMLFormattersFile(object):
     "conditional";
   * data_type, defines the corresponding event data type;
   * message, defines a list of message string pieces;
+  * separator, defines the message and short message string pieces separator;
   * short_message, defines the short message string pieces;
   * short_source, defines the short source;
   * source, defines the source.
@@ -38,6 +39,7 @@ class YAMLFormattersFile(object):
   _SUPPORTED_KEYS = frozenset([
       'data_type',
       'message',
+      'separator',
       'short_message',
       'short_source',
       'source',
@@ -111,6 +113,8 @@ class YAMLFormattersFile(object):
       # TODO: check if message and short_message are list of strings
       formatter.FORMAT_STRING_PIECES = message
       formatter.FORMAT_STRING_SHORT_PIECES = short_message
+      formatter.FORMAT_STRING_SEPARATOR = formatter_definition_values.get(
+          'separator', formatter.FORMAT_STRING_SEPARATOR)
 
     formatter.DATA_TYPE = data_type
     formatter.SOURCE_LONG = source

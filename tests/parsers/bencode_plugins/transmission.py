@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import bencode_parser as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import bencode_parser
 
@@ -54,8 +53,7 @@ class BencodeTest(test_lib.BencodePluginTestCase):
         'Saved to /Users/brian/Downloads; '
         'Minutes seeded: 4')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

@@ -95,12 +95,89 @@ short_message: '{command}'
 short_source: 'LOG'
 source: 'Bash History'
 ---
+type: 'conditional'
+data_type: 'chrome:autofill:entry'
+message:
+- 'Form field name: {field_name}'
+- 'Entered value: {value}'
+- 'Times used: {usage_count}'
+short_message:
+- '{field_name}:'
+- '{value}'
+- '({usage_count})'
+short_source: 'WEBHIST'
+source: 'Chrome Autofill'
+---
+type: 'conditional'
+data_type: 'chrome:cookie:entry'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Flags:'
+- '[HTTP only] = {httponly}'
+- '[Persistent] = {persistent}'
+short_message:
+- '{host}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Chrome Cookies'
+---
+type: 'conditional'
+data_type: 'file_history:namespace:event'
+message:
+- 'Filename: {original_filename}'
+- 'Identifier: {identifier}'
+- 'Parent Identifier: {parent_identifier}'
+- 'Attributes: {file_attribute}'
+- 'USN number: {usn_number}'
+short_message:
+- 'Filename: {original_filename}'
+short_source: 'LOG'
+source: 'File History Namespace'
+---
 type: 'basic'
 data_type: 'macosx:application_usage'
 message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
 short_message: '{application} ({count} time(s))'
 short_source: 'LOG'
 source: 'Application Usage'
+---
+type: 'conditional'
+data_type: 'p2p:bittorrent:transmission'
+message:
+- 'Saved to {destination}'
+- 'Minutes seeded: {seedtime}'
+separator: '; '
+short_message:
+- 'Saved to {destination}'
+- 'Minutes seeded: {seedtime}'
+short_source: 'TORRENT'
+source: 'Transmission Active Torrents'
+---
+type: 'conditional'
+data_type: 'p2p:bittorrent:utorrent'
+message:
+- 'Torrent {caption}'
+- 'Saved to {path}'
+- 'Minutes seeded: {seedtime}'
+separator: '; '
+short_message:
+- 'Torrent {caption}'
+- 'Saved to {path}'
+- 'Minutes seeded: {seedtime}'
+short_source: 'TORRENT'
+source: 'uTorrent Active Torrents'
+---
+type: 'conditional'
+data_type: 'syslog:cron:task_run'
+message:
+- 'Cron ran: {command}'
+- 'for user: {username}'
+- 'pid: {pid}'
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'Cron log'
 ---
 type: 'conditional'
 data_type: 'windows:registry:amcache'
