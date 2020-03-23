@@ -141,6 +141,9 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
   def testFormatSource(self):
     """Tests the _FormatSource function."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        TestEventFormatter)
+
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
@@ -149,8 +152,14 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     source_string = dynamic_fields_helper._FormatSource(event, event_data)
     self.assertEqual(source_string, 'Syslog')
 
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        TestEventFormatter)
+
   def testFormatSourceShort(self):
     """Tests the _FormatSourceShort function."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        TestEventFormatter)
+
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
@@ -159,6 +168,9 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     source_short_string = dynamic_fields_helper._FormatSourceShort(
         event, event_data)
     self.assertEqual(source_short_string, 'LOG')
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        TestEventFormatter)
 
   def testFormatTag(self):
     """Tests the _FormatTag function."""

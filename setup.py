@@ -228,7 +228,9 @@ setup(
     scripts=glob.glob(os.path.join('tools', '[a-z]*.py')),
     data_files=[
         ('share/plaso', glob.glob(
-            os.path.join('data', '*'))),
+            os.path.join('data', '*.*'))),
+        ('share/plaso/formatters', glob.glob(
+            os.path.join('data', 'formatters', '*.yaml'))),
         ('share/doc/plaso', [
             'ACKNOWLEDGEMENTS', 'AUTHORS', 'LICENSE', 'README']),
     ],

@@ -3,6 +3,9 @@
 
 from __future__ import unicode_literals
 
+import glob
+import os
+
 from plaso.formatters import default
 from plaso.formatters import logger
 from plaso.lib import definitions
@@ -16,8 +19,31 @@ class FormattersManager(object):
   _formatter_objects = {}
   _unformatted_attributes = {}
 
-  # Work-around to prevent the tests re-reading the formatters file.
-  _file_was_read = False
+  # Keep track of the data types of the formatters that were read from
+  # file to prevent re-reading the formatter files during unit tests and
+  # so that the formatters manager can be reset to hardcoded formatters.
+  _formatters_from_file = []
+
+  @classmethod
+  def _ReadFormattersFile(cls, path):
+    """Reads a formatters configuration file.
+
+    Args:
+      path (str): path of file that contains the formatters configuration.
+
+    Raises:
+      KeyError: if formatter class is already set for the corresponding
+          data type.
+    """
+    formatters_file = yaml_formatters_file.YAMLFormattersFile()
+    for formatter in formatters_file.ReadFromFile(path):
+      # TODO: refactor RegisterFormatter to only use formatter objects.
+      cls.RegisterFormatter(formatter)
+
+      data_type = formatter.DATA_TYPE.lower()
+      cls._formatter_objects[data_type] = formatter
+
+      cls._formatters_from_file.append(data_type)
 
   @classmethod
   def DeregisterFormatter(cls, formatter_class):
@@ -37,6 +63,9 @@ class FormattersManager(object):
           formatter_class.DATA_TYPE))
 
     del cls._formatter_classes[formatter_data_type]
+
+    if formatter_data_type in cls._formatter_objects:
+      del cls._formatter_objects[formatter_data_type]
 
   @classmethod
   def GetFormatterObject(cls, data_type):
@@ -128,6 +157,22 @@ class FormattersManager(object):
     return unformatted_attributes
 
   @classmethod
+  def ReadFormattersFromDirectory(cls, path):
+    """Reads formatters from a directory.
+
+    Args:
+      path (str): path of directory that contains the formatters configuration
+          files.
+
+    Raises:
+      KeyError: if formatter class is already set for the corresponding
+          data type.
+    """
+    if not cls._formatters_from_file:
+      for formatters_file_path in glob.glob(os.path.join(path, '*.yaml')):
+        cls._ReadFormattersFile(formatters_file_path)
+
+  @classmethod
   def ReadFormattersFromFile(cls, path):
     """Reads formatters from a file.
 
@@ -138,16 +183,8 @@ class FormattersManager(object):
       KeyError: if formatter class is already set for the corresponding
           data type.
     """
-    if not cls._file_was_read:
-      formatters_file = yaml_formatters_file.YAMLFormattersFile()
-      for formatter in formatters_file.ReadFromFile(path):
-        # TODO: refactor RegisterFormatter to only use formatter objects.
-        cls.RegisterFormatter(formatter)
-
-        data_type = formatter.DATA_TYPE.lower()
-        cls._formatter_objects[data_type] = formatter
-
-      cls._file_was_read = True
+    if not cls._formatters_from_file:
+      cls._ReadFormattersFile(path)
 
   @classmethod
   def RegisterFormatter(cls, formatter_class):
@@ -184,3 +221,15 @@ class FormattersManager(object):
     """
     for formatter_class in formatter_classes:
       cls.RegisterFormatter(formatter_class)
+
+  @classmethod
+  def Reset(cls):
+    """Resets the manager to the hardcoded formatter classes.
+
+    This method is used during unit testing.
+    """
+    for data_type in cls._formatters_from_file:
+      formatter_class = cls._formatter_objects[data_type]
+      cls.DeregisterFormatter(formatter_class)
+
+    cls._formatters_from_file = []
