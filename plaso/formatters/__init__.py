@@ -81,11 +81,9 @@ from plaso.formatters import tango_android
 from plaso.formatters import task_scheduler
 from plaso.formatters import terminal_server
 from plaso.formatters import text
-from plaso.formatters import timezone
 from plaso.formatters import trendmicroav
 from plaso.formatters import twitter_android
 from plaso.formatters import twitter_ios
-from plaso.formatters import typedurls
 from plaso.formatters import usb
 from plaso.formatters import usbstor
 from plaso.formatters import userassist
@@ -102,10 +100,8 @@ from plaso.formatters import winjob
 from plaso.formatters import winlnk
 from plaso.formatters import winlogon
 from plaso.formatters import winprefetch
-from plaso.formatters import winrar
 from plaso.formatters import winreg
 from plaso.formatters import winrestore
 from plaso.formatters import xchatlog
 from plaso.formatters import xchatscrollback
-from plaso.formatters import zeitgeist
 from plaso.formatters import zsh_extended_history

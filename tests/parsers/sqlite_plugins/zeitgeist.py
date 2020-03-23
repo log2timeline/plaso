@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import zeitgeist as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import zeitgeist
 
 from tests.parsers.sqlite_plugins import test_lib
@@ -35,8 +34,7 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_data.subject_uri, 'application://rhythmbox.desktop')
 
     expected_message = 'application://rhythmbox.desktop'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

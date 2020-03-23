@@ -8,52 +8,6 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class ChromePreferencesClearHistoryEventFormatter(
-    interface.ConditionalEventFormatter):
-  """Formatter for Chrome history clearing events."""
-
-  DATA_TYPE = 'chrome:preferences:clear_history'
-
-  FORMAT_STRING_PIECES = ['{message}']
-
-  FORMAT_STRING_SHORT_PIECES = ['{message}']
-
-  SOURCE_LONG = 'Chrome History Deletion'
-  SOURCE_SHORT = 'LOG'
-
-
-class ChromeExtensionsAutoupdaterEvent(interface.ConditionalEventFormatter):
-  """Formatter for Chrome Extensions Autoupdater events."""
-
-  DATA_TYPE = 'chrome:preferences:extensions_autoupdater'
-
-  FORMAT_STRING_PIECES = ['{message}']
-
-  FORMAT_STRING_SHORT_PIECES = ['{message}']
-
-  SOURCE_LONG = 'Chrome Extensions Autoupdater'
-  SOURCE_SHORT = 'LOG'
-
-
-class ChromeExtensionInstallationEventFormatter(
-    interface.ConditionalEventFormatter):
-  """Formatter for a Chrome extension installation event."""
-
-  DATA_TYPE = 'chrome:preferences:extension_installation'
-
-  FORMAT_STRING_PIECES = [
-      'CRX ID: {extension_id}',
-      'CRX Name: {extension_name}',
-      'Path: {path}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      '{extension_id}',
-      '{path}']
-
-  SOURCE_LONG = 'Chrome Extension Installation'
-  SOURCE_SHORT = 'LOG'
-
-
 class ChromeContentSettingsExceptionsFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Chrome content_settings exceptions event."""
@@ -122,8 +76,5 @@ class ChromeContentSettingsExceptionsFormatter(
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatters([
-    ChromeContentSettingsExceptionsFormatter,
-    ChromeExtensionsAutoupdaterEvent,
-    ChromeExtensionInstallationEventFormatter,
-    ChromePreferencesClearHistoryEventFormatter])
+manager.FormattersManager.RegisterFormatter(
+    ChromeContentSettingsExceptionsFormatter)

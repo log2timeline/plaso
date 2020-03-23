@@ -11,33 +11,28 @@ from plaso.formatters import chrome_preferences
 from tests.formatters import test_lib
 
 
-class ChromeExtensionInstallationEventFormatterTest(
+class ChromeContentSettingsExceptionsFormatter(
     test_lib.EventFormatterTestCase):
   """Tests for the Chrome extension installation event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = (
-        chrome_preferences.ChromeExtensionInstallationEventFormatter())
+        chrome_preferences.ChromeContentSettingsExceptionsFormatter())
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = (
-        chrome_preferences.ChromeExtensionInstallationEventFormatter())
+        chrome_preferences.ChromeContentSettingsExceptionsFormatter())
 
     expected_attribute_names = [
-        'extension_id', 'extension_name', 'path']
+        'permission', 'subject']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
 
   # TODO: add test for GetMessages.
-
-
-# TODO: add tests for ChromeExtensionsAutoupdaterEvent
-# TODO: add tests for ChromeExtensionInstallationEventFormatter
-# TODO: add tests for ChromeContentSettingsExceptionsFormatter
 
 
 if __name__ == '__main__':
