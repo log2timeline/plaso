@@ -10,8 +10,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.parsers.winreg_plugins import timezone as winreg_timezone
+from plaso.parsers.winreg_plugins import timezone
 
 from tests.parsers.winreg_plugins import test_lib
 
@@ -107,7 +106,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = winreg_timezone.WinRegTimezonePlugin()
+    plugin = timezone.WinRegTimezonePlugin()
 
     key_path = (
         'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
@@ -124,7 +123,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     time_string = '2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin = winreg_timezone.WinRegTimezonePlugin()
+    plugin = timezone.WinRegTimezonePlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
@@ -164,7 +163,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = winreg_timezone.WinRegTimezonePlugin()
+    plugin = timezone.WinRegTimezonePlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 

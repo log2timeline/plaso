@@ -123,6 +123,36 @@ short_source: 'WEBHIST'
 source: 'Chrome Cookies'
 ---
 type: 'conditional'
+data_type: 'chrome:preferences:clear_history'
+message:
+- '{message}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'Chrome History Deletion'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:extensions_autoupdater'
+message:
+- '{message}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'Chrome Extensions Autoupdater'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:extension_installation'
+message:
+- 'CRX ID: {extension_id}'
+- 'CRX Name: {extension_name}'
+- 'Path: {path}'
+short_message:
+- '{extension_id}'
+- '{path}'
+short_source: 'LOG'
+source: 'Chrome Extension Installation'
+---
+type: 'conditional'
 data_type: 'file_history:namespace:event'
 message:
 - 'Filename: {original_filename}'
@@ -244,3 +274,31 @@ short_message:
 - '{binary_path}'
 short_source: 'REG'
 source: 'Background Activity Moderator Registry Entry'
+---
+type: 'basic'
+data_type: 'windows:registry:timezone'
+message: '[{key_path}] {configuration}'
+short_message: '[{key_path}] {configuration}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:typedurls'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : Typed URLs'
+---
+type: 'basic'
+data_type: 'winrar:history'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Registry Key : WinRAR History'
+---
+type: 'basic'
+data_type: 'zeitgeist:activity'
+message: '{subject_uri}'
+short_message: '{subject_uri}'
+short_source: 'LOG'
+source: 'Zeitgeist activity log'
