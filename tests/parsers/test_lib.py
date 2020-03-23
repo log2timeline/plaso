@@ -7,8 +7,11 @@ import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
+from dfvfs.file_io import fake_file_io
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.path import fake_path_spec
+from dfvfs.resolver import context as dfvfs_context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
@@ -24,6 +27,25 @@ from tests import test_lib as shared_test_lib
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
   """Parser test case."""
+
+  def _CreateFileObject(self, filename, data):
+    """Creates a file-like object.
+
+    Args:
+      filename (str): name of the file.
+      data (bytes): data of the file.
+
+    Returns:
+      dfvfs.FakeFile: file-like object.
+    """
+    resolver_context = dfvfs_context.Context()
+    file_object = fake_file_io.FakeFile(resolver_context, data)
+
+    location = '/{0:s}'.format(filename)
+    test_path_spec = fake_path_spec.FakePathSpec(location=location)
+    file_object.open(path_spec=test_path_spec)
+
+    return file_object
 
   def _CreateParserMediator(
       self, storage_writer, collection_filters_helper=None, file_entry=None,
