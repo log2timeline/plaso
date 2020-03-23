@@ -209,8 +209,8 @@ class RedisMergeReader(interface.StorageMergeReader):
     containers = []
     identifiers_to_delete = []
     for identifier_bytes, serialized_container in iter(items.items()):
-      identifer_string = codecs.decode(identifier_bytes, 'utf-8')
-      identifier = identifiers.RedisKeyIdentifier(identifer_string)
+      identifier_string = codecs.decode(identifier_bytes, 'utf-8')
+      identifier = identifiers.RedisKeyIdentifier(identifier_string)
       identifiers_to_delete.append(identifier)
 
       container = self._DeserializeAttributeContainer(

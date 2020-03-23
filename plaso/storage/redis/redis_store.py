@@ -78,7 +78,8 @@ class RedisStore(interface.BaseStore):
           'Unable to set redis client name: {0:s} with error {1!s}'.format(
               name, exception))
 
-  def _AddAttributeContainer(self, container_type, container):
+  def _AddAttributeContainer(
+      self, container_type, container, serialized_data=None):
     """Adds an attribute container to the store.
 
    Args:
@@ -91,7 +92,8 @@ class RedisStore(interface.BaseStore):
     identifier = identifiers.RedisKeyIdentifier()
     container.SetIdentifier(identifier)
 
-    serialized_data = self._SerializeAttributeContainer(container)
+    if not serialized_data:
+      serialized_data = self._SerializeAttributeContainer(container)
 
     container_key = self._GenerateRedisKey(container_type)
     string_identifier = identifier.CopyToString()
@@ -125,8 +127,8 @@ class RedisStore(interface.BaseStore):
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
 
-      identifer_string = identifier.decode('utf-8')
-      redis_identifier = identifiers.RedisKeyIdentifier(identifer_string)
+      identifier_string = identifier.decode('utf-8')
+      redis_identifier = identifiers.RedisKeyIdentifier(identifier_string)
       attribute_container.SetIdentifier(redis_identifier)
       yield attribute_container
 
@@ -223,13 +225,14 @@ class RedisStore(interface.BaseStore):
     container_type = attribute_container.CONTAINER_TYPE
     self._AddAttributeContainer(container_type, attribute_container)
 
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): event.
+      serialized_data (Optional[bytes]): serialized form of the event.
     """
-    super(RedisStore, self).AddEvent(event)
+    super(RedisStore, self).AddEvent(event, serialized_data=serialized_data)
     event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
     identifier = event.GetIdentifier()
     string_identifier = identifier.CopyToString()
@@ -323,8 +326,8 @@ class RedisStore(interface.BaseStore):
 
     sorted_event_identifiers = self._redis_client.zscan_iter(event_index_name)
     for event_identifier, _ in sorted_event_identifiers:
-      identifer_string = event_identifier.decode('utf-8')
-      event_identifier = identifiers.RedisKeyIdentifier(identifer_string)
+      identifier_string = event_identifier.decode('utf-8')
+      event_identifier = identifiers.RedisKeyIdentifier(identifier_string)
       yield self._GetAttributeContainerByIdentifier(
           self._CONTAINER_TYPE_EVENT, event_identifier)
 

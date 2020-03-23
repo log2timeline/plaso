@@ -109,45 +109,50 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddAnalysisReport(analysis_report)
 
-  def AddEvent(self, event):
+  def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event(EventObject): an event.
+      serialized_data (Optional[bytes]): serialized form of the event.
     """
-    self._store.AddEvent(event)
+    self._store.AddEvent(event, serialized_data=serialized_data)
 
-  def AddEventData(self, event_data):
+  def AddEventData(self, event_data, serialized_data=None):
     """Adds an event data.
 
     Args:
       event_data(EventData): an event.
+      serialized_data (Optional[bytes]): serialized form of the event data.
     """
-    self._store.AddEventData(event_data)
+    self._store.AddEventData(event_data, serialized_data=serialized_data)
 
-  def AddEventSource(self, event_source):
+  def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
     Args:
       event_source (EventSource): an event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
     """
-    self._store.AddEventSource(event_source)
+    self._store.AddEventSource(event_source, serialized_data=serialized_data)
 
-  def AddEventTag(self, event_tag):
+  def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): an event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
-    self._store.AddEventTag(event_tag)
+    self._store.AddEventTag(event_tag, serialized_data=serialized_data)
 
-  def AddWarning(self, warning):
+  def AddWarning(self, warning, serialized_data=None):
     """Adds a warning.
 
     Args:
       warning (ExtractionWarning): a warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
     """
-    self._store.AddWarning(warning)
+    self._store.AddWarning(warning, serialized_data=serialized_data)
 
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging into the store.

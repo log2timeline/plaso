@@ -50,8 +50,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     self.assertEqual(
         store._GetNumberOfAttributeContainers(event_data.CONTAINER_TYPE), 0)
 
-    store._AddAttributeContainer(
-        store._CONTAINER_TYPE_EVENT_DATA, event_data)
+    store._AddAttributeContainer(store._CONTAINER_TYPE_EVENT_DATA, event_data)
 
     self.assertEqual(
         store._GetNumberOfAttributeContainers(event_data.CONTAINER_TYPE), 1)
@@ -69,8 +68,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     redis_client = self._GetRedisClient()
     store.Open(redis_client=redis_client)
 
-    store._AddAttributeContainer(
-        store._CONTAINER_TYPE_EVENT_DATA, event_data)
+    store._AddAttributeContainer(store._CONTAINER_TYPE_EVENT_DATA, event_data)
 
     self.assertEqual(
         store._GetNumberOfAttributeContainers(event_data.CONTAINER_TYPE), 1)
