@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from collections import namedtuple
-
 import pyevtx
 
 from defusedxml import ElementTree
@@ -33,7 +31,6 @@ class WinEvtxRecordEventData(events.EventData):
     recovered (bool): True if the record was recovered.
     source_name (str): name of the event source.
     strings (list[str]): event strings.
-    strings_parsed ([dict]): parsed information from event strings.
     user_sid (str): user security identifier (SID) stored in the event record.
     xml_string (str): XML representation of the event.
   """
@@ -51,7 +48,6 @@ class WinEvtxRecordEventData(events.EventData):
     self.recovered = None
     self.source_name = None
     self.strings = None
-    self.strings_parsed = None
     self.user_sid = None
     self.xml_string = None
 
@@ -63,30 +59,6 @@ class WinEvtxParser(interface.FileObjectParser):
 
   NAME = 'winevtx'
   DESCRIPTION = 'Parser for Windows XML EventLog (EVTX) files.'
-
-  # Mapping from evtx_record.strings entries to meaningful names.
-  # This mapping is different for each event_identifier.
-  # TODO: make this more generic in context of #158.
-
-  Rule = namedtuple('Rule', ['index', 'name'])
-
-  _EVTX_FIELD_MAP = {
-      4624: [
-          Rule(0, 'source_user_id'),
-          Rule(1, 'source_user_name'),
-          Rule(4, 'target_user_id'),
-          Rule(5, 'target_user_name'),
-          Rule(11, 'target_machine_name'),
-          Rule(18, 'target_machine_ip')
-      ],
-      4648: [
-          Rule(0, 'source_user_id'),
-          Rule(1, 'source_user_name'),
-          Rule(5, 'target_user_name'),
-          Rule(8, 'target_machine_name'),
-          Rule(12, 'target_machine_ip')
-      ]
-  }
 
   def _GetCreationTimeFromXMLString(
       self, parser_mediator, record_index, xml_string):
@@ -185,18 +157,6 @@ class WinEvtxParser(interface.FileObjectParser):
     event_data.user_sid = evtx_record.user_security_identifier
 
     event_data.strings = list(evtx_record.strings)
-
-    event_data.strings_parsed = {}
-    if event_identifier in self._EVTX_FIELD_MAP.keys():
-      rules = self._EVTX_FIELD_MAP.get(event_identifier, [])
-      for rule in rules:
-        if len(evtx_record.strings) <= rule.index:
-          parser_mediator.ProduceExtractionWarning((
-              'evtx_record.strings has unexpected length of {0:d} '
-              '(expected at least {1:d})'.format(
-                  len(evtx_record.strings), rule.index)))
-
-        event_data.strings_parsed[rule.name] = evtx_record.strings[rule.index]
 
     event_data.xml_string = evtx_record.xml_string
 
