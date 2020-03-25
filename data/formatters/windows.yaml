@@ -17,6 +17,19 @@ short_source: 'LOG'
 source: 'System'
 ---
 type: 'conditional'
+data_type: 'setupapi:log:line'
+message:
+- '{entry_type}'
+- '{exit_status}'
+separator: ' - '
+# Reversing fields for short description to prevent truncating the status
+short_message:
+- '{exit_status}'
+- '{entry_type}'
+short_source: 'LOG'
+source: 'Windows Setupapi Log'
+---
+type: 'conditional'
 data_type: 'task_scheduler:task_cache:entry'
 message:
 - '[{key_path}]'

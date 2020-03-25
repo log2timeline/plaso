@@ -38,17 +38,9 @@ from plaso.formatters import safari
 from plaso.formatters import safari_cookies
 from plaso.formatters import santa
 from plaso.formatters import sccm
-from plaso.formatters import selinux
 from plaso.formatters import services
-from plaso.formatters import setupapi
 from plaso.formatters import shell_items
-from plaso.formatters import skydrivelog
-from plaso.formatters import skype
-from plaso.formatters import sophos_av
-from plaso.formatters import ssh
 from plaso.formatters import symantec
-from plaso.formatters import syslog
-from plaso.formatters import systemd_journal
 from plaso.formatters import tango_android
 from plaso.formatters import trendmicroav
 from plaso.formatters import twitter_android
