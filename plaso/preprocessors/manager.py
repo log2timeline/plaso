@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.helpers import windows_path_resolver
+from dfvfs.lib import errors as dfvfs_errors
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
@@ -106,7 +107,15 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     Returns:
       WinRegistryFile: Windows Registry file or None.
     """
-    path_specification = self._path_resolver.ResolvePath(path)
+    path_specification = None
+
+    try:
+      path_specification = self._path_resolver.ResolvePath(path)
+    except dfvfs_errors.BackEndError as exception:
+      logger.warning((
+          'Unable to open Windows Registry file: {0:s} with error: '
+          '{1!s}').format(path, exception))
+
     if path_specification is None:
       return None
 
