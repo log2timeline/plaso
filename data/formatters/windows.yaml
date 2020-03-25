@@ -17,6 +17,17 @@ short_source: 'LOG'
 source: 'System'
 ---
 type: 'conditional'
+data_type: 'task_scheduler:task_cache:entry'
+message:
+- '[{key_path}]'
+- 'Task: {task_name}'
+- '[Identifier: {task_identifier}]'
+short_message:
+- 'Task: {task_name}'
+short_source: 'REG'
+source: 'Task Cache'
+---
+type: 'conditional'
 data_type: 'windows:distributed_link_tracking:creation'
 message:
 - '{uuid}'
