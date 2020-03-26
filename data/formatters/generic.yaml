@@ -28,6 +28,21 @@ short_message:
 short_source: 'LOG'
 source: 'APT History Log'
 ---
+type: 'conditional'
+data_type: 'av:mcafee:accessprotectionlog'
+message:
+- 'File Name: {filename}'
+- 'User: {username}'
+- '{trigger_location}'
+- '{status}'
+- '{rule}'
+- '{action}'
+short_message:
+- '{filename}'
+- '{action}'
+short_source: 'LOG'
+source: 'McAfee Access Protection Log'
+---
 type: 'basic'
 data_type: 'bash:history:command'
 message: 'Command executed: {command}'
@@ -112,6 +127,49 @@ short_message:
 - 'Filename: {original_filename}'
 short_source: 'LOG'
 source: 'File History Namespace'
+---
+type: 'basic'
+data_type: 'fs:mactime:line'
+message: '{filename}'
+short_message: '{filename}'
+short_source: 'FILE'
+source: 'Mactime Bodyfile'
+---
+type: 'conditional'
+data_type: 'gdrive_sync:log:line'
+message:
+- '[{log_level}'
+- '{pid}'
+- '{thread}'
+- '{source_code}]'
+- '{message}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'GoogleDriveSync Log File'
+---
+type: 'conditional'
+data_type: 'java:download:idx'
+message:
+- 'IDX Version: {idx_version}'
+- 'Host IP address: ({ip_address})'
+- 'Download URL: {url}'
+short_message:
+- 'IDX Version: {idx_version}'
+- 'Host IP address: ({ip_address})'
+- 'Download URL: {url}'
+short_source: 'JAVA_IDX'
+source: 'Java Cache IDX'
+---
+type: 'conditional'
+data_type: 'kodi:videos:viewing'
+message:
+- 'Video: {filename}'
+- 'Play Count: {play_count}'
+short_message:
+- '{filename}'
+short_source: 'KODI'
+source: 'Kodi Video Viewed'
 ---
 type: 'conditional'
 data_type: 'metadata:openxml'

@@ -80,6 +80,63 @@ short_source: 'LOG'
 source: 'Chrome Extension Installation'
 ---
 type: 'conditional'
+data_type: 'cookie:google:analytics:utma'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Sessions: {sessions}'
+- 'Domain Hash: {domain_hash}'
+- 'Visitor ID: {visitor_id}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Google Analytics Cookies'
+---
+type: 'conditional'
+data_type: 'cookie:google:analytics:utmb'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Pages Viewed: {pages_viewed}'
+- 'Domain Hash: {domain_hash}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Google Analytics Cookies'
+---
+type: 'conditional'
+data_type: 'cookie:google:analytics:utmt'
+message:
+- '{url}'
+- '({cookie_name})'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Google Analytics Cookies'
+---
+type: 'conditional'
+data_type: 'cookie:google:analytics:utmz'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Sessions: {sessions}'
+- 'Domain Hash: {domain_hash}'
+- 'Sources: {sources}'
+- 'Last source used to access: {utmcsr}'
+- 'Ad campaign information: {utmccn}'
+- 'Last type of visit: {utmcmd}'
+- 'Keywords used to find site: {utmctr}'
+- 'Path to the page of referring link: {utmcct}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Google Analytics Cookies'
+---
+type: 'conditional'
 data_type: 'firefox:cache:record'
 message:
 - 'Fetched {fetch_count} time(s)'

@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import iis as _  # pylint: disable=unused-import
 from plaso.parsers import iis
 
 from tests.parsers import test_lib
