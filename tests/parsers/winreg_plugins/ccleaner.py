@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import ccleaner
 
 from tests.parsers.winreg_plugins import test_lib
@@ -56,8 +55,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = 'Origin: {0:s}'.format(key_path)
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
     event = events[1]
 

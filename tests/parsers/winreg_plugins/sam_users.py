@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import sam_users
 
