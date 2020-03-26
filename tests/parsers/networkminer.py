@@ -43,12 +43,14 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
         '98 500 B '
         'abdb151dfd5775c05b47c0f4ea1cd3d7 '
         'travelocity.com/')
-
-    short_message = (
+    expected_short_message = (
         'Source IP: 111.123.124.11 '
         'Destination IP: 192.168.151.130 '
         'index.html D:\\case-...')
-    self._TestGetMessageStrings(event_data, expected_message, short_message)
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
 
 if __name__ == '__main__':
   unittest.main()

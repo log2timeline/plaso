@@ -23,13 +23,8 @@ from plaso.formatters import mac_notificationcenter
 from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
-from plaso.formatters import msie_webcache
 from plaso.formatters import msiecf
-from plaso.formatters import networkminer
 from plaso.formatters import olecf
-from plaso.formatters import opera
-from plaso.formatters import oxml
-from plaso.formatters import pe
 from plaso.formatters import recycler
 from plaso.formatters import safari_cookies
 from plaso.formatters import services

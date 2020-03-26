@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import olecf  # pylint: disable=unused-import
 from plaso.parsers.olecf_plugins import summary
 
 from tests.parsers.olecf_plugins import test_lib

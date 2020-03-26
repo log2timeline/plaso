@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import olecf  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.olecf_plugins import automatic_destinations
 

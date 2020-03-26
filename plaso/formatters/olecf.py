@@ -9,18 +9,6 @@ from plaso.lib import errors
 from plaso.lib import py2to3
 
 
-class OLECFItemFormatter(interface.EventFormatter):
-  """Formatter for an OLECF item event."""
-
-  DATA_TYPE = 'olecf:item'
-
-  FORMAT_STRING = 'Name: {name}'
-  FORMAT_STRING_SHORT = 'Name: {name}'
-
-  SOURCE_LONG = 'OLECF Item'
-  SOURCE_SHORT = 'OLECF'
-
-
 class OLECFDestListEntryFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF DestList stream event."""
 
@@ -70,38 +58,6 @@ class OLECFDestListEntryFormatter(interface.ConditionalEventFormatter):
       event_values['pin_status'] = 'Pinned'
 
     return self._ConditionalFormatMessages(event_values)
-
-
-class OLECFDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an OLECF Document Summary Info property set stream event."""
-
-  DATA_TYPE = 'olecf:document_summary_info'
-
-  FORMAT_STRING_PIECES = [
-      'Number of bytes: {number_of_bytes}',
-      'Number of lines: {number_of_lines}',
-      'Number of paragraphs: {number_of_paragraphs}',
-      'Number of slides: {number_of_slides}',
-      'Number of notes: {number_of_notes}',
-      'Number of hidden slides: {number_of_hidden_slides}',
-      'Number of multi-media clips: {number_of_clips}',
-      'Company: {company}',
-      'Manager: {manager}',
-      'Shared document: {shared_document}',
-      'Application version: {application_version}',
-      'Content type: {content_type}',
-      'Content status: {content_status}',
-      'Language: {language}',
-      'Document version: {document_version}']
-
-      # TODO: add support for the following properties.
-      # 'Digital signature: {digital_signature}',
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Company: {company}']
-
-  SOURCE_LONG = 'OLECF Document Summary Info'
-  SOURCE_SHORT = 'OLECF'
 
 
 class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
@@ -182,5 +138,4 @@ class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
 
 
 manager.FormattersManager.RegisterFormatters([
-    OLECFItemFormatter, OLECFDestListEntryFormatter,
-    OLECFDocumentSummaryInfoFormatter, OLECFSummaryInfoFormatter])
+    OLECFDestListEntryFormatter, OLECFSummaryInfoFormatter])

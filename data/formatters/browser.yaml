@@ -147,6 +147,85 @@ short_source: 'WEBHIST'
 source: 'Firefox History'
 ---
 type: 'conditional'
+data_type: 'msie:webcache:container'
+message:
+- 'URL: {url}'
+- 'Redirect URL: {redirect_url}'
+- 'Access count: {access_count}'
+- 'Sync count: {sync_count}'
+- 'Filename: {cached_filename}'
+- 'File extension: {file_extension}'
+- 'Cached file size: {cached_file_size}'
+- 'Request headers: {request_headers}'
+- 'Response headers: {response_headers}'
+- 'Entry identifier: {entry_identifier}'
+- 'Container identifier: {container_identifier}'
+- 'Cache identifier: {cache_identifier}'
+short_message:
+- 'URL: {url}'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache container record'
+---
+type: 'conditional'
+data_type: 'msie:webcache:containers'
+message:
+- 'Name: {name}'
+- 'Directory: {directory}'
+- 'Table: Container_{container_identifier}'
+- 'Container identifier: {container_identifier}'
+- 'Set identifier: {set_identifier}'
+short_message:
+- 'Directory: {directory}'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache containers record'
+---
+type: 'conditional'
+data_type: 'msie:webcache:leak_file'
+message:
+- 'Filename: {cached_filename}'
+- 'Leak identifier: {leak_identifier}'
+short_message:
+- 'Filename: {cached_filename}'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache leak file record'
+---
+type: 'conditional'
+data_type: 'msie:webcache:partitions'
+message:
+- 'Partition identifier: {partition_identifier}'
+- 'Partition type: {partition_type}'
+- 'Directory: {directory}'
+- 'Table identifier: {table_identifier}'
+short_message:
+- 'Directory: {directory}'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache partitions record'
+---
+type: 'conditional'
+data_type: 'opera:history:entry'
+message:
+- '{url}'
+- '({title})'
+- '[{description}]'
+short_message:
+- '{url}'
+- '({title})'
+- '[{description}]'
+short_source: 'WEBHIST'
+source: 'Opera Browser History'
+---
+type: 'conditional'
+data_type: 'opera:history:typed_entry'
+message:
+- '{url}'
+- '({entry_selection})'
+short_message:
+- '{url}'
+- '({entry_selection})'
+short_source: 'WEBHIST'
+source: 'Opera Browser History'
+---
+type: 'conditional'
 data_type: 'safari:history:visit'
 message:
 - 'Visited: {url}'
