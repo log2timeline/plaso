@@ -145,3 +145,35 @@ message: '{url} ({full_path}). Received: {received_bytes} bytes out of: {total_b
 short_message: '{full_path} downloaded ({received_bytes} bytes)'
 short_source: 'WEBHIST'
 source: 'Firefox History'
+---
+type: 'conditional'
+data_type: 'safari:history:visit'
+message:
+- 'Visited: {url}'
+- '({title}'
+- '- {display_title}'
+- ')'
+- 'Visit Count: {visit_count}'
+short_message:
+- 'Visited: {url}'
+- '({title}'
+- '- {display_title}'
+- ')'
+- 'Visit Count: {visit_count}'
+short_source: 'WEBHIST'
+source: 'Safari History'
+---
+type: 'conditional'
+data_type: 'safari:history:visit_sqlite'
+message:
+- 'URL: {url}'
+- 'Title: ({title})'
+- '[count: {visit_count}]'
+- 'http_non_get: {was_http_non_get}'
+short_message:
+- 'URL: {url}'
+- 'Title: ({title})'
+- '[count: {visit_count}]'
+- 'http_non_get: {was_http_non_get}'
+short_source: 'WEBHIST'
+source: 'Safari History'

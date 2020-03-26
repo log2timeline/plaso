@@ -122,3 +122,17 @@ short_message:
 - 'Action: {action}'
 short_source: 'LOG'
 source: 'Mac Wifi Log'
+---
+type: 'conditional'
+data_type: 'plist:key'
+message:
+- '{root}/'
+- '{key}'
+- ' {desc}'
+separator: ''
+short_message:
+- '{root}/'
+- '{key}'
+- ' {desc}'
+short_source: 'PLIST'
+source: 'Plist Entry'

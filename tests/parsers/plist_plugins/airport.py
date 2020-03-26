@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import airport
 
 from tests.parsers.plist_plugins import test_lib
