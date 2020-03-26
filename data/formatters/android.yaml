@@ -1,0 +1,61 @@
+# Android related event formatters.
+
+type: 'conditional'
+data_type: 'android:event:last_resume_time'
+message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_source: 'LOG'
+source: 'Android App Usage'
+---
+type: 'conditional'
+data_type: 'android:event:call'
+message:
+- '{call_type}'
+- 'Number: {number}'
+- 'Name: {name}'
+- 'Duration: {duration} seconds'
+short_message:
+- '{call_type} Call'
+short_source: 'LOG'
+source: 'Android Call History'
+---
+type: 'conditional'
+data_type: 'android:messaging:sms'
+message:
+- 'Type: {sms_type}'
+- 'Address: {address}'
+- 'Status: {sms_read}'
+- 'Message: {body}'
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'Android SMS messages'
+---
+type: 'conditional'
+data_type: 'webview:cookie'
+message:
+- 'Domain: {domain}'
+- 'Path: {path}'
+- 'Cookie name: {name}'
+- 'Value: {value}'
+- 'Secure: {secure}'
+short_message:
+- '{domain}'
+- '{name}'
+- '{value}'
+short_source: 'WebView'
+source: 'Android WebView'
+---
+type: 'conditional'
+data_type: 'android:webviewcache'
+message:
+- 'URL: {url}'
+- 'Content Length: {content_length}'
+short_message:
+- '{url}'
+short_source: 'WebViewCache'
+source: 'Android WebViewCache'
