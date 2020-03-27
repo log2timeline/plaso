@@ -43,7 +43,8 @@ timesketch : Create a Timesketch timeline.
 --------------------------------------------------------------------------------
 ```
 
-If you are missing any optional dependencies not all output modules may be available, which would be displayed by the ``-o list`` switch:
+If you are missing any optional dependencies not all output modules may be
+available, which would be displayed by the ``-o list`` switch:
 
 ```
 ******************************** Output Modules ********************************
@@ -63,6 +64,8 @@ timesketch : Create a Timesketch timeline.
 --------------------------------------------------------------------------------
 ```
 
+Also see [output and formatting](Output-and-formatting.md).
+
 #### Changing Output Format
 
 To change the output simply use the ``-o FORMAT`` for example:
@@ -71,7 +74,8 @@ To change the output simply use the ``-o FORMAT`` for example:
 $ psort.py -o l2tcsv -w test.l2tcsv test.plaso
 ```
 
-This would use the "l2tcsv" module, or the default CSV output of the older Perl version of log2timeline.
+This would use the "l2tcsv" module, or the default CSV output of the older Perl
+version of log2timeline.
 
 **Note that psort 1.5.0 no longer supports output to stdout.**
 
