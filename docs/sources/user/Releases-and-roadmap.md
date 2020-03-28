@@ -9,7 +9,8 @@ Plaso comes in 2 different forms of releases:
 
 If you do not plan to develop or live on the edge, regarding Plaso, we highly
 recommend sticking with the packaged release. We will try to provide a monthy
-release, if time permits and recommend using a Plaso no older than 6 months.
+release, if time permits and recommend using a version of Plaso no older than
+6 months.
 
 ## Roadmap
 

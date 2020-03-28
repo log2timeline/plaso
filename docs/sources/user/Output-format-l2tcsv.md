@@ -3,6 +3,8 @@
 By default log2timeline.pl used the l2tcsv (or l2t_csv) output format. l2tcsv
 is a CSV (comma separated values) format with 17 fields.
 
+**Note that for Plaso log2timeline l2tcsv is no longer the default.**
+
 The first line in the CSV file is a header, containing the name of each field.
 Other lines in the CSV file refers to one timestamped entry, which means that
 each timestamp object may be expanded to several lines.
