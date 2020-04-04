@@ -59,6 +59,19 @@ class BaseTestCase(unittest.TestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
+  def _GetDataFilePath(self, path_segments):
+    """Retrieves the path of a file in the data directory.
+
+    Args:
+      path_segments (list[str]): path segments inside the data directory.
+
+    Returns:
+      str: path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._DATA_PATH, *path_segments)
+
   def _GetTestFilePath(self, path_segments):
     """Retrieves the path of a test file in the test data directory.
 
