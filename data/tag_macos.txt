@@ -24,4 +24,4 @@ device_connection
 
 # Tags OLE compound document print events.
 document_print
-  data_type is 'metadata:OLECF' AND timestamp_desc contains 'Printed'
+  data_type is 'olecf:summary_info' AND timestamp_desc contains 'Printed'
