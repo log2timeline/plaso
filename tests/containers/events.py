@@ -36,13 +36,9 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventObject()
 
     expected_attribute_names = [
-        'data_type',
-        'display_name',
-        'filename',
-        'hostname',
-        'inode',
-        'offset',
-        'pathspec',
+        'event_data_entry_index',
+        'event_data_row_identifier',
+        'event_data_stream_number',
         'tag',
         'timestamp',
         'timestamp_desc']

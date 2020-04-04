@@ -42,47 +42,33 @@ class EventObject(interface.AttributeContainer):
   attributes.
 
   Attributes:
-    data_type (str): event data type indicator.
-    display_name (str): display friendly version of the path specification.
-    filename (str): name of the file related to the event.
-    hostname (str): name of the host related to the event.
-    inode (int): inode of the file related to the event.
-    offset (int): offset of the event data.
-    pathspec (dfvfs.PathSpec): path specification of the file related to
-        the event.
+    event_data_entry_index (int): serialized data stream entry index of
+        the event data, this attribute is used by the GZIP storage files
+        to uniquely identify the event data linked to the event.
+    event_data_row_identifier (int): row number of the serialized event data
+        stream, this attribute is used by the SQLite storage files to uniquely
+        identify the event data linked to the event.
+    event_data_stream_number (int): number of the serialized event data stream,
+        this attribute is used by the GZIP storage files to uniquely identify
+        the event data linked to the tag.
     tag (EventTag): event tag.
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
     timestamp_desc (str): description of the meaning of the timestamp.
   """
   CONTAINER_TYPE = 'event'
-  # TODO: eventually move data type out of event since the event source
-  # has a data type not the event itself.
-  DATA_TYPE = None
 
   def __init__(self):
     """Initializes an event attribute container."""
     super(EventObject, self).__init__()
     self._event_data_identifier = None
-    # TODO: move to event data
-    self.data_type = self.DATA_TYPE
-    # TODO: move to event data
-    self.display_name = None
-    # TODO: move to event data
-    self.filename = None
-    # TODO: move to event data
-    self.hostname = None
-    # TODO: move to event data
-    self.inode = None
-    # TODO: move to event data
-    self.offset = None
-    # TODO: move to event data
-    self.pathspec = None
+    self.event_data_entry_index = None
+    self.event_data_row_identifier = None
+    self.event_data_stream_number = None
     self.tag = None
     self.timestamp = None
+    # TODO: rename timestamp_desc to timestamp_description
     self.timestamp_desc = None
-
-    # TODO: add a solution for event_data_row_identifier
 
   # This method is necessary for heap sort.
   def __lt__(self, other):
@@ -94,9 +80,10 @@ class EventObject(interface.AttributeContainer):
       other (EventObject): event attribute container to compare to.
 
     Returns:
-      bool: True if the event  attribute container is less than the other.
+      bool: True if the event attribute container is less than the other.
     """
-    return self.timestamp < other.timestamp
+    return (self.timestamp < other.timestamp or
+            self.timestamp_desc < other.timestamp_desc)
 
   def GetEventDataIdentifier(self):
     """Retrieves the identifier of the event data associated with the event.
@@ -127,11 +114,14 @@ class EventTag(interface.AttributeContainer):
   Attributes:
     comment (str): comments.
     event_entry_index (int): serialized data stream entry index of the event,
-        this attribute is used by the ZIP and GZIP storage files to
-        uniquely identify the event linked to the tag.
+        this attribute is used by the GZIP storage files to uniquely identify
+        the event linked to the tag.
+    event_row_identifier (int): row number of the serialized event stream, this
+        attribute is used by the SQLite storage files to uniquely identify
+        the event linked to the tag.
     event_stream_number (int): number of the serialized event stream, this
-        attribute is used by the ZIP and GZIP storage files to uniquely
-        identify the event linked to the tag.
+        attribute is used by the GZIP storage files to uniquely identify
+        the event linked to the tag.
     labels (list[str]): labels, such as "malware", "application_execution".
   """
   CONTAINER_TYPE = 'event_tag'

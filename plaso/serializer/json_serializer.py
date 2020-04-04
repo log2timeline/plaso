@@ -182,7 +182,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       AttributeContainer|dict|list|tuple: deserialized object.
 
     Raises:
-      ValueError: if the class type or container type is not supported.
+      ValueError: if the class type, container type or attribute type
+          of event data container is not supported.
     """
     # Use __type__ to indicate the object class type.
     class_type = json_dict.get('__type__', None)
@@ -221,8 +222,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     container_object = container_class()
     supported_attribute_names = container_object.GetAttributeNames()
     for attribute_name, attribute_value in iter(json_dict.items()):
-      # Be strict about which attributes to set in non event values.
-      if (container_type not in ('event', 'event_data') and
+      # Be strict about which attributes to set in non event data attribute
+      # containers.
+      if (container_type != 'event_data' and
           attribute_name not in supported_attribute_names):
 
         if attribute_name not in ('__container_type__', '__type__'):
@@ -237,6 +239,17 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
       elif isinstance(attribute_value, list):
         attribute_value = cls._ConvertListToObject(attribute_value)
+
+      if container_type == 'event_data':
+        if isinstance(attribute_value, py2to3.BYTES_TYPE):
+          raise ValueError((
+              'Event data attribute value: {0:s} of type bytes is not '
+              'supported.').format(attribute_name))
+
+        if isinstance(attribute_value, dict):
+          raise ValueError((
+              'Event data attribute value: {0:s} of type dict is not '
+              'supported.').format(attribute_name))
 
       setattr(container_object, attribute_name, attribute_value)
 
