@@ -1,14 +1,20 @@
+# Tags Linux application execution events.
 application_execution
-  reporter is 'sudo' AND body contains 'COMMAND='
+  data_type is 'bash:history:command'
+  data_type is 'docker:json:layer'
   data_type is 'selinux:line' AND audit_type is 'EXECVE'
-  data_type is 'syslog:cron:task_run' OR data_type is 'bash:history:command' OR data_type is 'shell:zsh:history' OR data_type is 'docker:json:layer'
+  data_type is 'shell:zsh:history'
+  data_type is 'syslog:cron:task_run'
+  reporter is 'sudo' AND body contains 'COMMAND='
 
+# Tags Linux log-in events.
 login
   reporter is 'login' AND (body contains 'session opened' OR body contains 'logged in' OR body contains 'ROOT LOGIN')
   reporter is 'sshd' AND (body contains 'Starting session' OR body contains 'session opened')
   data_type is 'selinux:line' AND audit_type is 'LOGIN'
   data_type is 'linux:utmp:event' AND type == 7
 
+# Tags Linux failed log-in events.
 login_failed
   data_type is 'syslog:line' AND body contains 'pam_tally2'
   reporter is 'sshd' AND body contains 'uthentication failure'
@@ -16,6 +22,7 @@ login_failed
   data_type is 'selinux:line' AND audit_type is 'ANOM_LOGIN_FAILURES'
   reporter is 'xscreensaver' AND body contains 'FAILED LOGIN'
 
+# Tags Linux log-out events.
 logout
   reporter is 'login' AND body contains 'session closed'
   reporter is 'sshd' AND (body contains 'session closed' OR body contains 'Close session')
