@@ -4,7 +4,6 @@
 
 from __future__ import unicode_literals
 
-import os
 import unittest
 
 from plaso.containers import artifacts
@@ -170,7 +169,7 @@ class PresetsDataTest(shared_test_lib.BaseTestCase):
 
   def testParsersAndPresets(self):
     """Tests that all parsers/plugins in the default presets are valid."""
-    presets_file_path = os.path.join(self._DATA_PATH, 'presets.yaml')
+    presets_file_path = self._GetDataFilePath(['presets.yaml'])
 
     preset_manager = presets.ParserPresetsManager()
     preset_manager.ReadFromFile(presets_file_path)

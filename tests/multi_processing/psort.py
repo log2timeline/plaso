@@ -498,7 +498,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatters_manager.FormattersManager.Reset()
-    formatters_directory_path = os.path.join(self._DATA_PATH, 'formatters')
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
     formatters_manager.FormattersManager.ReadFormattersFromDirectory(
         formatters_directory_path)
 

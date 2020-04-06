@@ -171,7 +171,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     event_identifier = event_tag.GetEventIdentifier()
     if not isinstance(event_identifier, identifiers.FakeIdentifier):
-      raise IOError('Unsupported event identifier type: {0:s}'.format(
+      raise IOError('Unsupported event identifier type: {0!s}'.format(
           type(event_identifier)))
 
     event_tag = self._PrepareAttributeContainer(event_tag)

@@ -23,7 +23,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Analyzes events using the analysis plugin.
 
     Args:
-      event_values_list (list[dict[str, str]]): list of event values.
+      event_values_list (list[dict[str, object]]): list of event values.
       plugin (AnalysisPlugin): plugin.
       knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 

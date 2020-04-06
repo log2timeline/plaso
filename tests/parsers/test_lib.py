@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import os
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from dfvfs.file_io import fake_file_io
@@ -205,7 +203,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       expected_message (str): expected message string.
       expected_short_message (str): expected short message string.
     """
-    formatters_directory_path = os.path.join(self._DATA_PATH, 'formatters')
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
     formatters_manager.FormattersManager.ReadFormattersFromDirectory(
         formatters_directory_path)
 
