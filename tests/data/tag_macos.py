@@ -16,6 +16,7 @@ from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import filestat
 from plaso.parsers import syslog
+from plaso.parsers.olecf_plugins import summary
 from plaso.parsers.plist_plugins import ipod
 from plaso.parsers.sqlite_plugins import appusage
 from plaso.parsers.sqlite_plugins import chrome
@@ -224,8 +225,26 @@ class MacOSTaggingFileTest(shared_test_lib.BaseTestCase):
     self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['device_connection'])
 
-  # TODO: add tests for document_print tagging rule, this requires
-  # changes in plaso.parsers.olecf_plugins.summary.
+  def testRuleDocumentPrint(self):
+    """Tests the document_print tagging rule."""
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    summary_information = summary.OLECFSummaryInformation(None)
+    event_data = summary_information.GetEventData()
+
+    storage_writer = self._TagEvent(event, event_data)
+
+    self.assertEqual(storage_writer.number_of_event_tags, 0)
+    self._CheckLabels(storage_writer, [])
+
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_LAST_PRINTED
+
+    storage_writer = self._TagEvent(event, event_data)
+
+    self.assertEqual(storage_writer.number_of_event_tags, 1)
+    self._CheckLabels(storage_writer, ['document_print'])
 
 
 if __name__ == '__main__':
