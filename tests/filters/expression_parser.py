@@ -170,6 +170,12 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
   # TODO: add tests for _NegateExpression
 
+  def testNoOperation(self):
+    """Tests the _NoOperation function."""
+    parser = expression_parser.EventFilterExpressionParser()
+
+    parser._NoOperation()
+
   def testPopState(self):
     """Tests the _PopState function."""
     parser = expression_parser.EventFilterExpressionParser()
@@ -284,12 +290,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     next_state = parser._StringStart()
     self.assertIsNone(next_state)
     self.assertEqual(parser._string, '')
-
-  def testDefault(self):
-    """Tests the Default function."""
-    parser = expression_parser.EventFilterExpressionParser()
-
-    parser.Default()
 
   # TODO: add tests for HexEscape
   # TODO: add tests for InsertArg
