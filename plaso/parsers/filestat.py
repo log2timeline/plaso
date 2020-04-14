@@ -20,7 +20,7 @@ class FileStatEventData(events.EventData):
     file_entry_type (int): dfVFS file entry type.
     file_size (int): file size in bytes.
     file_system_type (str): file system type.
-    inode (int): inode of the file related to the event.
+    inode (int): inode of the file.
     is_allocated (bool): True if the file is allocated.
   """
 

@@ -130,8 +130,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   # TODO: add ExtractionWarning tests.
 
-  def testReadAndWriteSerializedEventObject(self):
-    """Test ReadSerialized and WriteSerialized of EventObject."""
+  def testReadAndWriteSerializedEventData(self):
+    """Test ReadSerialized and WriteSerialized of EventData."""
     test_file = self._GetTestFilePath(['ímynd.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -140,13 +140,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=volume_path_spec)
 
-    expected_event = events.EventObject()
+    expected_event = events.EventData()
     expected_event.data_type = 'test:event2'
     expected_event.pathspec = path_spec
-    expected_event.timestamp = 1234124
-    expected_event.timestamp_desc = 'Written'
 
-    expected_event.binary_string = b'\xc0\x90\x90binary'
     expected_event.empty_string = ''
     expected_event.zero_integer = 0
     expected_event.integer = 34
@@ -154,10 +151,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     expected_event.string = 'Normal string'
     expected_event.unicode_string = 'And I am a unicorn.'
     expected_event.my_list = ['asf', 4234, 2, 54, 'asf']
-    expected_event.my_dict = {
-        'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
-    expected_event.a_tuple = (
-        'some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35)
+    expected_event.a_tuple = ('some item', [234, 52, 15])
     expected_event.null_value = None
 
     json_string = (
@@ -166,44 +160,57 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     self.assertIsNotNone(json_string)
 
-    event = (
+    event_data = (
         json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
             json_string))
+
+    self.assertIsNotNone(event_data)
+    self.assertIsInstance(event_data, events.EventData)
+
+    expected_data_event_dict = {
+        'a_tuple': ('some item', [234, 52, 15]),
+        'data_type': 'test:event2',
+        'empty_string': '',
+        'integer': 34,
+        'float': -122.082203542683,
+        'my_list': ['asf', 4234, 2, 54, 'asf'],
+        'pathspec': path_spec.comparable,
+        'string': 'Normal string',
+        'unicode_string': 'And I am a unicorn.',
+        'zero_integer': 0}
+
+    event_data_dict = event_data.CopyToDict()
+    path_spec = event_data_dict.get('pathspec', None)
+    if path_spec:
+      event_data_dict['pathspec'] = path_spec.comparable
+
+    self.assertEqual(event_data_dict, expected_data_event_dict)
+
+  def testReadAndWriteSerializedEventObject(self):
+    """Test ReadSerialized and WriteSerialized of EventObject."""
+    expected_event = events.EventObject()
+    expected_event.timestamp = 1234124
+    expected_event.timestamp_desc = 'Written'
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_event))
+
+    self.assertIsNotNone(json_string)
+
+    event = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+        json_string)
 
     self.assertIsNotNone(event)
     self.assertIsInstance(event, events.EventObject)
 
     expected_event_dict = {
-        'a_tuple': (
-            'some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35),
-        'binary_string': b'\xc0\x90\x90binary',
-        'data_type': 'test:event2',
-        'empty_string': '',
-        'integer': 34,
-        'float': -122.082203542683,
-        'my_dict': {
-            'a': 'not b',
-            'an': [234, 32],
-            'c': 34,
-            'list': ['sf', 234]
-        },
-        'my_list': ['asf', 4234, 2, 54, 'asf'],
-        'pathspec': path_spec.comparable,
-        'string': 'Normal string',
-        'timestamp_desc': 'Written',
         'timestamp': 1234124,
-        'unicode_string': 'And I am a unicorn.',
-        'zero_integer': 0
-    }
+        'timestamp_desc': 'Written'}
 
     event_dict = event.CopyToDict()
-    path_spec = event_dict.get('pathspec', None)
-    if path_spec:
-      event_dict['pathspec'] = path_spec.comparable
 
-    self.assertEqual(
-        sorted(event_dict.items()),
-        sorted(expected_event_dict.items()))
+    self.assertEqual(event_dict, expected_event_dict)
 
   def testReadAndWriteSerializedEventSource(self):
     """Test ReadSerialized and WriteSerialized of EventSource."""

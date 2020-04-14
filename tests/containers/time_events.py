@@ -21,8 +21,8 @@ class TimestampEventTest(shared_test_lib.BaseTestCase):
     attribute_container = time_events.TimestampEvent(0, 'usage')
 
     expected_attribute_names = [
-        'data_type', 'display_name', 'filename', 'hostname', 'inode',
-        'offset', 'pathspec', 'tag', 'timestamp', 'timestamp_desc']
+        'event_data_entry_index', 'event_data_row_identifier',
+        'event_data_stream_number', 'tag', 'timestamp', 'timestamp_desc']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -38,8 +38,8 @@ class DateTimeValuesEventTest(shared_test_lib.BaseTestCase):
     attribute_container = time_events.DateTimeValuesEvent(posix_time, 'usage')
 
     expected_attribute_names = [
-        'data_type', 'display_name', 'filename', 'hostname', 'inode',
-        'offset', 'pathspec', 'tag', 'timestamp', 'timestamp_desc']
+        'event_data_entry_index', 'event_data_row_identifier',
+        'event_data_stream_number', 'tag', 'timestamp', 'timestamp_desc']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
