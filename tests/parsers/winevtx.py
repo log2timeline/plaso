@@ -139,32 +139,11 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
 
-    expected_strings_parsed = [
-        ('source_user_id', 'S-1-5-18'),
-        ('source_user_name', 'GREENDALEGOLD$'),
-        ('target_machine_ip', '-'),
-        ('target_machine_name', None),
-        ('target_user_id', 'S-1-5-18'),
-        ('target_user_name', 'SYSTEM')]
-
-    strings_parsed = sorted(event_data.strings_parsed.items())
-    self.assertEqual(strings_parsed, expected_strings_parsed)
-
     self.assertEqual(event_data.event_identifier, 4624)
 
     event = events[360]
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_strings_parsed = [
-        ('source_user_id', 'S-1-5-21-1539974973-2753941131-3212641383-1000'),
-        ('source_user_name', 'gold_administrator'),
-        ('target_machine_ip', '-'),
-        ('target_machine_name', 'DC1.internal.greendale.edu'),
-        ('target_user_name', 'administrator')]
-
-    strings_parsed = sorted(event_data.strings_parsed.items())
-    self.assertEqual(strings_parsed, expected_strings_parsed)
 
     self.assertEqual(event_data.event_identifier, 4648)
 
