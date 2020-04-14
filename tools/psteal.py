@@ -86,6 +86,11 @@ def Main():
     tool.ExtractEventsFromSources()
     tool.AnalyzeEvents()
 
+  # Writing to stdout and stderr will raise BrokenPipeError if it
+  # receives a SIGPIPE.
+  except BrokenPipeError:
+    pass
+
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')
     return False
