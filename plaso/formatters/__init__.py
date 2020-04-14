@@ -25,15 +25,7 @@ from plaso.formatters import ipod
 from plaso.formatters import java_idx
 from plaso.formatters import kik_ios
 from plaso.formatters import kodi
-from plaso.formatters import ls_quarantine
-from plaso.formatters import mac_appfirewall
-from plaso.formatters import mac_document_versions
-from plaso.formatters import mac_keychain
-from plaso.formatters import mac_knowledgec
-from plaso.formatters import mac_notes
 from plaso.formatters import mac_notificationcenter
-from plaso.formatters import mac_securityd
-from plaso.formatters import mac_wifi
 from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
