@@ -13,6 +13,7 @@ to the description_long and description_short field.
 
 from __future__ import unicode_literals
 
+import abc
 import re
 
 from plaso.formatters import logger
@@ -20,13 +21,71 @@ from plaso.lib import errors
 from plaso.lib import py2to3
 
 
+class EventFormatterHelper(object):
+  """Base class of helper for formatting event data."""
+
+  @abc.abstractmethod
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
+
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+
+
+class EnumerationEventFormatterHelper(object):
+  """Helper for formatting enumeration event data.
+
+  Attributes:
+    default (str): default value.
+    input_attribute (str): name of the attribute that contains the enumeration
+        input value.
+    output_attribute (str): name of the attribute where the enumeration output
+        value should be stored.
+    values (dict[str, str]): mapping of enumeration input and output values.
+  """
+
+  def __init__(
+      self, default=None, input_attribute=None, output_attribute=None,
+      values=None):
+    """Initialized a helper for formatting enumeration event data.
+
+    Args:
+      default (Optional[str]): default value.
+      input_attribute (Optional[str]): name of the attribute that contains
+          the enumeration input value.
+      output_attribute (Optional[str]): name of the attribute where the
+          enumeration output value should be stored.
+      values (Optional[dict[str, str]]): mapping of enumeration input and
+          output values.
+    """
+    super(EnumerationEventFormatterHelper, self).__init__()
+    self.default = default
+    self.input_attribute = input_attribute
+    self.output_attribute = output_attribute
+    self.values = values or {}
+
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
+
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+    input_value = event_values.get(self.input_attribute, None)
+    event_values[self.output_attribute] = self.values.get(
+        input_value, self.default)
+
+
 class EventFormatter(object):
-  """Base class to format event type specific data using a format string.
+  """Base class to format event data using a format string.
 
   Define the (long) format string and the short format string by defining
   FORMAT_STRING and FORMAT_STRING_SHORT. The syntax of the format strings
   is similar to that of format() where the place holder for a certain
   event object attribute is defined as {attribute_name}.
+
+  Attributes:
+    helpers (list[EventFormatterHelper]): event formatter helpers.
   """
 
   # The data type is a unique identifier for the event data. The current
@@ -52,6 +111,7 @@ class EventFormatter(object):
     """Initializes an event formatter object."""
     super(EventFormatter, self).__init__()
     self._format_string_attribute_names = None
+    self.helpers = []
 
   def _FormatMessage(self, format_string, event_values):
     """Determines the formatted message string.
@@ -359,4 +419,8 @@ class ConditionalEventFormatter(EventFormatter):
           event_data.data_type))
 
     event_values = event_data.CopyToDict()
+
+    for helper in self.helpers:
+      helper.FormatEventValues(event_values)
+
     return self._ConditionalFormatMessages(event_values)
