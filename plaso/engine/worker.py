@@ -38,6 +38,26 @@ class EventExtractionWorker(object):
         'Extracting', 'Hashing'.
   """
 
+  # NTFS metadata files that need special handling.
+  _METADATA_FILE_LOCATIONS_NTFS = frozenset([
+      '\\$AttrDef',
+      '\\$BadClus',
+      '\\$Bitmap',
+      '\\$Boot',
+      '\\$Extend\\$ObjId',
+      '\\$Extend\\$Quota',
+      '\\$Extend\\$Reparse',
+      '\\$Extend\\$RmMetadata\\$Repair',
+      '\\$Extend\\$RmMetadata\\$TxfLog\\$Tops',
+      '\\$Extend\\$UsnJrnl',
+      '\\$LogFile',
+      '\\$MFT',
+      '\\$MFTMirr',
+      '\\$Secure',
+      '\\$UpCase',
+      '\\$Volume',
+  ])
+
   # TSK metadata files that need special handling.
   _METADATA_FILE_LOCATIONS_TSK = frozenset([
       # NTFS
@@ -429,6 +449,10 @@ class EventExtractionWorker(object):
     Returns:
       bool: True if the file entry is a metadata file.
     """
+    if (file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_NTFS and
+        file_entry.path_spec.location in self._METADATA_FILE_LOCATIONS_NTFS):
+      return True
+
     if (file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK and
         file_entry.path_spec.location in self._METADATA_FILE_LOCATIONS_TSK):
       return True

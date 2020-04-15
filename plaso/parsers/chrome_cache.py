@@ -264,7 +264,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
       cache_entry, _ = self._ReadStructureFromFileObject(
           file_object, block_offset, cache_entry_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.ParseError((
           'Unable to parse cache entry at offset: 0x{0:08x} with error: '
           '{1!s}').format(block_offset, exception))
 
@@ -465,6 +465,12 @@ class ChromeCacheParser(interface.FileEntryParser):
     index_file_parser = ChromeCacheIndexFileParser()
 
     file_object = file_entry.GetFileObject()
+    if not file_object:
+      display_name = parser_mediator.GetDisplayName()
+      raise errors.UnableToParseFile(
+          '[{0:s}] unable to parse index file {1:s}'.format(
+              self.NAME, display_name))
+
     try:
       index_file_parser.ParseFileObject(parser_mediator, file_object)
     except (IOError, errors.ParseError) as exception:
