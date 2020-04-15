@@ -317,7 +317,7 @@ optional arguments:
 
     scan_node = volume_scan_node.sub_nodes[1]
     self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_NTFS_BACK_END)
 
   def testFormatHumanReadableSize(self):
     """Tests the _FormatHumanReadableSize function."""

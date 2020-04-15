@@ -285,7 +285,7 @@ class NTFSMFTParser(interface.FileObjectParser):
           path_hint = mft_entry.get_path_hint(attribute_index)
           self._ParseFileStatAttribute(
               parser_mediator, mft_entry, mft_attribute, [path_hint])
-          if mft_attribute.namespace != self._NAMESPACE_DOS:
+          if mft_attribute.name_space != self._NAMESPACE_DOS:
             path_hints.append(path_hint)
 
         elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_OBJECT_ID:
