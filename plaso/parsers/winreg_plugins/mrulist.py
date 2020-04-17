@@ -286,8 +286,8 @@ class MRUListShellItemListWindowsRegistryPlugin(
       shell_items_parser.ParseByteStream(
           parser_mediator, value.data, codepage=codepage)
 
-      value_string = 'Shell item path: {0:s}'.format(
-          shell_items_parser.CopyToPath())
+      shell_item_path = shell_items_parser.CopyToPath() or 'N/A'
+      value_string = 'Shell item path: {0:s}'.format(shell_item_path)
 
     return value_string
 

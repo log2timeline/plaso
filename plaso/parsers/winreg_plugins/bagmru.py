@@ -175,7 +175,7 @@ class BagMRUWindowsRegistryPlugin(
       entry_numbers[entry_number] = upper_path_segment
 
       entry = 'Index: {0:d} [MRU Value {1:d}]: Shell item path: {2:s}'.format(
-          entry_index + 1, entry_number, path)
+          entry_index + 1, entry_number, path or 'N/A')
       entries.append(entry)
 
     event_data = BagMRUEventData()
