@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Timeline plugin."""
+"""Tests for the Windows Timeline SQLite database plugin."""
 
 from __future__ import unicode_literals
 
@@ -16,7 +16,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
   """Tests for the Windows Timeline plugin."""
 
   def testProcess(self):
-    """Tests the Process function on a Windows Timeline db."""
+    """Tests the Process function on a Windows Timeline SQLite database."""
 
     plugin = windows_timeline.WindowsTimelinePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
