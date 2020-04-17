@@ -321,7 +321,8 @@ class NTFSMFTParser(interface.FileObjectParser):
       mft_metadata_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
+          'unable to open $MFT file with error: {0!s}'.format(exception))
+      return
 
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
       try:
@@ -428,6 +429,7 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to open NTFS volume with error: {0!s}'.format(exception))
+      return
 
     try:
       usn_change_journal = volume.get_usn_change_journal()
