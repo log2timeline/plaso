@@ -5,11 +5,10 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class RestorePointInfoFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Windows Windows Restore Point information event."""
+  """Formatter for a Windows Restore Point information event."""
 
   DATA_TYPE = 'windows:restore_point:info'
 
@@ -39,41 +38,21 @@ class RestorePointInfoFormatter(interface.ConditionalEventFormatter):
       13: 'CANCELLED_OPERATION',
   }
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Windows Restore Point information event format helper."""
+    super(RestorePointInfoFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='restore_point_event_type',
+        output_attribute='restore_point_event_type',
+        values=self._RESTORE_POINT_EVENT_TYPES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
+    self.helpers.append(helper)
 
-    Returns:
-      tuple(str, str): formatted message string and short message string.
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='restore_point_type',
+        output_attribute='restore_point_type', values=self._RESTORE_POINT_TYPES)
 
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    restore_point_event_type = event_values.get(
-        'restore_point_event_type', None)
-    if restore_point_event_type is not None:
-      event_values['restore_point_event_type'] = (
-          self._RESTORE_POINT_EVENT_TYPES.get(
-              restore_point_event_type, 'UNKNOWN'))
-
-    restore_point_type = event_values.get('restore_point_type', None)
-    if restore_point_type is not None:
-      event_values['restore_point_type'] = (
-          self._RESTORE_POINT_EVENT_TYPES.get(restore_point_type, 'UNKNOWN'))
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatter(RestorePointInfoFormatter)

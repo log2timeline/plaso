@@ -17,10 +17,9 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.formatters import trendmicroav as formatter
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
@@ -82,6 +81,9 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
     Yields:
       dict[str, str]: column values keyed by column header.
+
+    Raises:
+      UnableToParseFile: if a log line cannot be parsed.
     """
     for line in line_reader:
       if isinstance(line, py2to3.BYTES_TYPE):
@@ -205,6 +207,9 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
       'path', 'filename', 'unused2', 'timestamp', 'unused3', 'unused4']
   MIN_COLUMNS = 8
 
+  _SUPPORTED_SCAN_RESULTS = frozenset([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 25])
+
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
 
@@ -270,9 +275,7 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     except (ValueError, TypeError):
       return False
 
-    if action not in formatter.SCAN_RESULTS:
-      return False
-    return True
+    return action in self._SUPPORTED_SCAN_RESULTS
 
 
 class TrendMicroUrlEventData(events.EventData):
@@ -318,6 +321,8 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
       'credibility_score', 'ip', 'threshold', 'timestamp', 'unused')
 
   MIN_COLUMNS = 12
+
+  _SUPPORTED_BLOCK_MODES = frozenset([0, 1])
 
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
@@ -382,11 +387,8 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
     except (ValueError, TypeError):
       return False
 
-    if block_mode not in formatter.BLOCK_MODES:
-      return False
-    return True
+    return block_mode in self._SUPPORTED_BLOCK_MODES
 
 
 manager.ParsersManager.RegisterParsers([
-    OfficeScanVirusDetectionParser,
-    OfficeScanWebReputationParser])
+    OfficeScanVirusDetectionParser, OfficeScanWebReputationParser])

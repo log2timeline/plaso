@@ -41,7 +41,7 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
     expected_message = (
         '{0:s} '
         'Event type: BEGIN_NESTED_SYSTEM_CHANGE '
-        'Restore point type: UNKNOWN').format(expected_description)
+        'Restore point type: APPLICATION_INSTALL').format(expected_description)
     expected_short_message = expected_description
 
     self._TestGetMessageStrings(

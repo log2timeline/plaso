@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
+
 
 class KikIOSMessageFormatter(interface.ConditionalEventFormatter):
   """Formatter for an iOS Kik message event."""
@@ -24,14 +24,14 @@ class KikIOSMessageFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Kik iOS messages'
   SOURCE_SHORT = 'Kik iOS'
 
-  _MESSAGE_TYPE = {
+  _MESSAGE_TYPES = {
       1: 'received',
       2: 'sent',
       3: 'message to group admin',
       4: 'message to group'
   }
 
-  _MESSAGE_STATUS = {
+  _MESSAGE_STATUSES = {
       0: 'unread',
       2: 'message not sent',
       6: 'sent to Kik server',
@@ -45,39 +45,20 @@ class KikIOSMessageFormatter(interface.ConditionalEventFormatter):
       94: 'read after offline'
   }
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes an iOS Kik message event format helper."""
+    super(KikIOSMessageFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='message_status',
+        output_attribute='message_status', values=self._MESSAGE_STATUSES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
+    self.helpers.append(helper)
 
-    Returns:
-      tuple(str, str): formatted message string and short message string.
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='message_type',
+        output_attribute='message_type', values=self._MESSAGE_TYPES)
 
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    message_type = event_values.get('message_type', None)
-    if message_type is not None:
-      event_values['message_type'] = (
-          self._MESSAGE_TYPE.get(message_type, 'UNKNOWN'))
-
-    message_status = event_values.get('message_status', None)
-    if message_status is not None:
-      event_values['message_status'] = (
-          self._MESSAGE_STATUS.get(message_status, 'UNKNOWN'))
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatter(KikIOSMessageFormatter)

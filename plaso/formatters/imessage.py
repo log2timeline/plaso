@@ -5,11 +5,10 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class IMessageFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an iMessage and SMS event."""
+  """Formatter for an iMessage chat event."""
 
   DATA_TYPE = 'imessage:event:chat'
 
@@ -27,48 +26,29 @@ class IMessageFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Apple iMessage Application'
   SOURCE_SHORT = 'iMessage'
 
-  _READ_RECEIPT = {
+  _READ_RECEIPTS = {
       0: False,
       1: True
   }
-  _MESSAGE_TYPE = {
+  _MESSAGE_TYPES = {
       0: 'Received',
       1: 'Sent'
   }
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes an iMessage chat event format helper."""
+    super(IMessageFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='message_type',
+        output_attribute='message_type', values=self._MESSAGE_TYPES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
+    self.helpers.append(helper)
 
-    Returns:
-      tuple(str, str): formatted message string and short message string.
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='read_receipt',
+        output_attribute='read_receipt', values=self._READ_RECEIPTS)
 
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    read_receipt = event_values.get('read_receipt', None)
-    if read_receipt is not None:
-      event_values['read_receipt'] = (
-          self._READ_RECEIPT.get(read_receipt, 'UNKNOWN'))
-
-    message_type = event_values.get('message_type', None)
-    if message_type is not None:
-      event_values['message_type'] = (
-          self._MESSAGE_TYPE.get(message_type, 'UNKNOWN'))
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatter(IMessageFormatter)

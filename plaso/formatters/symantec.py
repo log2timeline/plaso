@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class SymantecAVFormatter(interface.ConditionalEventFormatter):
@@ -13,7 +12,7 @@ class SymantecAVFormatter(interface.ConditionalEventFormatter):
 
   DATA_TYPE = 'av:symantec:scanlog'
 
-  EVENT_NAMES = {
+  _EVENT_NAMES = {
       '1': 'GL_EVENT_IS_ALERT',
       '2': 'GL_EVENT_SCAN_STOP',
       '3': 'GL_EVENT_SCAN_START',
@@ -91,13 +90,13 @@ class SymantecAVFormatter(interface.ConditionalEventFormatter):
       '76': 'GL_EVENT_HPP_SCAN_NOT_SUPPORTED_FOR_OS',
       '77': 'GL_EVENT_HEUR_THREAT_NOW_KNOWN'}
 
-  CATEGORY_NAMES = {
+  _CATEGORY_NAMES = {
       '1': 'GL_CAT_INFECTION',
       '2': 'GL_CAT_SUMMARY',
       '3': 'GL_CAT_PATTERN',
       '4': 'GL_CAT_SECURITY'}
 
-  ACTION_1_2_NAMES = {
+  _ACTION_1_2_NAMES = {
       '1': 'Quarantine infected file',
       '2': 'Rename infected file',
       '3': 'Delete infected file',
@@ -105,7 +104,7 @@ class SymantecAVFormatter(interface.ConditionalEventFormatter):
       '5': 'Clean virus from file',
       '6': 'Clean or delete macros'}
 
-  ACTION_0_NAMES = {
+  _ACTION_0_NAMES = {
       '1': 'Quarantined',
       '2': 'Renamed',
       '3': 'Deleted',
@@ -123,6 +122,7 @@ class SymantecAVFormatter(interface.ConditionalEventFormatter):
 
   # The identifier for the formatter (a regular expression)
   FORMAT_STRING_SEPARATOR = '; '
+
   FORMAT_STRING_PIECES = [
       'Event Name: {event_map}',
       'Category Name: {category_map}',
@@ -147,52 +147,38 @@ class SymantecAVFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Symantec AV Log'
   SOURCE_SHORT = 'LOG'
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Symantec AV log file event format helper."""
+    super(SymantecAVFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='Unknown', input_attribute='event',
+        output_attribute='event_map', values=self._EVENT_NAMES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
+    self.helpers.append(helper)
 
-    Returns:
-      tuple(str, str): formatted message string and short message string.
+    helper = interface.EnumerationEventFormatterHelper(
+        default='Unknown', input_attribute='cat',
+        output_attribute='category_map', values=self._CATEGORY_NAMES)
 
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
+    self.helpers.append(helper)
 
-    event_values = event_data.CopyToDict()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='Unknown', input_attribute='action0',
+        output_attribute='action0_map', values=self._ACTION_0_NAMES)
 
-    event = event_values.get('event', None)
-    if event:
-      event_values['event_map'] = self.EVENT_NAMES.get(event, 'Unknown')
+    self.helpers.append(helper)
 
-    category = event_values.get('cat', None)
-    if category:
-      event_values['category_map'] = self.CATEGORY_NAMES.get(
-          category, 'Unknown')
+    helper = interface.EnumerationEventFormatterHelper(
+        default='Unknown', input_attribute='action1',
+        output_attribute='action1_map', values=self._ACTION_1_2_NAMES)
 
-    action = event_values.get('action0', None)
-    if action:
-      event_values['action0_map'] = self.ACTION_0_NAMES.get(action, 'Unknown')
+    self.helpers.append(helper)
 
-    action = event_values.get('action1', None)
-    if action:
-      event_values['action1_map'] = self.ACTION_1_2_NAMES.get(
-          action, 'Unknown')
+    helper = interface.EnumerationEventFormatterHelper(
+        default='Unknown', input_attribute='action2',
+        output_attribute='action2_map', values=self._ACTION_1_2_NAMES)
 
-    action = event_values.get('action2', None)
-    if action:
-      event_values['action2_map'] = self.ACTION_1_2_NAMES.get(
-          action, 'Unknown')
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatter(SymantecAVFormatter)

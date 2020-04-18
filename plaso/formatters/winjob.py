@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class WinJobFormatter(interface.ConditionalEventFormatter):
@@ -34,34 +33,14 @@ class WinJobFormatter(interface.ConditionalEventFormatter):
       0x0007: 'EVENT_AT_LOGON'
   }
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Windows Scheduled Task (job) event format helper."""
+    super(WinJobFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='trigger_type',
+        output_attribute='trigger_type', values=self._TRIGGER_TYPES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    trigger_type = event_values.get('trigger_type', None)
-    if trigger_type is not None:
-      event_values['trigger_type'] = self._TRIGGER_TYPES.get(
-          trigger_type, '0x{0:04x}'.format(trigger_type))
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatter(WinJobFormatter)
