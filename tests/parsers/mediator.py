@@ -190,13 +190,16 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     date_time = fake_time.FakeTime()
     event_with_timestamp = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+    event_with_timestamp.parser = 'test_parser'
     event_data = events.EventData()
+    event_data.parser = 'test_parser'
 
     parsers_mediator.ProduceEventWithEventData(event_with_timestamp, event_data)
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     event_without_timestamp = events.EventObject()
+    event_without_timestamp.parser = 'test_parser'
     with self.assertRaises(errors.InvalidEvent):
       parsers_mediator.ProduceEventWithEventData(
           event_without_timestamp, event_data)

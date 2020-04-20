@@ -142,6 +142,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event = events.EventData()
     expected_event.data_type = 'test:event2'
+    expected_event.parser = 'test_parser'
     expected_event.pathspec = path_spec
 
     expected_event.empty_string = ''
@@ -174,6 +175,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         'integer': 34,
         'float': -122.082203542683,
         'my_list': ['asf', 4234, 2, 54, 'asf'],
+        'parser': 'test_parser',
         'pathspec': path_spec.comparable,
         'string': 'Normal string',
         'unicode_string': 'And I am a unicorn.',
@@ -189,6 +191,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""
     expected_event = events.EventObject()
+    expected_event.parser = 'test_parser'
     expected_event.timestamp = 1234124
     expected_event.timestamp_desc = 'Written'
 
@@ -205,6 +208,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event, events.EventObject)
 
     expected_event_dict = {
+        'parser': 'test_parser',
         'timestamp': 1234124,
         'timestamp_desc': 'Written'}
 

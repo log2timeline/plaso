@@ -21,6 +21,7 @@ class EventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         'data_type',
         'offset',
+        'parser'
         'query']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
@@ -39,6 +40,7 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
         'event_data_entry_index',
         'event_data_row_identifier',
         'event_data_stream_number',
+        'parser',
         'tag',
         'timestamp',
         'timestamp_desc']
