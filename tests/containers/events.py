@@ -21,7 +21,7 @@ class EventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         'data_type',
         'offset',
-        'parser'
+        'parser',
         'query']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
