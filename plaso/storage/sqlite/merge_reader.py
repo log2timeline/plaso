@@ -9,16 +9,21 @@ import zlib
 
 from plaso.containers import event_sources
 from plaso.containers import events
+from plaso.containers import manager as containers_manager
 from plaso.containers import reports
 from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import interface
 from plaso.storage import identifiers
+from plaso.storage import logger
 
 
 class SQLiteStorageMergeReader(interface.StorageMergeReader):
   """SQLite-based storage file reader for merging."""
+
+  _ATTRIBUTE_CONTAINERS_MANAGER = (
+      containers_manager.AttributeContainersManager)
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
@@ -72,6 +77,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     self._connection = None
     self._container_types = None
     self._cursor = None
+    self._deserialization_errors = []
     self._event_data_identifier_mappings = {}
     self._path = path
 
@@ -114,7 +120,26 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
           event.event_data_row_identifier)
       lookup_key = event_data_identifier.CopyToString()
 
-      event_data_identifier = self._event_data_identifier_mappings[lookup_key]
+      event_data_identifier = self._event_data_identifier_mappings.get(
+          lookup_key, None)
+
+      if not event_data_identifier:
+        event_identifier = event.GetIdentifier()
+        event_identifier = event_identifier.CopyToString()
+
+        if lookup_key in self._deserialization_errors:
+          reason = 'deserialized'
+        else:
+          reason = 'found'
+
+        # TODO: store this as an extraction warning so this is preserved
+        # in the storage file.
+        logger.error((
+            'Unable to merge event attribute container: {0:s} since '
+            'corresponding event data: {1:s} could not be {2:s}.').format(
+                event_identifier, lookup_key, reason))
+        return
+
       event.SetEventDataIdentifier(event_data_identifier)
 
     # TODO: add event identifier mappings for event tags.
@@ -250,6 +275,8 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       self._ReadStorageMetadata()
       self._container_types = self._GetContainerTypes()
 
+    self._deserialization_errors = []
+
     number_of_containers = 0
     while self._active_cursor or self._container_types:
       if not self._active_cursor:
@@ -274,8 +301,20 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
         else:
           serialized_data = row[1]
 
-        attribute_container = self._DeserializeAttributeContainer(
-            self._active_container_type, serialized_data)
+        try:
+          attribute_container = self._DeserializeAttributeContainer(
+              self._active_container_type, serialized_data)
+        except IOError as exception:
+          # TODO: store this as an extraction warning so this is preserved
+          # in the storage file.
+          logger.error((
+              'Unable to deserialize attribute container with error: '
+              '{0!s}').format(exception))
+
+          identifier = identifier.CopyToString()
+          self._deserialization_errors.append(identifier)
+          continue
+
         attribute_container.SetIdentifier(identifier)
 
         if self._active_container_type == self._CONTAINER_TYPE_EVENT_TAG:

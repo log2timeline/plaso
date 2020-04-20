@@ -15,6 +15,15 @@ from tests.containers import test_lib
 class AttributeContainersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the attribute container manager."""
 
+  def testCreateAttributeContainer(self):
+    """Tests the CreateAttributeContainer function."""
+    attribute_container = (
+        manager.AttributeContainersManager.CreateAttributeContainer('event'))
+    self.assertIsNotNone(attribute_container)
+
+    with self.assertRaises(ValueError):
+      manager.AttributeContainersManager.CreateAttributeContainer('bogus')
+
   def testAttributeContainerRegistration(self):
     """Tests the Register and DeregisterAttributeContainer functions."""
     # pylint: disable=protected-access

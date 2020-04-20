@@ -212,14 +212,10 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     else:
       raise ValueError('Unsupported class type: {0:s}'.format(class_type))
 
-    container_class = (
-        containers_manager.AttributeContainersManager.GetAttributeContainer(
+    container_object = (
+        containers_manager.AttributeContainersManager.CreateAttributeContainer(
             container_type))
-    if not container_class:
-      raise ValueError('Unsupported container type: {0:s}'.format(
-          container_type))
 
-    container_object = container_class()
     supported_attribute_names = container_object.GetAttributeNames()
     for attribute_name, attribute_value in iter(json_dict.items()):
       # Be strict about which attributes to set in non event data attribute
