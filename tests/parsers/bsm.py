@@ -50,11 +50,8 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
-    expected_return_value = {
-        'call_status': 0,
-        'error': 'Success',
-        'token_status': 0
-    }
+    expected_return_value = (
+        '{\'error\': \'Success\', \'token_status\': 0, \'call_status\': 0}')
     self.assertEqual(event_data.return_value, expected_return_value)
 
     event = events[15]
@@ -85,11 +82,9 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
-    expected_return_value = {
-        'call_status': 5000,
-        'error': 'UNKNOWN',
-        'token_status': 255
-    }
+    expected_return_value = (
+        '{\'error\': \'UNKNOWN\', \'token_status\': 255, '
+        '\'call_status\': 5000}')
     self.assertEqual(event_data.return_value, expected_return_value)
 
     event = events[31]
@@ -119,11 +114,8 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'token_status': 0}}]
     self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
-    expected_return_value = {
-        'call_status': 0,
-        'error': 'Success',
-        'token_status': 0
-    }
+    expected_return_value = (
+        '{\'error\': \'Success\', \'token_status\': 0, \'call_status\': 0}')
     self.assertEqual(event_data.return_value, expected_return_value)
 
     event = events[50]
@@ -162,11 +154,8 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'token_status': 0}}]
     self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
-    expected_return_value = {
-        'call_status': 0,
-        'error': 'Success',
-        'token_status': 0
-    }
+    expected_return_value = (
+        '{\'error\': \'Success\', \'token_status\': 0, \'call_status\': 0}')
     self.assertEqual(event_data.return_value, expected_return_value)
 
 
