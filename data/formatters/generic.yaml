@@ -36,61 +36,69 @@ short_source: 'LOG'
 source: 'Bash History'
 ---
 type: 'conditional'
-data_type: 'chrome:autofill:entry'
+data_type: 'cups:ipp:event'
 message:
-- 'Form field name: {field_name}'
-- 'Entered value: {value}'
-- 'Times used: {usage_count}'
+- 'Status: {status}'
+- 'User: {user}'
+- 'Owner: {owner}'
+- 'Job Name: {job_name}'
+- 'Application: {application}'
+- 'Document type: {type_doc}'
+- 'Printer: {printer_id}'
 short_message:
-- '{field_name}:'
-- '{value}'
-- '({usage_count})'
-short_source: 'WEBHIST'
-source: 'Chrome Autofill'
----
-type: 'conditional'
-data_type: 'chrome:cookie:entry'
-message:
-- '{url}'
-- '({cookie_name})'
-- 'Flags:'
-- '[HTTP only] = {httponly}'
-- '[Persistent] = {persistent}'
-short_message:
-- '{host}'
-- '({cookie_name})'
-short_source: 'WEBHIST'
-source: 'Chrome Cookies'
----
-type: 'conditional'
-data_type: 'chrome:preferences:clear_history'
-message:
-- '{message}'
-short_message:
-- '{message}'
+- 'Status: {status}'
+- 'Job Name: {job_name}'
 short_source: 'LOG'
-source: 'Chrome History Deletion'
+source: 'CUPS IPP Log'
 ---
 type: 'conditional'
-data_type: 'chrome:preferences:extensions_autoupdater'
+data_type: 'docker:json:container'
 message:
-- '{message}'
+- 'Action: {action}'
+- 'Container Name: {container_name}'
+- 'Container ID: {container_id}'
+separator: ', '
 short_message:
-- '{message}'
-short_source: 'LOG'
-source: 'Chrome Extensions Autoupdater'
+- 'Action: {action}'
+- 'Container Name: {container_name}'
+- 'Container ID: {container_id}'
+short_source: 'DOCKER'
+source: 'Docker Container'
 ---
 type: 'conditional'
-data_type: 'chrome:preferences:extension_installation'
+data_type: 'docker:json:container:log'
 message:
-- 'CRX ID: {extension_id}'
-- 'CRX Name: {extension_name}'
-- 'Path: {path}'
+- 'Text: {log_line}'
+- 'Container ID: {container_id}'
+- 'Source: {log_source}'
+separator: ', '
 short_message:
-- '{extension_id}'
-- '{path}'
+- 'Text: {log_line}'
+- 'Container ID: {container_id}'
+- 'Source: {log_source}'
+short_source: 'DOCKER'
+source: 'Docker Container Logs'
+---
+type: 'conditional'
+data_type: 'docker:json:layer'
+message:
+- 'Command: {command}'
+- 'Layer ID: {layer_id}'
+separator: ', '
+short_message:
+- 'Command: {command}'
+- 'Layer ID: {layer_id}'
+short_source: 'DOCKER'
+source: 'Docker Layer'
+---
+type: 'conditional'
+data_type: 'dpkg:line'
+message:
+- '{body}'
+short_message:
+- '{body}'
 short_source: 'LOG'
-source: 'Chrome Extension Installation'
+source: 'dpkg log file'
 ---
 type: 'conditional'
 data_type: 'file_history:namespace:event'

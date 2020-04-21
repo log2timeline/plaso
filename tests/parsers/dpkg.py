@@ -50,8 +50,13 @@ class DpkgParserTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2016-08-09 04:57:14.000000')
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.body, 'status half-installed base-passwd:amd64 3.5.33')
+
+    expected_body = 'status half-installed base-passwd:amd64 3.5.33'
+    self.assertEqual(event_data.body, expected_body)
+
+    expected_message = expected_body
+
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
   def testVerification(self):
     """Tests for the VerifyStructure method"""

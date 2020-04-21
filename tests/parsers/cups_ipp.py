@@ -9,7 +9,6 @@ import unittest
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.path import fake_path_spec
 
-from plaso.formatters import cups_ipp as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import cups_ipp

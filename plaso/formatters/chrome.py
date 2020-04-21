@@ -8,25 +8,6 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class ChromeFileDownloadFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Chrome file download event."""
-
-  DATA_TYPE = 'chrome:history:file_downloaded'
-
-  FORMAT_STRING_PIECES = [
-      '{url}',
-      '({full_path}).',
-      'Received: {received_bytes} bytes',
-      'out of: {total_bytes} bytes.']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      '{full_path} downloaded',
-      '({received_bytes} bytes)']
-
-  SOURCE_LONG = 'Chrome History'
-  SOURCE_SHORT = 'WEBHIST'
-
-
 class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Chrome page visited event."""
 
@@ -48,7 +29,6 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Chrome History'
   SOURCE_SHORT = 'WEBHIST'
 
-  _UNKNOWN_PAGE_TRANSITION = ('UNKNOWN', None)
   # The following definition for values can be found here:
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h
   _PAGE_TRANSITIONS = {
@@ -72,6 +52,8 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
            'default search provider')),
       10: ('KEYWORD_GENERATED',
            'Corresponds to a visit generated from a KEYWORD')}
+
+  _UNKNOWN_PAGE_TRANSITION = ('UNKNOWN', None)
 
   # The following is the values for the source enum found in the visit_source
   # table and describes where a record originated from (if it originates from a
@@ -142,5 +124,4 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatters([
-    ChromeFileDownloadFormatter, ChromePageVisitedFormatter])
+manager.FormattersManager.RegisterFormatter(ChromePageVisitedFormatter)
