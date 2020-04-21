@@ -143,7 +143,8 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
           codepage=parser_mediator.codepage)
 
       link_target = shell_items_parser.CopyToPath()
-      link_targets.append(link_target)
+      if link_target:
+        link_targets.append(link_target)
 
       value_data_offset += entry_header.data_size
 
