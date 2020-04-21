@@ -22,6 +22,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
   _EVENT_TAG_COMMENT = 'Tag applied by tagging analysis plugin.'
 
   _OS_TAG_FILES = {
+      'linux': 'tag_linux.txt',
       'macos': 'tag_macos.txt',
       'windows': 'tag_windows.txt'}
 

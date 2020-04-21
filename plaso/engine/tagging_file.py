@@ -42,7 +42,7 @@ class TaggingFile(object):
     Raises:
       TaggingFileError: if a filter expression cannot be compiled.
     """
-    tagging_rules = {}
+    rules_per_label = {}
 
     label_name = None
     with io.open(self._path, 'r', encoding='utf-8') as tagging_file:
@@ -50,27 +50,34 @@ class TaggingFile(object):
         line = line.rstrip()
 
         stripped_line = line.lstrip()
-        if not stripped_line or stripped_line[0] == '#':
+        if not stripped_line:
+          label_name = None
+          continue
+
+        if stripped_line[0] == '#':
           continue
 
         if not line[0].isspace():
           label_name = line
-          tagging_rules[label_name] = []
-          continue
+          rules_per_label[label_name] = []
 
-        if not label_name:
-          continue
+        elif label_name:
+          rules_per_label[label_name].append(stripped_line)
 
-        filter_object = event_filter.EventObjectFilter()
+    filter_objects_per_label = {}
 
-        try:
-          filter_object.CompileFilter(stripped_line)
-        except errors.ParseError as exception:
-          raise errors.TaggingFileError((
-              'Unable to compile filter for label: {0:s} with error: '
-              '{1!s}').format(label_name, exception))
+    for label_name, rules in rules_per_label.items():
+      filter_object = event_filter.EventObjectFilter()
 
-        if filter_object not in tagging_rules[label_name]:
-          tagging_rules[label_name].append(filter_object)
+      try:
+        filter_rule = ' OR '.join(['({0:s})'.format(rule) for rule in rules])
+        filter_object.CompileFilter(filter_rule)
+      except errors.ParseError as exception:
+        raise errors.TaggingFileError((
+            'Unable to compile filter for label: {0:s} with error: '
+            '{1!s}').format(label_name, exception))
 
-    return tagging_rules
+      # TODO: change other code remove list around filter_object
+      filter_objects_per_label[label_name] = [filter_object]
+
+    return filter_objects_per_label

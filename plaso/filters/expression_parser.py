@@ -184,7 +184,7 @@ class EventFilterExpressionParser(object):
     while item_index < number_of_items:
       item = self._stack[item_index]
       if (isinstance(item, expressions.BinaryExpression) and
-          item.operator.lower() == operator_lower):
+          item.operator.lower() == operator_lower and not item.args):
         previous_item = self._stack[item_index - 1]
         next_item = self._stack[item_index + 1]
 
@@ -247,13 +247,13 @@ class EventFilterExpressionParser(object):
       # The match consumes the data off the buffer (the handler can put it back
       # if it likes)
       match_end_offset = match.end()
-      self._processed_buffer = ''.join(
-          [self._processed_buffer, self._buffer[:match_end_offset]])
+      match_buffer = self._buffer[:match_end_offset]
       self._buffer = self._buffer[match_end_offset:]
+      self._processed_buffer = ''.join([self._processed_buffer, match_buffer])
 
       next_state = token.next_state
       for action in token.actions:
-        callback = getattr(self, action, self.Default)
+        callback = getattr(self, action, self._NoOperation)
 
         # Allow a callback to skip other callbacks.
         possible_next_state = callback(string=match.group(0), match=match)
@@ -272,7 +272,7 @@ class EventFilterExpressionParser(object):
 
     raise errors.ParseError((
         'No token match for parser state: {0:s} at position {1!s}: {2!s} '
-        '<----> {3!s} )').format(
+        '<---> {3!s} )').format(
             self._state, len(self._processed_buffer), self._processed_buffer,
             self._buffer))
 
@@ -302,6 +302,13 @@ class EventFilterExpressionParser(object):
     logging.debug('Negating expression')
     self._current_expression.Negate()
 
+  def _NoOperation(self, **kwarg):
+    """No operation.
+
+    Note that this function is used as a callback by _GetNextToken.
+    """
+    logging.debug('Default handler: {0!s}'.format(kwarg))
+
   def _PopState(self, **unused_kwargs):
     """Pops the previous state from the stack.
 
@@ -316,7 +323,7 @@ class EventFilterExpressionParser(object):
     except IndexError:
       raise errors.ParseError((
           'Tried to pop state from an empty stack - possible recursion error '
-          'at position {0!s}: {1!s} <----> {2!s} )').format(
+          'at position {0!s}: {1!s} <---> {2!s} )').format(
               len(self._processed_buffer), self._processed_buffer,
               self._buffer))
 
@@ -365,7 +372,7 @@ class EventFilterExpressionParser(object):
     if self._state not in ('BINARY', 'INITIAL'):
       raise errors.ParseError((
           'Unsupported intial state: {0:s} - premature end of expression '
-          'at position {1!s}: {2!s} <----> {3!s} )').format(
+          'at position {1!s}: {2!s} <---> {3!s} )').format(
               self._state, len(self._processed_buffer), self._processed_buffer,
               self._buffer))
 
@@ -384,7 +391,7 @@ class EventFilterExpressionParser(object):
 
     if number_of_items != 1:
       raise errors.ParseError((
-          'Unsupported event filter expression at position {0!s}: {1!s} <----> '
+          'Unsupported event filter expression at position {0!s}: {1!s} <---> '
           '{2!s} )').format(
               len(self._processed_buffer), self._processed_buffer,
               self._buffer))
@@ -507,10 +514,6 @@ class EventFilterExpressionParser(object):
     self._string = ''
 
     return None
-
-  def Default(self, **kwarg):
-    """Default callback handler."""
-    logging.debug('Default handler: {0!s}'.format(kwarg))
 
   def HexEscape(self, string, match, **unused_kwargs):
     """Converts a hex escaped string.

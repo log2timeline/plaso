@@ -86,7 +86,8 @@ class AndFilter(Filter):
       bool: True if the event, data and tag match the filter, False otherwise.
     """
     for sub_filter in self.args:
-      if not sub_filter.Matches(event, event_data, event_tag):
+      match = sub_filter.Matches(event, event_data, event_tag)
+      if not match:
         return False
     return True
 
@@ -112,7 +113,8 @@ class OrFilter(Filter):
       return True
 
     for sub_filter in self.args:
-      if sub_filter.Matches(event, event_data, event_tag):
+      match = sub_filter.Matches(event, event_data, event_tag)
+      if match:
         return True
     return False
 
@@ -200,8 +202,6 @@ class GenericBinaryOperator(BinaryOperator):
 
   # Attributes that are stored in the event attribute container.
   _EVENT_ATTRIBUTE_NAMES = frozenset(['timestamp', 'timestamp_desc'])
-
-  _OBJECT_PATH_SEPARATOR = '.'
 
   def __init__(self, arguments=None, **kwargs):
     """Initializes a generic binary operator.

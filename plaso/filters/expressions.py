@@ -30,6 +30,7 @@ class Expression(object):
   def __init__(self):
     """Initializes an event filter parser expression."""
     super(Expression, self).__init__()
+    self.attribute = None
     self.args = []
     self.number_of_args = 1
     self.operator = None
@@ -92,6 +93,13 @@ class BinaryExpression(Expression):
     super(BinaryExpression, self).__init__()
     self.args = []
     self.operator = operator
+
+  def __repr__(self):
+    """Retrieves a string representation of the object for debugging."""
+    if len(self.args) == 2:
+      return '({0!s}) {1:s} {2!s}'.format(
+          self.args[0], self.operator, self.args[1])
+    return self.operator
 
   def AddOperands(self, lhs, rhs):
     """Adds an operand.
@@ -177,6 +185,10 @@ class EventExpression(Expression):
     """Initializes an event expression."""
     super(EventExpression, self).__init__()
     self._bool_value = True
+
+  def __repr__(self):
+    """Retrieves a string representation of the object for debugging."""
+    return '{0:s} {1:s} {2!s}'.format(self.attribute, self.operator, self.args)
 
   def _CopyValueToDateTime(self, value):
     """Copies an event filter value to a date and time object.
