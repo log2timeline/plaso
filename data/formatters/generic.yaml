@@ -140,6 +140,16 @@ short_source: 'TORRENT'
 source: 'uTorrent Active Torrents'
 ---
 type: 'conditional'
+data_type: 'shell:zsh:history'
+message:
+- '{command}'
+- 'Time elapsed: {elapsed_seconds} seconds'
+short_message:
+- '{command}'
+short_source: 'HIST'
+source: 'Zsh Extended History'
+---
+type: 'conditional'
 data_type: 'syslog:cron:task_run'
 message:
 - 'Cron ran: {command}'
@@ -149,6 +159,49 @@ short_message:
 - '{body}'
 short_source: 'LOG'
 source: 'Cron log'
+---
+type: 'basic'
+data_type: 'text:entry'
+message: '{text}'
+short_message: '{text}'
+short_source: 'LOG'
+source: 'Text File'
+---
+type: 'conditional'
+data_type: 'vsftpd:log'
+message:
+- '{text}'
+short_message:
+- '{text}'
+short_source: 'LOG'
+source: 'vsftpd log'
+---
+type: 'conditional'
+data_type: 'xchat:log:line'
+message:
+- '[nickname: {nickname}]'
+- '{text}'
+short_message:
+- '[nickname: {nickname}]'
+- '{text}'
+short_source: 'LOG'
+source: 'XChat Log File'
+---
+type: 'conditional'
+data_type: 'xchat:scrollback:line'
+message:
+- '['
+- 'nickname: {nickname}'
+- ']'
+- ' {text}'
+separator: ''
+short_message:
+- '['
+- 'nickname: {nickname}'
+- ']'
+- ' {text}'
+short_source: 'LOG'
+source: 'XChat Scrollback File'
 ---
 type: 'basic'
 data_type: 'zeitgeist:activity'

@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import vsftpd as _  # pylint: disable=unused-import
 from plaso.parsers import vsftpd
 
 from tests.parsers import test_lib

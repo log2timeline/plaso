@@ -43,6 +43,15 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2016-03-26 11:54:57.000000')
 
+    expected_message = (
+        'echo dfgdfg \\\\& touch /tmp/afile '
+        'Time elapsed: 0 seconds')
+    expected_short_message = (
+        'echo dfgdfg \\\\& touch /tmp/afile')
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
+
   def testVerification(self):
     """Tests for the VerifyStructure method"""
     parser = zsh_extended_history.ZshExtendedHistoryParser()
