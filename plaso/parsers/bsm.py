@@ -677,7 +677,12 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
 
       if token_type in (
           self._TOKEN_TYPE_AUT_RETURN32, self._TOKEN_TYPE_AUT_RETURN64):
-        return_token_values = token_values
+        # Make sure return_token_values is a string.
+        return_token_values = (
+            '{{\'error\': \'{0:s}\', \'token_status\': {1:d}, \'call_status\': '
+            '{2:d}}}').format(
+                token_values['error'], token_values['token_status'],
+                token_values['call_status'])
 
     if token_data.signature != self._TRAILER_TOKEN_SIGNATURE:
       raise errors.ParseError('Unsupported signature in trailer token.')
