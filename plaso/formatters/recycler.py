@@ -55,6 +55,7 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = 'RECBIN'
 
   def __init__(self):
+    """Initializes a Windows Recycler/Recycle Bin file event format helper."""
     super(WinRecyclerFormatter, self).__init__()
     helper = interface.EnumerationEventFormatterHelper(
         default='UNKNOWN', input_attribute='drive_number',

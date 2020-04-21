@@ -28,6 +28,7 @@ class ChromeExtensionActivityEventFormatterTest(
 
     expected_attribute_names = [
         'extension_id',
+        'action_type_string',
         'action_type',
         'activity_id',
         'page_url',

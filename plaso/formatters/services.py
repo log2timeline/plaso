@@ -8,7 +8,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import manager
 from plaso.formatters import interface
-from plaso.lib import errors
 from plaso.winnt import human_readable_service_enums
 
 
@@ -33,47 +32,29 @@ class WinRegistryServiceFormatter(interface.ConditionalEventFormatter):
       'Error control: {error_control}',
       '{values}']
 
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Windows service event format helper."""
+    super(WinRegistryServiceFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='error_control',
+        output_attribute='error_control', values=(
+            human_readable_service_enums.SERVICE_ENUMS['ErrorControl']))
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
-      event_data (EventData): event data.
+    self.helpers.append(helper)
 
-    Returns:
-      tuple(str, str): formatted message string and short message string.
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='service_type',
+        output_attribute='service_type', values=(
+            human_readable_service_enums.SERVICE_ENUMS['Type']))
 
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
+    self.helpers.append(helper)
 
-    event_values = event_data.CopyToDict()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='start_type',
+        output_attribute='start_type', values=(
+            human_readable_service_enums.SERVICE_ENUMS['Start']))
 
-    error_control = event_values.get('error_control', None)
-    if error_control is not None:
-      error_control = (
-          human_readable_service_enums.SERVICE_ENUMS['ErrorControl'].get(
-              error_control, error_control))
-      event_values['error_control'] = error_control
-
-    service_type = event_values.get('service_type', None)
-    if service_type is not None:
-      service_type = human_readable_service_enums.SERVICE_ENUMS['Type'].get(
-          service_type, service_type)
-      event_values['service_type'] = service_type
-
-    start_type = event_values.get('start_type', None)
-    if start_type is not None:
-      start_type = human_readable_service_enums.SERVICE_ENUMS['Start'].get(
-          start_type, start_type)
-      event_values['start_type'] = start_type
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatter(WinRegistryServiceFormatter)

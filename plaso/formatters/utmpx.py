@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
@@ -44,37 +43,14 @@ class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
       10: 'SIGNATURE',
       11: 'SHUTDOWN_TIME'}
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes an UTMPX session event format helper."""
+    super(UtmpxSessionFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='type',
+        output_attribute='status', values=self._STATUS_TYPES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    login_type = event_values.get('type', None)
-    if login_type is None:
-      status = 'N/A'
-    else:
-      status = self._STATUS_TYPES.get(login_type, 'UNKNOWN')
-
-    event_values['status'] = status
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatter(UtmpxSessionFormatter)

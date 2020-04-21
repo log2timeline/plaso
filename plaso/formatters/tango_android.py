@@ -31,33 +31,14 @@ class TangoAndroidMessageFormatter(interface.ConditionalEventFormatter):
       2: 'Outgoing'
   }
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Tango on Android message event format helper."""
+    super(TangoAndroidMessageFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='Unknown', input_attribute='direction',
+        output_attribute='direction', values=self._DIRECTION)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple[str, str]: formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    direction = event_values.get('direction', None)
-    if direction is not None:
-      event_values['direction'] = self._DIRECTION.get(direction, 'Unknown')
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 class TangoAndroidConversationFormatter(interface.ConditionalEventFormatter):

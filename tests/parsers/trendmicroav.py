@@ -83,5 +83,6 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
+
 if __name__ == '__main__':
   unittest.main()

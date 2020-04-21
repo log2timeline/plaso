@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
@@ -34,39 +33,19 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Twitter iOS Contacts'
   SOURCE_SHORT = 'Twitter iOS'
 
-  _FOLLOWING = {
+  _YES_NO_VALUES = {
       0: 'No',
       1: 'Yes',
   }
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Twitter on iOS 8+ contact event format helper."""
+    super(TwitterIOSContactFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='following',
+        output_attribute='following', values=self._YES_NO_VALUES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    following = event_values.get('following', None)
-    if following is not None:
-      event_values['following'] = (
-          self._FOLLOWING.get(following, 'UNKNOWN'))
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 class TwitterIOSStatusFormatter(interface.ConditionalEventFormatter):
@@ -91,38 +70,19 @@ class TwitterIOSStatusFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Twitter iOS Status'
   SOURCE_SHORT = 'Twitter iOS'
 
-  _FAVORITED = {
+  _YES_NO_VALUES = {
       0: 'No',
       1: 'Yes',
   }
 
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Twitter on iOS 8+ status event format helper."""
+    super(TwitterIOSStatusFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='favorited',
+        output_attribute='favorited', values=self._YES_NO_VALUES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    favorited = event_values.get('favorited', None)
-    if favorited is not None:
-      event_values['favorited'] = (
-          self._FAVORITED.get(favorited, 'UNKNOWN'))
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatters([

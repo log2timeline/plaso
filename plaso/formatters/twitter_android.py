@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Twitter on android database formatter."""
+"""Twitter on Android database formatter."""
 
 from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class TwitterAndroidContactFormatter(interface.ConditionalEventFormatter):
@@ -36,7 +35,7 @@ class TwitterAndroidContactFormatter(interface.ConditionalEventFormatter):
 
 
 class TwitterAndroidStatusFormatter(interface.ConditionalEventFormatter):
-  """Twitter for android status event formatter."""
+  """Twitter for Android status event formatter."""
 
   DATA_TYPE = 'twitter:android:status'
 
@@ -55,44 +54,25 @@ class TwitterAndroidStatusFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Twitter Android Status'
   SOURCE_SHORT = 'Twitter Android'
 
-  _BOOLEAN_PRETTY_PRINT = {
+  _YES_NO_VALUES = {
       0: 'No',
       1: 'Yes'
   }
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Twitter for Android status event format helper."""
+    super(TwitterAndroidStatusFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='favorited',
+        output_attribute='favorited', values=self._YES_NO_VALUES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
-      event_data (EventData): event data.
+    self.helpers.append(helper)
 
-    Returns:
-      tuple(str, str): formatted message string and short message string.
+    helper = interface.EnumerationEventFormatterHelper(
+        default='UNKNOWN', input_attribute='retweeted',
+        output_attribute='retweeted', values=self._YES_NO_VALUES)
 
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    favorited = event_values.get('favorited', None)
-    if favorited is not None:
-      event_values['favorited'] = (
-          self._BOOLEAN_PRETTY_PRINT.get(favorited, 'UNKNOWN'))
-
-    retweeted = event_values.get('retweeted', None)
-    if retweeted is not None:
-      event_values['retweeted'] = (
-          self._BOOLEAN_PRETTY_PRINT.get(retweeted, 'UNKNOWN'))
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 class TwitterAndroidSearchFormatter(interface.ConditionalEventFormatter):

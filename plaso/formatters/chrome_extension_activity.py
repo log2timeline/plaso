@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class ChromeExtensionActivityEventFormatter(
@@ -16,7 +15,8 @@ class ChromeExtensionActivityEventFormatter(
 
   FORMAT_STRING_PIECES = [
       'Chrome extension: {extension_id}',
-      'Action type: {action_type}',
+      'Action type: {action_type_string}',
+      '(type {action_type})',
       'Activity identifier: {activity_id}',
       'Page URL: {page_url}',
       'Page title: {page_title}',
@@ -45,35 +45,14 @@ class ChromeExtensionActivityEventFormatter(
       1001 : 'Unspecified'
   }
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def __init__(self):
+    """Initializes a Chrome extension activity format helper."""
+    super(ChromeExtensionActivityEventFormatter, self).__init__()
+    helper = interface.EnumerationEventFormatterHelper(
+        default='unknown', input_attribute='action_type',
+        output_attribute='action_type_string', values=self._CHROME_ACTION_TYPES)
 
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    action_type = event_values.get('action_type')
-    event_values['action_type'] = '%s (type %d)'%(
-        self._CHROME_ACTION_TYPES.get(action_type, 'unknown action_type'),
-        action_type
-    )
-
-    return self._ConditionalFormatMessages(event_values)
+    self.helpers.append(helper)
 
 
 manager.FormattersManager.RegisterFormatter(
