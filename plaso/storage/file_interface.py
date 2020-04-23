@@ -532,9 +532,9 @@ class StorageFileWriter(interface.StorageWriter):
     self._session.parsers_counter['total'] += 1
 
     # Here we want the name of the parser or plugin not the parser chain.
-    parser_name = getattr(event, 'parser', '')
-    _, _, parser_name = parser_name.rpartition('/')
-    if not parser_name:
+    if event.parser:
+      _, _, parser_name = event.parser.rpartition('/')
+    else:
       parser_name = 'N/A'
     self._session.parsers_counter[parser_name] += 1
 

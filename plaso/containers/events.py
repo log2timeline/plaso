@@ -17,6 +17,7 @@ class EventData(interface.AttributeContainer):
     data_type (str): event data type indicator.
     offset (int): offset relative to the start of the data stream where
         the event data is stored.
+    parser (str): string identifying the parser that produced the event data.
     query (str): query that was used to obtain the event data.
   """
   CONTAINER_TYPE = 'event_data'
@@ -30,6 +31,7 @@ class EventData(interface.AttributeContainer):
     super(EventData, self).__init__()
     self.data_type = data_type
     self.offset = None
+    self.parser = None
     self.query = None
 
 
@@ -51,6 +53,7 @@ class EventObject(interface.AttributeContainer):
     event_data_stream_number (int): number of the serialized event data stream,
         this attribute is used by the GZIP storage files to uniquely identify
         the event data linked to the tag.
+    parser (str): string identifying the parser that produced the event.
     tag (EventTag): event tag.
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
@@ -65,6 +68,7 @@ class EventObject(interface.AttributeContainer):
     self.event_data_entry_index = None
     self.event_data_row_identifier = None
     self.event_data_stream_number = None
+    self.parser = None
     self.tag = None
     self.timestamp = None
     # TODO: rename timestamp_desc to timestamp_description

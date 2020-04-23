@@ -38,6 +38,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
+       'parser': 'test_parser',
        'some_additional_foo': True,
        'a_binary_field': b'binary',
        'text': (
@@ -95,7 +96,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         'log/syslog.1',
         '-',
         '-',
-        '-',
+        'test_parser',
         'a_binary_field: binary; my_number: 123; some_additional_foo: True']
 
     event, event_data = containers_test_lib.CreateEventFromValues(
@@ -134,8 +135,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         'closed for user root),Reporter <CRON> PID: 8442 '
         '(pam_unix(cron:session): session closed for user root),'
-        '2,log/syslog.1,-,Malware Printed,'
-        '-,a_binary_field: binary; my_number: 123; some_additional_foo: True\n')
+        '2,log/syslog.1,-,Malware Printed,test_parser,'
+        'a_binary_field: binary; my_number: 123; some_additional_foo: True\n')
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
