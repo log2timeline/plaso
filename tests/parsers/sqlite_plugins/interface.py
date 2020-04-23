@@ -6,36 +6,9 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
-from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import interface
 
 from tests.parsers.sqlite_plugins import test_lib
-
-
-class TestEventData(events.EventData):
-  """Event data for testing the SQLite plugin interface.
-
-  Attributes:
-    field1 (str): first field.
-    field2 (str): second field.
-    field3 (str): third field.
-    from_wal (bool): True if the event data was created from a SQLite database
-        with a WAL file.
-  """
-
-  DATA_TYPE = 'test:sqlite_plugins:interface'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(TestEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.field1 = None
-    self.field2 = None
-    self.field3 = None
-    self.from_wal = None
 
 
 class TestSQLitePlugin(interface.SQLitePlugin):
@@ -58,6 +31,7 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     super(TestSQLitePlugin, self).__init__()
     self.results = []
 
+  # pylint: disable=unused-argument
   def ParseMyTableRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a MyTable row.
 
@@ -69,30 +43,11 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    file_entry = parser_mediator.GetFileEntry()
-
     field1 = self._GetRowValue(query_hash, row, 'Field1')
     field2 = self._GetRowValue(query_hash, row, 'Field2')
     field3 = self._GetRowValue(query_hash, row, 'Field3')
 
-    # If Python 2 is used field3 needs to be converted to a string
-    # because it is a read-write buffer.
-    if py2to3.PY_2 and field3 is not None:
-      field3 = str(field3)
-
     self.results.append((field1, field2, field3))
-
-    event_data = TestEventData()
-    event_data.field1 = field1
-    event_data.field2 = field2
-    event_data.field3 = field3
-    event_data.from_wal = file_entry.path_spec.location.endswith('-wal')
-
-    event = time_events.TimestampEvent(
-        timelib.Timestamp.NONE_TIMESTAMP,
-        definitions.TIME_DESCRIPTION_NOT_A_TIME)
-
-    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):

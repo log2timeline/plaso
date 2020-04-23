@@ -28,6 +28,18 @@ class EventDataTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(attribute_names, expected_attribute_names)
 
+  def testGetAttributes(self):
+    """Tests the GetAttributes function."""
+    attribute_container = events.EventData()
+
+    with self.assertRaises(TypeError):
+      attribute_container.error = b'bytes'
+      attribute_container.GetAttributeValuesHash()
+
+    with self.assertRaises(TypeError):
+      attribute_container.error = {'key': 'value'}
+      attribute_container.GetAttributeValuesHash()
+
 
 class EventObjectTest(shared_test_lib.BaseTestCase):
   """Tests for the event attribute container."""
