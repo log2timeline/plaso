@@ -12,6 +12,11 @@ from plaso.lib import py2to3
 class PathHelper(object):
   """Class that implements the path helper."""
 
+  _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + [0x7f]
+  _ESCAPE_CHARACTERS = str.maketrans({
+      value: '\\x{0:02x}'.format(value)
+      for value in _NON_PRINTABLE_CHARACTERS})
+
   _RECURSIVE_GLOB_LIMIT = 10
 
   _PATH_EXPANSIONS_PER_USERS_VARIABLE = {
@@ -358,8 +363,11 @@ class PathHelper(object):
     if not location:
       return None
 
+    location = location.translate(cls._ESCAPE_CHARACTERS)
+
     data_stream = getattr(path_spec, 'data_stream', None)
     if data_stream:
+      data_stream = data_stream.translate(cls._ESCAPE_CHARACTERS)
       location = '{0:s}:{1:s}'.format(location, data_stream)
 
     if path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_OS:
