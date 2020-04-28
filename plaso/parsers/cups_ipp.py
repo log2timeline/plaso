@@ -45,7 +45,6 @@ class CupsIppEventData(events.EventData):
 
   Attributes:
     application (str): application that prints the document.
-    data_dict (dict[str, object]): parsed data coming from the file.
     computer_name (str): name of the computer.
     copies (int): number of copies.
     doc_type (str): type of document.
@@ -65,8 +64,6 @@ class CupsIppEventData(events.EventData):
     self.application = None
     self.computer_name = None
     self.copies = None
-    # TODO: remove data_dict.
-    self.data_dict = None
     self.doc_type = None
     self.job_id = None
     self.job_name = None
@@ -413,7 +410,6 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
     event_data.application = self._GetStringValue(data_dict, 'application')
     event_data.computer_name = self._GetStringValue(data_dict, 'computer_name')
     event_data.copies = data_dict.get('copies', [0])[0]
-    event_data.data_dict = data_dict
     event_data.doc_type = self._GetStringValue(data_dict, 'doc_type')
     event_data.job_id = self._GetStringValue(data_dict, 'job_id')
     event_data.job_name = self._GetStringValue(data_dict, 'job_name')

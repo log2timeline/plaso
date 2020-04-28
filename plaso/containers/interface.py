@@ -66,9 +66,7 @@ class AttributeContainer(object):
     Returns:
       dict[str, object]: attribute values per name.
     """
-    return {
-        attribute_name: attribute_value
-        for attribute_name, attribute_value in self.GetAttributes()}
+    return dict(self.GetAttributes())
 
   def GetAttributeNames(self):
     """Retrieves the names of all attributes.

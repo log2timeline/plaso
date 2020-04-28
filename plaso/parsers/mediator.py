@@ -481,7 +481,8 @@ class ParserMediator(object):
       event_data (EventData): event data.
 
     Raises:
-      InvalidEvent: if the event timestamp value is not set or out of bounds.
+      InvalidEvent: if the event timestamp value is not set or out of bounds or
+          if the event data (attribute container) values cannot be hashed.
     """
     if event.timestamp is None:
       raise errors.InvalidEvent('Event timestamp value not set.')
@@ -489,7 +490,13 @@ class ParserMediator(object):
     if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
       raise errors.InvalidEvent('Event timestamp value out of bounds.')
 
-    event_data_hash = event_data.GetAttributeValuesHash()
+    try:
+      event_data_hash = event_data.GetAttributeValuesHash()
+    except TypeError as exception:
+      raise errors.InvalidEvent(
+          'Unable to hash event data values with error: {0!s}'.format(
+              exception))
+
     if event_data_hash != self._last_event_data_hash:
       # Make a copy of the event data before adding additional values.
       event_data = copy.deepcopy(event_data)

@@ -34,6 +34,36 @@ class EventData(interface.AttributeContainer):
     self.parser = None
     self.query = None
 
+  def GetAttributeValuesString(self):
+    """Retrieves a comparable string of the attribute values.
+
+    Returns:
+      str: comparable string of the attribute values.
+
+    Raises:
+      TypeError: if the attribute value type is not supported.
+    """
+    attributes = []
+    for attribute_name, attribute_value in sorted(self.__dict__.items()):
+      # Not using startswith to improve performance.
+      if attribute_name[0] == '_' or attribute_value is None:
+        continue
+
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        raise TypeError(
+            'Attribute: {0:s} value of type bytes not supported.'.format(
+                attribute_name))
+
+      if isinstance(attribute_value, dict):
+        raise TypeError(
+            'Attribute: {0:s} value of type dict not supported.'.format(
+                attribute_name))
+
+      attribute_string = '{0:s}: {1!s}'.format(attribute_name, attribute_value)
+      attributes.append(attribute_string)
+
+    return ', '.join(attributes)
+
 
 class EventObject(interface.AttributeContainer):
   """Event attribute container.
