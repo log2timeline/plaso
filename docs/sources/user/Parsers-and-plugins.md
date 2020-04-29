@@ -2,7 +2,7 @@
 
 Name | Description
 --- | ---
-amcache | Parser for Amcache Registry entries.
+amcache | Parser for AMCache Registry entries.
 android_app_usage | Parser for Android usage-history.xml files.
 apache_access | Apache access Parser
 apt_history | Parser for APT History log files.
