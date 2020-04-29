@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import pe as _  # pylint: disable=unused-import
 from plaso.parsers import pe
 
 from tests.parsers import test_lib
@@ -46,6 +45,15 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.data_type, 'pe:delay_import:import_time')
+
+    expected_message = (
+        'DLL name: USER32.dll '
+        'PE Type: Executable (EXE) '
+        'Import hash: 8d0739063fc8f9955cc6696b462544ab')
+    expected_short_message = 'USER32.dll'
+
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
   def testParseFileObjectOnDriver(self):
     """Tests the ParseFileObject on a PE driver (SYS) file."""
