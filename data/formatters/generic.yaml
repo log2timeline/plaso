@@ -140,6 +140,24 @@ short_source: 'TORRENT'
 source: 'uTorrent Active Torrents'
 ---
 type: 'conditional'
+data_type: 'selinux:line'
+message:
+- '['
+- 'audit_type: {audit_type}'
+- ', pid: {pid}'
+- ']'
+- ' {body}'
+separator: ''
+short_message:
+- '['
+- 'audit_type: {audit_type}'
+- ', pid: {pid}'
+- ']'
+- ' {body}'
+short_source: 'LOG'
+source: 'Audit log File'
+---
+type: 'conditional'
 data_type: 'shell:zsh:history'
 message:
 - '{command}'
@@ -148,6 +166,113 @@ short_message:
 - '{command}'
 short_source: 'HIST'
 source: 'Zsh Extended History'
+---
+type: 'conditional'
+data_type: 'skydrive:log:old:line'
+message:
+- '[{source_code}]'
+- '({log_level})'
+- '{text}'
+short_message:
+- '{text}'
+short_source: 'LOG'
+source: 'SkyDrive Log File'
+---
+type: 'conditional'
+data_type: 'skydrive:log:line'
+message:
+- '[{module}'
+- '{source_code}'
+- '{log_level}]'
+- '{detail}'
+short_message:
+- '{detail}'
+short_source: 'LOG'
+source: 'SkyDrive Log File'
+---
+type: 'conditional'
+data_type: 'skype:event:account'
+message:
+- '{username}'
+- '[{email}]'
+- 'Country: {country}'
+short_message:
+- '{username}'
+- '[{email}]'
+- 'Country: {country}'
+short_source: 'LOG'
+source: 'Skype Account'
+---
+type: 'conditional'
+data_type: 'skype:event:call'
+message:
+- 'From: {src_call}'
+- 'To: {dst_call}'
+- '[{call_type}]'
+short_message:
+- 'From: {src_call}'
+- 'To: {dst_call}'
+- '[{call_type}]'
+short_source: 'LOG'
+source: 'Skype Call'
+---
+type: 'conditional'
+data_type: 'skype:event:chat'
+message:
+- 'From: {from_account}'
+- 'To: {to_account}'
+- '[{title}]'
+- 'Message: [{text}]'
+short_message:
+- 'From: {from_account}'
+- 'To: {to_account}'
+short_source: 'LOG'
+source: 'Skype Chat MSG'
+---
+type: 'conditional'
+data_type: 'skype:event:sms'
+message:
+- 'To: {number}'
+- '[{text}]'
+short_message:
+- 'To: {number}'
+- '[{text}]'
+short_source: 'LOG'
+source: 'Skype SMS'
+---
+type: 'conditional'
+data_type: 'skype:event:transferfile'
+message:
+- 'Source: {source}'
+- 'Destination: {destination}'
+- 'File: {transferred_filename}'
+- '[{action_type}]'
+short_message:
+- 'Source: {source}'
+- 'Destination: {destination}'
+- 'File: {transferred_filename}'
+- '[{action_type}]'
+short_source: 'LOG'
+source: 'Skype Transfer Files'
+---
+type: 'conditional'
+data_type: 'sophos:av:log'
+message:
+- '{text}'
+short_message:
+- '{text}'
+short_source: 'LOG'
+source: 'Sophos Anti-Virus log'
+---
+type: 'conditional'
+data_type: 'syslog:comment'
+message:
+- '{body}'
+separator: ''
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'Log File'
 ---
 type: 'conditional'
 data_type: 'syslog:cron:task_run'
@@ -159,6 +284,104 @@ short_message:
 - '{body}'
 short_source: 'LOG'
 source: 'Cron log'
+---
+type: 'conditional'
+data_type: 'syslog:line'
+message:
+- '{severity} '
+- '['
+- '{reporter}'
+- ', pid: {pid}'
+- '] {body}'
+separator: ''
+short_message:
+- '{severity} '
+- '['
+- '{reporter}'
+- ', pid: {pid}'
+- '] {body}'
+short_source: 'LOG'
+source: 'Log File'
+---
+type: 'conditional'
+data_type: 'syslog:ssh:failed_connection'
+message:
+- 'Unsuccessful connection of user: {username}'
+- 'from {address}:'
+- '{port}'
+- 'using authentication method: {authentication_method}'
+- 'ssh pid: {pid}'
+separator: ''
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'SSH log'
+---
+type: 'conditional'
+data_type: 'syslog:ssh:login'
+message:
+- 'Successful login of user: {username}'
+- 'from {address}:'
+- '{port}'
+- 'using authentication method: {authentication_method}'
+- 'ssh pid: {pid}'
+separator: ''
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'SSH log'
+---
+type: 'conditional'
+data_type: 'syslog:ssh:opened_connection'
+message:
+- 'Connection opened {address}:'
+- '{port}'
+- 'ssh pid: {pid}'
+separator: ''
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'SSH log'
+---
+# It would be nice to have the _MACHINE_ID field, which is a unique identifier
+# for the system, and hopefully more unique than the _HOSTNAME field.
+# Unfortunately, journal files that have not been closed cleanly may contain
+# entries that have no _MACHINE_ID field.
+type: 'conditional'
+data_type: 'systemd:journal'
+message:
+- '{hostname} '
+- '['
+- '{reporter}'
+- ', pid: {pid}'
+- '] {body}'
+separator: ''
+short_message:
+- '{hostname} '
+- '['
+- '{reporter}'
+- ', pid: {pid}'
+- '] {body}'
+short_source: 'LOG'
+source: 'systemd-journal'
+---
+type: 'conditional'
+data_type: 'systemd:journal:dirty'
+message:
+- '{hostname} '
+- '['
+- '{reporter}'
+- ', pid: {pid}'
+- '] {body}'
+separator: ''
+short_message:
+- '{hostname} '
+- '['
+- '{reporter}'
+- ', pid: {pid}'
+- '] {body}'
+short_source: 'LOG'
+source: 'systemd-journal-dirty'
 ---
 type: 'basic'
 data_type: 'text:entry'

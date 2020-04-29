@@ -61,6 +61,15 @@ short_source: 'WebViewCache'
 source: 'Android WebViewCache'
 ---
 type: 'conditional'
+data_type: 'tango:android:conversation'
+message:
+- 'Conversation ({conversation_identifier})'
+short_message:
+- 'Conversation ({conversation_identifier})'
+short_source: 'Tango Android'
+source: 'Tango Android Conversation'
+---
+type: 'conditional'
 data_type: 'twitter:android:contact'
 message:
 - 'Screen name: {username}'

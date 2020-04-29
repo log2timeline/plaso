@@ -41,23 +41,6 @@ class TangoAndroidMessageFormatter(interface.ConditionalEventFormatter):
     self.helpers.append(helper)
 
 
-class TangoAndroidConversationFormatter(interface.ConditionalEventFormatter):
-  """Tango on Android conversation event formatter."""
-
-  DATA_TYPE = 'tango:android:conversation'
-
-  FORMAT_STRING_PIECES = [
-      'Conversation ({conversation_identifier})',
-  ]
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Conversation ({conversation_identifier})',
-  ]
-
-  SOURCE_LONG = 'Tango Android Conversation'
-  SOURCE_SHORT = 'Tango Android'
-
-
 class TangoAndroidContactFormatter(interface.ConditionalEventFormatter):
   """Tango on Android contact event formatter."""
 
@@ -113,5 +96,4 @@ class TangoAndroidContactFormatter(interface.ConditionalEventFormatter):
 
 
 manager.FormattersManager.RegisterFormatters([
-    TangoAndroidMessageFormatter, TangoAndroidConversationFormatter,
-    TangoAndroidContactFormatter])
+    TangoAndroidMessageFormatter, TangoAndroidContactFormatter])

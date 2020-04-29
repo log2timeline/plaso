@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import skype as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import skype
 
 from tests.parsers.sqlite_plugins import test_lib
@@ -68,6 +67,8 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     event = events[17]
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.data_type, 'skype:event:transferfile')
 
     expected_message = (
         'Source: gen.beringer <Gen Beringer> Destination: '

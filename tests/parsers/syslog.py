@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import syslog as _  # pylint: disable=unused-import
 from plaso.parsers import syslog
 
 from tests.parsers import test_lib

@@ -31,26 +31,6 @@ class TangoAndroidMessageFormatterTest(test_lib.EventFormatterTestCase):
         event_formatter, expected_attribute_names)
 
 
-class TangoAndroidConversationFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests the Tango on Android conversation event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = tango_android.TangoAndroidConversationFormatter()
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = tango_android.TangoAndroidConversationFormatter()
-
-    expected_attribute_names = [
-        'conversation_identifier'
-    ]
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-
 class TangoAndroidContactFormatterTest(test_lib.EventFormatterTestCase):
   """Tests the Tango on Android contact event formatter."""
 
