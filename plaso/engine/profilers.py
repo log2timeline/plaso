@@ -26,14 +26,14 @@ class CPUTimeMeasurement(object):
 
   def SampleStart(self):
     """Starts measuring the CPU time."""
-    self._start_cpu_time = time.clock()
+    self._start_cpu_time = time.perf_counter()
     self.start_sample_time = time.time()
     self.total_cpu_time = 0
 
   def SampleStop(self):
     """Stops measuring the CPU time."""
     if self._start_cpu_time is not None:
-      self.total_cpu_time += time.clock() - self._start_cpu_time
+      self.total_cpu_time += time.perf_counter() - self._start_cpu_time
 
 
 class SampleFileProfiler(object):
