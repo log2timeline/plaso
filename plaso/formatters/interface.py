@@ -373,7 +373,9 @@ class ConditionalEventFormatter(EventFormatter):
     string_pieces = []
     for map_index, attribute_name in enumerate(
         self._format_string_short_pieces_map):
-      if not attribute_name or event_values.get(attribute_name, None):
+
+      if not attribute_name or event_values.get(
+          attribute_name, None) not in (None, '', b''):
         string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
     short_format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 

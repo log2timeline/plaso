@@ -140,6 +140,82 @@ short_source: 'TORRENT'
 source: 'uTorrent Active Torrents'
 ---
 type: 'conditional'
+data_type: 'PLSRecall:event'
+message:
+- 'Sequence number: {sequence_number}'
+- 'Username: {username}'
+- 'Database name: {database_name}'
+- 'Query: {query}'
+short_message:
+- '{sequence_number}'
+- '{username}'
+- '{database_name}'
+- '{query}'
+short_source: 'PLSRecall'
+source: 'PL/SQL Developer Recall file'
+---
+type: 'conditional'
+data_type: 'popularity_contest:log:event'
+message:
+- 'mru [{mru}]'
+- 'package [{package}]'
+- 'tag [{record_tag}]'
+short_message:
+- '{mru}'
+short_source: 'LOG'
+source: 'Popularity Contest Log'
+---
+type: 'conditional'
+data_type: 'popularity_contest:session:event'
+message:
+- 'Session {session}'
+- '{status}'
+- 'ID {hostid}'
+- '[{details}]'
+short_message:
+- 'Session {session}'
+- '{status}'
+short_source: 'LOG'
+source: 'Popularity Contest Session'
+---
+type: 'conditional'
+data_type: 'santa:diskmount'
+message:
+- 'Santa {action}'
+- 'on ({mount})'
+- 'serial: ({serial})'
+- 'for ({dmg_path})'
+short_message:
+- '{action}'
+- '{volume}'
+short_source: 'LOG'
+source: 'Santa disk mount'
+---
+type: 'conditional'
+data_type: 'santa:execution'
+message:
+- 'Santa {decision}'
+- 'process: {process_path}'
+- 'hash: {process_hash}'
+short_message:
+- '{decision}'
+- 'process: {process_path}'
+short_source: 'LOG'
+source: 'Santa Execution'
+---
+type: 'conditional'
+data_type: 'santa:file_system_event'
+message:
+- 'Santa {action} event'
+- '{file_path}'
+- 'by process: {process_path}'
+short_message:
+- 'File {action}'
+- 'on: {file_path}'
+short_source: 'LOG'
+source: 'Santa FSEvent'
+---
+type: 'conditional'
 data_type: 'selinux:line'
 message:
 - '['

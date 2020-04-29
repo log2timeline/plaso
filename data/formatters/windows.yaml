@@ -30,6 +30,16 @@ short_source: 'LOG'
 source: 'Windows Setupapi Log'
 ---
 type: 'conditional'
+data_type: 'software_management:sccm:log'
+message:
+- '{component}'
+- '{text}'
+short_message:
+- '{text}'
+short_source: 'LOG'
+source: 'SCCM Event'
+---
+type: 'conditional'
 data_type: 'task_scheduler:task_cache:entry'
 message:
 - '[{key_path}]'

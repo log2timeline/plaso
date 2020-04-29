@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import safari as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import safari
 
@@ -36,13 +35,14 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.url, 'http://facebook.com/')
     self.assertEqual(event_data.title, '')
+    self.assertFalse(event_data.was_http_non_get)
 
     expected_message = (
         'URL: http://facebook.com/ '
-        '[count: 2] http_non_get: False')
+        '[count: 2] '
+        'http_non_get: False')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':
