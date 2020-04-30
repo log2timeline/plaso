@@ -515,13 +515,18 @@ class BaseStore(object):
 
     try:
       serialized_string = serialized_data.decode('utf-8')
-    except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(
-          exception))
-    attribute_container = self._serializer.ReadSerialized(serialized_string)
+      attribute_container = self._serializer.ReadSerialized(serialized_string)
 
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(container_type)
+    except UnicodeDecodeError as exception:
+      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
+
+    except (ValueError, TypeError) as exception:
+      # TODO: consider re-reading attribute container with error correction.
+      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
+
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(container_type)
 
     return attribute_container
 
@@ -594,13 +599,18 @@ class StorageMergeReader(object):
 
     try:
       serialized_string = serialized_data.decode('utf-8')
-    except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(
-          exception))
-    attribute_container = self._serializer.ReadSerialized(serialized_string)
+      attribute_container = self._serializer.ReadSerialized(serialized_string)
 
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(container_type)
+    except UnicodeDecodeError as exception:
+      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
+
+    except (ValueError, TypeError) as exception:
+      # TODO: consider re-reading attribute container with error correction.
+      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
+
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(container_type)
 
     return attribute_container
 
