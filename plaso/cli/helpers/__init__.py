@@ -31,6 +31,7 @@ from plaso.cli.helpers import virustotal_analysis
 from plaso.cli.helpers import windows_services_analysis
 from plaso.cli.helpers import xlsx_output
 from plaso.cli.helpers import yara_rules
+from plaso.cli.helpers import vfs_backend
 from plaso.cli.helpers import workers
 
 # These modules do not register CLI helpers, but contain super classes used by

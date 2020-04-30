@@ -35,7 +35,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     _EXPECTED_PROCESSING_OPTIONS = ("""\
 usage: log2timeline_test.py [--single_process]
                             [--temporary_directory DIRECTORY]
-                            [--worker_memory_limit SIZE] [--workers WORKERS]
+                            [--vfs_back_end TYPE] [--worker_memory_limit SIZE]
+                            [--workers WORKERS]
 
 Test argument parser.
 
@@ -45,6 +46,8 @@ optional arguments:
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
+  --vfs_back_end TYPE, --vfs-back-end TYPE
+                        The preferred dfVFS back-end: "auto" or "tsk".
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
@@ -58,7 +61,8 @@ optional arguments:
     _EXPECTED_PROCESSING_OPTIONS = ("""\
 usage: log2timeline_test.py [--single_process] [--process_memory_limit SIZE]
                             [--temporary_directory DIRECTORY]
-                            [--worker_memory_limit SIZE] [--workers WORKERS]
+                            [--vfs_back_end TYPE] [--worker_memory_limit SIZE]
+                            [--workers WORKERS]
 
 Test argument parser.
 
@@ -76,6 +80,8 @@ optional arguments:
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
+  --vfs_back_end TYPE, --vfs-back-end TYPE
+                        The preferred dfVFS back-end: "auto" or "tsk".
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
