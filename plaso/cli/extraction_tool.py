@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import os
 
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context as dfvfs_context
 
 # The following import makes sure the analyzers are registered.
@@ -197,9 +198,14 @@ class ExtractionTool(
     self._single_process_mode = getattr(options, 'single_process', False)
 
     argument_helper_names = [
-        'process_resources', 'temporary_directory', 'workers', 'zeromq']
+        'process_resources', 'temporary_directory', 'vfs_backend', 'workers',
+        'zeromq']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
+
+    if self._vfs_backend == 'tsk':
+      dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK)
 
   def _PreprocessSources(self, extraction_engine):
     """Preprocesses the sources.
@@ -300,7 +306,8 @@ class ExtractionTool(
         action='store_true', default=False, help=(
             'Indicate that the tool should run in a single process.'))
 
-    argument_helper_names = ['temporary_directory', 'workers', 'zeromq']
+    argument_helper_names = [
+        'temporary_directory', 'vfs_backend', 'workers', 'zeromq']
     if self._CanEnforceProcessMemoryLimit():
       argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
