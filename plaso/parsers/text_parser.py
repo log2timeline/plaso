@@ -45,52 +45,6 @@ def ConvertTokenToInteger(string, location, tokens):
     pass
 
 
-def PyParseRangeCheck(lower_bound, upper_bound):
-  """Verify that a number is within a defined range.
-
-  This is a callback method for pyparsing setParseAction
-  that verifies that a read number is within a certain range.
-
-  To use this method it needs to be defined as a callback method
-  in setParseAction with the upper and lower bound set as parameters.
-
-  Args:
-    lower_bound (int): lower bound of the range.
-    upper_bound (int): upper bound of the range.
-
-  Returns:
-    Function: callback method that can be used by pyparsing setParseAction.
-  """
-  # pylint: disable=unused-argument
-  def CheckRange(string, location, tokens):
-    """Parse the arguments.
-
-    Args:
-      string (str): original string.
-      location (int): location in the string where the match was made
-      tokens (list[str]): tokens.
-    """
-    try:
-      check_number = tokens[0]
-    except IndexError:
-      check_number = -1
-
-    if check_number < lower_bound:
-      raise pyparsing.ParseException(
-          'Value: {0:d} precedes lower bound: {1:d}'.format(
-              check_number, lower_bound))
-
-    if check_number > upper_bound:
-      raise pyparsing.ParseException(
-          'Value: {0:d} exceeds upper bound: {1:d}'.format(
-              check_number, upper_bound))
-
-  # Since callback methods for pyparsing need to accept certain parameters
-  # and there is no way to define conditions, like upper and lower bounds
-  # we need to return here a method that accepts those pyparsing parameters.
-  return CheckRange
-
-
 def PyParseIntCast(string, location, tokens):
   """Return an integer from a string.
 
@@ -124,30 +78,6 @@ def PyParseIntCast(string, location, tokens):
           'Unable to cast [{0:s} = {1:d}] to an int, setting to 0'.format(
               key, tokens[key]))
       tokens[key] = 0
-
-
-def PyParseJoinList(string, location, tokens):
-  """Return a joined token from a list of tokens.
-
-  This is a callback method for pyparsing setParseAction that modifies
-  the returned token list to join all the elements in the list to a single
-  token.
-
-  Args:
-    string (str): original string.
-    location (int): location in the string where the match was made.
-    tokens (list[str]): extracted tokens, where the string to be converted
-        is stored.
-  """
-  join_list = []
-  for token in tokens:
-    try:
-      join_list.append(str(token))
-    except UnicodeDecodeError:
-      join_list.append(repr(token))
-
-  tokens[0] = ''.join(join_list)
-  del tokens[1:]
 
 
 class PyparsingConstants(object):
@@ -267,7 +197,16 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       object: value in the token or default value if the token is not available
           in the structure.
     """
-    return structure.get(name, default_value)
+    value = structure.get(name, default_value)
+    if isinstance(value, pyparsing.ParseResults) and not value:
+      # Ensure the return value is not an empty pyparsing.ParseResults otherwise
+      # copy.deepcopy() will fail on Python 3.8 with: "TypeError: 'str' object
+      # is not callable" due to pyparsing.ParseResults overriding __getattr__
+      # with a function that returns an empty string when named token does not
+      # exists.
+      return None
+
+    return value
 
   # Pylint is confused by the formatting of the bytes_in argument.
   # pylint: disable=missing-param-doc,missing-type-doc
