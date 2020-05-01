@@ -44,12 +44,12 @@ optional arguments:
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.vfs_backend = 'auto'
+    options.vfs_back_end = 'auto'
 
     test_tool = tools.CLITool()
     vfs_backend.VFSBackEndArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._vfs_backend, options.vfs_backend)
+    self.assertEqual(test_tool._vfs_back_end, options.vfs_back_end)
 
     with self.assertRaises(errors.BadConfigObject):
       vfs_backend.VFSBackEndArgumentsHelper.ParseOptions(options, None)

@@ -73,7 +73,7 @@ class CLITool(object):
     self._preferred_time_zone = None
     self._quiet_mode = False
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
-    self._vfs_backend = 'auto'
+    self._vfs_back_end = 'auto'
 
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
