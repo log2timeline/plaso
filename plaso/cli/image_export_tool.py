@@ -173,7 +173,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         path_segments.insert(0, parent_path_spec.location[1:])
         break
 
-      elif parent_path_spec.type_indicator == (
+      if parent_path_spec.type_indicator == (
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
         path_segments.insert(0, parent_path_spec.location[1:])
 
@@ -690,7 +690,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
 
-    argument_helper_names = ['artifact_definitions', 'data_location']
+    argument_helper_names = [
+        'artifact_definitions', 'data_location', 'vfs_backend']
     if self._CanEnforceProcessMemoryLimit():
       argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
@@ -781,7 +782,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not self._data_location:
       logger.warning('Unable to automatically determine data location.')
 
-    argument_helper_names = ['artifact_definitions', 'process_resources']
+    argument_helper_names = [
+        'artifact_definitions', 'process_resources', 'vfs_backend']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
