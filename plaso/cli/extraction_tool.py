@@ -203,7 +203,7 @@ class ExtractionTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    if self._vfs_backend == 'tsk':
+    if self._vfs_back_end == 'tsk':
       dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK)
 
