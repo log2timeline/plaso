@@ -86,6 +86,10 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_data.data_type, 'windows:registry:run')
     self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
+    expected_entries = (
+        'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun')
+    self.assertEqual(event_data.entries, expected_entries)
+
     expected_message = (
         '[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
         '/autoRun').format(key_path)
@@ -125,6 +129,10 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_data.data_type, 'windows:registry:run')
     self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
+    expected_entries = (
+        'mctadmin: C:\\Windows\\System32\\mctadmin.exe')
+    self.assertEqual(event_data.entries, expected_entries)
+
     expected_message = (
         '[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
             key_path)
@@ -162,6 +170,13 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:run')
     self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
+
+    expected_entries = (
+        'McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\McAfee\\'
+        'Host Intrusion Prevention\\FireTray.exe" VMware Tools: "C:\\Program '
+        'Files\\VMware\\VMware Tools\\VMwareTray.exe" VMware User Process: '
+        '"C:\\Program Files\\VMware\\VMware Tools\\VMwareUser.exe"')
+    self.assertEqual(event_data.entries, expected_entries)
 
     expected_message = (
         '[{0:s}] '
@@ -206,6 +221,10 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:run')
     self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
+
+    expected_entries = (
+        '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq')
+    self.assertEqual(event_data.entries, expected_entries)
 
     expected_message = (
         '[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
