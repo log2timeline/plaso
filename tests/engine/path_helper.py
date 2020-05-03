@@ -326,6 +326,28 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         tsk_path_spec, text_prepend='C:')
     self.assertEqual(display_name, expected_display_name)
 
+    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    vshadow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location='/vss2',
+        store_index=1, parent=qcow_path_spec)
+    ntfs_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_NTFS, mft_entry=35,
+        location='\\syslog.gz', parent=vshadow_path_spec)
+
+    expected_display_name = 'VSS2:NTFS:\\syslog.gz'
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+        ntfs_path_spec)
+    self.assertEqual(display_name, expected_display_name)
+
+    expected_display_name = 'VSS2:NTFS:C:\\syslog.gz'
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+        ntfs_path_spec, text_prepend='C:')
+    self.assertEqual(display_name, expected_display_name)
+
     # Test without path specification.
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(None)
     self.assertIsNone(display_name)
