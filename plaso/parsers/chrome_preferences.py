@@ -208,7 +208,14 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     file_object.seek(0, os.SEEK_SET)
     file_content = file_object.read()
-    file_content = codecs.decode(file_content, self._ENCODING)
+
+    try:
+      file_content = codecs.decode(file_content, self._ENCODING)
+    except UnicodeDecodeError:
+      raise errors.UnableToParseFile((
+          '[{0:s}] {1:s} is not a valid Preference file, '
+          'unable to decode UTF-8.').format(
+              self.NAME, parser_mediator.GetDisplayName()))
 
     # Second pass to verify it's valid JSON
     try:

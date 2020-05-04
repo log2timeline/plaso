@@ -139,7 +139,14 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     # This file can have a UTF-8 byte-order-marker at the beginning of
     # the first row.
     # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
-    row_bytes = codecs.encode(row['date'], parser_mediator.codepage)
+
+    try:
+      # TODO: remove this after addressing
+      # https://github.com/log2timeline/plaso/issues/2919
+      row_bytes = codecs.encode(row['date'], parser_mediator.codepage)
+    except UnicodeEncodeError:
+      return False
+
     if row_bytes.startswith(b'\xef\xbb\xbf'):
       row['date'] = row['date'][3:]
       self._encoding = 'utf-8'
