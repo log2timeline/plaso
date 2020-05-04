@@ -11,8 +11,11 @@ MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 ARG PPA_TRACK=stable
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get -y update
-RUN apt-get -y install software-properties-common apt-transport-https
+RUN apt-get -y install apt-transport-https apt-utils
+RUN apt-get -y install libterm-readline-gnu-perl software-properties-common
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 
 RUN apt-get -y update
