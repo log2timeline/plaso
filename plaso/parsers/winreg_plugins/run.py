@@ -84,7 +84,9 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
       entries.append(value_string)
 
     event_data = RunKeyEventData()
-    event_data.entries = ' '.join(sorted(entries)) or None
+    # If entries is empty make sure it is set to an empty string otherwise
+    # formatting will be off https://github.com/log2timeline/plaso/issues/2912
+    event_data.entries = ' '.join(sorted(entries))
     event_data.key_path = registry_key.path
 
     event = time_events.DateTimeValuesEvent(
