@@ -1,6 +1,7 @@
 # Troubleshooting
 
-This page contains instructions that can be used to assist you in debugging potential issues with the plaso and its dependencies.
+This page contains instructions that can be used to assist you in debugging
+potential issues with the plaso and its dependencies.
 
 ## Quick list
 
@@ -9,7 +10,8 @@ This page contains instructions that can be used to assist you in debugging pote
 3. If you are experiencing an issue that cannot directly be attributed to some broken code e.g. the test are getting killed, check your system logs it might be a problem with resources available to plaso;
 4. Try to isolate the error, see below.
 
-If everything fails create a new issue on the [issue tracker](https://github.com/log2timeline/plaso/issues). Please provide as much detailed information as possible, keep in mind that:
+If everything fails create a new issue on the [issue tracker](https://github.com/log2timeline/plaso/issues).
+Please provide as much detailed information as possible, keep in mind that:
 
 * we cannot fix errors based on vague descriptions;
 * we cannot look into your thoughts or on your systems;
@@ -29,7 +31,9 @@ Hence please provide us with the following details:
 * Were you able to isolate the error to a specific file? Is it possible to share the file with the developer?
 * Any additional information that could be of use e.g. build logs, error logs, debug logs, etc.
 
-**Note that the github issue tracker uses [markdown](https://help.github.com/articles/markdown-basics/) and thus please escape blocks of error output accordingly.**
+**Note that the github issue tracker uses
+[markdown](https://help.github.com/articles/markdown-basics/) and thus please
+escape blocks of error output accordingly.**
 
 Also see the sections below on how to troubleshoot issues of a specific nature.
 
@@ -47,7 +51,11 @@ Ran 585 tests in 66.530s
 OK
 ```
 
-If an error occurs when processing a storage media image try to run with the storage image media file and/or the file system directly mounted. Mounting the storage image media file will bypass libraries (modules) supporting the storage image media format. Running [source_analyzer.py](https://github.com/log2timeline/dfvfs/blob/master/examples/source_analyzer.py) can help pinpointing the issue, e.g.
+If an error occurs when processing a storage media image try to run with the
+storage image media file and/or the file system directly mounted. Mounting the
+storage image media file will bypass libraries (modules) supporting the storage
+image media format. Running [source_analyzer.py](https://github.com/log2timeline/dfvfs/blob/master/examples/source_analyzer.py)
+can help pinpointing the issue, e.g.
 
 ```
 PYTHONPATH=. python examples/source_analyzer.py --no-auto-recurse
@@ -63,9 +71,15 @@ Try:
 
 ## Producing debug logs
 
-To produce debugging logs, run log2timeline like so: `log2timeline.py --log-file=log2timeline_problem.log.gz --debug`. This will create multiple, gzip-compressed log files. There will be one called log2timeline_problem.log.gz containing logs from the main log2timeline process, and one log file for each worker process.
+To produce debugging logs, run log2timeline like so: `log2timeline.py
+--log-file=log2timeline_problem.log.gz --debug`. This will create multiple,
+gzip-compressed log files. There will be one called log2timeline_problem.log.gz
+containing logs from the main log2timeline process, and one log file for each
+worker process.
 
-Note that the .gz file suffix is important, as it triggers Plaso to compress the log output. In an uncompressed form, the logs are very large. The compressed logs can be reviewed with unzip tools like `zless` and `zgrep`.
+Note that the .gz file suffix is important, as it triggers Plaso to compress
+the log output. In an uncompressed form, the logs are very large. The
+compressed logs can be reviewed with unzip tools like `zless` and `zgrep`.
 
 ## Import errors
 
@@ -84,7 +98,9 @@ _get_module_from_name
 ImportError: cannot import name asl
 ```
 
-This does not necessarily mean that the code cannot find the asl module. The import error can mask an underlying issue. Try running the following commands in a Python shell:
+This does not necessarily mean that the code cannot find the asl module. The
+import error can mask an underlying issue. Try running the following commands
+in a Python shell:
 ```
 $ python
 import sys
@@ -92,7 +108,8 @@ sys.path.insert(0, u'.')
 import plaso
 ```
 
-It also sometimes means that you have multiple versions of plaso installed on your system and Python tries to import for the wrong one.
+It also sometimes means that you have multiple versions of plaso installed on
+your system and Python tries to import for the wrong one.
 
 ## Crashes, hangs and tracebacks
 
@@ -103,21 +120,32 @@ In the context of plaso crashes and tracebacks have different meanings:
 
 ### A worker segfault-ing
 
-Since plaso relies on several compiled dependencies it is possible that a worker segfault (SIGSEGV).
+Since plaso relies on several compiled dependencies it is possible that a
+worker segfault (SIGSEGV).
 
-As part of the 1.3 pre-release bug hunting a SIGSEGV signal handler was added however this process turned out, as expected, unreliable. However it added an interesting side effect that is very useful for debugging. If the SIGSEGV signal handler is enable the worker process typically remains in the "running" state but stops producing event object. What happens under the hood is that the SIGSEGV signal is caught but the worker is unable to cleanly terminate. Because of this "frozen" state of the worker it is very easy to attach a debugger e.g. `gdb python -p PID`.
+As part of the 1.3 pre-release bug hunting a SIGSEGV signal handler was added
+however this process turned out, as expected, unreliable. However it added an
+interesting side effect that is very useful for debugging. If the SIGSEGV
+signal handler is enable the worker process typically remains in the "running"
+state but stops producing event object. What happens under the hood is that the
+SIGSEGV signal is caught but the worker is unable to cleanly terminate. Because
+of this "frozen" state of the worker it is very easy to attach a debugger e.g.
+`gdb python -p PID`.
 
-A `kill -11 PID` however seems to be cleanly handled by the SIGSEGV signal handler and puts the worker into "error" status.
+A `kill -11 PID` however seems to be cleanly handled by the SIGSEGV signal
+handler and puts the worker into "error" status.
 
 ### A worker gives a killed status
 
-This typically indicates that the worker was killed (SIGKILL) likely by an external process e.g the Out Of Memory (OOM) killer.
+This typically indicates that the worker was killed (SIGKILL) likely by an
+external process e.g the Out Of Memory (OOM) killer.
 
 Your system logs might indicate why the worker was killed.
 
 ### Which processes are running
 
-The following command help you determine which plaso processes are running on your system:
+The following command help you determine which plaso processes are running on
+your system:
 
 Linux:
 ```
@@ -131,25 +159,40 @@ ps aux | grep log2timeline.py | grep python | awk '{print $2}' | tr '\n' ',' | s
 
 ### Analyzing crashes with single process and debug mode
 
-In single process and debug mode `log2timeline.py --debug --single-process ...` log2timeline will run a Python debug shell (pdb) when an uncaught Python exception is raised.
+In single process and debug mode `log2timeline.py --debug --single-process ...`
+log2timeline will run a Python debug shell (pdb) when an uncaught Python
+exception is raised.
 
-Use `u` to go up one level and `d` to go down one level .
+Use:
 
-Print the attributes of the current object you are looking for.
+* `w` to print the frames.
+* `u` to go up one frame or `d` to go down one frame.
+* `l` to print source code of the current frame.
+
+Note that typically the top-level (oldest) frame will contain the exception:
+```
+p execption
+```
+
+Note that inside pdb you can run any Python commands including loading new
+libraries e.g. for troubleshooting. You can prepend commands with an
+exclamation mark (!) to indicate that you want to run a Python command as an
+opposed to a debug shell one.
+
+To print the attributes of the current object you are looking for.
 ```
 !self.__dict__
 ```
 
-Print the current argument stack to see what arguments are available to you.
+To print the current argument stack to see what arguments are available to you.
 ```
 args
 ```
 
-Note that inside pdb you can run any Python commands including loading new libraries e.g. for troubleshooting. You can prepend commands with an exclamation mark (!) to indicate that you want to run a Python command as an opposed to a debug shell one.
-
 ### Analyzing crashes with gdb
 
-Once you have isolated the file that causes the crash and you cannot share the file you can generate a back trace that can help us fix the error.
+Once you have isolated the file that causes the crash and you cannot share the
+file you can generate a back trace that can help us fix the error.
 
 First make sure you have the debug symbols installed.
 
@@ -165,23 +208,29 @@ bt
 
 Note that often the first 10 lines of the back trace are sufficient information.
 
-An alternative approach is to attach a debugger to it once the program is running:
+An alternative approach is to attach a debugger to it once the program is
+running:
 ```
 gdb python -p PID
 ```
 
-Where PID is the process identifier of the program. Once the debugger is attached continue running:
+Where PID is the process identifier of the program. Once the debugger is
+attached continue running:
 ```
 c
 ```
 
 Wait until the crash occurs and generate a back trace.
 
-Also see: [DebuggingWithGdb](https://wiki.python.org/moin/DebuggingWithGdb), [gdb Support](https://docs.python.org/devguide/gdb.html)
+Also see: [DebuggingWithGdb](https://wiki.python.org/moin/DebuggingWithGdb),
+[gdb Support](https://docs.python.org/devguide/gdb.html)
 
 ## High memory usage
 
-Plaso consists of various components. It can happen that one of these components uses a lot of memory or even leaks memory. In these cases it is important to isolate the error, see before, to track down what the possible culprit is. Also see: [Profiling memory usage](../developer/Profiling.md#profiling-memory-usage)
+Plaso consists of various components. It can happen that one of these
+components uses a lot of memory or even leaks memory. In these cases it is
+important to isolate the error, see before, to track down what the possible
+culprit is. Also see: [Profiling memory usage](../developer/Profiling.md#profiling-memory-usage)
 
 ## Also see
 
