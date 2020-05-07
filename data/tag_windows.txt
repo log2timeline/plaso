@@ -1,74 +1,250 @@
+user_suspect_file
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Users/' AND (filename contains '.exe' OR filename contains '.zip' OR filename contains '.rar' OR filename contains '.dll' OR filename contains '.cmd' OR filename contains '.rtf' OR filename contains '.pdf' OR filename contains '.doc' OR filename contains '.ppt' OR filename contains '.xls' OR filename contains '.vb' OR filename contains '.hta' OR filename contains '.jar' OR filename contains '.swf' OR filename contains '.reg' OR filename contains '.ps' OR filename contains '.ws' OR filename contains '.mht' OR filename contains '.ms' OR filename contains '.tmp' OR filename contains '.py' OR filename contains '.xhtm' OR filename contains '.js' OR filename contains '.bat' OR filename contains '.scr' OR filename contains '.sys' OR filename contains '.com' OR filename contains '.pif' OR filename contains '.inf' OR filename contains '.scf' OR filename contains '.chm' OR filename contains '.jnlp' OR filename contains '.gadget' OR filename contains '.appref-ms' OR filename contains '.application' OR filename contains '.sfx' OR filename contains '.lnk' OR filename contains '.otf' OR filename contains '.cpl' OR filename contains '.cab')
+
+# Exe OR dll have been changed
+# Normal case: This may be due to an installation OR an update
+# Bad case: permissions weakness [T1044], Thrid party software compromised [T1072], Supply chain compromise [T1195]...
+software_changed
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Program Files/' AND (filename contains '.exe' OR filename contains '.dll')
+
+# RAT tool installed & potentiel use valid account compromise [T1078]
+rat_tool
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND (filename contains 'TeamViewer' OR filename contains 'LogMeIn' OR filename contains 'webex' OR filename contains 'mikogo' OR filename contains 'logicnow' OR filename contains 'ammyy' OR filename contains 'darkcomet' OR filename contains 'join.me.exe' OR filename contains 'Splashtop')
+  data_type is 'windows:evtx:record' AND source_name is 'Desktop Window Manager' AND (event_identifier is 9011 OR event_identifier is 9013 OR event_identifier is 9010)
+  data_type is 'windows:evtx:record' AND (event_identifier is 102 OR event_identifier is 202) AND xml_string contains 'logmein'
+  data_type is 'windows:registry:key_value' AND (key_path contains 'Software\\ORL\\VNCviewer' OR key_path contains 'Software\\RealVNC\\WinVNC4' OR key_path contains 'Software\\TightVNC' OR key_path contains 'Software\\TeamViewer') AND (values contains 'MRU' OR values contains 'History' OR values contains 'VNC' OR values contains 'Server' OR values contains 'Version5')
+  data_type is 'windows:registry:key_value' AND key_path contains 'Policies\\Google\\Chrome' AND value contains 'RemoteAccessHostRequireCurtain'
+
+# Credential dumping
+# MITRE ATT&CK framework reference: T1003
+mimikatz_tool
+  data_type is 'windows:evtx:record' AND (xml_string contains ' mimikatz ' OR xml_string contains ' mimilib ' OR xml_string contains ' <3 eo.oe ' OR xml_string contains ' eo.oe.kiwi ' OR xml_string contains ' privilege::debug ' OR xml_string contains ' sekurlsa::logonpasswords ' OR xml_string contains ' lsadump::sam ' OR xml_string contains ' mimidrv.sys ')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4662 AND (xml_string contains 'Replicating Directory Changes All' OR xml_string contains '1131f6ad-9c07-11d1-f79f-00c04fc2dcd2')
+
+# Abuse exchange services - https://attack.mitre.org/software/S0358/
+ruler_tool
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND xml_string contains 'RULER' AND (event_identifier is 4776 OR event_identifier is 4624 OR event_identifier is 4625)
+
+# Browser extension can be used for persistence [T1176]
+browser_extension
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Users/' AND (filename contains 'Chrome' OR filename contains 'firefox') AND (filename contains 'Extensions')
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Users/' AND (filename contains '.xpi' OR filename contains '.crx' OR filename contains '.appx')
+  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Microsoft\\Internet Explorer\\Extensions'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Microsoft\\Internet Explorer\\Toolbar'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Microsoft\\Internet Explorer\\Browser Helper Objects'
+
+# Accessibility Features modified [T1015]
+persistence_backdoor
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Windows/System32/' AND (filename contains 'sethc.exe' OR filename contains 'utilman.exe' OR filename contains 'Magnify.exe' OR filename contains 'osk.exe' OR filename contains 'Narrator.exe' OR filename contains 'DisplaySwitch.exe' OR filename contains 'AtBroker.exe')
+
+# process run in background can be used to hidden process...
+run_background
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1 AND xml_string not contains 'TerminalSessionId\">0'
+
+# process argument launch use URI (can be suspect, you should verify if normal case)
+cmdline_withuri
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1 AND xml_string contains '://'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4688 AND xml_string contains '://'
+
+# trace of execution & task schedlule
+# Can help you to identify suspect command runned (wscript, hh, powershell, cmd, ...)
+# Knowledge: https://jpcertcc.github.io/ToolAnalysisResultSheet/
 # Tags Windows application execution events.
 application_execution
   data_type is 'fs:stat' AND filename contains PATH('Windows/Tasks/At')
-  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 592
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4688
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 592
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 500
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4673 OR event_identifier is 4688)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1
   data_type is 'windows:evtx:record' AND strings contains 'user mode service' AND strings contains 'demand start'
   data_type is 'windows:lnk:link' AND filename contains 'Recent' AND (local_path contains '.exe' OR network_path contains '.exe' OR relative_path contains '.exe')
   data_type is 'windows:prefetch:execution'
+  data_type is 'windows:registry:amcache'
   data_type is 'windows:registry:appcompatcache'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Search\\RecentApps\\'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Services\\bam\\UserSettings\\'
+  data_type is 'windows:registry:key_value' AND key_path contains  'Software\\Microsoft\\Windows\\Current Version\\Search\\RecentApps'
   data_type is 'windows:registry:mrulist' AND entries contains '.exe'
   data_type is 'windows:registry:mrulistex' AND entries contains '.exe'
   data_type is 'windows:registry:userassist' AND value_name contains '.exe'
   data_type is 'windows:tasks:job'
 
-# Tags Windows application installation events.
-application_install
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 903 OR event_identifier is 904)
+# it's crash report, can help to identify attack to exploit CVE OR suspect process
+app_potential_exploit
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Application Error' AND (event_identifier is 1000 OR event_identifier is 1005 OR event_identifier is 1015)
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Application Hang' AND event_identifier is 1002
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WER-SystemErrorReporting' AND event_identifier is 1001
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Windows Error Reporting' AND event_identifier is 1001
+  data_type is 'windows:evtx:record' AND source_name is 'EMET' AND (event_identifier is 1 OR event_identifier is 2)
+  data_type is 'windows:registry:key_value' AND key_path contains '\\CurrentVersion\\AeDebug'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 12 OR event_identifier is 13) AND xml_string contains '\\CurrentVersion\\AeDebug'
 
-# Tags Windows application update events.
-application_update
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 905
+# malware detected by windows defender
+windows_defender
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Defender' AND (event_identifier is 1005 OR event_identifier is 1006 OR event_identifier is 1007 OR event_identifier is 1008 OR event_identifier is 1009 OR event_identifier is 1010 OR event_identifier is 1016 OR event_identifier is 1017 OR event_identifier is 1018 OR event_identifier is 1019 OR event_identifier is 1021 OR event_identifier is 2001 OR event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 3002 OR event_identifier is 5008)
 
-# Tags Windows application removal events.
-application_removal
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 907 OR event_identifier is 908)
+# malware can be use sidbar gadget
+sidbar_gadget
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line' OR data_type is 'windows:lnk:link') AND (filename contains 'AppData/Local/Microsoft/Windows Sidebar/Gadgets' OR filename contains '/Program Files/Windows Sidebar/Shared Gadgets/')
+
+# malware can change configuration of network to have man in middle
+change_network
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 12 AND xml_string contains 'CurrentVersion\\NetworkList\\Profiles'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'Windows\\CurrentVersion\\Internet Settings'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'CurrentControlSet\\Services\\Tcpip\\Parameters'
+  data_type is 'windows:registry:key_value' AND values contains 'Override' AND key_path contains 'CurrentVersion\\NetworkList\\Profiles'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Windows\\CurrentVersion\\Internet Settings'
+  data_type is 'windows:registry:key_value' AND key_path contains 'CurrentControlSet\\Services\\Tcpip\\Parameters'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Internet Settings\\Zones\\3'
+
+# usb device (store, rubber ducky, ...) can used to spread attack
+new_device
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 12 AND xml_string contains '\\Devices\\' AND xml_string contains '\\FriendlyName'
+  data_type is 'windows:registry:key_value' AND values contains 'FriendlyName' AND key_path contains '\\Devices\\'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 6416 OR event_identifier is 6421 OR event_identifier is 6422 OR event_identifier is 6423 OR event_identifier is 6424)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Partition/Diagnostic' AND event_identifier is 1006
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-USB-USBHUB3' AND event_identifier is 43
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-PnP' AND (event_identifier is 400 OR event_identifier is 410 OR event_identifier is 219)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-CodeIntegrity' AND (event_identifier is 3001 OR event_identifier is 3002 OR event_identifier is 3003 OR event_identifier is 3004 OR event_identifier is 3010 OR event_identifier is 3023)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 12 OR event_identifier is 13) AND xml_string contains '\\CurrentVersion\\Drivers32'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\CurrentVersion\\Drivers32'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-DriverFrameworks-UserMode' AND (event_identifier is 2003 OR event_identifier is 2100 OR event_identifier is 2102)
+
+# rdp potential use CVE-2019-0708
+rpd_suspect
+  data_type is 'windows:evtx:record' AND source_name is 'TermDD' AND (event_identifier is 50 OR event_identifier is 56)
+
+# Change Default File Association [T1042]
+change_ext_open
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts' AND (xml_string contains 'OpenWithList' OR xml_string contains 'OpenWithProgids')
+  data_type is 'windows:registry:key_value' AND key_path contains 'OpenWith' AND key_path contains 'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts' AND values not contains 'No values stored in key'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'HKEY_CLASSES_ROOT\\.'
+  data_type is 'windows:registry:key_value' AND key_path contains 'HKEY_CLASSES_ROOT\\.' AND values not contains 'No values stored in key'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\shell\\' AND xml_string contains '\\command'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\shell\\' AND key_path contains '\\command' AND values not contains 'No values stored in key'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\shell\\' AND xml_string contains '\\ddeexec'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\shell\\' AND key_path contains '\\ddeexec' AND values not contains 'No values stored in key'
+
+# malware can change hidden extension to be discreet
+change_ext_hidden
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND (xml_string contains 'CurrentVersion\\Explorer\\Advanced\\ShowSuperHidden' OR xml_string contains 'CurrentVersion\\Explorer\\Advanced\\HideFileExt' OR xml_string contains 'CurrentVersion\\Explorer\\Advanced\\Hidden')
+  data_type is 'windows:registry:key_value' AND key_path contains 'CurrentVersion\\Explorer\\Advanced' AND (values contains 'Hidden' OR values contains 'HideFileExt')
+
+# Office macro configuration (identify if macro enable OR not)
+office_macro
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'VBAWarnings' AND xml_string contains 'Security'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Security' AND values contains 'VBAWarnings'
+
+# Process make connection
+process_connect
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 3
+
+# Process get resolv hostname
+process_resolvdns
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 22
+
+# Image File Execution Options Injection [T1183]
+change_exe_option
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options'
+  data_type is 'windows:registry:key_value' AND key_path contains 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SilentProcessExit'
+  data_type is 'windows:registry:key_value' AND key_path contains 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SilentProcessExit'
+
+# File created by process
+file_created
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 11
+
+# File tag Alternate Data Stream (ADS)
+from_internet
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 15
 
 # Tags Windows document open events.
+# Some documents can be used to exploit player like "pdf->js->embed", "doc->dde", 'doc->vba', 'rtf->cve', ...
 document_open
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains 'AppData/Roaming/Microsoft/Windows/Recent/' AND filename not contains '.exe'
+  data_type is 'windows:lnk:link' AND filename contains 'Recent' AND local_path not contains '.exe' AND network_path not contains '.exe' AND relative_path not contains '.exe'
   data_type is 'windows:registry:bagmru'
-  data_type is 'windows:registry:mrulist' AND entries not contains '.exe' AND timestamp > DATETIME(0)
-  data_type is 'windows:registry:mrulistex' AND entries not contains '.exe' AND timestamp > DATETIME(0)
+  data_type is 'windows:registry:key_value' AND key_path contains 'Security\\Trusted Documents\\TrustRecords'
+  (data_type is 'windows:registry:mrulist' OR data_type is 'windows:registry:mrulistex') AND entries not contains '.exe' AND timestamp > DATETIME(0)
   data_type is 'windows:registry:office_mru'
   data_type is 'windows:registry:office_mru_list'
 
+# logon type 0(system),5(service),4(batch),9(New credential)
+logon_suspect
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4624 AND (xml_string contains 'LogonType\">0' OR xml_string contains 'LogonType\">4' OR xml_string contains 'LogonType\">5' OR xml_string contains 'LogonType\">9')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4634 AND (xml_string contains 'LogonType\">0' OR xml_string contains 'LogonType\">4' OR xml_string contains 'LogonType\">5' OR xml_string contains 'LogonType\">9')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-NTLM' AND event_identifier is 8002
+
+# logon type 3(network),10(remote interactive) & rdp
+logon_remote
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-RemoteDesktopServices-RdpCoreTS' AND event_identifier is 131
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4624 AND (xml_string contains 'LogonType\">10' OR xml_string contains 'LogonType\">3')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4634 AND (xml_string contains 'LogonType\">10' OR xml_string contains 'LogonType\">3')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'Terminal Server\\WinStations\\RDP-Tcp\\InitialProgram'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Terminal Server\\WinStations\\RDP-Tcp' AND values contains 'InitialProgram'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4779 AND xml_string contains 'RDP-Tcp'
+
 # Tags Windows failed log-in events.
+# Failed log-ins can indicate brute force attack.
 login_failed
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4625
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4771
 
 # Tags Windows log-in attempt events.
 login_attempt
-  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 540
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4624
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 540
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4624 OR event_identifier is 4648)
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 21 OR event_identifier is 1101)
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' AND (event_identifier is 1147 OR event_identifier is 1149)
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 2
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7001
 
+# change password
+change_pw_attempt
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4723 OR event_identifier is 4724 OR event_identifier is 628 OR event_identifier is 4794)
+
+# backup delete
+backup_delete
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Backup' AND event_identifier is 524
+  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Policies\\Microsoft\\PreviousVersions' AND values contains 'DisableLocalPage'
+
+# firewall log - allowed connection  - https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=5156
+connexion
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 5156
+
 # Tags Windows log-off events.
 logoff
-  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 538
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 538
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4634
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 23 OR event_identifier is 1103)
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 4
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7002
 
-# Tags terminal services session disconnection events.
+# Tags kerberos ticket TODO attempts, possilby the result running tools such as mimikatz
+kerb_ticket_attempt
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4768 OR (event_identifier is 4769 AND xml_string contains '0x40810000'))
+
+# Tags terminal services (RDP) session disconnection events.
 session_disconnection
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND event_identifier is 24
 
-# Tags terminal services session reconnection events.
+# Tags terminal services (RDP) session reconnection events.
 session_reconnection
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 25 OR event_identifier is 1105)
 
-# Tags terminal services shell start events.
+# Tags terminal services (RDP) shell start events.
 shell_start
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 22 OR event_identifier is 1102)
 
 # Tags sheduled task creation events.
 task_schedule
-  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 602
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4698
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Microsoft-Windows-TaskScheduler' AND (event_identifier is 106 OR event_identifier is 140 OR event_identifier is 141)
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 602
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4698 OR event_identifier is 4702)
+
+# Tags task sheduler lauched job events.
+job_lauch
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 200
 
 # Tags task sheduler successful completed job events.
 job_success
@@ -103,11 +279,90 @@ autorun
   data_type is 'windows:registry:boot_execute' AND (value contains '.exe' OR value contains '.dll')
   data_type is 'windows:registry:boot_verification' AND (image_path contains '.exe' OR image_path contains '.dll')
   data_type is 'windows:registry:run' AND (entries contains '.exe' OR entries contains '.dll')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 7045 OR event_identifier is 4697)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SYSTEM\\CurrentControlSet\\Services' AND (xml_string contains 'ServiceDll' OR xml_string contains 'ServiceManifest' OR xml_string contains 'Start' OR xml_string contains 'HelperDllName' OR xml_string contains 'Library' OR xml_string contains 'Path' OR xml_string contains 'AppArgs' OR xml_string contains 'NameSpace_Callout')
+  data_type is 'windows:registry:key_value' AND key_path contains 'SYSTEM\\CurrentControlSet\\Services' AND (values contains 'Library' OR values contains 'HelperDllName' OR values contains 'Start' OR values contains 'ServiceManifest' OR values contains 'ServiceDll' OR values contains 'NameSpace_Callout' OR values contains 'AppArgs' OR values contains 'Path')
+
+# Tags PowerShell execution events.
+powershell_execute
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-PowerShell' AND (event_identifier is 4103 OR event_identifier is 4104 OR event_identifier is 400 OR event_identifier is 403 OR event_identifier is 600 OR event_identifier is 800 OR event_identifier is 4100)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1 AND xml_string contains 'powershell'
+
+# Tags PowerShell configuration logging change events.
+powershell_logging
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'Policies\\Microsoft\\Windows\\PowerShell\\ModuleLogging'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Policies\\Microsoft\\Windows\\PowerShell\\ModuleLogging'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'Policies\\Microsoft\\Windows\\PowerShell\\Transcription'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Policies\\Microsoft\\Windows\\PowerShell\\Transcription'
+
+# event clear => suspect trace cleaned?
+event_clear
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 1102 OR event_identifier is 517)
+
+# winrm [T1028]
+winrm
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WinRM' AND (event_identifier is 169 OR event_identifier is 81 OR event_identifier is 82 OR event_identifier is 134 OR event_identifier is 10148)
+
+# Credential dump, Authentication Package [T1131], Lsass driver [T1177], Security Support Provider [T1101]
+lsa_sam
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4610 OR event_identifier is 4611 OR event_identifier is 4614 OR event_identifier is 4622 OR event_identifier is 4661)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Codeintegrity' AND (event_identifier is 3065 OR event_identifier is 3066 OR event_identifier is 3033 OR event_identifier is 3063)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SYSTEM\\CurrentControlSet\\Control\\Lsa\\Authentication Packages'
+  data_type is 'windows:registry:key_value' AND key_path contains 'SYSTEM\\CurrentControlSet\\Control\\Lsa' AND values contains 'Authentication Packages'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SYSTEM\\CurrentControlSet\\Control\\Lsa\\Security Packages'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SYSTEM\\CurrentControlSet\\Control\\Lsa\\OSConfig\\Security Packages'
+  data_type is 'windows:registry:key_value' AND key_path contains 'SYSTEM\\CurrentControlSet\\Control\\Lsa' AND values contains 'Security Packages'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 16 AND xml_string contains 'SAM'
+
+# A user's local group membership was enumerated(discovery)
+enum_group
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4798
+
+# wmi used
+wmi
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 19 OR event_identifier is 20 OR event_identifier is 21)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WMI-Activity' AND (event_identifier is 5861 OR event_identifier is 5860 OR event_identifier is 5858 OR event_identifier is 5859 OR event_identifier is 5857)
+
+# user added
+user_added
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4720
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 12 AND xml_string contains 'Microsoft\\Windows NT\\CurrentVersion\\ProfileList'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Windows NT\\CurrentVersion\\ProfileList'
+
+# change user configuration
+user_change
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4738
+
+# A member was added to a security-enabled local group
+added_inlocalgroup
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4732
+
+# Special groups have been assigned to a new logon | Audit Policy Change
+policy_change
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4964 OR event_identifier is 4908 OR event_identifier is 4780 OR event_identifier is 4739 OR event_identifier is 643 OR event_identifier is 617 OR event_identifier is 4713 OR event_identifier is 4735 OR event_identifier is 639 OR event_identifier is 4737 OR event_identifier is 641 OR event_identifier is 4755 OR event_identifier is 659 OR event_identifier is 5136 OR event_identifier is 4672 OR event_identifier is 4719 OR event_identifier is 612)
+
+# SID History was added to an account
+sid_history
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4765 OR event_identifier is 4766)
+
+# 8005 -> allowed to run | 8006 -> was allowed to run but would have been prevented from running if the AppLocker policy were enforced.
+applocker
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-AppLocker' AND (event_identifier is 8005 OR event_identifier is 8006)
+
+# bits job created (3) - bits job done (4)
+bits_jobs
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Bits-Client' AND (event_identifier is 3 OR event_identifier is 4 OR event_identifier is 59 OR event_identifier is 60)
 
 # Tags file download events.
 file_download
   data_type is 'chrome:history:file_downloaded'
   timestamp_desc is 'File Downloaded'
+
+# Acces net share
+net_share
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 5145 OR event_identifier is 5140 OR event_identifier is 5142)
 
 # Tags OLE compound document print events.
 document_print
@@ -116,3 +371,190 @@ document_print
 # Tags Windows Firewall With Advanced Security change events
 firewall_change
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Firewall With Advanced Security' AND (event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 2005 OR event_identifier is 2006)
+
+handle_object
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4656 OR event_identifier is 4658 OR event_identifier is 4663)
+
+# AppCert DLLs [T1182]
+appcert_dll
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'System\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls'
+  data_type is 'windows:registry:key_value' AND key_path contains 'System\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'System\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs'
+  data_type is 'windows:registry:key_value' AND key_path contains 'System\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs'
+
+# AppInit DLLs [T1103]
+appinit_dll
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows\\AppInit_DLLs'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows\\LoadAppInit_DLLs'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows' AND (values not contains 'AppInit_DLLs' OR values not contains 'LoadAppInit_DLLs')
+
+# Application Shimming [T1138]
+Shimming
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'software\\microsoft\\windows nt\\currentversion\\appcompatflags\\custom'
+  data_type is 'windows:registry:key_value' AND key_path contains 'software\\microsoft\\windows nt\\currentversion\\appcompatflags\\custom'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'software\\microsoft\\windows nt\\currentversion\\appcompatflags\\installedsdb'
+  data_type is 'windows:registry:key_value' AND key_path contains 'software\\microsoft\\windows nt\\currentversion\\appcompatflags\\installedsdb'
+
+# Component Object Model Hijacking [T1122]
+com_obj
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Software\\Classes\\CLSID' AND (xml_string contains 'InprocServer' OR xml_string contains 'LocalServer')
+  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Classes\\CLSID' AND (key_path contains 'InprocServer' OR key_path contains 'LocalServer') AND values contains '(default)'
+
+# Netsh Helper DLL [T1128]
+netsh_dll
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SOFTWARE\\Microsoft\\Netsh'
+  data_type is 'windows:registry:key_value' AND key_path contains 'SOFTWARE\\Microsoft\\Netsh'
+
+# Office Application Startup [T1137]
+office_startup
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Office test'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Office test'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Office\\' AND xml_string contains '\\Options\\Open'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Office\\' AND key_path contains '\\Options\\Open'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Office\\' AND xml_string contains '\\AddIns\\' AND (xml_string contains '\\FriendlyName' OR xml_string contains '\\LoadBehaviour' OR xml_string contains '\\Autoload' OR xml_string contains '\\Path')
+  data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Office\\' AND key_path contains '\\AddIns\\' AND (values contains '\\FriendlyName' OR values contains '\\LoadBehaviour' OR values contains '\\Autoload' OR values contains '\\Path')
+
+# Port Monitors [T1013]
+port_monit
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors'
+  data_type is 'windows:registry:key_value' AND key_path contains 'SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors'
+
+# Logon Scripts [T1037]
+logon_script
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Software\\Policies\\Microsoft\\Windows\\System\\Scripts'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Policies\\Microsoft\\Windows\\System\\Scripts'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\Group Policy\\Scripts'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Group Policy\\Scripts'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\Environment\\UserInitMprLogonScript'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Environment' AND values contains 'UserInitMprLogonScript'
+
+# Registry Run Keys / Startup Folder [T1060]
+run_keys
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'CurrentVersion\\Windows\\load'
+  data_type is 'windows:registry:key_value' AND key_path contains 'CurrentVersion\\Windows\\load'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'CurrentVersion\\Explorer\\User Shell Folders'
+  data_type is 'windows:registry:key_value' AND key_path contains 'CurrentVersion\\Explorer\\User Shell Folders'
+
+# [T1180]
+screensaver
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Control Panel\\Desktop\\SCRNSAVE.exe'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Control Panel\\Desktop' AND values contains 'SCRNSAVE.exe'
+
+# SIP AND Trust Provider Hijacking [T1198]
+sip_provider
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\Microsoft\\Cryptography\\OID'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Microsoft\\Cryptography\\OID'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\Microsoft\\Cryptography\\Providers\\Trust'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Microsoft\\Cryptography\\Providers\\Trust'
+
+# Time Providers [T1209]
+time_provider
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'System\\CurrentControlSet\\Services\\W32Time\\TimeProviders'
+  data_type is 'windows:registry:key_value' AND key_path contains 'System\\CurrentControlSet\\Services\\W32Time\\TimeProviders' AND values contains 'DllName'
+
+# Winlogon Helper DLL [T1004]
+winlogon_dll
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Windows NT\\CurrentVersion\\Winlogon\\Shell'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Windows NT\\CurrentVersion\\Winlogon\\System'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Windows NT\\CurrentVersion\\Winlogon\\Notify'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Windows NT\\CurrentVersion\\Winlogon\\Userinit'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Windows NT\\CurrentVersion\\Winlogon' AND (values contains 'Shell' OR values contains 'System' OR values contains 'Notify' OR values contains 'Userinit')
+
+# Change IE configuration
+change_ieconf
+  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Microsoft\\Internet Explorer\\Main' AND (values contains 'Start Page' OR values contains 'Default_Page_URL' OR values contains 'Local Page' OR values contains 'Search Page' OR values contains 'url' OR values contains 'Secondary Start Pages')
+  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Microsoft\\Internet Explorer\\Security' AND values contains 'DisableSecuritySettingsCheck'
+
+boot_execute
+  parse is 'winreg/windows_boot_execute'
+  data_type is 'windows:registry:boot_execute'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Control\\Session Manager\\BootExecute'
+
+# change UAC conf
+change_uac
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'CurrentVersion\\Policies\\System\\LocalAccountTokenFilterPolicy'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'CurrentVersion\\Policies\\System\\EnableLUA'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\CurrentVersion\\Policies\\System' AND values contains 'EnableLUA' AND values contains '0'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\CurrentVersion\\Policies\\System' AND values contains 'LocalAccountTokenFilterPolicy' AND values contains '1'
+
+# Change security center conf
+change_securitycenter
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SOFTWARE\\Microsoft\\Security Center\\'
+  data_type is 'windows:registry:key_value' AND key_path contains 'SOFTWARE\\Microsoft\\Security Center' AND (values contains 'Disable' OR values contains 'Override')
+
+# change windows firewall conf
+change_firewall
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\FirewallPolicy\\' AND (xml_string contains 'DoNotAllowExceptions' OR xml_string contains 'EnableFirewall')
+  data_type is 'windows:registry:key_value' AND key_path contains '\\FirewallPolicy\\' AND (values contains 'EnableFirewal' OR values contains 'DoNotAllowExceptions')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND (xml_string contains '\\GloballyOpenPorts\\List' OR xml_string contains '\\AuthorizedApplications\\List')
+  data_type is 'windows:registry:key_value' AND (key_path contains '\\AuthorizedApplications\\List' OR key_path contains '\\GloballyOpenPorts\\List')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4950
+
+# change credential policy
+change_policycredential
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\SecurityProviders\\WDigest\\UseLogonCredential'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\SecurityProviders\\WDigest' AND values contains 'UseLogonCredential' AND values contains '1'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\Authentication\\Credential\\' AND xml_string contains 'Disabled'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Authentication\\Credential\\' AND values contains 'Disabled' AND values contains '1'
+
+change_gpo
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\CurrentVersion\\Winlogon\\GPExtensions\\' AND xml_string contains 'NoMachinePolicy'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\CurrentVersion\\Winlogon\\GPExtensions\\' AND values contains 'NoMachinePolicy' AND values contains '1'
+
+# Tags Windows application installation events.
+application_install
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 903 OR event_identifier is 904)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 12 AND xml_string contains '\\CurrentVersion\\Uninstall\\' AND (xml_string contains 'InstallSource' OR xml_string contains 'UrlUpdateInfo')
+  data_type is 'windows:registry:key_value' AND key_path contains '\\CurrentVersion\\Uninstall\\' AND (values contains 'UrlUpdateInfo' OR values contains 'InstallSource')
+  data_type is 'windows:evtx:record' AND source_name is 'MsiInstaller' AND (event_identifier is 11707 OR event_identifier is 11728 OR event_identifier is 1033 OR event_identifier is 1036)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 903
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 904
+
+# Tags Windows application update events.
+application_update
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 905
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 905
+
+# Tags Windows application removal events.
+application_removal
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 907 OR event_identifier is 908)
+
+kb_install
+  data_type is 'windows:evtx:record' AND source_name is 'MsiInstaller' AND event_identifier is 1022
+
+# Process remote
+rpc_attempt
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 5712
+
+# DLL Search Order Hijacking  [T1038]
+dll_search
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 7 AND xml_string contains '\\users\\' AND xml_string contains '.dll'
+  data_type is 'windows:registry:key_value' AND key_path contains 'CurrentControlSet\\Control\\Session Manager' AND values contains 'SafeDLLSearchMode'
+
+# sysmon named pipe
+named_pipe
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 17 OR event_identifier is 18)
+
+ad_replica
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4928 OR event_identifier is 4929)
+
+# can indicate process use intensive (like miner)
+ram_consum
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Resource-Exhaustion-Detector' AND (event_identifier is 1001 OR event_identifier is 2004)
+
+# certiciate change [T1130]
+cert_change
+  data_type is 'windows:registry:key_value' AND (key_path contains 'SOFTWARE\\Microsoft\\EnterpriseCertificates\\Root\\Certificates' OR key_path contains 'Microsoft\\SystemCertificates\\Root\\Certificates')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND (xml_string contains 'SOFTWARE\\Microsoft\\EnterpriseCertificates\\Root\\Certificates' OR xml_string contains 'Microsoft\\SystemCertificates\\Root\\Certificates')
+
+registry_modified
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4657
+
+ip_change
+  data_type is 'windows:evtx:record' AND (source_name is 'Microsoft-Windows-Iphlpsvc' OR source_name is 'Microsoft-Windows-Operating-System') AND event_identifier is 4200
+
+rdp_history
+  data_type is 'windows:registry:key_value' AND (key_path contains 'Software\\Microsoft\\Terminal Server Client\\Default' OR key_path contains 'Software\\Microsoft\\Terminal Server Client\\Servers')
+
+smb_trace
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-SMBClient' AND (event_identifier is 30803 OR event_identifier is 30904)
