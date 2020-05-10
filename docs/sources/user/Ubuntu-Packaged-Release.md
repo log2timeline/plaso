@@ -1,14 +1,16 @@
 # Installing Plaso on Ubuntu
 
-### Ubuntu 18.04 LTS
+### Ubuntu 18.04 LTS (bionic) and 20.04 LTS (focal)
 
-To install plaso from the GIFT Personal Package Archive (PPA) add the [GIFT PPA](https://launchpad.net/~gift):
+**Note that other versions of Ubuntu are not supported at this time.**
+
+To install Plaso from the GIFT Personal Package Archive (PPA) add the [GIFT PPA](https://launchpad.net/~gift):
 
 ```
 sudo add-apt-repository ppa:gift/stable
 ```
 
-Update and install plaso:
+Update and install Plaso:
 
 ```
 sudo apt-get update

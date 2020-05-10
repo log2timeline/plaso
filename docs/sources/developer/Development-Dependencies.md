@@ -19,7 +19,7 @@ Some dependencies for Plaso are optional:
 
 ### Fedora
 
-**Note that these instructions assume you are running on Fedora 30 or 31.
+**Note that these instructions assume you are running on Fedora 31 or 32.
 Installing packages from the copr on other versions and/or distributions 
 is not recommended.**
 
@@ -73,8 +73,8 @@ PYTHONPATH=. python tools/update.py --preset plaso --track dev
 
 ### Ubuntu
 
-**Note that the instructions in this page assume you are running on 
-Ubuntu 18.04. Installing packages from the PPA on other versions and/or 
+**Note that the instructions in this page assume you are running on Ubuntu 18.04
+or 20.04. Installing packages from the PPA on other versions and/or
 distributions is not recommended.**
 
 The [GIFT PPA](https://launchpad.net/~gift) contains the necessary packages for 
