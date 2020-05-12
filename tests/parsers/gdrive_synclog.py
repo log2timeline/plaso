@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import gdrive_synclog as _  # pylint: disable=unused-import
 from plaso.parsers import gdrive_synclog
 
 from tests.parsers import test_lib

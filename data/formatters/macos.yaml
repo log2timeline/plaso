@@ -1,6 +1,25 @@
 # Mac-OS related event formatters.
 
 type: 'conditional'
+data_type: 'ipod:device:entry'
+message:
+- 'Device ID: {device_id}'
+- 'Type: {device_class}'
+- '[{family_id}]'
+- 'Connected {use_count} times'
+- 'Serial nr: {serial_number}'
+- 'IMEI [{imei}]'
+short_message:
+- 'Device ID: {device_id}'
+- 'Type: {device_class}'
+- '[{family_id}]'
+- 'Connected {use_count} times'
+- 'Serial nr: {serial_number}'
+- 'IMEI [{imei}]'
+short_source: 'LOG'
+source: 'iPod Connections'
+---
+type: 'conditional'
 data_type: 'mac:appfirewall:line'
 message:
 - 'Computer: {computer_name}'
@@ -122,6 +141,24 @@ short_message:
 - 'Action: {action}'
 short_source: 'LOG'
 source: 'Mac Wifi Log'
+---
+type: 'conditional'
+data_type: 'mackeeper:cache'
+message:
+- '{description}'
+- '<{event_type}>'
+- ':'
+- '{text}'
+- '['
+- 'URL: {url}'
+- 'Event ID: {record_id}'
+- 'Room: {room}'
+- ']'
+short_message:
+- '<{event_type}>'
+- '{text}'
+short_source: 'LOG'
+source: 'MacKeeper Cache'
 ---
 type: 'conditional'
 data_type: 'plist:key'

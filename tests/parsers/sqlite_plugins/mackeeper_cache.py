@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import mackeeper_cache as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import mackeeper_cache
 
 from tests.parsers.sqlite_plugins import test_lib

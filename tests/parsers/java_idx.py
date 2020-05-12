@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import java_idx as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import java_idx
 
@@ -52,6 +51,12 @@ class IDXTest(test_lib.ParserTestCase):
 
     description_expected = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event.timestamp_desc, description_expected)
+
+    expected_message = (
+        'IDX Version: 602 '
+        'Download URL: http://www.gxxxxx.com/a/java/xxz.jar')
+
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
