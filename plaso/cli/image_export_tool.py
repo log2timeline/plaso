@@ -14,7 +14,6 @@ import textwrap
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
-from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -355,13 +354,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       self._PreprocessSources(extraction_engine)
 
     for source_path_spec in source_path_specs:
-      file_system, mount_point = self._GetSourceFileSystem(
+      file_system, mount_point = extraction_engine.GetSourceFileSystem(
           source_path_spec, resolver_context=self._resolver_context)
 
       display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
           source_path_spec)
-      output_writer.Write(
-          'Extracting file entries from: {0:s}\n'.format(display_name))
+      output_writer.Write('Extracting file entries from: {0:s}\n'.format(
+          display_name))
 
       try:
         extraction_engine.BuildCollectionFilters(
@@ -381,39 +380,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             path_spec, destination_path, skip_duplicates=skip_duplicates)
 
       file_system.Close()
-
-  # TODO: refactor, this is a duplicate of the function in engine.
-  def _GetSourceFileSystem(self, source_path_spec, resolver_context=None):
-    """Retrieves the file system of the source.
-
-    Args:
-      source_path_spec (dfvfs.PathSpec): source path specification of the file
-          system.
-      resolver_context (dfvfs.Context): resolver context.
-
-    Returns:
-      tuple: containing:
-
-        dfvfs.FileSystem: file system.
-        dfvfs.PathSpec: mount point path specification that refers
-            to the base location of the file system.
-
-    Raises:
-      RuntimeError: if source path specification is not set.
-    """
-    if not source_path_spec:
-      raise RuntimeError('Missing source.')
-
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(
-        source_path_spec, resolver_context=resolver_context)
-
-    type_indicator = source_path_spec.type_indicator
-    if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
-      mount_point = source_path_spec
-    else:
-      mount_point = source_path_spec.parent
-
-    return file_system, mount_point
 
   def _ParseExtensionsString(self, extensions_string):
     """Parses the extensions string.
