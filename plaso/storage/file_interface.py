@@ -873,7 +873,7 @@ class StorageFileWriter(interface.StorageWriter):
     if task.storage_format not in definitions.TASK_STORAGE_FORMATS:
       raise IOError('Unsupported storage format.')
 
-    elif task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+    if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
       task.storage_file_size = 1000
       redis_store.RedisStore.MarkTaskAsMerging(
           task.identifier, self._session.identifier)
