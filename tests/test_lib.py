@@ -81,7 +81,7 @@ class BaseTestCase(unittest.TestCase):
     """
     # Note that we need to pass the individual path segments to os.path.join
     # and not a list.
-    return os.path.join(self._DATA_PATH, *path_segments)
+    return os.path.join(DATA_PATH, *path_segments)
 
   def _GetTestFilePath(self, path_segments):
     """Retrieves the path of a test file in the test data directory.
