@@ -14,6 +14,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+
 # The path to top of the Plaso source tree.
 PROJECT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # The paths below are all derived from the project path directory.
@@ -28,6 +29,7 @@ OUTPUT_PATH = os.path.join(PROJECT_PATH, 'plaso', 'output')
 PARSERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'parsers')
 PREPROCESSORS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'preprocessors')
 TEST_DATA_PATH = os.path.join(PROJECT_PATH, 'test_data')
+
 
 def GetTestFilePath(path_segments):
   """Retrieves the path of a test file in the test data directory.
