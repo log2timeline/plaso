@@ -12,9 +12,9 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers import czip
 from plaso.parsers.czip_plugins import interface
+
 
 class OpenXMLEventData(events.EventData):
   """OXML event data.
@@ -105,7 +105,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       str: property value.
     """
     property_value = properties.get(property_name, None)
-    if isinstance(property_value, py2to3.BYTES_TYPE):
+    if isinstance(property_value, bytes):
       try:
         # TODO: get encoding form XML metadata.
         property_value = property_value.decode('utf-8')

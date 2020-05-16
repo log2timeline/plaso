@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 import gzip
 import logging
 
-from plaso.lib import py2to3
-
 
 class CompressedFileHandler(logging.FileHandler):
   """Compressed file handler for logging."""
@@ -20,7 +18,7 @@ class CompressedFileHandler(logging.FileHandler):
       mode (Optional[str]): file access mode.
       encoding (Optional[str]): encoding of the log lines.
     """
-    if 't' not in mode and encoding and py2to3.PY_3:
+    if 't' not in mode and encoding:
       mode = '{0:s}t'.format(mode)
     super(CompressedFileHandler, self).__init__(
         filename, mode=mode, encoding=encoding, delay=True)
@@ -31,13 +29,8 @@ class CompressedFileHandler(logging.FileHandler):
     Returns
       file: file-like object of the resulting stream.
     """
-    # The gzip module supports directly setting encoding as of Python 3.3.
-    # pylint: disable=unexpected-keyword-arg
-    if py2to3.PY_3:
-      return gzip.open(
-          self.baseFilename, mode=self.mode, encoding=self.encoding)
+    return gzip.open(self.baseFilename, mode=self.mode, encoding=self.encoding)
 
-    return gzip.open(self.baseFilename, self.mode)
 
 def ConfigureLogging(
     debug_output=False, filename=None, mode='w', quiet_mode=False):

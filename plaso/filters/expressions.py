@@ -9,7 +9,6 @@ import logging
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.filters import filters
 
 
@@ -202,13 +201,13 @@ class EventExpression(Expression):
     Raises:
       ValueError: if the value cannot be copied to a date and time object.
     """
-    if not isinstance(value, py2to3.INTEGER_TYPES):
+    if not isinstance(value, int):
       try:
         value = int(value, 10)
       except (TypeError, ValueError):
         pass
 
-    if isinstance(value, py2to3.INTEGER_TYPES):
+    if isinstance(value, int):
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=value)
     else:

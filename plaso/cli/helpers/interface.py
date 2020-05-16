@@ -7,7 +7,6 @@ import locale
 import sys
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 
 
 class ArgumentsHelper(object):
@@ -42,7 +41,7 @@ class ArgumentsHelper(object):
     if argument_value is None:
       return default_value
 
-    if not isinstance(argument_value, py2to3.INTEGER_TYPES):
+    if not isinstance(argument_value, int):
       raise errors.BadConfigOption(
           'Unsupported option: {0:s} integer type required.'.format(
               argument_name))
@@ -70,7 +69,7 @@ class ArgumentsHelper(object):
     if argument_value is None:
       return default_value
 
-    if isinstance(argument_value, py2to3.BYTES_TYPE):
+    if isinstance(argument_value, bytes):
       encoding = sys.stdin.encoding
 
       # Note that sys.stdin.encoding can be None.
@@ -86,7 +85,7 @@ class ArgumentsHelper(object):
             'Unable to convert option: {0:s} to Unicode with error: '
             '{1!s}.').format(argument_name, exception))
 
-    elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
+    elif not isinstance(argument_value, str):
       raise errors.BadConfigOption(
           'Unsupported option: {0:s} string type required.'.format(
               argument_name))

@@ -18,7 +18,6 @@ import re
 
 from plaso.formatters import logger
 from plaso.lib import errors
-from plaso.lib import py2to3
 
 
 class EventFormatterHelper(object):
@@ -123,7 +122,7 @@ class EventFormatter(object):
     Returns:
       str: formatted message string.
     """
-    if not isinstance(format_string, py2to3.UNICODE_TYPE):
+    if not isinstance(format_string, str):
       logger.warning('Format string: {0:s} is non-Unicode.'.format(
           format_string))
 
@@ -360,10 +359,7 @@ class ConditionalEventFormatter(EventFormatter):
           # If an attribute is an int, yet has zero value we want to include
           # that in the format string, since that is still potentially valid
           # information. Otherwise we would like to skip it.
-          # pylint: disable=unidiomatic-typecheck
-          if (not isinstance(attribute, (bool, float)) and
-              not isinstance(attribute, py2to3.INTEGER_TYPES) and
-              not attribute):
+          if not isinstance(attribute, (bool, float, int)) and not attribute:
             continue
 
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])

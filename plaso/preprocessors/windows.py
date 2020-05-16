@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.containers import artifacts
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.preprocessors import interface
 from plaso.preprocessors import logger
 from plaso.preprocessors import manager
@@ -28,7 +27,7 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    if not isinstance(value_data, py2to3.UNICODE_TYPE):
+    if not isinstance(value_data, str):
       raise errors.PreProcessFail(
           'Unsupported Windows Registry value type: {0!s} for '
           'artifact: {1:s}.'.format(
@@ -226,7 +225,7 @@ class WindowsCodepagePlugin(
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    if not isinstance(value_data, py2to3.UNICODE_TYPE):
+    if not isinstance(value_data, str):
       raise errors.PreProcessFail(
           'Unsupported Windows Registry value type: {0!s} for '
           'artifact: {1:s}.'.format(
@@ -259,7 +258,7 @@ class WindowsHostnamePlugin(
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    if not isinstance(value_data, py2to3.UNICODE_TYPE):
+    if not isinstance(value_data, str):
       if not hasattr(value_data, '__iter__'):
         raise errors.PreProcessFail(
             'Unsupported Windows Registry value type: {0!s} for '
@@ -359,7 +358,7 @@ class WindowsSystemProductPlugin(
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    if not isinstance(value_data, py2to3.UNICODE_TYPE):
+    if not isinstance(value_data, str):
       raise errors.PreProcessFail(
           'Unsupported Windows Registry value type: {0!s} for '
           'artifact: {1:s}.'.format(
@@ -394,7 +393,7 @@ class WindowsSystemVersionPlugin(
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    if not isinstance(value_data, py2to3.UNICODE_TYPE):
+    if not isinstance(value_data, str):
       raise errors.PreProcessFail(
           'Unsupported Windows Registry value type: {0!s} for '
           'artifact: {1:s}.'.format(
@@ -420,7 +419,7 @@ class WindowsTimeZonePlugin(
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    if not isinstance(value_data, py2to3.UNICODE_TYPE):
+    if not isinstance(value_data, str):
       raise errors.PreProcessFail(
           'Unsupported Windows Registry value type: {0!s} for '
           'artifact: {1:s}.'.format(

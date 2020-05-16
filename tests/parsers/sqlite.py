@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import py2to3
 from plaso.parsers import sqlite
 # Register all plugins.
 from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
@@ -51,15 +50,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     row_results = []
     for row in database.Query('SELECT * FROM MyTable'):
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
-      # Also, Field3 needs to be converted to a string if Python 2 is used
-      # because it is a read-write buffer.
-      field3 = row['Field3']
-      if py2to3.PY_2 and field3 is not None:
-        field3 = str(field3)
-      row_results.append((
-          row['Field1'], row['Field2'], field3))
+      row_results.append((row['Field1'], row['Field2'], row['Field3']))
 
     expected_results = [
         ('Committed Text 1', 1, None),
@@ -87,15 +78,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     row_results = []
     for row in database.Query('SELECT * FROM MyTable'):
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
-      # Also, Field3 needs to be converted to a string if Python 2 is used
-      # because it is a read-write buffer.
-      field3 = row['Field3']
-      if py2to3.PY_2 and field3:
-        field3 = str(field3)
-      row_results.append((
-          row['Field1'], row['Field2'], field3))
+      row_results.append((row['Field1'], row['Field2'], row['Field3']))
 
     expected_results = [
         ('Committed Text 1', 1, None),

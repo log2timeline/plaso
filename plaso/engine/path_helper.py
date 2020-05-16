@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.engine import logger
-from plaso.lib import py2to3
 
 
 class PathHelper(object):
@@ -261,7 +260,7 @@ class PathHelper(object):
       for environment_variable in environment_variables:
         attribute_name = environment_variable.name.upper()
         attribute_value = environment_variable.value
-        if not isinstance(attribute_value, py2to3.STRING_TYPES):
+        if not isinstance(attribute_value, str):
           continue
 
         lookup_table[attribute_name] = attribute_value

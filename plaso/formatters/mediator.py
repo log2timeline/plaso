@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import os
 
 from plaso.formatters import winevt_rc
-from plaso.lib import py2to3
 from plaso.winnt import language_ids
 
 
@@ -92,7 +91,7 @@ class FormatterMediator(object):
       KeyError: if the language identifier is not defined.
       ValueError: if the language identifier is not a string type.
     """
-    if not isinstance(language_identifier, py2to3.STRING_TYPES):
+    if not isinstance(language_identifier, str):
       raise ValueError('Language identifier is not a string.')
 
     values = language_ids.LANGUAGE_IDENTIFIERS.get(

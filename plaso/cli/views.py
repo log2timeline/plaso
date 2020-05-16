@@ -10,8 +10,6 @@ try:
 except ImportError:
   win32console = None
 
-from plaso.lib import py2to3
-
 
 class BaseTableView(object):
   """Table view interface."""
@@ -110,7 +108,7 @@ class CLITableView(BaseTableView):
     secondary_format_string = '{{0:<{0:d}s}}{{1:s}}\n'.format(
         self._column_width + 3)
 
-    if isinstance(values[1], py2to3.STRING_TYPES):
+    if isinstance(values[1], str):
       value_string = values[1]
     else:
       value_string = '{0!s}'.format(values[1])
@@ -268,7 +266,7 @@ class CLITabularTableView(BaseTableView):
 
     value_strings = []
     for value_index, value_string in enumerate(values):
-      if not isinstance(value_string, py2to3.UNICODE_TYPE):
+      if not isinstance(value_string, str):
         value_string = '{0!s}'.format(value_string)
       value_strings.append(value_string)
 
