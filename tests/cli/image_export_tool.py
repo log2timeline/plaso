@@ -158,7 +158,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     """Tests the _ParseSignatureIdentifiers function."""
     test_tool = image_export_tool.ImageExportTool()
 
-    test_tool._ParseSignatureIdentifiers(self._DATA_PATH, 'gzip')
+    test_tool._ParseSignatureIdentifiers(shared_test_lib.DATA_PATH, 'gzip')
 
     with self.assertRaises(ValueError):
       test_tool._ParseSignatureIdentifiers(None, 'gzip')
@@ -195,7 +195,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
-    test_tool._data_location = self._TEST_DATA_PATH
+    test_tool._data_location = shared_test_lib.TEST_DATA_PATH
 
     test_tool.ListSignatureIdentifiers()
 

@@ -20,8 +20,6 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
 
   NAME = 'chrome_extension_test'
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
-
   def _GetChromeWebStorePage(self, extension_identifier):
     """Retrieves the page for the extension from the Chrome store website.
 
@@ -40,19 +38,6 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
       page_content = file_object.read()
 
     return page_content.decode('utf-8')
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file in the test data directory.
-
-    Args:
-    path_segments (list[str]): path segments inside the test data directory.
-
-    Returns:
-      str: path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
 
 class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
