@@ -1,13 +1,47 @@
+# Tags potentially suspicious files in C:\Users
+# * Executable files: *.exe, *.dll, *.sys, *.scr, *.pif, *.com, *.ms (such as *.msi, *.msp)
+# * Archive files: *.zip, *.rar, *.cab, *.sfx
+# * Script files: *.cmd, *.vb*, *.hta, *.ps*, *.ws*, *.py, *.js, *.bat, *.ms* (such as PowerShell *.msh)
+# * Document files: *.rtf, *.pdf, *.doc*, *.ppt*, *.xls*, *.otf
+#   These files can be exploited player, use embedded file, internal script, ... TODO: fix this line
+# * Special file player files: *.jar, *.swf, *.jnlp, *.gadget, *.appref-ms, *.application
+#   These files can be used to exploit specific players or use a player its capacities like clickonce
+# * Configuration files: *.reg
+#   These files can be used to modify system and user configuration
+# * Regsvr32: *.sct
+#   For more information see: https://attack.mitre.org/techniques/T1117/
+# * CMSTP: *.inf
+#   For more information see: https://attack.mitre.org/techniques/T1191/
+# * Control Panel Items: *.cpl
+#   For more information see: https://attack.mitre.org/techniques/T1196/
+# * Application shimming: *.sdb
+#   For more information see: https://attack.mitre.org/techniques/T1138/
+# * Forced Auth: *.lnk, *.scf
+#   For more information see: https://attack.mitre.org/techniques/T1187/
+# * Compiled HTML File: *.chm
+#   For more information see: https://attack.mitre.org/techniques/T1223/
+# * Shortcut Modification and User execution: *.lnk
+#   For more information see: https://attack.mitre.org/techniques/T1023/ and https://attack.mitre.org/techniques/T1024/
+# * File can be suspect (according by context: like bits): *.tmp
+# * File htm can contains script or exploit for player: *.[xm]htm[l]
+# * Java history: *.idx
 user_suspect_file
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Users/' AND (filename contains '.exe' OR filename contains '.zip' OR filename contains '.rar' OR filename contains '.dll' OR filename contains '.cmd' OR filename contains '.rtf' OR filename contains '.pdf' OR filename contains '.doc' OR filename contains '.ppt' OR filename contains '.xls' OR filename contains '.vb' OR filename contains '.hta' OR filename contains '.jar' OR filename contains '.swf' OR filename contains '.reg' OR filename contains '.ps' OR filename contains '.ws' OR filename contains '.mht' OR filename contains '.ms' OR filename contains '.tmp' OR filename contains '.py' OR filename contains '.xhtm' OR filename contains '.js' OR filename contains '.bat' OR filename contains '.scr' OR filename contains '.sys' OR filename contains '.com' OR filename contains '.pif' OR filename contains '.inf' OR filename contains '.scf' OR filename contains '.chm' OR filename contains '.jnlp' OR filename contains '.gadget' OR filename contains '.appref-ms' OR filename contains '.application' OR filename contains '.sfx' OR filename contains '.lnk' OR filename contains '.otf' OR filename contains '.cpl' OR filename contains '.cab')
 
-# Exe OR dll have been changed
-# Normal case: This may be due to an installation OR an update
-# Bad case: permissions weakness [T1044], Thrid party software compromised [T1072], Supply chain compromise [T1195]...
+# Tags exe or ddl files that have beeen change
+# These changes can occur due due to an installation or an update or due to:
+# * permissions weakness
+#   For more information see: https://attack.mitre.org/techniques/T1044/
+# * third party software compromised
+#   For more information see: https://attack.mitre.org/techniques/T1072/
+# * supply chain compromise
+#   For more information see: https://attack.mitre.org/techniques/T1195/
+# * ... TODO: fix this line
 software_changed
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Program Files/' AND (filename contains '.exe' OR filename contains '.dll')
 
-# RAT tool installed & potentiel use valid account compromise [T1078]
+# Tags potential installation of a known Remote Access Trojan (RAT)
+# For more information see: https://attack.mitre.org/techniques/T1078/
 rat_tool
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND (filename contains 'TeamViewer' OR filename contains 'LogMeIn' OR filename contains 'webex' OR filename contains 'mikogo' OR filename contains 'logicnow' OR filename contains 'ammyy' OR filename contains 'darkcomet' OR filename contains 'join.me.exe' OR filename contains 'Splashtop')
   data_type is 'windows:evtx:record' AND source_name is 'Desktop Window Manager' AND (event_identifier is 9011 OR event_identifier is 9013 OR event_identifier is 9010)
@@ -15,8 +49,8 @@ rat_tool
   data_type is 'windows:registry:key_value' AND (key_path contains 'Software\\ORL\\VNCviewer' OR key_path contains 'Software\\RealVNC\\WinVNC4' OR key_path contains 'Software\\TightVNC' OR key_path contains 'Software\\TeamViewer') AND (values contains 'MRU' OR values contains 'History' OR values contains 'VNC' OR values contains 'Server' OR values contains 'Version5')
   data_type is 'windows:registry:key_value' AND key_path contains 'Policies\\Google\\Chrome' AND value contains 'RemoteAccessHostRequireCurtain'
 
-# Credential dumping
-# MITRE ATT&CK framework reference: T1003
+# Tags potential credential dumping
+# For more information see: https://attack.mitre.org/techniques/T1003/
 mimikatz_tool
   data_type is 'windows:evtx:record' AND (xml_string contains ' mimikatz ' OR xml_string contains ' mimilib ' OR xml_string contains ' <3 eo.oe ' OR xml_string contains ' eo.oe.kiwi ' OR xml_string contains ' privilege::debug ' OR xml_string contains ' sekurlsa::logonpasswords ' OR xml_string contains ' lsadump::sam ' OR xml_string contains ' mimidrv.sys ')
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4662 AND (xml_string contains 'Replicating Directory Changes All' OR xml_string contains '1131f6ad-9c07-11d1-f79f-00c04fc2dcd2')
