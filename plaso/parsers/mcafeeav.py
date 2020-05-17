@@ -6,8 +6,6 @@ updated, and when files match the virus database."""
 
 from __future__ import unicode_literals
 
-import codecs
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -48,10 +46,12 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
   NAME = 'mcafee_protection'
   DESCRIPTION = 'Parser for McAfee AV Access Protection log files.'
 
-  DELIMITER = b'\t'
+  DELIMITER = '\t'
   COLUMNS = [
       'date', 'time', 'status', 'username', 'filename',
       'trigger_location', 'rule', 'action']
+
+  _NUMBER_OF_COLUMNS = len(COLUMNS)
 
   def _ConvertToTimestamp(self, date, time, timezone):
     """Converts date and time values into a timestamp.
@@ -133,26 +133,11 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if len(row) != 8:
+    if len(row) != self._NUMBER_OF_COLUMNS:
       return False
 
-    # This file can have a UTF-8 byte-order-marker at the beginning of
-    # the first row.
-    # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
-
-    try:
-      # TODO: remove this after addressing
-      # https://github.com/log2timeline/plaso/issues/2919
-      row_bytes = codecs.encode(row['date'], parser_mediator.codepage)
-    except UnicodeEncodeError:
-      return False
-
-    if row_bytes.startswith(b'\xef\xbb\xbf'):
-      row['date'] = row['date'][3:]
-      self._encoding = 'utf-8'
-
-    # Check the date format!
-    # If it doesn't parse, then this isn't a McAfee AV Access Protection Log
+    # If the date and time values fails to be converted into a timestamp, then
+    # do not consider this to be a McAfee AV Access Protection Log.
     try:
       timestamp = self._ConvertToTimestamp(
           row['date'], row['time'], parser_mediator.timezone)
