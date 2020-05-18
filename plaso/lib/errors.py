@@ -79,6 +79,7 @@ class SerializationError(Error):
 class SourceScannerError(Error):
   """Class that defines source scanner errors."""
 
+
 class TaggingFileError(Error):
   """Raised when the tagging file is invalid."""
 
