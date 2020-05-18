@@ -862,9 +862,9 @@ class StorageFileWriter(interface.StorageWriter):
       task (Task): task.
 
     Raises:
-      IOError: if the storage type is not supported or
+      IOError: if the storage type or format is not supported or
           if the storage file cannot be renamed.
-      OSError: if the storage type is not supported or
+      OSError: if the storage type or format is not supported or
           if the storage file cannot be renamed.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:

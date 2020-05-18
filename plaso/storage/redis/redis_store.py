@@ -10,7 +10,6 @@ import uuid
 import redis
 
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.storage import identifiers
 from plaso.storage import interface
 from plaso.storage import logger
@@ -30,6 +29,8 @@ class RedisStore(interface.BaseStore):
   _FINALIZED_BYTES = b'finalized'
   _MERGING_KEY_NAME = 'merging'
   _MERGING_BYTES = b'merging'
+  # DEFAULT_REDIS_URL is public so that it appears in generated documentation.
+  DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
   def __init__(
       self, storage_type=definitions.STORAGE_TYPE_TASK,
@@ -40,8 +41,9 @@ class RedisStore(interface.BaseStore):
       storage_type (Optional[str]): storage type.
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
-      task_identifier (str): unique identifier of the task the store will
-          store containers for.
+      task_identifier (Optional[str]): unique identifier of the task the store
+          will store containers for. If not specified, an identifier will be
+          generated.
 
     Raises:
       ValueError: if the storage type is not supported.
@@ -73,9 +75,9 @@ class RedisStore(interface.BaseStore):
     """
     try:
       redis_client.client_setname(name)
-    except (AttributeError, redis.ResponseError) as exception:
+    except redis.ResponseError as exception:
       logger.debug(
-          'Unable to set redis client name: {0:s} with error {1!s}'.format(
+          'Unable to set redis client name: {0:s} with error: {1!s}'.format(
               name, exception))
 
   def _AddAttributeContainer(
@@ -138,7 +140,7 @@ class RedisStore(interface.BaseStore):
 
     Args:
       container_type (str): container type.
-      identifier (AttributeContainerIdentifier): event data identifier.
+      identifier (RedisKeyIdentifier): event data identifier.
 
     Returns:
       AttributeContainer: attribute container or None if not available.
@@ -171,7 +173,11 @@ class RedisStore(interface.BaseStore):
     return self._redis_client.hlen(container_key)
 
   def _GetFinalizationKey(self):
-    """Generates the finalized key for the store."""
+    """Generates the finalized key for the store.
+
+    Returns:
+      str: Redis key for the the finalization flag.
+    """
     return '{0:s}-{1:s}'.format(
         self._session_identifier, self._FINALIZED_KEY_NAME)
 
@@ -186,26 +192,29 @@ class RedisStore(interface.BaseStore):
           containers.
     """
     container_key = self._GenerateRedisKey(container_type)
-    return self._redis_client.hlen(container_key) > 0
+    number_of_containers = self._redis_client.hlen(container_key)
+    return  number_of_containers > 0
 
   def _RaiseIfNotReadable(self):
     """Checks that the store is ready to for reading.
 
      Raises:
-       StorageError: if the store cannot be read from.
+       IOError: if the store cannot be read from.
+       OSError: if the store cannot be read from.
     """
     if not self._redis_client:
-      raise errors.StorageError(
+      raise IOError(
           'Unable to read, client not connected.')
 
   def _RaiseIfNotWritable(self):
     """Checks that the store is ready to for writing.
 
      Raises:
-       StorageError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
+       OSError: if the store cannot be written to.
     """
     if not self._redis_client:
-      raise errors.StorageError('Unable to write, client not connected.')
+      raise IOError('Unable to write, client not connected.')
 
   def _WriteStorageMetadata(self):
     """Writes the storage metadata."""
@@ -357,20 +366,25 @@ class RedisStore(interface.BaseStore):
     return cursor, items
 
   # pylint: disable=arguments-differ
-  def Open(self, redis_client=None, url='redis://127.0.0.1/0'):
+  def Open(self, redis_client=None, url=None):
     """Opens the store.
 
     Args:
       redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created.
-      url (Optional[str]): URL for the Redis database. If no client is specified
-        a new client will be opened connected to this database.
+          new client will be created. If no client is specified a new client
+          will be opened connected to the Redis instance specified by 'url'.
+      url (Optional[str]): URL for a Redis database. If not specified, the
+          DEFAULT_REDIS_URL will be used.
 
     Raises:
-      StorageError: if the store is already connected to a Redis instance.
+      IOError: if the store is already connected to a Redis instance.
+      OSError: if the store is already connected to a Redis instance.
     """
+    if not url:
+      url = self.DEFAULT_REDIS_URL
+
     if self._redis_client:
-      raise errors.StorageError('Redis client already connected')
+      raise IOError('Redis client already connected')
 
     if redis_client:
       self._redis_client = redis_client
@@ -402,19 +416,23 @@ class RedisStore(interface.BaseStore):
 
   @classmethod
   def ScanForProcessedTasks(
-      cls, session_identifier, url='redis://127.0.0.1/0', redis_client=None):
+      cls, session_identifier, url=None, redis_client=None):
     """Scans a Redis database for processed tasks.
 
     Args:
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
-      url (Optional[str]): url for a Redis database.
+      url (Optional[str]): URL for a Redis database. If not specified,
+          REDIS_DEFAULT_URL will be used.
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
 
     Returns:
       list[str]: identifiers of processed tasks.
     """
+    if not url:
+      url = cls.DEFAULT_REDIS_URL
+
     if not redis_client:
       redis_client = redis.from_url(url=url, socket_timeout=60)
       cls._SetClientName(redis_client, 'processed_scan')
@@ -432,7 +450,7 @@ class RedisStore(interface.BaseStore):
 
   @classmethod
   def MarkTaskAsMerging(
-      cls, task_identifier, session_identifier, url='redis://127.0.0.1/0',
+      cls, task_identifier, session_identifier, url=None,
       redis_client=None):
     """Marks a finalized task as pending merge.
 
@@ -440,13 +458,18 @@ class RedisStore(interface.BaseStore):
       task_identifier (str): identifier of the task.
       session_identifier (Optional[str]): session identifier, formatted as
             a UUID.
-      url (Optional[str]): url for a Redis database.
+      url (Optional[str]): URL for a Redis database. If not specified,
+          REDIS_DEFAULT_URL will be used.
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
 
     Raises:
-      StorageError: if the task being updated is not finalized.
+      IOError: if the task being updated is not finalized.
+      OSError: if the task being updated is not finalized.
     """
+    if not url:
+      url = cls.DEFAULT_REDIS_URL
+
     if not redis_client:
       redis_client = redis.from_url(url=url, socket_timeout=60)
 
@@ -457,7 +480,7 @@ class RedisStore(interface.BaseStore):
     number_of_deleted_fields = redis_client.hdel(
         finalization_key, task_identifier)
     if number_of_deleted_fields == 0:
-      raise errors.StorageError('Task identifier {0:s} not finalized'.format(
+      raise IOError('Task identifier {0:s} not finalized'.format(
           task_identifier))
 
     merging_key = '{0:s}-{1:s}'.format(

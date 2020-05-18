@@ -10,7 +10,6 @@ import redis
 from plaso.containers import events
 from plaso.containers import sessions
 from plaso.containers import tasks
-from plaso.lib import errors
 from plaso.storage.redis import redis_store
 from plaso.storage.redis import writer
 
@@ -224,7 +223,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     task = tasks.Task(session_identifier=session.identifier)
 
     # Trying to mark a task as merging without finalizing it raises an error.
-    with self.assertRaises(errors.StorageError):
+    with self.assertRaises(IOError):
       redis_store.RedisStore.MarkTaskAsMerging(
           task.identifier, session.identifier, redis_client=redis_client)
 

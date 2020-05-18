@@ -115,11 +115,15 @@ class RedisKeyIdentifier(containers_interface.AttributeContainerIdentifier):
   a Redis instance.
 
   Attributes:
-    identifier (int): unique identifier of a container.
+    identifier (UUID): unique identifier of a container.
   """
 
   def __init__(self, identifier=None):
-    """"Initializes a Redis key identifier."""
+    """"Initializes a Redis key identifier.
+
+    Args:
+      identifier (Optional[str]): hexadecimal representation of a UUID4 UUID.
+    """
     super(RedisKeyIdentifier, self).__init__()
     if identifier:
       self.identifier = uuid.UUID(identifier)

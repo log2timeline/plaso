@@ -472,7 +472,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           event_source = event_source_heap.PopEventSource()
 
       except KeyboardInterrupt:
-        traceback.print_exc()
+        if self._debug_output:
+          traceback.print_exc()
         self._abort = True
 
         self._processing_status.aborted = True

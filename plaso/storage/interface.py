@@ -106,7 +106,7 @@ class BaseStore(object):
 
   @abc.abstractmethod
   def _RaiseIfNotWritable(self):
-    """Raises if the storage file is not writable.
+    """Raises if the store is not writable.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -115,7 +115,7 @@ class BaseStore(object):
 
   @abc.abstractmethod
   def _RaiseIfNotReadable(self):
-    """Raises if the storage file is not readable.
+    """Raises if the store is not readable.
 
      Raises:
        OSError: if the store cannot be read from.

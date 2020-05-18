@@ -19,6 +19,7 @@ from plaso.storage.redis import redis_store
 class RedisMergeReader(interface.StorageMergeReader):
   """Redis store reader for merging."""
 
+  # TODO: move definitions into parent class.
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
@@ -278,6 +279,7 @@ class RedisMergeReader(interface.StorageMergeReader):
         return False
 
     logger.debug('Merged {0:d} containers'.format(number_of_containers))
-    # Remove merging key
+    # While all the containers have been merged, the 'merging' key is still
+    # present, so we still need to remove the store.
     self._store.Remove()
     return True
