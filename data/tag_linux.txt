@@ -13,14 +13,19 @@ login
   data_type is 'selinux:line' AND audit_type is 'LOGIN'
   reporter is 'login' AND (body contains 'logged in' OR body contains 'ROOT LOGIN' OR body contains 'session opened')
   reporter is 'sshd' AND (body contains 'session opened' OR body contains 'Starting session')
+  reporter is 'dovecot' AND body contains 'imap-login: Login:'
+  reporter is 'postfix/submission/smtpd' AND body contains 'sasl_'
 
 # Tags Linux failed log-in events.
 login_failed
   data_type is 'selinux:line' AND audit_type is 'ANOM_LOGIN_FAILURES'
   data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND body contains 'res=failed'
   data_type is 'syslog:line' AND body contains 'pam_tally2'
-  reporter is 'sshd' AND body contains 'uthentication failure'
-  reporter is 'xscreensaver' AND body contains 'FAILED LOGIN'
+  (reporter is 'sshd' OR reporter is 'login' OR reporter is 'postfix/submission/smtpd' OR reporter is 'sudo') AND body contains 'uthentication fail'
+  reporter is 'sshd' AND (body contains 'Access denied for user' OR body contains 'not allowed because')
+  (reporter is 'xscreensaver' or reporter is 'login') AND body contains 'FAILED LOGIN'
+  reporter is 'su' and body contains 'DENIED'
+  reporter is 'nologin'
 
 # Tags Linux log-out events.
 logout
@@ -29,6 +34,7 @@ logout
   reporter is 'login' AND body contains 'session closed'
   reporter is 'sshd' AND (body contains 'session closed' OR body contains 'Close session')
   reporter is 'systemd-logind' AND body contains 'logged out'
+  reporter is 'dovecot' AND body contains 'Logged out'
 
 # Tags Linux user session start events.
 session_start
