@@ -240,11 +240,13 @@ class OutputModuleOptions(object):
         self._views_format_type, column_names=['Name', 'Description'],
         title='Output Modules')
 
-    for name, output_class in output_manager.OutputManager.GetOutputClasses():
+    output_classes = sorted(
+        output_manager.OutputManager.GetOutputClasses())
+    for name, output_class in output_classes:
       table_view.AddRow([name, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)
 
-    disabled_classes = list(
+    disabled_classes = sorted(
         output_manager.OutputManager.GetDisabledOutputClasses())
     if not disabled_classes:
       return
