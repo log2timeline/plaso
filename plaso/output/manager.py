@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from plaso.lib import py2to3
-
 from plaso.output import interface
 
 
@@ -64,7 +62,7 @@ class OutputManager(object):
       KeyError: if there is no output class found with the supplied name.
       ValueError: if name is not a string.
     """
-    if not isinstance(name, py2to3.STRING_TYPES):
+    if not isinstance(name, str):
       raise ValueError('Name attribute is not a string.')
 
     name = name.lower()
@@ -94,7 +92,7 @@ class OutputManager(object):
     Returns:
       bool: True if the output class is registered.
     """
-    if not isinstance(name, py2to3.STRING_TYPES):
+    if not isinstance(name, str):
       return False
 
     return name.lower() in cls._output_classes

@@ -84,14 +84,6 @@ plaso.lib.plist module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.py2to3 module
------------------------
-
-.. automodule:: plaso.lib.py2to3
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.specification module
 ------------------------------
 

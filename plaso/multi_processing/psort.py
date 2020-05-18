@@ -14,7 +14,6 @@ from plaso.engine import zeromq_queue
 from plaso.containers import tasks
 from plaso.lib import bufferlib
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import logger
@@ -95,7 +94,7 @@ class PsortEventHeap(object):
       elif isinstance(attribute_value, set):
         attribute_value = sorted(list(attribute_value))
 
-      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
+      elif isinstance(attribute_value, bytes):
         attribute_value = repr(attribute_value)
 
       try:
@@ -295,7 +294,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     logger.debug('Processing analysis plugin results.')
 
     # TODO: use a task based approach.
-    plugin_names = [plugin_name for plugin_name in analysis_plugins.keys()]
+    plugin_names = list(analysis_plugins.keys())
     while plugin_names:
       for plugin_name in list(plugin_names):
         if self._abort:

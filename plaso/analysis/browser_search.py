@@ -17,7 +17,6 @@ from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.containers import reports
-from plaso.lib import py2to3
 
 
 # Create a lightweight object that is used to store timeline based information
@@ -117,7 +116,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       return ''
 
     decoded_url = urlparse.unquote(url)
-    if isinstance(decoded_url, py2to3.BYTES_TYPE):
+    if isinstance(decoded_url, bytes):
       try:
         decoded_url = decoded_url.decode('utf-8')
       except UnicodeDecodeError as exception:

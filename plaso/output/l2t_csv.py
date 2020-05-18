@@ -11,7 +11,6 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.output import interface
 from plaso.output import logger
 from plaso.output import manager
@@ -37,7 +36,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
      Returns:
        str: formatted field value.
     """
-    if self._FIELD_DELIMITER and isinstance(field, py2to3.STRING_TYPES):
+    if self._FIELD_DELIMITER and isinstance(field, str):
       return field.replace(self._FIELD_DELIMITER, ' ')
     return field
 
@@ -135,7 +134,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
       if attribute_name in unformatted_attributes:
         # Some parsers have written bytes values to storage.
-        if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        if isinstance(attribute_value, bytes):
           attribute_value = attribute_value.decode('utf-8', 'replace')
           logger.warning(
               'Found bytes value for attribute "{0:s}" for data type: '
@@ -201,7 +200,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       output_values (list[str]): output values.
     """
     for index, value in enumerate(output_values):
-      if not isinstance(value, py2to3.STRING_TYPES):
+      if not isinstance(value, str):
         value = ''
       output_values[index] = value.replace(',', ' ')
 

@@ -10,7 +10,6 @@ from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import py2to3
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -187,7 +186,7 @@ class AndroidCallPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if duration:
-      if isinstance(duration, py2to3.STRING_TYPES):
+      if isinstance(duration, str):
         try:
           duration = int(duration, 10)
         except ValueError:

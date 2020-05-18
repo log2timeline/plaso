@@ -13,7 +13,6 @@ from dfvfs.path import factory as dfvfs_path_spec_factory
 
 from plaso.containers import interface as containers_interface
 from plaso.containers import manager as containers_manager
-from plaso.lib import py2to3
 from plaso.serializer import interface
 from plaso.serializer import logger
 
@@ -81,7 +80,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     Returns:
       dict|list: The JSON serialized object which can be a dictionary or a list.
     """
-    if isinstance(attribute_value, py2to3.BYTES_TYPE):
+    if isinstance(attribute_value, bytes):
       encoded_value = binascii.b2a_qp(attribute_value)
       encoded_value = codecs.decode(encoded_value, 'ascii')
       attribute_value = {
@@ -145,7 +144,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       if attribute_value is None:
         continue
 
-      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+      if isinstance(attribute_value, bytes):
         attribute_value = {
             '__type__': 'bytes',
             'stream': '{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -237,7 +236,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
         attribute_value = cls._ConvertListToObject(attribute_value)
 
       if container_type == 'event_data':
-        if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        if isinstance(attribute_value, bytes):
           raise ValueError((
               'Event data attribute value: {0:s} of type bytes is not '
               'supported.').format(attribute_name))

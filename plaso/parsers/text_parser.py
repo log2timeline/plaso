@@ -15,7 +15,6 @@ import pyparsing
 from dfvfs.helpers import text_file
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import logger
 
@@ -234,13 +233,11 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # Start with the assumption we are dealing with text.
     is_text = True
 
-    if isinstance(bytes_in, py2to3.UNICODE_TYPE):
+    if isinstance(bytes_in, str):
       return is_text
 
     # Check if this is ASCII text string.
     for value in bytes_in:
-      if py2to3.PY_2:
-        value = ord(value)
       if not 31 < value < 128:
         is_text = False
         break

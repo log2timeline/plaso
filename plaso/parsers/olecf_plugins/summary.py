@@ -10,7 +10,6 @@ import pyolecf
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
@@ -125,7 +124,7 @@ class OLECFPropertySetStream(object):
     event_data.name = self._EVENT_DATA_NAME
 
     for property_name, property_value in iter(self._properties.items()):
-      if isinstance(property_value, py2to3.BYTES_TYPE):
+      if isinstance(property_value, bytes):
         property_value = repr(property_value)
       setattr(event_data, property_name, property_value)
 

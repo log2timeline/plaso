@@ -90,7 +90,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -145,8 +144,8 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
 
   _ASCII_PRINTABLES = pyparsing.printables
   _UNICODE_PRINTABLES = ''.join(
-      py2to3.UNICHR(character) for character in range(65536)
-      if not py2to3.UNICHR(character).isspace())
+      chr(character) for character in range(65536)
+      if not chr(character).isspace())
 
   MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName('mru')
   PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName('package')

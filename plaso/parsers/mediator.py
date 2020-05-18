@@ -13,7 +13,6 @@ from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import logger
 
@@ -183,13 +182,13 @@ class ParserMediator(object):
     Returns:
       int: inode or -1 if the inode value cannot be converted to an integer.
     """
-    if isinstance(inode_value, py2to3.INTEGER_TYPES):
+    if isinstance(inode_value, int):
       return inode_value
 
     if isinstance(inode_value, float):
       return int(inode_value)
 
-    if not isinstance(inode_value, py2to3.STRING_TYPES):
+    if not isinstance(inode_value, str):
       return -1
 
     if b'-' in inode_value:

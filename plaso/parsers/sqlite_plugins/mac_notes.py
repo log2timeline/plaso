@@ -7,24 +7,22 @@ SQLite database Name: NotesV7.storedata
 
 from __future__ import unicode_literals
 
+import html.parser as HTMLParser
+
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
-
-# pylint: disable=import-error
-if py2to3.PY_2:
-  import HTMLParser
-else:
-  import html.parser as HTMLParser
 
 
 class _ZHTMLStringTextExtractor(HTMLParser.HTMLParser):
   """HTML parser for extracting text from a mac notes zhtmlstring."""
+
+  # pylint: disable=abstract-method
+  # Method 'error' is abstract in class 'ParserBase' but is not overridden
 
   # This method is part of the HTMLParser interface.
   # pylint: disable=invalid-name

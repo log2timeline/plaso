@@ -7,7 +7,6 @@ import re
 
 from plaso.containers import interface
 from plaso.containers import manager
-from plaso.lib import py2to3
 
 
 class EventData(interface.AttributeContainer):
@@ -49,7 +48,7 @@ class EventData(interface.AttributeContainer):
       if attribute_name[0] == '_' or attribute_value is None:
         continue
 
-      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+      if isinstance(attribute_value, bytes):
         raise TypeError(
             'Attribute: {0:s} value of type bytes not supported.'.format(
                 attribute_name))
@@ -202,9 +201,10 @@ class EventTag(interface.AttributeContainer):
       TypeError: if the label provided is not a string.
       ValueError: if a label is malformed.
     """
-    if not isinstance(label, py2to3.STRING_TYPES):
+    if not isinstance(label, str):
       raise TypeError('label is not a string type. Is {0:s}'.format(
           type(label)))
+
     if not self._VALID_LABEL_REGEX.match(label):
       raise ValueError((
           'Unsupported label: "{0:s}". A label must only consist of '

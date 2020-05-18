@@ -12,7 +12,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -248,7 +247,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     event_data.user_sid = data.get('sid', None)
 
     time_value = self._GetRowValue(query_hash, row, 'time_string')
-    if isinstance(time_value, py2to3.INTEGER_TYPES):
+    if isinstance(time_value, int):
       date_time = dfdatetime_java_time.JavaTime(timestamp=time_value)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_ADDED)

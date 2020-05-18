@@ -12,7 +12,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
@@ -217,12 +216,12 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
         request_headers = record_values.get('RequestHeaders', None)
         # Ignore non-Unicode request headers values.
-        if not isinstance(request_headers, py2to3.UNICODE_TYPE):
+        if not isinstance(request_headers, str):
           request_headers = None
 
         response_headers = record_values.get('ResponseHeaders', None)
         # Ignore non-Unicode response headers values.
-        if not isinstance(response_headers, py2to3.UNICODE_TYPE):
+        if not isinstance(response_headers, str):
           response_headers = None
 
         event_data = MsieWebCacheContainerEventData()

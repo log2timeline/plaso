@@ -3,23 +3,17 @@
 
 from __future__ import unicode_literals
 
-import codecs
+from urllib import parse as urlparse
 
-# pylint: disable=wrong-import-position
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers.cookie_plugins import interface
 from plaso.parsers.cookie_plugins import manager
 
-if py2to3.PY_2:
-  import urllib as urlparse
-else:
-  from urllib import parse as urlparse  # pylint: disable=no-name-in-module
 
 # TODO: determine if __utmc always 0?
 
@@ -409,31 +403,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       extra_attributes = {}
       for variable in extra_variables:
         key, _, value = variable.partition('=')
-
-        # Urllib2 in Python 2 requires a 'str' argument, not 'unicode'. We thus
-        # need to convert the value argument to 'str" and back again, but only
-        # in Python 2.
-        if isinstance(value, py2to3.UNICODE_TYPE) and py2to3.PY_2:
-          try:
-            value = codecs.decode(value, 'ascii')
-          except UnicodeEncodeError:
-            value = codecs.decode(value, 'ascii', errors='replace')
-            parser_mediator.ProduceExtractionWarning(
-                'Cookie contains non 7-bit ASCII characters, which have been '
-                'replaced with a "?".')
-
-        value = urlparse.unquote(value)
-
-        if py2to3.PY_2:
-          try:
-            value = codecs.encode(value, 'utf-8')
-          except UnicodeDecodeError:
-            value = codecs.encode(value, 'utf-8', errors='replace')
-            parser_mediator.ProduceExtractionWarning(
-                'Cookie value did not contain a Unicode string. Non UTF-8 '
-                'characters have been replaced.')
-
-        extra_attributes[key] = value
+        extra_attributes[key] = urlparse.unquote(value)
 
     if last_visit_posix_time is not None:
       date_time = dfdatetime_posix_time.PosixTime(

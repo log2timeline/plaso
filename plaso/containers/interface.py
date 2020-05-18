@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from plaso.lib import py2to3
-
 
 class AttributeContainerIdentifier(object):
   """The attribute container identifier.
@@ -121,7 +119,7 @@ class AttributeContainer(object):
       if isinstance(attribute_value, dict):
         attribute_value = sorted(attribute_value.items())
 
-      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
+      elif isinstance(attribute_value, bytes):
         attribute_value = repr(attribute_value)
 
       attribute_string = '{0:s}: {1!s}'.format(attribute_name, attribute_value)

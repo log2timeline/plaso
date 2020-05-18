@@ -13,7 +13,6 @@ import codecs
 
 from plaso.containers import artifacts
 from plaso.engine import logger
-from plaso.lib import py2to3
 
 import pytz  # pylint: disable=wrong-import-order
 
@@ -201,7 +200,7 @@ class KnowledgeBase(object):
         'operating_system_version')
 
     time_zone = self._time_zone.zone
-    if isinstance(time_zone, py2to3.BYTES_TYPE):
+    if isinstance(time_zone, bytes):
       time_zone = time_zone.decode('ascii')
 
     system_configuration.time_zone = time_zone
@@ -280,7 +279,7 @@ class KnowledgeBase(object):
     Raises:
       TypeError: if the identifier is not a string type.
     """
-    if not isinstance(identifier, py2to3.STRING_TYPES):
+    if not isinstance(identifier, str):
       raise TypeError('Identifier not a string type.')
 
     identifier = identifier.lower()
@@ -414,7 +413,7 @@ class KnowledgeBase(object):
     Raises:
       TypeError: if the identifier is not a string type.
     """
-    if not isinstance(identifier, py2to3.STRING_TYPES):
+    if not isinstance(identifier, str):
       raise TypeError('Identifier not a string type.')
 
     identifier = identifier.lower()

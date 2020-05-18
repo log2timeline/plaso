@@ -19,7 +19,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
@@ -86,7 +85,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       UnableToParseFile: if a log line cannot be parsed.
     """
     for line in line_reader:
-      if isinstance(line, py2to3.BYTES_TYPE):
+      if isinstance(line, bytes):
         try:
           line = codecs.decode(line, self._encoding)
         except UnicodeDecodeError as exception:

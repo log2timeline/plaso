@@ -11,8 +11,6 @@ import pysigscan
 
 from dfdatetime import time_elements
 
-from plaso.lib import py2to3
-
 
 class FileEntryFilter(object):
   """File entry filter interface."""
@@ -80,7 +78,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     Raises:
       ValueError: If the filter is badly formed.
     """
-    if not isinstance(time_value, py2to3.STRING_TYPES):
+    if not isinstance(time_value, str):
       raise ValueError('Filter type must be a string.')
 
     if start_time_string is None and end_time_string is None:

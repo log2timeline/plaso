@@ -7,7 +7,6 @@ import abc
 import json
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.output import interface
 from plaso.serializer import json_serializer
 
@@ -30,12 +29,7 @@ class SharedJSONOutputModule(interface.LinearOutputModule):
     """
     json_dict = self._WriteSerializedDict(event, event_data, event_tag)
 
-    json_string = json.dumps(json_dict, sort_keys=True)
-    # json.dumps() returns an ascii-encoded byte string in Python 2.
-    if py2to3.PY_2:
-      json_string = json_string.decode('ascii')
-
-    return json_string
+    return json.dumps(json_dict, sort_keys=True)
 
   def _WriteSerializedDict(self, event, event_data, event_tag):
     """Writes an event, event data and event tag to serialized form.

@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
@@ -364,7 +363,7 @@ class DynamicFieldsHelper(object):
     if output_value is None:
       output_value = '-'
 
-    elif not isinstance(output_value, py2to3.STRING_TYPES):
+    elif not isinstance(output_value, str):
       output_value = '{0!s}'.format(output_value)
 
     return output_value
@@ -405,7 +404,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     Returns:
       str: value of the field.
     """
-    if self._field_delimiter and isinstance(field, py2to3.STRING_TYPES):
+    if self._field_delimiter and isinstance(field, str):
       return field.replace(self._field_delimiter, ' ')
     return field
 

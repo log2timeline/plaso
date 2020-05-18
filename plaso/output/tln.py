@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -112,7 +111,7 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
      Returns:
        str: formatted field value.
     """
-    if self._FIELD_DELIMITER and isinstance(field, py2to3.STRING_TYPES):
+    if self._FIELD_DELIMITER and isinstance(field, str):
       return field.replace(self._FIELD_DELIMITER, ' ')
     return field
 

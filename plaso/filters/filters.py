@@ -11,7 +11,6 @@ import re
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 
 
 class Filter(object):
@@ -47,10 +46,10 @@ class Filter(object):
       value = [self._CopyValueToString(item) for item in value]
       return ''.join(value)
 
-    if isinstance(value, py2to3.INTEGER_TYPES):
+    if isinstance(value, int):
       value = '{0:d}'.format(value)
 
-    if not isinstance(value, py2to3.UNICODE_TYPE):
+    if not isinstance(value, str):
       return codecs.decode(value, 'utf8', 'ignore')
     return value
 
@@ -398,7 +397,7 @@ class Contains(GenericBinaryOperator):
       bool: True if the second value is part of the first, False otherwise.
     """
     try:
-      if isinstance(event_value, py2to3.STRING_TYPES):
+      if isinstance(event_value, str):
         return filter_value.lower() in event_value.lower()
 
       return filter_value in event_value
@@ -428,9 +427,7 @@ class InSet(GenericBinaryOperator):
 
     # event_value might be an iterable
     # first we need to skip strings or we'll do silly things
-    # pylint: disable=consider-merging-isinstance
-    if (isinstance(event_value, py2to3.STRING_TYPES) or
-        isinstance(event_value, bytes)):
+    if isinstance(event_value, (bytes, str)):
       return False
 
     try:

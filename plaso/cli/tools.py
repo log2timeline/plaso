@@ -19,7 +19,6 @@ import plaso
 from plaso.cli import logger
 from plaso.cli import views
 from plaso.lib import errors
-from plaso.lib import py2to3
 
 import pytz  # pylint: disable=wrong-import-order
 
@@ -56,7 +55,7 @@ class CLITool(object):
     preferred_encoding = locale.getpreferredencoding()
     if not preferred_encoding:
       preferred_encoding = self._PREFERRED_ENCODING
-    elif isinstance(preferred_encoding, py2to3.BYTES_TYPE):
+    elif isinstance(preferred_encoding, bytes):
       preferred_encoding = preferred_encoding.decode('utf-8')
 
     if not input_reader:
@@ -168,7 +167,7 @@ class CLITool(object):
       BadConfigOption: if the options are invalid.
     """
     time_zone_string = self.ParseStringOption(options, 'timezone')
-    if isinstance(time_zone_string, py2to3.STRING_TYPES):
+    if isinstance(time_zone_string, str):
       if time_zone_string.lower() == 'list':
         self.list_timezones = True
 
@@ -283,7 +282,7 @@ class CLITool(object):
     if not command_line_arguments:
       return ''
 
-    if isinstance(command_line_arguments[0], py2to3.BYTES_TYPE):
+    if isinstance(command_line_arguments[0], bytes):
       encoding = sys.stdin.encoding
 
       # Note that sys.stdin.encoding can be None.
@@ -399,7 +398,7 @@ class CLITool(object):
     if not argument_value:
       return default_value
 
-    if isinstance(argument_value, py2to3.BYTES_TYPE):
+    if isinstance(argument_value, bytes):
       encoding = sys.stdin.encoding
 
       # Note that sys.stdin.encoding can be None.
@@ -413,7 +412,7 @@ class CLITool(object):
             'Unable to convert option: {0:s} to Unicode with error: '
             '{1!s}.').format(argument_name, exception))
 
-    elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
+    elif not isinstance(argument_value, str):
       raise errors.BadConfigOption(
           'Unsupported option: {0:s} string type required.'.format(
               argument_name))
@@ -494,7 +493,7 @@ class FileObjectInputReader(CLIInputReader):
     """
     encoded_string = self._file_object.readline()
 
-    if isinstance(encoded_string, py2to3.UNICODE_TYPE):
+    if isinstance(encoded_string, str):
       return encoded_string
 
     try:

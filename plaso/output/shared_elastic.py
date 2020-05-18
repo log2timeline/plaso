@@ -14,7 +14,6 @@ except ImportError:
   elasticsearch = None
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
@@ -166,7 +165,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           continue
       event_values[attribute_name] = attribute_value
 
-      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+      if isinstance(attribute_value, bytes):
         # Some parsers have written bytes values to storage.
         attribute_value = attribute_value.decode('utf-8', 'replace')
         logger.warning(

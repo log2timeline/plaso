@@ -9,8 +9,6 @@ import csv
 from dfvfs.helpers import text_file
 
 from plaso.lib import errors
-from plaso.lib import line_reader_file
-from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.parsers import interface
 
@@ -59,10 +57,7 @@ class DSVParser(interface.FileObjectParser):
     """
     super(DSVParser, self).__init__()
     self._encoding = encoding
-    if py2to3.PY_2:
-      self._end_of_line = b'\n'
-    else:
-      self._end_of_line = '\n'
+    self._end_of_line = '\n'
     self._maximum_line_length = (
         len(self._end_of_line) +
         len(self.COLUMNS) * (self.FIELD_SIZE_LIMIT + len(self.DELIMITER)))
@@ -81,7 +76,7 @@ class DSVParser(interface.FileObjectParser):
           contains the column name and the value a Unicode string.
     """
     for key, value in iter(row.items()):
-      if isinstance(value, py2to3.UNICODE_TYPE):
+      if isinstance(value, str):
         continue
 
       try:
@@ -111,10 +106,9 @@ class DSVParser(interface.FileObjectParser):
     quotechar = self.QUOTE_CHAR
     magic_test_string = self._MAGIC_TEST_STRING
     # Python 3 csv module requires arguments to constructor to be of type str.
-    if py2to3.PY_3:
-      delimiter = delimiter.decode(self._encoding)
-      quotechar = quotechar.decode(self._encoding)
-      magic_test_string = magic_test_string.decode(self._encoding)
+    delimiter = delimiter.decode(self._encoding)
+    quotechar = quotechar.decode(self._encoding)
+    magic_test_string = magic_test_string.decode(self._encoding)
 
     return csv.DictReader(
         line_reader, delimiter=delimiter, fieldnames=self.COLUMNS,
@@ -139,20 +133,11 @@ class DSVParser(interface.FileObjectParser):
       UnicodeDecodeError: if the file cannot be read with the specified
           encoding.
     """
-    # The Python 2 csv module reads bytes and the Python 3 csv module Unicode
-    # reads strings.
-    if py2to3.PY_3:
-      line_reader = text_file.TextFile(
-          file_object, encoding=self._encoding, end_of_line=self._end_of_line)
+    line_reader = text_file.TextFile(
+        file_object, encoding=self._encoding, end_of_line=self._end_of_line)
 
-      # pylint: disable=protected-access
-      maximum_read_buffer_size = line_reader._MAXIMUM_READ_BUFFER_SIZE
-
-    else:
-      line_reader = line_reader_file.BinaryLineReader(
-          file_object, end_of_line=self._end_of_line)
-
-      maximum_read_buffer_size = line_reader.MAXIMUM_READ_BUFFER_SIZE
+    # pylint: disable=protected-access
+    maximum_read_buffer_size = line_reader._MAXIMUM_READ_BUFFER_SIZE
 
     # Line length is one less than the maximum read buffer size so that we
     # tell if there's a line that doesn't end at the end before the end of

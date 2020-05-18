@@ -12,7 +12,6 @@ try:
 except ImportError:
   xlsxwriter = None
 
-from plaso.lib import py2to3
 from plaso.output import dynamic
 from plaso.output import interface
 from plaso.output import manager
@@ -98,7 +97,7 @@ class XLSXOutputModule(interface.OutputModule):
     Returns:
       str: XML where all illegal characters have been removed.
     """
-    if not isinstance(xml_string, py2to3.STRING_TYPES):
+    if not isinstance(xml_string, str):
       return xml_string
 
     return self._ILLEGAL_XML_RE.sub('\ufffd', xml_string)

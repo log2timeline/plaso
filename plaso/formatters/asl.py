@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
-from plaso.lib import py2to3
 
 
 class ASLFormatter(interface.ConditionalEventFormatter):
@@ -69,7 +68,7 @@ class ASLFormatter(interface.ConditionalEventFormatter):
     event_values = event_data.CopyToDict()
 
     priority_level = event_values.get('level', None)
-    if isinstance(priority_level, py2to3.INTEGER_TYPES):
+    if isinstance(priority_level, int):
       event_values['level'] = '{0:s} ({1:d})'.format(
           self._PRIORITY_LEVELS.get(priority_level, 'UNKNOWN'), priority_level)
 
