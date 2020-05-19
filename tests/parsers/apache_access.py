@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for apache access log parser."""
+"""Tests for Apache access log parser."""
 
 from __future__ import unicode_literals
 
@@ -12,7 +12,7 @@ from tests.parsers import test_lib
 
 
 class ApacheAccessUnitTest(test_lib.ParserTestCase):
-  """Tests for apache access log parser."""
+  """Tests for Apache access log parser."""
 
   def testParse(self):
     """Tests the Parse function."""
@@ -22,8 +22,8 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 11)
 
-    # The order in which DSVParser generates events is nondeterministic
-    # hence we sort the events.
+    # The order in which parser generates events is nondeterministic hence
+    # we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # Test combined log format event.

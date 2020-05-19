@@ -11,6 +11,7 @@ from plaso.lib import definitions
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
+
 class NetworkMinerEventData(events.EventData):
   """NetworkMiner event Data.
 
@@ -38,6 +39,7 @@ class NetworkMinerEventData(events.EventData):
     self.filename = None
     self.source_ip = None
     self.source_port = None
+
 
 class NetworkMinerParser(dsv_parser.DSVParser):
   """Parser class for NetworkMiner fileinfos."""
@@ -107,5 +109,6 @@ class NetworkMinerParser(dsv_parser.DSVParser):
         return False
 
     return True
+
 
 manager.ParsersManager.RegisterParser(NetworkMinerParser)

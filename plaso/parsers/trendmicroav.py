@@ -9,8 +9,6 @@ Currently only the first log is supported.
 
 from __future__ import unicode_literals
 
-import codecs
-
 from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -46,7 +44,6 @@ class TrendMicroAVEventData(events.EventData):
     self.threat = None
 
 
-# pylint: disable=abstract-method
 class TrendMicroBaseParser(dsv_parser.DSVParser):
   """Common code for parsing Trend Micro log files.
 
@@ -54,6 +51,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
   delimiter is a three-character sequence and there is no provision for
   quoting or escaping.
   """
+  # pylint: disable=abstract-method
 
   DELIMITER = '<;>'
 
@@ -62,15 +60,6 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
   # Subclasses must define a list of field names.
   COLUMNS = ()
-
-  def __init__(self, encoding='cp1252'):
-    """Initializes a parsing Trend Micro log file parser.
-
-    Args:
-      encoding (Optional[str]): encoding used in the DSV file, where None
-          indicates the codepage of the parser mediator should be used.
-    """
-    super(TrendMicroBaseParser, self).__init__(encoding=encoding)
 
   def _CreateDictReader(self, line_reader):
     """Iterates over the log lines and provide a reader for the values.
@@ -85,13 +74,6 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       UnableToParseFile: if a log line cannot be parsed.
     """
     for line in line_reader:
-      if isinstance(line, bytes):
-        try:
-          line = codecs.decode(line, self._encoding)
-        except UnicodeDecodeError as exception:
-          raise errors.UnableToParseFile(
-              'Unable decode line with error: {0!s}'.format(exception))
-
       stripped_line = line.strip()
       values = stripped_line.split(self.DELIMITER)
       number_of_values = len(values)
