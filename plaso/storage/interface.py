@@ -445,10 +445,15 @@ class BaseStore(object):
       session_completion (SessionCompletion): session completion information.
 
     Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
+      IOError: if the storage type does not support writing a session
+          completion or the storage file is closed or read-only.
+      OSError: if the storage type does not support writing a session
+          completion or the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
+
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Session completion not supported by storage type.')
 
     self._WriteAttributeContainer(session_completion)
 
@@ -459,10 +464,15 @@ class BaseStore(object):
       session_start (SessionStart): session start information.
 
     Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
+      IOError: if the storage type does not support writing a session
+          start or the storage file is closed or read-only.
+      OSError: if the storage type does not support writing a session
+          start or the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
+
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Session start not supported by storage type.')
 
     self._WriteAttributeContainer(session_start)
 
@@ -473,10 +483,15 @@ class BaseStore(object):
       task_completion (TaskCompletion): task completion information.
 
     Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
+      IOError: if the storage type does not support writing a task
+          completion or the storage file is closed or read-only.
+      OSError: if the storage type does not support writing a task
+          completion or the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
+
+    if self.storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError('Task start not supported by storage type.')
 
     self._WriteAttributeContainer(task_completion)
 
@@ -487,9 +502,15 @@ class BaseStore(object):
       task_start (TaskStart): task start information.
 
     Raises:
-      StorageNotReadableError: when the storage file is closed or read-only.
+      IOError: if the storage type does not support writing a task
+          start or the storage file is closed or read-only.
+      OSError: if the storage type does not support writing a task
+          start or the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
+
+    if self.storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError('Task completion not supported by storage type.')
 
     self._WriteAttributeContainer(task_start)
 
