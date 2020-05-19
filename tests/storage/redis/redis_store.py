@@ -4,6 +4,8 @@
 
 from __future__ import unicode_literals
 
+import unittest
+
 import fakeredis
 import redis
 
@@ -81,10 +83,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     store.Close()
 
-
   def testAddEvent(self):
     """Tests the _AddEvent method."""
-
     event, _ = containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
 
     store = redis_store.RedisStore()
@@ -148,7 +148,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
     for serialized_container in serialized_containers:
       self.assertIsInstance(serialized_container, bytes)
     self.assertIsInstance(cursor, int)
-
 
     store.Close()
 
@@ -235,3 +234,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     redis_store.RedisStore.MarkTaskAsMerging(
         task.identifier, session.identifier, redis_client=redis_client)
+
+
+if __name__ == '__main__':
+  unittest.main()

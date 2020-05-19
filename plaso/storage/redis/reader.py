@@ -15,7 +15,6 @@ class RedisStorageReader(interface.StorageReader):
 
     Args:
       task (Task): the task whose results the store contains.
-      task (Task): the task whose results the store contains.
     """
     super(RedisStorageReader, self).__init__()
     self._store = redis_store.RedisStore(

@@ -416,19 +416,21 @@ class RedisStore(interface.BaseStore):
 
   @classmethod
   def ScanForProcessedTasks(
-      cls, session_identifier, url=None, redis_client=None):
+      cls, session_identifier, redis_client=None, url=None):
     """Scans a Redis database for processed tasks.
 
     Args:
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
+      url (Optional[str]): URL for a Redis database. If not specified,
+          REDIS_DEFAULT_URL will be used.
 
     Returns:
-      list[str]: identifiers of processed tasks.
+      tuple: containing
+        list[str]: identifiers of processed tasks.
+        Redis: Redis client used for the query.
     """
     if not url:
       url = cls.DEFAULT_REDIS_URL
@@ -444,24 +446,23 @@ class RedisStore(interface.BaseStore):
     except redis.exceptions.TimeoutError:
       # If there is a timeout fetching identifiers, we assume that there are
       # no processed tasks.
-      return []
+      return [], redis_client
     task_identifiers = [key.decode('utf-8') for key in task_identifiers]
     return task_identifiers, redis_client
 
   @classmethod
   def MarkTaskAsMerging(
-      cls, task_identifier, session_identifier, url=None,
-      redis_client=None):
+      cls, task_identifier, session_identifier, redis_client=None, url=None):
     """Marks a finalized task as pending merge.
 
     Args:
       task_identifier (str): identifier of the task.
-      session_identifier (Optional[str]): session identifier, formatted as
+      session_identifier (str): session identifier, formatted as
             a UUID.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
+      url (Optional[str]): URL for a Redis database. If not specified,
+          REDIS_DEFAULT_URL will be used.
 
     Raises:
       IOError: if the task being updated is not finalized.
