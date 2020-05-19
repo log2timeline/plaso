@@ -542,7 +542,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile(
-          storage_type=definitions.STORAGE_TYPE_TASK)
+          storage_type=definitions.STORAGE_TYPE_SESSION)
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.WriteSessionStart(session_start)
