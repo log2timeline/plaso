@@ -8,7 +8,6 @@ import unittest
 
 from plaso.containers import events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import filestat
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
@@ -33,8 +32,6 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
   """
 
   _TAG_FILE = 'tag_windows.txt'
-
-  _TEST_TIMESTAMP = timelib.Timestamp.CopyFromString('2020-04-10 15:22:28')
 
   def testApplicationExecution(self):
     """Tests the application_execution tagging rule."""

@@ -8,7 +8,6 @@ import unittest
 
 from plaso.containers import events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import bash_history
 from plaso.parsers import docker
 from plaso.parsers import dpkg
@@ -30,8 +29,6 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
   _TAG_FILE = 'tag_linux.txt'
 
-  _TEST_TIMESTAMP = timelib.Timestamp.CopyFromString('2020-04-04 14:56:39')
-
   def testRuleApplicationExecution(self):
     """Tests the application_execution tagging rule."""
     event = events.EventObject()
@@ -39,77 +36,43 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
     # Test: data_type is 'bash:history:command'
-    event_data = bash_history.BashHistoryEventData()
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_execution'])
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        bash_history.BashHistoryEventData, attribute_values_per_name,
+        ['application_execution'])
 
     # Test: data_type is 'docker:json:layer'
-    event_data = docker.DockerJSONLayerEventData()
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_execution'])
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        docker.DockerJSONLayerEventData, attribute_values_per_name,
+        ['application_execution'])
 
     # Test: data_type is 'selinux:line' AND audit_type is 'EXECVE'
-    event_data = selinux.SELinuxLogEventData()
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'EXECVE'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_execution'])
+    attribute_values_per_name = {
+        'audit_type': ['EXECVE']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['application_execution'])
 
     # Test: data_type is 'shell:zsh:history'
-    event_data = zsh_extended_history.ZshHistoryEventData()
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_execution'])
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        zsh_extended_history.ZshHistoryEventData, attribute_values_per_name,
+        ['application_execution'])
 
     # Test: data_type is 'syslog:cron:task_run'
-    event_data = cron.CronTaskRunEventData()
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_execution'])
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        cron.CronTaskRunEventData, attribute_values_per_name,
+        ['application_execution'])
 
     # Test: reporter is 'sudo' AND body contains 'COMMAND='
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'sudo'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'test if my COMMAND=bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'sudo'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_execution'])
+    attribute_values_per_name = {
+        'body': ['test if my COMMAND=bogus'],
+        'reporter': ['sudo']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['application_execution'])
 
   def testRuleLogin(self):
     """Tests the login tagging rule."""
