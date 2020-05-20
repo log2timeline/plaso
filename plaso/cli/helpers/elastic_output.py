@@ -116,7 +116,8 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
     elastic_user = cls._ParseStringOption(
         options, 'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
-
+    elastic_password = cls._ParseStringOption(
+        options, 'elastic_password', default_value=os.getenv("PLASO_ELASTIC_USERNAME", cls._DEFAULT_ELASTIC_PASSWORD))
     use_ssl = getattr(options, 'use_ssl', False)
 
     ca_certificates_path = cls._ParseStringOption(
