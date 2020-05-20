@@ -21,6 +21,7 @@ from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
+
 class RedisMergeReaderTest(test_lib.StorageTestCase):
   """Tests for the Redis store reader for merging."""
 
@@ -45,7 +46,7 @@ class RedisMergeReaderTest(test_lib.StorageTestCase):
 
     Args:
       session (Session): session the task store is part of.
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
+      redis_client (Redis): Redis client to query. If specified, no
           new client will be created.
 
     Returns:

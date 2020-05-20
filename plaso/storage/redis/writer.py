@@ -18,7 +18,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       session (Session): session the storage changes are part of.
       storage_type (Optional[str]): storage type.
-      task(Optional[Task]): task.
+      task (Optional[Task]): task.
 
     Raises:
       RuntimeError: if no task is provided.
@@ -41,10 +41,8 @@ class RedisStorageWriter(interface.StorageWriter):
       task_storage_format (str): storage format to store task results.
 
     Raises:
-      IOError: if the storage type does not support creating a task store or
-          if the task storage already exists.
-      OSError: if the storage type does not support creating a task store or
-          if the task storage already exists.
+      IOError: always, as creating a task is not supported by the redis store.
+      OSError: always, as creating a task is not supported by the redis store.
     """
     raise IOError(
         'Creating a task storage is not supported by the redis store.')
@@ -56,8 +54,10 @@ class RedisStorageWriter(interface.StorageWriter):
       task (Task): task.
 
     Raises:
-      IOError: if the storage type does not support finalizing a task store.
-      OSError: if the storage type does not support finalizing a task store.
+      IOError: always, as creating a finalizing a task storage is not supported
+          by the redis store.
+      OSError: always, as creating a finalizing a task storage is not supported
+          by the redis store.
     """
     raise IOError(
         'Finalizing a task storage is not supported by the redis store.')
@@ -99,7 +99,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       task (Task): task.
     """
-   # No preparations are necessary.
+    # No preparations are necessary.
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
@@ -192,7 +192,7 @@ class RedisStorageWriter(interface.StorageWriter):
     added event sources can be retrieved in order of addition.
 
     Returns:
-      EventSource: event source or None if there are no newly written ones.
+      EventSource: None as there are no newly written event sources.
 
     Raises:
       IOError: if the storage writer is closed.
@@ -208,7 +208,7 @@ class RedisStorageWriter(interface.StorageWriter):
     """Retrieves the next event source that was written after open.
 
     Returns:
-      EventSource: event source or None if there are no newly written ones.
+      EventSource: None as there are no newly written event sources.
 
     Raises:
       IOError: if the storage writer is closed.
@@ -249,8 +249,10 @@ class RedisStorageWriter(interface.StorageWriter):
           information.
 
     Raises:
-      IOError: if the storage format does not support preprocessing information.
-      OSError: if the storage format does not support preprocessing information.
+      IOError: always, as the Redis store does not support preprocessing
+          information.
+      OSError: always, as the Redis store does not support preprocessing
+          information.
     """
     raise IOError('Preprocessing information not supported by the redis store.')
 
@@ -261,8 +263,10 @@ class RedisStorageWriter(interface.StorageWriter):
       task (Task): task.
 
     Raises:
-      IOError: if the storage format does not support removing a task store.
-      OSError: if the storage format does not support removing a task store.
+      IOError: always, as the Redis store does not support removing a task
+          store.
+      OSError: always, as the Redis store does not support removing a task
+          store.
     """
     raise IOError(
         'Removing a task store is not supported by the redis store.')
@@ -290,8 +294,10 @@ class RedisStorageWriter(interface.StorageWriter):
       knowledge_base (KnowledgeBase): contains the preprocessing information.
 
     Raises:
-      IOError: if the storage format does not support preprocessing information.
-      OSError: if the storage format does not support preprocessing information.
+      IOError: always as the Redis store does not support preprocessing
+          information.
+      OSError: always as the Redis store does not support preprocessing
+          information.
     """
     raise IOError(
         'Preprocessing information is not supported by the redis store.')
@@ -303,10 +309,10 @@ class RedisStorageWriter(interface.StorageWriter):
       aborted (Optional[bool]): True if the session was aborted.
 
     Raises:
-      IOError: if the storage type does not support writing a session
-          completion or when the storage writer is closed.
-      OSError: if the storage type does not support writing a session
-          completion or when the storage writer is closed.
+      IOError: always, as the Redis store does not support writing a session
+          completion.
+      OSError: always, as the Redis store does not support writing a session
+          completion.
     """
     raise IOError('Session completion is not supported by the redis store.')
 
@@ -314,10 +320,10 @@ class RedisStorageWriter(interface.StorageWriter):
     """Writes session start information.
 
     Raises:
-      IOError: if the storage type does not support writing a session
-          start or when the storage writer is closed.
-      OSError: if the storage type does not support writing a session
-          start or when the storage writer is closed.
+      IOError: always, as the Redis store does not support writing a session
+          start.
+      OSError: always, as the Redis store does not support writing a session
+          start.
     """
     raise IOError('Session start is not supported by the redis store.')
 
@@ -339,7 +345,6 @@ class RedisStorageWriter(interface.StorageWriter):
     self._task.aborted = aborted
     task_completion = self._task.CreateTaskCompletion()
     self._store.WriteTaskCompletion(task_completion)
-
 
   def WriteTaskStart(self):
     """Writes task start information.
