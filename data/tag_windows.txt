@@ -1,42 +1,44 @@
 # Tags potentially suspicious files in C:\Users
-# * Executable files: *.exe, *.dll, *.sys, *.scr, *.pif, *.com, *.ms (such as *.msi, *.msp)
-# * Archive files: *.zip, *.rar, *.cab, *.sfx
-# * Script files: *.cmd, *.vb*, *.hta, *.ps*, *.ws*, *.py, *.js, *.bat, *.ms* (such as PowerShell *.msh)
-# * Document files: *.rtf, *.pdf, *.doc*, *.ppt*, *.xls*, *.otf
-#   These files can be exploited player, use embedded file, internal script, ... TODO: fix this line
-# * Special file player files: *.jar, *.swf, *.jnlp, *.gadget, *.appref-ms, *.application
-#   These files can be used to exploit specific players or use a player its capacities like clickonce
-# * Configuration files: *.reg
-#   These files can be used to modify system and user configuration
-# * Regsvr32: *.sct
-#   For more information see: https://attack.mitre.org/techniques/T1117/
-# * CMSTP: *.inf
-#   For more information see: https://attack.mitre.org/techniques/T1191/
-# * Control Panel Items: *.cpl
-#   For more information see: https://attack.mitre.org/techniques/T1196/
-# * Application shimming: *.sdb
-#   For more information see: https://attack.mitre.org/techniques/T1138/
-# * Forced Auth: *.lnk, *.scf
-#   For more information see: https://attack.mitre.org/techniques/T1187/
-# * Compiled HTML File: *.chm
-#   For more information see: https://attack.mitre.org/techniques/T1223/
-# * Shortcut Modification and User execution: *.lnk
-#   For more information see: https://attack.mitre.org/techniques/T1023/ and https://attack.mitre.org/techniques/T1024/
-# * File can be suspect (according by context: like bits): *.tmp
-# * File htm can contains script or exploit for player: *.[xm]htm[l]
-# * Java history: *.idx
+# - Executable files: *.exe, *.dll, *.sys, *.scr, *.pif, *.com, *.ms (such as *.msi, *.msp)
+# - Archive files may contains malicious files: *.zip, *.rar, *.cab, *.sfx
+# - Script files: *.cmd, *.vb*, *.hta, *.ps*, *.ws*, *.py, *.js, *.bat, *.ms* (such as PowerShell *.msh)
+# - Document files may contains malicious macro/script/dde/embedded file: *.rtf, *.pdf, *.doc*, *.ppt*, *.xls*, *.otf
+#    -  These files can exploit a vulnerability of the player (ex. OTF CVE) or a third party component (ex. script/ole use CVE COM Obj)
+# - Special file player files: *.jar, *.swf, *.jnlp, *.gadget, *.appref-ms, *.application
+#    -  These files can use the potential of the player to divert legitimate use towards malicious behavior (ex. clickonce)
+#    -  These files can exploit a vulnerability of the player (ex. java/flash CVE/EK)
+# - Configuration files: *.reg
+#   - These files can be used to modify system and user configuration
+# - Regsvr32: *.sct
+#   - For more information see: https://attack.mitre.org/techniques/T1117/
+# - CMSTP: *.inf
+#   - For more information see: https://attack.mitre.org/techniques/T1191/
+# - Control Panel Items: *.cpl
+#   - For more information see: https://attack.mitre.org/techniques/T1196/
+# - Application shimming: *.sdb
+#   - For more information see: https://attack.mitre.org/techniques/T1138/
+# - Forced Auth: *.lnk, *.scf
+#   - For more information see: https://attack.mitre.org/techniques/T1187/
+# - Compiled HTML File: *.chm
+#   - For more information see: https://attack.mitre.org/techniques/T1223/
+# -  Shortcut Modification and User execution: *.lnk
+#    - For more information see: https://attack.mitre.org/techniques/T1023/ and https://attack.mitre.org/techniques/T1024/
+# - File can be suspect (according by context: like bits): *.tmp
+# - File htm can contains script or exploit for player: *.[xm]htm[l]
+# - Java history: *.idx
 user_suspect_file
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Users/' AND (filename contains '.exe' OR filename contains '.zip' OR filename contains '.rar' OR filename contains '.dll' OR filename contains '.cmd' OR filename contains '.rtf' OR filename contains '.pdf' OR filename contains '.doc' OR filename contains '.ppt' OR filename contains '.xls' OR filename contains '.vb' OR filename contains '.hta' OR filename contains '.jar' OR filename contains '.swf' OR filename contains '.reg' OR filename contains '.ps' OR filename contains '.ws' OR filename contains '.mht' OR filename contains '.ms' OR filename contains '.tmp' OR filename contains '.py' OR filename contains '.xhtm' OR filename contains '.js' OR filename contains '.bat' OR filename contains '.scr' OR filename contains '.sys' OR filename contains '.com' OR filename contains '.pif' OR filename contains '.inf' OR filename contains '.scf' OR filename contains '.chm' OR filename contains '.jnlp' OR filename contains '.gadget' OR filename contains '.appref-ms' OR filename contains '.application' OR filename contains '.sfx' OR filename contains '.lnk' OR filename contains '.otf' OR filename contains '.cpl' OR filename contains '.cab')
 
 # Tags exe or ddl files that have beeen change
-# These changes can occur due due to an installation or an update or due to:
+# Changes in the "program files" directory may occur due to the installation or update of a legitimate program.
+# However, it is possible that some modification that is not related to the above information, is malicious.
+# You can use the methods below to modify them illegally.
 # * permissions weakness
 #   For more information see: https://attack.mitre.org/techniques/T1044/
 # * third party software compromised
 #   For more information see: https://attack.mitre.org/techniques/T1072/
 # * supply chain compromise
 #   For more information see: https://attack.mitre.org/techniques/T1195/
-# * ... TODO: fix this line
 software_changed
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Program Files/' AND (filename contains '.exe' OR filename contains '.dll')
 
@@ -59,7 +61,7 @@ mimikatz_tool
 ruler_tool
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND xml_string contains 'RULER' AND (event_identifier is 4776 OR event_identifier is 4624 OR event_identifier is 4625)
 
-# Browser extension can be used for persistence [T1176]
+# Browser extension can be used for persistence https://attack.mitre.org/techniques/T1176/
 browser_extension
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Users/' AND (filename contains 'Chrome' OR filename contains 'firefox') AND (filename contains 'Extensions')
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Users/' AND (filename contains '.xpi' OR filename contains '.crx' OR filename contains '.appx')
@@ -67,7 +69,7 @@ browser_extension
   data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Microsoft\\Internet Explorer\\Toolbar'
   data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Microsoft\\Internet Explorer\\Browser Helper Objects'
 
-# Accessibility Features modified [T1015]
+# Accessibility Features modified https://attack.mitre.org/techniques/T1015/
 persistence_backdoor
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Windows/System32/' AND (filename contains 'sethc.exe' OR filename contains 'utilman.exe' OR filename contains 'Magnify.exe' OR filename contains 'osk.exe' OR filename contains 'Narrator.exe' OR filename contains 'DisplaySwitch.exe' OR filename contains 'AtBroker.exe')
 
@@ -76,9 +78,10 @@ run_background
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1 AND xml_string not contains 'TerminalSessionId\">0'
 
 # process argument launch use URI (can be suspect, you should verify if normal case)
-cmdline_withuri
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1 AND xml_string contains '://'
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4688 AND xml_string contains '://'
+#TODO error contains "://" match false positive
+#cmdline_withuri
+#  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1 AND xml_string contains '://'
+#  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4688 AND xml_string contains '://'
 
 # trace of execution & task schedlule
 # Can help you to identify suspect command runned (wscript, hh, powershell, cmd, ...)
@@ -148,7 +151,7 @@ new_device
 rpd_suspect
   data_type is 'windows:evtx:record' AND source_name is 'TermDD' AND (event_identifier is 50 OR event_identifier is 56)
 
-# Change Default File Association [T1042]
+# Change Default File Association https://attack.mitre.org/techniques/T1042/
 change_ext_open
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts' AND (xml_string contains 'OpenWithList' OR xml_string contains 'OpenWithProgids')
   data_type is 'windows:registry:key_value' AND key_path contains 'OpenWith' AND key_path contains 'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts' AND values not contains 'No values stored in key'
@@ -177,7 +180,7 @@ process_connect
 process_resolvdns
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 22
 
-# Image File Execution Options Injection [T1183]
+# Image File Execution Options Injection https://attack.mitre.org/techniques/T1183/
 change_exe_option
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options'
   data_type is 'windows:registry:key_value' AND key_path contains 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options'
@@ -335,11 +338,11 @@ powershell_logging
 event_clear
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 1102 OR event_identifier is 517)
 
-# winrm [T1028]
+# winrm https://attack.mitre.org/techniques/T1028/
 winrm
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WinRM' AND (event_identifier is 169 OR event_identifier is 81 OR event_identifier is 82 OR event_identifier is 134 OR event_identifier is 10148)
 
-# Credential dump, Authentication Package [T1131], Lsass driver [T1177], Security Support Provider [T1101]
+# Credential dump, Authentication Package https://attack.mitre.org/techniques/T1131/, Lsass driver https://attack.mitre.org/techniques/T1177/, Security Support Provider https://attack.mitre.org/techniques/T1101/
 lsa_sam
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4610 OR event_identifier is 4611 OR event_identifier is 4614 OR event_identifier is 4622 OR event_identifier is 4661)
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Codeintegrity' AND (event_identifier is 3065 OR event_identifier is 3066 OR event_identifier is 3033 OR event_identifier is 3063)
@@ -409,37 +412,37 @@ firewall_change
 handle_object
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4656 OR event_identifier is 4658 OR event_identifier is 4663)
 
-# AppCert DLLs [T1182]
+# AppCert DLLs https://attack.mitre.org/techniques/T1182
 appcert_dll
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'System\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls'
   data_type is 'windows:registry:key_value' AND key_path contains 'System\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'System\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs'
   data_type is 'windows:registry:key_value' AND key_path contains 'System\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs'
 
-# AppInit DLLs [T1103]
+# AppInit DLLs https://attack.mitre.org/techniques/T1103
 appinit_dll
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows\\AppInit_DLLs'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows\\LoadAppInit_DLLs'
   data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows' AND (values not contains 'AppInit_DLLs' OR values not contains 'LoadAppInit_DLLs')
 
-# Application Shimming [T1138]
+# Application Shimming https://attack.mitre.org/techniques/T1138
 Shimming
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'software\\microsoft\\windows nt\\currentversion\\appcompatflags\\custom'
   data_type is 'windows:registry:key_value' AND key_path contains 'software\\microsoft\\windows nt\\currentversion\\appcompatflags\\custom'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'software\\microsoft\\windows nt\\currentversion\\appcompatflags\\installedsdb'
   data_type is 'windows:registry:key_value' AND key_path contains 'software\\microsoft\\windows nt\\currentversion\\appcompatflags\\installedsdb'
 
-# Component Object Model Hijacking [T1122]
+# Component Object Model Hijacking https://attack.mitre.org/techniques/T1122
 com_obj
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Software\\Classes\\CLSID' AND (xml_string contains 'InprocServer' OR xml_string contains 'LocalServer')
   data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Classes\\CLSID' AND (key_path contains 'InprocServer' OR key_path contains 'LocalServer') AND values contains '(default)'
 
-# Netsh Helper DLL [T1128]
+# Netsh Helper DLL https://attack.mitre.org/techniques/T1128
 netsh_dll
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SOFTWARE\\Microsoft\\Netsh'
   data_type is 'windows:registry:key_value' AND key_path contains 'SOFTWARE\\Microsoft\\Netsh'
 
-# Office Application Startup [T1137]
+# Office Application Startup https://attack.mitre.org/techniques/T1137
 office_startup
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Office test'
   data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Office test'
@@ -448,12 +451,12 @@ office_startup
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Office\\' AND xml_string contains '\\AddIns\\' AND (xml_string contains '\\FriendlyName' OR xml_string contains '\\LoadBehaviour' OR xml_string contains '\\Autoload' OR xml_string contains '\\Path')
   data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Office\\' AND key_path contains '\\AddIns\\' AND (values contains '\\FriendlyName' OR values contains '\\LoadBehaviour' OR values contains '\\Autoload' OR values contains '\\Path')
 
-# Port Monitors [T1013]
+# Port Monitors https://attack.mitre.org/techniques/T1013
 port_monit
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors'
   data_type is 'windows:registry:key_value' AND key_path contains 'SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors'
 
-# Logon Scripts [T1037]
+# Logon Scripts https://attack.mitre.org/techniques/T1037
 logon_script
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Software\\Policies\\Microsoft\\Windows\\System\\Scripts'
   data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Policies\\Microsoft\\Windows\\System\\Scripts'
@@ -462,31 +465,31 @@ logon_script
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\Environment\\UserInitMprLogonScript'
   data_type is 'windows:registry:key_value' AND key_path contains '\\Environment' AND values contains 'UserInitMprLogonScript'
 
-# Registry Run Keys / Startup Folder [T1060]
+# Registry Run Keys / Startup Folder https://attack.mitre.org/techniques/T1060
 run_keys
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'CurrentVersion\\Windows\\load'
   data_type is 'windows:registry:key_value' AND key_path contains 'CurrentVersion\\Windows\\load'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'CurrentVersion\\Explorer\\User Shell Folders'
   data_type is 'windows:registry:key_value' AND key_path contains 'CurrentVersion\\Explorer\\User Shell Folders'
 
-# [T1180]
+# https://attack.mitre.org/techniques/T1180
 screensaver
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Control Panel\\Desktop\\SCRNSAVE.exe'
   data_type is 'windows:registry:key_value' AND key_path contains 'Control Panel\\Desktop' AND values contains 'SCRNSAVE.exe'
 
-# SIP AND Trust Provider Hijacking [T1198]
+# SIP AND Trust Provider Hijacking https://attack.mitre.org/techniques/T1198
 sip_provider
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\Microsoft\\Cryptography\\OID'
   data_type is 'windows:registry:key_value' AND key_path contains '\\Microsoft\\Cryptography\\OID'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains '\\Microsoft\\Cryptography\\Providers\\Trust'
   data_type is 'windows:registry:key_value' AND key_path contains '\\Microsoft\\Cryptography\\Providers\\Trust'
 
-# Time Providers [T1209]
+# Time Providers https://attack.mitre.org/techniques/T1209
 time_provider
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'System\\CurrentControlSet\\Services\\W32Time\\TimeProviders'
   data_type is 'windows:registry:key_value' AND key_path contains 'System\\CurrentControlSet\\Services\\W32Time\\TimeProviders' AND values contains 'DllName'
 
-# Winlogon Helper DLL [T1004]
+# Winlogon Helper DLL https://attack.mitre.org/techniques/T1004
 winlogon_dll
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Windows NT\\CurrentVersion\\Winlogon\\Shell'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Windows NT\\CurrentVersion\\Winlogon\\System'
@@ -560,7 +563,7 @@ kb_install
 rpc_attempt
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 5712
 
-# DLL Search Order Hijacking  [T1038]
+# DLL Search Order Hijacking  https://attack.mitre.org/techniques/T1038
 dll_search
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 7 AND xml_string contains '\\users\\' AND xml_string contains '.dll'
   data_type is 'windows:registry:key_value' AND key_path contains 'CurrentControlSet\\Control\\Session Manager' AND values contains 'SafeDLLSearchMode'
@@ -576,7 +579,7 @@ ad_replica
 ram_consum
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Resource-Exhaustion-Detector' AND (event_identifier is 1001 OR event_identifier is 2004)
 
-# certiciate change [T1130]
+# certiciate change https://attack.mitre.org/techniques/T1130
 cert_change
   data_type is 'windows:registry:key_value' AND (key_path contains 'SOFTWARE\\Microsoft\\EnterpriseCertificates\\Root\\Certificates' OR key_path contains 'Microsoft\\SystemCertificates\\Root\\Certificates')
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND (xml_string contains 'SOFTWARE\\Microsoft\\EnterpriseCertificates\\Root\\Certificates' OR xml_string contains 'Microsoft\\SystemCertificates\\Root\\Certificates')
