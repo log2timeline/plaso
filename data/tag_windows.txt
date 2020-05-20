@@ -99,3 +99,6 @@ file_download
 # Tags OLE compound document print events.
 document_print
   data_type is 'olecf:summary_info' AND timestamp_desc contains 'Printed'
+
+firewall_change
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Firewall With Advanced Security' AND (event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 2005 OR event_identifier is 2006)
