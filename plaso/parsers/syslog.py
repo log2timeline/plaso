@@ -215,8 +215,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     """Updates the year to use for events, based on last observed month.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       month (int): month observed by the parser, where January is 1.
     """
     if not self._year_use:
