@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import os
 import getpass
 
 from uuid import uuid4
@@ -33,6 +34,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
   _DEFAULT_ELASTIC_USER = None
+  _DEFAULT_ELASTIC_PASSWORD = None
   _DEFAULT_CA_CERTS = None
   _DEFAULT_URL_PREFIX = None
 
@@ -67,6 +69,10 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         '--elastic_user', dest='elastic_user', action='store',
         default=cls._DEFAULT_ELASTIC_USER, help=(
             'Username to use for Elasticsearch authentication.'))
+    argument_group.add_argument(
+        '--elastic_password', dest='elastic_password', action='store',
+        default=os.getenv("PLASO_ELASTIC_USERNAME", cls._DEFAULT_ELASTIC_PASSWORD), help=(
+            'Password to use for Elasticsearch authentication. Can also be set with the environment variable PLASO_ELASTIC_PASSWORD'))    
     argument_group.add_argument(
         '--use_ssl', dest='use_ssl', action='store_true',
         help='Enforces use of ssl.')
@@ -119,7 +125,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     elastic_url_prefix = cls._ParseStringOption(
         options, 'elastic_url_prefix', default_value=cls._DEFAULT_URL_PREFIX)
 
-    if elastic_user is not None:
+    if elastic_user is not None and elastic_password is None:
       elastic_password = getpass.getpass(
           'Enter your Elasticsearch password: ')
     else:
