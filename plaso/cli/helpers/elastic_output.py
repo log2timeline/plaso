@@ -128,7 +128,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     if elastic_user is not None and elastic_password is None:
       elastic_password = getpass.getpass(
           'Enter your Elasticsearch password: ')
-    else:
+    elif elastic_user is None:
       elastic_password = None
 
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
