@@ -134,8 +134,8 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
       if registry_value.DataIsString():
         boot_execute = registry_value.GetDataAsObject()
       elif registry_value.DataIsMultiString():
-        boot_execute = ', '.join([
-            value for value in registry_value.GetDataAsObject() or []])
+        value_object = registry_value.GetDataAsObject()
+        boot_execute = ', '.join(value_object or [])
       else:
         error_string = (
             'Key: {0:s}, value: BootExecute: unsupported value data type: '

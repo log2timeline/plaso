@@ -46,6 +46,7 @@ class TemporaryDirectoryArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the temporary directory does not exists.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(

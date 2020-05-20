@@ -72,6 +72,8 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the output format is not supported or the output
+          is not provided or already exists.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(

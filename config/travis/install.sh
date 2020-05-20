@@ -64,10 +64,6 @@ then
 	then
 		docker exec ${CONTAINER_NAME} add-apt-repository universe;
 		docker exec ${CONTAINER_NAME} add-apt-repository ppa:deadsnakes/ppa -y;
-
-	elif test ${TARGET} = "pylint";
-	then
-		docker exec ${CONTAINER_NAME} add-apt-repository ppa:gift/pylint3 -y;
 	fi
 	docker exec ${CONTAINER_NAME} add-apt-repository ppa:gift/dev -y;
 

@@ -143,7 +143,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     event_data = OfficeMRUListWindowsRegistryEventData()
-    event_data.entries = ' '.join([value for value in entries]) or None
+    event_data.entries = ' '.join(entries) or None
     event_data.key_path = registry_key.path
 
     event = time_events.DateTimeValuesEvent(

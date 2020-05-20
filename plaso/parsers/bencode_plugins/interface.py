@@ -159,8 +159,8 @@ class BencodePlugin(plugins.BasePlugin):
       data (dict[str, object]): bencode data values.
 
     Raises:
-      WrongBencodePlugin: If this plugin is not able to process the given file.
       ValueError: If top level is not set.
+      WrongBencodePlugin: If this plugin is not able to process the given file.
     """
     if data is None:
       raise ValueError('Data is not set.')

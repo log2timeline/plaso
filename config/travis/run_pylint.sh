@@ -10,7 +10,11 @@ set -e;
 
 pylint --version
 
-for FILE in $(find setup.py config plaso tests tools -name \*.py);
+# Ignore setup.py for now due to:
+# setup.py:15:0: E0001: Cannot import 'distutils.command.bdist_msi' due to
+# syntax error 'expected an indented block (<unknown>, line 347)' (syntax-error)
+
+for FILE in $(find config plaso tests tools -name \*.py);
 do
 	echo "Checking: ${FILE}";
 

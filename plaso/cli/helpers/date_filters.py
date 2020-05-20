@@ -57,6 +57,7 @@ class DateFiltersArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the date filter is badly formatted.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(

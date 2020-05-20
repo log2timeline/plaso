@@ -47,6 +47,7 @@ else:
   class BdistMSICommand(bdist_msi):
     """Custom handler for the bdist_msi command."""
 
+    # pylint: disable=invalid-name
     def run(self):
       """Builds an MSI."""
       # Command bdist_msi does not support the library version, neither a date
@@ -62,6 +63,7 @@ else:
   class BdistRPMCommand(bdist_rpm):
     """Custom handler for the bdist_rpm command."""
 
+    # pylint: disable=invalid-name
     def _make_spec_file(self):
       """Generates the text of an RPM spec file.
 

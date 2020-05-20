@@ -305,8 +305,7 @@ class DockerJSONParser(interface.FileObjectParser):
     except ValueError as exception:
       if exception == 'No JSON object could be decoded':
         raise errors.UnableToParseFile(exception)
-      else:
-        raise
+      raise
 
 
 manager.ParsersManager.RegisterParser(DockerJSONParser)
