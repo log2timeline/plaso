@@ -39,15 +39,16 @@ class GooglelogTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    test_event = events[0]
-    self.assertEqual(test_event.priority, 'I')
-    self.assertEqual(test_event.line_number, '748')
-    self.assertEqual(test_event.file_name, '')
-    self.assertEqual(test_event.body, '')
+    event = events[0]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+    self.assertEqual(event_data.priority, 'I')
+    self.assertEqual(event_data.line_number, '65')
+    self.assertEqual(event_data.file_name, 'logging_functional_test_helper.py')
+    self.assertEqual(event_data.message, 'This line is VLOG level 0')
 
   def testMultilineEventAsExpected(self):
     """Check that an event that spans multiple lines is processed correctly."""
-
     parser = google_logging.GoogleLogParser()
     knowledge_base_values = {'year': 2020}
     storage_writer = self._ParseFile(
@@ -59,10 +60,11 @@ class GooglelogTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    test_event = events[2]
+    event = events[2]
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    message = event_data.message
 
-    self.assertNotEqual(test_event.body.find('\n'), -1)
-    self.assertNotEqual(test_event.body.find(''), -1)
+    self.assertIn('\n', message)
 
   def testEventFormatting(self):
     """Test that the events are formatting correctly."""
@@ -74,10 +76,15 @@ class GooglelogTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    test_event = events[1]
-    expected_string = ()
-    expected_short = ''
-    self._TestGetMessageStrings(test_event, expected_string, expected_short)
+    event = events[1]
+
+    self.CheckTimestamp(event.timestamp, '2019-12-31 23:59:59.000002')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_string = (
+        'logging_functional_test_helper.py: 65] This line is log level 0')
+    expected_short = 'This line is log level 0'
+    self._TestGetMessageStrings(event_data, expected_string, expected_short)
 
   def testRaisesUnableToParseForInvalidFiles(self):
     """Test that attempting to parse an invalid file should raise an error."""

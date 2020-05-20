@@ -21,6 +21,7 @@ from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
 from plaso.parsers import fseventsd
 from plaso.parsers import gdrive_synclog
+from plaso.parsers import google_logging
 from plaso.parsers import iis
 from plaso.parsers import java_idx
 from plaso.parsers import mac_appfirewall

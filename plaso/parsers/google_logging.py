@@ -12,7 +12,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -24,15 +23,15 @@ class GoogleLogEventData(events.EventData):
   See: https://github.com/google/glog
 
   Attributes:
-    priority (str): the priority of the body - I, W, E or F.
-    thread_id (int): the ID of the thread that recorded the body.
-    file_name (str): the name of the source file that logged the body.
+    priority (str): the priority of the message - I, W, E or F.
+    thread_id (int): the ID of the thread that recorded the message.
+    file_name (str): the name of the source file that logged the message.
     line_number (int): the line number in the source file where the logging
       statement is.
-    body (str): the body logged.
+    message (str): the log message.
   """
 
-  DATA_TYPE = 'googlelog:body'
+  DATA_TYPE = 'googlelog:log'
 
   def __init__(self, data_type=DATA_TYPE):
     """Initializes the event object.
@@ -45,7 +44,7 @@ class GoogleLogEventData(events.EventData):
     self.thread_id = None
     self.file_name = None
     self.line_number = None
-    self.body = None
+    self.message = None
 
 
 class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
@@ -58,20 +57,14 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
 
   DESCRIPTION = 'Parser for handling Google log formatted files.'
 
-  _GREETING_START = 'Log file created at: '
-
-  # Our initial buffer length is the length of the string we verify with.
-  _INITIAL_BUFFER_SIZE = len(_GREETING_START)
-  # Once we're sure we're reading a valid file, we'll use a larger read buffer.
-  _RUNNING_BUFFER_SIZE = 5120
-
   # PyParsing Components used to construct grammars for parsing lines.
   _PYPARSING_COMPONENTS = {
       'priority':
           (pyparsing.oneOf(['I', 'W', 'E', 'F']).setResultsName('priority')),
       'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
           'year'),
-      'month': text_parser.PyparsingConstants.MONTH.setResultsName('month'),
+      'month_number': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'month_number'),
       'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
           'day'),
       'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
@@ -88,12 +81,12 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
               'file_name')),
       'line_number':
           (pyparsing.Word(pyparsing.nums).setResultsName('line_number')),
-      'body':
+      'message':
           (pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).
-           setResultsName('body'))}
+           setResultsName('message'))}
 
   _PYPARSING_COMPONENTS['date'] = (
-      _PYPARSING_COMPONENTS['month'] +
+      _PYPARSING_COMPONENTS['month_number'] +
       _PYPARSING_COMPONENTS['day'] +
       _PYPARSING_COMPONENTS['hour'] + pyparsing.Suppress(':') +
       _PYPARSING_COMPONENTS['minute'] + pyparsing.Suppress(':') +
@@ -107,17 +100,25 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
       + _PYPARSING_COMPONENTS['thread_id'] +
       _PYPARSING_COMPONENTS['file_name'] + pyparsing.Suppress(':') +
       _PYPARSING_COMPONENTS['line_number'] + pyparsing.Suppress('] ') +
-      _PYPARSING_COMPONENTS['body'] + pyparsing.lineEnd())
-  
+      _PYPARSING_COMPONENTS['message'] + pyparsing.lineEnd())
+
   # Grammar for the log file greeting.
   _GREETING = (
       _PYPARSING_COMPONENTS['year'] + pyparsing.Suppress('/') +
-      _PYPARSING_COMPONENTS['month'] + pyparsing.Suppress('/') +
+      _PYPARSING_COMPONENTS['month_number'] + pyparsing.Suppress('/') +
       _PYPARSING_COMPONENTS['day'] + _PYPARSING_COMPONENTS['hour'] +
       pyparsing.Suppress(':') + _PYPARSING_COMPONENTS['minute'] +
       pyparsing.Suppress(':') + _PYPARSING_COMPONENTS['second'] +
       pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL) +
       pyparsing.lineEnd())
+
+  _GREETING_START = 'Log file created at: '
+
+  # Our initial buffer length is the length of the string we verify with.
+  _INITIAL_BUFFER_SIZE = len(_GREETING_START)
+
+  # Once we're sure we're reading a valid file, we'll use a larger read buffer.
+  _RUNNING_BUFFER_SIZE = 5120
 
   # Order is important here, as the structures are checked against each line
   # sequentially, so we put the most common first, and the most expensive
@@ -135,8 +136,9 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
 
     # Set the size of the file we need to read to verify it.
     self._buffer_size = self._INITIAL_BUFFER_SIZE
-    # The year to use for events (we need to calculate it, as individual events
-    # don't contain it.
+    self._maximum_year = 0
+    # The year to use for events. The initial year is stored in the log file
+    # greeting.
     self._year_use = 0
     # The month the last observed event occurred.
     self._last_month = 0
@@ -170,8 +172,8 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
     Args:
       structure (pyparsing.ParseResults): elements parsed from the file.
     """
-    self._year_use = int(structure.year)
-    self._last_month = int(structure.month)
+    self._year_use = self._GetValueFromStructure(structure, 'year')
+    self._last_month = self._GetValueFromStructure(structure, 'month_number')
 
   def _ParseLine(self, parser_mediator, structure):
     """Process a single log event into a GoogleLogEvent.
@@ -179,15 +181,9 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      structure: A pyparsing object extracted from the log file.
+      structure (pyparsing.ParseResults): elements parsed from the file.
     """
-    month = self._GetValueFromStructure(structure, 'month')
-    try:
-      month = timelib.MONTH_DICT.get(month.lower(), 0)
-    except AttributeError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid month value: {0!s}'.format(month))
-      return
+    month = self._GetValueFromStructure(structure, 'month_number')
 
     if month != 0:
       self._UpdateYear(parser_mediator, month)
@@ -196,13 +192,13 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
     hours = self._GetValueFromStructure(structure, 'hour')
     minutes = self._GetValueFromStructure(structure, 'minute')
     seconds = self._GetValueFromStructure(structure, 'second')
-    # microseconds = self._GetValueFromStructure(structure, 'microsecond')
+    microseconds = self._GetValueFromStructure(structure, 'microsecond')
 
     time_elements_tuple = (
-        self._year_use, month, day, hours, minutes, seconds)
+        self._year_use, month, day, hours, minutes, seconds, microseconds)
 
     try:
-      date_time = dfdatetime_time_elements.TimeElements(
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
     except ValueError:
@@ -216,7 +212,7 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
     event_data.file_name = self._GetValueFromStructure(structure, 'file_name')
     event_data.line_number = self._GetValueFromStructure(
         structure, 'line_number')
-    event_data.body = self._GetValueFromStructure(structure, 'body')
+    event_data.message = self._GetValueFromStructure(structure, 'message')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -255,14 +251,14 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if lines.startswith(self._GREETING_START):
-      # Now that we know this is a valid log, expand the read buffer to the
-      # maximum size we expect a log event to be (which is quite large).
-      self._buffer_size = self._RUNNING_BUFFER_SIZE
-      self._year_use = parser_mediator.year
-      return True
-    else:
+    if not lines.startswith(self._GREETING_START):
       return False
+
+    # Now that we know this is a valid log, expand the read buffer to the
+    # maximum size we expect a log event to be (which is quite large).
+    self._buffer_size = self._RUNNING_BUFFER_SIZE
+    self._year_use = parser_mediator.year
+    return True
 
 
 manager.ParsersManager.RegisterParser(GoogleLogParser)
