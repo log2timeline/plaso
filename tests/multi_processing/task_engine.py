@@ -58,7 +58,7 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_writer = sqlite_writer.SQLiteStorageFileWriter(session, temp_file)
 
       test_engine.ProcessSources(
-          session.identifier, [source_path_spec], storage_writer, configuration)
+          session, [source_path_spec], storage_writer, configuration)
 
     # TODO: implement a way to obtain the results without relying
     # on multi-process primitives e.g. by writing to a file.

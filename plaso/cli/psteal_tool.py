@@ -369,15 +369,15 @@ class PstealTool(
       logger.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
-          self._source_path_specs, storage_writer, self._resolver_context,
-          configuration, status_update_callback=status_update_callback)
+          session, self._source_path_specs, storage_writer,
+          self._resolver_context, configuration,
+          status_update_callback=status_update_callback)
 
     else:
       logger.debug('Starting extraction in multi process mode.')
 
       processing_status = extraction_engine.ProcessSources(
-          session.identifier, self._source_path_specs, storage_writer,
-          configuration,
+          session, self._source_path_specs, storage_writer, configuration,
           enable_sigsegv_handler=self._enable_sigsegv_handler,
           number_of_worker_processes=self._number_of_extraction_workers,
           status_update_callback=status_update_callback)

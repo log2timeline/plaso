@@ -16,7 +16,6 @@ from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
@@ -465,27 +464,16 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def _PrintPreprocessingInformation(
-      self, storage_reader, session_identifier=None):
-    """Prints the details of the preprocessing information.
+  def _PrintSourceConfiguration(
+      self, source_configuration, session_identifier=None):
+    """Prints the details of a source configuration.
 
     Args:
-      storage_reader (StorageReader): storage reader.
+      source_configuration (SourceConfiguration): source configuration.
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
     """
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    storage_reader.ReadSystemConfiguration(knowledge_base_object)
-
-    lookup_identifier = session_identifier
-    if lookup_identifier:
-      # The knowledge base requires the session identifier to be formatted in
-      # hexadecimal representation.
-      lookup_identifier = lookup_identifier.replace('-', '')
-
-    system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
-        session_identifier=lookup_identifier)
+    system_configuration = source_configuration.system_configuration
     if not system_configuration:
       return
 
@@ -603,8 +591,9 @@ class PinfoTool(
       table_view.Write(self._output_writer)
 
       if self._verbose:
-        self._PrintPreprocessingInformation(
-            storage_reader, session_identifier=session_identifier)
+        for source_configuration in session.source_configurations:
+          self._PrintSourceConfiguration(
+              source_configuration, session_identifier=session_identifier)
 
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
