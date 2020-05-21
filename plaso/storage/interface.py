@@ -385,16 +385,14 @@ class BaseStore(object):
   def Open(self, **kwargs):
     """Opens the storage."""
 
-  def ReadPreprocessingInformation(self, knowledge_base):
-    """Reads preprocessing information.
+  def ReadSystemConfiguration(self, knowledge_base):
+    """Reads system configuration information.
 
-    The preprocessing information contains the system configuration which
-    contains information about various system specific configuration data,
-    for example the user accounts.
+    The system configuration contains information about various system specific
+    configuration data, for example the user accounts.
 
     Args:
-      knowledge_base (KnowledgeBase): is used to store the preprocessing
-          information.
+      knowledge_base (KnowledgeBase): is used to store the system configuration.
     """
     generator = self._GetAttributeContainers(
         self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
@@ -802,16 +800,14 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def ReadPreprocessingInformation(self, knowledge_base):
-    """Reads preprocessing information.
+  def ReadSystemConfiguration(self, knowledge_base):
+    """Reads system configuration information.
 
-    The preprocessing information contains the system configuration which
-    contains information about various system specific configuration data,
-    for example the user accounts.
+    The system configuration contains information about various system specific
+    configuration data, for example the user accounts.
 
     Args:
-      knowledge_base (KnowledgeBase): is used to store the preprocessing
-          information.
+      knowledge_base (KnowledgeBase): is used to store the system configuration.
     """
 
   @abc.abstractmethod
@@ -1033,16 +1029,14 @@ class StorageWriter(object):
     raise NotImplementedError()
 
   @abc.abstractmethod
-  def ReadPreprocessingInformation(self, knowledge_base):
-    """Reads preprocessing information.
+  def ReadSystemConfiguration(self, knowledge_base):
+    """Reads system configuration information.
 
-    The preprocessing information contains the system configuration which
-    contains information about various system specific configuration data,
-    for example the user accounts.
+    The system configuration contains information about various system specific
+    configuration data, for example the user accounts.
 
     Args:
-      knowledge_base (KnowledgeBase): is used to store the preprocessing
-          information.
+      knowledge_base (KnowledgeBase): is used to store the system configuration.
     """
 
   # pylint: disable=unused-argument

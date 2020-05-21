@@ -405,18 +405,16 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.HasWarnings()
 
-  def ReadPreprocessingInformation(self, knowledge_base):
-    """Reads preprocessing information.
+  def ReadSystemConfiguration(self, knowledge_base):
+    """Reads system configuration information.
 
-    The preprocessing information contains the system configuration which
-    contains information about various system specific configuration data,
-    for example the user accounts.
+    The system configuration contains information about various system specific
+    configuration data, for example the user accounts.
 
     Args:
-      knowledge_base (KnowledgeBase): is used to store the preprocessing
-          information.
+      knowledge_base (KnowledgeBase): is used to store the system configuration.
     """
-    self._storage_file.ReadPreprocessingInformation(knowledge_base)
+    self._storage_file.ReadSystemConfiguration(knowledge_base)
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
@@ -882,16 +880,14 @@ class StorageFileWriter(interface.StorageWriter):
           'Unable to rename task storage file: {0:s} with error: '
           '{1!s}').format(processed_storage_file_path, exception))
 
-  def ReadPreprocessingInformation(self, knowledge_base):
-    """Reads preprocessing information.
+  def ReadSystemConfiguration(self, knowledge_base):
+    """Reads system configuration information.
 
-    The preprocessing information contains the system configuration which
-    contains information about various system specific configuration data,
-    for example the user accounts.
+    The system configuration contains information about various system specific
+    configuration data, for example the user accounts.
 
     Args:
-      knowledge_base (KnowledgeBase): is used to store the preprocessing
-          information.
+      knowledge_base (KnowledgeBase): is used to store the system configuration.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -900,7 +896,7 @@ class StorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError('Unable to read from closed storage writer.')
 
-    self._storage_file.ReadPreprocessingInformation(knowledge_base)
+    self._storage_file.ReadSystemConfiguration(knowledge_base)
 
   def RemoveProcessedTaskStorage(self, task):
     """Removes a processed task storage.
