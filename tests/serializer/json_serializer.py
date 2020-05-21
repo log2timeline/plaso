@@ -381,7 +381,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(session_start, sessions.SessionStart)
 
     expected_session_start_dict = {
-        'debug_mode': False,
         'identifier': session_identifier,
         'product_name': 'plaso',
         'product_version': plaso.__version__,
