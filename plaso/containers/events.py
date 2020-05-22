@@ -73,15 +73,9 @@ class EventObject(interface.AttributeContainer):
   attributes.
 
   Attributes:
-    event_data_entry_index (int): serialized data stream entry index of
-        the event data, this attribute is used by the GZIP storage files
-        to uniquely identify the event data linked to the event.
     event_data_row_identifier (int): row number of the serialized event data
         stream, this attribute is used by the SQLite storage files to uniquely
         identify the event data linked to the event.
-    event_data_stream_number (int): number of the serialized event data stream,
-        this attribute is used by the GZIP storage files to uniquely identify
-        the event data linked to the tag.
     parser (str): string identifying the parser that produced the event.
     tag (EventTag): event tag.
     timestamp (int): timestamp, which contains the number of microseconds
@@ -94,9 +88,7 @@ class EventObject(interface.AttributeContainer):
     """Initializes an event attribute container."""
     super(EventObject, self).__init__()
     self._event_data_identifier = None
-    self.event_data_entry_index = None
     self.event_data_row_identifier = None
-    self.event_data_stream_number = None
     self.parser = None
     self.tag = None
     self.timestamp = None
@@ -146,14 +138,8 @@ class EventTag(interface.AttributeContainer):
 
   Attributes:
     comment (str): comments.
-    event_entry_index (int): serialized data stream entry index of the event,
-        this attribute is used by the GZIP storage files to uniquely identify
-        the event linked to the tag.
     event_row_identifier (int): row number of the serialized event stream, this
         attribute is used by the SQLite storage files to uniquely identify
-        the event linked to the tag.
-    event_stream_number (int): number of the serialized event stream, this
-        attribute is used by the GZIP storage files to uniquely identify
         the event linked to the tag.
     labels (list[str]): labels, such as "malware", "application_execution".
   """
@@ -172,9 +158,7 @@ class EventTag(interface.AttributeContainer):
     super(EventTag, self).__init__()
     self._event_identifier = None
     self.comment = comment
-    self.event_entry_index = None
     self.event_row_identifier = None
-    self.event_stream_number = None
     self.labels = []
 
   def AddComment(self, comment):
