@@ -12,6 +12,9 @@ from plaso.containers import manager
 class EventData(interface.AttributeContainer):
   """Event data attribute container.
 
+  The event data attribute container represents the attributes of an entity,
+  such as a database record or log line.
+
   Attributes:
     data_type (str): event data type indicator.
     offset (int): offset relative to the start of the data stream where
@@ -28,6 +31,7 @@ class EventData(interface.AttributeContainer):
       data_type (Optional[str]): event data type indicator.
     """
     super(EventData, self).__init__()
+    self._event_data_stream_identifier = None
     self.data_type = data_type
     self.offset = None
     self.parser = None
@@ -62,6 +66,55 @@ class EventData(interface.AttributeContainer):
       attributes.append(attribute_string)
 
     return ', '.join(attributes)
+
+  def GetEventDataStreamIdentifier(self):
+    """Retrieves the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that should not
+    be serialized.
+
+    Returns:
+      AttributeContainerIdentifier: event data stream or None when not set.
+    """
+    return self._event_data_stream_identifier
+
+  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
+    """Sets the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that should not
+    be serialized.
+
+    Args:
+      event_data_stream_identifier (AttributeContainerIdentifier): event data
+          stream identifier.
+    """
+    self._event_data_stream_identifier = event_data_stream_identifier
+
+
+class EventDataStream(interface.AttributeContainer):
+  """Event data stream attribute container.
+
+  The event data stream attribute container represents the attributes of
+  a data stream, such as the content of a file or extended attribute.
+
+  Attributes:
+    file_entropy (str): byte entropy value of the data stream.
+    md5_hash (str): MD5 digest hash of the data stream.
+    sha1_hash (str): SHA-1 digest hash of the data stream.
+    sha256_hash (str): SHA-256 digest hash of the data stream.
+    yara_match (list[str]): names of the Yara rules that matched the data
+        stream.
+  """
+  CONTAINER_TYPE = 'event_data_stream'
+
+  def __init__(self):
+    """Initializes an event data attribute container."""
+    super(EventDataStream, self).__init__()
+    self.file_entropy = None
+    self.md5_hash = None
+    self.sha1_hash = None
+    self.sha256_hash = None
+    self.yara_match = None
 
 
 class EventObject(interface.AttributeContainer):
@@ -110,24 +163,25 @@ class EventObject(interface.AttributeContainer):
             self.timestamp_desc < other.timestamp_desc)
 
   def GetEventDataIdentifier(self):
-    """Retrieves the identifier of the event data associated with the event.
+    """Retrieves the identifier of the associated event data.
 
     The event data identifier is a storage specific value that should not
     be serialized.
 
     Returns:
-      AttributeContainerIdentifier: event identifier or None when not set.
+      AttributeContainerIdentifier: event data identifier or None when not set.
     """
     return self._event_data_identifier
 
   def SetEventDataIdentifier(self, event_data_identifier):
-    """Sets the identifier of the event data associated with the event.
+    """Sets the identifier of the associated event data.
 
     The event data identifier is a storage specific value that should not
     be serialized.
 
     Args:
-      event_data_identifier (AttributeContainerIdentifier): event identifier.
+      event_data_identifier (AttributeContainerIdentifier): event data
+          identifier.
     """
     self._event_data_identifier = event_data_identifier
 
@@ -246,7 +300,7 @@ class EventTag(interface.AttributeContainer):
     return cls._INVALID_LABEL_CHARACTERS_REGEX.sub('_', text)
 
   def GetEventIdentifier(self):
-    """Retrieves the identifier of the event associated with the event tag.
+    """Retrieves the identifier of the associated event.
 
     The event identifier is a storage specific value that should not
     be serialized.
@@ -257,7 +311,7 @@ class EventTag(interface.AttributeContainer):
     return self._event_identifier
 
   def SetEventIdentifier(self, event_identifier):
-    """Sets the identifier of the event associated with the event tag.
+    """Sets the identifier of the associated event.
 
     The event identifier is a storage specific value that should not
     be serialized.
@@ -269,4 +323,4 @@ class EventTag(interface.AttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EventData, EventObject, EventTag])
+    EventData, EventDataStream, EventObject, EventTag])

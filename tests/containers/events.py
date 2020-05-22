@@ -40,6 +40,34 @@ class EventDataTest(shared_test_lib.BaseTestCase):
       attribute_container.error = {'key': 'value'}
       attribute_container.GetAttributeValuesHash()
 
+  def testGetEventDataStreamIdentifier(self):
+    """Tests the GetEventDataStreamIdentifier function."""
+    attribute_container = events.EventData()
+
+    identifier = attribute_container.GetEventDataStreamIdentifier()
+    self.assertIsNone(identifier)
+
+  def testSetEventDataStreamIdentifier(self):
+    """Tests the SetEventDataStreamIdentifier function."""
+    attribute_container = events.EventData()
+
+    attribute_container.SetEventDataStreamIdentifier(None)
+
+
+class EventDataStreamTest(shared_test_lib.BaseTestCase):
+  """Tests for the event data stream attribute container."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = events.EventDataStream()
+
+    expected_attribute_names = [
+        'file_entropy', 'md5_hash', 'sha1_hash', 'sha256_hash', 'yara_match']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+
+    self.assertEqual(attribute_names, expected_attribute_names)
+
 
 class EventObjectTest(shared_test_lib.BaseTestCase):
   """Tests for the event attribute container."""
@@ -59,6 +87,19 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(attribute_names, expected_attribute_names)
 
+  def testGetEventDataIdentifier(self):
+    """Tests the GetEventDataIdentifier function."""
+    attribute_container = events.EventObject()
+
+    identifier = attribute_container.GetEventDataIdentifier()
+    self.assertIsNone(identifier)
+
+  def testSetEventDataIdentifier(self):
+    """Tests the SetEventDataIdentifier function."""
+    attribute_container = events.EventObject()
+
+    attribute_container.SetEventDataIdentifier(None)
+
 
 class EventTagTest(shared_test_lib.BaseTestCase):
   """Tests for the event tag attribute container."""
@@ -75,6 +116,19 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
     self.assertEqual(attribute_names, expected_attribute_names)
+
+  def testGetEventIdentifier(self):
+    """Tests the GetEventIdentifier function."""
+    attribute_container = events.EventTag()
+
+    identifier = attribute_container.GetEventIdentifier()
+    self.assertIsNone(identifier)
+
+  def testSetEventIdentifier(self):
+    """Tests the SetEventIdentifier function."""
+    attribute_container = events.EventTag()
+
+    attribute_container.SetEventIdentifier(None)
 
 
 if __name__ == '__main__':
