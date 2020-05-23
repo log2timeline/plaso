@@ -79,7 +79,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      self._output_module.WriteEventBody(event, event_data, None)
+      self._output_module.WriteEventBody(event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)

@@ -7,6 +7,8 @@ https://forensicswiki.xyz/wiki/index.php?title=TLN
 
 from __future__ import unicode_literals
 
+import abc
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import errors
@@ -17,8 +19,6 @@ from plaso.output import manager
 
 class TLNBaseOutputModule(interface.LinearOutputModule):
   """Base class for a TLN output module."""
-  # Stop pylint from complaining about missing WriteEventBody.
-  # pylint: disable=abstract-method
 
   _FIELD_DELIMITER = '|'
   _DESCRIPTION_FIELD_DELIMITER = ';'
@@ -116,6 +116,17 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
       return field.replace(self._FIELD_DELIMITER, ' ')
     return field
 
+  @abc.abstractmethod
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+    """Writes event values to the output.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+    """
+
   def WriteHeader(self):
     """Writes the header to the output."""
     self._output_writer.Write(self._HEADER)
@@ -137,12 +148,13 @@ class TLNOutputModule(TLNBaseOutputModule):
   _HEADER = 'Time|Source|Host|User|Description\n'
 
   # pylint: disable=unused-argument
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     if not hasattr(event, 'timestamp'):
@@ -221,12 +233,13 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
     return self._SanitizeField(notes)
 
   # pylint: disable=unused-argument
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     if not hasattr(event, 'timestamp'):

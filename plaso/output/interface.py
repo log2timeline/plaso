@@ -64,18 +64,19 @@ class OutputModule(object):
     """Opens the output."""
     return
 
-  def WriteEvent(self, event, event_data, event_tag):
+  def WriteEvent(self, event, event_data, event_data_stream, event_tag):
     """Writes the event to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     self.WriteEventStart()
 
     try:
-      self.WriteEventBody(event, event_data, event_tag)
+      self.WriteEventBody(event, event_data, event_data_stream, event_tag)
 
     except errors.NoFormatterFound as exception:
       error_message = 'unable to retrieve formatter with error: {0!s}'.format(
@@ -89,12 +90,13 @@ class OutputModule(object):
     self.WriteEventEnd()
 
   @abc.abstractmethod
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
 
@@ -118,11 +120,12 @@ class OutputModule(object):
     such. If not overridden this function will output every event individually.
 
     Args:
-      event_macb_group (list[tuple[EventObject, EventData, EventTag]]): group
-          of events with identical timestamps, attributes and values.
+      event_macb_group (list[tuple[EventObject, EventData, EventDataStream,
+          EventTag]]): group of events with identical timestamps, attributes
+          and values.
     """
-    for event, event_data, event_tag in event_macb_group:
-      self.WriteEvent(event, event_data, event_tag)
+    for event, event_data, event_data_stream, event_tag in event_macb_group:
+      self.WriteEvent(event, event_data, event_data_stream, event_tag)
 
   def WriteEventStart(self):
     """Writes the start of an event to the output.
@@ -166,12 +169,13 @@ class LinearOutputModule(OutputModule):
     self._output_writer = None
 
   @abc.abstractmethod
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
 

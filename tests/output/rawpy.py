@@ -50,7 +50,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data, None)
+    output_module.WriteEventBody(event, event_data, None, None)
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we

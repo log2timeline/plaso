@@ -50,18 +50,15 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
     try:
       event_formatter = self._output_mediator.GetEventFormatter(event_data)
-      self.assertIsInstance(
-          event_formatter, formatters_test_lib.TestEventFormatter)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
 
+    self.assertIsInstance(
+        event_formatter, formatters_test_lib.TestEventFormatter)
+
   def testGetFormattedMessages(self):
     """Tests the GetFormattedMessages function."""
-    expected_message = (
-        'Reporter <CRON> PID: 8442'
-        ' (pam_unix(cron:session): session closed for user root)')
-
     _, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
@@ -74,6 +71,10 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
+
+    expected_message = (
+        'Reporter <CRON> PID: 8442'
+        ' (pam_unix(cron:session): session closed for user root)')
 
     self.assertEqual(message, expected_message)
     self.assertEqual(message_short, expected_message)

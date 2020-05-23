@@ -123,7 +123,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     # Set timestamp to 0 otherwise document_open rule triggers.
     event.timestamp = 0
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
@@ -131,7 +131,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     event.timestamp = self._TEST_TIMESTAMP
     event_data.entries = 'Index: 0 [MRU Value a]: file.exe'
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['application_execution'])
@@ -144,7 +144,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     # Set timestamp to 0 otherwise document_open rule triggers.
     event.timestamp = 0
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
@@ -152,7 +152,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     event.timestamp = self._TEST_TIMESTAMP
     event_data.entries = 'Index: 0 [MRU Value 1]: file.exe'
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['application_execution'])
@@ -225,14 +225,14 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event.timestamp = 0
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['document_open'])
@@ -248,14 +248,14 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event.timestamp = 0
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['document_open'])
@@ -578,14 +578,14 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = utorrent.UTorrentEventData()
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['file_download'])
@@ -601,14 +601,14 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     summary_information = summary.OLECFSummaryInformation(None)
     event_data = summary_information.GetEventData()
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = definitions.TIME_DESCRIPTION_LAST_PRINTED
 
-    storage_writer = self._TagEvent(event, event_data)
+    storage_writer = self._TagEvent(event, event_data, None)
 
     self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['document_print'])

@@ -16,27 +16,31 @@ class SharedJSONOutputModule(interface.LinearOutputModule):
 
   _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
-  def _WriteSerialized(self, event, event_data, event_tag):
+  def _WriteSerialized(self, event, event_data, event_data_stream, event_tag):
     """Writes an event, event data and event tag to serialized form.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
 
     Returns:
       str: A JSON string containing the serialized form.
     """
-    json_dict = self._WriteSerializedDict(event, event_data, event_tag)
+    json_dict = self._WriteSerializedDict(
+        event, event_data, event_data_stream, event_tag)
 
     return json.dumps(json_dict, sort_keys=True)
 
-  def _WriteSerializedDict(self, event, event_data, event_tag):
+  def _WriteSerializedDict(
+      self, event, event_data, event_data_stream, event_tag):
     """Writes an event, event data and event tag to serialized form.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
 
     Returns:
@@ -61,6 +65,12 @@ class SharedJSONOutputModule(interface.LinearOutputModule):
 
     event_json_dict.update(event_data_json_dict)
 
+    if event_data_stream:
+      event_data_stream_json_dict = self._JSON_SERIALIZER.WriteSerializedDict(
+          event_data_stream)
+
+      event_json_dict.update(event_data_stream_json_dict)
+
     if event_tag:
       event_tag_json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event_tag)
 
@@ -69,11 +79,12 @@ class SharedJSONOutputModule(interface.LinearOutputModule):
     return event_json_dict
 
   @abc.abstractmethod
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """

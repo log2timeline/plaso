@@ -80,7 +80,8 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      json_string = output_module._WriteSerialized(event, event_data, None)
+      json_string = output_module._WriteSerialized(
+          event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -140,7 +141,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
 
     try:
       json_dict = output_module._WriteSerializedDict(
-          event, event_data, None)
+          event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)

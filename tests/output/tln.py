@@ -67,7 +67,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      self._output_module.WriteEventBody(event, event_data, None)
+      self._output_module.WriteEventBody(event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -79,7 +79,6 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
-
     self.assertEqual(event_body.count('|'), 4)
 
 
@@ -130,7 +129,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      self._output_module.WriteEventBody(event, event_data, None)
+      self._output_module.WriteEventBody(event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)

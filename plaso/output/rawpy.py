@@ -15,12 +15,13 @@ class NativePythonFormatterHelper(object):
   """Helper for outputting as "raw" (or native) Python."""
 
   @classmethod
-  def GetFormattedEvent(cls, event, event_data, event_tag):
+  def GetFormattedEvent(cls, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
 
     Returns:
@@ -53,7 +54,11 @@ class NativePythonFormatterHelper(object):
         '',
         '[Additional attributes]:']
 
-    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+    event_attributes = event_data.GetAttributes()
+    if event_data_stream:
+      event_attributes.extend(event_data_stream.GetAttributes())
+
+    for attribute_name, attribute_value in sorted(event_attributes):
       # Some parsers have written bytes values to storage.
       if isinstance(attribute_value, bytes):
         attribute_value = attribute_value.decode('utf-8', 'replace')
@@ -95,16 +100,17 @@ class NativePythonOutputModule(interface.LinearOutputModule):
   NAME = 'rawpy'
   DESCRIPTION = '"raw" (or native) Python output.'
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     output_string = NativePythonFormatterHelper.GetFormattedEvent(
-        event, event_data, event_tag)
+        event, event_data, event_data_stream, event_tag)
     self._output_writer.Write(output_string)
 
 

@@ -90,7 +90,7 @@ class AnalysisPlugin(object):
     """
 
   @abc.abstractmethod
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event.
 
     Args:
@@ -98,6 +98,7 @@ class AnalysisPlugin(object):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
 
 
@@ -183,7 +184,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       self._analyzer.start()
       self._analyzer_started = True
 
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Evaluates whether an event contains the right data for a hash lookup.
 
     Args:
@@ -191,6 +192,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     if (event_data.data_type not in self.DATA_TYPES or
         not self._analyzer.lookup_hash):

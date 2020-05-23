@@ -232,7 +232,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     except errors.QueueAlreadyClosed:
       logger.error('Queue for {0:s} was already closed.'.format(self.name))
 
-  def _ProcessEvent(self, mediator, event, event_data):
+  def _ProcessEvent(self, mediator, event, event_data, event_data_stream):
     """Processes an event.
 
     Args:
@@ -240,9 +240,11 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     try:
-      self._analysis_plugin.ExamineEvent(mediator, event, event_data)
+      self._analysis_plugin.ExamineEvent(
+          mediator, event, event_data, event_data_stream)
 
     except Exception as exception:  # pylint: disable=broad-except
       self.SignalAbort()

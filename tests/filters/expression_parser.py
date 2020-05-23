@@ -90,13 +90,15 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
        'timestamp_desc': 'Last Written'}]
 
   def _CheckIfExpressionMatches(
-      self, expression, event, event_data, event_tag, expected_result):
+      self, expression, event, event_data, event_data_stream, event_tag,
+      expected_result):
     """Checks if the event filter expression matches the event values.
 
     Args:
       expression (str): event filter expression.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
       expected_result (bool): expected result.
     """
@@ -104,7 +106,8 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     expression = parser.Parse(expression)
     event_filter = expression.Compile()
 
-    result = event_filter.Matches(event, event_data, event_tag)
+    result = event_filter.Matches(
+        event, event_data, event_data_stream, event_tag)
     self.assertEqual(expected_result, result)
 
   def testAddBinaryOperator(self):
@@ -405,50 +408,52 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     event_tag.AddLabel('browser_search')
 
     self._CheckIfExpressionMatches(
-        'filename contains \'GoodFella\'', event, event_data, event_tag, True)
+        'filename contains \'GoodFella\'', event, event_data, None, event_tag,
+        True)
 
     # Test timestamp filtering.
     self._CheckIfExpressionMatches(
-        'timestamp >= \'2015-11-18\'', event, event_data, event_tag, True)
+        'timestamp >= \'2015-11-18\'', event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'timestamp < \'2015-11-19\'', event, event_data, event_tag, True)
+        'timestamp < \'2015-11-19\'', event, event_data, None, event_tag, True)
 
     expression = (
         'timestamp < \'2015-11-18T01:15:44.341\' and '
         'timestamp > \'2015-11-18 01:15:42\'')
 
     self._CheckIfExpressionMatches(
-        expression, event, event_data, event_tag, True)
+        expression, event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'timestamp > \'2015-11-19\'', event, event_data, event_tag, False)
+        'timestamp > \'2015-11-19\'', event, event_data, None, event_tag, False)
 
     # Perform few attribute tests.
     self._CheckIfExpressionMatches(
-        'filename not contains \'sometext\'', event, event_data, event_tag,
-        True)
+        'filename not contains \'sometext\'', event, event_data, None,
+        event_tag, True)
 
     expression = (
         'timestamp_desc CONTAINS \'written\' AND timestamp > \'2015-11-18\' '
         'AND timestamp < \'2015-11-25 12:56:21\'')
 
     self._CheckIfExpressionMatches(
-        expression, event, event_data, event_tag, True)
+        expression, event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'parser is not \'Made\'', event, event_data, event_tag, True)
+        'parser is not \'Made\'', event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'parser is not \'Weirdo\'', event, event_data, event_tag, False)
+        'parser is not \'Weirdo\'', event, event_data, None, event_tag, False)
 
     self._CheckIfExpressionMatches(
-        'tag contains \'browser_search\'', event, event_data, event_tag, True)
+        'tag contains \'browser_search\'', event, event_data, None, event_tag,
+        True)
 
     # Test multiple attributes.
     self._CheckIfExpressionMatches(
         'text iregexp \'bad, bad thing [a-zA-Z\\\\s.]+ evil\'', event,
-        event_data, event_tag, True)
+        event_data, None, event_tag, True)
 
 
 if __name__ == "__main__":

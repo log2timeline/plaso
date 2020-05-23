@@ -39,11 +39,11 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    date_string = dynamic_fields_helper._FormatDate(event, event_data)
+    date_string = dynamic_fields_helper._FormatDate(event, event_data, None)
     self.assertEqual(date_string, '2012-06-27')
 
     event.timestamp = -9223372036854775808
-    date_string = dynamic_fields_helper._FormatDate(event, event_data)
+    date_string = dynamic_fields_helper._FormatDate(event, event_data, None)
     self.assertEqual(date_string, '0000-00-00')
 
   def testFormatDateTime(self):
@@ -53,11 +53,13 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    date_time_string = dynamic_fields_helper._FormatDateTime(event, event_data)
+    date_time_string = dynamic_fields_helper._FormatDateTime(
+        event, event_data, None)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01+00:00')
 
     event.timestamp = -9223372036854775808
-    date_time_string = dynamic_fields_helper._FormatDateTime(event, event_data)
+    date_time_string = dynamic_fields_helper._FormatDateTime(
+        event, event_data, None)
     self.assertEqual(date_time_string, '0000-00-00T00:00:00')
 
   def testFormatHostname(self):
@@ -67,7 +69,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    hostname_string = dynamic_fields_helper._FormatHostname(event, event_data)
+    hostname_string = dynamic_fields_helper._FormatHostname(
+        event, event_data, None)
     self.assertEqual(hostname_string, 'ubuntu')
 
   def testFormatInode(self):
@@ -77,7 +80,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    inode_string = dynamic_fields_helper._FormatInode(event, event_data)
+    inode_string = dynamic_fields_helper._FormatInode(event, event_data, None)
     self.assertEqual(inode_string, '-')
 
   def testFormatMACB(self):
@@ -87,7 +90,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    macb_string = dynamic_fields_helper._FormatMACB(event, event_data)
+    macb_string = dynamic_fields_helper._FormatMACB(event, event_data, None)
     self.assertEqual(macb_string, '..C.')
 
   def testFormatMessage(self):
@@ -102,7 +105,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      message_string = dynamic_fields_helper._FormatMessage(event, event_data)
+      message_string = dynamic_fields_helper._FormatMessage(
+          event, event_data, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -125,7 +129,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     try:
       message_short_string = dynamic_fields_helper._FormatMessageShort(
-          event, event_data)
+          event, event_data, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -145,8 +149,10 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     formatters_manager.FormattersManager.RegisterFormatter(
         formatters_test_lib.TestEventFormatter)
+
     try:
-      source_string = dynamic_fields_helper._FormatSource(event, event_data)
+      source_string = dynamic_fields_helper._FormatSource(
+          event, event_data, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -166,7 +172,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     try:
       source_short_string = dynamic_fields_helper._FormatSourceShort(
-          event, event_data)
+          event, event_data, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -195,11 +201,11 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    time_string = dynamic_fields_helper._FormatTime(event, event_data)
+    time_string = dynamic_fields_helper._FormatTime(event, event_data, None)
     self.assertEqual(time_string, '18:17:01')
 
     event.timestamp = -9223372036854775808
-    time_string = dynamic_fields_helper._FormatTime(event, event_data)
+    time_string = dynamic_fields_helper._FormatTime(event, event_data, None)
     self.assertEqual(time_string, '--:--:--')
 
   def testFormatTimestampDescription(self):
@@ -210,7 +216,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
     timestamp_description_string = (
-        dynamic_fields_helper._FormatTimestampDescription(event, event_data))
+        dynamic_fields_helper._FormatTimestampDescription(
+            event, event_data, None))
     self.assertEqual(timestamp_description_string, 'Metadata Modification Time')
 
   def testFormatUsername(self):
@@ -220,7 +227,8 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    username_string = dynamic_fields_helper._FormatUsername(event, event_data)
+    username_string = dynamic_fields_helper._FormatUsername(
+        event, event_data, None)
     self.assertEqual(username_string, '-')
 
   def testFormatZone(self):
@@ -230,7 +238,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    zone_string = dynamic_fields_helper._FormatZone(event, event_data)
+    zone_string = dynamic_fields_helper._FormatZone(event, event_data, None)
     self.assertEqual(zone_string, 'UTC')
 
   # TODO: add coverage for _ReportEventError
@@ -243,7 +251,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
     zone_string = dynamic_fields_helper.GetFormattedField(
-        event, event_data, None, 'zone')
+        'zone', event, event_data, None, None)
     self.assertEqual(zone_string, 'UTC')
 
 
@@ -291,7 +299,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      output_module.WriteEventBody(event, event_data, None)
+      output_module.WriteEventBody(event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -328,7 +336,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      output_module.WriteEventBody(event, event_data, None)
+      output_module.WriteEventBody(event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)

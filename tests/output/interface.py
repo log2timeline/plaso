@@ -46,7 +46,7 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
     for event_values in self._TEST_EVENTS:
       event, event_data = containers_test_lib.CreateEventFromValues(
           event_values)
-      output_module.WriteEvent(event, event_data, None)
+      output_module.WriteEvent(event, event_data, None, None)
 
     output_module.WriteFooter()
 

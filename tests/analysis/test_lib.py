@@ -51,7 +51,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         storage_writer, knowledge_base_object)
 
     for event, event_data in test_events:
-      plugin.ExamineEvent(mediator, event, event_data)
+      plugin.ExamineEvent(mediator, event, event_data, None)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
@@ -91,7 +91,14 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         event_data = storage_writer.GetEventDataByIdentifier(
             event_data_identifier)
 
-      plugin.ExamineEvent(mediator, event, event_data)
+      event_data_stream = None
+      if event_data:
+        event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+        if event_data_stream_identifier:
+          event_data_stream = storage_writer.GetEventDataStreamByIdentifier(
+              event_data_stream_identifier)
+
+      plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
