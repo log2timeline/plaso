@@ -134,7 +134,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         file_object.close()
 
     else:
-      self.fail('Got unexpected parser type: {0:s}'.format(type(parser)))
+      self.fail('Got unexpected parser type: {0!s}'.format(type(parser)))
 
     return storage_writer
 

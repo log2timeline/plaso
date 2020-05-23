@@ -186,7 +186,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         file_object.close()
 
     else:
-      self.fail('Got unsupported parser type: {0:s}'.format(type(parser)))
+      self.fail('Got unsupported parser type: {0!s}'.format(type(parser)))
 
     return storage_writer
 

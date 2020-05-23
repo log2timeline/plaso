@@ -242,7 +242,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
         self.registry_find_specs.append(find_spec)
 
       else:
-        logger.warning('Unsupported find specification type: {0:s}'.format(
+        logger.warning('Unsupported find specification type: {0!s}'.format(
             type(find_spec)))
 
   @classmethod
