@@ -28,8 +28,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   _FORMAT_VERSION = 20190309
 
   # The earliest format version, stored in-file, that this class
+  # is able to append (write).
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20190309
+
+  # The earliest format version, stored in-file, that this class
   # is able to read.
-  _COMPATIBLE_FORMAT_VERSION = 20170707
+  _READ_COMPATIBLE_FORMAT_VERSION = 20170707
 
   # Container types that are referenced from other container types.
   _REFERENCED_CONTAINER_TYPES = (
@@ -179,13 +183,15 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     except (TypeError, ValueError):
       raise IOError('Invalid format version: {0!s}.'.format(format_version))
 
-    if not check_readable_only and format_version != cls._FORMAT_VERSION:
-      raise IOError('Format version: {0:d} is not supported.'.format(
-          format_version))
+    if (not check_readable_only and
+        format_version < cls._APPEND_COMPATIBLE_FORMAT_VERSION):
+      raise IOError((
+          'Format version: {0:d} is too old and can no longer be '
+          'written.').format(format_version))
 
-    if format_version < cls._COMPATIBLE_FORMAT_VERSION:
+    if format_version < cls._READ_COMPATIBLE_FORMAT_VERSION:
       raise IOError(
-          'Format version: {0:d} is too old and no longer supported.'.format(
+          'Format version: {0:d} is too old and can no longer be read.'.format(
               format_version))
 
     if format_version > cls._FORMAT_VERSION:
