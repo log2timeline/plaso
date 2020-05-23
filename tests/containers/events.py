@@ -49,7 +49,7 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventObject()
 
     expected_attribute_names = [
-        'event_data_row_identifier',
+        '_event_data_row_identifier',
         'parser',
         'tag',
         'timestamp',
@@ -68,8 +68,8 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventTag()
 
     expected_attribute_names = [
+        '_event_row_identifier',
         'comment',
-        'event_row_identifier',
         'labels']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())

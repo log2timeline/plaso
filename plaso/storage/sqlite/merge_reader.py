@@ -114,10 +114,11 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       event (EventObject): event.
       serialized_data (Optional[bytes]): serialized form of the event.
     """
-    if hasattr(event, 'event_data_row_identifier'):
+    row_identifier = getattr(event, '_event_data_row_identifier', None)
+    # TODO: error if row_identifier is None
+    if row_identifier is not None:
       event_data_identifier = identifiers.SQLTableIdentifier(
-          self._CONTAINER_TYPE_EVENT_DATA,
-          event.event_data_row_identifier)
+          self._CONTAINER_TYPE_EVENT_DATA, row_identifier)
       lookup_key = event_data_identifier.CopyToString()
 
       event_data_identifier = self._event_data_identifier_mappings.get(
@@ -318,12 +319,14 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
         attribute_container.SetIdentifier(identifier)
 
         if self._active_container_type == self._CONTAINER_TYPE_EVENT_TAG:
+          row_identifier = getattr(
+              attribute_container, '_event_row_identifier', None)
+          # TODO: error if row_identifier is None
           event_identifier = identifiers.SQLTableIdentifier(
-              self._CONTAINER_TYPE_EVENT,
-              attribute_container.event_row_identifier)
+              self._CONTAINER_TYPE_EVENT, row_identifier)
           attribute_container.SetEventIdentifier(event_identifier)
 
-          del attribute_container.event_row_identifier
+          delattr(attribute_container, '_event_row_identifier')
 
         if callback:
           callback(self._storage_writer, attribute_container)

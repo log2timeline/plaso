@@ -217,6 +217,16 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     supported_attribute_names = container_object.GetAttributeNames()
     for attribute_name, attribute_value in json_dict.items():
+      # Convert attribute names to provide backwards compatibility for previous
+      # variants of attribute containers.
+      if (container_type == 'event' and
+          attribute_name == 'event_data_row_identifier'):
+        attribute_name = '_event_data_row_identifier'
+
+      elif (container_type == 'event_tag' and
+            attribute_name == 'event_row_identifier'):
+        attribute_name = '_event_row_identifier'
+
       # Be strict about which attributes to set in non event data attribute
       # containers.
       if (container_type != 'event_data' and
