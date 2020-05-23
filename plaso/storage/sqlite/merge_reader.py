@@ -160,7 +160,6 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     """
     row_identifier = getattr(
         event_data, '_event_data_stream_row_identifier', None)
-    # TODO: error if row_identifier is None
     if row_identifier is not None:
       event_data_stream_identifier = identifiers.SQLTableIdentifier(
           self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)

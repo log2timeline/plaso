@@ -10,6 +10,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import knowledge_base
@@ -38,6 +39,20 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """
     event_data_identifier = event.GetEventDataIdentifier()
     return storage_writer.GetEventDataByIdentifier(event_data_identifier)
+
+  def _GetEventDataStreamOfEventData(self, storage_writer, event_data):
+    """Retrieves the event data stream of event data.
+
+    Args:
+      storage_writer (FakeStorageWriter): storage writer.
+      event_data (EventData): event data.
+
+    Return:
+      EventDataStream: event data stream corresponding to the event data.
+    """
+    event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+    return storage_writer.GetEventDataStreamByIdentifier(
+        event_data_stream_identifier)
 
   def _GetTestFilePathSpec(self, path_segments):
     """Retrieves a path specification of a test file in the test data directory.
@@ -126,19 +141,28 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     extraction_worker._analyzers = [test_analyzer]
 
+    storage_writer.Open()
+    storage_writer.WriteSessionStart()
+
     file_entry = self._GetTestFileEntry(['ímynd.dd'])
     mediator.SetFileEntry(file_entry)
 
     file_object = file_entry.GetFileObject()
+    display_name = mediator.GetDisplayName()
+    event_data_stream = events.EventDataStream()
 
     try:
-      extraction_worker._AnalyzeFileObject(mediator, file_object)
+      extraction_worker._AnalyzeFileObject(
+          file_object, display_name, event_data_stream)
     finally:
       file_object.close()
 
-    self.assertEqual(len(mediator._extra_event_attributes), 1)
+    storage_writer.WriteSessionCompletion()
+    storage_writer.Close()
 
-    event_attribute = mediator._extra_event_attributes.get('test_result', None)
+    self.assertIsNotNone(event_data_stream)
+
+    event_attribute = getattr(event_data_stream, 'test_result', None)
     self.assertEqual(event_attribute, 'is_vegetable')
 
   def testProcessPathSpecFile(self):
@@ -299,9 +323,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     empty_file_md5 = 'd41d8cd98f00b204e9800998ecf8427e'
     for event in storage_writer.GetSortedEvents():
       event_data = self._GetEventDataOfEvent(storage_writer, event)
+      event_data_stream = self._GetEventDataStreamOfEventData(
+          storage_writer, event_data)
 
-      md5_hash = getattr(event_data, 'md5_hash', None)
-      self.assertEqual(md5_hash, empty_file_md5)
+      self.assertEqual(event_data_stream.md5_hash, empty_file_md5)
 
     storage_writer.Close()
 
@@ -331,9 +356,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     expected_yara_match = 'PEfileBasic,PEfile'
     for event in storage_writer.GetSortedEvents():
       event_data = self._GetEventDataOfEvent(storage_writer, event)
+      event_data_stream = self._GetEventDataStreamOfEventData(
+          storage_writer, event_data)
 
-      yara_match = getattr(event_data, 'yara_match', None)
-      self.assertEqual(yara_match, expected_yara_match)
+      self.assertEqual(event_data_stream.yara_match, expected_yara_match)
 
     storage_writer.Close()
 
