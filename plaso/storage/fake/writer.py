@@ -37,6 +37,7 @@ class FakeStorageWriter(interface.StorageWriter):
     super(FakeStorageWriter, self).__init__(
         session, storage_type=storage_type, task=task)
     self._event_data = {}
+    self._event_data_streams = {}
     self._event_sources = []
     self._event_tags = []
     self._events = []
@@ -140,6 +141,25 @@ class FakeStorageWriter(interface.StorageWriter):
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
     self._event_data[lookup_key] = event_data
+
+  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+    """Adds an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+      serialized_data (bytes): serialized form of the event data stream.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    event_data_stream = self._PrepareAttributeContainer(event_data_stream)
+
+    identifier = event_data_stream.GetIdentifier()
+    lookup_key = identifier.CopyToString()
+    self._event_data_streams[lookup_key] = event_data_stream
 
   def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
@@ -294,6 +314,18 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     lookup_key = identifier.CopyToString()
     return self._event_data.get(lookup_key, None)
+
+  def GetEventDataStreamByIdentifier(self, identifier):
+    """Retrieves a specific event data stream.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data stream identifier.
+
+    Returns:
+      EventDataStream: event data stream or None if not available.
+    """
+    lookup_key = identifier.CopyToString()
+    return self._event_data_streams.get(lookup_key, None)
 
   def GetEventSources(self):
     """Retrieves the event sources.

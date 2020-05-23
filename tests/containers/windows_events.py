@@ -22,8 +22,8 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
         windows_events.WindowsDistributedLinkTrackingEventData(test_uuid, None))
 
     expected_attribute_names = [
-        'data_type', 'mac_address', 'offset', 'origin', 'parser', 'query',
-        'uuid']
+        '_event_data_stream_row_identifier', 'data_type', 'mac_address',
+        'offset', 'origin', 'parser', 'query', 'uuid']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -38,8 +38,8 @@ class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_events.WindowsVolumeEventData()
 
     expected_attribute_names = [
-        'data_type', 'device_path', 'offset', 'origin', 'parser', 'query',
-        'serial_number']
+        '_event_data_stream_row_identifier', 'data_type', 'device_path',
+        'offset', 'origin', 'parser', 'query', 'serial_number']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

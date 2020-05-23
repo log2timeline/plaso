@@ -308,6 +308,25 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.GetEventDataByIdentifier(identifier)
 
+  def GetEventDataStreams(self):
+    """Retrieves the event data streams.
+
+    Returns:
+      generator(EventDataStream): event data stream generator.
+    """
+    return self._storage_file.GetEventDataStreams()
+
+  def GetEventDataStreamByIdentifier(self, identifier):
+    """Retrieves a specific event data stream.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventDataStream: event data stream or None if not available.
+    """
+    return self._storage_file.GetEventDataStreamByIdentifier(identifier)
+
   def GetEvents(self):
     """Retrieves the events.
 
@@ -618,6 +637,23 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._storage_file.AddEventData(event_data, serialized_data=serialized_data)
 
+  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+    """Adds an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+      serialized_data (Optional[bytes]): serialized form of the event data
+          stream.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    self._storage_file.AddEventDataStream(
+        event_data_stream, serialized_data=serialized_data)
+
   def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
@@ -677,6 +713,17 @@ class StorageFileWriter(interface.StorageWriter):
       EventData: event data or None if not available.
     """
     return self._storage_file.GetEventDataByIdentifier(identifier)
+
+  def GetEventDataStreamByIdentifier(self, identifier):
+    """Retrieves a specific event data stream.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data stream identifier.
+
+    Returns:
+      EventDataStream: event data stream or None if not available.
+    """
+    return self._storage_file.GetEventDataStreamByIdentifier(identifier)
 
   def GetEvents(self):
     """Retrieves the events.
