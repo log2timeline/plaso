@@ -23,15 +23,17 @@ class JSONOutputModule(shared_json.SharedJSONOutputModule):
     super(JSONOutputModule, self).__init__(output_mediator)
     self._event_counter = 0
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    json_string = self._WriteSerialized(event, event_data, event_tag)
+    json_string = self._WriteSerialized(
+        event, event_data, event_data_stream, event_tag)
 
     if self._event_counter != 0:
       self._output_writer.Write(', ')

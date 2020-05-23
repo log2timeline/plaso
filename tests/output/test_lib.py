@@ -31,12 +31,13 @@ class TestOutputModule(interface.LinearOutputModule):
   NAME = 'test_xml'
   DESCRIPTION = 'Test output that provides a simple mocked XML.'
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes the body of an event to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     date_time = timelib.Timestamp.CopyToIsoFormat(

@@ -56,7 +56,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     if not attribute_values_per_name:
       event_data = event_data_class()
-      storage_writer = self._TagEvent(event, event_data)
+      storage_writer = self._TagEvent(event, event_data, None)
 
       self.assertEqual(
           storage_writer.number_of_event_tags, len(expected_rule_names))
@@ -79,7 +79,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
           attribute_value = attribute_values[attribute_value_index]
           setattr(event_data, attribute_name, attribute_value)
 
-        storage_writer = self._TagEvent(event, event_data)
+        storage_writer = self._TagEvent(event, event_data, None)
 
         self.assertEqual(
             storage_writer.number_of_event_tags, len(expected_rule_names))
@@ -99,17 +99,18 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
             attribute_value = attribute_values[0]
           setattr(event_data, attribute_name, attribute_value)
 
-        storage_writer = self._TagEvent(event, event_data)
+        storage_writer = self._TagEvent(event, event_data, None)
 
         self.assertEqual(storage_writer.number_of_event_tags, 0)
         self._CheckLabels(storage_writer, [])
 
-  def _TagEvent(self, event, event_data):
+  def _TagEvent(self, event, event_data, event_data_stream):
     """Tags an event.
 
     Args:
       event (Event): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -124,6 +125,8 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
+    if event_data_stream:
+      storage_writer.AddEventDataStream(event_data_stream)
     storage_writer.AddEventData(event_data)
     storage_writer.AddEvent(event)
 
@@ -134,7 +137,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     plugin = tagging.TaggingAnalysisPlugin()
     plugin.SetAndLoadTagFile(tag_file_path)
-    plugin.ExamineEvent(mediator, event, event_data)
+    plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)

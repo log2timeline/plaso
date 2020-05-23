@@ -252,7 +252,7 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event and creates Windows Services as required.
 
     At present, this method only handles events extracted from the Registry.
@@ -262,6 +262,7 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
       return

@@ -53,12 +53,13 @@ class DynamicFieldsHelper(object):
 
   # pylint: disable=unused-argument
 
-  def _FormatDate(self, event, event_data):
+  def _FormatDate(self, event, event_data, event_data_stream):
     """Formats the date.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: date field.
@@ -78,12 +79,13 @@ class DynamicFieldsHelper(object):
 
       return '0000-00-00'
 
-  def _FormatDateTime(self, event, event_data):
+  def _FormatDateTime(self, event, event_data, event_data_stream):
     """Formats the date and time in ISO 8601 format.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: date and time field.
@@ -101,24 +103,26 @@ class DynamicFieldsHelper(object):
 
       return '0000-00-00T00:00:00'
 
-  def _FormatHostname(self, event, event_data):
+  def _FormatHostname(self, event, event_data, event_data_stream):
     """Formats the hostname.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: hostname field.
     """
     return self._output_mediator.GetHostname(event_data)
 
-  def _FormatInode(self, event, event_data):
+  def _FormatInode(self, event, event_data, event_data_stream):
     """Formats the inode.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: inode field.
@@ -133,24 +137,26 @@ class DynamicFieldsHelper(object):
 
     return inode
 
-  def _FormatMACB(self, event, event_data):
+  def _FormatMACB(self, event, event_data, event_data_stream):
     """Formats the legacy MACB representation.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: MACB field.
     """
     return self._output_mediator.GetMACBRepresentation(event, event_data)
 
-  def _FormatMessage(self, event, event_data):
+  def _FormatMessage(self, event, event_data, event_data_stream):
     """Formats the message.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: message field.
@@ -168,12 +174,13 @@ class DynamicFieldsHelper(object):
 
     return message
 
-  def _FormatMessageShort(self, event, event_data):
+  def _FormatMessageShort(self, event, event_data, event_data_stream):
     """Formats the short message.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: short message field.
@@ -191,12 +198,13 @@ class DynamicFieldsHelper(object):
 
     return message_short
 
-  def _FormatSource(self, event, event_data):
+  def _FormatSource(self, event, event_data, event_data_stream):
     """Formats the source.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: source field.
@@ -214,12 +222,13 @@ class DynamicFieldsHelper(object):
 
     return source
 
-  def _FormatSourceShort(self, event, event_data):
+  def _FormatSourceShort(self, event, event_data, event_data_stream):
     """Formats the short source.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: short source field.
@@ -252,12 +261,13 @@ class DynamicFieldsHelper(object):
 
     return ' '.join(event_tag.labels)
 
-  def _FormatTime(self, event, event_data):
+  def _FormatTime(self, event, event_data, event_data_stream):
     """Formats the time.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: time field.
@@ -280,36 +290,39 @@ class DynamicFieldsHelper(object):
 
       return '--:--:--'
 
-  def _FormatTimestampDescription(self, event, event_data):
+  def _FormatTimestampDescription(self, event, event_data, event_data_stream):
     """Formats the timestamp description.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: timestamp description field.
     """
     return event.timestamp_desc or '-'
 
-  def _FormatUsername(self, event, event_data):
+  def _FormatUsername(self, event, event_data, event_data_stream):
     """Formats the username.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: username field.
     """
     return self._output_mediator.GetUsername(event_data)
 
-  def _FormatZone(self, event, event_data):
+  def _FormatZone(self, event, event_data, event_data_stream):
     """Formats the time zone.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: time zone field.
@@ -335,14 +348,16 @@ class DynamicFieldsHelper(object):
             parser_chain, error_message)
     logger.error(error_message)
 
-  def GetFormattedField(self, event, event_data, event_tag, field_name):
+  def GetFormattedField(
+      self, field_name, event, event_data, event_data_stream, event_tag):
     """Formats the specified field.
 
     Args:
+      field_name (str): name of the field.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
-      field_name (str): name of the field.
 
     Returns:
       str: value of the field.
@@ -356,7 +371,9 @@ class DynamicFieldsHelper(object):
       callback_function = getattr(self, callback_name, None)
 
     if callback_function:
-      output_value = callback_function(event, event_data)
+      output_value = callback_function(event, event_data, event_data_stream)
+    elif hasattr(event_data_stream, field_name):
+      output_value = getattr(event_data_stream, field_name, None)
     else:
       output_value = getattr(event_data, field_name, None)
 
@@ -424,18 +441,19 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """
     self._fields = fields
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     output_values = []
     for field_name in self._fields:
       output_value = self._dynamic_fields_helper.GetFormattedField(
-          event, event_data, event_tag, field_name)
+          field_name, event, event_data, event_data_stream, event_tag)
 
       output_value = self._SanitizeField(output_value)
       output_values.append(output_value)

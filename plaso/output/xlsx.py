@@ -153,12 +153,13 @@ class XLSXOutputModule(interface.OutputModule):
     """
     self._timestamp_format = timestamp_format
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     for column_index, field_name in enumerate(self._fields):
@@ -167,7 +168,7 @@ class XLSXOutputModule(interface.OutputModule):
 
       else:
         field_value = self._dynamic_fields_helper.GetFormattedField(
-            event, event_data, event_tag, field_name)
+            field_name, event, event_data, event_data_stream, event_tag)
         field_value = self._SanitizeField(field_value)
 
       if (field_name == 'datetime' and

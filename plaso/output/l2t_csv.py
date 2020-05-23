@@ -83,12 +83,13 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     username = self._output_mediator.GetUsername(event_data)
     return self._FormatField(username)
 
-  def _GetOutputValues(self, event, event_data, event_tag):
+  def _GetOutputValues(self, event, event_data, event_data_stream, event_tag):
     """Retrieves output values.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
 
     Returns:
@@ -130,8 +131,12 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
+    event_attributes = event_data.GetAttributes()
+    if event_data_stream:
+      event_attributes.extend(event_data_stream.GetAttributes())
+
     extra_attributes = []
-    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+    for attribute_name, attribute_value in sorted(event_attributes):
       if attribute_name in unformatted_attributes:
         # Some parsers have written bytes values to storage.
         if isinstance(attribute_value, bytes):
@@ -208,19 +213,21 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     output_line = '{0:s}\n'.format(output_line)
     self._output_writer.Write(output_line)
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
           type in the event data.object.
     """
-    output_values = self._GetOutputValues(event, event_data, event_tag)
+    output_values = self._GetOutputValues(
+        event, event_data, event_data_stream, event_tag)
 
     output_values[3] = self._output_mediator.GetMACBRepresentation(
         event, event_data)
@@ -237,7 +244,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     output_values = self._GetOutputValues(*event_macb_group[0])
 
     timestamp_descriptions = [
-        event.timestamp_desc for event, _, _ in event_macb_group]
+        event.timestamp_desc for event, _, _, _ in event_macb_group]
     output_values[3] = (
         self._output_mediator.GetMACBRepresentationFromDescriptions(
             timestamp_descriptions))

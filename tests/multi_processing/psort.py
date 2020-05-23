@@ -52,7 +52,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     """
     return
 
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event object.
 
     Args:
@@ -60,6 +60,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     return
 
@@ -100,15 +101,16 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self.events = []
     self.macb_groups = []
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes the body of an event object to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    self.events.append((event, event_data, event_tag))
+    self.events.append((event, event_data, event_data_stream, event_tag))
 
   def WriteHeader(self):
     """Writes the header to the output."""
@@ -162,8 +164,8 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    macb_group_identifier, content_identifier = (
-        event_heap._GetEventIdentifiers(event, event_data))
+    macb_group_identifier, content_identifier = event_heap._GetEventIdentifiers(
+        event, event_data, None)
 
     expected_identifier = 'data_type: test:event'
     self.assertEqual(macb_group_identifier, expected_identifier)
@@ -182,7 +184,7 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
     for event, event_data in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
-      event_heap.PushEvent(event, event_data)
+      event_heap.PushEvent(event, event_data, None)
 
     self.assertEqual(len(event_heap._heap), 2)
 
@@ -202,7 +204,7 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
     for event, event_data in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
-      event_heap.PushEvent(event, event_data)
+      event_heap.PushEvent(event, event_data, None)
 
     self.assertEqual(len(event_heap._heap), 2)
 
@@ -219,7 +221,7 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    event_heap.PushEvent(event, event_data)
+    event_heap.PushEvent(event, event_data, None)
 
     self.assertEqual(len(event_heap._heap), 1)
 
@@ -373,18 +375,22 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
 
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'storage.plaso')
-      self._CreateTestStorageFile(temp_file)
+    try:
+      with shared_test_lib.TempDirectory() as temp_directory:
+        temp_file = os.path.join(temp_directory, 'storage.plaso')
+        self._CreateTestStorageFile(temp_file)
 
-      storage_reader = (
-          storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      storage_reader.ReadSystemConfiguration(knowledge_base_object)
+        storage_reader = (
+            storage_factory.StorageFactory.CreateStorageReaderForFile(
+                temp_file))
+        storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
-      test_engine._ExportEvents(
-          storage_reader, output_module, deduplicate_events=False)
+        test_engine._ExportEvents(
+            storage_reader, output_module, deduplicate_events=False)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(TestEventFormatter)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          TestEventFormatter)
 
     self.assertEqual(len(output_module.events), 17)
     self.assertEqual(len(output_module.macb_groups), 3)
@@ -406,17 +412,21 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
 
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'storage.plaso')
-      self._CreateTestStorageFile(temp_file)
+    try:
+      with shared_test_lib.TempDirectory() as temp_directory:
+        temp_file = os.path.join(temp_directory, 'storage.plaso')
+        self._CreateTestStorageFile(temp_file)
 
-      storage_reader = (
-          storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      storage_reader.ReadSystemConfiguration(knowledge_base_object)
+        storage_reader = (
+            storage_factory.StorageFactory.CreateStorageReaderForFile(
+                temp_file))
+        storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
-      test_engine._ExportEvents(storage_reader, output_module)
+        test_engine._ExportEvents(storage_reader, output_module)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(TestEventFormatter)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          TestEventFormatter)
 
     lines = []
     output = output_writer.ReadOutput()

@@ -60,12 +60,17 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
     formatters_manager.FormattersManager.RegisterFormatter(
         test_lib.TestEventFormatter)
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data, None)
+    try:
+      self._output_module.WriteEventBody(event, event_data, None, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          test_lib.TestEventFormatter)
 
     expected_event_body = (
         '1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
@@ -74,11 +79,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
-
     self.assertEqual(event_body.count('|'), 4)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
 
 
 class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
@@ -121,12 +122,17 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
     formatters_manager.FormattersManager.RegisterFormatter(
         test_lib.TestEventFormatter)
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data, None)
+    try:
+      self._output_module.WriteEventBody(event, event_data, None, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          test_lib.TestEventFormatter)
 
     expected_event_body = (
         '1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
@@ -138,9 +144,6 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(event_body, expected_event_body)
 
     self.assertEqual(event_body.count('|'), 6)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
 
 
 if __name__ == '__main__':

@@ -78,10 +78,12 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         test_lib.TestEventFormatter)
 
-    json_string = output_module._WriteSerialized(event, event_data, None)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
+    try:
+      json_string = output_module._WriteSerialized(
+          event, event_data, None, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          test_lib.TestEventFormatter)
 
     self.assertEqual(json_string, expected_json_string)
 
@@ -136,11 +138,12 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         test_lib.TestEventFormatter)
 
-    json_dict = output_module._WriteSerializedDict(
-        event, event_data, None)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
+    try:
+      json_dict = output_module._WriteSerializedDict(
+          event, event_data, None, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          test_lib.TestEventFormatter)
 
     self.assertEqual(json_dict, expected_json_dict)
 

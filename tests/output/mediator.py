@@ -52,50 +52,59 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetEventFormatter(self):
     """Tests the GetEventFormatter function."""
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
     formatters_manager.FormattersManager.RegisterFormatter(
         TestEventFormatter)
 
-    _, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    event_formatter = self._output_mediator.GetEventFormatter(event_data)
-    self.assertIsInstance(event_formatter, TestEventFormatter)
+    try:
+      event_formatter = self._output_mediator.GetEventFormatter(event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          TestEventFormatter)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
+    self.assertIsInstance(event_formatter, TestEventFormatter)
 
   def testGetFormattedMessages(self):
     """Tests the GetFormattedMessages function."""
+    _, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
     formatters_manager.FormattersManager.RegisterFormatter(
         TestEventFormatter)
+
+    try:
+      message, message_short = self._output_mediator.GetFormattedMessages(
+          event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          TestEventFormatter)
 
     expected_message = (
         'Reporter <CRON> PID: 8442'
         ' (pam_unix(cron:session): session closed for user root)')
 
-    _, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    message, message_short = self._output_mediator.GetFormattedMessages(
-        event_data)
     self.assertEqual(message, expected_message)
     self.assertEqual(message_short, expected_message)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
-
   def testGetFormattedSources(self):
     """Tests the GetFormattedSources function."""
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
     formatters_manager.FormattersManager.RegisterFormatter(
         TestEventFormatter)
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    source_short, source = self._output_mediator.GetFormattedSources(
-        event, event_data)
+    try:
+      source_short, source = self._output_mediator.GetFormattedSources(
+          event, event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          TestEventFormatter)
+
     self.assertEqual(source, 'Syslog')
     self.assertEqual(source_short, 'LOG')
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
 
   def testGetHostname(self):
     """Tests the GetHostname function."""
