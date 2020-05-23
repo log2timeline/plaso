@@ -28,6 +28,7 @@ class BaseStore(object):
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
   _CONTAINER_TYPE_EXTRACTION_ERROR = (
@@ -46,6 +47,7 @@ class BaseStore(object):
       _CONTAINER_TYPE_EXTRACTION_WARNING,
       _CONTAINER_TYPE_EVENT,
       _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT_DATA_STREAM,
       _CONTAINER_TYPE_EVENT_SOURCE,
       _CONTAINER_TYPE_EVENT_TAG,
       _CONTAINER_TYPE_SESSION_COMPLETION,
@@ -191,6 +193,20 @@ class BaseStore(object):
         self._CONTAINER_TYPE_EVENT_DATA, event_data,
         serialized_data=serialized_data)
 
+  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+    """Adds an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+      serialized_data (Optional[bytes]): serialized form of the event data
+          stream.
+    """
+    self._RaiseIfNotWritable()
+
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM, event_data_stream,
+        serialized_data=serialized_data)
+
   def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
@@ -261,6 +277,26 @@ class BaseStore(object):
     """
     return self._GetAttributeContainerByIdentifier(
         self._CONTAINER_TYPE_EVENT_DATA, identifier)
+
+  def GetEventDataStream(self):
+    """Retrieves the event data stream.
+
+    Returns:
+      generator(EventDataStream): event data stream generator.
+    """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA_STREAM)
+
+  def GetEventDataStreamByIdentifier(self, identifier):
+    """Retrieves specific event data stream.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data stream identifier.
+
+    Returns:
+      EventDataStream: event data stream or None if not available.
+    """
+    return self._GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
 
   def GetEvents(self):
     """Retrieves the events.
@@ -728,6 +764,25 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetEventDataStream(self):
+    """Retrieves the event data stream.
+
+    Yields:
+      EventDataStream: event data stream.
+    """
+
+  @abc.abstractmethod
+  def GetEventDataStreamByIdentifier(self, identifier):
+    """Retrieves a specific event data stream.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data stream identifier.
+
+    Returns:
+      EventDataStream: event data stream or None if not available.
+    """
+
+  @abc.abstractmethod
   def GetEvents(self):
     """Retrieves the events.
 
@@ -916,6 +971,16 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
+  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+    """Adds an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+      serialized_data (Optional[bytes]): serialized form of the event data
+          stream.
+    """
+
+  @abc.abstractmethod
   def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
@@ -982,6 +1047,17 @@ class StorageWriter(object):
 
     Returns:
       EventData: event data or None if not available.
+    """
+
+  @abc.abstractmethod
+  def GetEventDataStreamByIdentifier(self, identifier):
+    """Retrieves a specific event data stream.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data stream identifier.
+
+    Returns:
+      EventDataStream: event data stream or None if not available.
     """
 
   @abc.abstractmethod

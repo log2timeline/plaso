@@ -19,6 +19,7 @@ class EventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventData()
 
     expected_attribute_names = [
+        '_event_data_stream_row_identifier',
         'data_type',
         'offset',
         'parser',

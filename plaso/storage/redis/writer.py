@@ -128,6 +128,16 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddEventData(event_data, serialized_data=serialized_data)
 
+  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+    """Adds an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+      serialized_data (Optional[bytes]): serialized form of the event data
+          stream.
+    """
+    self._store.AddEventData(event_data_stream, serialized_data=serialized_data)
+
   def AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.
 
@@ -176,6 +186,17 @@ class RedisStorageWriter(interface.StorageWriter):
       EventData: event data or None if not available.
     """
     return self._store.GetEventDataByIdentifier(identifier)
+
+  def GetEventDataStreamByIdentifier(self, identifier):
+    """Retrieves a specific event data stream.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data stream identifier.
+
+    Returns:
+      EventDataStream: event data stream or None if not available.
+    """
+    return self._store.GetEventDataStreamByIdentifier(identifier)
 
   def GetEvents(self):
     """Retrieves the events.

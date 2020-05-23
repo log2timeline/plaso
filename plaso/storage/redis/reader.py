@@ -65,6 +65,25 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.GetEventDataByIdentifier(identifier)
 
+  def GetEventDataStream(self):
+    """Retrieves the event data stream.
+
+    Returns:
+      generator(EventDataStream): event data stream generator.
+    """
+    return self._store.GetEventDataStream()
+
+  def GetEventDataStreamByIdentifier(self, identifier):
+    """Retrieves a specific event data stream.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data stream identifier.
+
+    Returns:
+      EventDataStream: event data stream or None if not available.
+    """
+    return self._store.GetEventDataStreamByIdentifier(identifier)
+
   def GetEvents(self):
     """Retrieves the events.
 

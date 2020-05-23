@@ -24,6 +24,8 @@ class EventData(interface.AttributeContainer):
   """
   CONTAINER_TYPE = 'event_data'
 
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_stream_row_identifier']
+
   def __init__(self, data_type=None):
     """Initializes an event data attribute container.
 
@@ -32,6 +34,7 @@ class EventData(interface.AttributeContainer):
     """
     super(EventData, self).__init__()
     self._event_data_stream_identifier = None
+    self._event_data_stream_row_identifier = None
     self.data_type = data_type
     self.offset = None
     self.parser = None
