@@ -221,7 +221,7 @@ class PstealTool(
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
-    for item, value in iter(session.analysis_reports_counter.items()):
+    for item, value in session.analysis_reports_counter.items():
       counter[item] = value
 
     if self._quiet_mode:

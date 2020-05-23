@@ -129,8 +129,7 @@ class MactimeParser(dsv_parser.DSVParser):
       # Note that the user_sid value is expected to be a string.
       event_data.user_sid = '{0:d}'.format(user_uid)
 
-    for value_name, timestamp_description in iter(
-        self._TIMESTAMP_DESC_MAP.items()):
+    for value_name, timestamp_description in self._TIMESTAMP_DESC_MAP.items():
       posix_time = self._GetIntegerValue(row, value_name)
       # mactime will return 0 if the timestamp is not set.
       if not posix_time:

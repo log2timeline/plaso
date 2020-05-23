@@ -45,7 +45,7 @@ class BluetoothPlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     device_cache = match.get('DeviceCache', {})
-    for device, value in iter(device_cache.items()):
+    for device, value in device_cache.items():
       name = value.get('Name', '')
       if name:
         name = ''.join(('Name:', name))

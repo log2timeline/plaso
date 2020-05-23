@@ -158,7 +158,7 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
     projects = []
     tags = []
-    for project, entries in iter(hash_information.items()):
+    for project, entries in hash_information.items():
       if not entries:
         continue
 

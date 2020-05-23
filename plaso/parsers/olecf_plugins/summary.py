@@ -123,7 +123,7 @@ class OLECFPropertySetStream(object):
     event_data = events.EventData(data_type=self._EVENT_DATA_TYPE)
     event_data.name = self._EVENT_DATA_NAME
 
-    for property_name, property_value in iter(self._properties.items()):
+    for property_name, property_value in self._properties.items():
       if isinstance(property_value, bytes):
         property_value = repr(property_value)
       setattr(event_data, property_name, property_value)
@@ -314,7 +314,7 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
       summary_information = OLECFSummaryInformation(item)
       event_data = summary_information.GetEventData()
 
-      for property_name, date_time in iter(
+      for property_name, date_time in (
           summary_information.date_time_properties.items()):
         date_time_description = self._DATE_TIME_DESCRIPTIONS.get(
             property_name, definitions.TIME_DESCRIPTION_UNKNOWN)

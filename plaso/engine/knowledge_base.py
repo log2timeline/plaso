@@ -256,7 +256,7 @@ class KnowledgeBase(object):
     path = path.lower()
 
     user_accounts = self._user_accounts.get(self._active_session, {})
-    for user_account in iter(user_accounts.values()):
+    for user_account in user_accounts.values():
       if not user_account.user_directory:
         continue
 

@@ -118,7 +118,7 @@ class BaseParser(object):
       return
 
     default_plugin_name = '{0:s}_default'.format(self.NAME)
-    for plugin_name, plugin_class in iter(self._plugin_classes.items()):
+    for plugin_name, plugin_class in self._plugin_classes.items():
       if plugin_name == default_plugin_name:
         self._default_plugin = plugin_class()
         continue
@@ -163,7 +163,7 @@ class BaseParser(object):
     Yields:
       tuple[str, type]: name and class of the plugin.
     """
-    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+    for plugin_name, plugin_class in cls._plugin_classes.items():
       yield plugin_name, plugin_class
 
   @classmethod

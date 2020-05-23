@@ -447,7 +447,7 @@ class ChromeCacheParser(interface.FileEntryParser):
       self._ParseCacheEntries(
           parser_mediator, index_table, data_block_files)
     finally:
-      for data_block_file_object in iter(data_block_files.values()):
+      for data_block_file_object in data_block_files.values():
         if data_block_file_object:
           data_block_file_object.close()
 

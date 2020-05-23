@@ -552,7 +552,7 @@ class PsortTool(
           worker_memory_limit=self._worker_memory_limit)
 
       analysis_counter = collections.Counter()
-      for item, value in iter(session.analysis_reports_counter.items()):
+      for item, value in session.analysis_reports_counter.items():
         analysis_counter[item] = value
 
     if self._output_format != 'null':

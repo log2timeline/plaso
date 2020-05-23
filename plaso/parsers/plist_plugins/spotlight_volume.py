@@ -29,7 +29,7 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     stores = match.get('Stores', {})
-    for volume_name, volume in iter(stores.items()):
+    for volume_name, volume in stores.items():
       datetime_value = volume.get('CreationDate', None)
       if not datetime_value:
         continue

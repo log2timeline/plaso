@@ -274,7 +274,7 @@ class ParsersManager(object):
         parser_filter_expression)
 
     parser_objects = {}
-    for parser_name, parser_class in iter(cls._parser_classes.items()):
+    for parser_name, parser_class in cls._parser_classes.items():
       # If there are no includes all parsers are included by default.
       if not includes and parser_name in excludes:
         continue
@@ -319,7 +319,7 @@ class ParsersManager(object):
     excludes, includes = parser_filter_helper.SplitExpression(
         parser_filter_expression)
 
-    for parser_name, parser_class in iter(cls._parser_classes.items()):
+    for parser_name, parser_class in cls._parser_classes.items():
       # If there are no includes all parsers are included by default.
       if not includes and parser_name in excludes:
         continue

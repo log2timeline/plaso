@@ -122,7 +122,7 @@ class HashersManager(object):
       list[BaseHasher]: hashers.
     """
     hashers = []
-    for hasher_name, hasher_class in iter(cls._hasher_classes.items()):
+    for hasher_name, hasher_class in cls._hasher_classes.items():
       if hasher_name in hasher_names:
         hashers.append(hasher_class())
 
@@ -141,7 +141,7 @@ class HashersManager(object):
          str: parser name
          type: next hasher class.
     """
-    for hasher_name, hasher_class in iter(cls._hasher_classes.items()):
+    for hasher_name, hasher_class in cls._hasher_classes.items():
       if not hasher_names or hasher_name in hasher_names:
         yield hasher_name, hasher_class
 

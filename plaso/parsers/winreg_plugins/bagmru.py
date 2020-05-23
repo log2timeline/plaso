@@ -186,7 +186,7 @@ class BagMRUWindowsRegistryPlugin(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    for entry_number, path_segment in iter(entry_numbers.items()):
+    for entry_number, path_segment in entry_numbers.items():
       sub_key_name = '{0:d}'.format(entry_number)
       sub_key = registry_key.GetSubkeyByName(sub_key_name)
       if not sub_key:

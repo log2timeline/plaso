@@ -137,7 +137,7 @@ class MSIECFParser(interface.FileObjectParser):
 
     decode_error = False
     cache_directories = []
-    for cache_directory_name in iter(msiecf_file.cache_directories):
+    for cache_directory_name in msiecf_file.cache_directories:
       try:
         cache_directory_name = cache_directory_name.decode('ascii')
       except UnicodeDecodeError:

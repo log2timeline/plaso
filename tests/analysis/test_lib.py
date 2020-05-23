@@ -149,7 +149,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
-      for identifier, value in iter(knowledge_base_values.items()):
+      for identifier, value in knowledge_base_values.items():
         if identifier == 'users':
           self._SetUserAccounts(knowledge_base_object, value)
         else:

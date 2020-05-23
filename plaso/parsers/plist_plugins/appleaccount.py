@@ -38,9 +38,13 @@ class AppleAccountPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       plist_name (str): name of the plist.
       top_level (dict[str, object]): plist top-level key.
+
+    Raises:
+      WrongPlistPlugin: if this plugin is not able to process the given file
     """
     if not plist_name.startswith(self.PLIST_PATH):
       raise errors.WrongPlistPlugin(self.NAME, plist_name)
+
     super(AppleAccountPlugin, self).Process(
         parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
@@ -54,7 +58,7 @@ class AppleAccountPlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     accounts = match.get('Accounts', {})
-    for name_account, account in iter(accounts.items()):
+    for name_account, account in accounts.items():
       first_name = account.get('FirstName', '<FirstName>')
       last_name = account.get('LastName', '<LastName>')
       general_description = '{0:s} ({1:s} {2:s})'.format(

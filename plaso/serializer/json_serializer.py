@@ -140,7 +140,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       raise TypeError
 
     json_dict = {'__type__': 'collections.Counter'}
-    for attribute_name, attribute_value in iter(collections_counter.items()):
+    for attribute_name, attribute_value in collections_counter.items():
       if attribute_value is None:
         continue
 
@@ -216,7 +216,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
             container_type))
 
     supported_attribute_names = container_object.GetAttributeNames()
-    for attribute_name, attribute_value in iter(json_dict.items()):
+    for attribute_name, attribute_value in json_dict.items():
       # Be strict about which attributes to set in non event data attribute
       # containers.
       if (container_type != 'event_data' and
@@ -272,7 +272,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """
     collections_counter = collections.Counter()
 
-    for key, value in iter(json_dict.items()):
+    for key, value in json_dict.items():
       if key == '__type__':
         continue
       collections_counter[key] = value

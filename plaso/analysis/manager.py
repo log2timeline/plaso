@@ -57,7 +57,7 @@ class AnalysisPluginManager(object):
           analysis plugin in alphabetical order.
     """
     results = []
-    for plugin_class in iter(cls._plugin_classes.values()):
+    for plugin_class in cls._plugin_classes.values():
       plugin_object = plugin_class()
       if not show_all and not plugin_class.ENABLE_IN_EXTRACTION:
         continue
@@ -90,7 +90,7 @@ class AnalysisPluginManager(object):
       dict[str, AnalysisPlugin]: analysis plugins per name.
     """
     plugin_objects = {}
-    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+    for plugin_name, plugin_class in cls._plugin_classes.items():
       if plugin_name not in plugin_names:
         continue
 
@@ -108,7 +108,7 @@ class AnalysisPluginManager(object):
         str: name of the plugin
         type: plugin class
     """
-    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+    for plugin_name, plugin_class in cls._plugin_classes.items():
       yield plugin_name, plugin_class
 
   @classmethod

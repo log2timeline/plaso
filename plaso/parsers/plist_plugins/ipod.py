@@ -45,7 +45,7 @@ class IPodPlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     devices = match.get('Devices', {})
-    for device_identifier, device_information in iter(devices.items()):
+    for device_identifier, device_information in devices.items():
       datetime_value = device_information.get('Connected', None)
       if not datetime_value:
         continue
@@ -54,7 +54,7 @@ class IPodPlugin(interface.PlistPlugin):
       event_data.device_id = device_identifier
 
       # TODO: refactor.
-      for key, value in iter(device_information.items()):
+      for key, value in device_information.items():
         if key == 'Connected':
           continue
         attribute_name = key.lower().replace(' ', '_')

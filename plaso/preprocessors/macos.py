@@ -37,7 +37,7 @@ class PlistFileArtifactPreprocessorPlugin(
       names (list[str]): names of the keys to match.
       matches (list[str]): keys with matching names.
     """
-    for name, subkey in iter(key.items()):
+    for name, subkey in key.items():
       if name in names:
         matches.append((name, subkey))
 

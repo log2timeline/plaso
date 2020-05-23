@@ -67,9 +67,12 @@ class UTorrentPlugin(interface.BencodePlugin):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       data (Optional[dict[str, object]]): bencode data values.
+
+    Raises:
+      WrongBencodePlugin: If this plugin is not able to process the given file.
     """
     # Walk through one of the torrent keys to ensure it's from a valid file.
-    for key, value in iter(data.items()):
+    for key, value in data.items():
       if not '.torrent' in key:
         continue
 
@@ -79,7 +82,7 @@ class UTorrentPlugin(interface.BencodePlugin):
       if not caption or not path or seedtime < 0:
         raise errors.WrongBencodePlugin(self.NAME)
 
-    for torrent, value in iter(data.items()):
+    for torrent, value in data.items():
       if not '.torrent' in torrent:
         continue
 
@@ -92,7 +95,7 @@ class UTorrentPlugin(interface.BencodePlugin):
       event_data.seedtime, _ = divmod(seedtime, 60)
 
       # Create timeline events based on extracted values.
-      for event_key, event_value in iter(value.items()):
+      for event_key, event_value in value.items():
         if event_key == 'added_on':
           date_time = dfdatetime_posix_time.PosixTime(timestamp=event_value)
           event = time_events.DateTimeValuesEvent(

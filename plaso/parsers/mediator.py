@@ -449,7 +449,7 @@ class ParserMediator(object):
     if not getattr(event_data, 'query', None) and query:
       event_data.query = query
 
-    for attribute, value in iter(self._extra_event_attributes.items()):
+    for attribute, value in self._extra_event_attributes.items():
       if hasattr(event_data, attribute):
         raise KeyError('Event already has a value for {0:s}'.format(attribute))
 

@@ -120,7 +120,7 @@ class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
     security = event_values.get('security', None)
     if security:
       security_flags = []
-      for flag, description in iter(self._SECURITY_VALUES.items()):
+      for flag, description in self._SECURITY_VALUES.items():
         if security & flag:
           security_flags.append(description)
 
@@ -129,7 +129,7 @@ class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
 
       event_values['security'] = security_string
 
-    for key, value in iter(event_values.items()):
+    for key, value in event_values.items():
       if isinstance(value, bytes):
         event_values[key] = repr(value)
 

@@ -94,7 +94,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
         return
 
     matched_label_names = []
-    for label_name, filter_objects in iter(self._tagging_rules.items()):
+    for label_name, filter_objects in self._tagging_rules.items():
       for filter_object in filter_objects:
         # Note that tagging events based on existing labels is currently
         # not supported.
