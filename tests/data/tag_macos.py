@@ -9,7 +9,6 @@ import unittest
 from plaso.containers import events
 from plaso.containers import plist_event
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import filestat
 from plaso.parsers import syslog
 from plaso.parsers.olecf_plugins import summary
@@ -29,8 +28,6 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
   """
 
   _TAG_FILE = 'tag_macos.txt'
-
-  _TEST_TIMESTAMP = timelib.Timestamp.CopyFromString('2020-04-04 13:46:25')
 
   def testRuleApplicationExecution(self):
     """Tests the application_execution tagging rule."""
