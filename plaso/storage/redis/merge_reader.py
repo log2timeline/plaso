@@ -209,7 +209,7 @@ class RedisMergeReader(interface.StorageMergeReader):
 
     containers = []
     identifiers_to_delete = []
-    for identifier_bytes, serialized_container in iter(items.items()):
+    for identifier_bytes, serialized_container in items.items():
       identifier_string = codecs.decode(identifier_bytes, 'utf-8')
       identifier = identifiers.RedisKeyIdentifier(identifier_string)
       identifiers_to_delete.append(identifier)
@@ -238,8 +238,8 @@ class RedisMergeReader(interface.StorageMergeReader):
     """Reads attribute containers from a task store into the writer.
 
     Args:
-      callback (function[StorageWriter, AttributeContainer]): function to call
-          after each attribute container is deserialized.
+      callback (Optional[function[StorageWriter, AttributeContainer]]): function
+          to call after each attribute container is deserialized.
       maximum_number_of_containers (Optional[int]): maximum number of
           containers to merge, where 0 represent no limit.
 
@@ -254,9 +254,8 @@ class RedisMergeReader(interface.StorageMergeReader):
       self._container_types = self._GetContainerTypes()
 
     number_of_containers = 0
-    while (self._active_cursor or
-           self._container_types or
-           self._active_extra_containers):
+    while (self._active_cursor or self._container_types
+           or self._active_extra_containers):
       if not self._active_cursor and not self._active_extra_containers:
         self._PrepareForNextContainerType()
 

@@ -41,8 +41,8 @@ class RedisStorageWriter(interface.StorageWriter):
       task_storage_format (str): storage format to store task results.
 
     Raises:
-      IOError: always, as creating a task is not supported by the redis store.
-      OSError: always, as creating a task is not supported by the redis store.
+      IOError: always, as creating a task is not supported by the Redis store.
+      OSError: always, as creating a task is not supported by the Redis store.
     """
     raise IOError(
         'Creating a task storage is not supported by the redis store.')
@@ -55,15 +55,15 @@ class RedisStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: always, as creating a finalizing a task storage is not supported
-          by the redis store.
+          by the Redis store.
       OSError: always, as creating a finalizing a task storage is not supported
-          by the redis store.
+          by the Redis store.
     """
     raise IOError(
         'Finalizing a task storage is not supported by the redis store.')
 
   # pylint: disable=arguments-differ
-  def Open(self, redis_client=None):
+  def Open(self, redis_client=None, **unused_kwargs):
     """Opens the storage writer.
 
     Raises:
@@ -100,6 +100,7 @@ class RedisStorageWriter(interface.StorageWriter):
       task (Task): task.
     """
     # No preparations are necessary.
+    return
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.

@@ -122,7 +122,9 @@ class RedisKeyIdentifier(containers_interface.AttributeContainerIdentifier):
     """"Initializes a Redis key identifier.
 
     Args:
-      identifier (Optional[str]): hexadecimal representation of a UUID4 UUID.
+      identifier (Optional[str]): hexadecimal representation of a UUID
+          (version 4). If not specified, a random UUID (version 4) will be
+          generated.
     """
     super(RedisKeyIdentifier, self).__init__()
     if identifier:

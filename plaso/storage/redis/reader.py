@@ -183,6 +183,7 @@ class RedisStorageReader(interface.StorageReader):
           information.
     """
     # Not implemented by the Redis store, as it is a task store only.
+    return
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.

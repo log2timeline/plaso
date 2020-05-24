@@ -160,8 +160,8 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     self._storage_writer.AddEventData(
         event_data, serialized_data=serialized_data)
 
-    post_write_identifier = event_data.GetIdentifier()
-    self._event_data_identifier_mappings[lookup_key] = post_write_identifier
+    last_write_identifier = event_data.GetIdentifier()
+    self._event_data_identifier_mappings[lookup_key] = last_write_identifier
 
   def _AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.

@@ -85,7 +85,7 @@ class RedisStore(interface.BaseStore):
     """Adds an attribute container to the store.
 
    Args:
-      container_type (Type): container type attribute of the container being
+      container_type (str): container type attribute of the container being
           added.
       container (AttributeContainer): unserialized attribute container.
       serialized_data (Optional[bytes]): serialized form of the container.
@@ -102,20 +102,20 @@ class RedisStore(interface.BaseStore):
     string_identifier = identifier.CopyToString()
     self._redis_client.hset(container_key, string_identifier, serialized_data)
 
-  def _GenerateRedisKey(self, subkey):
+  def _GenerateRedisKey(self, key_suffix):
     """Generates a Redis key inside the appropriate namespace.
 
     Args:
-      subkey (str): Redis key to be prefixed with the namespace value.
+      key_suffix (str): Redis key to be prefixed with the namespace value.
 
     Returns:
       str: a Redis key name.
     """
     return '{0:s}-{1:s}-{2:s}'.format(
-        self._session_identifier, self._task_identifier, subkey)
+        self._session_identifier, self._task_identifier, key_suffix)
 
   def _GetAttributeContainers(self, container_type):
-    """Yields attribute containers
+    """Retrieves attribute containers
 
     Args:
       container_type (str): container type attribute of the container being
@@ -140,7 +140,7 @@ class RedisStore(interface.BaseStore):
 
     Args:
       container_type (str): container type.
-      identifier (RedisKeyIdentifier): event data identifier.
+      identifier (RedisKeyIdentifier): attributes container identifier.
 
     Returns:
       AttributeContainer: attribute container or None if not available.
@@ -203,8 +203,7 @@ class RedisStore(interface.BaseStore):
        OSError: if the store cannot be read from.
     """
     if not self._redis_client:
-      raise IOError(
-          'Unable to read, client not connected.')
+      raise IOError('Unable to read, client not connected.')
 
   def _RaiseIfNotWritable(self):
     """Checks that the store is ready to for writing.
@@ -257,7 +256,7 @@ class RedisStore(interface.BaseStore):
     """Removes an attribute container from the store.
 
     Args:
-      container_type (Type): container type attribute of the container being
+      container_type (str): container type attribute of the container being
           removed.
       identifier (AttributeContainerIdentifier): event data identifier.
     """
@@ -274,7 +273,7 @@ class RedisStore(interface.BaseStore):
     """Removes multiple attribute containers from the store.
 
     Args:
-      container_type (Type): container type attribute of the container being
+      container_type (str): container type attribute of the container being
           removed.
       container_identifiers (list[AttributeContainerIdentifier]):
           event data identifier.
@@ -322,7 +321,7 @@ class RedisStore(interface.BaseStore):
 
     Args:
       time_range (Optional[TimeRange]): This argument is not supported by the
-          redis store.
+          Redis store.
 
     Yields:
       EventObject: event.
@@ -366,7 +365,7 @@ class RedisStore(interface.BaseStore):
     return cursor, items
 
   # pylint: disable=arguments-differ
-  def Open(self, redis_client=None, url=None):
+  def Open(self, redis_client=None, url=None, **unused_kwargs):
     """Opens the store.
 
     Args:
@@ -420,7 +419,7 @@ class RedisStore(interface.BaseStore):
     """Scans a Redis database for processed tasks.
 
     Args:
-      session_identifier (Optional[str]): session identifier, formatted as
+      session_identifier (str): session identifier, formatted as
           a UUID.
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
@@ -429,8 +428,9 @@ class RedisStore(interface.BaseStore):
 
     Returns:
       tuple: containing
-        list[str]: identifiers of processed tasks.
-        Redis: Redis client used for the query.
+          list[str]: identifiers of processed tasks, which may be empty if the
+              connection to Redis times out.
+          Redis: Redis client used for the query.
     """
     if not url:
       url = cls.DEFAULT_REDIS_URL
@@ -457,8 +457,7 @@ class RedisStore(interface.BaseStore):
 
     Args:
       task_identifier (str): identifier of the task.
-      session_identifier (str): session identifier, formatted as
-            a UUID.
+      session_identifier (str): session identifier, formatted as a UUID.
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
       url (Optional[str]): URL for a Redis database. If not specified,

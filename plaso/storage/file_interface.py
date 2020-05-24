@@ -816,7 +816,7 @@ class StorageFileWriter(interface.StorageWriter):
     if not task.storage_format in definitions.SESSION_STORAGE_FORMATS:
       raise IOError('Unsupported storage format')
 
-    # Not that Redis task stores do not need finalization.
+    # Note that Redis task stores do not need finalization.
     if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
       storage_file_path = self._GetTaskStorageFilePath(task)
       processed_storage_file_path = self._GetProcessedStorageFilePath(task)
