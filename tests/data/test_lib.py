@@ -75,7 +75,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
         event_data = event_data_class()
         for attribute_name, attribute_values in (
             attribute_values_per_name.items()):
-          attribute_value_index = min(test_index, len(attribute_values))
+          attribute_value_index = min(test_index, len(attribute_values) - 1)
           attribute_value = attribute_values[attribute_value_index]
           setattr(event_data, attribute_name, attribute_value)
 

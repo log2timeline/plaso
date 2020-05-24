@@ -31,10 +31,6 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testRuleApplicationExecution(self):
     """Tests the application_execution tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'bash:history:command'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
@@ -76,412 +72,116 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testRuleLogin(self):
     """Tests the login tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'linux:utmp:event' AND type == 7
-    event_data = utmp.UtmpEventData()
-    event_data.type = 0
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.type = 7
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
+    attribute_values_per_name = {
+        'type': [7]}
+    self._CheckTaggingRule(
+        utmp.UtmpEventData, attribute_values_per_name,
+        ['login'])
 
     # Test: data_type is 'selinux:line' AND audit_type is 'LOGIN'
-    event_data = selinux.SELinuxLogEventData()
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'LOGIN'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
+    attribute_values_per_name = {
+        'audit_type': ['LOGIN']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['login'])
 
     # Test: reporter is 'login' AND (body contains 'logged in' OR
     #       body contains 'ROOT LOGIN' OR body contains 'session opened')
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'login'
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'logged in'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'login'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
-
-    event_data.body = 'ROOT LOGIN'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
-
-    event_data.body = 'session opened'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
+    attribute_values_per_name = {
+        'body': ['logged in', 'ROOT LOGIN', 'session opened'],
+        'reporter': ['login']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login'])
 
     # Test: reporter is 'sshd' AND (body contains 'session opened' OR
     #       body contains 'Starting session')
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'sshd'
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'session opened'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'sshd'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
-
-    event_data.body = 'Starting session'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
+    attribute_values_per_name = {
+        'body': ['session opened', 'Starting session'],
+        'reporter': ['sshd']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login'])
 
     # Test: reporter is 'dovecot' AND body contains 'imap-login: Login:'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'dovecot'
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'imap-login: Login: user='
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'dovecot'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
+    attribute_values_per_name = {
+        'body': ['imap-login: Login:'],
+        'reporter': ['dovecot']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login'])
 
     # Test: reporter is 'postfix/submission/smtpd' AND body contains 'sasl_'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'postfix/submission/smtpd'
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'sasl_method=PLAIN, sasl_username='
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'postfix/submission/smtpd'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login'])
+    attribute_values_per_name = {
+        'body': ['sasl_method=PLAIN, sasl_username='],
+        'reporter': ['postfix/submission/smtpd']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login'])
 
   def testRuleLoginFailed(self):
     """Tests the login_failed tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'selinux:line' AND audit_type is 'ANOM_LOGIN_FAILURES'
-    event_data = selinux.SELinuxLogEventData()
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'ANOM_LOGIN_FAILURES'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
+    attribute_values_per_name = {
+        'audit_type': ['ANOM_LOGIN_FAILURES']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['login_failed'])
 
     # Test: data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND
     #       body contains 'res=failed'
-    event_data = selinux.SELinuxLogEventData()
-    event_data.audit_type = 'bogus'
-    event_data.body = 'res=failed'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'USER_LOGIN'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'USER_LOGIN'
-    event_data.body = 'res=failed'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
+    attribute_values_per_name = {
+        'audit_type': ['USER_LOGIN'],
+        'body': ['res=failed']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['login_failed'])
 
     # Test: data_type is 'syslog:line' AND body contains 'pam_tally2'
-    event_data = syslog.SyslogLineEventData()
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.body = 'pam_tally2'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
+    attribute_values_per_name = {
+        'body': ['pam_tally2']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login_failed'])
 
     # Test: (reporter is 'sshd' OR
     #        reporter is 'login' OR
     #        reporter is 'postfix/submission/smtpd' OR
     #        reporter is 'sudo') AND
     #        body contains 'uthentication fail'
-    # Test the reporter is 'bogus' cases first with all the message bodies
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'bogus'
-    event_data.body = 'Authentication failure'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.body = 'authentication failure'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.body = 'authentication failed'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    # Test the message body 'bogus' cases for all reporters
-    event_data.reporter = 'sshd'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'login'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'postfix/submission/smtpd'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'sudo'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    # reporter is 'login'
-    event_data.reporter = 'login'
-    event_data.body = 'Authentication failure'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
-
-    # these come from PAM modules
-    event_data.body = 'authentication failure'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
-
-    # reporter is 'sshd'
-    event_data.reporter = 'sshd'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
-
-    # reporter is 'sudo'
-    event_data.reporter = 'sudo'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
-
-    # reporter is 'postfix/submission/smtpd'
-    event_data.reporter = 'postfix/submission/smtpd'
-    event_data.body = 'authentication failed'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
+    attribute_values_per_name = {
+        'body': ['authentication failed', 'authentication failure',
+                 'Authentication failure'],
+        'reporter': ['login', 'postfix/submission/smtpd', 'sshd', 'sudo']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login_failed'])
 
     # Test: (reporter is 'xscreensaver' or
     #        reporter is 'login') AND
     #       body contains 'FAILED LOGIN'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'bogus'
-    event_data.body = 'FAILED LOGIN'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'xscreensaver'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'login'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.body = 'FAILED LOGIN'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
-
-    event_data.reporter = 'xscreensaver'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
+    attribute_values_per_name = {
+        'body': ['FAILED LOGIN'],
+        'reporter': ['login', 'xscreensaver']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login_failed'])
 
     # Test: reporter is 'su' AND body contains 'DENIED'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'bogus'
-    event_data.body = 'DENIED su from'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'su'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.body = 'DENIED su from'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
+    attribute_values_per_name = {
+        'body': ['DENIED su from'],
+        'reporter': ['su']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login_failed'])
 
     # Test: reporter is 'nologin'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'nologin'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['login_failed'])
+    attribute_values_per_name = {
+        'reporter': ['nologin']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['login_failed'])
 
   def testRuleLogout(self):
     """Tests the logout tagging rule."""
