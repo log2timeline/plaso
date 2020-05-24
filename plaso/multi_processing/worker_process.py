@@ -176,7 +176,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         try:
           task = self._task_queue.PopItem()
         except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logger.debug('ConsumeItems exiting with exception {0:s}.'.format(
+          logger.debug('ConsumeItems exiting with exception: {0!s}.'.format(
               type(exception)))
           break
 

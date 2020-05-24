@@ -157,7 +157,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
           queued_object = self._event_queue.PopItem()
 
         except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logger.debug('ConsumeItems exiting with exception {0:s}.'.format(
+          logger.debug('ConsumeItems exiting with exception {0!s}.'.format(
               type(exception)))
           break
 

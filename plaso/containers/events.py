@@ -202,7 +202,7 @@ class EventTag(interface.AttributeContainer):
       ValueError: if a label is malformed.
     """
     if not isinstance(label, str):
-      raise TypeError('label is not a string type. Is {0:s}'.format(
+      raise TypeError('label is not a string type. Is {0!s}'.format(
           type(label)))
 
     if not self._VALID_LABEL_REGEX.match(label):
