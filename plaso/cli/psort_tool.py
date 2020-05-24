@@ -526,6 +526,8 @@ class PsortTool(
 
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location
+    configuration.debug_output = self._debug_mode
+    configuration.log_filename = self._log_file
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.sample_rate = self._profiling_sample_rate
     configuration.profiling.profilers = self._profilers
