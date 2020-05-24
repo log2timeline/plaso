@@ -35,8 +35,8 @@ class SyslogPlugin(plugins.BasePlugin):
     """Parses a syslog body that matched one of the grammars the plugin defined.
 
     Args:
-      parser_mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       date_time (dfdatetime.DateTimeValues): date and time values.
       tokens (dict[str, str]): names of the fields extracted by the syslog
@@ -49,8 +49,8 @@ class SyslogPlugin(plugins.BasePlugin):
     """Processes the data structure produced by the parser.
 
     Args:
-      parser_mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       date_time (dfdatetime.DateTimeValues): date and time values.
       syslog_tokens (dict[str, str]): names of the fields extracted by the
           syslog parser and the matching grammar, and values are the values of
