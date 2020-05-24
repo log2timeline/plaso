@@ -12,22 +12,11 @@ from plaso.parsers import google_logging
 from tests.parsers import test_lib
 
 
-class GooglelogTest(test_lib.ParserTestCase):
+class GooglelogParserTest(test_lib.ParserTestCase):
   """Tests for the Google logging parser"""
 
-  def testEventsParsed(self):
-    """Test that the parser produces events, and the number we expect."""
-    parser = google_logging.GoogleLogParser()
-    knowledge_base_values = {'year': 2020}
-    storage_writer = self._ParseFile(
-        ['googlelog_test.INFO'], parser,
-        knowledge_base_values=knowledge_base_values)
-
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 4)
-
-  def testFirstEventAsExpected(self):
-    """Check that the fields in the first event has the correct values."""
+  def testParse(self):
+    """Tests the parse function on an example file."""
     parser = google_logging.GoogleLogParser()
     knowledge_base_values = {'year': 2020}
     storage_writer = self._ParseFile(
@@ -39,43 +28,7 @@ class GooglelogTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.priority, 'I')
-    self.assertEqual(event_data.line_number, '65')
-    self.assertEqual(event_data.file_name, 'logging_functional_test_helper.py')
-    self.assertEqual(event_data.message, 'This line is VLOG level 0')
-
-  def testMultilineEventAsExpected(self):
-    """Check that an event that spans multiple lines is processed correctly."""
-    parser = google_logging.GoogleLogParser()
-    knowledge_base_values = {'year': 2020}
-    storage_writer = self._ParseFile(
-        ['googlelog_test.INFO'], parser,
-        knowledge_base_values=knowledge_base_values)
-
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 4)
-
-    events = list(storage_writer.GetSortedEvents())
-
-    event = events[2]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    message = event_data.message
-
-    self.assertIn('\n', message)
-
-  def testEventFormatting(self):
-    """Test that the events are formatting correctly."""
-    parser = google_logging.GoogleLogParser()
-    knowledge_base_values = {'year': 2020}
-    storage_writer = self._ParseFile(
-        ['googlelog_test.INFO'], parser,
-        knowledge_base_values=knowledge_base_values)
-
-    events = list(storage_writer.GetSortedEvents())
-
+    # Test a regular event.
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2019-12-31 23:59:59.000002')
@@ -86,15 +39,27 @@ class GooglelogTest(test_lib.ParserTestCase):
     expected_short = 'This line is log level 0'
     self._TestGetMessageStrings(event_data, expected_string, expected_short)
 
+   # Test a multiline event.
+    multi_line_event = events[2]
+    multi_line_event_data = self._GetEventDataOfEvent(
+        storage_writer, multi_line_event)
+    multi_line_message = multi_line_event_data.message
+
+    self.assertIn('\n', multi_line_message)
+
   def testRaisesUnableToParseForInvalidFiles(self):
     """Test that attempting to parse an invalid file should raise an error."""
     parser = google_logging.GoogleLogParser()
     knowledge_base_values = {'year': 2020}
 
-    for invalid_file in ['access.log']:
-      with self.assertRaises(errors.UnableToParseFile):
-        self._ParseFile(
-            [invalid_file], parser, knowledge_base_values=knowledge_base_values)
+    invalid_file_name = 'access.log'
+    invalid_file_path = self._GetTestFilePath([invalid_file_name])
+    self._SkipIfPathNotExists(invalid_file_path)
+
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(
+          [invalid_file_name], parser,
+          knowledge_base_values=knowledge_base_values)
 
 
 if __name__ == '__main__':
