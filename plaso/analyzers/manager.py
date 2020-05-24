@@ -77,7 +77,7 @@ class AnalyzersManager(object):
       list[BaseAnalyzer]: analyzer instances.
     """
     analyzer_instances = []
-    for analyzer_name, analyzer_class in iter(cls.GetAnalyzers()):
+    for analyzer_name, analyzer_class in cls.GetAnalyzers():
       if analyzer_name in analyzer_names:
         analyzer_instances.append(analyzer_class())
 
@@ -102,7 +102,7 @@ class AnalyzersManager(object):
         str: the uniquely identifying name of the analyzer
         type: the analyzer class.
     """
-    for analyzer_name, analyzer_class in iter(cls._analyzer_classes.items()):
+    for analyzer_name, analyzer_class in cls._analyzer_classes.items():
       yield analyzer_name, analyzer_class
 
   @classmethod

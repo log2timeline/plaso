@@ -420,7 +420,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
     event_data.sources = number_of_sources
     event_data.url = url
 
-    for key, value in iter(extra_attributes.items()):
+    for key, value in extra_attributes.items():
       setattr(event_data, key, value)
 
     event = time_events.DateTimeValuesEvent(date_time, timestamp_description)

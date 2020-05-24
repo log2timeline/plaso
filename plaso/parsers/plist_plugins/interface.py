@@ -253,7 +253,7 @@ def RecurseKey(recur_item, depth=15, key_path=''):
   if not hasattr(recur_item, 'items'):
     return
 
-  for subkey, value in iter(recur_item.items()):
+  for subkey, value in recur_item.items():
     yield key_path, subkey, value
 
     if isinstance(value, dict):

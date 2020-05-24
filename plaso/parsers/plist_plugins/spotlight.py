@@ -43,7 +43,7 @@ class SpotlightPlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     shortcuts = match.get('UserShortcuts', {})
-    for search_text, data in iter(shortcuts.items()):
+    for search_text, data in shortcuts.items():
       datetime_value = data.get('LAST_USED', None)
       if not datetime_value:
         continue

@@ -220,14 +220,14 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     parser_names = []
     parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression='test_parser')
-    for _, parser in iter(parsers.items()):
+    for parser in parsers.values():
       parser_names.append(parser.NAME)
     self.assertEqual(parser_names, ['test_parser'])
 
     parser_names = []
     parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression='!test_parser')
-    for _, parser in iter(parsers.items()):
+    for parser in parsers.values():
       parser_names.append(parser.NAME)
     self.assertNotEqual(len(parser_names), 0)
     self.assertNotIn('test_parser', parser_names)
@@ -235,7 +235,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     parser_names = []
     parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression='test_parser_with_plugins/test_plugin')
-    for _, parser in iter(parsers.items()):
+    for parser in parsers.values():
       parser_names.append(parser.NAME)
     self.assertEqual(parser_names, ['test_parser_with_plugins'])
 
@@ -243,7 +243,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     parser_names = []
     parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression='test_parser_with_plugins')
-    for _, parser in iter(parsers.items()):
+    for parser in parsers.values():
       parser_names.append(parser.NAME)
     self.assertEqual(parser_names, ['test_parser_with_plugins'])
 

@@ -90,7 +90,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       list[str]: list of strings.
     """
     ret_list = []
-    for key, value in iter(data_dict.items()):
+    for key, value in data_dict.items():
       if key in ('body', 'datetime', 'type', 'room', 'rooms', 'id'):
         continue
       ret_list.append('{0:s} = {1!s}'.format(key, value))

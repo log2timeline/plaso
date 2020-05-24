@@ -64,7 +64,7 @@ class SyslogPlugin(plugins.BasePlugin):
     if not body:
       raise AttributeError('Missing required attribute: body')
 
-    for key, grammar in iter(self.MESSAGE_GRAMMARS):
+    for key, grammar in self.MESSAGE_GRAMMARS:
       try:
         tokens = grammar.parseString(body)
         syslog_tokens.update(tokens.asDict())

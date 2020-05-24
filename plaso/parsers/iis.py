@@ -235,7 +235,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
     event_data = IISEventData()
 
-    for key, value in iter(structure.items()):
+    for key, value in structure.items():
       if key in ('date', 'date_time', 'time') or value == '-':
         continue
 

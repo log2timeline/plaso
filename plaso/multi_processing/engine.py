@@ -66,7 +66,7 @@ class MultiProcessEngine(engine.BaseEngine):
       timeout (int): number of seconds to wait for processes to join, where
           None represents no timeout.
     """
-    for pid, process in iter(self._processes_per_pid.items()):
+    for pid, process in self._processes_per_pid.items():
       logger.debug('Waiting for process: {0:s} (PID: {1:d}).'.format(
           process.name, pid))
       process.join(timeout=timeout)
@@ -76,7 +76,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def _AbortKill(self):
     """Aborts all registered processes by sending a SIGKILL or equivalent."""
-    for pid, process in iter(self._processes_per_pid.items()):
+    for pid, process in self._processes_per_pid.items():
       if not process.is_alive():
         continue
 
@@ -86,7 +86,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def _AbortTerminate(self):
     """Aborts all registered processes by sending a SIGTERM or equivalent."""
-    for pid, process in iter(self._processes_per_pid.items()):
+    for pid, process in self._processes_per_pid.items():
       if not process.is_alive():
         continue
 

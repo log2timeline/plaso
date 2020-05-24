@@ -206,7 +206,7 @@ class WinRegistryParser(interface.FileObjectParser):
       find_specs (dfwinreg.FindSpecs): Keys to search for.
     """
     searcher = dfwinreg_registry_searcher.WinRegistrySearcher(win_registry)
-    for registry_key_path in iter(searcher.Find(find_specs=find_specs)):
+    for registry_key_path in searcher.Find(find_specs=find_specs):
       if parser_mediator.abort:
         break
 

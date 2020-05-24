@@ -58,7 +58,7 @@ class SafariCookieFormatter(interface.ConditionalEventFormatter):
       del event_values['flags']
     elif cookie_flags:
       flags = []
-      for flag_value, flag_description in iter(self._COOKIE_FLAGS.items()):
+      for flag_value, flag_description in self._COOKIE_FLAGS.items():
         if cookie_flags & flag_value:
           flags.append(flag_description)
 

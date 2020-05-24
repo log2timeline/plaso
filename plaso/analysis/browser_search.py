@@ -313,7 +313,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       AnalysisReport: analysis report.
     """
     results = {}
-    for key, count in iter(self._counter.items()):
+    for key, count in self._counter.items():
       search_engine, _, search_term = key.partition(':')
       results.setdefault(search_engine, {})
       results[search_engine][search_term] = count

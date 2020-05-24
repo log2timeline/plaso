@@ -45,7 +45,7 @@ class OutputManager(object):
     Yields:
       tuple[str, type]: output module name and class.
     """
-    for _, output_class in iter(cls._disabled_output_classes.items()):
+    for output_class in cls._disabled_output_classes.values():
       yield output_class.NAME, output_class
 
   @classmethod
@@ -79,7 +79,7 @@ class OutputManager(object):
     Yields:
       tuple[str, type]: output class name and type object.
     """
-    for _, output_class in iter(cls._output_classes.items()):
+    for output_class in cls._output_classes.values():
       yield output_class.NAME, output_class
 
   @classmethod

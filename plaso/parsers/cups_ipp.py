@@ -418,12 +418,12 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
     event_data.printer_id = self._GetStringValue(data_dict, 'printer_id')
     event_data.uri = self._GetStringValue(data_dict, 'uri')
 
-    for name, usage in iter(self._DATE_TIME_VALUES.items()):
+    for name, usage in self._DATE_TIME_VALUES.items():
       for date_time in time_dict.get(name, []):
         event = time_events.DateTimeValuesEvent(date_time, usage)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    for name, usage in iter(self._POSIX_TIME_VALUES.items()):
+    for name, usage in self._POSIX_TIME_VALUES.items():
       for time_value in time_dict.get(name, []):
         date_time = dfdatetime_posix_time.PosixTime(timestamp=time_value)
         event = time_events.DateTimeValuesEvent(date_time, usage)

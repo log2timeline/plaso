@@ -73,7 +73,7 @@ class AttributeContainer(object):
       list[str]: attribute names.
     """
     attribute_names = []
-    for attribute_name in iter(self.__dict__.keys()):
+    for attribute_name in self.__dict__:
       # Not using startswith to improve performance.
       if attribute_name[0] == '_':
         continue
@@ -89,7 +89,7 @@ class AttributeContainer(object):
     Yields:
       tuple[str, object]: attribute name and value.
     """
-    for attribute_name, attribute_value in iter(self.__dict__.items()):
+    for attribute_name, attribute_value in self.__dict__.items():
       # Not using startswith to improve performance.
       if attribute_name[0] == '_' or attribute_value is None:
         continue
