@@ -245,8 +245,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
         value_object = registry_value.GetDataAsObject()
 
         if registry_value.DataIsMultiString():
-          value_string = '[{0:s}]'.format(', '.join([
-              value for value in value_object or []]))
+          value_string = '[{0:s}]'.format(', '.join(value_object or []))
 
         elif (registry_value.DataIsInteger() or
               registry_value.DataIsString()):

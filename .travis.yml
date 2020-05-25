@@ -4,11 +4,11 @@ os: linux
 dist: bionic
 jobs:
   include:
-  - name: "Pylint on Ubuntu Bionic (18.04) (Docker) with Python 3.6"
-    env: [TARGET="pylint", UBUNTU_VERSION="18.04"]
+  - name: "Pylint on Ubuntu Bionic (20.04) (Docker) with Python 3.8"
+    env: [TARGET="pylint", UBUNTU_VERSION="20.04"]
     group: edge
     language: python
-    python: 3.6
+    python: 3.8
     services:
     - docker
   - name: "Fedora 31 (Docker) with Python 3.7"

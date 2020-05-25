@@ -52,6 +52,8 @@ class CompoundZIPPlugin(plugins.BasePlugin):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
       ValueError: if a subclass has not specified REQUIRED_PATHS.
+      WrongCompoundZIPPlugin: If this plugin is not able to process the given
+          file.
     """
     if not self.REQUIRED_PATHS:
       raise ValueError('REQUIRED_PATHS not specified')

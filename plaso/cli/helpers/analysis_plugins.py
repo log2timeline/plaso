@@ -61,6 +61,7 @@ class AnalysisPluginsArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when non-existing analysis plugins are specified.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(

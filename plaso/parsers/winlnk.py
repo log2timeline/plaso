@@ -148,7 +148,7 @@ class WinLnkParser(interface.FileObjectParser):
       return
 
     link_target = None
-    if lnk_file.link_target_identifier_data:
+    if lnk_file.link_target_identifier_data:  # pylint: disable=using-constant-test
       # TODO: change file_entry.name to display name once it is generated
       # correctly.
       display_name = parser_mediator.GetFilename()
@@ -208,7 +208,7 @@ class WinLnkParser(interface.FileObjectParser):
           date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if lnk_file.droid_file_identifier:
+    if lnk_file.droid_file_identifier:  # pylint: disable=using-constant-test
       try:
         self._ParseDistributedTrackingIdentifier(
             parser_mediator, lnk_file.droid_file_identifier, display_name)
@@ -217,7 +217,7 @@ class WinLnkParser(interface.FileObjectParser):
             'unable to read droid file identifier with error: {0!s}.'.format(
                 exception))
 
-    if lnk_file.birth_droid_file_identifier:
+    if lnk_file.birth_droid_file_identifier:  # pylint: disable=using-constant-test
       try:
         self._ParseDistributedTrackingIdentifier(
             parser_mediator, lnk_file.birth_droid_file_identifier, display_name)

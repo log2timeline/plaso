@@ -382,18 +382,19 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
   def _GetCacheFileMetadataHeaderOffset(self, file_object):
     """Determines the offset of the cache file metadata header.
 
-     This method is inspired by the work of James Habben:
-     https://github.com/JamesHabben/FirefoxCache2
+    This method is inspired by the work of James Habben:
+    https://github.com/JamesHabben/FirefoxCache2
 
     Args:
       file_object (dfvfs.FileIO): a file-like object.
 
     Returns:
       int: offset of the file cache metadata header relative to the start
-        of the file.
+          of the file.
 
     Raises:
-      IOError: if the start of the cache file metadata could not be determined.
+      UnableToParseFile: if the size of the cache file metadata cannot be
+          determined.
     """
     file_object.seek(-4, os.SEEK_END)
     file_offset = file_object.tell()
@@ -407,7 +408,6 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
       raise errors.UnableToParseFile(
           'Unable to parse cache file metadata size with error: {0!s}'.format(
               exception))
-
 
     # Firefox splits the content into chunks.
     number_of_chunks, remainder = divmod(metadata_size, self._CHUNK_SIZE)

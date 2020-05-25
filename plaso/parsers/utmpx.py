@@ -83,8 +83,7 @@ class UtmpxParser(dtfabric_parser.DtFabricBaseParser):
           '{1!s}.').format(file_offset, exception))
 
     if entry.type not in self._SUPPORTED_TYPES:
-      raise errors.UnableToParseFile('Unsupported type: {0:d}'.format(
-          entry.type))
+      raise errors.ParseError('Unsupported type: {0:d}'.format(entry.type))
 
     encoding = parser_mediator.codepage or 'utf8'
 

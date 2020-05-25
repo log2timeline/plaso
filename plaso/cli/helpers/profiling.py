@@ -72,6 +72,8 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the configuration options are missing or not
+          supported.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(

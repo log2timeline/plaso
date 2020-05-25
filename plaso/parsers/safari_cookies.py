@@ -207,6 +207,7 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
       file_object (dfvfs.FileIO): file-like object to be parsed.
 
     Raises:
+      ParseError: when the page sizes array cannot be parsed.
       UnableToParseFile: when the file cannot be parsed, this will signal
           the event extractor to apply other parsers.
     """

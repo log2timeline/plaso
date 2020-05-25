@@ -100,7 +100,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
           'with error: {1!s}'.format(page_offset, exception))
 
     if page_header.signature not in self._DLS_SIGNATURES:
-      raise errors.UnableToParseFile(
+      raise errors.ParseError(
           'Unsupported page header signature at offset: 0x{0:08x}'.format(
               page_offset))
 

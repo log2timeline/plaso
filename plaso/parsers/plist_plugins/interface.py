@@ -171,8 +171,8 @@ class PlistPlugin(plugins.BasePlugin):
       top_level (dict[str, object]): plist top-level key.
 
     Raises:
-      WrongPlistPlugin: If this plugin is not able to process the given file.
       ValueError: If top_level or plist_name are not set.
+      WrongPlistPlugin: If this plugin is not able to process the given file.
     """
     if plist_name is None or top_level is None:
       raise ValueError('Top level or plist name are not set.')

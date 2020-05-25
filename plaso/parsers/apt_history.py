@@ -152,10 +152,10 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           a log entry.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: when the date and time value is missing.
     """
     if not self._date_time:
-      raise errors.ParseError('Unable to parse, record incomplete.')
+      raise errors.ParseError('Missing date time value.')
 
     # Command data
     if structure[0] == 'Commandline:':
@@ -191,10 +191,10 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           and other components, such as storage and dfvfs.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: when the date and time value is missing.
     """
     if not self._date_time:
-      raise errors.ParseError('Unable to parse, record incomplete.')
+      raise errors.ParseError('Missing date time value.')
 
     # Create relevant events for record
     if self._downgrade:
@@ -256,6 +256,9 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       key (str): identifier of the structure of tokens.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a log entry.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
     if key == 'record_start':
       self._ParseRecordStart(parser_mediator, structure)
@@ -294,7 +297,6 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       return False
 
     return True
-
 
 
 manager.ParsersManager.RegisterParser(APTHistoryLogParser)
