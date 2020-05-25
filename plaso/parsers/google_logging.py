@@ -19,21 +19,25 @@ from plaso.parsers import text_parser
 class GoogleLogEventData(events.EventData):
   """Google log file event data.
 
-  See: https://github.com/google/glog
+  See: https://github.com/google/glog. This format is also used by
+  Kubernetes, see https://github.com/kubernetes/klog
 
   Attributes:
     file_name (str): the name of the source file that logged the message.
     line_number (int): the line number in the source file where the logging
-      statement is.
+        statement is.
     message (str): the log message.
-    priority (str): the priority of the message - I, W, E or F.
-    thread_id (int): the ID of the thread that recorded the message.
+    priority (str): the priority of the message - I, W, E or F. These values
+        represent messages logged at INFO, WARNING, ERROR or FATAL severities,
+        respectively.
+    thread_identifier (int): the identifier of the thread that recorded the
+        message.
   """
 
   DATA_TYPE = 'googlelog:log'
 
   def __init__(self, data_type=DATA_TYPE):
-    """Initializes the event object.
+    """Initializes event data.
 
     Args:
       data_type (Optional[str]): event data type indicator.
@@ -43,7 +47,7 @@ class GoogleLogEventData(events.EventData):
     self.line_number = None
     self.message = None
     self.priority = None
-    self.thread_id = None
+    self.thread_identifier = None
 
 
 class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
@@ -57,8 +61,8 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
 
   # PyParsing components used to construct grammars for parsing lines.
   _PYPARSING_COMPONENTS = {
-      'priority':
-          (pyparsing.oneOf(['I', 'W', 'E', 'F']).setResultsName('priority')),
+      'priority': (
+          pyparsing.oneOf(['I', 'W', 'E', 'F']).setResultsName('priority')),
       'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
           'year'),
       'month_number': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
@@ -73,15 +77,16 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
           'second'),
       'microsecond': pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
           text_parser.PyParseIntCast).setResultsName('microsecond'),
-      'thread_id': pyparsing.Word(pyparsing.nums).setResultsName('thread_id'),
+      'thread_identifier': pyparsing.Word(pyparsing.nums).setResultsName(
+          'thread_identifier'),
       'file_name':
           (pyparsing.Word(pyparsing.printables.replace(':', '')).setResultsName(
               'file_name')),
-      'line_number':
-          (pyparsing.Word(pyparsing.nums).setResultsName('line_number')),
-      'message':
-          (pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).
-           setResultsName('message'))}
+      'line_number': (
+          pyparsing.Word(pyparsing.nums).setResultsName('line_number')),
+      'message': (
+          pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).
+          setResultsName('message'))}
 
   _PYPARSING_COMPONENTS['date'] = (
       _PYPARSING_COMPONENTS['month_number'] +
@@ -94,8 +99,8 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
 
   # Grammar for individual log event lines.
   _LOG_LINE = (
-      _PYPARSING_COMPONENTS['priority'] + _PYPARSING_COMPONENTS['date']
-      + _PYPARSING_COMPONENTS['thread_id'] +
+      _PYPARSING_COMPONENTS['priority'] + _PYPARSING_COMPONENTS['date'] +
+      _PYPARSING_COMPONENTS['thread_identifier'] +
       _PYPARSING_COMPONENTS['file_name'] + pyparsing.Suppress(':') +
       _PYPARSING_COMPONENTS['line_number'] + pyparsing.Suppress('] ') +
       _PYPARSING_COMPONENTS['message'] + pyparsing.lineEnd())
@@ -129,7 +134,7 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a Google log formatted file parser."""
     super(GoogleLogParser, self).__init__()
 
     # Set the size of the file we need to read to verify it.
@@ -206,7 +211,8 @@ class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
 
     event_data = GoogleLogEventData()
     event_data.priority = self._GetValueFromStructure(structure, 'priority')
-    event_data.thread_id = self._GetValueFromStructure(structure, 'thread_id')
+    event_data.thread_identifier = self._GetValueFromStructure(
+        structure, 'thread_identifier')
     event_data.file_name = self._GetValueFromStructure(structure, 'file_name')
     event_data.line_number = self._GetValueFromStructure(
         structure, 'line_number')

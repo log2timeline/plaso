@@ -45,7 +45,8 @@ class GooglelogParserTest(test_lib.ParserTestCase):
         storage_writer, multi_line_event)
     multi_line_message = multi_line_event_data.message
 
-    self.assertIn('\n', multi_line_message)
+    self.assertEqual(
+        'Interesting Stuff\n    that spans two lines', multi_line_message)
 
   def testRaisesUnableToParseForInvalidFiles(self):
     """Test that attempting to parse an invalid file should raise an error."""

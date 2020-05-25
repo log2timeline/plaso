@@ -1,6 +1,5 @@
 Log file created at: 2019/07/18 06:07:40
 Running on machine: plasotest1
-Binary: Built on May 14 2019 17:08:01 (1368576481)
 Binary: Built for gcc-4.X.Y
 Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
 I1231 23:59:59.000001 12345 logging_functional_test_helper.py:65] This line is VLOG level 0
