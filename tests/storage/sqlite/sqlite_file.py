@@ -25,14 +25,16 @@ class _TestSQLiteStorageFileV1(sqlite_file.SQLiteStorageFile):
   """Test class for testing format compatibility checks."""
 
   _FORMAT_VERSION = 1
-  _COMPATIBLE_FORMAT_VERSION = 1
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 1
+  _READ_COMPATIBLE_FORMAT_VERSION = 1
 
 
 class _TestSQLiteStorageFileV2(sqlite_file.SQLiteStorageFile):
   """Test class for testing format compatibility checks."""
 
   _FORMAT_VERSION = 2
-  _COMPATIBLE_FORMAT_VERSION = 1
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 2
+  _READ_COMPATIBLE_FORMAT_VERSION = 1
 
 
 class SQLiteStorageFileTest(test_lib.StorageTestCase):
