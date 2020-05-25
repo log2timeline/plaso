@@ -55,36 +55,31 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename='path')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+    self.assertRegex(storage_filename, expected_storage_filename)
 
     test_tool._source_path = '/test/storage/path/'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename='path')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+    self.assertRegex(storage_filename, expected_storage_filename)
 
     test_tool._source_path = '/'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename='ROOT')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+    self.assertRegex(storage_filename, expected_storage_filename)
 
     test_tool._source_path = '/foo/..'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename='ROOT')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+    self.assertRegex(storage_filename, expected_storage_filename)
 
     test_tool._source_path = 'foo/../bar'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename='bar')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+    self.assertRegex(storage_filename, expected_storage_filename)
 
   def testFailWhenOutputAlreadyExists(self):
     """Test to make sure the tool raises when the output file already exists."""
@@ -114,8 +109,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       # error: bogus escape: '\\1'
       expected_error = 'Output file already exists: {0:s}.'.format(
           options.write.replace('\\', '\\\\'))
-      # pylint: disable=deprecated-method
-      with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+      with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
   def testParseOptions(self):
@@ -134,8 +128,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = 'source'
     # Test when the output file is missing.
     expected_error = 'Output format: dynamic requires an output file'
-    # pylint: disable=deprecated-method
-    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+    with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
@@ -143,14 +136,12 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     # Test when the source is missing.
     expected_error = 'Missing source path.'
 
-    # pylint: disable=deprecated-method
-    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+    with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
     # Test when the source is missing.
     expected_error = 'Missing source path.'
-    # pylint: disable=deprecated-method
-    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+    with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -169,8 +160,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       # error: bogus escape: '\\1'
       expected_error = 'Output file already exists: {0:s}.'.format(
           options.write.replace('\\', '\\\\'))
-      # pylint: disable=deprecated-method
-      with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+      with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
   def testParseArguments(self):
