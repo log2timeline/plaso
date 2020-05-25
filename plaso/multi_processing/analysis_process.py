@@ -47,7 +47,6 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._analysis_mediator = None
     self._analysis_plugin = analysis_plugin
     self._data_location = data_location
-    self._debug_output = False
     self._event_filter_expression = event_filter_expression
     self._event_queue = event_queue
     self._foreman_status_wait_event = None
@@ -201,8 +200,9 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     try:
       self._storage_writer.FinalizeTaskStorage(task)
-    except IOError:
-      pass
+    except IOError as exception:
+      logger.warning('Unable to finalize task storage with error: {0!s}'.format(
+          exception))
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED
