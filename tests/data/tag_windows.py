@@ -826,5 +826,6 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
         ['firewall_change'])
 
+    
 if __name__ == '__main__':
   unittest.main()
