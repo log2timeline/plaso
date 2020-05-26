@@ -49,23 +49,29 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     mappings = {}
 
     if self._raw_fields:
-      if self._document_type not in mappings:
-        mappings[self._document_type] = {}
+      # This cannot be static because we use the value of self._document_type
+      # from arguments.
+      mappings = {
+          'dynamic_templates': [{
+              'strings': {
+                  'mapping': {
+                      'fields': {
+                          'raw': {
+                              'ignore_above': (
+                                  self._ELASTIC_ANALYZER_STRING_LIMIT),
+                              'index': 'false',
+                              'type': 'keyword',
+                          },
+                      },
+                  },
+                  'match_mapping_type': 'string',
+              },
+          }],
+      }
 
-      mappings[self._document_type]['dynamic_templates'] = [{
-          'strings': {
-              'match_mapping_type': 'string',
-              'mapping': {
-                  'fields': {
-                      'raw': {
-                          'type': 'keyword',
-                          'index': 'false',
-                          'ignore_above': self._ELASTIC_ANALYZER_STRING_LIMIT
-                      }
-                  }
-              }
-          }
-      }]
+      # TODO: Remove once Elasticsearch v6.x is deprecated.
+      if self._GetClientMajorVersion() < 7:
+        mappings = {self._document_type: mappings}
 
     self._Connect()
 
