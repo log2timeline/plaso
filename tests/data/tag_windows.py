@@ -812,6 +812,21 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
   # TODO: add tests for file_download tagging rule
   # TODO: add tests for document_print tagging rule
 
+  def testFirewallChange(self):
+    """Tests the firewall_change tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Windows Firewall With Advanced
+    #           Security' AND
+    #       (event_identifier is 2003 OR event_identifier is 2004 OR
+    #        event_identifier is 2005 OR event_identifier is 2006)
+    attribute_values_per_name = {
+        'source_name': [
+            'Microsoft-Windows-Windows Firewall With Advanced Security'],
+        'event_identifier': [2003, 2004, 2005, 2006]}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['firewall_change'])
+
 
 if __name__ == '__main__':
   unittest.main()
