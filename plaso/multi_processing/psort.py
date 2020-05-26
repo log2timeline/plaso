@@ -901,7 +901,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       # the ZIP storage file will remain locked as long as the worker processes
       # are alive.
       storage_writer.Open()
-      storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+      storage_writer.ReadSystemConfiguration(knowledge_base_object)
       storage_writer.WriteSessionStart()
 
       try:
@@ -984,7 +984,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
-    storage_reader.ReadPreprocessingInformation(knowledge_base_object)
+    storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
     total_number_of_events = 0
     for session in storage_reader.GetSessions():

@@ -325,7 +325,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer.StartTaskStorage()
 
       storage_writer.Open()
-      storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+      storage_writer.ReadSystemConfiguration(knowledge_base_object)
 
       # TODO: implement, this currently loops infinite.
       # test_engine._AnalyzeEvents(storage_writer, [test_plugin])
@@ -343,7 +343,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer.StartTaskStorage()
 
       storage_writer.Open()
-      storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+      storage_writer.ReadSystemConfiguration(knowledge_base_object)
 
       # TODO: implement, this currently loops infinite.
       _ = test_engine
@@ -379,7 +379,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      storage_reader.ReadPreprocessingInformation(knowledge_base_object)
+      storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
       test_engine._ExportEvents(
           storage_reader, output_module, deduplicate_events=False)
@@ -412,7 +412,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      storage_reader.ReadPreprocessingInformation(knowledge_base_object)
+      storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
       test_engine._ExportEvents(storage_reader, output_module)
 

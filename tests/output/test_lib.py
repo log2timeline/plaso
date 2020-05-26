@@ -82,7 +82,7 @@ class OutputModuleTestCase(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     if storage_file:
-      storage_file.ReadPreprocessingInformation(knowledge_base_object)
+      storage_file.ReadSystemConfiguration(knowledge_base_object)
 
     formatter_mediator = formatters_mediator.FormatterMediator()
     output_mediator = mediator.OutputMediator(

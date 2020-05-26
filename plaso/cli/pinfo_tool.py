@@ -447,7 +447,7 @@ class PinfoTool(
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    storage_reader.ReadPreprocessingInformation(knowledge_base_object)
+    storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
     lookup_identifier = session_identifier
     if lookup_identifier:

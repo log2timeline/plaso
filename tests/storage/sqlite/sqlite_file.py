@@ -531,7 +531,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for Open and Close
 
-  # TODO: add tests for ReadPreprocessingInformation
+  # TODO: add tests for ReadSystemConfiguration
   # TODO: add tests for WritePreprocessingInformation
 
   def testWriteSessionStartAndCompletion(self):
