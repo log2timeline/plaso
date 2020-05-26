@@ -73,8 +73,8 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         '--elastic_password', dest='elastic_password', action='store',
         default=os.getenv("PLASO_ELASTIC_PASSWORD",
         cls._DEFAULT_ELASTIC_PASSWORD), help=(
-        'Password to use for Elasticsearch authentication.\\
-        Can also be set with the environment variable PLASO_ELASTIC_PASSWORD'))    
+        'Password to use for Elasticsearch authentication. Can also '+
+        'be set with the environment variable PLASO_ELASTIC_PASSWORD'))
     argument_group.add_argument(
         '--use_ssl', dest='use_ssl', action='store_true',
         help='Enforces use of ssl.')
@@ -119,7 +119,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     elastic_user = cls._ParseStringOption(
         options, 'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
     elastic_password = cls._ParseStringOption(
-        options, 'elastic_password', 
+        options, 'elastic_password',
         default_value=os.getenv("PLASO_ELASTIC_PASSWORD",
         cls._DEFAULT_ELASTIC_PASSWORD))
     use_ssl = getattr(options, 'use_ssl', False)
