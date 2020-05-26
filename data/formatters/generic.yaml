@@ -149,6 +149,17 @@ short_source: 'LOG'
 source: 'GoogleDriveSync Log File'
 ---
 type: 'conditional'
+data_type: 'googlelog:log'
+message:
+  - '{file_name}:'
+  - '{line_number}]'
+  - '{message}'
+short_message:
+  - '{message}'
+short_source: 'LOG'
+source: 'Google Log'
+---
+type: 'conditional'
 data_type: 'java:download:idx'
 message:
 - 'IDX Version: {idx_version}'

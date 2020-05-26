@@ -1,0 +1,9 @@
+Log file created at: 2019/07/18 06:07:40
+Running on machine: plasotest1
+Binary: Built for gcc-4.X.Y
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I1231 23:59:59.000001 12345 logging_functional_test_helper.py:65] This line is VLOG level 0
+I1231 23:59:59.000002 12345 logging_functional_test_helper.py:65] This line is log level 0
+I1231 23:59:59.000003 12345 logging_functional_test_helper.py:70] Interesting Stuff
+    that spans two lines
+F1231 23:59:59.000004 12345 logging_functional_test_helper.py:75] This line is a fatal log

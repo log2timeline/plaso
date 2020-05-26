@@ -29,6 +29,7 @@ parsers:
 - dpkg
 - filestat
 - gdrive_synclog
+- googlelog
 - olecf
 - pls_recall
 - popularity_contest
