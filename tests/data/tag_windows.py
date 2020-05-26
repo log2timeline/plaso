@@ -820,12 +820,13 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     #       (event_identifier is 2003 OR event_identifier is 2004 OR
     #        event_identifier is 2005 OR event_identifier is 2006)
     attribute_values_per_name = {
-        'source_name': ['Microsoft-Windows-Windows Firewall With Advanced Security'],
+        'source_name': [
+            'Microsoft-Windows-Windows Firewall With Advanced Security'],
         'event_identifier': [2003, 2004, 2005, 2006]}
     self._CheckTaggingRule(
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
         ['firewall_change'])
 
-    
+
 if __name__ == '__main__':
   unittest.main()
