@@ -42,7 +42,7 @@ optional arguments:
   --elastic_password ELASTIC_PASSWORD
                         Password to use for Elasticsearch authentication. Can
                         also be set with the environment variable
-                        PLASO_ELASTIC_PASSWORD                        
+                        PLASO_ELASTIC_PASSWORD
   --elastic_url_prefix ELASTIC_URL_PREFIX
                         URL prefix for elastic search.
   --elastic_user ELASTIC_USER
