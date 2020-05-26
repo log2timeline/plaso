@@ -814,7 +814,11 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testFirewallChange(self):
     """Tests the firewall_change tagging rule."""
-    # Test: data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Firewall With Advanced Security' AND (event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 2005 OR event_identifier is 2006)
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Windows Firewall With Advanced
+    #           Security' AND
+    #       (event_identifier is 2003 OR event_identifier is 2004 OR
+    #        event_identifier is 2005 OR event_identifier is 2006)
     attribute_values_per_name = {
         'source_name': ['Microsoft-Windows-Windows Firewall With Advanced Security'],
         'event_identifier': [2003, 2004, 2005, 2006]}
