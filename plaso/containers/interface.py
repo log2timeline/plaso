@@ -35,10 +35,15 @@ class AttributeContainer(object):
   the container type, for example the container type "event" identifiers
   an event object.
 
-  Attributes are public class members of an serializable type. Protected
-  and private class members are not to be serialized.
+  Attributes are public class members of an serializable type. Protected and
+  private class members are not to be serialized, with the exception of those
+  defined in _SERIALIZABLE_PROTECTED_ATTRIBUTES.
   """
   CONTAINER_TYPE = None
+
+  # Names of protected attributes, those with a leading underscore, that
+  # should be serialized.
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = []
 
   def __init__(self):
     """Initializes an attribute container."""
@@ -54,9 +59,9 @@ class AttributeContainer(object):
     """
     for attribute_name, attribute_value in attributes.items():
       # Not using startswith to improve performance.
-      if attribute_name[0] == '_':
-        continue
-      setattr(self, attribute_name, attribute_value)
+      if (attribute_name[0] != '_' or
+          attribute_name in self._SERIALIZABLE_PROTECTED_ATTRIBUTES):
+        self.__dict__[attribute_name] = attribute_value
 
   def CopyToDict(self):
     """Copies the attribute container to a dictionary.
@@ -72,12 +77,11 @@ class AttributeContainer(object):
     Returns:
       list[str]: attribute names.
     """
-    attribute_names = []
+    attribute_names = list(self._SERIALIZABLE_PROTECTED_ATTRIBUTES)
     for attribute_name in self.__dict__:
       # Not using startswith to improve performance.
-      if attribute_name[0] == '_':
-        continue
-      attribute_names.append(attribute_name)
+      if attribute_name[0] != '_':
+        attribute_names.append(attribute_name)
 
     return attribute_names
 
@@ -91,10 +95,10 @@ class AttributeContainer(object):
     """
     for attribute_name, attribute_value in self.__dict__.items():
       # Not using startswith to improve performance.
-      if attribute_name[0] == '_' or attribute_value is None:
-        continue
-
-      yield attribute_name, attribute_value
+      if attribute_value is not None and (
+          attribute_name[0] != '_' or
+          attribute_name in self._SERIALIZABLE_PROTECTED_ATTRIBUTES):
+        yield attribute_name, attribute_value
 
   def GetAttributeValuesHash(self):
     """Retrieves a comparable string of the attribute values.
@@ -113,17 +117,18 @@ class AttributeContainer(object):
     attributes = []
     for attribute_name, attribute_value in sorted(self.__dict__.items()):
       # Not using startswith to improve performance.
-      if attribute_name[0] == '_' or attribute_value is None:
-        continue
+      if attribute_value is not None and (
+          attribute_name[0] != '_' or
+          attribute_name in self._SERIALIZABLE_PROTECTED_ATTRIBUTES):
+        if isinstance(attribute_value, dict):
+          attribute_value = sorted(attribute_value.items())
 
-      if isinstance(attribute_value, dict):
-        attribute_value = sorted(attribute_value.items())
+        elif isinstance(attribute_value, bytes):
+          attribute_value = repr(attribute_value)
 
-      elif isinstance(attribute_value, bytes):
-        attribute_value = repr(attribute_value)
-
-      attribute_string = '{0:s}: {1!s}'.format(attribute_name, attribute_value)
-      attributes.append(attribute_string)
+        attribute_string = '{0:s}: {1!s}'.format(
+            attribute_name, attribute_value)
+        attributes.append(attribute_string)
 
     return ', '.join(attributes)
 
