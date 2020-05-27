@@ -436,14 +436,19 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     Args:
       event (EventObject): event.
+
+    Raises:
+      ValueError: if the event data row identifier attribute is missing.
     """
     row_identifier = getattr(event, 'event_data_row_identifier', None)
-    if row_identifier is not None:
-      event_data_identifier = identifiers.SQLTableIdentifier(
-          'event_data', row_identifier)
-      event.SetEventDataIdentifier(event_data_identifier)
+    if row_identifier is None:
+      raise ValueError('Missing event data row identifier attribute')
 
-      delattr(event, 'event_data_row_identifier')
+    event_data_identifier = identifiers.SQLTableIdentifier(
+        'event_data', row_identifier)
+    event.SetEventDataIdentifier(event_data_identifier)
+
+    delattr(event, 'event_data_row_identifier')
 
   def _UpdateEventDataIdentifierBeforeSerialize(self, event):
     """Sets the event data row identifier of an event before serialization.
@@ -457,15 +462,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     """
     event_data_identifier = event.GetEventDataIdentifier()
 
-    # TODO: change to no longer allow event_data_identifier is None
-    # after refactoring every parser to generate event data.
-    if event_data_identifier:
-      if not isinstance(event_data_identifier, identifiers.SQLTableIdentifier):
-        raise IOError('Unsupported event data identifier type: {0!s}'.format(
-            type(event_data_identifier)))
+    if not isinstance(event_data_identifier, identifiers.SQLTableIdentifier):
+      raise IOError('Unsupported event data identifier type: {0!s}'.format(
+          type(event_data_identifier)))
 
-      setattr(event, 'event_data_row_identifier',
-              event_data_identifier.row_identifier)
+    setattr(event, 'event_data_row_identifier',
+            event_data_identifier.row_identifier)
 
   def _UpdateEventIdentifierAfterDeserialize(self, event_tag):
     """Updates the event identifier of an event tag after deserialization.
