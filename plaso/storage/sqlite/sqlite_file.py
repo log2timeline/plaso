@@ -431,6 +431,78 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self.serialization_format = metadata_values['serialization_format']
     self.storage_type = metadata_values['storage_type']
 
+  def _UpdateEventDataIdentifierAfterDeserialize(self, event):
+    """Updates the event data identifier of an event after deserialization.
+
+    Args:
+      event (EventObject): event.
+    """
+    row_identifier = getattr(event, 'event_data_row_identifier', None)
+    if row_identifier is not None:
+      event_data_identifier = identifiers.SQLTableIdentifier(
+          'event_data', row_identifier)
+      event.SetEventDataIdentifier(event_data_identifier)
+
+      delattr(event, 'event_data_row_identifier')
+
+  def _UpdateEventDataIdentifierBeforeSerialize(self, event):
+    """Sets the event data row identifier of an event before serialization.
+
+    Args:
+      event (EventObject): event.
+
+    Raises:
+      IOError: if the event data identifier type is not supported.
+      OSError: if the event data identifier type is not supported.
+    """
+    event_data_identifier = event.GetEventDataIdentifier()
+
+    # TODO: change to no longer allow event_data_identifier is None
+    # after refactoring every parser to generate event data.
+    if event_data_identifier:
+      if not isinstance(event_data_identifier, identifiers.SQLTableIdentifier):
+        raise IOError('Unsupported event data identifier type: {0!s}'.format(
+            type(event_data_identifier)))
+
+      setattr(event, 'event_data_row_identifier',
+              event_data_identifier.row_identifier)
+
+  def _UpdateEventIdentifierAfterDeserialize(self, event_tag):
+    """Updates the event identifier of an event tag after deserialization.
+
+    Args:
+      event_tag (EventTag): event tag.
+
+    Raises:
+      ValueError: if the event row identifier attribute is missing.
+    """
+    row_identifier = getattr(event_tag, 'event_row_identifier', None)
+    if row_identifier is None:
+      raise ValueError('Missing event row identifier attribute')
+
+    event_identifier = identifiers.SQLTableIdentifier(
+        self._CONTAINER_TYPE_EVENT, row_identifier)
+    event_tag.SetEventIdentifier(event_identifier)
+
+    delattr(event_tag, 'event_row_identifier')
+
+  def _UpdateEventIdentifierBeforeSerialize(self, event_tag):
+    """Sets the event row identifier of an event tag before serialization.
+
+    Args:
+      event_tag (EventTag): event tag.
+
+    Raises:
+      IOError: if the event identifier type is not supported.
+      OSError: if the event identifier type is not supported.
+    """
+    event_identifier = event_tag.GetEventIdentifier()
+    if not isinstance(event_identifier, identifiers.SQLTableIdentifier):
+      raise IOError('Unsupported event identifier type: {0!s}'.format(
+          type(event_identifier)))
+
+    setattr(event_tag, 'event_row_identifier', event_identifier.row_identifier)
+
   def _WriteAttributeContainer(
       self, attribute_container, serialized_data=None):
     """Writes an attribute container.
@@ -564,23 +636,14 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       serialized_data (Optional[bytes]): serialized form of the event.
 
     Raises:
-      IOError: when the storage file is closed or read-only or
-          if the event data identifier type is not supported.
-      OSError: when the storage file is closed or read-only or
-          if the event data identifier type is not supported.
+      IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
-    # TODO: change to no longer allow event_data_identifier is None
-    # after refactoring every parser to generate event data.
-    event_data_identifier = event.GetEventDataIdentifier()
-    if event_data_identifier:
-      if not isinstance(event_data_identifier, identifiers.SQLTableIdentifier):
-        raise IOError('Unsupported event data identifier type: {0!s}'.format(
-            type(event_data_identifier)))
-
-      event.event_data_row_identifier = event_data_identifier.row_identifier
-
+    # The serialized data is not used, as this method modifies the attribute
+    # container.
+    self._UpdateEventDataIdentifierBeforeSerialize(event)
     self._AddSerializedEvent(event)
 
   def AddEventTag(self, event_tag, serialized_data=None):
@@ -591,22 +654,14 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       serialized_data (Optional[bytes]): serialized form of the event tag.
 
     Raises:
-      IOError: when the storage file is closed or read-only or
-          if the event identifier type is not supported.
-      OSError: when the storage file is closed or read-only or
-          if the event identifier type is not supported.
+      IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
-    event_identifier = event_tag.GetEventIdentifier()
-    if not isinstance(event_identifier, identifiers.SQLTableIdentifier):
-      raise IOError('Unsupported event identifier type: {0!s}'.format(
-          type(event_identifier)))
-
-    event_tag.event_row_identifier = event_identifier.row_identifier
-
-    # The serialized form of the event tag is not used, as this method modifies
-    # the event tag.
+    # The serialized data is not used, as this method modifies the attribute
+    # container.
+    self._UpdateEventIdentifierBeforeSerialize(event_tag)
     self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
 
   @classmethod
@@ -714,13 +769,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       EventObject: event.
     """
     for event in self._GetAttributeContainers('event'):
-      if hasattr(event, 'event_data_row_identifier'):
-        event_data_identifier = identifiers.SQLTableIdentifier(
-            'event_data', event.event_data_row_identifier)
-        event.SetEventDataIdentifier(event_data_identifier)
-
-        del event.event_data_row_identifier
-
+      self._UpdateEventDataIdentifierAfterDeserialize(event)
       yield event
 
   def GetEventSourceByIndex(self, index):
@@ -755,11 +804,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     event_tag = self._GetAttributeContainerByIndex(
         self._CONTAINER_TYPE_EVENT_TAG, identifier.row_identifier - 1)
     if event_tag:
-      event_identifier = identifiers.SQLTableIdentifier(
-          self._CONTAINER_TYPE_EVENT, event_tag.event_row_identifier)
-      event_tag.SetEventIdentifier(event_identifier)
-
-      del event_tag.event_row_identifier
+      self._UpdateEventIdentifierAfterDeserialize(event_tag)
 
     return event_tag
 
@@ -771,12 +816,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     """
     for event_tag in self._GetAttributeContainers(
         self._CONTAINER_TYPE_EVENT_TAG):
-      event_identifier = identifiers.SQLTableIdentifier(
-          self._CONTAINER_TYPE_EVENT, event_tag.event_row_identifier)
-      event_tag.SetEventIdentifier(event_identifier)
-
-      del event_tag.event_row_identifier
-
+      self._UpdateEventIdentifierAfterDeserialize(event_tag)
       yield event_tag
 
   def GetNumberOfEventSources(self):
@@ -854,13 +894,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         order_by='_timestamp')
 
     for event in event_generator:
-      if hasattr(event, 'event_data_row_identifier'):
-        event_data_identifier = identifiers.SQLTableIdentifier(
-            'event_data', event.event_data_row_identifier)
-        event.SetEventDataIdentifier(event_data_identifier)
-
-        del event.event_data_row_identifier
-
+      self._UpdateEventDataIdentifierAfterDeserialize(event)
       yield event
 
   # pylint: disable=arguments-differ
