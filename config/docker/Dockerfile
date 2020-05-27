@@ -22,7 +22,9 @@ RUN apt-get -y update
 RUN apt-get -y upgrade
 
 RUN apt-get -y install locales plaso-tools
-RUN apt-get clean &&  rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+
+# Clean up apt-get cache files
+RUN apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Set terminal to UTF-8 by default
 RUN locale-gen en_US.UTF-8
