@@ -13,7 +13,7 @@ from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
 from plaso.cli.helpers import server_config
 from plaso.output import elastic
-
+from plaso.cli import logger
 
 class ElasticSearchServerArgumentsHelper(server_config.ServerArgumentsHelper):
   """Elastic Search server CLI arguments helper."""
@@ -71,9 +71,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
             'Username to use for Elasticsearch authentication.'))
     argument_group.add_argument(
         '--elastic_password', dest='elastic_password', action='store',
-        default=os.getenv(
-            "PLASO_ELASTIC_PASSWORD",
-            cls._DEFAULT_ELASTIC_PASSWORD),
+        default=cls._DEFAULT_ELASTIC_PASSWORD,
         help=('Password to use for Elasticsearch authentication. Can '+\
         'also be set with the environment variable PLASO_ELASTIC_PASSWORD'))
     argument_group.add_argument(
@@ -121,9 +119,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
     elastic_password = cls._ParseStringOption(
         options, 'elastic_password',
-        default_value=os.getenv(
-            "PLASO_ELASTIC_PASSWORD",
-            cls._DEFAULT_ELASTIC_PASSWORD))
+        cls._DEFAULT_ELASTIC_PASSWORD)
     use_ssl = getattr(options, 'use_ssl', False)
 
     ca_certificates_path = cls._ParseStringOption(
@@ -132,11 +128,15 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     elastic_url_prefix = cls._ParseStringOption(
         options, 'elastic_url_prefix', default_value=cls._DEFAULT_URL_PREFIX)
 
+    if elastic_password is cls._DEFAULT_ELASTIC_PASSWORD:
+      logger.warning('Provide elastic password via cli is unsafe')
+      elastic_password = os.getenv(
+          "PLASO_ELASTIC_PASSWORD",
+          cls._DEFAULT_ELASTIC_PASSWORD)
+
     if elastic_user is not None and elastic_password is None:
       elastic_password = getpass.getpass(
           'Enter your Elasticsearch password: ')
-    elif elastic_user is None:
-      elastic_password = None
 
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
