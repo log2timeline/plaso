@@ -128,15 +128,15 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     elastic_url_prefix = cls._ParseStringOption(
         options, 'elastic_url_prefix', default_value=cls._DEFAULT_URL_PREFIX)
 
-    if elastic_password is cls._DEFAULT_ELASTIC_PASSWORD:
+    if elastic_password is not cls._DEFAULT_ELASTIC_PASSWORD:
       logger.warning('Provide elastic password via cli is unsafe')
+    else:
       elastic_password = os.getenv(
           "PLASO_ELASTIC_PASSWORD",
           cls._DEFAULT_ELASTIC_PASSWORD)
 
     if elastic_user is not None and elastic_password is None:
-      elastic_password = getpass.getpass(
-          'Enter your Elasticsearch password: ')
+      elastic_password = getpass.getpass('Enter your Elasticsearch password: ')
 
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
