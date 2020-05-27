@@ -5,25 +5,11 @@ from __future__ import unicode_literals
 
 import abc
 import collections
-import sys
+import queue
 import threading
 import time
 
-if sys.version_info[0] < 3:
-  import Queue  # pylint: disable=import-error
-else:
-  import queue as Queue  # pylint: disable=import-error
-
-# pylint: disable=wrong-import-position
 import requests
-
-# Some distributions unvendor urllib3 from the requests module, and we need to
-# access some methods inside urllib3 to disable warnings. We'll try to import it
-# here, to keep the imports together.
-try:
-  import urllib3
-except ImportError:
-  urllib3 = None
 
 from plaso.analysis import definitions
 from plaso.analysis import logger
@@ -123,9 +109,9 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
   the HashAnalyzer interface.
 
   Attributes:
-    hash_analysis_queue (Queue.queue): queue that contains the results of
+    hash_analysis_queue (queue.Queue): queue that contains the results of
         analysis of file hashes.
-    hash_queue (Queue.queue): queue that contains file hashes.
+    hash_queue (queue.Queue): queue that contains file hashes.
   """
   # The event data types the plugin will collect hashes from. Subclasses
   # must override this attribute.
@@ -151,8 +137,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     self._hash_pathspecs = collections.defaultdict(list)
     self._requester_class = None
     self._time_of_last_status_log = time.time()
-    self.hash_analysis_queue = Queue.Queue()
-    self.hash_queue = Queue.Queue()
+    self.hash_analysis_queue = queue.Queue()
+    self.hash_queue = queue.Queue()
 
     self._analyzer = analyzer_class(self.hash_queue, self.hash_analysis_queue)
 
@@ -285,7 +271,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         self._LogProgressUpdateIfReasonable()
         hash_analysis = self.hash_analysis_queue.get(
             timeout=self._analysis_queue_timeout)
-      except Queue.Empty:
+      except queue.Empty:
         # The result queue is empty, but there could still be items that need
         # to be processed by the analyzer.
         continue
@@ -384,8 +370,8 @@ class HashAnalyzer(threading.Thread):
     """Initializes a hash analyzer.
 
     Args:
-      hash_queue (Queue.queue): contains hashes to be analyzed.
-      hash_analysis_queue (Queue.queue): queue that the analyzer will append
+      hash_queue (queue.Queue): contains hashes to be analyzed.
+      hash_analysis_queue (queue.Queue): queue that the analyzer will append
           HashAnalysis objects to.
       hashes_per_batch (Optional[int]): number of hashes to analyze at once.
       lookup_hash (Optional[str]): name of the hash attribute to look up.
@@ -406,7 +392,7 @@ class HashAnalyzer(threading.Thread):
     """Retrieves a list of items from a queue.
 
     Args:
-      target_queue (Queue.queue): queue to retrieve hashes from.
+      target_queue (queue.Queue): queue to retrieve hashes from.
       max_hashes (int): maximum number of items to retrieve from the
           target_queue.
 
@@ -418,7 +404,7 @@ class HashAnalyzer(threading.Thread):
     for _ in range(0, max_hashes):
       try:
         item = target_queue.get_nowait()
-      except Queue.Empty:
+      except queue.Empty:
         continue
       hashes.append(item)
     return hashes
@@ -477,49 +463,6 @@ class HashAnalyzer(threading.Thread):
 class HTTPHashAnalyzer(HashAnalyzer):
   """Interface for hash analysis plugins that use HTTP(S)"""
 
-  def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
-    """Initializes a HTTP hash analyzer.
-
-    Args:
-      hash_queue (Queue.queue): a queue that contains hashes to be analyzed.
-      hash_analysis_queue (Queue.queue): queue that the analyzer will append
-          HashAnalysis objects to.
-    """
-    super(HTTPHashAnalyzer, self).__init__(
-        hash_queue, hash_analysis_queue, **kwargs)
-    self._checked_for_old_python_version = False
-
-  def _CheckPythonVersionAndDisableWarnings(self):
-    """Checks python version, and disables SSL warnings.
-
-    urllib3 will warn on each HTTPS request made by older versions of Python.
-    Rather than spamming the user, we print one warning message, then disable
-    warnings in urllib3.
-    """
-    if self._checked_for_old_python_version:
-      return
-    if sys.version_info[0:3] < (2, 7, 9):
-      logger.warning(
-          'You are running a version of Python prior to 2.7.9. Your version '
-          'of Python has multiple weaknesses in its SSL implementation that '
-          'can allow an attacker to read or modify SSL encrypted data. '
-          'Please update. Further SSL warnings will be suppressed. See '
-          'https://www.python.org/dev/peps/pep-0466/ for more information.')
-
-      # Some distributions de-vendor urllib3 from requests, so we have to
-      # check if this has occurred and disable warnings in the correct
-      # package.
-      urllib3_module = urllib3
-      if not urllib3_module:
-        if hasattr(requests, 'packages'):
-          urllib3_module = getattr(requests.packages, 'urllib3')
-
-      if urllib3_module and hasattr(urllib3_module, 'disable_warnings'):
-        urllib3_module.disable_warnings()
-
-    self._checked_for_old_python_version = True
-
-  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Analyze(self, hashes):
     """Analyzes a list of hashes.
@@ -552,9 +495,6 @@ class HTTPHashAnalyzer(HashAnalyzer):
     method_upper = method.upper()
     if method_upper not in ('GET', 'POST'):
       raise ValueError('Method {0:s} is not supported')
-
-    if url.lower().startswith('https'):
-      self._CheckPythonVersionAndDisableWarnings()
 
     try:
       if method_upper == 'GET':
