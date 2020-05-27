@@ -185,12 +185,14 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testRuleLogout(self):
     """Tests the logout tagging rule."""
+    # Test: data_type is 'linux:utmp:event' AND type == 8 AND terminal != '' AND
+    #       pid != 0
+
+    # Cannot use _CheckTaggingRule here because of terminal != ''
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
-    # Test: data_type is 'linux:utmp:event' AND type == 8 AND terminal != '' AND
-    #       pid != 0
     event_data = utmp.UtmpEventData()
     event_data.type = 0
     event_data.terminal = 'tty1'
@@ -225,518 +227,165 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckLabels(storage_writer, ['logout'])
 
     # Test: reporter is 'login' AND body contains 'session closed'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'login'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'session closed'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'login'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['logout'])
+    attribute_values_per_name = {
+        'body': ['session closed'],
+        'reporter': ['login']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name, ['logout'])
 
     # Test: reporter is 'sshd' AND (body contains 'session closed' OR
     #       body contains 'Close session')
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'sshd'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'session closed'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'sshd'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['logout'])
-
-    event_data.body = 'Close session'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['logout'])
+    attribute_values_per_name = {
+        'body': ['Close session', 'session closed'],
+        'reporter': ['sshd']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name, ['logout'])
 
     # Test: reporter is 'systemd-logind' AND body contains 'logged out'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'systemd-logind'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'logged out'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'systemd-logind'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['logout'])
+    attribute_values_per_name = {
+        'body': ['logged out'],
+        'reporter': ['systemd-logind']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name, ['logout'])
 
     # Test: reporter is 'dovecot' AND body contains 'Logged out'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'dovecot'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'Logged out'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'dovecot'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['logout'])
+    attribute_values_per_name = {
+        'body': ['Logged out'],
+        'reporter': ['dovecot']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name, ['logout'])
 
   def testRuleSessionStart(self):
     """Tests the session_start tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: reporter is 'systemd-logind' and body contains 'New session'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'systemd-logind'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'New session'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'systemd-logind'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['session_start'])
+    attribute_values_per_name = {
+        'body': ['New session'],
+        'reporter': ['systemd-logind']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['session_start'])
 
   def testRuleSessionStop(self):
     """Tests the session_stop tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: reporter is 'systemd-logind' and body contains 'Removed session'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'systemd-logind'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'Removed session'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'systemd-logind'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['session_stop'])
+    attribute_values_per_name = {
+        'body': ['Removed session'],
+        'reporter': ['systemd-logind']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['session_stop'])
 
   def testRuleBoot(self):
     """Tests the boot tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'linux:utmp:event' AND type == 2 AND
     #       terminal is 'system boot' AND username is 'reboot'
-    event_data = utmp.UtmpEventData()
-    event_data.type = 0
-    event_data.terminal = 'system boot'
-    event_data.username = 'reboot'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.type = 2
-    event_data.terminal = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.terminal = 'system boot'
-    event_data.username = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.username = 'reboot'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['boot'])
+    attribute_values_per_name = {
+        'terminal': ['system boot'],
+        'type': [2],
+        'username': ['reboot']}
+    self._CheckTaggingRule(
+        utmp.UtmpEventData, attribute_values_per_name, ['boot'])
 
   def testRuleShutdown(self):
     """Tests the shutdonw tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'linux:utmp:event' AND type == 1 AND
     #       (terminal is '~~' OR terminal is 'system boot') AND
     #       username is 'shutdown'
-    event_data = utmp.UtmpEventData()
-    event_data.type = 0
-    event_data.terminal = 'system boot'
-    event_data.username = 'shutdown'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.type = 1
-    event_data.terminal = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.terminal = 'system boot'
-    event_data.username = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.username = 'shutdown'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['shutdown'])
-
-    event_data.terminal = '~~'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['shutdown'])
+    attribute_values_per_name = {
+        'terminal': ['~~', 'system boot'],
+        'type': [1],
+        'username': ['shutdown']}
+    self._CheckTaggingRule(
+        utmp.UtmpEventData, attribute_values_per_name, ['shutdown'])
 
   def testRuleRunlevel(self):
     """Tests the runlevel tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'linux:utmp:event' AND type == 1 AND
     #       username is 'runlevel'
-    event_data = utmp.UtmpEventData()
-    event_data.type = 0
-    event_data.username = 'runlevel'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.type = 1
-    event_data.username = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.username = 'runlevel'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['runlevel'])
+    attribute_values_per_name = {
+        'type': [1],
+        'username': ['runlevel']}
+    self._CheckTaggingRule(
+        utmp.UtmpEventData, attribute_values_per_name, ['runlevel'])
 
   def testRuleDeviceConnection(self):
     """Tests the device_connection tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: reporter is 'kernel' AND body contains 'New USB device found'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'kernel'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'New USB device found'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'kernel'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['device_connection'])
+    attribute_values_per_name = {
+        'body': ['New USB device found'],
+        'reporter': ['kernel']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['device_connection'])
 
   def testRuleDeviceDisconnection(self):
     """Tests the device_disconnection tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: reporter is 'kernel' AND body contains 'USB disconnect'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'kernel'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'USB disconnect'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'kernel'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['device_disconnection'])
+    attribute_values_per_name = {
+        'body': ['USB disconnect'],
+        'reporter': ['kernel']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['device_disconnection'])
 
   def testRuleApplicationInstall(self):
     """Tests the application_install tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'dpkg:line' AND body contains 'status installed'
-    event_data = dpkg.DpkgEventData()
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.body = 'status installed'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_install'])
+    attribute_values_per_name = {
+        'body': ['status installed']}
+    self._CheckTaggingRule(
+        dpkg.DpkgEventData, attribute_values_per_name,
+        ['application_install'])
 
   def testRuleServiceStart(self):
     """Tests the service_start tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'selinux:line' AND audit_type is 'SERVICE_START'
-    event_data = selinux.SELinuxLogEventData()
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'SERVICE_START'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['service_start'])
+    attribute_values_per_name = {
+        'audit_type': ['SERVICE_START']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['service_start'])
 
   def testRuleServiceStop(self):
     """Tests the service_stop tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'selinux:line' AND audit_type is 'SERVICE_STOP'
-    event_data = selinux.SELinuxLogEventData()
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'SERVICE_STOP'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['service_stop'])
+    attribute_values_per_name = {
+        'audit_type': ['SERVICE_STOP']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['service_stop'])
 
   def testRulePromiscuous(self):
     """Tests the promiscuous tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'selinux:line' AND audit_type is 'ANOM_PROMISCUOUS'
-    event_data = selinux.SELinuxLogEventData()
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'ANOM_PROMISCUOUS'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['promiscuous'])
+    attribute_values_per_name = {
+        'audit_type': ['ANOM_PROMISCUOUS']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['promiscuous'])
 
     # Test: reporter is 'kernel' AND body contains 'promiscuous mode'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'kernel'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'promiscuous mode'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'kernel'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['promiscuous'])
+    attribute_values_per_name = {
+        'body': ['promiscuous mode'],
+        'reporter': ['kernel']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['promiscuous'])
 
   def testRuleCrach(self):
     """Tests the crash tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
     # Test: data_type is 'selinux:line' AND audit_type is 'ANOM_ABEND'
-    event_data = selinux.SELinuxLogEventData()
-    event_data.audit_type = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.audit_type = 'ANOM_ABEND'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['crash'])
+    attribute_values_per_name = {
+        'audit_type': ['ANOM_ABEND']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name, ['crash'])
 
     # Test: reporter is 'kernel' AND body contains 'segfault'
-    event_data = syslog.SyslogLineEventData()
-    event_data.reporter = 'kernel'
-    event_data.body = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'bogus'
-    event_data.body = 'segfault'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data.reporter = 'kernel'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['crash'])
+    attribute_values_per_name = {
+        'body': ['segfault'],
+        'reporter': ['kernel']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name, ['crash'])
 
 
 if __name__ == '__main__':
