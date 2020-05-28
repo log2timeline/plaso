@@ -18,8 +18,10 @@ class DependencyDefinition(object):
         provides the dependency.
     l2tbinaries_name (str): name of the l2tbinaries package that provides
         the dependency.
-    maximum_version (str): maximum supported version.
-    minimum_version (str): minimum supported version.
+    maximum_version (str): maximum supported version, a greater or equal
+        version is not supported.
+    minimum_version (str): minimum supported version, a lesser version is
+        not supported.
     name (str): name of (the Python module that provides) the dependency.
     pypi_name (str): name of the PyPI package that provides the dependency.
     python2_only (bool): True if the dependency is only supported by Python 2.
