@@ -171,7 +171,8 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.HasWarnings()
 
-  def ReadPreprocessingInformation(self, knowledge_base):
+  # pylint: disable=unused-argument
+  def ReadSystemConfiguration(self, knowledge_base):
     """Reads preprocessing information.
 
     The preprocessing information contains the system configuration which
