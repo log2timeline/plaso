@@ -173,11 +173,10 @@ class RedisStorageReader(interface.StorageReader):
 
   # pylint: disable=unused-argument
   def ReadSystemConfiguration(self, knowledge_base):
-    """Reads preprocessing information.
+    """Reads system configuration information.
 
-    The preprocessing information contains the system configuration which
-    contains information about various system specific configuration data,
-    for example the user accounts.
+    The system configuration contains information about various system specific
+    configuration data, for example the user accounts.
 
     Args:
       knowledge_base (KnowledgeBase): is used to store the preprocessing
