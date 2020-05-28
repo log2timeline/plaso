@@ -131,7 +131,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    event_attributes = event_data.GetAttributes()
+    event_attributes = list(event_data.GetAttributes())
     if event_data_stream:
       event_attributes.extend(event_data_stream.GetAttributes())
 

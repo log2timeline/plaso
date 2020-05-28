@@ -25,16 +25,20 @@ from tests.storage import test_lib
 class RedisMergeReaderTest(test_lib.StorageTestCase):
   """Tests for the Redis store reader for merging."""
 
+  _REDIS_URL = 'redis://127.0.0.1/0'
+
   def _GetRedisClient(self):
     """Creates a Redis client for testing.
 
-    This method will attempt to use the
+    This method will attempt to use a Redis server listening on localhost and
+    fallback to a fake Redis client if no server is availble or the connection
+    timed out.
 
     Returns:
       Redis: a Redis client.
     """
     try:
-      redis_client = redis.from_url('redis://127.0.0.1/0', socket_timeout=60)
+      redis_client = redis.from_url(self._REDIS_URL, socket_timeout=60)
       redis_client.ping()
     except redis.exceptions.ConnectionError:
       redis_client = fakeredis.FakeStrictRedis()
@@ -59,8 +63,11 @@ class RedisMergeReaderTest(test_lib.StorageTestCase):
 
     task_store.Open(redis_client=redis_client)
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      task_store.AddEventDataStream(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
       task_store.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())

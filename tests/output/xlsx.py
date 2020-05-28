@@ -132,9 +132,9 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       output_module.Open()
       output_module.WriteHeader()
 
-      event, event_data = containers_test_lib.CreateEventFromValues(
-          self._TEST_EVENTS[0])
-      output_module.WriteEvent(event, event_data, None, None)
+      event, event_data, event_data_stream = (
+          containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+      output_module.WriteEvent(event, event_data, event_data_stream, None)
 
       output_module.WriteFooter()
       output_module.Close()

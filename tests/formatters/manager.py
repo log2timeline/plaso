@@ -163,28 +163,32 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
 
   def testMessageStrings(self):
     """Tests the GetMessageStrings and GetSourceStrings functions."""
-    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
-
     formatter_mediator = mediator.FormatterMediator()
 
     message_strings = []
     text_message = None
     text_message_short = None
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
-      message, message_short = manager.FormattersManager.GetMessageStrings(
-          formatter_mediator, event_data)
-      source_short, source_long = manager.FormattersManager.GetSourceStrings(
-          event, event_data)
+    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
 
-      if source_short == 'LOG' and not text_message:
-        text_message = message
-        text_message_short = message_short
+    try:
+      for event, event_data, _ in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        message, message_short = manager.FormattersManager.GetMessageStrings(
+            formatter_mediator, event_data)
+        source_short, source_long = manager.FormattersManager.GetSourceStrings(
+            event, event_data)
 
-      csv_message_strings = '{0:d},{1:s},{2:s},{3:s}'.format(
-          event.timestamp, source_short, source_long, message)
-      message_strings.append(csv_message_strings)
+        if source_short == 'LOG' and not text_message:
+          text_message = message
+          text_message_short = message_short
+
+        csv_message_strings = '{0:d},{1:s},{2:s},{3:s}'.format(
+            event.timestamp, source_short, source_long, message)
+        message_strings.append(csv_message_strings)
+
+    finally:
+      manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 
     self.assertIn((
         '1334961526929596,REG,UNKNOWN,[MY AutoRun key] '
@@ -219,21 +223,21 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
         'And since this l...')
     self.assertEqual(text_message_short, expected_text_message_short)
 
-    manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
-
   def testGetUnformattedAttributes(self):
     """Tests the GetUnformattedAttributes function."""
-    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
-
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
-    unformatted_attributes = manager.FormattersManager.GetUnformattedAttributes(
-        event_data)
+    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
+
+    try:
+      unformatted_attributes = (
+          manager.FormattersManager.GetUnformattedAttributes(event_data))
+    finally:
+      manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
+
     self.assertEqual(
         unformatted_attributes, ['_event_data_stream_row_identifier', 'random'])
-
-    manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 
 
 if __name__ == '__main__':

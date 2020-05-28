@@ -52,7 +52,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetEventFormatter(self):
     """Tests the GetEventFormatter function."""
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     formatters_manager.FormattersManager.RegisterFormatter(
@@ -68,7 +68,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetFormattedMessages(self):
     """Tests the GetFormattedMessages function."""
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     formatters_manager.FormattersManager.RegisterFormatter(
@@ -90,7 +90,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetFormattedSources(self):
     """Tests the GetFormattedSources function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
+    event, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     formatters_manager.FormattersManager.RegisterFormatter(
@@ -108,14 +108,14 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetHostname(self):
     """Tests the GetHostname function."""
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
     hostname = self._output_mediator.GetHostname(event_data)
     self.assertEqual(hostname, 'ubuntu')
 
   def testGetMACBRepresentation(self):
     """Tests the GetMACBRepresentation function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
+    event, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
     macb_representation = self._output_mediator.GetMACBRepresentation(
         event, event_data)
@@ -128,7 +128,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetUsername(self):
     """Tests the GetUsername function."""
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
     username = self._output_mediator.GetUsername(event_data)
     self.assertEqual(username, 'root')

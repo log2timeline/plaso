@@ -91,7 +91,7 @@ class AndFilterTest(shared_test_lib.BaseTestCase):
 
   def testMatches(self):
     """Tests the Matches function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
+    event, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     false_filter_object = FalseFilter()
@@ -121,7 +121,7 @@ class OrFilterTest(shared_test_lib.BaseTestCase):
 
   def testMatches(self):
     """Tests the Matches function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
+    event, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     false_filter_object = FalseFilter()
@@ -151,7 +151,7 @@ class IdentityFilterTest(shared_test_lib.BaseTestCase):
 
   def testMatches(self):
     """Tests the Matches function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
+    event, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     filter_object = filters.IdentityFilter()
@@ -187,7 +187,7 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
 
   def testGetValue(self):
     """Tests the _GetValue function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
+    event, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     event_tag = events.EventTag(comment='comment')

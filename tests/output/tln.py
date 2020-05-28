@@ -60,14 +60,15 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     formatters_manager.FormattersManager.RegisterFormatter(
         test_lib.TestEventFormatter)
 
     try:
-      self._output_module.WriteEventBody(event, event_data, None, None)
+      self._output_module.WriteEventBody(
+          event, event_data, event_data_stream, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           test_lib.TestEventFormatter)
@@ -122,14 +123,15 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     formatters_manager.FormattersManager.RegisterFormatter(
         test_lib.TestEventFormatter)
 
     try:
-      self._output_module.WriteEventBody(event, event_data, None, None)
+      self._output_module.WriteEventBody(
+          event, event_data, event_data_stream, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           test_lib.TestEventFormatter)

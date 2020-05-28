@@ -269,8 +269,12 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event, event_data in containers_test_lib.CreateEventsFromValues(
-          self._TEST_EVENTS):
+      for event, event_data, event_data_stream in (
+          containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+        storage_file.AddEventDataStream(event_data_stream)
+
+        event_data.SetEventDataStreamIdentifier(
+            event_data_stream.GetIdentifier())
         storage_file.AddEventData(event_data)
 
         event.SetEventDataIdentifier(event_data.GetIdentifier())
@@ -312,8 +316,12 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.Open(path=temp_file, read_only=False)
 
       test_events = []
-      for event, event_data in containers_test_lib.CreateEventsFromValues(
-          self._TEST_EVENTS):
+      for event, event_data, event_data_stream in (
+          containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+        storage_file.AddEventDataStream(event_data_stream)
+
+        event_data.SetEventDataStreamIdentifier(
+            event_data_stream.GetIdentifier())
         storage_file.AddEventData(event_data)
 
         event.SetEventDataIdentifier(event_data.GetIdentifier())
@@ -423,8 +431,12 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event, event_data in containers_test_lib.CreateEventsFromValues(
-          self._TEST_EVENTS):
+      for event, event_data, event_data_stream in (
+          containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+        storage_file.AddEventDataStream(event_data_stream)
+
+        event_data.SetEventDataStreamIdentifier(
+            event_data_stream.GetIdentifier())
         storage_file.AddEventData(event_data)
 
         event.SetEventDataIdentifier(event_data.GetIdentifier())
@@ -471,8 +483,12 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.Open(path=temp_file, read_only=False)
 
       test_events = []
-      for event, event_data in containers_test_lib.CreateEventsFromValues(
-          self._TEST_EVENTS):
+      for event, event_data, event_data_stream in (
+          containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+        storage_file.AddEventDataStream(event_data_stream)
+
+        event_data.SetEventDataStreamIdentifier(
+            event_data_stream.GetIdentifier())
         storage_file.AddEventData(event_data)
 
         event.SetEventDataIdentifier(event_data.GetIdentifier())
@@ -506,8 +522,12 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event, event_data in containers_test_lib.CreateEventsFromValues(
-          self._TEST_EVENTS):
+      for event, event_data, event_data_stream in (
+          containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+        storage_file.AddEventDataStream(event_data_stream)
+
+        event_data.SetEventDataStreamIdentifier(
+            event_data_stream.GetIdentifier())
         storage_file.AddEventData(event_data)
 
         event.SetEventDataIdentifier(event_data.GetIdentifier())

@@ -45,8 +45,11 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer.Open()
 
     event = None
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      storage_writer.AddEventDataStream(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
       storage_writer.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
@@ -81,8 +84,11 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer.Open()
 
     test_events = []
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      storage_writer.AddEventDataStream(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
       storage_writer.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
@@ -149,8 +155,11 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      storage_writer.AddEventDataStream(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
       storage_writer.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
@@ -173,8 +182,11 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      storage_writer.AddEventDataStream(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
       storage_writer.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())

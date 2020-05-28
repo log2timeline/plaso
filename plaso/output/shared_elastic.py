@@ -152,7 +152,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    event_attributes = event_data.GetAttributes()
+    event_attributes = list(event_data.GetAttributes())
     if event_data_stream:
       event_attributes.extend(event_data_stream.GetAttributes())
 

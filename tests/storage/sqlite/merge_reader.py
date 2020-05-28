@@ -49,8 +49,11 @@ class SQLiteStorageMergeReaderTest(test_lib.StorageTestCase):
 
     storage_file.Open()
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        event_values_list):
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(event_values_list)):
+      storage_file.AddEventDataStream(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
       storage_file.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())

@@ -15,26 +15,27 @@ def CreateEventFromValues(event_values):
     event_values (dict[str, str]): event values.
 
   Returns:
-    tuple[EventObject, EventData]: event and event data for testing.
+    tuple[EventObject, EventData, EventDataStream]: event, event data and
+        event data stream for testing.
   """
   copy_of_event_values = dict(event_values)
 
-  timestamp = copy_of_event_values.get('timestamp', None)
-  if 'timestamp' in copy_of_event_values:
-    del copy_of_event_values['timestamp']
-
-  timestamp_desc = copy_of_event_values.get('timestamp_desc', None)
-  if 'timestamp_desc' in copy_of_event_values:
-    del copy_of_event_values['timestamp_desc']
-
   event = events.EventObject()
-  event.timestamp = timestamp
-  event.timestamp_desc = timestamp_desc
+  for attribute_name in ('timestamp', 'timestamp_desc'):
+    attribute_value = copy_of_event_values.pop(attribute_name, None)
+    if attribute_value is not None:
+      setattr(event, attribute_name, attribute_value)
+
+  event_data_stream = events.EventDataStream()
+  for attribute_name in ('md5_hash', 'sha256_hash'):
+    attribute_value = copy_of_event_values.pop(attribute_name, None)
+    if attribute_value is not None:
+      setattr(event_data_stream, attribute_name, attribute_value)
 
   event_data = events.EventData()
   event_data.CopyFromDict(copy_of_event_values)
 
-  return event, event_data
+  return event, event_data, event_data_stream
 
 
 def CreateEventsFromValues(event_values_list):
@@ -44,7 +45,8 @@ def CreateEventsFromValues(event_values_list):
     event_values_list (list[dict[str, str]]): list of event values.
 
   Yields:
-    tuple[EventObject, EventData]: event and event data for testing.
+    tuple[EventObject, EventData, EventDataStream]: event, event data and
+        event data stream for testing.
   """
   for event_values in event_values_list:
     yield CreateEventFromValues(event_values)
