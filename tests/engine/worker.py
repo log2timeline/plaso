@@ -83,7 +83,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       storage_writer (StorageWriter): storage writer.
       path_spec (dfvfs.PathSpec): path specification.
       extraction_worker (Optional[EventExtractorWorker]): worker to process the
-          pathspec. If None, a new worker will be created.
+          path specification. If None, a new worker will be created.
       knowledge_base_values (Optional[dict]): knowledge base values.
       process_archives (Optional[bool]): whether archive files should be
           processed.

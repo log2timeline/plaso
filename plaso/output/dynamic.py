@@ -129,9 +129,14 @@ class DynamicFieldsHelper(object):
     """
     inode = getattr(event_data, 'inode', None)
     if inode is None:
-      pathspec = getattr(event_data, 'pathspec', None)
-      if pathspec and hasattr(pathspec, 'inode'):
-        inode = pathspec.inode
+      path_specification = getattr(event_data_stream, 'path_spec', None)
+      if not path_specification:
+        # Note that support for event_data.pathspec is kept for backwards
+        # compatibility.
+        path_specification = getattr(event_data, 'pathspec', None)
+
+      inode = getattr(path_specification, 'inode', None)
+
     if inode is None:
       inode = '-'
 

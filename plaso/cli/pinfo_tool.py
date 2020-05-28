@@ -308,7 +308,8 @@ class PinfoTool(
     Args:
       storage_counters (dict): storage counters.
     """
-    warnings_by_pathspec = storage_counters.get('warnings_by_path_spec', {})
+    warnings_by_path_specification = storage_counters.get(
+        'warnings_by_path_spec', {})
     warnings_by_parser_chain = storage_counters.get(
         'warnings_by_parser_chain', {})
     if not warnings_by_parser_chain:
@@ -329,9 +330,8 @@ class PinfoTool(
         column_names=['Number of warnings', 'Pathspec'],
         title='Pathspecs with most warnings')
 
-    top_pathspecs = warnings_by_pathspec.most_common(10)
-    for pathspec, count in top_pathspecs:
-      for path_index, line in enumerate(pathspec.split('\n')):
+    for path_spec, count in warnings_by_path_specification.most_common(10):
+      for path_index, line in enumerate(path_spec.split('\n')):
         if not line:
           continue
 

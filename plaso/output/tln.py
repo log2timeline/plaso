@@ -195,35 +195,42 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
 
   _HEADER = 'Time|Source|Host|User|Description|TZ|Notes\n'
 
-  def _FormatInode(self, event_data):
+  def _FormatInode(self, event_data, event_data_stream):
     """Formats the inode.
 
     Args:
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: inode field.
     """
     inode = getattr(event_data, 'inode', None)
     if inode is None:
-      pathspec = getattr(event_data, 'pathspec', None)
-      if pathspec and hasattr(pathspec, 'inode'):
-        inode = pathspec.inode
+      path_specification = getattr(event_data_stream, 'path_spec', None)
+      if not path_specification:
+        # Note that support for event_data.pathspec is kept for backwards
+        # compatibility.
+        path_specification = getattr(event_data, 'pathspec', None)
+
+      inode = getattr(path_specification, 'inode', None)
+
     if inode is None:
       inode = '-'
 
     return inode
 
-  def _FormatNotes(self, event_data):
+  def _FormatNotes(self, event_data, event_data_stream):
     """Formats the notes.
 
     Args:
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
      Returns:
        str: formatted notes field.
     """
-    inode = self._FormatInode(event_data)
+    inode = self._FormatInode(event_data, event_data_stream)
 
     notes = getattr(event_data, 'notes', '')
     if not notes:
@@ -255,7 +262,7 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
     hostname = self._FormatHostname(event_data)
     username = self._FormatUsername(event_data)
     description = self._FormatDescription(event, event_data)
-    notes = self._FormatNotes(event_data)
+    notes = self._FormatNotes(event_data, event_data_stream)
 
     out_write = '{0:d}|{1:s}|{2:s}|{3:s}|{4:s}|{5!s}|{6!s}\n'.format(
         posix_timestamp, source, hostname, username, description,

@@ -132,32 +132,23 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedEventData(self):
     """Test ReadSerialized and WriteSerialized of EventData."""
-    test_file = self._GetTestFilePath(['ímynd.dd'])
+    expected_event_data = events.EventData()
+    expected_event_data.data_type = 'test:event2'
+    expected_event_data.parser = 'test_parser'
 
-    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
-        parent=volume_path_spec)
-
-    expected_event = events.EventData()
-    expected_event.data_type = 'test:event2'
-    expected_event.parser = 'test_parser'
-    expected_event.pathspec = path_spec
-
-    expected_event.empty_string = ''
-    expected_event.zero_integer = 0
-    expected_event.integer = 34
-    expected_event.float = -122.082203542683
-    expected_event.string = 'Normal string'
-    expected_event.unicode_string = 'And I am a unicorn.'
-    expected_event.my_list = ['asf', 4234, 2, 54, 'asf']
-    expected_event.a_tuple = ('some item', [234, 52, 15])
-    expected_event.null_value = None
+    expected_event_data.empty_string = ''
+    expected_event_data.zero_integer = 0
+    expected_event_data.integer = 34
+    expected_event_data.float = -122.082203542683
+    expected_event_data.string = 'Normal string'
+    expected_event_data.unicode_string = 'And I am a unicorn.'
+    expected_event_data.my_list = ['asf', 4234, 2, 54, 'asf']
+    expected_event_data.a_tuple = ('some item', [234, 52, 15])
+    expected_event_data.null_value = None
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-            expected_event))
+            expected_event_data))
 
     self.assertIsNotNone(json_string)
 
@@ -168,7 +159,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsNotNone(event_data)
     self.assertIsInstance(event_data, events.EventData)
 
-    expected_data_event_dict = {
+    expected_event_data_dict = {
         'a_tuple': ('some item', [234, 52, 15]),
         'data_type': 'test:event2',
         'empty_string': '',
@@ -176,17 +167,51 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         'float': -122.082203542683,
         'my_list': ['asf', 4234, 2, 54, 'asf'],
         'parser': 'test_parser',
-        'pathspec': path_spec.comparable,
         'string': 'Normal string',
         'unicode_string': 'And I am a unicorn.',
         'zero_integer': 0}
 
     event_data_dict = event_data.CopyToDict()
-    path_spec = event_data_dict.get('pathspec', None)
-    if path_spec:
-      event_data_dict['pathspec'] = path_spec.comparable
+    self.assertEqual(event_data_dict, expected_event_data_dict)
 
-    self.assertEqual(event_data_dict, expected_data_event_dict)
+  def testReadAndWriteSerializedEventDataStream(self):
+    """Test ReadSerialized and WriteSerialized of EventDataStream."""
+    test_file = self._GetTestFilePath(['ímynd.dd'])
+
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
+        parent=volume_path_spec)
+
+    expected_event_data_stream = events.EventDataStream()
+    expected_event_data_stream.md5_hash = 'e3df0d2abd2c27fbdadfb41a47442520'
+    expected_event_data_stream.path_spec = path_spec
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_event_data_stream))
+
+    self.assertIsNotNone(json_string)
+
+    event_data_stream = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(event_data_stream)
+    self.assertIsInstance(event_data_stream, events.EventDataStream)
+
+    expected_event_data_stream_dict = {
+        'md5_hash': 'e3df0d2abd2c27fbdadfb41a47442520',
+        'path_spec': path_spec.comparable}
+
+    event_data_stream_dict = event_data_stream.CopyToDict()
+
+    path_spec = event_data_stream_dict.get('path_spec', None)
+    if path_spec:
+      event_data_stream_dict['path_spec'] = path_spec.comparable
+
+    self.assertEqual(event_data_stream_dict, expected_event_data_stream_dict)
 
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""

@@ -407,7 +407,6 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_path = '\\??\\C:\\Windows\\PSEXESVC.EXE'
     expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(

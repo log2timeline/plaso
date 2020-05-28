@@ -100,8 +100,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     Returns:
       list[HashAnalysis]: analysis results, or an empty list on error.
     """
-    logger.debug(
-        'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
+    logger.debug('Opening connection to {0:s}:{1:d}'.format(
+        self._host, self._port))
 
     nsrl_socket = self._GetSocket()
     if not nsrl_socket:
@@ -119,8 +119,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     nsrl_socket.close()
 
-    logger.debug(
-        'Closed connection to {0:s}:{1:d}'.format(self._host, self._port))
+    logger.debug('Closed connection to {0:s}:{1:d}'.format(
+        self._host, self._port))
 
     return hash_analyses
 

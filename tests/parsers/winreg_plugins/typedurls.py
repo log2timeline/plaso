@@ -59,7 +59,6 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:typedurls')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] '
@@ -114,7 +113,6 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:typedurls')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] '
