@@ -24,16 +24,20 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
+  _REDIS_URL = 'redis://127.0.0.1/0'
+
   def _GetRedisClient(self):
     """Creates a Redis client for testing.
 
-    This method will attempt to use the
+    This method will attempt to use a Redis server listening on localhost and
+    fallback to a fake Redis client if no server is availble or the connection
+    timed out.
 
     Returns:
       Redis: a Redis client.
     """
     try:
-      redis_client = redis.from_url('redis://127.0.0.1/0', socket_timeout=60)
+      redis_client = redis.from_url(self._REDIS_URL, socket_timeout=60)
       redis_client.ping()
     except redis.exceptions.ConnectionError:
       redis_client = fakeredis.FakeStrictRedis()
@@ -85,7 +89,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testAddEvent(self):
     """Tests the _AddEvent method."""
-    event, _ = containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+    event, _, _ = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
 
     store = redis_store.RedisStore()
     redis_client = self._GetRedisClient()
@@ -107,7 +112,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     redis_client = self._GetRedisClient()
     store.Open(redis_client=redis_client)
 
-    for event, _ in containers_test_lib.CreateEventsFromValues(
+    for event, _, _ in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
       store.AddEvent(event)
 
@@ -122,7 +127,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     redis_client = self._GetRedisClient()
     store.Open(redis_client=redis_client)
 
-    for _, event_data in containers_test_lib.CreateEventsFromValues(
+    for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
       store.AddEventData(event_data)
 
@@ -138,7 +143,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     redis_client = self._GetRedisClient()
     store.Open(redis_client=redis_client)
 
-    for _, event_data in containers_test_lib.CreateEventsFromValues(
+    for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
       store.AddEventData(event_data)
 
@@ -154,7 +159,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
   def testGetAttributeContainerByIdentifier(self):
     """Tests the _GetAttributeContainerByIdentifier method."""
     test_events = []
-    for test_event, _ in containers_test_lib.CreateEventsFromValues(
+    for test_event, _, _ in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
       test_events.append(test_event)
 

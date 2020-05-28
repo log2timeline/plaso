@@ -82,7 +82,7 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
     formatter_mediator = mediator.FormatterMediator()
     event_formatter = test_lib.TestEventFormatter()
 
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     message, _ = event_formatter.GetMessages(formatter_mediator, event_data)
@@ -130,7 +130,7 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
     formatter_mediator = mediator.FormatterMediator()
     event_formatter = ConditionalTestEventFormatter()
 
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     message, _ = event_formatter.GetMessages(formatter_mediator, event_data)

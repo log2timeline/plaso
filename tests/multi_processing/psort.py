@@ -151,10 +151,10 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     """Tests the _GetEventIdentifiers function."""
     event_heap = psort.PsortEventHeap()
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     macb_group_identifier, content_identifier = event_heap._GetEventIdentifiers(
-        event, event_data, None)
+        event, event_data, event_data_stream)
 
     expected_identifier = 'data_type: test:event'
     self.assertEqual(macb_group_identifier, expected_identifier)
@@ -171,9 +171,9 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     test_event = event_heap.PopEvent()
     self.assertIsNone(test_event)
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
-      event_heap.PushEvent(event, event_data, None)
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      event_heap.PushEvent(event, event_data, event_data_stream)
 
     self.assertEqual(len(event_heap._heap), 2)
 
@@ -191,9 +191,9 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     test_events = list(event_heap.PopEvents())
     self.assertEqual(len(test_events), 0)
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
-      event_heap.PushEvent(event, event_data, None)
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      event_heap.PushEvent(event, event_data, event_data_stream)
 
     self.assertEqual(len(event_heap._heap), 2)
 
@@ -208,9 +208,9 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
     self.assertEqual(len(event_heap._heap), 0)
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    event_heap.PushEvent(event, event_data, None)
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    event_heap.PushEvent(event, event_data, event_data_stream)
 
     self.assertEqual(len(event_heap._heap), 1)
 
@@ -288,8 +288,11 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     # TODO: add preprocessing information.
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      storage_file.AddEventDataStream(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
       storage_file.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())

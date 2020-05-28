@@ -401,7 +401,7 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
   def testParseWithEvents(self):
     """Tests the Parse function with events."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
+    event, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     event_tag = events.EventTag()

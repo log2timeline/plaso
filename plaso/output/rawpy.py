@@ -54,7 +54,7 @@ class NativePythonFormatterHelper(object):
         '',
         '[Additional attributes]:']
 
-    event_attributes = event_data.GetAttributes()
+    event_attributes = list(event_data.GetAttributes())
     if event_data_stream:
       event_attributes.extend(event_data_stream.GetAttributes())
 

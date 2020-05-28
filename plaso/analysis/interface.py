@@ -132,8 +132,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     super(HashTaggingAnalysisPlugin, self).__init__()
     self._analysis_queue_timeout = self.DEFAULT_QUEUE_TIMEOUT
     self._analyzer_started = False
-    self._event_identifiers_by_pathspec = collections.defaultdict(list)
-    self._hash_pathspecs = collections.defaultdict(list)
+    self._event_identifiers_by_path_spec = collections.defaultdict(list)
+    self._hash_path_specs = collections.defaultdict(list)
     self._requester_class = None
     self._time_of_last_status_log = time.time()
     self.hash_analysis_queue = queue.Queue()
@@ -154,16 +154,17 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     Returns:
       tuple: containing:
 
-        list[dfvfs.PathSpec]: pathspecs that had the hash value looked up.
+        list[dfvfs.PathSpec]: path specifications that had the hash value
+            looked up.
         list[str]: labels that corresponds to the hash value that was looked up.
         list[EventTag]: event tags for all events that were extracted from the
             path specifications.
     """
     tags = []
     labels = self.GenerateLabels(hash_analysis.hash_information)
-    path_specifications = self._hash_pathspecs.pop(hash_analysis.subject_hash)
+    path_specifications = self._hash_path_specs.pop(hash_analysis.subject_hash)
     for path_specification in path_specifications:
-      event_identifiers = self._event_identifiers_by_pathspec.pop(
+      event_identifiers = self._event_identifiers_by_path_spec.pop(
           path_specification, [])
 
       if not labels:
@@ -200,24 +201,30 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
 
     self._EnsureRequesterStarted()
 
-    event_identifiers = self._event_identifiers_by_pathspec[event_data.pathspec]
+    path_specification = getattr(event_data, 'pathspec', None)
+
+    event_identifiers = self._event_identifiers_by_path_spec[path_specification]
 
     event_identifier = event.GetIdentifier()
     event_identifiers.append(event_identifier)
 
+    hash_attributes_container = event_data_stream
+    if not hash_attributes_container:
+      hash_attributes_container = event_data
+
     lookup_hash = '{0:s}_hash'.format(self._analyzer.lookup_hash)
-    lookup_hash = getattr(event_data, lookup_hash, None)
+    lookup_hash = getattr(hash_attributes_container, lookup_hash, None)
     if not lookup_hash:
-      display_name = mediator.GetDisplayNameForPathSpec(event_data.pathspec)
+      display_name = mediator.GetDisplayNameForPathSpec(path_specification)
       logger.warning((
           'Lookup hash attribute: {0:s}_hash missing from event that '
           'originated from: {1:s}.').format(
               self._analyzer.lookup_hash, display_name))
       return
 
-    path_specs = self._hash_pathspecs[lookup_hash]
-    path_specs.append(event_data.pathspec)
-    # There may be multiple path specification that have the same hash. We only
+    path_specs = self._hash_path_specs[lookup_hash]
+    path_specs.append(path_specification)
+    # There may be multiple path specifications that have the same hash. We only
     # want to look them up once.
     if len(path_specs) == 1:
       self.hash_queue.put(lookup_hash)
@@ -275,12 +282,12 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         # The result queue is empty, but there could still be items that need
         # to be processed by the analyzer.
         continue
-      pathspecs, labels, new_tags = self._HandleHashAnalysis(
+      path_specs, labels, new_tags = self._HandleHashAnalysis(
           hash_analysis)
 
       tags.extend(new_tags)
       for label in labels:
-        path_specs_per_labels_counter[label] += len(pathspecs)
+        path_specs_per_labels_counter[label] += len(path_specs)
 
     self._analyzer.SignalAbort()
 

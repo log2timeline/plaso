@@ -66,14 +66,15 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     formatters_manager.FormattersManager.RegisterFormatter(
         formatters_test_lib.TestEventFormatter)
 
     try:
-      self._output_module.WriteEventBody(event, event_data, None, None)
+      self._output_module.WriteEventBody(
+          event, event_data, event_data_stream, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
