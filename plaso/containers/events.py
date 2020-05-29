@@ -73,9 +73,6 @@ class EventObject(interface.AttributeContainer):
   attributes.
 
   Attributes:
-    event_data_row_identifier (int): row number of the serialized event data
-        stream, this attribute is used by the SQLite storage files to uniquely
-        identify the event data linked to the event.
     parser (str): string identifying the parser that produced the event.
     tag (EventTag): event tag.
     timestamp (int): timestamp, which contains the number of microseconds
@@ -84,11 +81,13 @@ class EventObject(interface.AttributeContainer):
   """
   CONTAINER_TYPE = 'event'
 
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_row_identifier']
+
   def __init__(self):
     """Initializes an event attribute container."""
     super(EventObject, self).__init__()
     self._event_data_identifier = None
-    self.event_data_row_identifier = None
+    self._event_data_row_identifier = None
     self.parser = None
     self.tag = None
     self.timestamp = None
@@ -138,14 +137,13 @@ class EventTag(interface.AttributeContainer):
 
   Attributes:
     comment (str): comments.
-    event_row_identifier (int): row number of the serialized event stream, this
-        attribute is used by the SQLite storage files to uniquely identify
-        the event linked to the tag.
     labels (list[str]): labels, such as "malware", "application_execution".
   """
   CONTAINER_TYPE = 'event_tag'
 
   _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_row_identifier']
 
   _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 
@@ -157,8 +155,8 @@ class EventTag(interface.AttributeContainer):
     """
     super(EventTag, self).__init__()
     self._event_identifier = None
+    self._event_row_identifier = None
     self.comment = comment
-    self.event_row_identifier = None
     self.labels = []
 
   def AddComment(self, comment):
