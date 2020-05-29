@@ -5,10 +5,7 @@ from __future__ import unicode_literals
 
 import lzma
 
-try:
-  import lz4.block as lz4_block
-except ImportError:
-  lz4_block = None
+from lz4 import block as lz4_block
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -123,13 +120,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
             'Unable to parse LZ4 uncompressed size at offset: 0x{0:08x} with '
             'error: {1!s}').format(file_offset + 64, exception))
 
-      if not lz4_block:
-        raise errors.ParseError((
-            'Unable to decompress LZ4 compressed data at offset: 0x{0:08x} '
-            'with error: missing LZ4 support').format(file_offset + 68))
-
-      data = lz4_block.decompress(
-          data[8:], uncompressed_size=uncompressed_size)
+      data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
 
     return data
 
