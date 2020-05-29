@@ -7,7 +7,6 @@ import os
 import sqlite3
 import zlib
 
-from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import event_heaps
@@ -87,7 +86,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     super(SQLiteStorageFile, self).__init__()
     self._connection = None
     self._cursor = None
-    self._last_session = 0
     self._maximum_buffer_size = maximum_buffer_size
     self._serialized_event_heap = event_heaps.SerializedEventHeap()
 
@@ -257,8 +255,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       AttributeContainer: attribute container or None if not available.
 
     Raises:
-      OSError: if an invalid identifier is provided.
-      IOError: if an invalid identifier is provided.
+      OSError: if an unsupported identifier is provided.
+      IOError: if an unsupported identifier is provided.
     """
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
       raise IOError('Unsupported event data identifier type: {0!s}'.format(
@@ -833,39 +831,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     number_of_event_sources += self._GetNumberOfSerializedAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
     return number_of_event_sources
-
-  def GetSessions(self):
-    """Retrieves the sessions.
-
-    Yields:
-      Session: session attribute container.
-
-    Raises:
-      IOError: if there is a mismatch in session identifiers between the
-          session start and completion attribute containers.
-      OSError: if there is a mismatch in session identifiers between the
-          session start and completion attribute containers.
-    """
-    session_start_generator = self._GetAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_START)
-    session_completion_generator = self._GetAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_COMPLETION)
-
-    for session_index in range(0, self._last_session):
-      session_start = next(session_start_generator)  # pylint: disable=stop-iteration-return
-      session_completion = next(session_completion_generator)  # pylint: disable=stop-iteration-return
-
-      session = sessions.Session()
-      session.CopyAttributesFromSessionStart(session_start)
-      if session_completion:
-        try:
-          session.CopyAttributesFromSessionCompletion(session_completion)
-        except ValueError:
-          raise IOError(
-              'Session identifier mismatch for session: {0:d}'.format(
-                  session_index))
-
-      yield session
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.

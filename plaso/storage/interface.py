@@ -60,6 +60,7 @@ class BaseStore(object):
     self.format_version = None
     self.serialization_format = None
     self.storage_type = None
+    self._last_session = 0
     self._serializers_profiler = None
     self._storage_profiler = None
     self._serializer = json_serializer.JSONAttributeContainerSerializer
@@ -105,7 +106,7 @@ class BaseStore(object):
 
   @abc.abstractmethod
   def _RaiseIfNotWritable(self):
-    """Raises if the storage file is not writable.
+    """Raises if the store is not writable.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -114,7 +115,7 @@ class BaseStore(object):
 
   @abc.abstractmethod
   def _RaiseIfNotReadable(self):
-    """Raises if the storage file is not readable.
+    """Raises if the store is not readable.
 
      Raises:
        OSError: if the store cannot be read from.
@@ -265,7 +266,7 @@ class BaseStore(object):
     """Retrieves the events.
 
     Returns:
-      generator(Event): event  generator.
+      generator(Event): event generator.
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
 
@@ -319,13 +320,38 @@ class BaseStore(object):
     return self._GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
 
-  @abc.abstractmethod
   def GetSessions(self):
     """Retrieves the sessions.
 
     Yields:
-      Session: session.
+      Session: session attribute container.
+
+    Raises:
+      IOError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
+      OSError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
     """
+    session_start_generator = self._GetAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_START)
+    session_completion_generator = self._GetAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_COMPLETION)
+
+    for session_index in range(0, self._last_session):
+      session_start = next(session_start_generator)  # pylint: disable=stop-iteration-return
+      session_completion = next(session_completion_generator)  # pylint: disable=stop-iteration-return
+
+      session = sessions.Session()
+      session.CopyAttributesFromSessionStart(session_start)
+      if session_completion:
+        try:
+          session.CopyAttributesFromSessionCompletion(session_completion)
+        except ValueError:
+          raise IOError(
+              'Session identifier mismatch for session: {0:d}'.format(
+                  session_index))
+
+      yield session
 
   @abc.abstractmethod
   def GetSortedEvents(self, time_range=None):
@@ -342,13 +368,13 @@ class BaseStore(object):
       EventObject: event.
     """
 
-  @abc.abstractmethod
   def GetWarnings(self):
     """Retrieves the warnings.
 
-    Yields:
-      ExtractionWarning: warning.
+    Returns:
+      generator(ExtractionWarning): warning generator.
     """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def HasAnalysisReports(self):
     """Determines if a store contains analysis reports.
@@ -746,7 +772,7 @@ class StorageReader(object):
 
   @abc.abstractmethod
   def GetNumberOfEventSources(self):
-    """Retrieves the number event sources.
+    """Retrieves the number of event sources.
 
     Returns:
       int: number of event sources.
@@ -1013,7 +1039,7 @@ class StorageWriter(object):
     raise NotImplementedError()
 
   @abc.abstractmethod
-  def Open(self):
+  def Open(self, **kwargs):
     """Opens the storage writer."""
 
   # pylint: disable=unused-argument

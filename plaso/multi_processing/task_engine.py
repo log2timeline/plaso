@@ -8,6 +8,7 @@ import logging
 import multiprocessing
 import os
 import time
+import traceback
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
@@ -24,6 +25,7 @@ from plaso.multi_processing import engine
 from plaso.multi_processing import logger
 from plaso.multi_processing import task_manager
 from plaso.multi_processing import worker_process
+from plaso.storage.redis import redis_store
 
 
 class _EventSourceHeap(object):
@@ -129,6 +131,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_worker_processes = 0
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._processing_configuration = None
+    self._redis_client = None
     self._resolver_context = context.Context()
     self._session_identifier = None
     self._status = definitions.STATUS_INDICATOR_IDLE
@@ -165,6 +168,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     while event_source:
       event_source_heap.PushEventSource(event_source)
       if event_source_heap.IsFull():
+        logger.debug('Source heap is full.')
         break
 
       if self._processing_profiler:
@@ -192,7 +196,18 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming('merge_check')
 
-    for task_identifier in storage_writer.GetProcessedTaskIdentifiers():
+    if (self._processing_configuration.task_storage_format ==
+        definitions.STORAGE_FORMAT_REDIS):
+
+      task_identifiers, redis_client = (
+          redis_store.RedisStore.ScanForProcessedTasks(
+              self._session_identifier, redis_client=self._redis_client))
+      self._redis_client = redis_client
+
+    else:
+      task_identifiers = storage_writer.GetProcessedTaskIdentifiers()
+
+    for task_identifier in task_identifiers:
       try:
         task = self._task_manager.GetProcessedTaskByIdentifier(task_identifier)
 
@@ -457,6 +472,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           event_source = event_source_heap.PopEventSource()
 
       except KeyboardInterrupt:
+        if self._debug_output:
+          traceback.print_exc()
         self._abort = True
 
         self._processing_status.aborted = True

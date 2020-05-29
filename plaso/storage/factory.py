@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 from plaso.lib import definitions
+from plaso.storage.redis import writer as redis_writer
 from plaso.storage.sqlite import reader as sqlite_reader
 from plaso.storage.sqlite import sqlite_file
 from plaso.storage.sqlite import writer as sqlite_writer
@@ -60,6 +61,9 @@ class StorageFactory(object):
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
       return sqlite_writer.SQLiteStorageFileWriter(session, path)
+
+    if storage_format == definitions.STORAGE_FORMAT_REDIS:
+      return redis_writer.RedisStorageWriter(session)
 
     return None
 

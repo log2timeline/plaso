@@ -1,2 +1,4 @@
+fakeredis >= 1.4.1
 mock >= 2.0.0
 pbr >= 4.2.0
+sortedcontainers >= 2.1.0
