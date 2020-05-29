@@ -62,7 +62,16 @@ then
 
 elif test "${TARGET}" = "dockerfile";
 then
-	cd config/docker && docker build --build-arg PPA_TRACK="dev" -f Dockerfile .
+	SOURCE_PATH=${PWD};
+	CONTAINER_NAME="log2timeline/plaso";
+
+	cd config/docker
+
+	docker build --build-arg PPA_TRACK="dev" -f Dockerfile -t ${CONTAINER_NAME} .
+
+	docker run -v ${SOURCE_PATH}:/data ${CONTAINER_NAME} log2timeline --status_view linear /data/test.plaso /data/test_data;
+
+	docker run -v ${SOURCE_PATH}:/data ${CONTAINER_NAME} psort --status_view linear -w /data/timeline.log /data/test.plaso;
 
 elif test "${TRAVIS_OS_NAME}" = "osx";
 then
