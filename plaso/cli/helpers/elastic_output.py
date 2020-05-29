@@ -121,11 +121,12 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
 
     if elastic_password is None:
       elastic_password = os.getenv('PLASO_ELASTIC_PASSWORD', None)
-    else:
+
+    if elastic_password is not None:
       logger.warning(
           'Note that specifying your Elasticsearch password via '
-          '--elastic_password can expose the password to other users on the '
-          'system.')
+          '--elastic_password or the environment PLASO_ELASTIC_PASSWORD can '
+          'expose the password to other users on the system.')
 
     if elastic_user is not None and elastic_password is None:
       elastic_password = getpass.getpass('Enter your Elasticsearch password: ')
