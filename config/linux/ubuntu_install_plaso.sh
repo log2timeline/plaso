@@ -58,6 +58,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      python3-psutil
                      python3-pyparsing
                      python3-pytsk3
+                     python3-redis
                      python3-requests
                      python3-six
                      python3-tz
@@ -70,9 +71,11 @@ PYTHON_DEPENDENCIES="libbde-python3
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python3-coverage
                    python3-distutils
+                   python3-fakeredis
                    python3-mock
                    python3-pbr
-                   python3-setuptools";
+                   python3-setuptools
+                   python3-sortedcontainers";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
