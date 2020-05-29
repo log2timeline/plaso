@@ -24,7 +24,8 @@ class ElasticSearchOutputArgumentsHelperTest(
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOCUMENT_TYPE]
                      [--flush_interval FLUSH_INTERVAL] [--raw_fields]
-                     [--elastic_user ELASTIC_USER] [--use_ssl]
+                     [--elastic_user ELASTIC_USER]
+                     [--elastic_password ELASTIC_PASSWORD] [--use_ssl]
                      [--ca_certificates_file_path CA_CERTIFICATES_FILE_PATH]
                      [--elastic_url_prefix ELASTIC_URL_PREFIX]
                      [--server HOSTNAME] [--port PORT]
@@ -38,6 +39,12 @@ optional arguments:
   --doc_type DOCUMENT_TYPE
                         Name of the document type that will be used in
                         ElasticSearch.
+  --elastic_password ELASTIC_PASSWORD
+                        Password to use for Elasticsearch authentication.
+                        WARNING: use with caution since this can expose the
+                        password to other users on the system. The password
+                        can also be set with the environment variable
+                        PLASO_ELASTIC_PASSWORD.
   --elastic_url_prefix ELASTIC_URL_PREFIX
                         URL prefix for elastic search.
   --elastic_user ELASTIC_USER
