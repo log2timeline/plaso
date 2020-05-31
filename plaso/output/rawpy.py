@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Output module for the "raw" (or native) Python format."""
+"""Output module for the native (or "raw") Python format."""
 
 from __future__ import unicode_literals
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import definitions
+from plaso.output import formatting_helper
 from plaso.output import interface
 from plaso.output import logger
 from plaso.output import manager
 
 
-class NativePythonFormatterHelper(object):
-  """Helper for outputting as "raw" (or native) Python."""
+class NativePythonEventFormattingHelper(
+    formatting_helper.EventFormattingHelper):
+  """Native (or "raw") Python output module event formatting helper."""
 
-  @classmethod
-  def GetFormattedEvent(cls, event, event_data, event_data_stream, event_tag):
+  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
@@ -97,29 +98,26 @@ class NativePythonFormatterHelper(object):
           '[Tag]:',
           '  {{labels}} [{0:s}]'.format(', '.join(labels))])
 
-    lines_of_text.extend(['', ''])
+    lines_of_text.append('')
 
     return '\n'.join(lines_of_text)
 
 
 class NativePythonOutputModule(interface.LinearOutputModule):
-  """Output module for the "raw" (or native) Python output format."""
+  """Output module for native (or "raw") Python output format."""
 
   NAME = 'rawpy'
-  DESCRIPTION = '"raw" (or native) Python output.'
+  DESCRIPTION = 'native (or "raw") Python output.'
 
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
+  def __init__(self, output_mediator):
+    """Initializes a native (or "raw") Python output module.
 
     Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+      output_mediator (OutputMediator): an output mediator.
     """
-    output_string = NativePythonFormatterHelper.GetFormattedEvent(
-        event, event_data, event_data_stream, event_tag)
-    self._output_writer.Write(output_string)
+    event_formatting_helper = NativePythonEventFormattingHelper(output_mediator)
+    super(NativePythonOutputModule, self).__init__(
+        output_mediator, event_formatting_helper)
 
 
 manager.OutputManager.RegisterOutput(NativePythonOutputModule)

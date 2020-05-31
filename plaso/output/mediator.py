@@ -55,27 +55,26 @@ class OutputMediator(object):
     """The timezone."""
     return self._timezone
 
-  def GetEventFormatter(self, event):
-    """Retrieves the event formatter for a specific event type.
+  def _GetEventFormatter(self, event_data):
+    """Retrieves the event formatter for a specific event data type.
 
     Args:
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       EventFormatter: event formatter or None.
     """
-    data_type = getattr(event, 'data_type', None)
-    if not data_type:
-      return None
+    if event_data.data_type:
+      return formatters_manager.FormattersManager.GetFormatterObject(
+          event_data.data_type)
 
-    return formatters_manager.FormattersManager.GetFormatterObject(
-        event.data_type)
+    return None
 
-  def GetFormattedMessages(self, event):
-    """Retrieves the formatted messages related to the event.
+  def GetFormattedMessages(self, event_data):
+    """Retrieves the formatted messages related to the event data.
 
     Args:
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple: containing:
@@ -83,11 +82,11 @@ class OutputMediator(object):
         str: full message string or None if no event formatter was found.
         str: short message string or None if no event formatter was found.
     """
-    event_formatter = self.GetEventFormatter(event)
-    if not event_formatter:
-      return None, None
+    event_formatter = self._GetEventFormatter(event_data)
+    if event_formatter:
+      return event_formatter.GetMessages(self._formatter_mediator, event_data)
 
-    return event_formatter.GetMessages(self._formatter_mediator, event)
+    return None, None
 
   def GetFormattedSources(self, event, event_data):
     """Retrieves the formatted sources related to the event.
@@ -102,11 +101,11 @@ class OutputMediator(object):
         str: full source string or None if no event formatter was found.
         str: short source string or None if no event formatter was found.
     """
-    event_formatter = self.GetEventFormatter(event_data)
-    if not event_formatter:
-      return None, None
+    event_formatter = self._GetEventFormatter(event_data)
+    if event_formatter:
+      return event_formatter.GetSources(event, event_data)
 
-    return event_formatter.GetSources(event, event_data)
+    return None, None
 
   def GetHostname(self, event_data, default_hostname='-'):
     """Retrieves the hostname related to the event.

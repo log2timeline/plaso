@@ -23,6 +23,17 @@ class KMLOutputModule(interface.LinearOutputModule):
   NAME = 'kml'
   DESCRIPTION = 'Saves events with geography data into a KML format.'
 
+  def __init__(self, output_mediator):
+    """Initializes a Keyhole Markup Language (KML) XML file output module.
+
+    Args:
+      output_mediator (OutputMediator): an output mediator.
+    """
+    event_formatting_helper = rawpy.NativePythonEventFormattingHelper(
+        output_mediator)
+    super(KMLOutputModule, self).__init__(
+        output_mediator, event_formatting_helper)
+
   def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
@@ -44,10 +55,11 @@ class KMLOutputModule(interface.LinearOutputModule):
 
       description_xml_element = ElementTree.SubElement(
           placemark_xml_element, 'description')
-      # TODO: move the description formatting into this output module.
-      description_xml_element.text = (
-          rawpy.NativePythonFormatterHelper.GetFormattedEvent(
-              event, event_data, event_data_stream, event_tag))
+
+      description_text = self._event_formatting_helper.GetFormattedEvent(
+          event, event_data, event_data_stream, event_tag)
+
+      description_xml_element.text = '{0:s}\n'.format(description_text)
 
       point_xml_element = ElementTree.SubElement(
           placemark_xml_element, 'Point')

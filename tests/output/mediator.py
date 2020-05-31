@@ -30,6 +30,8 @@ class TestEventFormatter(formatters_interface.EventFormatter):
 class OutputMediatorTest(test_lib.OutputModuleTestCase):
   """Tests for the output mediator object."""
 
+  # pylint: disable=protected-access
+
   _TEST_EVENTS = [
       {'data_type': 'test:mediator',
        'filename': 'log/syslog.1',
@@ -51,7 +53,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     self._output_mediator = mediator.OutputMediator(knowledge_base_object, None)
 
   def testGetEventFormatter(self):
-    """Tests the GetEventFormatter function."""
+    """Tests the _GetEventFormatter function."""
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
@@ -59,7 +61,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         TestEventFormatter)
 
     try:
-      event_formatter = self._output_mediator.GetEventFormatter(event_data)
+      event_formatter = self._output_mediator._GetEventFormatter(event_data)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           TestEventFormatter)

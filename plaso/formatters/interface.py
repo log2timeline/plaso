@@ -231,8 +231,9 @@ class EventFormatter(object):
       WrongFormatter: if the event data cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
+      raise errors.WrongFormatter(
+          'Unsupported data type: {0:s} expected {1:s}.'.format(
+              event_data.data_type, self.DATA_TYPE))
 
     event_values = event_data.CopyToDict()
     return self._FormatMessages(
@@ -253,8 +254,9 @@ class EventFormatter(object):
       WrongFormatter: if the event data cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
+      raise errors.WrongFormatter(
+          'Unsupported data type: {0:s} expected {1:s}.'.format(
+              event_data.data_type, self.DATA_TYPE))
 
     return self.SOURCE_SHORT, self.SOURCE_LONG
 

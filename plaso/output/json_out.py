@@ -3,11 +3,12 @@
 
 from __future__ import unicode_literals
 
+from plaso.output import interface
 from plaso.output import manager
 from plaso.output import shared_json
 
 
-class JSONOutputModule(shared_json.SharedJSONOutputModule):
+class JSONOutputModule(interface.LinearOutputModule):
   """Output module for the JSON format."""
 
   NAME = 'json'
@@ -20,7 +21,10 @@ class JSONOutputModule(shared_json.SharedJSONOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    super(JSONOutputModule, self).__init__(output_mediator)
+    event_formatting_helper = shared_json.JSONEventFormattingHelper(
+        output_mediator)
+    super(JSONOutputModule, self).__init__(
+        output_mediator, event_formatting_helper)
     self._event_counter = 0
 
   def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
@@ -32,14 +36,15 @@ class JSONOutputModule(shared_json.SharedJSONOutputModule):
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    json_string = self._WriteSerialized(
+    output_text = self._event_formatting_helper.GetFormattedEvent(
         event, event_data, event_data_stream, event_tag)
 
     if self._event_counter != 0:
       self._output_writer.Write(', ')
 
-    line = '"event_{0:d}": {1:s}\n'.format(self._event_counter, json_string)
-    self._output_writer.Write(line)
+    output_text = '"event_{0:d}": {1:s}\n'.format(
+        self._event_counter, output_text)
+    self._output_writer.Write(output_text)
 
     self._event_counter += 1
 

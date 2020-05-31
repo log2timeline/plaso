@@ -18,7 +18,7 @@ from plaso.cli import psort_tool
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import errors
-from plaso.output import interface as output_interface
+from plaso.output import dynamic
 from plaso.output import manager as output_manager
 
 from tests import test_lib as shared_test_lib
@@ -67,7 +67,7 @@ class TestOutputModuleArgumentHelper(helpers_interface.ArgumentsHelper):
       output_module.SetMissingValue('parameters', parameters)
 
 
-class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
+class TestOutputModuleMissingParameters(dynamic.DynamicOutputModule):
   """Test output module that is missing some parameters."""
 
   NAME = 'test_missing'
@@ -111,10 +111,6 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
     output_text = '{0:s}/{1:s} {2:s}\n'.format(
         source_short, source_long, message)
     self._output_writer.Write(output_text)
-
-  def WriteHeader(self):
-    """Writes the header to the output."""
-    self._output_writer.Write(self._HEADER)
 
 
 class PsortToolTest(test_lib.CLIToolTestCase):

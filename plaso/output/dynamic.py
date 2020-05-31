@@ -5,10 +5,8 @@ from __future__ import unicode_literals
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import formatting_helper
-from plaso.output import logger
 from plaso.output import manager
 from plaso.output import shared_dsv
 
@@ -98,91 +96,6 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
       return '0000-00-00T00:00:00'
 
-  def _FormatMACB(self, event, event_data, event_data_stream):
-    """Formats a legacy MACB representation field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: MACB field.
-    """
-    return self._output_mediator.GetMACBRepresentation(event, event_data)
-
-  def _FormatMessage(self, event, event_data, event_data_stream):
-    """Formats a message field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: message field.
-
-    Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
-          type in the event data.
-    """
-    message, _ = self._output_mediator.GetFormattedMessages(event_data)
-    if message is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to create message for event with data type: {0:s}.'.format(
-              data_type))
-
-    return message
-
-  def _FormatMessageShort(self, event, event_data, event_data_stream):
-    """Formats a short message field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: short message field.
-
-    Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
-          type in the event data.
-    """
-    _, message_short = self._output_mediator.GetFormattedMessages(event_data)
-    if message_short is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to create message for event with data type: {0:s}.'.format(
-              data_type))
-
-    return message_short
-
-  def _FormatSource(self, event, event_data, event_data_stream):
-    """Formats a source field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: source field.
-
-    Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
-          type in the event data.
-    """
-    _, source = self._output_mediator.GetFormattedSources(event, event_data)
-    if source is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to create source for event with data type: {0:s}.'.format(
-              data_type))
-
-    return source
-
   def _FormatTime(self, event, event_data, event_data_stream):
     """Formats a time field.
 
@@ -227,25 +140,6 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
   # pylint: enable=unused-argument
 
-  def _ReportEventError(self, event, event_data, error_message):
-    """Reports an event related error.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      error_message (str): error message.
-    """
-    event_identifier = event.GetIdentifier()
-    event_identifier_string = event_identifier.CopyToString()
-    display_name = getattr(event_data, 'display_name', None) or 'N/A'
-    parser_chain = getattr(event_data, 'parser', None) or 'N/A'
-    error_message = (
-        'Event: {0!s} data type: {1:s} display name: {2:s} '
-        'parser chain: {3:s} with error: {4:s}').format(
-            event_identifier_string, event_data.data_type, display_name,
-            parser_chain, error_message)
-    logger.error(error_message)
-
 
 class DynamicOutputModule(shared_dsv.DSVOutputModule):
   """Dynamic selected delimeter separated values output module."""
@@ -259,14 +153,14 @@ class DynamicOutputModule(shared_dsv.DSVOutputModule):
       'message', 'parser', 'display_name', 'tag']
 
   def __init__(self, output_mediator):
-    """Initializes an output module object.
+    """Initializes a dynamic delimeter separated values output module object.
 
     Args:
       output_mediator (OutputMediator): an output mediator.
     """
-    formatting_helper_object = DynamicFieldFormattingHelper(output_mediator)
+    field_formatting_helper = DynamicFieldFormattingHelper(output_mediator)
     super(DynamicOutputModule, self).__init__(
-        output_mediator, formatting_helper_object, self._DEFAULT_NAMES)
+        output_mediator, field_formatting_helper, self._DEFAULT_NAMES)
 
 
 manager.OutputManager.RegisterOutput(DynamicOutputModule)

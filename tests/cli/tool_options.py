@@ -177,7 +177,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
       expected_number_of_tables += 1
 
     self.assertEqual(number_of_tables, expected_number_of_tables)
-    expected_line = 'rawpy : "raw" (or native) Python output.'
+    expected_line = 'rawpy : native (or "raw") Python output.'
     self.assertIn(expected_line, lines)
 
 

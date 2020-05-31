@@ -76,7 +76,7 @@ class TestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'None in Particular'
 
 
-class TestOutputModule(output_interface.LinearOutputModule):
+class TestOutputModule(output_interface.OutputModule):
   """Output module for testing.
 
   Attributes:
@@ -364,7 +364,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
   def testInternalExportEvents(self):
     """Tests the _ExportEvents function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatter_mediator = formatters_mediator.FormatterMediator()
 
@@ -372,7 +371,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         knowledge_base_object, formatter_mediator)
 
     output_module = TestOutputModule(output_mediator_object)
-    output_module.SetOutputWriter(output_writer)
 
     test_engine = psort.PsortMultiProcessEngine()
 
@@ -401,7 +399,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
   def testInternalExportEventsDeduplicate(self):
     """Tests the _ExportEvents function with deduplication."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatter_mediator = formatters_mediator.FormatterMediator()
 
@@ -409,7 +406,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         knowledge_base_object, formatter_mediator)
 
     output_module = TestOutputModule(output_mediator_object)
-    output_module.SetOutputWriter(output_writer)
 
     test_engine = psort.PsortMultiProcessEngine()
 
@@ -430,11 +426,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           TestEventFormatter)
-
-    lines = []
-    output = output_writer.ReadOutput()
-    for line in output.split(b'\n'):
-      lines.append(line)
 
     self.assertEqual(len(output_module.events), 15)
     self.assertEqual(len(output_module.macb_groups), 3)

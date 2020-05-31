@@ -3,7 +3,37 @@
 
 from __future__ import unicode_literals
 
+import abc
+
 from plaso.lib import errors
+from plaso.output import logger
+
+
+class EventFormattingHelper(object):
+  """Output module event formatting helper."""
+
+  def __init__(self, output_mediator):
+    """Initializes an event formatting helper.
+
+    Args:
+      output_mediator (OutputMediator): output mediator.
+    """
+    super(EventFormattingHelper, self).__init__()
+    self._output_mediator = output_mediator
+
+  @abc.abstractmethod
+  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
+    """Retrieves a string representation of the event.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      str: string representation of the event.
+    """
 
 
 class FieldFormattingHelper(object):
@@ -65,6 +95,91 @@ class FieldFormattingHelper(object):
 
     return inode
 
+  def _FormatMACB(self, event, event_data, event_data_stream):
+    """Formats a legacy MACB representation field.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: MACB field.
+    """
+    return self._output_mediator.GetMACBRepresentation(event, event_data)
+
+  def _FormatMessage(self, event, event_data, event_data_stream):
+    """Formats a message field.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: message field.
+
+    Raises:
+      NoFormatterFound: if no event formatter can be found to match the data
+          type in the event data.
+    """
+    # TODO: refactor GetFormattedMessages by GetFormattedMessage.
+    message, _ = self._output_mediator.GetFormattedMessages(event_data)
+    if message is None:
+      raise errors.NoFormatterFound(
+          'Unable to create message for event with data type: {0:s}.'.format(
+              event_data.data_type))
+
+    return message
+
+  def _FormatMessageShort(self, event, event_data, event_data_stream):
+    """Formats a short message field.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: short message field.
+
+    Raises:
+      NoFormatterFound: if no event formatter can be found to match the data
+          type in the event data.
+    """
+    # TODO: refactor GetFormattedMessages by GetFormattedMessageShort.
+    _, message_short = self._output_mediator.GetFormattedMessages(event_data)
+    if message_short is None:
+      raise errors.NoFormatterFound(
+          'Unable to create message for event with data type: {0:s}.'.format(
+              event_data.data_type))
+
+    return message_short
+
+  def _FormatSource(self, event, event_data, event_data_stream):
+    """Formats a source field.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: source field.
+
+    Raises:
+      NoFormatterFound: if no event formatter can be found to match the data
+          type in the event data.
+    """
+    # TODO: refactor GetFormattedSources by GetFormattedSource.
+    _, source = self._output_mediator.GetFormattedSources(event, event_data)
+    if source is None:
+      raise errors.NoFormatterFound(
+          'Unable to create source for event with data type: {0:s}.'.format(
+              event_data.data_type))
+
+    return source
+
   def _FormatSourceShort(self, event, event_data, event_data_stream):
     """Formats a short source field.
 
@@ -80,13 +195,13 @@ class FieldFormattingHelper(object):
       NoFormatterFound: If no event formatter can be found to match the data
           type in the event data.
     """
+    # TODO: refactor GetFormattedSources by GetFormattedSourceShort.
     source_short, _ = self._output_mediator.GetFormattedSources(
         event, event_data)
     if source_short is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
           'Unable to create source for event with data type: {0:s}.'.format(
-              data_type))
+              event_data.data_type))
 
     return source_short
 
@@ -132,6 +247,25 @@ class FieldFormattingHelper(object):
 
   # pylint: enable=unused-argument
 
+  def _ReportEventError(self, event, event_data, error_message):
+    """Reports an event related error.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      error_message (str): error message.
+    """
+    event_identifier = event.GetIdentifier()
+    event_identifier_string = event_identifier.CopyToString()
+    display_name = getattr(event_data, 'display_name', None) or 'N/A'
+    parser_chain = getattr(event_data, 'parser', None) or 'N/A'
+    error_message = (
+        'Event: {0!s} data type: {1:s} display name: {2:s} '
+        'parser chain: {3:s} with error: {4:s}').format(
+            event_identifier_string, event_data.data_type, display_name,
+            parser_chain, error_message)
+    logger.error(error_message)
+
   def GetFormattedField(
       self, field_name, event, event_data, event_data_stream, event_tag):
     """Formats the specified field.
@@ -146,10 +280,10 @@ class FieldFormattingHelper(object):
     Returns:
       str: value of the field.
     """
-    if field_name == 'tag':
+    callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
+    if callback_name == '_FormatTag':
       return self._FormatTag(event_tag)
 
-    callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
     callback_function = None
     if callback_name:
       callback_function = getattr(self, callback_name, None)
