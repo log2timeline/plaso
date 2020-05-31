@@ -97,6 +97,7 @@ class OutputModule(object):
       event_tag (EventTag): event tag.
     """
 
+  # TODO: this method does not appear to be used remove it.
   def WriteEventEnd(self):
     """Writes the end of an event to the output.
 
@@ -124,6 +125,7 @@ class OutputModule(object):
     for event, event_data, event_data_stream, event_tag in event_macb_group:
       self.WriteEvent(event, event_data, event_data_stream, event_tag)
 
+  # TODO: this method does not appear to be used remove it.
   def WriteEventStart(self):
     """Writes the start of an event to the output.
 
@@ -152,17 +154,18 @@ class OutputModule(object):
 class LinearOutputModule(OutputModule):
   """Linear output module."""
 
-  def __init__(self, output_mediator):
+  def __init__(self, output_mediator, event_formatting_helper):
     """Initializes a linear output module.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
+      event_formatting_helper (EevntFormattingHelper): event formatting helper.
     """
     super(LinearOutputModule, self).__init__(output_mediator)
+    self._event_formatting_helper = event_formatting_helper
     self._output_writer = None
 
-  @abc.abstractmethod
   def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
@@ -172,6 +175,11 @@ class LinearOutputModule(OutputModule):
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
+    output_text = self._event_formatting_helper.GetFormattedEvent(
+        event, event_data, event_data_stream, event_tag)
+
+    output_text = '{0:s}\n'.format(output_text)
+    self._output_writer.Write(output_text)
 
   def SetOutputWriter(self, output_writer):
     """Set the output writer.
