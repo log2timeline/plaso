@@ -110,6 +110,19 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
     self.assertEqual(attribute_names, expected_attribute_names)
 
 
+class SourceConfigurationArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the source configuration artifact."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = artifacts.SourceConfigurationArtifact()
+
+    expected_attribute_names = ['path_spec', 'system_configuration']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+    self.assertEqual(attribute_names, expected_attribute_names)
+
+
 class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the system configuration artifact."""
 
