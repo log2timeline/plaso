@@ -311,6 +311,30 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     storage_file.Close()
 
+  def _ReadSessionConfiguration(self, path, knowledge_base_object):
+    """Reads session configuration information.
+
+    The session configuration contains the system configuration, which contains
+    information about various system specific configuration data, for example
+    the user accounts.
+
+    Args:
+      path (str): path.
+      knowledge_base_object (KnowledgeBase): is used to store the system
+          configuration.
+    """
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+        path)
+
+    for session in storage_reader.GetSessions():
+      if not session.source_configurations:
+        storage_reader.ReadSystemConfiguration(knowledge_base_object)
+      else:
+        for source_configuration in session.source_configurations:
+          knowledge_base_object.ReadSystemConfigurationArtifact(
+              source_configuration.system_configuration,
+              session_identifier=session.identifier)
+
   def testInternalAnalyzeEvents(self):
     """Tests the _AnalyzeEvents function."""
     session = sessions.Session()
@@ -323,6 +347,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
+      self._ReadSessionConfiguration(temp_file, knowledge_base_object)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
@@ -330,7 +355,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer.StartTaskStorage()
 
       storage_writer.Open()
-      storage_writer.ReadSystemConfiguration(knowledge_base_object)
 
       # TODO: implement, this currently loops infinite.
       # test_engine._AnalyzeEvents(storage_writer, [test_plugin])
@@ -341,6 +365,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
+      self._ReadSessionConfiguration(temp_file, knowledge_base_object)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
@@ -348,7 +373,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer.StartTaskStorage()
 
       storage_writer.Open()
-      storage_writer.ReadSystemConfiguration(knowledge_base_object)
 
       # TODO: implement, this currently loops infinite.
       _ = test_engine
@@ -380,11 +404,11 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       with shared_test_lib.TempDirectory() as temp_directory:
         temp_file = os.path.join(temp_directory, 'storage.plaso')
         self._CreateTestStorageFile(temp_file)
+        self._ReadSessionConfiguration(temp_file, knowledge_base_object)
 
         storage_reader = (
             storage_factory.StorageFactory.CreateStorageReaderForFile(
                 temp_file))
-        storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
         test_engine._ExportEvents(
             storage_reader, output_module, deduplicate_events=False)
@@ -415,11 +439,11 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       with shared_test_lib.TempDirectory() as temp_directory:
         temp_file = os.path.join(temp_directory, 'storage.plaso')
         self._CreateTestStorageFile(temp_file)
+        self._ReadSessionConfiguration(temp_file, knowledge_base_object)
 
         storage_reader = (
             storage_factory.StorageFactory.CreateStorageReaderForFile(
                 temp_file))
-        storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
         test_engine._ExportEvents(storage_reader, output_module)
 

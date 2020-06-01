@@ -552,12 +552,13 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   # TODO: add tests for Open and Close
 
   # TODO: add tests for ReadSystemConfiguration
-  # TODO: add tests for WritePreprocessingInformation
 
-  def testWriteSessionStartAndCompletion(self):
-    """Tests the WriteSessionStart and WriteSessionCompletion functions."""
+  def testWriteSessionStartConfigurationAndCompletion(self):
+    """Tests the WriteSessionStart, Configuration and Completion functions."""
     session = sessions.Session()
     session_start = sessions.SessionStart(identifier=session.identifier)
+    session_configuration = sessions.SessionConfiguration(
+        identifier=session.identifier)
     session_completion = sessions.SessionCompletion(
         identifier=session.identifier)
 
@@ -568,6 +569,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.WriteSessionStart(session_start)
+      storage_file.WriteSessionConfiguration(session_configuration)
       storage_file.WriteSessionCompletion(session_completion)
 
       storage_file.Close()

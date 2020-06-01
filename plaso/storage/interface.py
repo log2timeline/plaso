@@ -35,6 +35,8 @@ class BaseStore(object):
       warnings.ExtractionError.CONTAINER_TYPE)
   _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_SESSION_CONFIGURATION = (
+      sessions.SessionConfiguration.CONTAINER_TYPE)
   _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
   _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
       artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
@@ -51,6 +53,7 @@ class BaseStore(object):
       _CONTAINER_TYPE_EVENT_SOURCE,
       _CONTAINER_TYPE_EVENT_TAG,
       _CONTAINER_TYPE_SESSION_COMPLETION,
+      _CONTAINER_TYPE_SESSION_CONFIGURATION,
       _CONTAINER_TYPE_SESSION_START,
       _CONTAINER_TYPE_SYSTEM_CONFIGURATION,
       _CONTAINER_TYPE_TASK_COMPLETION,
@@ -59,13 +62,13 @@ class BaseStore(object):
   def __init__(self):
     """Initializes a store."""
     super(BaseStore, self).__init__()
+    self._last_session = 0
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+    self._storage_profiler = None
     self.format_version = None
     self.serialization_format = None
     self.storage_type = None
-    self._last_session = 0
-    self._serializers_profiler = None
-    self._storage_profiler = None
-    self._serializer = json_serializer.JSONAttributeContainerSerializer
 
   @abc.abstractmethod
   def _AddAttributeContainer(
@@ -373,19 +376,49 @@ class BaseStore(object):
     session_completion_generator = self._GetAttributeContainers(
         self._CONTAINER_TYPE_SESSION_COMPLETION)
 
-    for session_index in range(0, self._last_session):
-      session_start = next(session_start_generator)  # pylint: disable=stop-iteration-return
-      session_completion = next(session_completion_generator)  # pylint: disable=stop-iteration-return
+    if self._HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
+      session_configuration_generator = self._GetAttributeContainers(
+          self._CONTAINER_TYPE_SESSION_CONFIGURATION)
+    else:
+      session_configuration_generator = None
+
+    for session_index in range(1, self._last_session + 1):
+      try:
+        session_start = next(session_start_generator)
+      except StopIteration:
+        raise IOError('Missing session start: {0:d}'.format(session_index))
+
+      try:
+        session_completion = next(session_completion_generator)
+      except StopIteration:
+        pass
+
+      session_configuration = None
+      if session_configuration_generator:
+        try:
+          session_configuration = next(session_configuration_generator)
+        except StopIteration:
+          raise IOError('Missing session configuration: {0:d}'.format(
+              session_index))
 
       session = sessions.Session()
       session.CopyAttributesFromSessionStart(session_start)
+
+      if session_configuration:
+        try:
+          session.CopyAttributesFromSessionConfiguration(session_configuration)
+        except ValueError:
+          raise IOError((
+              'Session identifier mismatch for session configuration: '
+              '{0:d}').format(session_index))
+
       if session_completion:
         try:
           session.CopyAttributesFromSessionCompletion(session_completion)
         except ValueError:
-          raise IOError(
-              'Session identifier mismatch for session: {0:d}'.format(
-                  session_index))
+          raise IOError((
+              'Session identifier mismatch for session completion: '
+              '{0:d}').format(session_index))
 
       yield session
 
@@ -447,6 +480,7 @@ class BaseStore(object):
   def Open(self, **kwargs):
     """Opens the storage."""
 
+  # TODO: remove, this method is kept for backwards compatibility reasons.
   def ReadSystemConfiguration(self, knowledge_base):
     """Reads system configuration information.
 
@@ -456,10 +490,13 @@ class BaseStore(object):
     Args:
       knowledge_base (KnowledgeBase): is used to store the system configuration.
     """
-    generator = self._GetAttributeContainers(
-        self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
-    for system_configuration in generator:
-      knowledge_base.ReadSystemConfigurationArtifact(system_configuration)
+    # Backwards compatibility for older session storage files that do not
+    # store system configuration as part of the session configuration.
+    if self._HasAttributeContainers(self._CONTAINER_TYPE_SYSTEM_CONFIGURATION):
+      generator = self._GetAttributeContainers(
+          self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
+      for system_configuration in generator:
+        knowledge_base.ReadSystemConfigurationArtifact(system_configuration)
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
@@ -476,27 +513,6 @@ class BaseStore(object):
       storage_profiler (StorageProfiler): storage profiler.
     """
     self._storage_profiler = storage_profiler
-
-  def WritePreprocessingInformation(self, knowledge_base):
-    """Writes preprocessing information.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains the preprocessing information.
-
-    Raises:
-      IOError: if the storage type does not support writing preprocess
-          information or the storage file is closed or read-only.
-      OSError: if the storage type does not support writing preprocess
-          information or the storage file is closed or read-only.
-    """
-    self._RaiseIfNotWritable()
-
-    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Preprocess information not supported by storage type.')
-
-    system_configuration = knowledge_base.GetSystemConfigurationArtifact()
-
-    self._WriteAttributeContainer(system_configuration)
 
   def WriteSessionCompletion(self, session_completion):
     """Writes session completion information.
@@ -516,6 +532,23 @@ class BaseStore(object):
       raise IOError('Session completion not supported by storage type.')
 
     self._WriteAttributeContainer(session_completion)
+
+  def WriteSessionConfiguration(self, session_configuration):
+    """Writes session configuration information.
+
+    Args:
+      session_configuration (SessionConfiguration): session configuration
+          information.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
+    """
+    self._RaiseIfNotWritable()
+
+    if not self._HasAttributeContainers(
+        self._CONTAINER_TYPE_SYSTEM_CONFIGURATION):
+      self._WriteAttributeContainer(session_configuration)
 
   def WriteSessionStart(self, session_start):
     """Writes session start information.
@@ -601,7 +634,7 @@ class BaseStore(object):
     except UnicodeDecodeError as exception:
       raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
 
-    except (ValueError, TypeError) as exception:
+    except (TypeError, ValueError) as exception:
       # TODO: consider re-reading attribute container with error correction.
       raise IOError('Unable to read serialized data: {0!s}'.format(exception))
 
@@ -685,7 +718,7 @@ class StorageMergeReader(object):
     except UnicodeDecodeError as exception:
       raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
 
-    except (ValueError, TypeError) as exception:
+    except (TypeError, ValueError) as exception:
       # TODO: consider re-reading attribute container with error correction.
       raise IOError('Unable to read serialized data: {0!s}'.format(exception))
 
@@ -880,6 +913,7 @@ class StorageReader(object):
       bool: True if the store contains extraction warnings.
     """
 
+  # TODO: remove, this method is kept for backwards compatibility reasons.
   @abc.abstractmethod
   def ReadSystemConfiguration(self, knowledge_base):
     """Reads system configuration information.
@@ -1130,17 +1164,6 @@ class StorageWriter(object):
     """
     raise NotImplementedError()
 
-  @abc.abstractmethod
-  def ReadSystemConfiguration(self, knowledge_base):
-    """Reads system configuration information.
-
-    The system configuration contains information about various system specific
-    configuration data, for example the user accounts.
-
-    Args:
-      knowledge_base (KnowledgeBase): is used to store the system configuration.
-    """
-
   # pylint: disable=unused-argument
   def RemoveProcessedTaskStorage(self, task):
     """Removes a processed task storage.
@@ -1170,20 +1193,16 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
-  def WritePreprocessingInformation(self, knowledge_base):
-    """Writes preprocessing information.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains the preprocessing information.
-    """
-
-  @abc.abstractmethod
   def WriteSessionCompletion(self, aborted=False):
     """Writes session completion information.
 
     Args:
       aborted (Optional[bool]): True if the session was aborted.
     """
+
+  @abc.abstractmethod
+  def WriteSessionConfiguration(self):
+    """Writes session configuration information."""
 
   @abc.abstractmethod
   def WriteSessionStart(self):

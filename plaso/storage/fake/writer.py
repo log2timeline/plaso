@@ -18,6 +18,8 @@ class FakeStorageWriter(interface.StorageWriter):
     analysis_reports (list[AnalysisReport]): analysis reports.
     session_completion (SessionCompletion): session completion attribute
         container.
+    session_configuration (SessionConfiguration): session configuration
+        attribute container.
     session_start (SessionStart): session start attribute container.
     task_completion (TaskCompletion): task completion attribute container.
     task_start (TaskStart): task start attribute container.
@@ -44,6 +46,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._task_storage_writers = {}
     self.analysis_reports = []
     self.session_completion = None
+    self.session_configuration = None
     self.session_start = None
     self.task_completion = None
     self.task_start = None
@@ -458,29 +461,6 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
           task.identifier))
 
-  # pylint: disable=unused-argument
-  def ReadSystemConfiguration(self, knowledge_base):
-    """Reads system configuration information.
-
-    The system configuration contains information about various system specific
-    configuration data, for example the user accounts.
-
-    Args:
-      knowledge_base (KnowledgeBase): is used to store the system configuration.
-
-    Raises:
-      IOError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-      OSError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Preprocessing information not supported by storage type.')
-
-    # TODO: implement.
-
   def RemoveProcessedTaskStorage(self, task):
     """Removes a processed task storage.
 
@@ -513,27 +493,6 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     return
 
-  # pylint: disable=unused-argument
-  def WritePreprocessingInformation(self, knowledge_base):
-    """Writes preprocessing information.
-
-    Args:
-      knowledge_base (KnowledgeBase): used to store the preprocessing
-          information.
-
-    Raises:
-      IOError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-      OSError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Preprocessing information not supported by storage type.')
-
-    # TODO: implement.
-
   def WriteSessionCompletion(self, aborted=False):
     """Writes session completion information.
 
@@ -553,6 +512,23 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._session.aborted = aborted
     self.session_completion = self._session.CreateSessionCompletion()
+
+  def WriteSessionConfiguration(self):
+    """Writes session configuration information.
+
+
+    Raises:
+      IOError: if the storage type does not support writing session
+          configuration information or when the storage writer is closed.
+      OSError: if the storage type does not support writing session
+          configuration information or when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Session configuration not supported by storage type.')
+
+    self.session_configuration = self._session.CreateSessionConfiguration()
 
   def WriteSessionStart(self):
     """Writes session start information.

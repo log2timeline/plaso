@@ -520,6 +520,15 @@ class PsortTool(
           'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
 
+    for session in storage_reader.GetSessions():
+      if not session.source_configurations:
+        storage_reader.ReadSystemConfiguration(self._knowledge_base)
+      else:
+        for source_configuration in session.source_configurations:
+          self._knowledge_base.ReadSystemConfigurationArtifact(
+              source_configuration.system_configuration,
+              session_identifier=session.identifier)
+
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
