@@ -7,10 +7,7 @@ import datetime
 import os
 import re
 
-try:
-  import xlsxwriter
-except ImportError:
-  xlsxwriter = None
+import xlsxwriter
 
 from plaso.output import dynamic
 from plaso.output import interface
@@ -31,10 +28,10 @@ class XLSXOutputModule(interface.OutputModule):
 
   _DEFAULT_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:MM:SS.000'
 
-  _MAX_COLUMN_WIDTH = 50
-  _MIN_COLUMN_WIDTH = 6
+  _MAXIMUM_COLUMN_WIDTH = 50
+  _MINIMUM_COLUMN_WIDTH = 6
 
-  # Illegal Unicode characters for XML.
+  # Illegal XML string characters.
   _ILLEGAL_XML_RE = re.compile((
       r'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf'
       r'\ufffe-\uffff]'))
@@ -43,10 +40,11 @@ class XLSXOutputModule(interface.OutputModule):
     """Initializes an Excel Spreadsheet (XLSX) output module.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfvfs.
     """
     super(XLSXOutputModule, self).__init__(output_mediator)
-    self._column_widths = {}
+    self._column_widths = []
     self._current_row = 0
     self._dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
     self._fields = self._DEFAULT_FIELDS
@@ -55,9 +53,7 @@ class XLSXOutputModule(interface.OutputModule):
     self._timestamp_format = self._DEFAULT_TIMESTAMP_FORMAT
     self._workbook = None
 
-  # Pylint has trouble parsing the return type.
-  # pylint: disable=missing-return-type-doc
-  def _FormatDateTime(self, event, event_data):
+  def _FormatDateTime(self, event, event_data):  # pylint: disable=missing-return-type-doc
     """Formats the date to a datetime object without timezone information.
 
     Note: timezone information must be removed due to lack of support
@@ -86,25 +82,27 @@ class XLSXOutputModule(interface.OutputModule):
               event.timestamp, exception))
       return 'ERROR'
 
-  def _RemoveIllegalXMLCharacters(self, xml_string):
-    """Removes illegal characters for XML.
+  def _SanitizeField(self, field):
+    """Sanitizes a field for output.
 
-    If the input is not a string it will be returned unchanged.
+    This method replaces any illegal XML string characters with the Unicode
+    replacement character (\ufffd).
 
     Args:
-      xml_string (str): XML with possible illegal characters.
+      field (str): name of the field to sanitize.
 
     Returns:
-      str: XML where all illegal characters have been removed.
+      str: value of the field.
     """
-    if not isinstance(xml_string, str):
-      return xml_string
-
-    return self._ILLEGAL_XML_RE.sub('\ufffd', xml_string)
+    return self._ILLEGAL_XML_RE.sub('\ufffd', field)
 
   def Close(self):
-    """Closes the output."""
+    """Closes the workbook."""
+    for column_index, column_width in enumerate(self._column_widths):
+      self._sheet.set_column(column_index, column_index, column_width)
+
     self._workbook.close()
+    self._workbook = None
 
   def Open(self):
     """Creates a new workbook.
@@ -163,52 +161,48 @@ class XLSXOutputModule(interface.OutputModule):
       event_data (EventData): event data.
       event_tag (EventTag): event tag.
     """
-    for field_name in self._fields:
+    for column_index, field_name in enumerate(self._fields):
       if field_name == 'datetime':
-        output_value = self._FormatDateTime(event, event_data)
-      else:
-        output_value = self._dynamic_fields_helper.GetFormattedField(
-            event, event_data, event_tag, field_name)
+        field_value = self._FormatDateTime(event, event_data)
 
-      output_value = self._RemoveIllegalXMLCharacters(output_value)
+      else:
+        field_value = self._dynamic_fields_helper.GetFormattedField(
+            event, event_data, event_tag, field_name)
+        field_value = self._SanitizeField(field_value)
+
+      if (field_name == 'datetime' and
+          isinstance(field_value, datetime.datetime)):
+        self._sheet.write_datetime(
+            self._current_row, column_index, field_value)
+        column_width = len(self._timestamp_format) + 2
+      else:
+        self._sheet.write(self._current_row, column_index, field_value)
+        column_width = len(field_value) + 2
 
       # Auto adjust the column width based on the length of the output value.
-      column_index = self._fields.index(field_name)
-      self._column_widths.setdefault(column_index, 0)
+      column_width = min(column_width, self._MAXIMUM_COLUMN_WIDTH)
+      column_width = max(column_width, self._MINIMUM_COLUMN_WIDTH,
+                         self._column_widths[column_index])
 
-      if field_name == 'datetime':
-        column_width = min(
-            self._MAX_COLUMN_WIDTH, len(self._timestamp_format) + 2)
-      else:
-        column_width = min(self._MAX_COLUMN_WIDTH, len(output_value) + 2)
-
-      self._column_widths[column_index] = max(
-          self._MIN_COLUMN_WIDTH, self._column_widths[column_index],
-          column_width)
-      self._sheet.set_column(
-          column_index, column_index, self._column_widths[column_index])
-
-      if (field_name == 'datetime'
-          and isinstance(output_value, datetime.datetime)):
-        self._sheet.write_datetime(
-            self._current_row, column_index, output_value)
-      else:
-        self._sheet.write(self._current_row, column_index, output_value)
+      self._column_widths[column_index] = column_width
 
     self._current_row += 1
 
   def WriteHeader(self):
     """Writes the header to the spreadsheet."""
-    self._column_widths = {}
-    bold = self._workbook.add_format({'bold': True})
-    bold.set_align('center')
-    for index, field_name in enumerate(self._fields):
-      self._sheet.write(self._current_row, index, field_name, bold)
-      self._column_widths[index] = len(field_name) + 2
-    self._current_row += 1
+    cell_format = self._workbook.add_format({'bold': True})
+    cell_format.set_align('center')
+
+    self._column_widths = []
+    for column_index, field_name in enumerate(self._fields):
+      self._sheet.write(0, column_index, field_name, cell_format)
+
+      column_width = len(field_name) + 2
+      self._column_widths.append(column_width)
+
+    self._current_row = 1
     self._sheet.autofilter(0, len(self._fields) - 1, 0, 0)
     self._sheet.freeze_panes(1, 0)
 
 
-manager.OutputManager.RegisterOutput(
-    XLSXOutputModule, disabled=xlsxwriter is None)
+manager.OutputManager.RegisterOutput(XLSXOutputModule)
