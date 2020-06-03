@@ -14,11 +14,16 @@ from plaso.parsers import winevtx
 from plaso.parsers import winlnk
 from plaso.parsers import winjob
 from plaso.parsers import winprefetch
+from plaso.parsers.bencode_plugins import utorrent
+from plaso.parsers.olecf_plugins import summary
+from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import bagmru
+from plaso.parsers.winreg_plugins import lfu
 from plaso.parsers.winreg_plugins import mrulist
 from plaso.parsers.winreg_plugins import mrulistex
 from plaso.parsers.winreg_plugins import officemru
+from plaso.parsers.winreg_plugins import run
 from plaso.parsers.winreg_plugins import userassist
 
 from tests.data import test_lib
@@ -389,20 +394,224 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckTaggingRule(
         winevtx.WinEvtxRecordEventData, attribute_values_per_name, ['logoff'])
 
-  # TODO: add tests for session_disconnection tagging rule
-  # TODO: add tests for session_reconnection tagging rule
-  # TODO: add tests for shell_start tagging rule
-  # TODO: add tests for task_schedule tagging rule
-  # TODO: add tests for job_success tagging rule
-  # TODO: add tests for action_success tagging rule
-  # TODO: add tests for name_resolution_timeout tagging rule
-  # TODO: add tests for time_change tagging rule
-  # TODO: add tests for shutdown tagging rule
-  # TODO: add tests for system_start tagging rule
-  # TODO: add tests for system_sleep tagging rule
-  # TODO: add tests for autorun tagging rule
-  # TODO: add tests for file_download tagging rule
-  # TODO: add tests for document_print tagging rule
+  def testSessionDisconnection(self):
+    """Tests the session_disconnection tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND source_name is
+    #       'Microsoft-Windows-TerminalServices-LocalSessionManager' AND
+    #       event_identifier is 24
+    attribute_values_per_name = {
+        'event_identifier': [24],
+        'source_name': [
+            'Microsoft-Windows-TerminalServices-LocalSessionManager']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['session_disconnection'])
+
+  def testSessionReconnection(self):
+    """Tests the session_reconnection tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND source_name is
+    #       'Microsoft-Windows-TerminalServices-LocalSessionManager' AND
+    #       (event_identifier is 25 OR event_identifier is 1105)
+    attribute_values_per_name = {
+        'event_identifier': [25, 1105],
+        'source_name': [
+            'Microsoft-Windows-TerminalServices-LocalSessionManager']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['session_reconnection'])
+
+  def testShellStart(self):
+    """Tests the shell_start tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND source_name is
+    #       'Microsoft-Windows-TerminalServices-LocalSessionManager' AND
+    #       (event_identifier is 22 OR event_identifier is 1102)
+    attribute_values_per_name = {
+        'event_identifier': [22, 1102],
+        'source_name': [
+            'Microsoft-Windows-TerminalServices-LocalSessionManager']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['shell_start'])
+
+  def testTaksSchedule(self):
+    """Tests the task_schedule tagging rule."""
+    # Test: data_type is 'windows:evt:record' AND
+    #       source_name is 'Security' AND
+    #       event_identifier is 602
+    attribute_values_per_name = {
+        'event_identifier': [602],
+        'source_name': ['Security']}
+    self._CheckTaggingRule(
+        winevt.WinEvtRecordEventData, attribute_values_per_name,
+        ['task_schedule'])
+
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Security-Auditing' AND
+    #       event_identifier is 4698
+    attribute_values_per_name = {
+        'event_identifier': [4698],
+        'source_name': ['Microsoft-Windows-Security-Auditing']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['task_schedule'])
+
+  def testJobSuccess(self):
+    """Tests the job_success tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-TaskScheduler' AND
+    #       event_identifier is 102
+    attribute_values_per_name = {
+        'event_identifier': [102],
+        'source_name': ['Microsoft-Windows-TaskScheduler']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['job_success'])
+
+  def testActionSuccess(self):
+    """Tests the action_success tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-TaskScheduler' AND
+    #       event_identifier is 201
+    attribute_values_per_name = {
+        'event_identifier': [201],
+        'source_name': ['Microsoft-Windows-TaskScheduler']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['action_success'])
+
+  def testNameResolutionTimeout(self):
+    """Tests the name_resolution_timeout tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-DNS-Client' AND
+    #       event_identifier is 1014
+    attribute_values_per_name = {
+        'event_identifier': [1014],
+        'source_name': ['Microsoft-Windows-DNS-Client']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['name_resolution_timeout'])
+
+  def testTimeChange(self):
+    """Tests the time_change tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Kernel-General' AND
+    #       event_identifier is 1
+    attribute_values_per_name = {
+        'event_identifier': [1],
+        'source_name': ['Microsoft-Windows-Kernel-General']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['time_change'])
+
+  def testShutdown(self):
+    """Tests the shutdown tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Kernel-General' AND
+    #       event_identifier is 13
+    attribute_values_per_name = {
+        'event_identifier': [13],
+        'source_name': ['Microsoft-Windows-Kernel-General']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['shutdown'])
+
+  def testSystemStart(self):
+    """Tests the system_start tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Kernel-General' AND
+    #       event_identifier is 12
+    attribute_values_per_name = {
+        'event_identifier': [12],
+        'source_name': ['Microsoft-Windows-Kernel-General']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['system_start'])
+
+  def testSystemSleep(self):
+    """Tests the system_sleep tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Kernel-Power' AND
+    #       event_identifier is 12
+    attribute_values_per_name = {
+        'event_identifier': [42],
+        'source_name': ['Microsoft-Windows-Kernel-Power']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['system_sleep'])
+
+  def testAutorun(self):
+    """Tests the autorun tagging rule."""
+    # Test: data_type is 'windows:registry:boot_execute' AND
+    #       (value contains '.exe' OR value contains '.dll')
+    attribute_values_per_name = {
+        'value': ['file.exe', 'file.dll']}
+    self._CheckTaggingRule(
+        lfu.WindowsBootExecuteEventData, attribute_values_per_name, ['autorun'])
+
+    # Test: data_type is 'windows:registry:boot_verification' AND
+    #       (image_path contains '.exe' OR image_path contains '.dll')
+    attribute_values_per_name = {
+        'image_path': ['file.exe', 'file.dll']}
+    self._CheckTaggingRule(
+        lfu.WindowsBootVerificationEventData, attribute_values_per_name,
+        ['autorun'])
+
+    # Test: data_type is 'windows:registry:run' AND
+    #       (entries contains '.exe' OR entries contains '.dll')
+    attribute_values_per_name = {
+        'entries': ['file.exe', 'file.dll']}
+    self._CheckTaggingRule(
+        run.RunKeyEventData, attribute_values_per_name, ['autorun'])
+
+  def testFileDownload(self):
+    """Tests the file_download tagging rule."""
+    # Test: data_type is 'chrome:history:file_downloaded'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        chrome.ChromeHistoryFileDownloadedEventData, attribute_values_per_name,
+        ['file_download'])
+
+    # Test: timestamp_desc is 'File Downloaded'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = utorrent.UTorrentEventData()
+
+    storage_writer = self._TagEvent(event, event_data)
+
+    self.assertEqual(storage_writer.number_of_event_tags, 0)
+    self._CheckLabels(storage_writer, [])
+
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
+
+    storage_writer = self._TagEvent(event, event_data)
+
+    self.assertEqual(storage_writer.number_of_event_tags, 1)
+    self._CheckLabels(storage_writer, ['file_download'])
+
+  def testDocumentPrint(self):
+    """Tests the document_print tagging rule."""
+    # Test: data_type is 'olecf:summary_info' AND
+    #       timestamp_desc contains 'Printed'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    summary_information = summary.OLECFSummaryInformation(None)
+    event_data = summary_information.GetEventData()
+
+    storage_writer = self._TagEvent(event, event_data)
+
+    self.assertEqual(storage_writer.number_of_event_tags, 0)
+    self._CheckLabels(storage_writer, [])
+
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_LAST_PRINTED
+
+    storage_writer = self._TagEvent(event, event_data)
+
+    self.assertEqual(storage_writer.number_of_event_tags, 1)
+    self._CheckLabels(storage_writer, ['document_print'])
 
   def testFirewallChange(self):
     """Tests the firewall_change tagging rule."""

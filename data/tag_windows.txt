@@ -53,45 +53,58 @@ logoff
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 4
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7002
 
+# Tags terminal services session disconnection events.
 session_disconnection
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND event_identifier is 24
 
+# Tags terminal services session reconnection events.
 session_reconnection
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 25 OR event_identifier is 1105)
 
+# Tags terminal services shell start events.
 shell_start
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 22 OR event_identifier is 1102)
 
+# Tags sheduled task creation events.
 task_schedule
   data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 602
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4698
 
+# Tags task sheduler successful completed job events.
 job_success
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 102
 
+# Tags task sheduler successful completed actions events.
 action_success
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 201
 
+# Tags DNS resolution timeout events.
 name_resolution_timeout
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-DNS-Client' AND event_identifier is 1014
 
+# Tags system time change events.
 time_change
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 1
 
+# Tags system shutdown events.
 shutdown
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 13
 
+# Tags system start events.
 system_start
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 13
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 12
 
+# Tags system sleep events.
 system_sleep
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-Power' AND event_identifier is 42
 
+# Tags auto run events.
 autorun
   data_type is 'windows:registry:boot_execute' AND (value contains '.exe' OR value contains '.dll')
   data_type is 'windows:registry:boot_verification' AND (image_path contains '.exe' OR image_path contains '.dll')
   data_type is 'windows:registry:run' AND (entries contains '.exe' OR entries contains '.dll')
 
+# Tags file download events.
 file_download
   data_type is 'chrome:history:file_downloaded'
   timestamp_desc is 'File Downloaded'
