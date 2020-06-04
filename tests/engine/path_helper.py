@@ -304,6 +304,34 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         gzip_path_spec)
     self.assertEqual(display_name, expected_display_name)
 
+    test_path = self._GetTestFilePath(['syslog.bz2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+        compression_method=dfvfs_definitions.COMPRESSION_METHOD_BZIP2,
+        parent=os_path_spec)
+
+    expected_display_name = 'BZIP2:{0:s}'.format(test_path)
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+        compressed_stream_path_spec)
+    self.assertEqual(display_name, expected_display_name)
+
+    test_path = self._GetTestFilePath(['syslog.xz'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+        compression_method=dfvfs_definitions.COMPRESSION_METHOD_XZ,
+        parent=os_path_spec)
+
+    expected_display_name = 'XZ:{0:s}'.format(test_path)
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+        compressed_stream_path_spec)
+    self.assertEqual(display_name, expected_display_name)
+
     test_path = self._GetTestFilePath(['vsstest.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)

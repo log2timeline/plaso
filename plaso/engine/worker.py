@@ -559,6 +559,12 @@ class EventExtractionWorker(object):
         compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=path_spec)
 
+      elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_XZ:
+        compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+            compression_method=dfvfs_definitions.COMPRESSION_METHOD_XZ,
+            parent=path_spec)
+
       else:
         compressed_stream_path_spec = None
 

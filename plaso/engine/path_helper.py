@@ -317,11 +317,17 @@ class PathHelper(object):
     if text_prepend:
       relative_path = '{0:s}{1:s}'.format(text_prepend, relative_path)
 
+    path_type_indicator = path_spec.type_indicator
+
     parent_path_spec = path_spec.parent
-    if parent_path_spec and path_spec.type_indicator in (
-        dfvfs_definitions.TYPE_INDICATOR_BZIP2,
-        dfvfs_definitions.TYPE_INDICATOR_GZIP):
-      parent_path_spec = parent_path_spec.parent
+    if parent_path_spec:
+      if path_spec.type_indicator == (
+          dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM):
+        path_type_indicator = path_spec.compression_method.upper()
+        parent_path_spec = parent_path_spec.parent
+
+      elif path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
+        parent_path_spec = parent_path_spec.parent
 
     if parent_path_spec and parent_path_spec.type_indicator == (
         dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
@@ -330,7 +336,7 @@ class PathHelper(object):
         return 'VSS{0:d}:{1:s}:{2:s}'.format(
             store_index + 1, path_spec.type_indicator, relative_path)
 
-    return '{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
+    return '{0:s}:{1:s}'.format(path_type_indicator, relative_path)
 
   @classmethod
   def GetRelativePathForPathSpec(cls, path_spec, mount_path=None):
