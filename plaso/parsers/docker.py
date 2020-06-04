@@ -39,7 +39,7 @@ class DockerJSONContainerLogEventData(events.EventData):
 
 
 class DockerJSONContainerEventData(events.EventData):
-  """Docker container's configuration file event data.
+  """Docker container configuration event data.
 
   Attributes:
     action (str): whether the container was created, started, or finished.
@@ -58,11 +58,11 @@ class DockerJSONContainerEventData(events.EventData):
 
 
 class DockerJSONLayerEventData(events.EventData):
-  """Docker filesystem layer configuration file event data.
+  """Docker file system layer configuration event data.
 
   Attributes:
-    command: the command used which made Docker create a new layer
-    layer_id: the identifier of the current Docker layer (sha1)
+    command: the command used which made Docker create a new layer.
+    layer_id: the identifier of the current Docker layer (SHA-1).
   """
 
   DATA_TYPE = 'docker:json:layer'
