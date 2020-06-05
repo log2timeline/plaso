@@ -5,7 +5,11 @@ from __future__ import unicode_literals
 
 try:
   from flask import current_app
-  import timesketch
+  # For backwards compatibility with Timesketch installations.
+  try:
+    import timesketch.app as timesketch
+  except ImportError
+    import timesketch
   from timesketch.models import db_session as timesketch_db_session
   from timesketch.models import sketch as timesketch_sketch
   from timesketch.models import user as timesketch_user
@@ -37,13 +41,7 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     super(TimesketchOutputModule, self).__init__(output_mediator)
     self._timeline_name = hostname
     self._timeline_owner = None
-    try:
-      self._timesketch = timesketch.create_app()
-    except AttributeError:
-      # TODO: Due to a change in Timesketch codebase, remove once Timesketch
-      # gets upgraded.
-      from timesketch import app
-      self._timesketch = app.create_app()
+    self._timesketch = timesketch.create_app()
 
   def Close(self):
     """Closes the connection to TimeSketch Elasticsearch database.
