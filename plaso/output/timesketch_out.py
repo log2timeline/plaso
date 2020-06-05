@@ -5,7 +5,12 @@ from __future__ import unicode_literals
 
 try:
   from flask import current_app
-  import timesketch
+  # TODO: Added for backwards compatibility with Timesketch installations.
+  # Remove once no longer needed.
+  try:
+    import timesketch.app as timesketch
+  except ImportError:
+    import timesketch
   from timesketch.models import db_session as timesketch_db_session
   from timesketch.models import sketch as timesketch_sketch
   from timesketch.models import user as timesketch_user
