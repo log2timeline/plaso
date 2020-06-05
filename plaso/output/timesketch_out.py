@@ -37,7 +37,13 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     super(TimesketchOutputModule, self).__init__(output_mediator)
     self._timeline_name = hostname
     self._timeline_owner = None
-    self._timesketch = timesketch.create_app()
+    try:
+      self._timesketch = timesketch.create_app()
+    except AttributeError:
+      # TODO: Due to a change in Timesketch codebase, remove once Timesketch
+      # gets upgraded.
+      from timesketch import app
+      self._timesketch = app.create_app()
 
   def Close(self):
     """Closes the connection to TimeSketch Elasticsearch database.
