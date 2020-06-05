@@ -20,7 +20,7 @@ file_download
 # Tags device connection events.
 device_connection
   data_type is 'ipod:device:entry'
-  data_type is 'plist:key' and plugin is 'plist_airport'
+  data_type is 'plist:key' AND plugin is 'plist_airport'
 
 # Tags OLE compound document print events.
 document_print

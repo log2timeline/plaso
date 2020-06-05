@@ -31,57 +31,36 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testRuleApplicationExecution(self):
     """Tests the application_execution tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+    # Test: data_type is 'macosx:application_usage'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        appusage.MacOSApplicationUsageEventData, attribute_values_per_name,
+        ['application_execution'])
 
-    event_data = appusage.MacOSApplicationUsageEventData()
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_execution'])
-
-    event_data = syslog.SyslogLineEventData()
-    event_data.body = 'some random log message'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data = syslog.SyslogLineEventData()
-    event_data.body = 'somethin invoked COMMAND=/bin/launchctl'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_execution'])
+    # Test: data_type is 'syslog:line' AND
+    #       body contains 'COMMAND=/bin/launchctl'
+    attribute_values_per_name = {
+        'body': ['COMMAND=/bin/launchctl']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['application_execution'])
 
   def testRuleApplicationInstall(self):
     """Tests the application_install tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
-    event_data = plist_event.PlistTimeEventData()
-    event_data.plugin = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data = plist_event.PlistTimeEventData()
-    event_data.plugin = 'plist_install_history'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['application_install'])
+    # Test: data_type is 'plist:key' AND
+    #       plugin is 'plist_install_history'
+    attribute_values_per_name = {
+        'plugin': ['plist_install_history']}
+    self._CheckTaggingRule(
+        plist_event.PlistTimeEventData, attribute_values_per_name,
+        ['application_install'])
 
   def testRuleAutorun(self):
     """Tests the autorun tagging rule."""
+    # Test: data_type is 'fs:stat' AND
+    #       timestamp_desc is 'HFS_DETECT crtime' AND
+    #       filename contains 'LaunchAgents/' AND
+    #       filename contains '.plist'
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = 'HFS_DETECT crtime'
@@ -104,23 +83,22 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testRuleFileDownload(self):
     """Tests the file_download tagging rule."""
+    # Test: data_type is 'chrome:history:file_downloaded'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        chrome.ChromeHistoryFileDownloadedEventData, attribute_values_per_name,
+        ['file_download'])
+
+    # Test: data_type is 'macosx:lsquarantine'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        ls_quarantine.LsQuarantineEventData, attribute_values_per_name,
+        ['file_download'])
+
+    # Test: timestamp_desc is 'File Downloaded'
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
-
-    event_data = chrome.ChromeHistoryFileDownloadedEventData()
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['file_download'])
-
-    event_data = ls_quarantine.LsQuarantineEventData()
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['file_download'])
 
     event_data = filestat.FileStatEventData()
 
@@ -138,35 +116,24 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testRuleDeviceConnection(self):
     """Tests the device_connection tagging rule."""
-    event = events.EventObject()
-    event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+    # Test: data_type is 'ipod:device:entry'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        ipod.IPodPlistEventData, attribute_values_per_name,
+        ['device_connection'])
 
-    event_data = ipod.IPodPlistEventData()
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['device_connection'])
-
-    event_data = plist_event.PlistTimeEventData()
-    event_data.plugin = 'bogus'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
-    self._CheckLabels(storage_writer, [])
-
-    event_data = plist_event.PlistTimeEventData()
-    event_data.plugin = 'plist_airport'
-
-    storage_writer = self._TagEvent(event, event_data)
-
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
-    self._CheckLabels(storage_writer, ['device_connection'])
+    # Test: data_type is 'plist:key' AND
+    #       plugin is 'plist_airport'
+    attribute_values_per_name = {
+        'plugin': ['plist_airport']}
+    self._CheckTaggingRule(
+        plist_event.PlistTimeEventData, attribute_values_per_name,
+        ['device_connection'])
 
   def testRuleDocumentPrint(self):
     """Tests the document_print tagging rule."""
+    # Test: data_type is 'olecf:summary_info' AND
+    #       timestamp_desc contains 'Printed'
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
