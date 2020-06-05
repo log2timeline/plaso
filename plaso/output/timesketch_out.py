@@ -9,7 +9,7 @@ try:
   # Remove once no longer needed.
   try:
     import timesketch.app as timesketch
-  except ImportError
+  except ImportError:
     import timesketch
   from timesketch.models import db_session as timesketch_db_session
   from timesketch.models import sketch as timesketch_sketch
