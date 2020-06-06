@@ -56,8 +56,6 @@ class ExtractionTool(
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
     self._buffer_size = 0
-    self._mount_path = None
-    self._operating_system = None
     self._parser_filter_expression = None
     self._preferred_year = None
     self._presets_file = None
@@ -148,7 +146,6 @@ class ExtractionTool(
         self._process_compressed_streams)
     configuration.extraction.yara_rules_string = self._yara_rules_string
     configuration.filter_file = self._filter_file
-    configuration.input_source.mount_path = self._mount_path
     configuration.log_filename = self._log_file
     configuration.parser_filter_expression = parser_filter_expression
     configuration.preferred_year = self._preferred_year
