@@ -28,7 +28,6 @@ class SQLiteStorageMergeReaderTest(test_lib.StorageTestCase):
       {'data_type': 'windows:registry:key_value',
        'key_path': 'MY AutoRun key',
        'parser': 'UNKNOWN',
-       'regvalue': {'Name1': 'Data1', 'Name2': 'Data2'},
        'timestamp': timelib.Timestamp.CopyFromString(
            '2012-04-20 22:38:46.929596'),
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,

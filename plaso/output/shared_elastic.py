@@ -152,11 +152,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     event_values = {}
     for attribute_name, attribute_value in event_data.GetAttributes():
-      # TODO: remove regvalue, which is kept for backwards compatibility.
-      # Ignore the regvalue attribute as it cause issues when indexing.
-      if attribute_name == 'regvalue':
-        continue
-
       if attribute_name == 'pathspec':
         try:
           attribute_value = JsonPathSpecSerializer.WriteSerialized(
