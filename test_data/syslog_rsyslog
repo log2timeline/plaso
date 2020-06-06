@@ -1,11 +1,5 @@
-Jan 22 07:54:32 myhostname.myhost.com Job `cron.daily' terminated
-Mar 11 09:39:38 ubuntu2015 dhclient: PRC: Renewing lease on enp0s3.
-Mar 11 09:39:39: --- last message repeated 5 times ---
-Mar 11 12:17:01 ubuntu2015 CRON[11068]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
-Mar 11 22:55:30 ubuntu2015 AptDaemon: INFO: CommitPackages() was called: dbus.Array([dbus.String('')],
-signature=dbus.Signature('s')), dbus.Array([dbus.String('')], signature=dbus.Signature('s')), dbus.Ar
-Mar 11 22:58:58 ubuntu2015 com.canonical.Unity.Scope.Music[1378]: (unity-music-daemon:27902): unity-music-daemon-WARNING
- **: rhythmbox-collection.vala:574: Error while parsing rhythmbox DB: Error opening file: No such file or directory
-Mar 11 23:07:04 ubuntu2015 org.debian.apt[557]: 23:07:04 AptDaemon [INFO]: Quitting was requested
-Nov 18 01:15:20 myhostname.myhost.com aprocess[101001]: This is a multi-line message that screws up
-	many syslog parsers.
+2020-05-31T00:00:45.698463+00:00 localhost rsyslogd:  message repeated 76 times: [-- MARK --]
+2020-05-31T00:00:45.698885+00:00 localhost rsyslogd:  [origin software="rsyslogd" swVersion="8.33.1" x-pid="1138" x-info="http://www.rsyslog.com"] rsyslogd was HUPed
+2020-05-31T00:00:45.738158+00:00 localhost systemd[1]: Reloaded System Logging Service.
+2020-05-31T00:00:46.599903+00:00 localhost systemd[1]: Started Rotate log files.
+2020-05-31T00:00:47.044800+00:00 localhost systemd[1]: Started Do daily mandb update.

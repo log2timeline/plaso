@@ -15,18 +15,29 @@ class SyslogParserTest(test_lib.ParserTestCase):
   """Tests for the syslog parser."""
 
   def testParseRsyslog(self):
-    """Tests the Parse function on an Ubuntu-style syslog file"""
+    """Tests the Parse function on a rsyslog file."""
+    parser = syslog.SyslogParser()
+    knowledge_base_values = {'year': 2020}
+    storage_writer = self._ParseFile(
+        ['syslog_rsyslog'], parser,
+        knowledge_base_values=knowledge_base_values)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 5)
+
+  def testParseRsyslogTraditional(self):
+    """Tests the Parse function on a traditional rsyslog file."""
     parser = syslog.SyslogParser()
     knowledge_base_values = {'year': 2016}
     storage_writer = self._ParseFile(
-        ['syslog_rsyslog'], parser,
+        ['syslog_rsyslog_traditional'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
   def testParseDarwin(self):
-    """Tests the Parse function on an Darwin-style syslog file"""
+    """Tests the Parse function on an Darwin-style syslog file."""
     parser = syslog.SyslogParser()
     knowledge_base_values = {'year': 2016}
     storage_writer = self._ParseFile(
