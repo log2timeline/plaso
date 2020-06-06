@@ -380,6 +380,7 @@ class PstealTool(
             'in the form <timestamp>-<source>.plaso'))
 
     self.AddStorageMediaImageOptions(extraction_group)
+    self.AddVSSProcessingOptions(extraction_group)
     self.AddCredentialOptions(extraction_group)
 
     info_group = argument_parser.add_argument_group('informational arguments')
