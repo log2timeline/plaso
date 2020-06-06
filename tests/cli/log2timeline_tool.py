@@ -564,8 +564,10 @@ optional arguments:
             '{0!s}.').format(exception))
 
       # There should be 3 filestat and 3 pe parser generated events.
+      # Typically there are 3 filestat events, but there can be 4 on platforms
+      # that support os.stat_result st_birthtime.
       events = list(storage_file.GetSortedEvents())
-      self.assertEqual(len(events), 6)
+      self.assertIn(len(events), [6, 7])
 
   def testShowInfo(self):
     """Tests the output of the tool in info mode."""

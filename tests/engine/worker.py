@@ -151,7 +151,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_events, 19)
+    # Typically there are 3 filestat events, but there can be 4 on platforms
+    # that support os.stat_result st_birthtime.
+    self.assertIn(storage_writer.number_of_events, [19, 20])
 
   def testProcessPathSpecCompressedFileGZIP(self):
     """Tests the ProcessPathSpec function on a gzip compressed file."""
@@ -163,7 +165,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_events, 16)
+    # Typically there are 3 filestat events, but there can be 4 on platforms
+    # that support os.stat_result st_birthtime.
+    self.assertIn(storage_writer.number_of_events, [16, 17])
 
   def testProcessPathSpecCompressedFileBZIP2(self):
     """Tests the ProcessPathSpec function on a bzip2 compressed file."""
@@ -175,7 +179,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_events, 15)
+    # Typically there are 3 filestat events, but there can be 4 on platforms
+    # that support os.stat_result st_birthtime.
+    self.assertIn(storage_writer.number_of_events, [15, 16])
 
   def testProcessPathSpec(self):
     """Tests the ProcessPathSpec function on an archive file."""
@@ -203,7 +209,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_events, 3)
+    # Typically there are 3 filestat events, but there can be 4 on platforms
+    # that support os.stat_result st_birthtime.
+    self.assertIn(storage_writer.number_of_events, [3, 4])
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tar'])
@@ -212,7 +220,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values,
         process_archives=True)
 
-    self.assertEqual(storage_writer.number_of_events, 16)
+    # Typically there are 3 filestat events, but there can be 4 on platforms
+    # that support os.stat_result st_birthtime.
+    self.assertIn(storage_writer.number_of_events, [16, 17])
 
   def testProcessPathSpecCompressedArchive(self):
     """Tests the ProcessPathSpec function on a compressed archive file."""
@@ -243,7 +253,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values,
         process_archives=True)
 
-    self.assertEqual(storage_writer.number_of_events, 17)
+    # Typically there are 3 filestat events, but there can be 4 on platforms
+    # that support os.stat_result st_birthtime.
+    self.assertIn(storage_writer.number_of_events, [17, 18])
 
   def testProcessPathSpecVMDK(self):
     """Tests the ProcessPathSpec function on a VMDK with symbolic links."""
