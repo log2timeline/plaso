@@ -31,7 +31,6 @@ class SerializedAttributeContainerListTest(unittest.TestCase):
 
 
 # TODO: add tests for BaseStorageFile
-# TODO: add tests for StorageFileMergeReader
 # TODO: add tests for StorageFileReader
 # TODO: add tests for StorageFileWriter
 

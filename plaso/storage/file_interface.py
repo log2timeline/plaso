@@ -205,22 +205,6 @@ class BaseStorageFile(interface.BaseStore):
       raise IOError('Unable to write to read-only storage file.')
 
 
-class StorageFileMergeReader(interface.StorageMergeReader):
-  """Storage reader interface for merging file-based stores."""
-
-  # pylint: disable=abstract-method
-
-  def __init__(self, storage_writer):
-    """Initializes a storage merge reader.
-
-    Args:
-      storage_writer (StorageWriter): storage writer.
-    """
-    super(StorageFileMergeReader, self).__init__(storage_writer)
-    self._serializer = json_serializer.JSONAttributeContainerSerializer
-    self._serializers_profiler = None
-
-
 class StorageFileReader(interface.StorageReader):
   """File-based storage reader interface."""
 
