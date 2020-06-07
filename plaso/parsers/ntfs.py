@@ -28,9 +28,11 @@ class NTFSFileStatEventData(events.EventData):
   Attributes:
     attribute_type (int): attribute type for example "0x00000030", which
         represents "$FILE_NAME".
+    display_name (str): display name.
     file_attribute_flags (int): NTFS file attribute flags.
     file_reference (int): NTFS file reference.
     file_system_type (str): file system type.
+    filename (str): name of the file.
     is_allocated (bool): True if the MFT entry is allocated (marked as in use).
     name (str): name associated with the stat event, for example that of
         a $FILE_NAME attribute or None if not available.
@@ -44,9 +46,11 @@ class NTFSFileStatEventData(events.EventData):
     """Initializes event data."""
     super(NTFSFileStatEventData, self).__init__(data_type=self.DATA_TYPE)
     self.attribute_type = None
+    self.display_name = None
     self.file_attribute_flags = None
     self.file_reference = None
     self.file_system_type = 'NTFS'
+    self.filename = None
     self.is_allocated = None
     self.name = None
     self.parent_file_reference = None
@@ -154,7 +158,9 @@ class NTFSMFTParser(interface.FileObjectParser):
     """
     event_data = NTFSFileStatEventData()
     event_data.attribute_type = mft_attribute.attribute_type
+    event_data.display_name = parser_mediator.GetDisplayName()
     event_data.file_reference = mft_entry.file_reference
+    event_data.filename = parser_mediator.GetRelativePath()
     event_data.is_allocated = mft_entry.is_allocated()
     event_data.path_hints = path_hints
 

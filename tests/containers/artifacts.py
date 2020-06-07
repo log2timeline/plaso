@@ -117,7 +117,8 @@ class SourceConfigurationArtifactTest(shared_test_lib.BaseTestCase):
     """Tests the GetAttributeNames function."""
     attribute_container = artifacts.SourceConfigurationArtifact()
 
-    expected_attribute_names = ['path_spec', 'system_configuration']
+    expected_attribute_names = [
+        'mount_path', 'path_spec', 'system_configuration']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
     self.assertEqual(attribute_names, expected_attribute_names)

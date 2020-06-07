@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import copy
-import os
 import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -60,7 +59,6 @@ class ParserMediator(object):
     self._last_event_data_hash = None
     self._last_event_data_identifier = None
     self._memory_profiler = None
-    self._mount_path = None
     self._number_of_event_sources = 0
     self._number_of_events = 0
     self._number_of_warnings = 0
@@ -70,7 +68,6 @@ class ParserMediator(object):
     self._resolver_context = resolver_context
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
-    self._text_prepend = None
 
     self.collection_filters_helper = collection_filters_helper
     self.last_activity_timestamp = 0.0
@@ -174,32 +171,6 @@ class ParserMediator(object):
           'error: {0!s}').format(exception))
       return None
 
-  def _GetInode(self, inode_value):
-    """Retrieves the inode from the inode value.
-
-    Args:
-      inode_value (int|str): inode, such as 1 or '27-128-1'.
-
-    Returns:
-      int: inode or -1 if the inode value cannot be converted to an integer.
-    """
-    if isinstance(inode_value, int):
-      return inode_value
-
-    if isinstance(inode_value, float):
-      return int(inode_value)
-
-    if not isinstance(inode_value, str):
-      return -1
-
-    if b'-' in inode_value:
-      inode_value, _, _ = inode_value.partition(b'-')
-
-    try:
-      return int(inode_value, 10)
-    except ValueError:
-      return -1
-
   def _GetLatestYearFromFileEntry(self):
     """Retrieves the maximum (highest value) year from the file entry.
 
@@ -291,12 +262,15 @@ class ParserMediator(object):
 
     path_spec = getattr(file_entry, 'path_spec', None)
 
+    mount_path = self._knowledge_base.GetMountPath()
     relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
-        path_spec, mount_path=self._mount_path)
+        path_spec, mount_path=mount_path)
     if not relative_path:
       return file_entry.name
 
-    return self.GetDisplayNameForPathSpec(path_spec)
+    text_prepend = self._knowledge_base.GetTextPrepend()
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(
+        path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -307,8 +281,10 @@ class ParserMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
+    mount_path = self._knowledge_base.GetMountPath()
+    text_prepend = self._knowledge_base.GetTextPrepend()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=self._mount_path, text_prepend=self._text_prepend)
+        path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
   def GetEstimatedYear(self):
     """Retrieves an estimate of the year.
@@ -386,6 +362,33 @@ class ParserMediator(object):
     """
     return '/'.join(self._parser_chain_components)
 
+  def GetRelativePath(self):
+    """Retrieves the relative path of the current file entry.
+
+    Returns:
+      str: relateive path of the current file entry or None if no current
+          file entry.
+    """
+    if self._file_entry is None:
+      return None
+
+    mount_path = self._knowledge_base.GetMountPath()
+    return path_helper.PathHelper.GetRelativePathForPathSpec(
+        self._file_entry.path_spec, mount_path=mount_path)
+
+  def GetRelativePathForPathSpec(self, path_spec):
+    """Retrieves the relative path for a path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: relateive path of the path specification.
+    """
+    mount_path = self._knowledge_base.GetMountPath()
+    return path_helper.PathHelper.GetRelativePathForPathSpec(
+        path_spec, mount_path=mount_path)
+
   def PopFromParserChain(self):
     """Removes the last added parser or parser plugin from the parser chain."""
     self._parser_chain_components.pop()
@@ -409,34 +412,8 @@ class ParserMediator(object):
     if not getattr(event_data, 'parser', None) and parser_chain:
       event_data.parser = parser_chain
 
-    # TODO: deprecate text_prepend in favor of an event tag.
-    if not getattr(event_data, 'text_prepend', None) and self._text_prepend:
-      event_data.text_prepend = self._text_prepend
-
     if file_entry is None:
       file_entry = self._file_entry
-
-    display_name = None
-    if file_entry:
-      # TODO: move filename to event data stream or derive when needed.
-      if not getattr(event_data, 'filename', None):
-        path_spec = getattr(file_entry, 'path_spec', None)
-        event_data.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
-            path_spec, mount_path=self._mount_path)
-
-      if not display_name:
-        # TODO: dfVFS refactor: move display name to output since the path
-        # specification contains the full information.
-        display_name = self.GetDisplayName(file_entry)
-
-      # TODO: move inode to event data stream or derive when needed.
-      stat_object = file_entry.GetStat()
-      inode_value = getattr(stat_object, 'ino', None)
-      if getattr(event_data, 'inode', None) is None and inode_value is not None:
-        event_data.inode = self._GetInode(inode_value)
-
-    if not getattr(event_data, 'display_name', None) and display_name:
-      event_data.display_name = display_name
 
     if not getattr(event_data, 'hostname', None) and self.hostname:
       event_data.hostname = self.hostname
@@ -623,30 +600,6 @@ class ParserMediator(object):
     """
     if self._cpu_time_profiler:
       self._cpu_time_profiler.StopTiming(parser_name)
-
-  def SetEventExtractionConfiguration(self, configuration):
-    """Sets the event extraction configuration settings.
-
-    Args:
-      configuration (EventExtractionConfiguration): event extraction
-          configuration.
-    """
-    self._text_prepend = configuration.text_prepend
-
-  def SetInputSourceConfiguration(self, configuration):
-    """Sets the input source configuration settings.
-
-    Args:
-      configuration (InputSourceConfiguration): input source configuration.
-    """
-    mount_path = configuration.mount_path
-
-    # Remove a trailing path separator from the mount path so the relative
-    # paths will start with a path separator.
-    if mount_path and mount_path.endswith(os.sep):
-      mount_path = mount_path[:-1]
-
-    self._mount_path = mount_path
 
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.

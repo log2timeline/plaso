@@ -37,7 +37,8 @@ class SessionTest(shared_test_lib.BaseTestCase):
         'product_name',
         'product_version',
         'source_configurations',
-        'start_time']
+        'start_time',
+        'text_prepend']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -143,7 +144,8 @@ class SessionConfiguration(shared_test_lib.BaseTestCase):
         'preferred_encoding',
         'preferred_time_zone',
         'preferred_year',
-        'source_configurations']
+        'source_configurations',
+        'text_prepend']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

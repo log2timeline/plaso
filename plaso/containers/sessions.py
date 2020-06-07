@@ -43,6 +43,7 @@ class Session(interface.AttributeContainer):
         that are (or going to be) processed.
     start_time (int): time that the session was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
+    text_prepend (str): text to prepend to every display name.
   """
   CONTAINER_TYPE = 'session'
 
@@ -68,6 +69,7 @@ class Session(interface.AttributeContainer):
     self.product_version = plaso.__version__
     self.source_configurations = None
     self.start_time = int(time.time() * 1000000)
+    self.text_prepend = None
 
   def CopyAttributesFromSessionCompletion(self, session_completion):
     """Copies attributes from a session completion.
@@ -121,6 +123,7 @@ class Session(interface.AttributeContainer):
     self.preferred_encoding = session_configuration.preferred_encoding
     self.preferred_time_zone = session_configuration.preferred_time_zone
     self.source_configurations = session_configuration.source_configurations
+    self.text_prepend = session_configuration.text_prepend
 
   def CopyAttributesFromSessionStart(self, session_start):
     """Copies attributes from a session start.
@@ -188,6 +191,7 @@ class Session(interface.AttributeContainer):
     session_configuration.preferred_encoding = self.preferred_encoding
     session_configuration.preferred_time_zone = self.preferred_time_zone
     session_configuration.source_configurations = self.source_configurations
+    session_configuration.text_prepend = self.text_prepend
     return session_configuration
 
   def CreateSessionStart(self):
@@ -255,6 +259,7 @@ class SessionConfiguration(interface.AttributeContainer):
     preferred_year (int): preferred year.
     source_configurations (list[SourceConfiguration]): configuration of sources
         that are (or going to be) processed.
+    text_prepend (str): text to prepend to every display name.
   """
   CONTAINER_TYPE = 'session_configuration'
 
@@ -278,6 +283,7 @@ class SessionConfiguration(interface.AttributeContainer):
     self.preferred_time_zone = None
     self.preferred_year = None
     self.source_configurations = None
+    self.text_prepend = None
 
 
 class SessionStart(interface.AttributeContainer):

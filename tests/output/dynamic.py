@@ -73,6 +73,9 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '0000-00-00T00:00:00')
 
+  # TODO: add tests for _FormatDisplayName
+  # TODO: add tests for _FormatFilename
+
   def testFormatTime(self):
     """Tests the _FormatTime function."""
     output_mediator = self._CreateOutputMediator()

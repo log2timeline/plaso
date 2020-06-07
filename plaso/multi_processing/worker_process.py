@@ -133,12 +133,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         resolver_context=resolver_context,
         temporary_directory=self._processing_configuration.temporary_directory)
 
-    self._parser_mediator.SetEventExtractionConfiguration(
-        self._processing_configuration.event_extraction)
-
-    self._parser_mediator.SetInputSourceConfiguration(
-        self._processing_configuration.input_source)
-
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.

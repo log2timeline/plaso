@@ -18,7 +18,6 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator
 from plaso.storage.fake import writer as fake_writer
@@ -43,8 +42,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     self.assertIsNone(earliest_year)
 
     # TODO: improve test coverage.
-
-  # TODO: add tests for _GetInode.
 
   def testGetLatestYearFromFileEntry(self):
     """Tests the _GetLatestYearFromFileEntry function."""
@@ -117,10 +114,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     expected_display_name = 'VSS2:TSK:/syslog.gz'
     self.assertEqual(display_name, expected_display_name)
 
-    configuration = configurations.EventExtractionConfiguration()
-    configuration.text_prepend = 'C:'
+    knowledge_base_object.SetTextPrepend('C:')
 
-    parser_mediator.SetEventExtractionConfiguration(configuration)
     display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
     expected_display_name = 'VSS2:TSK:C:/syslog.gz'
     self.assertEqual(display_name, expected_display_name)
@@ -194,6 +189,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     self.assertEqual(latest_year, expected_latest_year)
 
   # TODO: add tests for GetParserChain.
+  # TODO: add tests for GetRelativePathForPathSpec.
   # TODO: add tests for PopFromParserChain.
   # TODO: add tests for ProcessEvent.
   # TODO: add tests for ProduceEventSource.
@@ -240,9 +236,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
         storage_writer, knowledge_base_object)
 
     parser_mediator.ResetFileEntry()
-
-  # TODO: add tests for SetEventExtractionConfiguration.
-  # TODO: add tests for SetInputSourceConfiguration.
 
   def testSetFileEntry(self):
     """Tests the SetFileEntry function."""

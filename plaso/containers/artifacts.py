@@ -227,6 +227,7 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
   image or a mounted directory.
 
   Attributes:
+    mount_path (str): path of a "mounted" directory input source.
     path_spec (dfvfs.PathSpec): path specification of the source that is
         processed.
     system_configuration (SystemConfigurationArtifact): system configuration of
@@ -243,6 +244,7 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
           that is processed.
     """
     super(SourceConfigurationArtifact, self).__init__()
+    self.mount_path = None
     self.path_spec = path_spec
     self.system_configuration = None
 

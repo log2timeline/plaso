@@ -238,12 +238,6 @@ class SingleProcessEngine(engine.BaseEngine):
         resolver_context=resolver_context,
         temporary_directory=processing_configuration.temporary_directory)
 
-    parser_mediator.SetEventExtractionConfiguration(
-        processing_configuration.event_extraction)
-
-    parser_mediator.SetInputSourceConfiguration(
-        processing_configuration.input_source)
-
     extraction_worker = worker.EventExtractionWorker(
         parser_filter_expression=(
             processing_configuration.parser_filter_expression))
