@@ -28,7 +28,6 @@ class SQLiteStorageMergeReaderTest(test_lib.StorageTestCase):
       {'data_type': 'windows:registry:key_value',
        'key_path': 'MY AutoRun key',
        'parser': 'UNKNOWN',
-       'regvalue': {'Name1': 'Data1', 'Name2': 'Data2'},
        'timestamp': timelib.Timestamp.CopyFromString(
            '2012-04-20 22:38:46.929596'),
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
@@ -60,25 +59,6 @@ class SQLiteStorageMergeReaderTest(test_lib.StorageTestCase):
       storage_file.AddEvent(event)
 
     storage_file.Close()
-
-  def testReadStorageMetadata(self):
-    """Tests the _ReadStorageMetadata function."""
-    session = sessions.Session()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      task_storage_path = os.path.join(temp_directory, 'task.sqlite')
-      self._CreateTaskStorageFile(session, task_storage_path, self._TEST_EVENTS)
-
-      session_storage_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = writer.SQLiteStorageFileWriter(
-          session, session_storage_path)
-
-      test_reader = merge_reader.SQLiteStorageMergeReader(
-          storage_writer, task_storage_path)
-
-      test_reader._Open()
-      test_reader._ReadStorageMetadata()
-      test_reader._Close()
 
   def testMergeAttributeContainers(self):
     """Tests the MergeAttributeContainers function."""

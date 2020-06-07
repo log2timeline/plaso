@@ -4,8 +4,6 @@
 from __future__ import unicode_literals
 
 import os
-import sqlite3
-import zlib
 
 from plaso.containers import event_sources
 from plaso.containers import events
@@ -15,8 +13,8 @@ from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import interface
-from plaso.storage import identifiers
 from plaso.storage import logger
+from plaso.storage.sqlite import sqlite_file
 
 
 class SQLiteStorageMergeReader(interface.StorageMergeReader):
@@ -57,9 +55,6 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddWarning',
   }
 
-  _TABLE_NAMES_QUERY = (
-      'SELECT name FROM sqlite_master WHERE type = "table"')
-
   def __init__(self, storage_writer, path):
     """Initializes a storage merge reader.
 
@@ -72,18 +67,16 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       RuntimeError: if an add container method is missing.
     """
     super(SQLiteStorageMergeReader, self).__init__(storage_writer)
+    self._active_container_generator = None
     self._active_container_type = None
-    self._active_cursor = None
     self._add_active_container_method = None
     self._add_container_type_methods = {}
-    self._compression_format = definitions.COMPRESSION_FORMAT_NONE
-    self._connection = None
     self._container_types = None
-    self._cursor = None
-    self._deserialization_errors = []
     self._event_data_identifier_mappings = {}
     self._event_data_stream_identifier_mappings = {}
+    self._event_identifier_mappings = {}
     self._path = path
+    self._task_storage_file = None
 
     # Create a runtime lookup table for the add container type method. This
     # prevents having to create a series of if-else checks for container types.
@@ -98,6 +91,8 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
       self._add_container_type_methods[container_type] = method
 
+  # pylint: disable=unused-argument
+
   def _AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
@@ -105,12 +100,8 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       analysis_report (AnalysisReport): analysis report.
       serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
-    self._storage_writer.AddAnalysisReport(
-        analysis_report, serialized_data=serialized_data)
+    self._storage_writer.AddAnalysisReport(analysis_report)
 
-  # The serialized form of the event is not used, as this method modifies the
-  # event.
-  # pylint: disable=unused-argument
   def _AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
@@ -118,38 +109,33 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       event (EventObject): event.
       serialized_data (Optional[bytes]): serialized form of the event.
     """
-    row_identifier = getattr(event, '_event_data_row_identifier', None)
-    # TODO: error if row_identifier is None
-    if row_identifier is not None:
-      event_data_identifier = identifiers.SQLTableIdentifier(
-          self._CONTAINER_TYPE_EVENT_DATA, row_identifier)
-      lookup_key = event_data_identifier.CopyToString()
+    event_data_identifier = event.GetEventDataIdentifier()
+    lookup_key = event_data_identifier.CopyToString()
 
-      event_data_identifier = self._event_data_identifier_mappings.get(
-          lookup_key, None)
+    event_data_identifier = self._event_data_identifier_mappings.get(
+        lookup_key, None)
 
-      if not event_data_identifier:
-        event_identifier = event.GetIdentifier()
-        event_identifier = event_identifier.CopyToString()
+    if not event_data_identifier:
+      event_identifier = event.GetIdentifier()
+      event_identifier = event_identifier.CopyToString()
 
-        if lookup_key in self._deserialization_errors:
-          reason = 'deserialized'
-        else:
-          reason = 'found'
+      # TODO: store this as an extraction warning so this is preserved
+      # in the storage file.
+      logger.error((
+          'Unable to merge event attribute container: {0:s} since '
+          'corresponding event data: {1:s} could not be found.').format(
+              event_identifier, lookup_key))
+      return
 
-        # TODO: store this as an extraction warning so this is preserved
-        # in the storage file.
-        logger.error((
-            'Unable to merge event attribute container: {0:s} since '
-            'corresponding event data: {1:s} could not be {2:s}.').format(
-                event_identifier, lookup_key, reason))
-        return
+    event.SetEventDataIdentifier(event_data_identifier)
 
-      event.SetEventDataIdentifier(event_data_identifier)
-
-    # TODO: add event identifier mappings for event tags.
+    identifier = event.GetIdentifier()
+    lookup_key = identifier.CopyToString()
 
     self._storage_writer.AddEvent(event)
+
+    identifier = event.GetIdentifier()
+    self._event_identifier_mappings[lookup_key] = identifier
 
   def _AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
@@ -158,20 +144,14 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       event_data (EventData): event data.
       serialized_data (bytes): serialized form of the event data.
     """
-    row_identifier = getattr(
-        event_data, '_event_data_stream_row_identifier', None)
-    if row_identifier is not None:
-      event_data_stream_identifier = identifiers.SQLTableIdentifier(
-          self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+    event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+    if event_data_stream_identifier:
       lookup_key = event_data_stream_identifier.CopyToString()
 
       event_data_stream_identifier = (
           self._event_data_stream_identifier_mappings.get(lookup_key, None))
 
-      if event_data_stream_identifier:
-        event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
-
-      elif lookup_key in self._deserialization_errors:
+      if not event_data_stream_identifier:
         event_data_identifier = event_data.GetIdentifier()
         event_data_identifier = event_data_identifier.CopyToString()
 
@@ -180,17 +160,18 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
         logger.error((
             'Unable to merge event data attribute container: {0:s} since '
             'corresponding event data stream: {1:s} could not be '
-            'deserialized.').format(event_data_identifier, lookup_key))
+            'found.').format(event_data_identifier, lookup_key))
         return
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
-    self._storage_writer.AddEventData(
-        event_data, serialized_data=serialized_data)
+    self._storage_writer.AddEventData(event_data)
 
-    last_write_identifier = event_data.GetIdentifier()
-    self._event_data_identifier_mappings[lookup_key] = last_write_identifier
+    identifier = event_data.GetIdentifier()
+    self._event_data_identifier_mappings[lookup_key] = identifier
 
   def _AddEventDataStream(self, event_data_stream, serialized_data=None):
     """Adds an event data stream.
@@ -202,8 +183,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     identifier = event_data_stream.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
-    self._storage_writer.AddEventDataStream(
-        event_data_stream, serialized_data=serialized_data)
+    self._storage_writer.AddEventDataStream(event_data_stream)
 
     identifier = event_data_stream.GetIdentifier()
     self._event_data_stream_identifier_mappings[lookup_key] = identifier
@@ -215,8 +195,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       event_source (EventSource): event source.
       serialized_data (Optional[bytes]): serialized form of the event source.
     """
-    self._storage_writer.AddEventSource(
-        event_source, serialized_data=serialized_data)
+    self._storage_writer.AddEventSource(event_source)
 
   def _AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
@@ -225,7 +204,26 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       event_tag (EventTag): event tag.
       serialized_data (Optional[bytes]): serialized form of the event tag.
     """
-    self._storage_writer.AddEventTag(event_tag, serialized_data=serialized_data)
+    event_identifier = event_tag.GetEventIdentifier()
+    lookup_key = event_identifier.CopyToString()
+
+    event_identifier = self._event_identifier_mappings.get(lookup_key, None)
+
+    if not event_identifier:
+      event_tag_identifier = event_tag.GetIdentifier()
+      event_tag_identifier = event_tag_identifier.CopyToString()
+
+      # TODO: store this as an extraction warning so this is preserved
+      # in the storage file.
+      logger.error((
+          'Unable to merge event tag attribute container: {0:s} since '
+          'corresponding event: {1:s} could not be found.').format(
+              event_tag_identifier, lookup_key))
+      return
+
+    event_tag.SetEventDataIdentifier(event_identifier)
+
+    self._storage_writer.AddEventTag(event_tag)
 
   def _AddWarning(self, warning, serialized_data=None):
     """Adds a warning.
@@ -234,65 +232,24 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       warning (ExtractionWarning): warning.
       serialized_data (Optional[bytes]): serialized form of the warning.
     """
-    self._storage_writer.AddWarning(warning, serialized_data=serialized_data)
+    self._storage_writer.AddWarning(warning)
 
   def _Close(self):
     """Closes the task storage after reading."""
-    self._connection.close()
-    self._connection = None
-    self._cursor = None
-
-  def _GetContainerTypes(self):
-    """Retrieves the container types to merge.
-
-    Container types not defined in _CONTAINER_TYPES are ignored and not merged.
-
-    Specific container types reference other container types, such
-    as event referencing event data. The names are ordered to ensure the
-    attribute containers are merged in the correct order.
-
-    Returns:
-      list[str]: names of the container types to merge.
-    """
-    self._cursor.execute(self._TABLE_NAMES_QUERY)
-    table_names = [row[0] for row in self._cursor.fetchall()]
-
-    return [
-        table_name for table_name in self._CONTAINER_TYPES
-        if table_name in table_names]
+    self._task_storage_file.Close()
+    self._task_storage_file = None
 
   def _Open(self):
     """Opens the task storage for reading."""
-    self._connection = sqlite3.connect(
-        self._path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
-    self._cursor = self._connection.cursor()
+    self._task_storage_file = sqlite_file.SQLiteStorageFile(
+        storage_type=definitions.STORAGE_TYPE_TASK)
+    self._task_storage_file.Open(self._path)
 
-  def _ReadStorageMetadata(self):
-    """Reads the task storage metadata."""
-    query = 'SELECT key, value FROM metadata'
-    self._cursor.execute(query)
+    table_names = self._task_storage_file.GetTableNames()
 
-    metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
-
-    self._compression_format = metadata_values['compression_format']
-
-  def _PrepareForNextContainerType(self):
-    """Prepares for the next container type.
-
-    This method prepares the task storage for merging the next container type.
-    It sets the active container type, its add method and active cursor
-    accordingly.
-    """
-    self._active_container_type = self._container_types.pop(0)
-
-    self._add_active_container_method = self._add_container_type_methods.get(
-        self._active_container_type)
-
-    query = 'SELECT _identifier, _data FROM {0:s}'.format(
-        self._active_container_type)
-    self._cursor.execute(query)
-
-    self._active_cursor = self._cursor
+    self._container_types = [
+        table_name for table_name in self._CONTAINER_TYPES
+        if table_name in table_names]
 
   def MergeAttributeContainers(
       self, callback=None, maximum_number_of_containers=0):
@@ -316,70 +273,33 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     if maximum_number_of_containers < 0:
       raise ValueError('Invalid maximum number of containers')
 
-    if not self._cursor:
+    if not self._task_storage_file:
       self._Open()
-      self._ReadStorageMetadata()
-      self._container_types = self._GetContainerTypes()
-
-    self._deserialization_errors = []
 
     number_of_containers = 0
-    while self._active_cursor or self._container_types:
-      if not self._active_cursor:
-        self._PrepareForNextContainerType()
+    while self._active_container_generator or self._container_types:
+      if not self._active_container_generator:
+        self._active_container_type = self._container_types.pop(0)
 
-      if maximum_number_of_containers == 0:
-        rows = self._active_cursor.fetchall()
-      else:
-        number_of_rows = maximum_number_of_containers - number_of_containers
-        rows = self._active_cursor.fetchmany(size=number_of_rows)
+        self._active_container_generator = (
+            self._task_storage_file.GetStoredAttributeContainerGenerator(
+                self._active_container_type))
 
-      if not rows:
-        self._active_cursor = None
+        self._add_active_container_method = (
+            self._add_container_type_methods.get(self._active_container_type))
+
+      try:
+        attribute_container = next(self._active_container_generator)
+      except StopIteration:
+        self._active_container_generator = None
         continue
 
-      for row in rows:
-        identifier = identifiers.SQLTableIdentifier(
-            self._active_container_type, row[0])
+      if callback:
+        callback(self._storage_writer, attribute_container)
 
-        if self._compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-          serialized_data = zlib.decompress(row[1])
-        else:
-          serialized_data = row[1]
+      self._add_active_container_method(attribute_container)
 
-        try:
-          attribute_container = self._DeserializeAttributeContainer(
-              self._active_container_type, serialized_data)
-        except IOError as exception:
-          # TODO: store this as an extraction warning so this is preserved
-          # in the storage file.
-          logger.error((
-              'Unable to deserialize attribute container with error: '
-              '{0!s}').format(exception))
-
-          identifier = identifier.CopyToString()
-          self._deserialization_errors.append(identifier)
-          continue
-
-        attribute_container.SetIdentifier(identifier)
-
-        if self._active_container_type == self._CONTAINER_TYPE_EVENT_TAG:
-          row_identifier = getattr(
-              attribute_container, '_event_row_identifier', None)
-          # TODO: error if row_identifier is None
-          event_identifier = identifiers.SQLTableIdentifier(
-              self._CONTAINER_TYPE_EVENT, row_identifier)
-          attribute_container.SetEventIdentifier(event_identifier)
-
-          delattr(attribute_container, '_event_row_identifier')
-
-        if callback:
-          callback(self._storage_writer, attribute_container)
-
-        self._add_active_container_method(
-            attribute_container, serialized_data=serialized_data)
-
-        number_of_containers += 1
+      number_of_containers += 1
 
       if (maximum_number_of_containers != 0 and
           number_of_containers >= maximum_number_of_containers):

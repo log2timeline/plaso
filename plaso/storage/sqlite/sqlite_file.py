@@ -59,6 +59,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       'SELECT name FROM sqlite_master '
       'WHERE type = "table" AND name = "{0:s}"')
 
+  _TABLE_NAMES_QUERY = (
+      'SELECT name FROM sqlite_master WHERE type = "table"')
+
   # The maximum buffer size of serialized data before triggering
   # a flush to disk (64 MiB).
   _MAXIMUM_BUFFER_SIZE = 64 * 1024 * 1024
@@ -793,20 +796,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     self._is_open = False
 
-  def GetWarnings(self):
-    """Retrieves the warnings.
-
-    Returns:
-      generator(ExtractionWarning): warning generator.
-    """
-    # For backwards compatibility with pre-20190309 stores.
-    # Note that stores cannot contain both ExtractionErrors and
-    # ExtractionWarnings
-    if self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR):
-      return self._GetExtractionErrorsAsWarnings()
-
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
   def _GetExtractionErrorsAsWarnings(self):
     """Retrieves errors from from the store, and converts them to warnings.
 
@@ -959,6 +948,49 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     for event in event_generator:
       self._UpdateEventDataIdentifierAfterDeserialize(event)
       yield event
+
+  def GetStoredAttributeContainerGenerator(self, container_type):
+    """Retrieves a generator for specific stored attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      generator(AttributeContainer): attribute container generator.
+    """
+    if container_type == self._CONTAINER_TYPE_EVENT:
+      return self.GetEvents()
+
+    if container_type == self._CONTAINER_TYPE_EVENT_DATA:
+      return self.GetEventData()
+
+    if container_type == self._CONTAINER_TYPE_EVENT_TAG:
+      return self.GetEventTags()
+
+    return self._GetAttributeContainers(container_type)
+
+  def GetTableNames(self):
+    """Retrieves the table names.
+
+    Returns:
+      list[str]: names of the tables.
+    """
+    self._cursor.execute(self._TABLE_NAMES_QUERY)
+    return [row[0] for row in self._cursor.fetchall()]
+
+  def GetWarnings(self):
+    """Retrieves the warnings.
+
+    Returns:
+      generator(ExtractionWarning): warning generator.
+    """
+    # For backwards compatibility with pre-20190309 stores.
+    # Note that stores cannot contain both ExtractionErrors and
+    # ExtractionWarnings
+    if self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR):
+      return self._GetExtractionErrorsAsWarnings()
+
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
