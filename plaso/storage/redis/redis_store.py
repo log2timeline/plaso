@@ -364,6 +364,17 @@ class RedisStore(interface.BaseStore):
         name, cursor=cursor, count=maximum_number_of_items)
     return cursor, items
 
+  def GetStoredAttributeContainerGenerator(self, container_type):
+    """Retrieves a generator for specific stored attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      generator(AttributeContainer): attribute container generator.
+    """
+    return self._GetAttributeContainers(container_type)
+
   # pylint: disable=arguments-differ
   def Open(self, redis_client=None, url=None, **unused_kwargs):
     """Opens the store.

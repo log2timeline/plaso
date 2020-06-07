@@ -14,6 +14,7 @@ from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
+from plaso.storage import logger
 
 
 class BaseStore(object):
@@ -680,58 +681,221 @@ class BaseStore(object):
 class StorageMergeReader(object):
   """Storage reader interface for merging."""
 
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
+
+  # Some container types reference other container types, such as event
+  # referencing event_data. Container types in this tuple must be ordered after
+  # all the container types they reference.
+  _CONTAINER_TYPES = (
+      _CONTAINER_TYPE_EVENT_SOURCE,
+      _CONTAINER_TYPE_EVENT_DATA_STREAM,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_TAG,
+      _CONTAINER_TYPE_EXTRACTION_WARNING,
+      _CONTAINER_TYPE_ANALYSIS_REPORT)
+
+  _ADD_CONTAINER_TYPE_METHODS = {
+      _CONTAINER_TYPE_ANALYSIS_REPORT: '_AddAnalysisReport',
+      _CONTAINER_TYPE_EVENT: '_AddEvent',
+      _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
+      _CONTAINER_TYPE_EVENT_DATA_STREAM: '_AddEventDataStream',
+      _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
+      _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
+      _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddWarning',
+  }
+
   def __init__(self, storage_writer):
     """Initializes a storage merge reader.
 
     Args:
       storage_writer (StorageWriter): storage writer.
-    """
-    super(StorageMergeReader, self).__init__()
-    self._storage_writer = storage_writer
-    self._serializer = json_serializer.JSONAttributeContainerSerializer
-    self._serializers_profiler = None
-
-  def _DeserializeAttributeContainer(self, container_type, serialized_data):
-    """Deserializes an attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      serialized_data (bytes): serialized attribute container data.
-
-    Returns:
-      AttributeContainer: attribute container or None.
 
     Raises:
-      IOError: if the serialized data cannot be decoded.
-      OSError: if the serialized data cannot be decoded.
+      RuntimeError: if an add container method is missing.
     """
-    if not serialized_data:
-      return None
+    super(StorageMergeReader, self).__init__()
+    self._active_container_generator = None
+    self._active_container_type = None
+    self._add_active_container_method = None
+    self._add_container_type_methods = {}
+    self._container_types = None
+    self._event_data_identifier_mappings = {}
+    self._event_data_stream_identifier_mappings = {}
+    self._event_identifier_mappings = {}
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+    self._session_storage_writer = storage_writer
+    self._task_store = None
 
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(container_type)
+    # Create a runtime lookup table for the add container type method. This
+    # prevents having to create a series of if-else checks for container types.
+    # The table is generated at runtime as there are no forward function
+    # declarations in Python.
+    for container_type, method_name in self._ADD_CONTAINER_TYPE_METHODS.items():
+      method = getattr(self, method_name, None)
+      if not method:
+        raise RuntimeError(
+            'Add method missing for container type: {0:s}'.format(
+                container_type))
 
-    try:
-      serialized_string = serialized_data.decode('utf-8')
-      attribute_container = self._serializer.ReadSerialized(serialized_string)
+      self._add_container_type_methods[container_type] = method
 
-    except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
+  # pylint: disable=unused-argument
 
-    except (TypeError, ValueError) as exception:
-      # TODO: consider re-reading attribute container with error correction.
-      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
+  def _AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report.
 
-    finally:
-      if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(container_type)
+    Args:
+      analysis_report (AnalysisReport): analysis report.
+    """
+    self._session_storage_writer.AddAnalysisReport(analysis_report)
 
-    return attribute_container
+  def _AddEvent(self, event):
+    """Adds an event.
+
+    Args:
+      event (EventObject): event.
+    """
+    event_data_identifier = event.GetEventDataIdentifier()
+    lookup_key = event_data_identifier.CopyToString()
+
+    event_data_identifier = self._event_data_identifier_mappings.get(
+        lookup_key, None)
+
+    if not event_data_identifier:
+      event_identifier = event.GetIdentifier()
+      event_identifier = event_identifier.CopyToString()
+
+      # TODO: store this as an extraction warning so this is preserved
+      # in the session store.
+      logger.error((
+          'Unable to merge event attribute container: {0:s} since '
+          'corresponding event data: {1:s} could not be found.').format(
+              event_identifier, lookup_key))
+      return
+
+    event.SetEventDataIdentifier(event_data_identifier)
+
+    identifier = event.GetIdentifier()
+    lookup_key = identifier.CopyToString()
+
+    self._session_storage_writer.AddEvent(event)
+
+    identifier = event.GetIdentifier()
+    self._event_identifier_mappings[lookup_key] = identifier
+
+  def _AddEventData(self, event_data):
+    """Adds event data.
+
+    Args:
+      event_data (EventData): event data.
+    """
+    event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+    if event_data_stream_identifier:
+      lookup_key = event_data_stream_identifier.CopyToString()
+
+      event_data_stream_identifier = (
+          self._event_data_stream_identifier_mappings.get(lookup_key, None))
+
+      if not event_data_stream_identifier:
+        event_data_identifier = event_data.GetIdentifier()
+        event_data_identifier = event_data_identifier.CopyToString()
+
+        # TODO: store this as an extraction warning so this is preserved
+        # in the session store.
+        logger.error((
+            'Unable to merge event data attribute container: {0:s} since '
+            'corresponding event data stream: {1:s} could not be '
+            'found.').format(event_data_identifier, lookup_key))
+        return
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+    identifier = event_data.GetIdentifier()
+    lookup_key = identifier.CopyToString()
+
+    self._session_storage_writer.AddEventData(event_data)
+
+    identifier = event_data.GetIdentifier()
+    self._event_data_identifier_mappings[lookup_key] = identifier
+
+  def _AddEventDataStream(self, event_data_stream):
+    """Adds an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+    """
+    identifier = event_data_stream.GetIdentifier()
+    lookup_key = identifier.CopyToString()
+
+    self._session_storage_writer.AddEventDataStream(event_data_stream)
+
+    identifier = event_data_stream.GetIdentifier()
+    self._event_data_stream_identifier_mappings[lookup_key] = identifier
+
+  def _AddEventSource(self, event_source):
+    """Adds an event source.
+
+    Args:
+      event_source (EventSource): event source.
+    """
+    self._session_storage_writer.AddEventSource(event_source)
+
+  def _AddEventTag(self, event_tag):
+    """Adds an event tag.
+
+    Args:
+      event_tag (EventTag): event tag.
+    """
+    event_identifier = event_tag.GetEventIdentifier()
+    lookup_key = event_identifier.CopyToString()
+
+    event_identifier = self._event_identifier_mappings.get(lookup_key, None)
+
+    if not event_identifier:
+      event_tag_identifier = event_tag.GetIdentifier()
+      event_tag_identifier = event_tag_identifier.CopyToString()
+
+      # TODO: store this as an extraction warning so this is preserved
+      # in the session store.
+      logger.error((
+          'Unable to merge event tag attribute container: {0:s} since '
+          'corresponding event: {1:s} could not be found.').format(
+              event_tag_identifier, lookup_key))
+      return
+
+    event_tag.SetEventDataIdentifier(event_identifier)
+
+    self._session_storage_writer.AddEventTag(event_tag)
+
+  def _AddWarning(self, warning):
+    """Adds a warning.
+
+    Args:
+      warning (ExtractionWarning): warning.
+    """
+    self._session_storage_writer.AddWarning(warning)
 
   @abc.abstractmethod
+  def _Close(self):
+    """Closes the task store after merging."""
+
+  @abc.abstractmethod
+  def _Open(self):
+    """Opens the task store before merging."""
+
   def MergeAttributeContainers(
       self, callback=None, maximum_number_of_containers=0):
-    """Reads attribute containers from a task store into the writer.
+    """Reads attribute containers from a task store into the storage writer.
 
     Args:
       callback (function[StorageWriter, AttributeContainer]): function to call
@@ -741,7 +905,54 @@ class StorageMergeReader(object):
 
     Returns:
       bool: True if the entire task storage file has been merged.
+
+    Raises:
+      RuntimeError: if the add method for the active attribute container
+          type is missing.
+      OSError: if the task storage file cannot be deleted.
+      ValueError: if the maximum number of containers is a negative value.
     """
+    if maximum_number_of_containers < 0:
+      raise ValueError('Invalid maximum number of containers')
+
+    if not self._task_store:
+      self._Open()
+
+    number_of_containers = 0
+    while self._active_container_generator or self._container_types:
+      if not self._active_container_generator:
+        self._active_container_type = self._container_types.pop(0)
+
+        self._active_container_generator = (
+            self._task_store.GetStoredAttributeContainerGenerator(
+                self._active_container_type))
+
+        self._add_active_container_method = (
+            self._add_container_type_methods.get(self._active_container_type))
+
+      try:
+        attribute_container = next(self._active_container_generator)
+      except StopIteration:
+        self._active_container_generator = None
+        continue
+
+      if callback:
+        callback(self._session_storage_writer, attribute_container)
+
+      self._add_active_container_method(attribute_container)
+
+      number_of_containers += 1
+
+      if (maximum_number_of_containers != 0 and
+          number_of_containers >= maximum_number_of_containers):
+        logger.debug('Merged {0:d} containers'.format(number_of_containers))
+        return False
+
+    self._Close()
+
+    logger.debug('Merged all {0:d} containers'.format(number_of_containers))
+
+    return True
 
 
 # pylint: disable=redundant-returns-doc,redundant-yields-doc
