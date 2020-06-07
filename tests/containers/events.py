@@ -79,7 +79,6 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_row_identifier',
         'parser',
-        'tag',
         'timestamp',
         'timestamp_desc']
 
