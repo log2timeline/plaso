@@ -186,6 +186,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
         title='Plaso Storage Information')
     table_view.AddRow(['Filename', test_filename])
     table_view.AddRow(['Format version', format_version])
+    table_view.AddRow(['Storage type', 'session'])
     table_view.AddRow(['Serialization format', 'json'])
     table_view.Write(output_writer)
 
@@ -223,6 +224,9 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     expected_output = (
         '{0:s}'
+        '\n'
+        'No events labels stored.\n'
+        '\n'
         'No warnings stored.\n'
         '\n'
         'No analysis reports stored.\n'
@@ -234,6 +238,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.storage_file = test_file_path
     options.output_format = 'text'
+    options.sections = 'events,reports,sessions,warnings'
 
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_tool.ParseOptions(options)
