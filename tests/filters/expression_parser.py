@@ -85,8 +85,7 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
        'hostname': 'Agrabah',
        'inode': 1245,
        'parser': 'Weirdo',
-       'text': (
-           'User did a very bad thing, bad, bad thing that awoke Dr. Evil.'),
+       'text': 'User did a very bad thing, bad, bad thing that awoke Dr. Evil.',
        'text_short': 'This description is different than the long one.',
        'timestamp': timelib.Timestamp.CopyFromString('2015-11-18 01:15:43'),
        'timestamp_desc': 'Last Written'}]
@@ -449,7 +448,7 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
     # Test multiple attributes.
     self._CheckIfExpressionMatches(
-        'text iregexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'', event,
+        'text iregexp \'bad, bad thing [a-zA-Z\\\\s.]+ evil\'', event,
         event_data, event_tag, True)
 
 

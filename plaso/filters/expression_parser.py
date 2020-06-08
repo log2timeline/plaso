@@ -449,7 +449,7 @@ class EventFilterExpressionParser(object):
   def _StringEscape(self, string='', match='', **unused_kwargs):
     """Escapes backslashes found inside an expression string.
 
-    Backslashes followed by anything other than [\'"rnbt.ws] will raise
+    Backslashes followed by anything other than [\\'"rnbt.ws] will raise
     an Error.
 
     Note that this function is used as a callback by _GetNextToken.
@@ -463,7 +463,7 @@ class EventFilterExpressionParser(object):
       str: next state, which is None.
 
     Raises:
-      ParseError: when the escaped string is not one of [\'"rnbt].
+      ParseError: when the escaped string is not one of [\\'"rnbt].
     """
     if match.group(1) not in '\\\'"rnbt\\.ws':
       raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
