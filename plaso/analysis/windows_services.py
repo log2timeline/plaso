@@ -265,7 +265,7 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
       event_data (EventData): event data.
     """
     # TODO: Handle event log entries here also (ie, event id 4697).
-    if not event_data.data_type == 'windows:registry:service':
+    if event_data.data_type != 'windows:registry:service':
       return
 
     event_data_attributes = event_data.CopyToDict()
