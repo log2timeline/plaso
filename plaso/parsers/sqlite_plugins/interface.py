@@ -3,11 +3,7 @@
 
 from __future__ import unicode_literals
 
-# pylint: disable=wrong-import-order
-try:
-  from pysqlite2 import dbapi2 as sqlite3
-except ImportError:
-  import sqlite3
+import sqlite3
 
 from plaso.parsers import logger
 from plaso.parsers import plugins
