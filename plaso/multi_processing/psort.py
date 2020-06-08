@@ -621,7 +621,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     stored_event_tag = self._event_tag_index.GetEventTagByIdentifier(
         storage_writer, event_identifier)
     if stored_event_tag:
-      attribute_container.AddComment(stored_event_tag.comment)
       attribute_container.AddLabels(stored_event_tag.labels)
 
     self._event_tag_index.SetEventTag(attribute_container)

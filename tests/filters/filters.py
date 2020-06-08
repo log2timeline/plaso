@@ -188,7 +188,7 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
-    event_tag = events.EventTag(comment='comment')
+    event_tag = events.EventTag()
     event_tag.AddLabel('browser_search')
 
     filter_object = filters.GenericBinaryOperator(arguments=['test_value', 1])

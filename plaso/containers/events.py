@@ -190,7 +190,6 @@ class EventTag(interface.AttributeContainer):
   """Event tag attribute container.
 
   Attributes:
-    comment (str): comments.
     labels (list[str]): labels, such as "malware", "application_execution".
   """
   CONTAINER_TYPE = 'event_tag'
@@ -201,31 +200,12 @@ class EventTag(interface.AttributeContainer):
 
   _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 
-  def __init__(self, comment=None):
-    """Initializes an event tag attribute container.
-
-    Args:
-      comment (Optional[str]): comments.
-    """
+  def __init__(self):
+    """Initializes an event tag attribute container."""
     super(EventTag, self).__init__()
     self._event_identifier = None
     self._event_row_identifier = None
-    self.comment = comment
     self.labels = []
-
-  def AddComment(self, comment):
-    """Adds a comment to the event tag.
-
-    Args:
-      comment (str): comment.
-    """
-    if not comment:
-      return
-
-    if not self.comment:
-      self.comment = comment
-    else:
-      self.comment = ''.join([self.comment, comment])
 
   def AddLabel(self, label):
     """Adds a label to the event tag.
@@ -274,13 +254,7 @@ class EventTag(interface.AttributeContainer):
     Returns:
       dict[str, object]: event tag attributes.
     """
-    result_dict = {
-        'labels': self.labels
-    }
-    if self.comment:
-      result_dict['comment'] = self.comment
-
-    return result_dict
+    return {'labels': self.labels}
 
   @classmethod
   def CopyTextToLabel(cls, text, prefix=''):

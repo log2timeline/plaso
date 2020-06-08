@@ -34,7 +34,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
   # Indicate that we do not want to run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = False
 
-  _EVENT_TAG_COMMENT = 'Browser Search'
   _EVENT_TAG_LABELS = ['browser_search']
 
   _SUPPORTED_EVENT_DATA_TYPES = frozenset([
@@ -374,8 +373,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       if not search_query:
         continue
 
-      event_tag = self._CreateEventTag(
-          event, self._EVENT_TAG_COMMENT, self._EVENT_TAG_LABELS)
+      event_tag = self._CreateEventTag(event, self._EVENT_TAG_LABELS)
       mediator.ProduceEventTag(event_tag)
 
       self._counter['{0:s}:{1:s}'.format(engine, search_query)] += 1
