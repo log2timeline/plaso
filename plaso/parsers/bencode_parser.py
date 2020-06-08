@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Bencode Parser.
-
-Plaso's engine calls BencodeParser when it encounters bencoded files to be
-processed, typically seen for BitTorrent data.
-"""
+"""Parser for bencoded files."""
 
 from __future__ import unicode_literals
 
@@ -19,12 +15,12 @@ from plaso.parsers import manager
 
 
 class BencodeParser(interface.FileObjectParser):
-  """Deserializes bencoded file; produces a dictionary containing bencoded data.
+  """Parser for bencoded files.
 
   The Plaso engine calls parsers by their Parse() method. The Parse() function
-  deserializes bencoded files using the BitTorrent-bencode library and
-  calls plugins (BencodePlugin) registered through the interface by their
-  Process() to produce event objects.
+  deserializes bencoded files using the BitTorrent-bencode library and calls
+  plugins (BencodePlugin) registered through the interface by their Process()
+  to produce event objects.
 
   Plugins are how this parser understands the content inside a bencoded file,
   each plugin holds logic specific to a particular bencoded file. See the
@@ -32,10 +28,8 @@ class BencodeParser(interface.FileObjectParser):
   implemented.
   """
 
-  _INITIAL_FILE_OFFSET = None
-
   # Regex match for a bencode dictionary followed by a field size.
-  BENCODE_RE = re.compile(b'd[0-9]')
+  _BENCODE_RE = re.compile(b'd[0-9]')
 
   NAME = 'bencode'
   DESCRIPTION = 'Parser for bencoded files.'
@@ -53,31 +47,49 @@ class BencodeParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
-    header = file_object.read(2)
-    if not self.BENCODE_RE.match(header):
+    header_data = file_object.read(2)
+    if not self._BENCODE_RE.match(header_data):
       raise errors.UnableToParseFile('Not a valid Bencoded file.')
 
     file_object.seek(0, os.SEEK_SET)
     try:
-      data_object = bencode.bdecode(file_object.read())
+      decoded_values = bencode.bread(file_object)
 
-    except (IOError, bencode.BTFailure) as exception:
+    except (IOError, bencode.BencodeDecodeError) as exception:
+      diplay_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
-              self.NAME, parser_mediator.GetDisplayName(), exception))
+              self.NAME, diplay_name, exception))
 
-    if not data_object:
-      raise errors.UnableToParseFile(
-          '[{0:s}] missing decoded data for file: {1:s}'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
+    if not decoded_values:
+      parser_mediator.ProduceExtractionWarning('missing decoded Bencode values')
+      return
+
+    bencode_keys = set()
+    for key in decoded_values.keys():
+      if isinstance(key, bytes):
+        # Work-around for issue in bencode 3.0.1 where keys are bytes.
+        key = key.decode('utf-8')
+
+      bencode_keys.add(key)
 
     for plugin in self._plugins:
+      if parser_mediator.abort:
+        break
+
+      if not bencode_keys.issuperset(plugin.BENCODE_KEYS):
+        continue
+
+      logger.debug('Bencode Plugin Used: {0:s}'.format(plugin.NAME))
+
       try:
-        plugin.UpdateChainAndProcess(parser_mediator, data=data_object)
-      except errors.WrongBencodePlugin as exception:
-        logger.debug('[{0:s}] wrong plugin: {1!s}'.format(
-            self.NAME, exception))
+        plugin.UpdateChainAndProcess(
+            parser_mediator, decoded_values=decoded_values)
+
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionWarning((
+            'plugin: {0:s} unable to parse Bencode file with error: '
+            '{1!s}').format(plugin.NAME, exception))
 
 
 manager.ParsersManager.RegisterParser(BencodeParser)
