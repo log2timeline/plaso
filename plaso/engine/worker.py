@@ -111,6 +111,7 @@ class EventExtractionWorker(object):
     super(EventExtractionWorker, self).__init__()
     self._abort = False
     self._analyzers = []
+    self._analyzers_profiler = None
     self._event_extractor = extractors.EventExtractor(
         parser_filter_expression=parser_filter_expression)
     self._hasher_file_size_limit = None
@@ -212,7 +213,14 @@ class EventExtractionWorker(object):
 
         self.processing_status = analyzer_object.PROCESSING_STATUS_HINT
 
-        analyzer_object.Analyze(data)
+        if self._analyzers_profiler:
+          self._analyzers_profiler.StartTiming(analyzer_object.NAME)
+
+        try:
+          analyzer_object.Analyze(data)
+        finally:
+          if self._analyzers_profiler:
+            self._analyzers_profiler.StopTiming(analyzer_object.NAME)
 
         self.last_activity_timestamp = time.time()
 
@@ -866,8 +874,16 @@ class EventExtractionWorker(object):
     self._process_compressed_streams = configuration.process_compressed_streams
     self._SetYaraRules(configuration.yara_rules_string)
 
-  def SetProcessingProfiler(self, processing_profiler):
+  def SetAnalyzersProfiler(self, analyzers_profiler):
     """Sets the parsers profiler.
+
+    Args:
+      analyzers_profiler (AnalyzersProfiler): analyzers profile.
+    """
+    self._analyzers_profiler = analyzers_profiler
+
+  def SetProcessingProfiler(self, processing_profiler):
+    """Sets the processing profiler.
 
     Args:
       processing_profiler (ProcessingProfiler): processing profile.
