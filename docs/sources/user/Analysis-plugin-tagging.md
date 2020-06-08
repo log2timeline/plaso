@@ -4,12 +4,13 @@ Notes on how to use the tagging analysis plugin.
 
 ## Creating the tagging file
 
-A tagging-file.txt is an UTF-8 encoded text file that contains tagging definitions.
+A tagging-file.txt is an UTF-8 encoded text file that contains tagging rules.
 
-A tagging definition consists of:
+A tagging rule consists of:
 ```
-TAG LABEL
-  EVENT TAGGING EXPRESSION
+# Short description
+LABEL
+  EVENT FILTER EXPRESSION
 ```
 
 For example:
@@ -34,3 +35,4 @@ psort.py --analysis tagging --tagging-file tagging-file.txt timeline.plaso
 ## Also see
 
 * [Event filters](Event-Filters.md)
+* [Tagging rules](Taggging-Rules.md)
