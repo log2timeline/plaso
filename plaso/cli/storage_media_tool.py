@@ -704,7 +704,7 @@ class StorageMediaTool(tools.CLITool):
 
     self._output_writer.Write(header)
 
-    credentials_list = list(credentials.CREDENTIALS)
+    credentials_list = sorted(credentials.CREDENTIALS)
     credentials_list.append('skip')
 
     self._output_writer.Write('Supported credentials:\n\n')
@@ -715,8 +715,8 @@ class StorageMediaTool(tools.CLITool):
 
     self._output_writer.Write('\nNote that you can abort with Ctrl^C.\n\n')
 
-    result = False
-    while not result:
+    is_unlocked = False
+    while not is_unlocked:
       self._output_writer.Write('Select a credential to unlock the volume: ')
 
       input_line = self._input_reader.Read()
@@ -752,14 +752,19 @@ class StorageMediaTool(tools.CLITool):
           self._output_writer.Write('Unsupported credential data.\n')
           continue
 
-      result = self._source_scanner.Unlock(
+      is_unlocked = self._source_scanner.Unlock(
           scan_context, locked_scan_node.path_spec, credential_type,
           credential_data)
 
-      if not result:
-        self._output_writer.Write('Unable to unlock volume.\n\n')
+      if is_unlocked:
+        self._output_writer.Write('Volume unlocked.\n\n')
+        self._AddCredentialConfiguration(
+            locked_scan_node.path_spec, credential_type, credential_data)
+        break
 
-    return result
+      self._output_writer.Write('Unable to unlock volume.\n\n')
+
+    return is_unlocked
 
   def _PromptUserForPartitionIdentifiers(
       self, volume_system, volume_identifiers):
@@ -927,7 +932,7 @@ class StorageMediaTool(tools.CLITool):
     credentials_dict = dict(self._credentials)
 
     is_unlocked = False
-    for credential_type in credentials.CREDENTIALS:
+    for credential_type in sorted(credentials.CREDENTIALS):
       credential_data = credentials_dict.get(credential_type, None)
       if not credential_data:
         continue
@@ -935,6 +940,8 @@ class StorageMediaTool(tools.CLITool):
       is_unlocked = self._source_scanner.Unlock(
           scan_context, scan_node.path_spec, credential_type, credential_data)
       if is_unlocked:
+        self._AddCredentialConfiguration(
+            scan_node.path_spec, credential_type, credential_data)
         break
 
     if not is_unlocked:
