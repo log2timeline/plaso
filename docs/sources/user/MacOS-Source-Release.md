@@ -1,77 +1,87 @@
 # MacOS Source Release
 
-To install the "Source code" release of plaso on MacOS you need to download the latest version from https://github.com/log2timeline/plaso/releases/latest
+To install the "Source code" release of Plaso on MacOS you need to download the latest version from https://github.com/log2timeline/plaso/releases/latest
 
-Under the latest release you should see four links to differnet packages, you will need to download the "**Source code (tar.gz)**" package file.
+For the purposes of this guide it will use 20200430 to represent the latest Plaso release in the examples below. However, you will need to adjust this based on the latest version available from the link above.
 
-For the purposes of this guide it will use "_plaso-20190708_" to represent the current version of Plaso in the following command line examples. However, you will need to adjust this based on the latest release version you have just downloaded from the link above.
-
+Under the latest release you should see four links to different packages, you will need to download the "**Source code (tar.gz)**" package file e.g. https://github.com/log2timeline/plaso/archive/20200430.tar.gz
 
 Extract the source code:
+
 ```
 cd /tmp
-tar zxf ~/Downloads/plaso-20190708.tar.gz
+tar zxf ~/Downloads/plaso-20200430.tar.gz
 ```
 
 In some cases, MacOS will automatically ungzip the downloaded file. In which case, untar with:
+
 ```
 cd /tmp
-tar xf ~/Downloads/plaso-20190708.tar
+tar xf ~/Downloads/plaso-20200430.tar
 ```
 
 XCode Command Line Tools is required. It can be installed with:
+
 ```
 xcode-select --install
 ```
 
 If python3 is not already installed, it can be downloaded from https://www.python.org/downloads/
 
-## Install plaso contained within a virtual environment
+## Install Plaso contained within a virtual environment
 
 Plaso can be installed within a virtual environment so that dependency packages are not installed system-wide.
 To do this, install Virtualenv:
+
 ```
 sudo pip3 install virtualenv
 ```
 
-Create a virtual environment to install plaso into (in this instance, it's named "plaso_env" created under the home directory):
+Create a virtual environment to install Plaso into (in this instance, it's named "plaso_env" created under the home directory):
+
 ```
 virtualenv -p python3 ~/plaso_env
 ```
 
 Activate the virtual environment:
+
 ```
 source ~/plaso_env/bin/activate
 ```
 
-Install the plaso dependencies:
+Install the Plaso dependencies:
+
 ```
-cd /tmp/plaso-20190708/
+cd /tmp/plaso-20200430/
 pip install -r requirements.txt
 ```
 
-Install plaso:
+Install Plaso:
+
 ```
 python setup.py build
 python setup.py install
 ```
 
 To deactivate the virtual environment:
+
 ```
 deactivate
 ```
 
-*In order to run plaso, the virtual environment needs to be activated.*
+*In order to run Plaso, the virtual environment needs to be activated.*
 
-## Install plaso system-wide
+## Install Plaso system-wide
 
-Install the plaso dependencies:
+Install the Plaso dependencies:
+
 ```
-cd /tmp/plaso-20190708/
+cd /tmp/plaso-20200430/
 sudo pip3 install -r requirements.txt
 ```
 
-Install plaso:
+Install Plaso:
+
 ```
 python3 setup.py build
 sudo python3 setup.py install
@@ -93,7 +103,6 @@ Some Python dependencies fail to compile with the error:
 It is likely that the Python interpreter was built using a specific MacOS SDK.
 Make sure that version of the MacOS SDK is installed on your system, in the
 example above this is MacOS SDK 10.14.
-
 
 Pycrypto fails to build with the error:
 
@@ -119,7 +128,6 @@ export CFLAGS="-I/usr/local/include ${CFLAGS}";
 export LDFLAGS="-L/usr/local/lib ${LDFLAGS}";
 ```
 
-
 Yara-python fails to build with the error:
 
 ```
@@ -144,4 +152,3 @@ And your build environment knows where to find its development files:
 export CFLAGS="-I/usr/local/opt/openssl@1.1/include ${CFLAGS}";
 export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib ${LDFLAGS}";
 ```
-
