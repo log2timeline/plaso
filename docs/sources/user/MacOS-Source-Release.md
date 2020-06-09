@@ -44,6 +44,7 @@ source ~/plaso_env/bin/activate
 Install the plaso dependencies:
 ```
 cd /tmp/plaso-20190708/
+curl -Lo requirements.txt https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt
 pip install -r requirements.txt
 ```
 
@@ -65,6 +66,7 @@ deactivate
 Install the plaso dependencies:
 ```
 cd /tmp/plaso-20190708/
+curl -Lo requirements.txt https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt
 sudo pip3 install -r requirements.txt
 ```
 
