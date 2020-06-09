@@ -26,24 +26,23 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'description': 'Software Distribution Service 3.0',
+        'restore_point_event_type': 102,
+        'restore_point_type': 0,
+        'timestamp': '2015-03-23 18:38:14.246954',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2015-03-23 18:38:14.246954')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.restore_point_event_type, 102)
-    self.assertEqual(event_data.restore_point_type, 0)
-    expected_description = 'Software Distribution Service 3.0'
-    self.assertEqual(event_data.description, expected_description)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
-        '{0:s} '
+        'Software Distribution Service 3.0 '
         'Event type: BEGIN_NESTED_SYSTEM_CHANGE '
-        'Restore point type: APPLICATION_INSTALL').format(expected_description)
-    expected_short_message = expected_description
+        'Restore point type: APPLICATION_INSTALL')
+    expected_short_message = (
+        'Software Distribution Service 3.0')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

@@ -248,15 +248,21 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     """
     event_data = None
     for name, expected_value in expected_event_values.items():
-      if name == 'timestamp':
-        self.CheckTimestamp(event.timestamp, expected_value)
+      if name == 'timestamp' and isinstance(expected_value, str):
+        posix_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=event.timestamp)
+        value = posix_time.CopyToDateTimeString()
+
+      elif name in ('timestamp', 'timestamp_desc'):
+        value = getattr(event, name, None)
 
       else:
         if not event_data:
           event_data = self._GetEventDataOfEvent(storage_writer, event)
 
         value = getattr(event_data, name, None)
-        self.assertEqual(value, expected_value)
+
+      self.assertEqual(value, expected_value)
 
   def CheckTimestamp(self, timestamp, expected_date_time):
     """Asserts that a timestamp value matches the expected date and time.
