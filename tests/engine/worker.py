@@ -183,6 +183,20 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     # that support os.stat_result st_birthtime.
     self.assertIn(storage_writer.number_of_events, [15, 16])
 
+  def testProcessPathSpecCompressedFileXZ(self):
+    """Tests the ProcessPathSpec function on a xz compressed file."""
+    knowledge_base_values = {'year': 2016}
+    session = sessions.Session()
+
+    path_spec = self._GetTestFilePathSpec(['syslog.xz'])
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
+
+    # Typically there are 3 filestat events, but there can be 4 on platforms
+    # that support os.stat_result st_birthtime.
+    self.assertIn(storage_writer.number_of_events, [15, 16])
+
   def testProcessPathSpec(self):
     """Tests the ProcessPathSpec function on an archive file."""
     knowledge_base_values = {'year': 2016}
