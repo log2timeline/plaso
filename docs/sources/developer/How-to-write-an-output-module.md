@@ -3,14 +3,14 @@
 ## Create file and class
 * Plugin file in `plaso/output/`
   * Create an empty subclass of [plaso.output.interface.OutputModule](../api/plaso.output.html#plaso.output.interface.OutputModule)
-  * Register it with the output module manager by calling 
+  * Register it with the output module manager by calling
  [OutputManager.RegisterOutput](../api/plaso.output.html#plaso.output.manager.OutputManager.RegisterOutput)
 * Test file in `tests/output/`
   * Create an empty subclass of `tests.output.test_lib.OutputModuleTestCase`
 
 ## Write minimal tests
 * Write a test that loads your output module.
-* It will fail initially, but running the test while you're developing your 
+* It will fail initially, but running the test while you're developing your
 plugin gives you a quick way to see if your code is doing what you expect.
 
 ## Develop plugin
@@ -33,7 +33,7 @@ plugin gives you a quick way to see if your code is doing what you expect.
 * Add additional tests that test your plugin
 
 ## Register classes
-* Edit `plaso/output/__init__.py` to import your plugin in the correct 
+* Edit `plaso/output/__init__.py` to import your plugin in the correct
 alphabetical order.
 
 ## Code review/submit

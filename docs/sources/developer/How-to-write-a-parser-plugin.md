@@ -1,6 +1,6 @@
 # How to write a parser plugin
 
-Writing a parser plugin is different depending on which parser you're writing a 
+Writing a parser plugin is different depending on which parser you're writing a
 plugin for. Parsers that support plugins are:
 
 * bencode

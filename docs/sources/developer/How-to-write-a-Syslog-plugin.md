@@ -22,8 +22,8 @@
 * Define the attributes events produced by your plugin will have.
 
 ## Write minimal tests
-* Write a test that loads your plugin and parses a file. 
-* It will fail initially, but running the test while you're developing your 
+* Write a test that loads your plugin and parses a file.
+* It will fail initially, but running the test while you're developing your
 plugin gives you a quick way to see if your code is doing what you expect.
 ## Develop plugin
 * Implement your subclass of [SyslogPlugin](../api/plaso.parsers.syslog_plugins.html#module-plaso.parsers.syslog_plugins.interface)
@@ -37,8 +37,8 @@ plugin gives you a quick way to see if your code is doing what you expect.
 ## Expand tests
 * Add additional tests that test your plugin and formatter
 ## Register classes
-* Edit `plaso/parsers/syslog_plugins/__init__.py` to import your plugin in 
+* Edit `plaso/parsers/syslog_plugins/__init__.py` to import your plugin in
 alphabetical order.
-* Edit `plaso/formatters/__init__.py` to import your formatter in 
+* Edit `plaso/formatters/__init__.py` to import your formatter in
 alphabetical order.
 ## Code review/submit

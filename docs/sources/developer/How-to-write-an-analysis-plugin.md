@@ -10,7 +10,7 @@
 
 ## Write minimal tests
 * Write a test that loads your plugin
-* It will fail initially, but running the test while you're developing your 
+* It will fail initially, but running the test while you're developing your
 plugin gives you a quick way to see if your code is doing what you expect.
 
 ## Develop plugin
@@ -21,7 +21,7 @@ plugin gives you a quick way to see if your code is doing what you expect.
   * CompileReport()
 * You may also want to override:
   * URLS
-  * ENABLE_IN_EXTRACTION, if your plugin is eligible to run while Plaso is 
+  * ENABLE_IN_EXTRACTION, if your plugin is eligible to run while Plaso is
 extracting events.
 
 ## Expand tests
