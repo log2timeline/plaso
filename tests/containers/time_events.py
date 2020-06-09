@@ -21,8 +21,7 @@ class TimestampEventTest(shared_test_lib.BaseTestCase):
     attribute_container = time_events.TimestampEvent(0, 'usage')
 
     expected_attribute_names = [
-        '_event_data_row_identifier', 'parser', 'tag', 'timestamp',
-        'timestamp_desc']
+        '_event_data_row_identifier', 'parser', 'timestamp', 'timestamp_desc']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -38,8 +37,7 @@ class DateTimeValuesEventTest(shared_test_lib.BaseTestCase):
     attribute_container = time_events.DateTimeValuesEvent(posix_time, 'usage')
 
     expected_attribute_names = [
-        '_event_data_row_identifier', 'parser', 'tag', 'timestamp',
-        'timestamp_desc']
+        '_event_data_row_identifier', 'parser', 'timestamp', 'timestamp_desc']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
