@@ -1,10 +1,10 @@
-# MacOS Source Release
+# MacOS Source release
 
 To install the "Source code" release of Plaso on MacOS you need to download the latest version from https://github.com/log2timeline/plaso/releases/latest
 
 For the purposes of this guide it will use 20200430 to represent the latest Plaso release in the examples below. However, you will need to adjust this based on the latest version available from the link above.
 
-Under the latest release you should see four links to different packages, you will need to download the "**Source code (tar.gz)**" package file e.g. https://github.com/log2timeline/plaso/archive/20200430.tar.gz
+Under the latest release you should see four links to different packages, you will need to download the "**Source code (tar.gz)**" package file, for example https://github.com/log2timeline/plaso/archive/20200430.tar.gz
 
 Extract the source code:
 
