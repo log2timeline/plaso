@@ -19,8 +19,6 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
 
   ENABLE_IN_EXTRACTION = True
 
-  _EVENT_TAG_COMMENT = 'Tag applied by tagging analysis plugin.'
-
   _OS_TAG_FILES = {
       'linux': 'tag_linux.txt',
       'macos': 'tag_macos.txt',
@@ -103,8 +101,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
           break
 
     if matched_label_names:
-      event_tag = self._CreateEventTag(
-          event, self._EVENT_TAG_COMMENT, matched_label_names)
+      event_tag = self._CreateEventTag(event, matched_label_names)
 
       mediator.ProduceEventTag(event_tag)
       self._number_of_event_tags += 1

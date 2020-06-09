@@ -250,7 +250,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedEventTag(self):
     """Test ReadSerialized and WriteSerialized of EventTag."""
-    expected_event_tag = events.EventTag(comment='My first comment.')
+    expected_event_tag = events.EventTag()
     expected_event_tag.AddLabels(['Malware', 'Common'])
 
     json_string = (
@@ -267,7 +267,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event_tag, events.EventTag)
 
     expected_event_tag_dict = {
-        'comment': 'My first comment.',
         'labels': ['Malware', 'Common'],
     }
 

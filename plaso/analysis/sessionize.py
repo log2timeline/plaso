@@ -16,8 +16,6 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
 
   ENABLE_IN_EXTRACTION = False
 
-  _EVENT_TAG_COMMENT = 'Tag applied by sessionize analysis plugin.'
-
   _DEFAULT_MAXIMUM_PAUSE = 10 * definitions.MICROSECONDS_PER_MINUTE
 
   def __init__(self):
@@ -85,7 +83,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
     self._events_per_session[-1] += 1
 
     label = 'session_{0:d}'.format(self._session_counter)
-    event_tag = self._CreateEventTag(event, self._EVENT_TAG_COMMENT, [label])
+    event_tag = self._CreateEventTag(event, [label])
     mediator.ProduceEventTag(event_tag)
     self._number_of_event_tags += 1
 

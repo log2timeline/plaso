@@ -79,7 +79,6 @@ class EventTagIndexTest(test_lib.StorageTestCase):
       event_tag = test_index.GetEventTagByIdentifier(
           storage_file, event_identifier)
       self.assertIsNotNone(event_tag)
-      self.assertEqual(event_tag.comment, 'My comment')
 
       event_identifier = identifiers.SQLTableIdentifier('event', 99)
       event_tag = test_index.GetEventTagByIdentifier(

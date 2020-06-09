@@ -50,12 +50,11 @@ class AnalysisPlugin(object):
     """str: name of the plugin."""
     return self.NAME
 
-  def _CreateEventTag(self, event, comment, labels):
+  def _CreateEventTag(self, event, labels):
     """Creates an event tag.
 
     Args:
       event (EventObject): event to tag.
-      comment (str): event tag comment.
       labels (list[str]): event tag labels.
 
     Returns:
@@ -63,13 +62,13 @@ class AnalysisPlugin(object):
     """
     event_identifier = event.GetIdentifier()
 
-    event_tag = events.EventTag(comment=comment)
+    event_tag = events.EventTag()
     event_tag.SetEventIdentifier(event_identifier)
     event_tag.AddLabels(labels)
 
     event_identifier_string = event_identifier.CopyToString()
-    logger.debug('Created event tag: {0:s} for event: {1:s}'.format(
-        comment, event_identifier_string))
+    logger.debug('Tagged event: {0:s} with labels: {1:s}'.format(
+        event_identifier_string, ', '.join(labels)))
 
     return event_tag
 
@@ -132,7 +131,6 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     super(HashTaggingAnalysisPlugin, self).__init__()
     self._analysis_queue_timeout = self.DEFAULT_QUEUE_TIMEOUT
     self._analyzer_started = False
-    self._comment = 'Tag applied by {0:s} analysis plugin'.format(self.NAME)
     self._event_identifiers_by_pathspec = collections.defaultdict(list)
     self._hash_pathspecs = collections.defaultdict(list)
     self._requester_class = None
@@ -171,7 +169,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         continue
 
       for event_identifier in event_identifiers:
-        event_tag = events.EventTag(comment=self._comment)
+        event_tag = events.EventTag()
         event_tag.SetEventIdentifier(event_identifier)
         event_tag.AddLabels(labels)
 

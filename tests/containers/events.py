@@ -108,10 +108,7 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     """Tests the GetAttributeNames function."""
     attribute_container = events.EventTag()
 
-    expected_attribute_names = [
-        '_event_row_identifier',
-        'comment',
-        'labels']
+    expected_attribute_names = ['_event_row_identifier', 'labels']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

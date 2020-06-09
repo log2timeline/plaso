@@ -61,7 +61,7 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
 
     event_identifier = test_events[0].GetIdentifier()
 
-    event_tag = events.EventTag(comment='My comment')
+    event_tag = events.EventTag()
     event_tag.SetEventIdentifier(event_identifier)
     event_tags.append(event_tag)
 
@@ -74,7 +74,7 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
 
     event_identifier = test_events[2].GetIdentifier()
 
-    event_tag = events.EventTag(comment='This is interesting')
+    event_tag = events.EventTag()
     event_tag.SetEventIdentifier(event_identifier)
     event_tag.AddLabels(['Malware', 'Benign'])
     event_tags.append(event_tag)
