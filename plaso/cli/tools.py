@@ -523,6 +523,18 @@ class StdinInputReader(FileObjectInputReader):
     """
     super(StdinInputReader, self).__init__(sys.stdin, encoding=encoding)
 
+  def Read(self):
+    """Reads a string from the input.
+
+    Returns:
+      str: input.
+    """
+    # Flush stdout to guarantee that all output has been provided before waiting
+    # for input.
+    sys.stdout.flush()
+
+    return super(StdinInputReader, self).Read()
+
 
 class FileObjectOutputWriter(CLIOutputWriter):
   """File object command line interface output writer.

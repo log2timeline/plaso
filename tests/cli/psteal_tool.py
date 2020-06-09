@@ -215,8 +215,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  # TODO: Fix test https://github.com/log2timeline/plaso/issues/2253.
-  @unittest.skip('failing on Windows')
   def testExtractEventsFromSourceBDEImage(self):
     """Tests the ExtractEventsFromSources function on an image with BDE."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
