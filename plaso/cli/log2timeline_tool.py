@@ -342,12 +342,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
               serializer_format))
     self._storage_serializer_format = serializer_format
 
-    # TODO: where is this defined?
-    self._operating_system = getattr(options, 'os', None)
-
-    if self._operating_system:
-      self._mount_path = getattr(options, 'filename', None)
-
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['status_view'])
 
