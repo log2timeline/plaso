@@ -237,6 +237,27 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(source, expected_source)
     self.assertEqual(source_short, expected_source_short)
 
+  def CheckEventValues(self, storage_writer, event, expected_event_values):
+    """Asserts that an event and its event data matches the expected values.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      event (EventObject): event to check.
+      expected_event_values (dict[str, list[str]): expected values of the event
+          and event data attribute values per name.
+    """
+    event_data = None
+    for name, expected_value in expected_event_values.items():
+      if name == 'timestamp':
+        self.CheckTimestamp(event.timestamp, expected_value)
+
+      else:
+        if not event_data:
+          event_data = self._GetEventDataOfEvent(storage_writer, event)
+
+        value = getattr(event_data, name, None)
+        self.assertEqual(value, expected_value)
+
   def CheckTimestamp(self, timestamp, expected_date_time):
     """Asserts that a timestamp value matches the expected date and time.
 
