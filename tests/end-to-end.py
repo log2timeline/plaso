@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import abc
 import argparse
+import configparser
 import difflib
 import logging
 import os
@@ -16,19 +17,6 @@ import subprocess
 import sys
 import tempfile
 
-try:
-  import ConfigParser as configparser
-except ImportError:
-  import configparser  # pylint: disable=import-error
-
-if sys.version_info[0] < 3:
-  PY2 = True
-  PY3 = False
-  BYTES_TYPE = str
-else:
-  PY2 = False
-  PY3 = True
-  BYTES_TYPE = bytes
 
 # Since os.path.abspath() uses the current working directory (cwd)
 # os.path.abspath(__file__) will point to a different location if
@@ -307,7 +295,7 @@ class TestDefinitionReader(object):
     except configparser.NoOptionError:
       value = None
 
-    if isinstance(value, BYTES_TYPE):
+    if isinstance(value, bytes):
       value = value.decode('utf-8')
 
     if split_string and value:
@@ -333,9 +321,7 @@ class TestDefinitionReader(object):
     Yields:
       TestDefinition: end-to-end test definition.
     """
-    # TODO: replace by:
-    # self._config_parser = configparser.ConfigParser(interpolation=None)
-    self._config_parser = configparser.RawConfigParser()
+    self._config_parser = configparser.ConfigParser(interpolation=None)
 
     try:
       self._config_parser.read_file(file_object)
@@ -501,15 +487,11 @@ class StorageFileTestCase(TestCase):
           # the tests under UNIX and Windows.
           reference_output_list = []
           for line in reference_output_file.readlines():
-            if PY2:
-              line = line.decode('utf-8')
             line = line.replace('/tmp/test/test_data/', '')
             reference_output_list.append(line)
 
           output_list = []
           for line in output_file:
-            if PY2:
-              line = line.decode('utf-8')
             line = line.replace('/tmp/test/test_data/', '')
             line = line.replace('C:\\tmp\\test\\test_data\\', '')
             line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
