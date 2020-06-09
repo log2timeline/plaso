@@ -1,4 +1,4 @@
-# Fedora Packaged Release 
+# Fedora Packaged Release
 
 ### Fedora 31 and 32
 

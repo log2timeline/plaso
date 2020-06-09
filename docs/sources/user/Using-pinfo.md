@@ -1,6 +1,6 @@
 # Using pinfo.py
 
-**pinfo** is a command line tool to provide information about the contents of a plaso storage file. 
+**pinfo** is a command line tool to provide information about the contents of a plaso storage file.
 
 The plaso storage file contains information about:
 
@@ -119,7 +119,7 @@ Parser counter information:
 There is also an option to compare two storage files, for instance if you run the tool against a storage media file, then later re-run the tool and you want to quickly determine if there is a difference between the two storage files (does not go into content, only counters).
 
 ```
-$ pinfo.py --compare older_test.plaso test.plaso 
+$ pinfo.py --compare older_test.plaso test.plaso
 
 collection_information.version value mismatch 1.3.0_20150716 != 1.3.0_20150713.
 counter.filestat value mismatch 49090 != 28894.

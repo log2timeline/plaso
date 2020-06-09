@@ -19,7 +19,7 @@ To test if nsrlsvr is working you'll need [nsrllookup](https://github.com/rjhans
 
 To run nsrllookup against your instance of nsrlsvr:
 ```
-echo $MD5 | nsrllookup -s localhost -p 9120 -k 
+echo $MD5 | nsrllookup -s localhost -p 9120 -k
 ```
 
 Which will return $MD5 if present in NSRLFile.txt and nothing when $MD5 does not present.

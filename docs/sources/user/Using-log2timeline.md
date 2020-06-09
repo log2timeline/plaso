@@ -43,7 +43,7 @@ $ log2timeline.py OUTPUT INPUT
 
 An example run:
 ```
-$ log2timeline.py test.plaso test.vhd 
+$ log2timeline.py test.plaso test.vhd
 
 Source path	: /PATH/test.vhd
 Source type	: storage media image
@@ -75,7 +75,7 @@ Processing completed.
 The input here was a storage media file that had a single partition on it, which was running a Windows XP system on it. The first thing the tool does is to scan the storage media file, if it discovers more than a single partition, an encrypted partition or that the partition contains Volume Shadow Copies (VSS) it will ask the user for further details, eg:
 
 ```
-$ log2timeline.py bde_windows.plaso bde_enabled_windows.dd 
+$ log2timeline.py bde_windows.plaso bde_enabled_windows.dd
 
 The following partitions were found:
 Identifier      Offset (in bytes)       Size (in bytes)
@@ -95,7 +95,7 @@ Supported credentials:
 
 Note that you can abort with Ctrl^C.
 
-Select a credential to unlock the volume: 
+Select a credential to unlock the volume:
 ```
 
 After finding a partition to process the tool will start the pre-processing stage, where it collects information from the storage media. That is evident by the entries like:
@@ -111,7 +111,7 @@ After that the tool spins up several workers (the actual number differs depends 
 For a better overview of what the tool is doing, please use the ```--status_view``` parameter (warning the window status view does not work very well on Windows).
 
 ```
-$ log2timeline.py --status_view window test.plaso test.vhd 
+$ log2timeline.py --status_view window test.plaso test.vhd
 ```
 
 This makes it easier to keep track on what the tool is doing at any point in time.
@@ -123,14 +123,14 @@ Source path	: /PATH/test.vhd
 Source type	: storage media image
 
 Identifier	PID	Status		Events		File
-Collector	98490	running			
+Collector	98490	running
 Worker_00	98484	running		1280 (108)	GZIP:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/HYU1BON0/results[1].aspx
 Worker_01	98485	running		3069 (24)	TSK:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/HYU1BON0/google[1]
 Worker_02	98486	running		1040 (160)	TSK:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/HYU1BON0/gray[1].gif
 Worker_03	98487	running		2175 (8)	GZIP:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/HYU1BON0/login[1].first=1
 Worker_04	98488	running		842 (148)	GZIP:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/HYU1BON0/downloadget[1].php
 Worker_05	98489	running		1034 (4)	GZIP:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/HYU1BON0/CAJIGZ3H.com%2F
-StorageWriter	98483	running		7646 (3063)	
+StorageWriter	98483	running		7646 (3063)
 ```
 
 The status window includes information on how many workers were started up, what their PID is, how many total events each one of them has extracted (within the parenthesis) and what was the last file they were working on extracting events from.
@@ -138,7 +138,7 @@ The status window includes information on how many workers were started up, what
 Another useful option to use is the ```--logfile```. This will redirect all log messages from the tool to a file. This can be coupled with ```-d``` if you wish to get more detailed debug data.
 
 ```
-$ log2timeline.py --status_view window --logfile test.log test.plaso test.vhd 
+$ log2timeline.py --status_view window --logfile test.log test.plaso test.vhd
 ```
 
 This combines storing all log entries to a file for easier viewing later and having the status window displaying the current status of the tool. The benefits of this is the ability to both having a better overview of what the tool is doing at any point in time as well as being able to easily review after the run if the tool encountered any errors. That can be very useful in determining if the tool failed to process an important artifact for instance.
@@ -154,7 +154,7 @@ There are also few options that can be used to prevent the tool from prompting t
 Sometimes you may not want to do a complete timeline that extracts events from every discovered file. To do a more targeted timelining the ```-f FILTER_FILE``` parameter can be used.
 
 ```
-$ log2timeline.py -f filter test.plaso test.vhd 
+$ log2timeline.py -f filter test.plaso test.vhd
 
 Source path	: /PATH/test.vhd
 Source type	: storage media image
@@ -169,7 +169,7 @@ Processing completed.
 Instead of processing the entire partition only the file paths included in the filter file will be used. Here the content is:
 
 ```
-$ cat filter 
+$ cat filter
 {sysregistry}/.+
 /Users/.+/NTUSER.DAT
 /Documents And Settings/.+/NTUSER.DAT

@@ -214,7 +214,7 @@ Analysis Arguments:
 An example run could therefore be:
 
 ```
-$ psort.py -o null --analysis tagging --tagging-file tag_windows.txt test.plaso 
+$ psort.py -o null --analysis tagging --tagging-file tag_windows.txt test.plaso
 ```
 
 What this does is:
@@ -253,7 +253,7 @@ Parser counter information:
 The tags are now included in the output:
 
 ```
-$ psort.py -w output_tags.csv test.plaso 
+$ psort.py -w output_tags.csv test.plaso
 $ grep "Document Printed" output_tags.csv
 1999-05-15T15:39:16+00:00,Document Last Printed Time,OLECF,OLECF Summary Info,Title: Microsoft Powertoys for Windows XP  Subject: Powertoys Author: Microsoft Corporation Keywords: Powertoy Template: Intel;1033 Revision number: {1DA2A275-1387-4A40-8453-EFDF70F62811} Last saved by: InstallShield  Number of pages: 110 Number of words: 0 Number of characters: 0 Application: InstallShield® Developer 7.0 Security: 0x00000001: Password protected,olecf/olecf_summary,TSK:/WINDOWS/Downloaded Installations/Powertoys For Windows XP.msi;TSK:/WINDOWS/Installer/ac704.msi,Document Printed,1,888
 ...
@@ -274,7 +274,7 @@ It is possible to filter out the results **psort** provides using few different 
 The simplest filter is the time slice, where if you've discovered an interesting timestamp and would like to explore what occurred just prior and after that timestamp of interest. This can be achieved using the ``--slice DATE`` parameter, for example:
 
 ```bash
-$ psort.py -q --slice "2004-09-20 16:13:02" test.plaso 
+$ psort.py -q --slice "2004-09-20 16:13:02" test.plaso
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 2004-09-20T16:13:02+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://www.microsoft.com/windows/ie/getosver/javaxp.asp Number of hits: 2 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143661
 2004-09-20T16:13:12+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://fosi.ural.net Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143663

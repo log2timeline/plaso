@@ -1,4 +1,4 @@
-# Troubleshooting on Windows 
+# Troubleshooting on Windows
 
 ## Not a valid Win32 application
 
@@ -13,7 +13,7 @@ This means your Python interpreter (on Windows) cannot load a Python module sinc
 
 When I try to import one of the Python-bindings I get:
 ```
-ImportError: DLL load failed: The specified procedure could not be found. 
+ImportError: DLL load failed: The specified procedure could not be found.
 ```
 
 Make sure the DLL is built for the right WINAPI version, check the value of WINVER of your build.

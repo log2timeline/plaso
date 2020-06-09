@@ -29,7 +29,7 @@ A more analysts view on how an event can be defined is:
 * Where did we learn from that the event happened (event source)
 
 ### Time-less events
-Based on our definition an event technically should have a date or time (or duration). However there are cases where we know an action happened but have no indication of when. 
+Based on our definition an event technically should have a date or time (or duration). However there are cases where we know an action happened but have no indication of when.
 
 **TODO: add description**
 
@@ -37,7 +37,7 @@ Based on our definition an event technically should have a date or time (or dura
 **TODO: add description**
 
 * source-level event; e.g. a line in syslog representing an event
-* system-level event; e.g. 
+* system-level event; e.g.
 * user-level event
 
 ## How are events defined in plaso?
