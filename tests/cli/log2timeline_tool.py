@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import collections
 import os
 import platform
 import unittest
@@ -150,6 +151,31 @@ optional arguments:
 
     self.assertIn('Parser Plugins', plugin_info)
     self.assertIsNotNone(plugin_info['Parser Plugins'])
+
+  def CheckEventCounters(self, storage_file, expected_event_counters):
+    """Asserts that the number of events per data type matches.
+
+    Args:
+      storage_file (StorageFile): storage file.
+      expected_event_counters (dict[str, int|list[int]]): expected event
+          counters per event data type.
+    """
+    event_counters = collections.Counter()
+    for event in storage_file.GetSortedEvents():
+      event_data_identifier = event.GetEventDataIdentifier()
+      event_data = storage_file.GetEventDataByIdentifier(event_data_identifier)
+
+      event_counters[event_data.data_type] += 1
+
+    for data_type, expected_event_count in expected_event_counters.items():
+      event_count = event_counters.pop(data_type, 0)
+      if isinstance(expected_event_count, list):
+        self.assertIn(event_count, expected_event_count)
+      else:
+        self.assertEqual(event_count, expected_event_count)
+
+    # Ensure there are no events left unaccounted for.
+    self.assertEqual(event_counters, collections.Counter())
 
   def testParseProcessingOptions(self):
     """Tests the _ParseProcessingOptions function."""
@@ -566,8 +592,13 @@ optional arguments:
       # There should be 3 filestat and 3 pe parser generated events.
       # Typically there are 3 filestat events, but there can be 4 on platforms
       # that support os.stat_result st_birthtime.
-      events = list(storage_file.GetSortedEvents())
-      self.assertIn(len(events), [6, 7])
+      expected_event_counters = {
+          'fs:stat': [3, 4],
+          'pe:delay_import:import_time': 1,
+          'pe:import:import_time': 1,
+          'pe:compilation:compilation_time': 1}
+
+      self.CheckEventCounters(storage_file, expected_event_counters)
 
   def testShowInfo(self):
     """Tests the output of the tool in info mode."""
