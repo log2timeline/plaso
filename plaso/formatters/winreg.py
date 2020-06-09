@@ -42,15 +42,6 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
     event_values = event_data.CopyToDict()
 
     values = event_values.get('values', None)
-    if values is None:
-      # TODO: remove regvalue, which is kept for backwards compatibility.
-      regvalue = event_values.get('regvalue', {})
-      string_parts = []
-      for key, value in sorted(regvalue.items()):
-        string_parts.append('{0:s}: {1!s}'.format(key, value))
-      values = ' '.join(string_parts)
-      event_values['values'] = values
-
     if not values:
       event_values['values'] = '(empty)'
 
