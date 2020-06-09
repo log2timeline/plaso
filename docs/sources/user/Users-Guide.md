@@ -2,21 +2,21 @@
 
 ### How to get started
 
-First determine which version of plaso is must suitable to your needs, for more information see [Releases and roadmap](Releases-and-roadmap.md)
+First determine which version of plaso is must suitable to your needs, for more information see [Releases and roadmap](Releases-and-roadmap.html)
 
 ### Installing the packaged release
 
 To get plaso up and running quickly:
 
-* [Docker](Installing-with-docker.md)
+* [Docker](Installing-with-docker.html)
 
 Alternative options:
 
-* [Fedora](Fedora-Packaged-Release.md)
-* [MacOS](MacOS-Source-Release.md)
-* [Ubuntu](Ubuntu-Packaged-Release.md)
+* [Fedora](Fedora-Packaged-Release.html)
+* [MacOS](MacOS-Source-Release.html)
+* [Ubuntu](Ubuntu-Packaged-Release.html)
 
-If you run into problems installing, check out the [installation troubleshooting guide](Troubleshooting-installation-issues.md)
+If you run into problems installing, check out the [installation troubleshooting guide](Troubleshooting-installation-issues.html)
 
 ## Before we start
 
@@ -29,17 +29,17 @@ To follow announcements from the plaso team or send in generic inquiries or disc
 
 ### I know the good old Perl version
 
-If you are one of those people that liked the old perl version of log2timeline but really would like to switch use all the nifty features of the Python version. Fear not, [here](Log2Timeline-Perl-(Legacy).md) is a guide to help you migrate.
+If you are one of those people that liked the old perl version of log2timeline but really would like to switch use all the nifty features of the Python version. Fear not, [here](Log2Timeline-Perl-(Legacy).html) is a guide to help you migrate.
 
 ## The tools
 
 Though plaso initially was created in mind to replace the Perl version of log2timeline, its focus has shifted from a stand-alone tool to a set of modules that can be used in various use cases. Fear not plaso is not a developers only project it also includes several command line tools, each with its specific purpose. Currently these are:
 
-* [image_export](Using-image_export.md)
-* [log2timeline](Using-log2timeline.md)
-* [pinfo](Using-pinfo.md)
-* [psort](Using-psort.md)
-* [psteal](Using-psteal.md)
+* [image_export](Using-image_export.html)
+* [log2timeline](Using-log2timeline.html)
+* [pinfo](Using-pinfo.html)
+* [psort](Using-psort.html)
+* [psteal](Using-psteal.html)
 
 Note that each tool can be invoked with the `-h` or `--help` command line flag to display basic usage and command line option information.
 
@@ -49,7 +49,7 @@ Note that each tool can be invoked with the `-h` or `--help` command line flag t
 
 ### log2timeline
 
-**log2timeline** is a command line tool to extract [events](Scribbles-about-events.md#what-is-an-event) from individual files, recursing a directory (e.g. mount point) or storage media image or device. log2timeline creates a plaso storage file which can be analyzed with the pinfo and psort tools.
+**log2timeline** is a command line tool to extract [events](Scribbles-about-events.html#what-is-an-event) from individual files, recursing a directory (e.g. mount point) or storage media image or device. log2timeline creates a plaso storage file which can be analyzed with the pinfo and psort tools.
 
 The plaso storage file contains the extracted events and various metadata about the collection process alongside information collected from the source data. It may also contain information about tags applied to events and reports from analysis plugins.
 

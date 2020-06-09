@@ -1,6 +1,6 @@
 # Tagging Rules
 
-Plaso provides various configuration files for the [tagging analysis plugin](Analysis-plugin-tagging.md).
+Plaso provides various configuration files for the [tagging analysis plugin](Analysis-plugin-tagging.html).
 
 ## Linux tagging rules
 

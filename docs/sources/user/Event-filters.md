@@ -8,7 +8,7 @@ Event filters are used to:
 
 Tools that have event filter support:
 
-* [psort](Using-psort.md#filtering)
+* [psort](Using-psort.html#filtering)
 
 ## How do event filters work
 

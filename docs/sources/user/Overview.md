@@ -166,8 +166,8 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 ### Also see
 
 * [Project documentation](http://wiki.log2timeline.net/)
-  * [Developers Guide](Developers-Guide.md)
-  * [Users Guide](Users-Guide.md)
+  * [Developers Guide](Developers-Guide.html)
+  * [Users Guide](Users-Guide.html)
 * [Downloads](https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/)
 * Blog: [All things time related....](http://blog.kiddaland.net/)
 * Mailing lists:

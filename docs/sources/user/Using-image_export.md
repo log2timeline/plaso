@@ -75,7 +75,7 @@ By default image_export.py will not extract duplicate files, however paths to al
 
 
 ### Collection filters
-More details: [collection filters](Collection-Filters.md)
+More details: [collection filters](Collection-Filters.html)
 
 
 ## Other options

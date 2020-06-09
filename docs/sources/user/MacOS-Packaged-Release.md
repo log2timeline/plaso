@@ -1,1 +1,1 @@
-This page has been deprecated see [User Guide](Users-Guide.md) for the latest information.
+This page has been deprecated see [User Guide](Users-Guide.html) for the latest information.

@@ -19,8 +19,8 @@ Checking availability and versions of plaso dependencies.
 
 ## Mac OS-X
 
-See: [Troubleshooting Mac OS X](Troubleshooting-MacOS.md)
+See: [Troubleshooting Mac OS X](Troubleshooting-MacOS.html)
 
 ## Windows
 
-See: [Troubleshooting Windows](Troubleshooting-Windows.md)
+See: [Troubleshooting Windows](Troubleshooting-Windows.html)

@@ -2,7 +2,7 @@
 
 **psort** is a command line tool to post-process plaso storage files. It allows you to filter, sort and run automatic analysis on the contents of plaso storage files.
 
-Looking for [tips and tricks](Using-psort.md#how-do-i)?
+Looking for [tips and tricks](Using-psort.html#how-do-i)?
 
 ## Usage
 
@@ -64,7 +64,7 @@ timesketch : Create a Timesketch timeline.
 --------------------------------------------------------------------------------
 ```
 
-Also see [output and formatting](Output-and-formatting.md).
+Also see [output and formatting](Output-and-formatting.html).
 
 #### Changing Output Format
 
@@ -294,7 +294,7 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 ```
 #### Filters
 
-A more comprehensive discussions of the filters can be [read here](Event-Filters.md).
+A more comprehensive discussions of the filters can be [read here](Event-Filters.html).
 
 For **psort** the filters are included at the end of the command line arguments, for example:
 
@@ -347,7 +347,7 @@ $ psort.py --slice_size 15 --slicer -q test.plaso "cached_file_size is 43"
 
 ### Other options
 
-The [data](https://github.com/log2timeline/plaso/tree/master/data) folder was [previously mentioned](Using-psort.md#automatic-analysis). The location of this folder is automatically determined, depending on how the tool got installed on the system and the OS platform. This data path is used by **psort** to find the location of filter files, Event Log message database, etc.
+The [data](https://github.com/log2timeline/plaso/tree/master/data) folder was [previously mentioned](Using-psort.html#automatic-analysis). The location of this folder is automatically determined, depending on how the tool got installed on the system and the OS platform. This data path is used by **psort** to find the location of filter files, Event Log message database, etc.
 
 This data path can be changed from the default location, for instance if you have your own *winevt-rc.db* database or set of filter files. This can be achieved using the ``--data PATH`` parameter, for example:
 

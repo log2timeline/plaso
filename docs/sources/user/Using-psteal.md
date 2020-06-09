@@ -1,6 +1,6 @@
 # Using psteal.py
 
-**psteal** (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk) is a command line tool which uses [log2timeline](Using-log2timeline.md) and [psort](Using-psort.md) engines to extract and process [events](Scribbles-about-events.md#what-is-an-event) in one go.
+**psteal** (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk) is a command line tool which uses [log2timeline](Using-log2timeline.html) and [psort](Using-psort.html) engines to extract and process [events](Scribbles-about-events.html#what-is-an-event) in one go.
 
 It is a quick shortcut to the "*kitchen sink*" approach and only supports a very limited subset of options the above tools provide.
 
@@ -17,7 +17,7 @@ This can be used for further processing with Psort or [Timesketch](https://githu
 
 ## Options
 
-Psteal purposefully supports only a limited subset of options from both [log2timeline](Using-log2timeline.md) and [psort](Using-psort.md) tools.
-Please refer to their respective documentations for more information, for example for help regarding the [output formats](Using-psort.md#Output).
+Psteal purposefully supports only a limited subset of options from both [log2timeline](Using-log2timeline.html) and [psort](Using-psort.html) tools.
+Please refer to their respective documentations for more information, for example for help regarding the [output formats](Using-psort.html#Output).
 
 If your use case requires specific options to either log2timeline or psort, please use both command line tools separately.
