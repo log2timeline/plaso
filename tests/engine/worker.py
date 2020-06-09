@@ -243,12 +243,17 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     path_spec = self._GetTestFilePathSpec(['syslog.xz'])
     storage_writer = fake_writer.FakeStorageWriter(session)
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime.
-    self.assertIn(storage_writer.number_of_events, [15, 16])
+    expected_event_counters = {
+        'fs:stat': [3, 4],
+        'syslog:cron:task_run': 3,
+        'syslog:line': 9}
+
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, expected_event_counters,
+        knowledge_base_values=knowledge_base_values)
 
   def testProcessPathSpec(self):
     """Tests the ProcessPathSpec function on an archive file."""
