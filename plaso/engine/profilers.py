@@ -153,6 +153,12 @@ class MemoryProfiler(SampleFileProfiler):
     self._WritesString(sample)
 
 
+class AnalyzersProfiler(CPUTimeProfiler):
+  """The analyzers profiler."""
+
+  _FILENAME_PREFIX = 'analyzers'
+
+
 class ProcessingProfiler(CPUTimeProfiler):
   """The processing profiler."""
 

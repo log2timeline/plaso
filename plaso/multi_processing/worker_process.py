@@ -154,6 +154,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         self._process_information)
     self._StartProfiling(self._processing_configuration.profiling)
 
+    if self._analyzers_profiler:
+      self._extraction_worker.SetAnalyzersProfiler(self._analyzers_profiler)
+
     if self._processing_profiler:
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
@@ -198,6 +201,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       logger.exception(exception)
 
       self._abort = True
+
+    if self._analyzers_profiler:
+      self._extraction_worker.SetAnalyzersProfiler(None)
 
     if self._processing_profiler:
       self._extraction_worker.SetProcessingProfiler(None)

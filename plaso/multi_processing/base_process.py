@@ -41,6 +41,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
           multiprocessing.Process.
     """
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
+    self._analyzers_profiler = None
     self._debug_output = False
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._log_filename = None
@@ -186,6 +187,12 @@ class MultiProcessBaseProcess(multiprocessing.Process):
           self._name, configuration)
       self._memory_profiler.Start()
 
+    if configuration.HaveProfileAnalyzers():
+      identifier = '{0:s}-analyzers'.format(self._name)
+      self._analyzers_profiler = profilers.AnalyzersProfiler(
+          identifier, configuration)
+      self._analyzers_profiler.Start()
+
     if configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profilers.ProcessingProfiler(
@@ -228,6 +235,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     if self._memory_profiler:
       self._memory_profiler.Stop()
       self._memory_profiler = None
+
+    if self._analyzers_profiler:
+      self._analyzers_profiler.Stop()
+      self._analyzers_profiler = None
 
     if self._processing_profiler:
       self._processing_profiler.Stop()

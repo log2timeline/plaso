@@ -120,6 +120,14 @@ class ProfilingConfiguration(interface.AttributeContainer):
     self.profilers = set()
     self.sample_rate = 1000
 
+  def HaveProfileAnalyzers(self):
+    """Determines if analyzers profiling is configured.
+
+    Returns:
+      bool: True if analyzers profiling is configured.
+    """
+    return 'analyzers' in self.profilers
+
   def HaveProfileMemory(self):
     """Determines if memory profiling is configured.
 
