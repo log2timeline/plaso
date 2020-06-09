@@ -30,7 +30,7 @@ supports plugins for the following file formats:
 * OLECF
 * Plist
 * SQLite
-* [Syslog](How-to-write-a-Syslog-plugin.md)
+* [Syslog](How-to-write-a-Syslog-plugin.html)
 * Windows Registry
 
 If the artifact you're trying to parse is in one of these formats, you need to
@@ -58,7 +58,7 @@ material.**
 [EventFormatter](../api/plaso.formatters.html#plaso.formatters.interface.EventFormatter) which generates a human readable
 description of the event data.
 * event; a subclass of [EventObject](../api/plaso.containers.html#plaso.containers.events.EventObject) which represents
-[an event](Scribbles-about-events.md#what-is-an-event)
+[an event](Scribbles-about-events.html#what-is-an-event)
 * event data; a subclass of [EventData](../api/plaso.containers.html#plaso.containers.events.EventData) which represents
 data related to the event.
 

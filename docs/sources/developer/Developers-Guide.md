@@ -13,30 +13,30 @@ development environment.
 
 Start by setting up a development environment:
 
-* [Development environment in a VirtualEnv](Developing-Virtualenv.md)
-* [Development environment on Fedora](Developing-Fedora.md)
-* [Development environment on MacOS](Developing-MacOS.md)
-* [Development environment on Ubuntu](Developing-Ubuntu.md)
-* [Development environment on Windows](Developing-Windows.md)
+* [Development environment in a VirtualEnv](Developing-Virtualenv.html)
+* [Development environment on Fedora](Developing-Fedora.html)
+* [Development environment on MacOS](Developing-MacOS.html)
+* [Development environment on Ubuntu](Developing-Ubuntu.html)
+* [Development environment on Windows](Developing-Windows.html)
 
 ## Getting Started
 
 Once you've set up your development environment we recommend start simple:
 
-* [How to write a parser](How-to-write-a-parser-plugin.md)
-* [How to write a parser plugin](How-to-write-a-parser-plugin.md)
-* [How to write an analysis plugin](How-to-write-an-analysis-plugin.md)
-* [How to write an output module](How-to-write-an-output-module.md)
+* [How to write a parser](How-to-write-a-parser-plugin.html)
+* [How to write a parser plugin](How-to-write-a-parser-plugin.html)
+* [How to write an analysis plugin](How-to-write-an-analysis-plugin.html)
+* [How to write an output module](How-to-write-an-output-module.html)
 
 ## Design
 Overview of the general architecture of Plaso:
 
-* [Architecture](Internals.md)
+* [Architecture](Internals.html)
 * [API documentation](../api/plaso.html)
 
 ## Roadmap
 
-A high level roadmap can be found [here](../user/Releases-and-roadmap.md).
+A high level roadmap can be found [here](../user/Releases-and-roadmap.html).
 Individual features are tracked as a github issue and labeled as "enhancement".
 A list of features we'd already like to add can be found
 [here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
@@ -56,7 +56,7 @@ ever wants to work on it.
 
 Before you start writing  code, please review the following:
 
-* [Style guide](Style-guide.md). All code submitted to the project needs to
+* [Style guide](Style-guide.html). All code submitted to the project needs to
 follow this style guide.
 * [Code review](https://github.com/log2timeline/l2tdocs/blob/master/process/Code%20review%20process.md). All code that is submitted into the project is
  reviewed by at least one other person.

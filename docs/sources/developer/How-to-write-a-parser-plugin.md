@@ -9,6 +9,6 @@ plugin for. Parsers that support plugins are:
 * esedb
 * olecf
 * plist
-* [sqlite](How-to-write-a-SQLite-plugin.md)
-* [syslog](How-to-write-a-Syslog-plugin.md)
+* [sqlite](How-to-write-a-SQLite-plugin.html)
+* [syslog](How-to-write-a-Syslog-plugin.html)
 * winreg

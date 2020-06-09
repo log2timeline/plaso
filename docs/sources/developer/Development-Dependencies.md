@@ -5,9 +5,9 @@ development.
 
 There are multiple ways to install the dependencies:
 
-* [Using prepackaged dependencies](Development-Dependencies.md#prepackaged-dependencies)
-* [Batch build](Development-Dependencies.md#batch-build)
-* [Manual build](Development-Dependencies.md#manual-build)
+* [Using prepackaged dependencies](Development-Dependencies.html#prepackaged-dependencies)
+* [Batch build](Development-Dependencies.html#batch-build)
+* [Manual build](Development-Dependencies.html#manual-build)
 
 ## Optional dependencies
 
