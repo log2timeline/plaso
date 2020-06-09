@@ -1,8 +1,11 @@
 # MacOS Source Release
 
-To install the source release of plaso on MacOS you need to download the latest version from https://github.com/log2timeline/plaso/releases
+To install the "Source code" release of plaso on MacOS you need to download the latest version from https://github.com/log2timeline/plaso/releases/latest
 
-Attached to the most recent release (as of this time version 20190708) is a "Source code (tar.gz)" file.
+Under the latest release you should see four links to differnet packages, you will need to download the "**Source code (tar.gz)**" package file.
+
+For the purposes of this guide it will use "_plaso-20190708_" to represent the current version of Plaso in the following command line examples. However, you will need to adjust this based on the latest release version you have just downloaded from the link above.
+
 
 Extract the source code:
 ```
@@ -44,7 +47,6 @@ source ~/plaso_env/bin/activate
 Install the plaso dependencies:
 ```
 cd /tmp/plaso-20190708/
-curl -Lo requirements.txt https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt
 pip install -r requirements.txt
 ```
 
@@ -66,7 +68,6 @@ deactivate
 Install the plaso dependencies:
 ```
 cd /tmp/plaso-20190708/
-curl -Lo requirements.txt https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt
 sudo pip3 install -r requirements.txt
 ```
 
