@@ -44,7 +44,14 @@ def Main():
     return False
 
   if tool.list_signature_identifiers:
-    tool.ListSignatureIdentifiers()
+    try:
+      tool.ListSignatureIdentifiers()
+
+    # BadConfigOption will be raised if signatures.conf cannot be found.
+    except errors.BadConfigOption as exception:
+      logging.warning(exception)
+      return False
+
     return True
 
   if not tool.has_filters:
