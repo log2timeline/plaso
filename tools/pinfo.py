@@ -42,6 +42,14 @@ def Main():
   except KeyboardInterrupt:
     return False
 
+  have_list_option = False
+  if tool.list_sections:
+    tool.ListSections()
+    have_list_option = True
+
+  if have_list_option:
+    return True
+
   result = True
   try:
     if tool.compare_storage_information:

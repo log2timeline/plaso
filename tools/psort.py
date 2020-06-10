@@ -53,12 +53,16 @@ def Main():
     tool.ListAnalysisPlugins()
     have_list_option = True
 
+  if tool.list_language_identifiers:
+    tool.ListLanguageIdentifiers()
+    have_list_option = True
+
   if tool.list_output_modules:
     tool.ListOutputModules()
     have_list_option = True
 
-  if tool.list_language_identifiers:
-    tool.ListLanguageIdentifiers()
+  if tool.list_profilers:
+    tool.ListProfilers()
     have_list_option = True
 
   if tool.list_timezones:
