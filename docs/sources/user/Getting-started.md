@@ -10,7 +10,7 @@ To get started have a look at the [User Guide](Users-Guide.md).
 
 If you have questions, suggestions and want to discuss them join the general discussions mailing list: [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss)
 
-## I want to develop Plaso 
+## I want to develop Plaso
 
 There are various ways to develop with plaso. We expect the more common use case that you would like to extend plaso by adding a parser or plugin or equivalent.
 

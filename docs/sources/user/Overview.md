@@ -1,6 +1,6 @@
 ## Plaso Overview
 
-plaso (Plaso Langar Að Safna Öllu) is a Python-based backend engine for the tool log2timeline. 
+plaso (Plaso Langar Að Safna Öllu) is a Python-based backend engine for the tool log2timeline.
 
 log2timeline is a tool designed to extract timestamps from various files found on a typical computer system(s) and aggregate them.
 
