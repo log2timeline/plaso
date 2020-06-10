@@ -4,12 +4,12 @@ environment:
     MACHINE_TYPE: "x86"
     PYTHON: "C:\\Python38"
     PYTHON_VERSION: "3.8"
-    L2TBINARIES_TRACK: "testing"
+    L2TBINARIES_TRACK: "dev"
   - TARGET: unittests
     MACHINE_TYPE: "amd64"
     PYTHON: "C:\\Python38-x64"
     PYTHON_VERSION: "3.8"
-    L2TBINARIES_TRACK: "testing"
+    L2TBINARIES_TRACK: "dev"
 
 install:
 - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
