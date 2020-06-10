@@ -34,6 +34,10 @@ if ! test -f ${CONFIGURATION_FILE};
 then
 	CONFIGURATION_FILE="config/jenkins/sans/${CONFIGURATION_NAME}.ini";
 fi
+if ! test -f ${CONFIGURATION_FILE};
+then
+	CONFIGURATION_FILE="config/jenkins/other/${CONFIGURATION_NAME}.ini";
+fi
 
 PYTHONPATH=. python3 ./utils/check_dependencies.py
 
