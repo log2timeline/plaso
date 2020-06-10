@@ -278,16 +278,27 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     self._deserialization_errors = []
 
+    total_compressed_data_size = 0
+    total_serialized_data_size = 0
+
     number_of_containers = 0
     while self._active_cursor or self._container_types:
       if not self._active_cursor:
         self._PrepareForNextContainerType()
 
-      if maximum_number_of_containers == 0:
-        rows = self._active_cursor.fetchall()
-      else:
-        number_of_rows = maximum_number_of_containers - number_of_containers
-        rows = self._active_cursor.fetchmany(size=number_of_rows)
+      if self._storage_profiler:
+        self._storage_profiler.StartTiming('merge_read')
+
+      try:
+        if maximum_number_of_containers == 0:
+          rows = self._active_cursor.fetchall()
+        else:
+          number_of_rows = maximum_number_of_containers - number_of_containers
+          rows = self._active_cursor.fetchmany(size=number_of_rows)
+
+      finally:
+        if self._storage_profiler:
+          self._storage_profiler.StopTiming('merge_read')
 
       if not rows:
         self._active_cursor = None
@@ -298,9 +309,15 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
             self._active_container_type, row[0])
 
         if self._compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-          serialized_data = zlib.decompress(row[1])
+          compressed_data = row[1]
+          serialized_data = zlib.decompress(compressed_data)
         else:
+          compressed_data = ''
           serialized_data = row[1]
+
+        if self._storage_profiler:
+          total_compressed_data_size += len(compressed_data)
+          total_serialized_data_size += len(serialized_data)
 
         try:
           attribute_container = self._DeserializeAttributeContainer(
@@ -338,7 +355,17 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
       if (maximum_number_of_containers != 0 and
           number_of_containers >= maximum_number_of_containers):
+        if self._storage_profiler:
+          self._storage_profiler.Sample(
+              'merge_read', 'read', self._active_container_type,
+              total_serialized_data_size, total_compressed_data_size)
+
         return False
+
+    if self._storage_profiler:
+      self._storage_profiler.Sample(
+          'merge_read', 'read', self._active_container_type,
+          total_serialized_data_size, total_compressed_data_size)
 
     self._Close()
 
