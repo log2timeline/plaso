@@ -223,7 +223,8 @@ class RedisStore(interface.BaseStore):
         'serialization_format': self.serialization_format}
     metadata_key = self._GenerateRedisKey('metadata')
 
-    self._redis_client.hmset(metadata_key, metadata)
+    for key, value in metadata.items():
+      self._redis_client.hset(metadata_key, key, value)
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container to the store.
