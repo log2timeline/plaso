@@ -20,7 +20,7 @@ import re
 # property or method.
 PYTHON_DEPENDENCIES = {
     'artifacts': ('__version__', '20190305', None, True),
-    'bencode': ('', '', '3.0', True),
+    'bencode': ('', '', None, True),
     'biplist': ('', '1.0.3', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'cffi': ('__version__', '1.9.1', None, True),

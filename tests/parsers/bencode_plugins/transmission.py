@@ -18,7 +18,7 @@ class BencodeTest(test_lib.BencodePluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     parser = bencode_parser.BencodeParser()
-    storage_writer = self._ParseFile(['bencode_transmission'], parser)
+    storage_writer = self._ParseFile(['bencode', 'transmission'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
