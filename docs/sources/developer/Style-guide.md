@@ -54,12 +54,12 @@ human readable string.
 ### Tests
 
 * Use  the test functions available in the local test_lib.py as much as possible
- nstead of writing your own test functions. If you think a test function is 
- missing please add it, or mail the developer list to see if you can get someone 
+ nstead of writing your own test functions. If you think a test function is
+ missing please add it, or mail the developer list to see if you can get someone
  else to do it.
 * Use `self.CheckTimestamp` for testing timestamp values.
 
-Common test code should be stored in "test library" files, for example. the parser test 
+Common test code should be stored in "test library" files, for example. the parser test
 library is `tests/parsers/test_lib.py`.
 
 We do this for a few reasons:
@@ -67,5 +67,5 @@ We do this for a few reasons:
 * to remove code duplication in "boiler plate" test code;
 * to make the tests more uniform in both look-and-feel but also what is tested;
 * improve test coverage;
-* isolate core functionality from tests to prevent some future core changes 
+* isolate core functionality from tests to prevent some future core changes
 affecting the parsers and plugins too much.

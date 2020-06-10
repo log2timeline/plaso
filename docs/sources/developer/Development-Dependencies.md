@@ -1,6 +1,6 @@
 # Plaso Development Dependencies
 
-This page contains detailed instructions on how to install dependencies for 
+This page contains detailed instructions on how to install dependencies for
 development.
 
 There are multiple ways to install the dependencies:
@@ -13,18 +13,18 @@ There are multiple ways to install the dependencies:
 
 Some dependencies for Plaso are optional:
 
-* [Timesketch](https://github.com/google/timesketch/blob/master/docs/Installation.md) 
+* [Timesketch](https://github.com/google/timesketch/blob/master/docs/Installation.md)
 
 ## Prepackaged dependencies
 
 ### Fedora
 
 **Note that these instructions assume you are running on Fedora 31 or 32.
-Installing packages from the copr on other versions and/or distributions 
+Installing packages from the copr on other versions and/or distributions
 is not recommended.**
 
 The [GIFT copr](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) contains
-the necessary packages for running Plaso. GIFT copr provides the following 
+the necessary packages for running Plaso. GIFT copr provides the following
 tracks:
 
 * stable; track intended for the "packaged release" of Plaso and dependencies;
@@ -53,15 +53,15 @@ symbol packages as well:
 
 ### MacOS
 
-The [l2tbinaries](https://github.com/log2timeline/l2tbinaries) 
-repository contains the necessary packages for running Plaso. l2tbinaries 
+The [l2tbinaries](https://github.com/log2timeline/l2tbinaries)
+repository contains the necessary packages for running Plaso. l2tbinaries
 provides the following branches:
 
 * master; branch intended for the "packaged release" of Plaso and dependencies;
 * dev; branch intended for development of Plaso;
 * testing; branch intended for testing newly created packages.
 
-The l2tdevtools project provides 
+The l2tdevtools project provides
 [an update script](https://github.com/log2timeline/l2tdevtools/wiki/Update-script)
  to ease the process of keeping the dependencies up to date.
 
@@ -77,10 +77,10 @@ PYTHONPATH=. python tools/update.py --preset plaso --track dev
 or 20.04. Installing packages from the PPA on other versions and/or
 distributions is not recommended.**
 
-The [GIFT PPA](https://launchpad.net/~gift) contains the necessary packages for 
+The [GIFT PPA](https://launchpad.net/~gift) contains the necessary packages for
 running Plaso. The GIFT PPA provides the following tracks:
 
-* Release (stable) track intended for the "packaged release" of Plaso and 
+* Release (stable) track intended for the "packaged release" of Plaso and
 its dependencies;
 * Bleeding Edge (dev) track intended for development of Plaso;
 * Testing (testing) track intended for testing newly created packages.
@@ -113,7 +113,7 @@ symbol packages as well:
 
 ### Windows
 
-The [l2tbinaries](https://github.com/log2timeline/l2tbinaries) 
+The [l2tbinaries](https://github.com/log2timeline/l2tbinaries)
 repository contains the necessary packages for running plaso. l2tbinaries
 provides the following branches:
 
@@ -121,11 +121,11 @@ provides the following branches:
 * dev; branch intended for the development of Plaso;
 * testing; branch intended for testing newly created packages.
 
-The l2tdevtools project provides 
+The l2tdevtools project provides
 [an update script](https://github.com/log2timeline/l2tdevtools/wiki/Update-script)
  to ease the process of keeping the dependencies up to date.
 
-The script requires [pywin32](https://github.com/mhammond/pywin32/releases) and 
+The script requires [pywin32](https://github.com/mhammond/pywin32/releases) and
 [Python WMI](https://pypi.python.org/pypi/WMI/).
 
 To install the development versions of the dependencies run:
@@ -138,7 +138,7 @@ C:\Python27\python.exe tools\update.py --preset plaso --track=dev
 
 ## Batch build
 
-**Note that the batch build script is currently still work in progress, but it 
+**Note that the batch build script is currently still work in progress, but it
 will build most of the dependencies.**
 
 Set up the [l2tdevtools build script](https://github.com/log2timeline/l2tdevtools/wiki/Build-script).
@@ -158,8 +158,8 @@ PYTHONPATH=. python tools/build.py --preset plaso BUILD_TARGET
 ```
 
 Where `BUILD_TARGET` is the build target for your configuration. If you can't
-identify the proper build target we do not recommend using this installation 
+identify the proper build target we do not recommend using this installation
 method.
 
-Successfully built packages will be stored in the build directory, which is 
+Successfully built packages will be stored in the build directory, which is
 `build` by default. You can use your preferred installation method to install them.

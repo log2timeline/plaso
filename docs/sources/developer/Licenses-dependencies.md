@@ -65,7 +65,7 @@ Dependency | License
 ### Windows packaged version dependencies
 
 Dependency | License
---- | --- 
+--- | ---
 [PyInstaller](http://www.pyinstaller.org/) | [GNU General Public License 2](http://www.gnu.org/licenses/gpl-2.0.html) with an exception for the bootloader, which is the part that is used in plaso binaries.
 
 ### To do
