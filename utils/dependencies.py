@@ -27,6 +27,8 @@ class DependencyDefinition(object):
     python2_only (bool): True if the dependency is only supported by Python 2.
     python3_only (bool): True if the dependency is only supported by Python 3.
     rpm_name (str): name of the rpm package that provides the dependency.
+    skip_check (bool): True if the dependency should be skipped by the
+        CheckDependencies or CheckTestDependencies methods of DependencyHelper.
     version_property (str): name of the version attribute or function.
   """
 
@@ -48,6 +50,7 @@ class DependencyDefinition(object):
     self.python2_only = False
     self.python3_only = False
     self.rpm_name = None
+    self.skip_check = None
     self.version_property = None
 
 
@@ -65,6 +68,7 @@ class DependencyDefinitionReader(object):
       'python2_only',
       'python3_only',
       'rpm_name',
+      'skip_check',
       'version_property'])
 
   def _GetConfigValue(self, config_parser, section_name, value_name):
@@ -304,6 +308,9 @@ class DependencyHelper(object):
     check_result = True
 
     for _, dependency in sorted(self.dependencies.items()):
+      if dependency.skip_check:
+        continue
+
       result, status_message = self._CheckPythonModule(dependency)
 
       if not result and not dependency.is_optional:
@@ -336,6 +343,9 @@ class DependencyHelper(object):
     for dependency in sorted(
         self._test_dependencies.values(),
         key=lambda dependency: dependency.name):
+      if dependency.skip_check:
+        continue
+
       result, status_message = self._CheckPythonModule(dependency)
       if not result:
         check_result = False
