@@ -152,7 +152,7 @@ Linux:
 top -p `ps -ef | grep log2timeline.py | grep python | awk '{ print $2 }' | tr '\n' ',' | sed 's/,$//'`
 ```
 
-Mac OS X:
+MacOS:
 ```
 ps aux | grep log2timeline.py | grep python | awk '{print $2}' | tr '\n' ',' | sed 's/,$//'
 ```
@@ -234,7 +234,7 @@ culprit is. Also see: [Profiling memory usage](../developer/Profiling.md#profili
 
 ## Also see
 
-* [Troubleshooting Mac OS X specific issues](Troubleshooting-MacOS.md)
+* [Troubleshooting MacOS specific issues](Troubleshooting-MacOS.md)
 * [Troubleshooting Ubuntu specific issues](Troubleshooting-Ubuntu.md)
 * [Troubleshooting Windows specific issues](Troubleshooting-Windows.md)
 * [Troubleshooting Plaso Issues - Memory Edition](http://blog.kiddaland.net/2014/11/troubleshooting-plaso-issues-memory.html)
