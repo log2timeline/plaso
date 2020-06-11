@@ -54,16 +54,27 @@ class BaseStore(object):
       _CONTAINER_TYPE_TASK_COMPLETION,
       _CONTAINER_TYPE_TASK_START)
 
+  # Container types that only should be used in a session store.
+  _SESSION_STORE_ONLY_CONTAINER_TYPES = (
+      _CONTAINER_TYPE_SESSION_COMPLETION,
+      _CONTAINER_TYPE_SESSION_START,
+      _CONTAINER_TYPE_SYSTEM_CONFIGURATION)
+
+  # Container types that only should be used in a task store.
+  _TASK_STORE_ONLY_CONTAINER_TYPES = (
+      _CONTAINER_TYPE_TASK_COMPLETION,
+      _CONTAINER_TYPE_TASK_START)
+
   def __init__(self):
     """Initializes a store."""
     super(BaseStore, self).__init__()
+    self._last_session = 0
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+    self._storage_profiler = None
     self.format_version = None
     self.serialization_format = None
     self.storage_type = None
-    self._last_session = 0
-    self._serializers_profiler = None
-    self._storage_profiler = None
-    self._serializer = json_serializer.JSONAttributeContainerSerializer
 
   @abc.abstractmethod
   def _AddAttributeContainer(

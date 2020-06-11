@@ -214,6 +214,25 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       raise IOError('Unsupported storage type: {0:s}'.format(
           storage_type))
 
+  def _CreateAttributeContainerTable(self, container_type):
+    """Creates a table for a specific attribute container type.
+
+    Args:
+      container_type (str): attribute container type.
+    """
+    if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+      data_column_type = 'BLOB'
+    else:
+      data_column_type = 'TEXT'
+
+    if container_type == self._CONTAINER_TYPE_EVENT:
+      query = self._CREATE_EVENT_TABLE_QUERY.format(
+          container_type, data_column_type)
+    else:
+      query = self._CREATE_TABLE_QUERY.format(container_type, data_column_type)
+
+    self._cursor.execute(query)
+
   def _GetNumberOfAttributeContainers(self, container_type):
     """Counts the number of attribute containers of the given type.
 
@@ -913,20 +932,17 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       else:
         self._ReadAndCheckStorageMetadata()
 
-      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-        data_column_type = 'BLOB'
-      else:
-        data_column_type = 'TEXT'
-
       for container_type in self._CONTAINER_TYPES:
+        if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
+            container_type in self._TASK_STORE_ONLY_CONTAINER_TYPES):
+          continue
+
+        if (self.storage_type == definitions.STORAGE_TYPE_TASK and
+            container_type in self._SESSION_STORE_ONLY_CONTAINER_TYPES):
+          continue
+
         if not self._HasTable(container_type):
-          if container_type == self._CONTAINER_TYPE_EVENT:
-            query = self._CREATE_EVENT_TABLE_QUERY.format(
-                container_type, data_column_type)
-          else:
-            query = self._CREATE_TABLE_QUERY.format(
-                container_type, data_column_type)
-          self._cursor.execute(query)
+          self._CreateAttributeContainerTable(container_type)
 
       self._connection.commit()
 
