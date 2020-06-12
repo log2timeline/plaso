@@ -33,10 +33,6 @@ then
 
 	if test -n "${TOXENV}";
 	then
-		TEST_COMMAND="tox -e ${TOXENV}";
-
-	elif test "${TARGET}" = "coverage";
-	then
 		# Also see: https://docs.codecov.io/docs/testing-with-docker
 		curl -o codecov_env.sh -s https://codecov.io/env;
 
@@ -45,7 +41,7 @@ then
 
 		CONTAINER_OPTIONS="${CODECOV_ENV} ${CONTAINER_OPTIONS}";
 
-		TEST_COMMAND="./config/travis/run_coverage.sh";
+		TEST_COMMAND="tox -e ${TOXENV}";
 
 	elif test "${TARGET}" = "jenkins3";
 	then
