@@ -167,12 +167,3 @@ class Timestamp(object):
       timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
 
     return timestamp
-
-  @classmethod
-  def RoundToSeconds(cls, timestamp):
-    """Takes a timestamp value and rounds it to a second precision."""
-    leftovers = timestamp % definitions.MICROSECONDS_PER_SECOND
-    scrubbed = timestamp - leftovers
-    rounded = round(float(leftovers) / definitions.MICROSECONDS_PER_SECOND)
-
-    return int(scrubbed + rounded * definitions.MICROSECONDS_PER_SECOND)

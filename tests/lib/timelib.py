@@ -199,18 +199,6 @@ class TimeLibTest(shared_test_lib.BaseTestCase):
         '12-15-1984 05:13:00', timezone=pytz.timezone('US/Pacific'))
     self.assertEqual(timestamp, 471964380000000)
 
-  def testRoundTimestamp(self):
-    """Test the RoundToSeconds function."""
-    # Should be rounded up.
-    test_one = 442813351785412
-    # Should be rounded down.
-    test_two = 1384381247271976
-
-    self.assertEqual(
-        timelib.Timestamp.RoundToSeconds(test_one), 442813352000000)
-    self.assertEqual(
-        timelib.Timestamp.RoundToSeconds(test_two), 1384381247000000)
-
 
 if __name__ == '__main__':
   unittest.main()
