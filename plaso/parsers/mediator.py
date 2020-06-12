@@ -147,31 +147,21 @@ class ParserMediator(object):
     if not file_entry:
       return None
 
-    stat_object = file_entry.GetStat()
+    date_time = file_entry.creation_time
+    if not date_time:
+      date_time = file_entry.change_time
 
-    posix_time = getattr(stat_object, 'crtime', None)
-    if posix_time is None:
-      posix_time = getattr(stat_object, 'ctime', None)
-
-    # Gzip files don't store the creation or metadata modification times,
-    # but the modification time stored in the file is a good proxy.
+    # Gzip files do not store a creation or change time, but its modification
+    # time is a good alternative.
     if file_entry.TYPE_INDICATOR == dfvfs_definitions.TYPE_INDICATOR_GZIP:
-      posix_time = getattr(stat_object, 'mtime', None)
+      date_time = file_entry.modification_time
 
-    if posix_time is None:
-      logger.warning(
-          'Unable to determine earliest year from file stat information.')
+    if date_time is None:
+      logger.warning('File entry has no creation or change time.')
       return None
 
-    try:
-      year = timelib.GetYearFromPosixTime(
-          posix_time, timezone=self._knowledge_base.timezone)
-      return year
-    except ValueError as exception:
-      logger.error((
-          'Unable to determine earliest year from file stat information with '
-          'error: {0!s}').format(exception))
-      return None
+    year, _, _ = date_time.GetDate()
+    return year
 
   def _GetInode(self, inode_value):
     """Retrieves the inode from the inode value.
@@ -206,32 +196,22 @@ class ParserMediator(object):
     time (metadata last modification time) is used.
 
     Returns:
-      int: year of the file entry or None.
+      int: year of the file entry or None if the year cannot be retrieved.
     """
     file_entry = self.GetFileEntry()
     if not file_entry:
       return None
 
-    stat_object = file_entry.GetStat()
+    date_time = file_entry.modification_time
+    if not date_time:
+      date_time = file_entry.change_time
 
-    posix_time = getattr(stat_object, 'mtime', None)
-    if posix_time is None:
-      posix_time = getattr(stat_object, 'ctime', None)
-
-    if posix_time is None:
-      logger.warning(
-          'Unable to determine modification year from file stat information.')
+    if date_time is None:
+      logger.warning('File entry has no modification or change time.')
       return None
 
-    try:
-      year = timelib.GetYearFromPosixTime(
-          posix_time, timezone=self._knowledge_base.timezone)
-      return year
-    except ValueError as exception:
-      logger.error((
-          'Unable to determine creation year from file stat '
-          'information with error: {0!s}').format(exception))
-      return None
+    year, _, _ = date_time.GetDate()
+    return year
 
   def AddEventAttribute(self, attribute_name, attribute_value):
     """Adds an attribute that will be set on all events produced.
@@ -330,7 +310,7 @@ class ParserMediator(object):
       return self._knowledge_base.year
 
     # TODO: Find a decent way to actually calculate the correct year
-    # instead of relying on stats object.
+    # instead of relying on file entry timestamps.
     year = self._GetEarliestYearFromFileEntry()
     if not year:
       year = self._GetLatestYearFromFileEntry()
