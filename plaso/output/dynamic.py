@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
@@ -63,15 +61,14 @@ class DynamicFieldsHelper(object):
     Returns:
       str: date field.
     """
-    # TODO: preserve dfdatetime as an object.
-    # TODO: add support for self._output_mediator.timezone
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=event.timestamp)
-
-    year, month, day_of_month = date_time.GetDate()
     try:
-      return '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
-    except (TypeError, ValueError):
+      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
+          event.timestamp, timezone=self._output_mediator.timezone,
+          raise_error=True)
+
+      return iso_date_time[:10]
+
+    except (OverflowError, ValueError):
       self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable date. '
           'Defaulting to: "0000-00-00"').format(event.timestamp))
@@ -262,18 +259,14 @@ class DynamicFieldsHelper(object):
     Returns:
       str: time field.
     """
-    # TODO: preserve dfdatetime as an object.
-    # TODO: add support for self._output_mediator.timezone
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=event.timestamp)
-
-    year, month, day_of_month = date_time.GetDate()
-    hours, minutes, seconds = date_time.GetTimeOfDay()
     try:
-      # Ensure that the date is valid.
-      _ = '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
-      return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
-    except (TypeError, ValueError):
+      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
+          event.timestamp, timezone=self._output_mediator.timezone,
+          raise_error=True)
+
+      return iso_date_time[11:19]
+
+    except (OverflowError, ValueError):
       self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable time. '
           'Defaulting to: "--:--:--"').format(event.timestamp))
