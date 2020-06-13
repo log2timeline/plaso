@@ -3,10 +3,11 @@
 
 from __future__ import unicode_literals
 
+import calendar
 import time
 
 from plaso.engine import path_helper
-from plaso.lib import timelib
+from plaso.lib import definitions
 
 
 class AnalysisMediator(object):
@@ -100,7 +101,10 @@ class AnalysisMediator(object):
     if not analysis_report:
       return
 
-    analysis_report.time_compiled = timelib.Timestamp.GetNow()
+    time_elements = time.gmtime()
+    time_compiled = (
+        calendar.timegm(time_elements) * definitions.MICROSECONDS_PER_SECOND)
+    analysis_report.time_compiled = time_compiled
 
     plugin_name = getattr(analysis_report, 'plugin_name', plugin.plugin_name)
     if plugin_name:

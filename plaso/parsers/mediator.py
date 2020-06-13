@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import copy
+import datetime
 import os
 import time
 
@@ -13,7 +14,6 @@ from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.parsers import logger
 
 
@@ -316,7 +316,8 @@ class ParserMediator(object):
       year = self._GetLatestYearFromFileEntry()
 
     if not year:
-      year = timelib.GetCurrentYear()
+      year = self.GetCurrentYear()
+
     return year
 
   def GetFileEntry(self):
@@ -342,6 +343,15 @@ class ParserMediator(object):
 
     return self._file_entry.name
 
+  def GetCurrentYear(self):
+    """Retrieves current year.
+
+    Returns:
+      int: the current year.
+    """
+    datetime_object = datetime.datetime.now()
+    return datetime_object.year
+
   def GetLatestYear(self):
     """Retrieves the latest (newest) year for an event from a file.
 
@@ -353,7 +363,7 @@ class ParserMediator(object):
     """
     year = self._GetLatestYearFromFileEntry()
     if not year:
-      year = timelib.GetCurrentYear()
+      year = self.GetCurrentYear()
 
     return year
 

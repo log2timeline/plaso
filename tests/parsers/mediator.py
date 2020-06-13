@@ -17,7 +17,6 @@ from plaso.containers import sessions
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.engine import configurations
 from plaso.storage.fake import writer as fake_writer
 
@@ -141,7 +140,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
-    expected_estimated_year = timelib.GetCurrentYear()
+    expected_estimated_year = parsers_mediator.GetCurrentYear()
     estimated_year = parsers_mediator.GetEstimatedYear()
     self.assertEqual(estimated_year, expected_estimated_year)
 
@@ -171,7 +170,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
-    expected_latest_year = timelib.GetCurrentYear()
+    expected_latest_year = parsers_mediator.GetCurrentYear()
     latest_year = parsers_mediator.GetLatestYear()
     self.assertEqual(latest_year, expected_latest_year)
 
