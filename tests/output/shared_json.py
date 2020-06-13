@@ -13,9 +13,9 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import shared_json
 
+from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
@@ -93,7 +93,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2012-06-27 18:17:01')
 
     if sys.platform.startswith('win'):

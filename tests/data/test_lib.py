@@ -9,7 +9,6 @@ from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
@@ -20,7 +19,8 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
   _TAG_FILE = None
 
-  _TEST_TIMESTAMP = timelib.Timestamp.CopyFromString('2020-04-04 14:56:39')
+  _TEST_TIMESTAMP = shared_test_lib.CopyTimestampFromSring(
+      '2020-04-04 14:56:39')
 
   def _CheckLabels(self, storage_writer, expected_labels):
     """Checks the labels of tagged events.

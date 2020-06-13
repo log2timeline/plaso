@@ -10,8 +10,8 @@ import unittest
 from plaso.cli import views as cli_views
 from plaso.cli import pinfo_tool
 from plaso.lib import errors
-from plaso.lib import timelib
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -280,7 +280,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(first_session['identifier'], session_identifier)
 
-    expected_start_time = timelib.Timestamp.CopyFromString(session_start_time)
+    expected_start_time = shared_test_lib.CopyTimestampFromSring(
+        session_start_time)
     self.assertEqual(first_session['start_time'], expected_start_time)
 
     parsers_counter = first_session['parsers_counter']
