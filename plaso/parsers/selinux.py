@@ -27,6 +27,8 @@ from __future__ import unicode_literals
 
 import pyparsing
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -162,8 +164,10 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     # TODO: pass line number to offset or remove.
     event_data.offset = 0
 
-    event = time_events.TimestampEvent(
-        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
