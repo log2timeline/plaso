@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -57,11 +59,15 @@ class IPodPlugin(interface.PlistPlugin):
       for key, value in device_information.items():
         if key == 'Connected':
           continue
+
         attribute_name = key.lower().replace(' ', '_')
         setattr(event_data, attribute_name, value)
 
-      event = time_events.PythonDatetimeEvent(
-          datetime_value, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromDatetime(datetime_value)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
