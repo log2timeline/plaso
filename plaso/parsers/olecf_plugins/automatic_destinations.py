@@ -177,7 +177,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
                 exception))
 
       if entry.last_modification_time == 0:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
       else:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=entry.last_modification_time)

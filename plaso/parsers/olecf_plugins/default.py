@@ -99,7 +99,7 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
       event_data.size = root_item.size
 
       # If no event was produced, produce at least one for the root item.
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)

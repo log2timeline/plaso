@@ -203,7 +203,7 @@ class WinLnkParser(interface.FileObjectParser):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if access_time == 0 and creation_time == 0 and modification_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
       parser_mediator.ProduceEventWithEventData(event, event_data)

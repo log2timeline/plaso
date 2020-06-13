@@ -165,7 +165,7 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
       date_time = dfdatetime_cocoa_time.CocoaTime(
           timestamp=record_header.expiration_time)
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_EXPIRATION)

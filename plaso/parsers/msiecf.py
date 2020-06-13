@@ -107,7 +107,7 @@ class MSIECFParser(interface.FileObjectParser):
       recovered (Optional[bool]): True if the item was recovered.
     """
     # TODO: add support for possible last cache synchronization date and time.
-    date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+    date_time = dfdatetime_semantic_time.NotSet()
 
     event_data = MSIECFLeakEventData()
     event_data.cached_filename = msiecf_item.filename
@@ -202,7 +202,7 @@ class MSIECFParser(interface.FileObjectParser):
       msiecf_item (pymsiecf.redirected): MSIECF redirected item.
       recovered (Optional[bool]): True if the item was recovered.
     """
-    date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+    date_time = dfdatetime_semantic_time.NotSet()
 
     event_data = MSIECFRedirectedEventData()
     event_data.offset = msiecf_item.offset
@@ -234,7 +234,7 @@ class MSIECFParser(interface.FileObjectParser):
     # between the different type of files.
     timestamp = msiecf_item.get_primary_time_as_integer()
     if not timestamp:
-      primary_date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      primary_date_time = dfdatetime_semantic_time.NotSet()
     else:
       primary_date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
     primary_date_time_description = 'Primary Time'
@@ -328,13 +328,13 @@ class MSIECFParser(interface.FileObjectParser):
       # apply the right conversion here.
       if format_version == '4.7':
         if expiration_timestamp == 0x7fffffffffffffff:
-          expiration_date_time = dfdatetime_semantic_time.SemanticTime('Never')
+          expiration_date_time = dfdatetime_semantic_time.Never()
         else:
           expiration_date_time = dfdatetime_filetime.Filetime(
               timestamp=expiration_timestamp)
       else:
         if expiration_timestamp == 0xffffffff:
-          expiration_date_time = dfdatetime_semantic_time.SemanticTime('Never')
+          expiration_date_time = dfdatetime_semantic_time.Never()
         else:
           expiration_date_time = dfdatetime_fat_date_time.FATDateTime(
               fat_date_time=expiration_timestamp)

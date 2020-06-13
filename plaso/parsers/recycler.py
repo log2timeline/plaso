@@ -116,7 +116,7 @@ class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
               file_header.format_version))
 
     if file_header.deletion_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
       date_time = dfdatetime_filetime.Filetime(
           timestamp=file_header.deletion_time)
@@ -205,7 +205,7 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
       unicode_filename = unicode_filename.rstrip('\x00')
 
     if record.deletion_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
       date_time = dfdatetime_filetime.Filetime(
           timestamp=record.deletion_time)

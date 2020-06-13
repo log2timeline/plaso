@@ -340,7 +340,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             timestamp=timestamp)
         timestamp_description = definitions.TIME_DESCRIPTION_SAMPLE
       else:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
         timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
       event = time_events.DateTimeValuesEvent(date_time, timestamp_description)

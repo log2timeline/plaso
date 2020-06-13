@@ -224,7 +224,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       timestamp = None
 
     if timestamp is None:
-      date_time = dfdatetime_semantic_time.SemanticTime('Invalid')
+      date_time = dfdatetime_semantic_time.InvalidTime()
     else:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 

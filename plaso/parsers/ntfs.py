@@ -117,7 +117,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       dfdatetime.DateTimeValues: date and time.
     """
     if filetime == 0:
-      return dfdatetime_semantic_time.SemanticTime('Not set')
+      return dfdatetime_semantic_time.NotSet()
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
 
@@ -404,7 +404,7 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
       event_data.update_source_flags = usn_record.update_source_flags
 
       if not usn_record.update_date_time:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
       else:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=usn_record.update_date_time)
