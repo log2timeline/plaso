@@ -40,7 +40,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
        'text': (
            'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\n '
            'closed for user root)'),
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 

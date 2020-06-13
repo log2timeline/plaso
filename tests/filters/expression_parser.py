@@ -13,7 +13,6 @@ from plaso.filters import filters
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
@@ -87,7 +86,7 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
        'parser': 'Weirdo',
        'text': 'User did a very bad thing, bad, bad thing that awoke Dr. Evil.',
        'text_short': 'This description is different than the long one.',
-       'timestamp': timelib.Timestamp.CopyFromString('2015-11-18 01:15:43'),
+       'timestamp': '2015-11-18 01:15:43',
        'timestamp_desc': 'Last Written'}]
 
   def _CheckIfExpressionMatches(

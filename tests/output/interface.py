@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import manager
 
 from tests.cli import test_lib as cli_test_lib
@@ -21,19 +20,19 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
   _TEST_EVENTS = [
       {'data_type': 'test:event',
        'entry': 'My Event Is Now!',
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
        'entry': 'There is no tomorrow.',
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:18:23'),
+       'timestamp': '2012-06-27 18:18:23',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
        'entry': 'Tomorrow is now.',
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 19:11:54'),
+       'timestamp': '2012-06-27 19:11:54',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
        'entry': 'This is just some stuff to fill the line.',
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 19:12:03'),
+       'timestamp': '2012-06-27 19:12:03',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   def testOutput(self):

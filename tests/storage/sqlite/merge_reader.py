@@ -10,7 +10,6 @@ import unittest
 from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.storage.sqlite import merge_reader
 from plaso.storage.sqlite import writer
 
@@ -28,8 +27,7 @@ class SQLiteStorageMergeReaderTest(test_lib.StorageTestCase):
       {'data_type': 'windows:registry:key_value',
        'key_path': 'MY AutoRun key',
        'parser': 'UNKNOWN',
-       'timestamp': timelib.Timestamp.CopyFromString(
-           '2012-04-20 22:38:46.929596'),
+       'timestamp': '2012-04-20 22:38:46.929596',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
        'values': 'Value: c:/Temp/evil.exe'}]
 

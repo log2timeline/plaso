@@ -9,7 +9,6 @@ import unittest
 
 from plaso.analysis import chrome_extension
 from plaso.lib import definitions
-from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
@@ -59,7 +58,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   _MACOS_TEST_EVENTS = [
       {'data_type': 'fs:stat',
        'filename': path,
-       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
       for path in _MACOS_PATHS]
 
@@ -84,7 +83,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   _WINDOWS_TEST_EVENTS = [
       {'data_type': 'fs:stat',
        'filename': path,
-       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
       for path in _WINDOWS_PATHS]
 
