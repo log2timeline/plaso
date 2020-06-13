@@ -1,20 +1,26 @@
 # Using psort.py (Plaso Síar Og Raðar Þessu)
 
-**psort** is a command line tool to post-process plaso storage files. It allows you to filter, sort and run automatic analysis on the contents of plaso storage files.
+**psort** is a command line tool to post-process Plaso storage files. It allows
+you to filter, sort and run automatic analysis on the contents of Plaso storage
+files.
 
 Looking for [tips and tricks](Using-psort.md#how-do-i)?
 
 ## Usage
 
-To see a list of all available parameters you can pass to psort use ``-h`` or ``--help``.
+To see a list of all available parameters you can pass to psort use ``-h`` or
+``--help``.
 
-The simplest way to run the tool is simply provide it with a storage file.
+Basic usage of **psort** is straightforward, just provide it with a storage file
+and the necessary output options, for example:
 
 ```
 $ psort.py -w test.log test.plaso
 ```
 
-This will use the default output module and print out to STDOUT a list of all extracted events, merging detected duplicate events. All timestamps on the output will be in UTC.
+This will use the default dynamic output format and write to test.log all
+extracted events, merging detected duplicate events. All date and time values
+will be in UTC.
 
 The generic options are:
 
@@ -81,7 +87,8 @@ version of log2timeline.
 
 #### Modify the Timezone
 
-**psort** uses UTC as it's default timezone when outputting events. This can be controlled using the ``-z TIMEZONE`` parameter.
+**psort** uses UTC as it's default timezone when outputting events. This can be
+controlled using the ``-z TIMEZONE`` parameter.
 
 ```
 $ psort.py -z EST5EDT test.plaso
@@ -105,7 +112,9 @@ $ psort.py -z list
 
 #### Quiet and More Verbose Output
 
-**psort** records the number of events it processes and how many events got filtered out due to filter settings or to duplication removals. This information is printed out at the end of each run, for example:
+**psort** records the number of events it processes and how many events got
+filtered out due to filter settings or to duplication removals. This
+information is printed out at the end of each run, for example:
 
 ```
 $ psort.py test.plaso "SELECT timestamp LIMIT 10"
@@ -130,19 +139,23 @@ $ psort.py test.plaso
 
 ```
 
-This output provides valuable information about how many events got filtered out by for instance the duplicate entry removals. There are many reasons why there may be duplicate entries in an output:
+This output provides valuable information about how many events got filtered
+out by for instance the duplicate entry removals. There are many reasons why
+there may be duplicate entries in an output:
 
 + A filesystem entry that has the same timestamp for MACB timestamps (or any combination of them)
 + Parsing a storage media file and processing a VSS store will produce a lot of duplicate entries, for example: the exact same Event Log record.
 + Metadata information extracted from a file that is stored in more than one place on the drive
 
-If you don't want duplicate entries to be removed it is possible to supply the flag ``-a`` or ``--include_all` to **psort**.
+If you don't want duplicate entries to be removed it is possible to supply the
+flag ``-a`` or ``--include_all` to **psort**.
 
 ```
 $ psort.py -a -w all_events.txt test.plaso
 ```
 
-If you on the other hand do not want to see the overview printed at the end it is possible to silence it with the ``-q`` flag:
+If you on the other hand do not want to see the overview printed at the end it
+is possible to silence it with the ``-q`` flag:
 
 ```
 $ psort.py -q -w output.csv test.plaso
@@ -150,9 +163,16 @@ $ psort.py -q -w output.csv test.plaso
 
 ### Automatic Analysis
 
-plaso defines a concept called an analysis plugin. Essentially that means that you can write a plugin that gets a copy of every event that is extracted and is not filtered out to inspect and potentially extract meaning or context out of. This information can be used to create tags and attach them back to the events or to create reports.
+Plaso defines a concept called an analysis plugin. Essentially that means that
+you can write a plugin that gets a copy of every event that is extracted and is
+not filtered out to inspect and potentially extract meaning or context out of.
+This information can be used to create tags and attach them back to the events
+or to create reports.
 
-As of now the analysis plugins are only exposed to the post-processing layer, as in exposed to **psort** although there are efforts underway to expose them to the extraction stage as well. That way you can use them to create tags that are immediately available in post processing.
+As of now the analysis plugins are only exposed to the post-processing layer,
+as in exposed to **psort** although there are efforts underway to expose them
+to the extraction stage as well. That way you can use them to create tags that
+are immediately available in post processing.
 
 The syntax works by using the ``--analysis PLUGIN`` syntax, for example:
 
@@ -183,7 +203,9 @@ windows_services : Provides a single list of for Windows services found in the
 --------------------------------------------------------------------------------
 ```
 
-Some of these plugins may provide additional parameters that may be required for each analysis plugin. To know which parameters are exposed use the ``-h`` flag in addition to the ``--analysis PLUGIN``, for example:
+Some of these plugins may provide additional parameters that may be required
+for each analysis plugin. To know which parameters are exposed use the ``-h``
+flag in addition to the ``--analysis PLUGIN``, for example:
 
 ```
 $ psort.py --analysis virustotal -h
@@ -223,11 +245,16 @@ What this does is:
 + Runs the tagging analysis plugin. This analysis plugin runs through each event, compares that to the list of tags you provide to the tool and applies the appropriate tags.
 + Uses the file "tag_windows.txt" as a source of all tags to apply.
 
-The filter file that is passed on is searched for using the provided path as an absolute, relative path or relative to the [data](https://github.com/log2timeline/plaso/tree/master/data) directory.
+The filter file that is passed on is searched for using the provided path as an
+absolute, relative path or relative to the [data](https://github.com/log2timeline/plaso/tree/master/data)
+directory.
 
-The file [tag_windows.txt](https://github.com/log2timeline/plaso/blob/master/data/tag_windows.txt) for instance is a file that is found inside the data directory and can thus be used without creating any file.
+The file [tag_windows.txt](https://github.com/log2timeline/plaso/blob/master/data/tag_windows.txt)
+for instance is a file that is found inside the data directory and can thus be
+used without creating any file.
 
-At the end of the run the tool will produce a summary or reports of the analysis plugins:
+At the end of the run the tool will produce a summary or reports of the
+analysis plugins:
 
 ```
 [INFO] All analysis plugins are now completed.
@@ -238,7 +265,8 @@ Report text:
 Tagging plugin produced 146 tags.
 ```
 
-And in this case, since this was tagging the results of what tags were provided can be viewed using **pinfo**:
+And in this case, since this was tagging the results of what tags were provided
+can be viewed using **pinfo**:
 
 ```
 $ pinfo.py test.plaso
@@ -259,11 +287,13 @@ $ grep "Document Printed" output_tags.csv
 ...
 ```
 
-**TODO: Move this documentation to a separate analysis plugin site and include information about the rest of the plugins.**
+**TODO: Move this documentation to a separate analysis plugin site and include
+information about the rest of the plugins.**
 
 ### Filtering
 
-It is possible to filter out the results **psort** provides using few different methods:
+It is possible to filter out the results **psort** provides using few different
+methods:
 
 + If you have a timestamp of interest a time slice, where only events that occur X minutes before and after that timestamp are included
 + Provide a granular filter for timestamps and/or content of various attributes
@@ -271,20 +301,27 @@ It is possible to filter out the results **psort** provides using few different 
 
 #### Time Slices
 
-The simplest filter is the time slice, where if you've discovered an interesting timestamp and would like to explore what occurred just prior and after that timestamp of interest. This can be achieved using the ``--slice DATE`` parameter, for example:
+The simplest filter is the time slice, where if you've discovered an
+interesting timestamp and would like to explore what occurred just prior and
+after that timestamp of interest. This can be achieved using the ``--slice
+DATE_TIME`` parameter, for example:
+
+**Note that as of 20200613 the date and time parameter of ``--slice`` must
+be defined in ISO 8601 format.**
 
 ```bash
-$ psort.py -q --slice "2004-09-20 16:13:02" test.plaso
+$ psort.py -q --slice "2004-09-20T16:13:02" test.plaso
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 2004-09-20T16:13:02+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://www.microsoft.com/windows/ie/getosver/javaxp.asp Number of hits: 2 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143661
 2004-09-20T16:13:12+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://fosi.ural.net Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143663
 2004-09-20T16:13:12+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: :2004082520040826: Mr. Evil@http://fosi.ural.net Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/MSHist012004082520040826/index.dat,-,1,143662
 ```
 
-By default the tool chooses 5 minutes prior and after the timestamp in question. To configure that use the ``--slice_size SLICE_SIZE`` parameter.
+By default the tool chooses 5 minutes prior and after the timestamp in
+question. To configure that use the ``--slice_size SLICE_SIZE`` parameter.
 
 ```
-$ psort.py -q --slice "2004-09-20 16:13:02" --slice_size 100 test.plaso
+$ psort.py -q --slice "2004-09-20T16:13:02" --slice_size 100 test.plaso
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 2004-09-20T15:18:38+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: :2004082520040826: Mr. Evil@http://www.yahoo.com Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/MSHist012004082520040826/index.dat,-,1,143624
 2004-09-20T15:18:38+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://www.yahoo.com Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143625
@@ -294,9 +331,11 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 ```
 #### Filters
 
-A more comprehensive discussions of the filters can be [read here](Event-Filters.md).
+A more comprehensive discussions of the filters can be [read
+here](Event-Filters.md).
 
-For **psort** the filters are included at the end of the command line arguments, for example:
+For **psort** the filters are included at the end of the command line
+arguments, for example:
 
 ```
 $ psort.py -q test.plaso FILTER
@@ -313,7 +352,9 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 
 #### Filter and Include Surrounding Events
 
-If you have something interesting that you want to filter but you also want to include some context surrounding those hits you can run the tool with the flag ``--slicer`` in addition to the filter.
+If you have something interesting that you want to filter but you also want to
+include some context surrounding those hits you can run the tool with the flag
+``--slicer`` in addition to the filter.
 
 An example:
 ```
@@ -324,7 +365,10 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 ...
 ```
 
-Here the filter ``cached_file_size is 43``` is applied to the output searching for all IE cache files that are 43 bytes in size. If we wanted to gather some context surrounding these events we can supply the ``--slicer`` flag, for example:
+Here the filter ``cached_file_size is 43``` is applied to the output searching
+for all IE cache files that are 43 bytes in size. If we wanted to gather some
+context surrounding these events we can supply the ``--slicer`` flag, for
+example:
 
 ```
 $ psort.py --slicer -q test.plaso "cached_file_size is 43"
@@ -339,7 +383,8 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 ...
 ```
 
-By default the tool will include five events before and after each filter hit. This can be controlled using the ``--slice_size``.
+By default the tool will include five events before and after each filter hit.
+This can be controlled using the ``--slice_size``.
 
 ```
 $ psort.py --slice_size 15 --slicer -q test.plaso "cached_file_size is 43"
@@ -347,9 +392,15 @@ $ psort.py --slice_size 15 --slicer -q test.plaso "cached_file_size is 43"
 
 ### Other options
 
-The [data](https://github.com/log2timeline/plaso/tree/master/data) folder was [previously mentioned](Using-psort.md#automatic-analysis). The location of this folder is automatically determined, depending on how the tool got installed on the system and the OS platform. This data path is used by **psort** to find the location of filter files, Event Log message database, etc.
+The [data](https://github.com/log2timeline/plaso/tree/master/data) folder was
+[previously mentioned](Using-psort.md#automatic-analysis). The location of this
+folder is automatically determined, depending on how the tool got installed on
+the system and the OS platform. This data path is used by **psort** to find the
+location of filter files, Event Log message database, etc.
 
-This data path can be changed from the default location, for instance if you have your own *winevt-rc.db* database or set of filter files. This can be achieved using the ``--data PATH`` parameter, for example:
+This data path can be changed from the default location, for instance if you
+have your own *winevt-rc.db* database or set of filter files. This can be
+achieved using the ``--data PATH`` parameter, for example:
 
 ```
 $ psort.py --data /where/my/data/is/stored test.plaso
@@ -357,7 +408,12 @@ $ psort.py --data /where/my/data/is/stored test.plaso
 
 #### Debug
 
-If during the runtime of **psort** the tool encounters an unexpected exception the debug mode can be used. To invoke debug mode use the ``-d`` parameter. What that will do is that instead of exiting the tool when an unexpected exception is raised it prints the traceback of the exception and drops into a [Python debug shell](http://stackoverflow.com/questions/4228637/getting-started-with-the-python-debugger-pdb). This can be used to debug the problem and fix the issue.
+If during the runtime of **psort** the tool encounters an unexpected exception
+the debug mode can be used. To invoke debug mode use the ``-d`` parameter. What
+that will do is that instead of exiting the tool when an unexpected exception
+is raised it prints the traceback of the exception and drops into a
+[Python debug shell](http://stackoverflow.com/questions/4228637/getting-started-with-the-python-debugger-pdb).
+This can be used to debug the problem and fix the issue.
 
 ## How do I?
 ### How do I filter on tags?
