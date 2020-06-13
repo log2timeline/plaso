@@ -10,12 +10,13 @@ from __future__ import unicode_literals
 #    be present. 6.02 files will currently return 'Unknown'.
 
 from dfdatetime import java_time as dfdatetime_java_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
@@ -158,22 +159,23 @@ class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if date_http_header:
-      # A HTTP header date and string "should" be in UTC or have an associated
-      # time zone information in the string itself. If that is not the case
-      # then there is no reliable method for plaso to determine the proper
-      # time zone, so the assumption is that it is UTC.
+      # A HTTP header date and time should be formatted according to RFC 1123.
+      # The date "should" be in UTC or have associated time zone information
+      # in the string itself. If that is not the case then there is no reliable
+      # method for Plaso to determine the proper time zone, so the assumption
+      # is that the date and time is in UTC.
       try:
-        download_date = timelib.Timestamp.FromTimeString(
-            date_http_header.value, gmt_as_timezone=False)
-      except errors.TimestampError:
-        parser_mediator.ProduceExtractionWarning(
-            'Unable to parse date HTTP header value: {0:s}'.format(
-                date_http_header.value))
+        date_time = dfdatetime_time_elements.TimeElements()
+        date_time.CopyFromStringRFC1123(date_http_header.value)
+      except ValueError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'Unable to parse date HTTP header string: {0:s} with error: '
+            '{1!s}').format(date_http_header.value, exception))
+        date_time = dfdatetime_semantic_time.InvalidTime()
 
-      if download_date:
-        event = time_events.TimestampEvent(
-            download_date, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(JavaIDXParser)

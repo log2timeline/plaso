@@ -11,15 +11,12 @@ human readable form.
 
 from __future__ import unicode_literals
 
-import calendar
 import datetime
 import logging
 
-import dateutil.parser
 import pytz
 
 from plaso.lib import definitions
-from plaso.lib import errors
 
 # pylint: disable=missing-type-doc,missing-return-type-doc
 
@@ -90,55 +87,6 @@ class Timestamp(object):
           '{1!s}').format(timestamp, exception))
 
     return datetime_object.isoformat()
-
-  @classmethod
-  def FromTimeString(
-      cls, time_string, dayfirst=False, gmt_as_timezone=True,
-      timezone=pytz.UTC):
-    """Converts a string containing a date and time value into a timestamp.
-
-    Args:
-      time_string: String that contains a date and time value.
-      dayfirst: An optional boolean argument. If set to true then the
-                parser will change the precedence in which it parses timestamps
-                from MM-DD-YYYY to DD-MM-YYYY (and YYYY-MM-DD will be
-                YYYY-DD-MM, etc).
-      gmt_as_timezone: Sometimes the dateutil parser will interpret GMT and UTC
-                       the same way, that is not make a distinction. By default
-                       this is set to true, that is GMT can be interpreted
-                       differently than UTC. If that is not the expected result
-                       this attribute can be set to false.
-      timezone: Optional timezone object (instance of pytz.timezone) that
-                the data and time value in the string represents. This value
-                is used when the timezone cannot be determined from the string.
-
-    Returns:
-      The timestamp which is an integer containing the number of microseconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-
-    Raises:
-      TimestampError: if the time string could not be parsed.
-    """
-    if not gmt_as_timezone and time_string.endswith(' GMT'):
-      time_string = '{0:s}UTC'.format(time_string[:-3])
-
-    try:
-      # TODO: deprecate the use of dateutil parser.
-      datetime_object = dateutil.parser.parse(time_string, dayfirst=dayfirst)
-
-    except (TypeError, ValueError) as exception:
-      raise errors.TimestampError((
-          'Unable to convert time string: {0:s} in to a datetime object '
-          'with error: {1!s}').format(time_string, exception))
-
-    if datetime_object.tzinfo:
-      datetime_object = datetime_object.astimezone(pytz.UTC)
-    else:
-      datetime_object = timezone.localize(datetime_object)
-
-    posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
-    timestamp = posix_time * definitions.MICROSECONDS_PER_SECOND
-    return timestamp + datetime_object.microsecond
 
   @classmethod
   def LocaltimeToUTC(cls, timestamp, timezone, is_dst=False):
