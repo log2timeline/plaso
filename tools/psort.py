@@ -65,7 +65,7 @@ def Main():
     tool.ListProfilers()
     have_list_option = True
 
-  if tool.list_timezones:
+  if tool.list_time_zones:
     tool.ListTimeZones()
     have_list_option = True
 

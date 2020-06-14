@@ -46,19 +46,6 @@ optional arguments:
                     instead.
 """
 
-  _EXPECTED_TIMEZONE_OPTION = """\
-usage: tool_test.py [-z TIMEZONE]
-
-Test argument parser.
-
-optional arguments:
-  -z TIMEZONE, --zone TIMEZONE, --timezone TIMEZONE
-                        explicitly define the timezone. Typically the timezone
-                        is determined automatically where possible otherwise
-                        it will default to UTC. Use "-z list" to see a list of
-                        available timezones.
-"""
-
   # TODO: add test for _ConfigureLogging
   # TODO: add test for _EncodeString
 
@@ -80,23 +67,6 @@ optional arguments:
     options.log_file = 'file.log'
 
     test_tool._ParseLogFileOptions(options)
-
-  def testParseTimezoneOption(self):
-    """Tests the _ParseTimezoneOption function."""
-    test_tool = tools.CLITool()
-
-    options = test_lib.TestOptions()
-
-    test_tool._ParseTimezoneOption(options)
-    self.assertIsNone(test_tool._preferred_time_zone)
-
-    options.timezone = 'list'
-    test_tool._ParseTimezoneOption(options)
-    self.assertIsNone(test_tool._preferred_time_zone)
-
-    options.timezone = 'CET'
-    test_tool._ParseTimezoneOption(options)
-    self.assertEqual(test_tool._preferred_time_zone, 'CET')
 
   # TODO: add test for _PromptUserForInput
 
@@ -125,18 +95,6 @@ optional arguments:
     self.assertEqual(output, self._EXPECTED_INFORMATIONAL_OPTIONS)
 
   # TODO: add test for AddLogFileOptions
-
-  def testAddTimeZoneOption(self):
-    """Tests the AddTimeZoneOption function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='tool_test.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = tools.CLITool()
-    test_tool.AddTimeZoneOption(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)
 
   def testCheckOutDated(self):
     """Tests the CheckOutDated function."""

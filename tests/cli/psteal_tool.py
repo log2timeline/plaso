@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import argparse
 import io
 import os
 import unittest
@@ -23,6 +24,19 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   # pylint: disable=protected-access
 
   _BDE_PASSWORD = 'bde-TEST'
+
+  _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
+usage: psteal_test.py [--output_time_zone TIME_ZONE]
+
+Test argument parser.
+
+optional arguments:
+  --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
+                        time zone of date and time values written to the
+                        output, if supported by the output format. Output
+                        formats that support this are: dynamic and l2t_csv.
+                        Use "list" to see a list of available time zones.
+"""
 
   _EXPECTED_PROCESSING_OPTIONS = '\n'.join([
       'usage: psteal_test.py',
@@ -81,12 +95,41 @@ class PstealToolTest(test_lib.CLIToolTestCase):
         filename='bar')
     self.assertRegex(storage_filename, expected_storage_filename)
 
+  def testParseOutputTimeZoneOption(self):
+    """Tests the _ParseOutputTimeZoneOption function."""
+    test_tool = psteal_tool.PstealTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertIsNone(test_tool._output_time_zone)
+
+    options.output_time_zone = 'list'
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertIsNone(test_tool._output_time_zone)
+
+    options.output_time_zone = 'CET'
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertEqual(test_tool._output_time_zone, 'CET')
+
+  def testAddOutputTimeZoneOption(self):
+    """Tests the AddOutputTimeZoneOption function."""
+    argument_parser = argparse.ArgumentParser(
+        prog='psteal_test.py', description='Test argument parser.',
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+
+    test_tool = psteal_tool.PstealTool()
+    test_tool.AddOutputTimeZoneOption(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_OUTPUT_TIME_ZONE_OPTION)
+
   def testFailWhenOutputAlreadyExists(self):
     """Test to make sure the tool raises when the output file already exists."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psteal_test.plaso'])
     self._SkipIfPathNotExists(test_file_path)
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')

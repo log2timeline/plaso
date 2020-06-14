@@ -7,6 +7,11 @@ from __future__ import unicode_literals
 import argparse
 import unittest
 
+try:
+  import resource
+except ImportError:
+  resource = None
+
 from plaso.cli import extraction_tool
 
 from tests.cli import test_lib
@@ -33,6 +38,84 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       '                        (defaults to 125000)',
       ''])
 
+  if resource is None:
+    _EXPECTED_PROCESSING_OPTIONS = ("""\
+usage: extraction_tool_test.py [--single_process]
+                               [--temporary_directory DIRECTORY]
+                               [--vfs_back_end TYPE]
+                               [--worker_memory_limit SIZE]
+                               [--workers WORKERS]
+
+Test argument parser.
+
+optional arguments:
+  --single_process, --single-process
+                        Indicate that the tool should run in a single process.
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --vfs_back_end TYPE, --vfs-back-end TYPE
+                        The preferred dfVFS back-end: "auto" or "tsk".
+  --worker_memory_limit SIZE, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
+  --workers WORKERS     Number of worker processes [defaults to available
+                        system CPUs minus one].
+""")
+  else:
+    _EXPECTED_PROCESSING_OPTIONS = ("""\
+usage: extraction_tool_test.py [--single_process]
+                               [--process_memory_limit SIZE]
+                               [--temporary_directory DIRECTORY]
+                               [--vfs_back_end TYPE]
+                               [--worker_memory_limit SIZE]
+                               [--workers WORKERS]
+
+Test argument parser.
+
+optional arguments:
+  --process_memory_limit SIZE, --process-memory-limit SIZE
+                        Maximum amount of memory (data segment) a process is
+                        allowed to allocate in bytes, where 0 represents no
+                        limit. The default limit is 4294967296 (4 GiB). This
+                        applies to both the main (foreman) process and the
+                        worker processes. This limit is enforced by the
+                        operating system and will supersede the worker memory
+                        limit (--worker_memory_limit).
+  --single_process, --single-process
+                        Indicate that the tool should run in a single process.
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --vfs_back_end TYPE, --vfs-back-end TYPE
+                        The preferred dfVFS back-end: "auto" or "tsk".
+  --worker_memory_limit SIZE, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
+  --workers WORKERS     Number of worker processes [defaults to available
+                        system CPUs minus one].
+""")
+
+  _EXPECTED_TIME_ZONE_OPTION = """\
+usage: extraction_tool_test.py [-z TIME_ZONE]
+
+Test argument parser.
+
+optional arguments:
+  -z TIME_ZONE, --zone TIME_ZONE, --timezone TIME_ZONE
+                        preferred time zone of extracted date and time values
+                        that are stored without a time zone indicator. The
+                        time zone is determined based on the source data where
+                        possible otherwise it will default to UTC. Use "list"
+                        to see a list of available time zones.
+"""
+
   # TODO: add test for _CreateProcessingConfiguration
 
   def testParsePerformanceOptions(self):
@@ -43,7 +126,31 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
     test_tool._ParsePerformanceOptions(options)
 
-  # TODO: add test for _ParseProcessingOptions
+  def testParseProcessingOptions(self):
+    """Tests the _ParseProcessingOptions function."""
+    test_tool = extraction_tool.ExtractionTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseProcessingOptions(options)
+
+  def testParseTimeZoneOption(self):
+    """Tests the _ParseTimeZoneOption function."""
+    test_tool = extraction_tool.ExtractionTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseTimeZoneOption(options)
+    self.assertIsNone(test_tool._preferred_time_zone)
+
+    options.timezone = 'list'
+    test_tool._ParseTimeZoneOption(options)
+    self.assertIsNone(test_tool._preferred_time_zone)
+
+    options.timezone = 'CET'
+    test_tool._ParseTimeZoneOption(options)
+    self.assertEqual(test_tool._preferred_time_zone, 'CET')
+
   # TODO: add test for _PreprocessSources
   # TODO: add test for _ReadParserPresetsFromFile
   # TODO: add test for _SetExtractionParsersAndPlugins
@@ -61,7 +168,30 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PERFORMANCE_OPTIONS)
 
-  # TODO: add test for AddProcessingOptions
+  def testAddProcessingOptions(self):
+    """Tests the AddProcessingOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog='extraction_tool_test.py',
+        description='Test argument parser.', add_help=False,
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
+
+    test_tool = extraction_tool.ExtractionTool()
+    test_tool.AddProcessingOptions(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
+
+  def testAddTimeZoneOption(self):
+    """Tests the AddTimeZoneOption function."""
+    argument_parser = argparse.ArgumentParser(
+        prog='extraction_tool_test.py', description='Test argument parser.',
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+
+    test_tool = extraction_tool.ExtractionTool()
+    test_tool.AddTimeZoneOption(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_TIME_ZONE_OPTION)
 
   def testListParsersAndPlugins(self):
     """Tests the ListParsersAndPlugins function."""
@@ -118,8 +248,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
     expected_line = 'winreg_default : Parser for Registry data.'
     self.assertIn(expected_line, lines)
-
-
 
 
 if __name__ == '__main__':
