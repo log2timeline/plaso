@@ -16,6 +16,7 @@ from plaso.output import tln
 
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
+from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
@@ -27,7 +28,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join('cases', 'image.dd')))
 
   _TEST_EVENTS = [
-      {'data_type': 'test:output',
+      {'data_type': 'test:event',
        'display_name': 'OS: /var/log/syslog.1',
        'hostname': 'ubuntu',
        'inode': 12345678,
@@ -59,15 +60,20 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        test_lib.TestEventFormatter)
-
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data, None)
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      self._output_module.WriteEventBody(event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
 
     expected_event_body = (
-        '1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
+        '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
         'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
         'session closed for user root)\n')
 
@@ -75,9 +81,6 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(event_body, expected_event_body)
 
     self.assertEqual(event_body.count('|'), 4)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
 
 
 class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
@@ -88,7 +91,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join('cases', 'image.dd')))
 
   _TEST_EVENTS = [
-      {'data_type': 'test:output',
+      {'data_type': 'test:event',
        'display_name': 'OS: /var/log/syslog.1',
        'hostname': 'ubuntu',
        'inode': 12345678,
@@ -120,15 +123,20 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        test_lib.TestEventFormatter)
-
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data, None)
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      self._output_module.WriteEventBody(event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
 
     expected_event_body = (
-        '1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
+        '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
         'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
         'session closed for user root)'
         '|UTC|File: OS: /var/log/syslog.1 inode: 12345678\n')
@@ -137,9 +145,6 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(event_body, expected_event_body)
 
     self.assertEqual(event_body.count('|'), 6)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
 
 
 if __name__ == '__main__':

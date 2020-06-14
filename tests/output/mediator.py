@@ -8,29 +8,20 @@ import unittest
 
 from plaso.containers import artifacts
 from plaso.engine import knowledge_base
-from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import mediator
 
 from tests.containers import test_lib as containers_test_lib
+from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
-
-
-class TestEventFormatter(formatters_interface.EventFormatter):
-  """Test event formatter."""
-  DATA_TYPE = 'test:mediator'
-  FORMAT_STRING = '{text}'
-
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Syslog'
 
 
 class OutputMediatorTest(test_lib.OutputModuleTestCase):
   """Tests for the output mediator object."""
 
   _TEST_EVENTS = [
-      {'data_type': 'test:mediator',
+      {'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'text': (
@@ -51,50 +42,59 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetEventFormatter(self):
     """Tests the GetEventFormatter function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
     _, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    event_formatter = self._output_mediator.GetEventFormatter(event_data)
-    self.assertIsInstance(event_formatter, TestEventFormatter)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      event_formatter = self._output_mediator.GetEventFormatter(event_data)
+      self.assertIsInstance(
+          event_formatter, formatters_test_lib.TestEventFormatter)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
 
   def testGetFormattedMessages(self):
     """Tests the GetFormattedMessages function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
     expected_message = (
         'Reporter <CRON> PID: 8442'
         ' (pam_unix(cron:session): session closed for user root)')
 
     _, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    message, message_short = self._output_mediator.GetFormattedMessages(
-        event_data)
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      message, message_short = self._output_mediator.GetFormattedMessages(
+          event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
     self.assertEqual(message, expected_message)
     self.assertEqual(message_short, expected_message)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
-
   def testGetFormattedSources(self):
     """Tests the GetFormattedSources function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    source_short, source = self._output_mediator.GetFormattedSources(
-        event, event_data)
-    self.assertEqual(source, 'Syslog')
-    self.assertEqual(source_short, 'LOG')
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      source_short, source = self._output_mediator.GetFormattedSources(
+          event, event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
+    self.assertEqual(source, 'Test log file')
+    self.assertEqual(source_short, 'FILE')
 
   def testGetHostname(self):
     """Tests the GetHostname function."""

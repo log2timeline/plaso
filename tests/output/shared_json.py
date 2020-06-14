@@ -17,6 +17,7 @@ from plaso.output import shared_json
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
+from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
@@ -30,7 +31,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join('cases', 'image.dd')))
 
   _TEST_EVENTS = [
-      {'data_type': 'test:output',
+      {'data_type': 'test:event',
        'display_name': 'OS: /var/log/syslog.1',
        'hostname': 'ubuntu',
        'inode': 12345678,
@@ -64,7 +65,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_json_string = (
         '{{"__container_type__": "event", "__type__": "AttributeContainer", '
-        '"data_type": "test:output", "display_name": "OS: /var/log/syslog.1", '
+        '"data_type": "test:event", "display_name": "OS: /var/log/syslog.1", '
         '"hostname": "ubuntu", "inode": 12345678, "message": "Reporter <CRON> '
         'PID: |8442| (pam_unix(cron:session): session closed for user root)", '
         '"pathspec": {{"__type__": "PathSpec", "inode": 15, "location": '
@@ -76,12 +77,13 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
             expected_os_location)
 
     formatters_manager.FormattersManager.RegisterFormatter(
-        test_lib.TestEventFormatter)
+        formatters_test_lib.TestEventFormatter)
 
-    json_string = output_module._WriteSerialized(event, event_data, None)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
+    try:
+      json_string = output_module._WriteSerialized(event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
 
     self.assertEqual(json_string, expected_json_string)
 
@@ -108,7 +110,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
     expected_json_dict = {
         '__container_type__': 'event',
         '__type__': 'AttributeContainer',
-        'data_type': 'test:output',
+        'data_type': 'test:event',
         'display_name': 'OS: /var/log/syslog.1',
         'hostname': 'ubuntu',
         'inode': 12345678,
@@ -134,13 +136,14 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
         'username': 'root',
     }
     formatters_manager.FormattersManager.RegisterFormatter(
-        test_lib.TestEventFormatter)
+        formatters_test_lib.TestEventFormatter)
 
-    json_dict = output_module._WriteSerializedDict(
-        event, event_data, None)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
+    try:
+      json_dict = output_module._WriteSerializedDict(
+          event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
 
     self.assertEqual(json_dict, expected_json_dict)
 

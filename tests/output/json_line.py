@@ -19,6 +19,7 @@ from plaso.output import json_line
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
+from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
@@ -30,7 +31,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join('cases', 'image.dd')))
 
   _TEST_EVENTS = [
-      {'data_type': 'test:output',
+      {'data_type': 'test:event',
        'display_name': 'OS: /var/log/syslog.1',
        'hostname': 'ubuntu',
        'inode': 12345678,
@@ -65,15 +66,17 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        test_lib.TestEventFormatter)
-
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data, None)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        test_lib.TestEventFormatter)
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      self._output_module.WriteEventBody(event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
 
     expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2012-06-27 18:17:01')
@@ -90,7 +93,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     expected_json_dict = {
         '__container_type__': 'event',
         '__type__': 'AttributeContainer',
-        'data_type': 'test:output',
+        'data_type': 'test:event',
         'display_name': 'OS: /var/log/syslog.1',
         'hostname': 'ubuntu',
         'inode': 12345678,

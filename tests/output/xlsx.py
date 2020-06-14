@@ -10,24 +10,14 @@ import zipfile
 
 from defusedxml import ElementTree
 
-from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import xlsx
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
+from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
-
-
-class TestEventFormatter(formatters_interface.EventFormatter):
-  """Event object formatter used for testing."""
-
-  DATA_TYPE = 'test:xlsx'
-  FORMAT_STRING = '{text}'
-
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Syslog'
 
 
 class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
@@ -44,7 +34,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
   _VALUE_STRING_TAG = '}v'
 
   _TEST_EVENTS = [
-      {'data_type': 'test:xlsx',
+      {'data_type': 'test:event',
        'hostname': 'ubuntu',
        'filename': 'log/syslog.1',
        'text': (
@@ -110,17 +100,6 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteHeader function."""
-    formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
-
-    expected_header = [
-        'datetime', 'timestamp_desc', 'source', 'source_long',
-        'message', 'parser', 'display_name', 'tag']
-    expected_event_body = [
-        '41087.76181712963', 'Metadata Modification Time', 'LOG', 'Syslog',
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        'closed for user root) Invalid character -> \ufffd',
-        '-', '-', '-']
-
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
       output_module = xlsx.XLSXOutputModule(output_mediator)
@@ -133,7 +112,15 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
       event, event_data = containers_test_lib.CreateEventFromValues(
           self._TEST_EVENTS[0])
-      output_module.WriteEvent(event, event_data, None)
+
+      formatters_manager.FormattersManager.RegisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
+      try:
+        output_module.WriteEvent(event, event_data, None)
+      finally:
+        formatters_manager.FormattersManager.DeregisterFormatter(
+            formatters_test_lib.TestEventFormatter)
 
       output_module.WriteFooter()
       output_module.Close()
@@ -142,6 +129,16 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
         rows = self._GetSheetRows(xslx_file)
       except ValueError as exception:
         self.fail(exception)
+
+      expected_header = [
+          'datetime', 'timestamp_desc', 'source', 'source_long',
+          'message', 'parser', 'display_name', 'tag']
+      expected_event_body = [
+          '41087.76181712963', 'Metadata Modification Time', 'FILE',
+          'Test log file',
+          'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+          'closed for user root) Invalid character -> \ufffd',
+          '-', '-', '-']
 
       self.assertEqual(expected_header, rows[0])
       self.assertEqual(len(expected_event_body), len(rows[1]))

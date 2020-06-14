@@ -15,7 +15,7 @@ class TestEventFormatter(interface.EventFormatter):
   FORMAT_STRING = '{text}'
 
   SOURCE_SHORT = 'FILE'
-  SOURCE_LONG = 'Weird Log File'
+  SOURCE_LONG = 'Test log file'
 
 
 class EventFormatterTestCase(shared_test_lib.BaseTestCase):

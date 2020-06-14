@@ -14,7 +14,6 @@ from plaso.analysis import tagging
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import knowledge_base
-from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import definitions
@@ -29,6 +28,7 @@ from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.filters import test_lib as filters_test_lib
+from tests.formatters import test_lib as formatters_test_lib
 from tests.multi_processing import test_lib
 
 
@@ -62,17 +62,6 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
       event_data (EventData): event data.
     """
     return
-
-
-class TestEventFormatter(formatters_interface.EventFormatter):
-  """Event formatter for testing."""
-
-  DATA_TYPE = 'test:event:psort'
-
-  FORMAT_STRING = 'My text goes along: {text} lines'
-
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'None in Particular'
 
 
 class TestOutputModule(output_interface.LinearOutputModule):
@@ -142,7 +131,7 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
       {'data_type': 'test:event',
        'timestamp': 5134324321,
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
-      {'data_type': 'test:event:psort',
+      {'data_type': 'test:event',
        'display_name': '/dev/none',
        'filename': '/dev/none',
        'parser': 'TestEvent',
@@ -395,8 +384,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     test_engine = psort.PsortMultiProcessEngine()
 
-    formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
@@ -404,11 +391,18 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
+      storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
-      test_engine._ExportEvents(
-          storage_reader, output_module, deduplicate_events=False)
+      formatters_manager.FormattersManager.RegisterFormatter(
+          formatters_test_lib.TestEventFormatter)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(TestEventFormatter)
+      try:
+        test_engine._ExportEvents(
+            storage_reader, output_module, deduplicate_events=False)
+
+      finally:
+        formatters_manager.FormattersManager.DeregisterFormatter(
+            formatters_test_lib.TestEventFormatter)
 
     self.assertEqual(len(output_module.events), 17)
     self.assertEqual(len(output_module.macb_groups), 3)
@@ -428,8 +422,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     test_engine = psort.PsortMultiProcessEngine()
 
-    formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
-
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
@@ -437,10 +429,17 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
+      storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
-      test_engine._ExportEvents(storage_reader, output_module)
+      formatters_manager.FormattersManager.RegisterFormatter(
+          formatters_test_lib.TestEventFormatter)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(TestEventFormatter)
+      try:
+        test_engine._ExportEvents(storage_reader, output_module)
+
+      finally:
+        formatters_manager.FormattersManager.DeregisterFormatter(
+            formatters_test_lib.TestEventFormatter)
 
     lines = []
     output = output_writer.ReadOutput()

@@ -7,23 +7,14 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.containers import events
-from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import dynamic
 
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
+from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
-
-
-class TestEventFormatter(formatters_interface.EventFormatter):
-  """Test event formatter."""
-  DATA_TYPE = 'test:dynamic'
-  FORMAT_STRING = '{text}'
-
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Syslog'
 
 
 class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
@@ -32,7 +23,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'data_type': 'test:dynamic',
+      {'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'text': (
@@ -101,75 +92,86 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
   def testFormatMessage(self):
     """Tests the _FormatMessage function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    message_string = dynamic_fields_helper._FormatMessage(event, event_data)
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      message_string = dynamic_fields_helper._FormatMessage(event, event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
     expected_message_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
         'for user root)')
     self.assertEqual(message_string, expected_message_string)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
-
   def testFormatMessageShort(self):
     """Tests the _FormatMessageShort function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    message_short_string = dynamic_fields_helper._FormatMessageShort(
-        event, event_data)
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      message_short_string = dynamic_fields_helper._FormatMessageShort(
+          event, event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
     expected_message_short_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
         'for user root)')
     self.assertEqual(message_short_string, expected_message_short_string)
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
-
   def testFormatSource(self):
     """Tests the _FormatSource function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    source_string = dynamic_fields_helper._FormatSource(event, event_data)
-    self.assertEqual(source_string, 'Syslog')
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+    try:
+      source_string = dynamic_fields_helper._FormatSource(event, event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
+    self.assertEqual(source_string, 'Test log file')
 
   def testFormatSourceShort(self):
     """Tests the _FormatSourceShort function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    source_short_string = dynamic_fields_helper._FormatSourceShort(
-        event, event_data)
-    self.assertEqual(source_short_string, 'LOG')
 
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      source_short_string = dynamic_fields_helper._FormatSourceShort(
+          event, event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
+    self.assertEqual(source_short_string, 'FILE')
 
   def testFormatTag(self):
     """Tests the _FormatTag function."""
@@ -251,7 +253,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'data_type': 'test:dynamic',
+      {'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'text': (
@@ -266,9 +268,6 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        TestEventFormatter)
-
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
@@ -287,13 +286,22 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data, None)
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      output_module.WriteEventBody(event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
     expected_event_body = (
-        '2012-06-27,18:17:01,UTC,..C.,LOG,Syslog,Metadata Modification Time,-,'
-        'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        'closed for user root),Reporter <CRON> PID: 8442 '
-        '(pam_unix(cron:session): session closed for user root),log/syslog.1'
-        ',-,-,-,-\n')
+        '2012-06-27,18:17:01,UTC,..C.,FILE,Test log file,Metadata '
+        'Modification Time,-,ubuntu,Reporter <CRON> PID: 8442 '
+        '(pam_unix(cron:session): session closed for user root),Reporter '
+        '<CRON> PID: 8442 (pam_unix(cron:session): session closed for user '
+        'root),log/syslog.1,-,-,-,-\n')
     event_body = output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
@@ -315,12 +323,18 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data, None)
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      output_module.WriteEventBody(event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
     event_body = output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        TestEventFormatter)
 
   def testHeader(self):
     """Tests the WriteHeader function."""
