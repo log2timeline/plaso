@@ -12,7 +12,6 @@ from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
-from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import extractors
 
@@ -75,43 +74,6 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
       find_specs.append(find_spec)
 
     return find_specs
-
-  def testCalculateNTFSTimeHash(self):
-    """Tests the _CalculateNTFSTimeHash function."""
-    # Note that the source file is a RAW (VMDK flat) image.
-    test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    image_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-
-    p1_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
-        part_index=2, start_offset=0x00010000, parent=image_path_spec)
-    p1_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/file1.txt',
-        parent=p1_path_spec)
-
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        p1_file_system_path_spec)
-
-    test_extractor = extractors.PathSpecExtractor()
-    hash_value = test_extractor._CalculateNTFSTimeHash(file_entry)
-    self.assertEqual(hash_value, '6b181becbc9529b73cf3dc35c99a61e7')
-
-    p2_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p2',
-        part_index=3, start_offset=0x00510000, parent=image_path_spec)
-    p2_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/file2_on_part_2.txt',
-        parent=p2_path_spec)
-
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        p2_file_system_path_spec)
-
-    test_extractor = extractors.PathSpecExtractor()
-    hash_value = test_extractor._CalculateNTFSTimeHash(file_entry)
-    self.assertEqual(hash_value, '8738ed1e707fec64cd1593fd81eb26d2')
 
   # TODO: add test for _ExtractPathSpecs
   # TODO: add test for _ExtractPathSpecsFromDirectory
@@ -309,9 +271,9 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=p2_path_spec)
 
-    resolver_context = context.Context()
-    test_extractor = extractors.PathSpecExtractor(resolver_context)
+    test_extractor = extractors.PathSpecExtractor()
 
+    resolver_context = context.Context()
     path_specs = list(test_extractor.ExtractPathSpecs(
         [p1_file_system_path_spec, p2_file_system_path_spec],
         resolver_context=resolver_context))
