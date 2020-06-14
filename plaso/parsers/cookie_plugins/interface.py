@@ -15,7 +15,7 @@ class BaseCookiePlugin(plugins.BasePlugin):
   This is a generic cookie parsing interface that can handle parsing
   cookies from all browsers.
   """
-  NAME = 'cookie'
+  NAME = 'cookie_plugin'
   DESCRIPTION = ''
 
   # The name of the cookie value that this plugin is designed to parse.

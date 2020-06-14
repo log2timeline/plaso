@@ -240,7 +240,7 @@ optional arguments:
     # Note that the expected line is truncated by the cell wrapping in
     # the table.
     expected_line = (
-        'chrome_27_history : Parser for Google Chrome 27 and up history SQLite')
+        'chrome_27_history : Parser for Google Chrome 27 and later history')
     self.assertIn(expected_line, lines)
 
     expected_line = 'ssh : Parser for SSH syslog entries.'

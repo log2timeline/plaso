@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the iMessage database on OSX and iOS.
+"""This file contains a parser for the iMessage database on MacOS and iOS.
 
-iMessage and SMS data in OSX and iOS are stored in SQLite databases named
+iMessage and SMS data in MacOS and iOS are stored in SQLite databases named
 chat.db and sms.db respectively.
 """
 
@@ -48,7 +48,7 @@ class IMessagePlugin(interface.SQLitePlugin):
 
   NAME = 'imessage'
   DESCRIPTION = (
-      'Parser for the iMessage and SMS SQLite databases on OSX and iOS.')
+      'Parser for the iMessage and SMS SQLite databases on MacOS and iOS.')
 
   REQUIRED_STRUCTURE = {
       'message': frozenset([

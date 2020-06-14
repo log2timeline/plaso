@@ -46,8 +46,7 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   crankd.
 
   See the code here:
-  http://code.google.com/p/google-macops/source/browse/trunk/crankd/\
-      ApplicationUsage.py
+  https://github.com/google/macops/blob/master/crankd/ApplicationUsage.py
 
   Default installation: /var/db/application_usage.sqlite
   """

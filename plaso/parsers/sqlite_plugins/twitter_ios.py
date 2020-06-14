@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Parser for Twitter on iOS 8+ database.
+"""Parser for Twitter on iOS 8+ SQLite database files.
 
 SQLite database path:
 /private/var/mobile/Containers/Data/Application/Library/Caches/databases/
@@ -74,10 +74,10 @@ class TwitterIOSStatusEventData(events.EventData):
 
 
 class TwitterIOSPlugin(interface.SQLitePlugin):
-  """Parser for Twitter on iOS 8+ database."""
+  """Parser for Twitter on iOS 8+ SQLite database files."""
 
   NAME = 'twitter_ios'
-  DESCRIPTION = 'Parser for Twitter on iOS 8+ database'
+  DESCRIPTION = 'Parser for Twitter on iOS 8+ SQLite database files'
 
   REQUIRED_STRUCTURE = {
       'Users': frozenset([

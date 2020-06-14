@@ -19,7 +19,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
   # This must be overridden by actual plugins.
   REQUIRED_PATHS = frozenset()
 
-  NAME = 'czip'
+  NAME = 'czip_plugin'
 
   @abc.abstractmethod
   def InspectZipFile(self, parser_mediator, zip_file):

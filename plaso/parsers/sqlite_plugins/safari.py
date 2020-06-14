@@ -46,7 +46,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   Safari history file is stored in a SQLite database file named History.db
   """
 
-  NAME = 'safari_history'
+  NAME = 'safari_historydb'
   DESCRIPTION = 'Parser for Safari history SQLite database files.'
 
   REQUIRED_STRUCTURE = {

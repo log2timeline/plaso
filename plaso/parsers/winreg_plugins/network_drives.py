@@ -35,7 +35,7 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the Network key."""
 
   NAME = 'network_drives'
-  DESCRIPTION = 'Parser for Network Registry data.'
+  DESCRIPTION = 'Parser for Windows network drives Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter('HKEY_CURRENT_USER\\Network')])

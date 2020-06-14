@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin for the Windows 10 Timeline SQLite database.
+"""Parser for Windows 10 Timeline SQLite database files.
 
 Timeline events on Windows are stored in a SQLite
 database file usually found in ActivitiesCache.db,
@@ -18,6 +18,7 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
+
 
 class WindowsTimelineGenericEventData(events.EventData):
   """Windows Timeline database generic event data.
@@ -45,6 +46,7 @@ class WindowsTimelineGenericEventData(events.EventData):
     self.description = None
     self.application_display_name = None
 
+
 class WindowsTimelineUserEngagedEventData(events.EventData):
   """Windows Timeline database User Engaged event data.
 
@@ -71,11 +73,12 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
     self.reporting_app = None
     self.active_duration_seconds = None
 
+
 class WindowsTimelinePlugin(interface.SQLitePlugin):
-  """Parse the Windows Timeline SQLite database."""
+  """Parser for Windows 10 Timeline SQLite database files."""
 
   NAME = 'windows_timeline'
-  DESCRIPTION = 'Parser for the Windows Timeline SQLite database'
+  DESCRIPTION = 'Parser for the Windows 10 Timeline SQLite database files'
 
   REQUIRED_STRUCTURE = {
       'Activity': frozenset([

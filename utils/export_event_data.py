@@ -74,7 +74,7 @@ class EventDataAttributeContainersSchemaExtractor(object):
     return attribute_containers
 
   def GetAttributeContainers(self):
-    """Retrieves event data attribute containers from plaso.
+    """Retrieves event data attribute containers from Plaso.
 
     Returns:
       list[plaso.EventData]: event data attribute containers.
@@ -89,7 +89,7 @@ def Main():
     bool: True if successful or False if not.
   """
   argument_parser = argparse.ArgumentParser(description=(
-      'Extract the event data schema from plaso.'))
+      'Extract the event data schema from Plaso.'))
 
   argument_parser.parse_args()
 

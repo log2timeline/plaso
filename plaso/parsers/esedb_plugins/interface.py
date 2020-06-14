@@ -18,7 +18,7 @@ from plaso.parsers import plugins
 class ESEDBPlugin(plugins.BasePlugin):
   """The ESE database plugin interface."""
 
-  NAME = 'esedb'
+  NAME = 'esedb_plugin'
 
   BINARY_DATA_COLUMN_TYPES = frozenset([
       pyesedb.column_types.BINARY_DATA,

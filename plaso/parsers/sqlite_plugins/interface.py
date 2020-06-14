@@ -12,7 +12,7 @@ from plaso.parsers import plugins
 class SQLitePlugin(plugins.BasePlugin):
   """SQLite parser plugin."""
 
-  NAME = 'sqlite'
+  NAME = 'sqlite_plugin'
   DESCRIPTION = 'Parser for SQLite database files.'
 
   # Dictionary of frozensets containing the columns in tables that must be

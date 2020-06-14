@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Parser for Tango on Android databases."""
+"""Parser for Tango on Android SQLite database files."""
 
 from __future__ import unicode_literals
 
@@ -85,7 +85,7 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
   """Parser for Tango on Android tc database."""
 
   NAME = 'tango_android_tc'
-  DESCRIPTION = 'Parser for Tango on Android tc database.'
+  DESCRIPTION = 'Parser for Tango on Android tc SQLite database.'
 
   REQUIRED_STRUCTURE = {
       'conversations': frozenset([
@@ -200,7 +200,7 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
   """Parser for Tango on Android profile database."""
 
   NAME = 'tango_android_profile'
-  DESCRIPTION = 'Parser for Tango on Android profile database.'
+  DESCRIPTION = 'Parser for Tango on Android profile SQLite database.'
 
   REQUIRED_STRUCTURE = {
       'profiletable': frozenset([

@@ -144,11 +144,13 @@ class BaseChromeCookiePlugin(interface.SQLitePlugin):
             'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
                 plugin.NAME, exception))
 
+
 class Chrome17CookiePlugin(BaseChromeCookiePlugin):
   """Parse Chrome Cookies file, versions 17 - 65."""
 
   NAME = 'chrome_17_cookies'
-  DESCRIPTION = 'Parser for Chrome 17 - 65 cookies SQLite database files.'
+  DESCRIPTION = (
+      'Parser for Google Chrome 17 - 65 cookies SQLite database files.')
 
   REQUIRED_STRUCTURE = {
       'cookies': frozenset([
@@ -179,7 +181,8 @@ class Chrome66CookiePlugin(BaseChromeCookiePlugin):
   """Parse Chrome Cookies file, versions 66 and above."""
 
   NAME = 'chrome_66_cookies'
-  DESCRIPTION = 'Parser for Chrome 66+ cookies SQLite database files.'
+  DESCRIPTION = (
+      'Parser for Google Chrome 66 and later cookies SQLite database files.')
 
   REQUIRED_STRUCTURE = {
       'cookies': frozenset([
@@ -207,6 +210,7 @@ class Chrome66CookiePlugin(BaseChromeCookiePlugin):
       'meta': (
           'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, '
           'value LONGVARCHAR)')}]
+
 
 sqlite.SQLiteParser.RegisterPlugins([
     Chrome17CookiePlugin, Chrome66CookiePlugin])

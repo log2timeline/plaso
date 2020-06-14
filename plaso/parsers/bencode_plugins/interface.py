@@ -26,7 +26,7 @@ class BencodePlugin(plugins.BasePlugin):
   # Ex. ['https://wiki.theory.org/BitTorrentSpecification#Bencoding']
   URLS = []
 
-  NAME = 'bencode'
+  NAME = 'bencode_plugin'
 
   def _GetDecodedValue(self, decoded_values, name):
     """Retrieves a decoded value.
