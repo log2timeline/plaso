@@ -1,20 +1,22 @@
-## plaso (Plaso Langar Að Safna Öllu)
+## Plaso (Plaso Langar Að Safna Öllu)
 
 *super timeline all the things*
 
-In short, plaso is a Python-based backend engine for the tool 
-[log2timeline](http://plaso.kiddaland.net "Plaso home of the super timeline").
+Plaso (Plaso Langar Að Safna Öllu) is the Python-based engine used by [tools](https://plaso.readthedocs.io/en/latest/sources/user/Users-Guide.html#the-tools)
+for automatic creation of timelines. Plaso default behavior is to create
+super timelines but it also supports creating more [targeted timelines](http://blog.kiddaland.net/2013/02/targeted-timelines-part-i.html).
+
+These timelines support digital forensic investigators/analysts, to correlate
+the large amount of information found in logs and other files found on an
+average computer.
 
 ### A longer version
 
-log2timeline is a tool designed to extract timestamps from various files found 
-on a typical computer system(s) and aggregate them.
-
-The initial purpose of plaso was to collect all timestamped events of interest 
+The initial purpose of Plaso was to collect all timestamped events of interest 
 on a computer system and have them aggregated in a single place for computer 
 forensic analysis (aka Super Timeline).
 
-However plaso has become a framework that supports:
+However Plaso has become a framework that supports:
 
 * adding new parsers or parsing plug-ins;
 * adding new analysis plug-ins;
@@ -38,4 +40,7 @@ And is moving to support:
 * [Homepage](https://github.com/log2timeline/plaso)
 * [Downloads](https://github.com/log2timeline/plaso/releases)
 * [Documentation](https://plaso.readthedocs.io)
-
+* Contact information:
+  * Plaso channel on [Open Source DFIR Slack community](https://github.com/open-source-dfir/slack)
+  * Mailing list for general discussions: [log2timeline-discuss](https://groups.google.com/forum/#%21forum/log2timeline-discuss)
+  * Mailing list for development: [log2timeline-dev](https://groups.google.com/forum/#%21forum/log2timeline-dev)
