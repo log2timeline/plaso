@@ -14,7 +14,6 @@ from __future__ import unicode_literals
 import calendar
 import datetime
 import logging
-import time
 
 import dateutil.parser
 import pytz
@@ -290,17 +289,6 @@ class Timestamp(object):
     return timestamp + datetime_object.microsecond
 
   @classmethod
-  def GetNow(cls):
-    """Retrieves the current time (now) as a timestamp in UTC.
-
-    Returns:
-      The timestamp which is an integer containing the number of microseconds
-      since January 1, 1970, 00:00:00 UTC.
-    """
-    time_elements = time.gmtime()
-    return calendar.timegm(time_elements) * 1000000
-
-  @classmethod
   def LocaltimeToUTC(cls, timestamp, timezone, is_dst=False):
     """Converts the timestamp in localtime of the timezone to UTC.
 
@@ -336,9 +324,3 @@ class Timestamp(object):
     rounded = round(float(leftovers) / definitions.MICROSECONDS_PER_SECOND)
 
     return int(scrubbed + rounded * definitions.MICROSECONDS_PER_SECOND)
-
-
-def GetCurrentYear():
-  """Determines the current year."""
-  datetime_object = datetime.datetime.now()
-  return datetime_object.year

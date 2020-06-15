@@ -9,7 +9,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
@@ -62,28 +61,32 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
       'execute', 'insert', 'replace', 'rollback', 'select', 'set',
       'update'])
 
-  # 6 * 365 * 24 * 60 * 60 * 1000000.
-  _SIX_YEARS_IN_MICRO_SECONDS = 189216000000000
-
-  def _VerifyRecord(self, pls_record):
+  def _VerifyRecord(self, parser_mediator, pls_record):
     """Verifies a PLS Recall record.
 
     Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       pls_record (pls_recall_record): a PLS Recall record to verify.
 
     Returns:
       bool: True if this is a valid PLS Recall record, False otherwise.
     """
-    # Verify that the timestamp is no more than six years into the future.
+    current_year = parser_mediator.GetCurrentYear()
+
+    pls_date_time = dfdatetime_delphi_date_time.DelphiDateTime(
+        timestamp=pls_record.last_written_time)
+
+    pls_year, _, _ = pls_date_time.GetDate()
+
+    # Verify that the PLS timestamp is no more than six years into the future.
     # Six years is an arbitrary time length just to evaluate the timestamp
     # against some value. There is no guarantee that this will catch everything.
     # TODO: Add a check for similarly valid value back in time. Maybe if it the
     # timestamp is before 1980 we are pretty sure it is invalid?
-    # TODO: This is a very flaky assumption. Find a better one.
-    future_timestamp = (
-        timelib.Timestamp.GetNow() + self._SIX_YEARS_IN_MICRO_SECONDS)
-
-    if pls_record.last_written_time > future_timestamp:
+    # TODO: This is a very flaky assumption, maybe use the # file entry time
+    # range instead?
+    if pls_year > current_year + 6:
       return False
 
     # Take the first word from the query field and attempt to match that against
@@ -123,7 +126,8 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
             '{1!s}').format(file_offset, exception))
         break
 
-      if file_offset == 0 and not self._VerifyRecord(pls_record):
+      if file_offset == 0 and not self._VerifyRecord(
+          parser_mediator, pls_record):
         raise errors.UnableToParseFile('Verification of first record failed.')
 
       event_data = PlsRecallEventData()
