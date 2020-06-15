@@ -11,7 +11,6 @@ from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import mediator
 
 from tests.containers import test_lib as containers_test_lib
@@ -37,7 +36,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE,
        'username': 'root'}]
 

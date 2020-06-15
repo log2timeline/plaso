@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from plaso.containers import events
 from plaso.containers import interface
+from plaso.lib import timelib
 
 
 def CreateEventFromValues(event_values):
@@ -26,6 +27,9 @@ def CreateEventFromValues(event_values):
   timestamp_desc = copy_of_event_values.get('timestamp_desc', None)
   if 'timestamp_desc' in copy_of_event_values:
     del copy_of_event_values['timestamp_desc']
+
+  if isinstance(timestamp, str):
+    timestamp = timelib.Timestamp.CopyFromString(timestamp)
 
   event = events.EventObject()
   event.timestamp = timestamp

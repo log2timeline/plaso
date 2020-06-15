@@ -10,7 +10,6 @@ from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import dynamic
 
 from tests.cli import test_lib as cli_test_lib
@@ -39,7 +38,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
 
   def testFormatDate(self):
@@ -258,7 +257,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
 
   # TODO: add coverage for _SanitizeField

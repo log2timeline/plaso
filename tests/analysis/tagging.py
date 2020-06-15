@@ -8,7 +8,6 @@ import unittest
 
 from plaso.analysis import tagging
 from plaso.lib import definitions
-from plaso.lib import timelib
 
 from tests.analysis import test_lib
 
@@ -20,23 +19,23 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [
       {'data_type': 'windows:prefetch',
-       'timestamp': timelib.Timestamp.CopyFromString('2015-05-01 15:12:00'),
+       'timestamp': '2015-05-01 15:12:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'chrome:history:file_downloaded',
-       'timestamp': timelib.Timestamp.CopyFromString('2015-05-01 05:06:00'),
+       'timestamp': '2015-05-01 05:06:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'something_else',
-       'timestamp': timelib.Timestamp.CopyFromString('2015-02-19 08:00:01'),
+       'timestamp': '2015-02-19 08:00:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'windows:evt:record',
        'event_identifier': 538,
        'source_name': 'Security',
-       'timestamp': timelib.Timestamp.CopyFromString('2016-05-25 13:00:06'),
+       'timestamp': '2016-05-25 13:00:06',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'body': 'this is a message',
        'data_type': 'windows:evt:record',
        'event_identifier': 16,
-       'timestamp': timelib.Timestamp.CopyFromString('2016-05-25 13:00:06'),
+       'timestamp': '2016-05-25 13:00:06',
        'source_name': 'Messaging',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 

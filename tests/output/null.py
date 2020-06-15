@@ -11,7 +11,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import null
 
 from tests.cli import test_lib as cli_test_lib
@@ -37,7 +36,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
        'text': (
            'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\n '
            'closed for user root)'),
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 

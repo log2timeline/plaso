@@ -13,7 +13,6 @@ except ImportError:
 
 from plaso.containers import events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import shared_elastic
 
 from tests.containers import test_lib as containers_test_lib
@@ -46,8 +45,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
-       'timestamp': timelib.Timestamp.CopyFromString(
-           '2012-06-27 18:17:01+00:00'),
+       'timestamp': '2012-06-27 18:17:01+00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
   def testConnect(self):
