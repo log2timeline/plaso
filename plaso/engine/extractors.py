@@ -7,7 +7,6 @@ An extractor is a class used to extract information from "raw" data.
 from __future__ import unicode_literals
 
 import copy
-import hashlib
 
 import pysigscan
 
@@ -365,61 +364,6 @@ class PathSpecExtractor(object):
 
   _MAXIMUM_DEPTH = 255
 
-  def __init__(self, duplicate_file_check=False):
-    """Initializes a path specification extractor.
-
-    The source collector discovers all the file entries in the source.
-    The source can be a single file, directory or a volume within
-    a storage media image or device.
-
-    Args:
-      duplicate_file_check (Optional[bool]): True if duplicate files should
-          be ignored.
-    """
-    super(PathSpecExtractor, self).__init__()
-    self._duplicate_file_check = duplicate_file_check
-    self._hashlist = {}
-
-  def _CalculateNTFSTimeHash(self, file_entry):
-    """Calculates an MD5 from the date and time value of a NTFS file entry.
-
-    Args:
-      file_entry (dfvfs.FileEntry): file entry.
-
-    Returns:
-      str: hexadecimal representation of the MD5 hash value of the date and
-          time values of the file entry.
-    """
-    date_time_values = []
-
-    access_time = getattr(file_entry, 'access_time', None)
-    if access_time:
-      date_time_string = access_time.CopyToDateTimeString()
-      date_time_values.append('atime:{0:s}'.format(date_time_string))
-
-    creation_time = getattr(file_entry, 'creation_time', None)
-    if creation_time:
-      date_time_string = creation_time.CopyToDateTimeString()
-      date_time_values.append('crtime:{0:s}'.format(date_time_string))
-
-    modification_time = getattr(file_entry, 'modification_time', None)
-    if modification_time:
-      date_time_string = modification_time.CopyToDateTimeString()
-      date_time_values.append('mtime:{0:s}'.format(date_time_string))
-
-    # file_entry.change_time is an alias of file_entry.entry_modification_time.
-    change_time = getattr(file_entry, 'change_time', None)
-    if change_time:
-      date_time_string = change_time.CopyToDateTimeString()
-      date_time_values.append('ctime:{0:s}'.format(date_time_string))
-
-    date_time_values = ''.join(date_time_values)
-    date_time_values = date_time_values.encode('ascii')
-
-    hash_value = hashlib.md5()
-    hash_value.update(date_time_values)
-    return hash_value.hexdigest()
-
   def _ExtractPathSpecs(
       self, path_spec, find_specs=None, recurse_file_system=True,
       resolver_context=None):
@@ -505,21 +449,6 @@ class PathSpecExtractor(object):
 
       if sub_file_entry.IsDirectory():
         sub_directories.append(sub_file_entry)
-
-      elif sub_file_entry.IsFile():
-        # If we are dealing with a VSS we want to calculate a hash
-        # value based on available timestamps and compare that to previously
-        # calculated hash values, and only include the file into the queue if
-        # the hash does not match.
-        if self._duplicate_file_check:
-          hash_value = self._CalculateNTFSTimeHash(sub_file_entry)
-
-          inode = getattr(sub_file_entry.path_spec, 'inode', 0)
-          if inode in self._hashlist:
-            if hash_value in self._hashlist[inode]:
-              continue
-
-          self._hashlist.setdefault(inode, []).append(hash_value)
 
       for path_spec in self._ExtractPathSpecsFromFile(sub_file_entry):
         yield path_spec
