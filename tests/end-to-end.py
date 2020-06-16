@@ -514,17 +514,11 @@ class StorageFileTestCase(TestCase):
 
   def _InitializePinfoPath(self):
     """Initializes the location of pinfo."""
-    for filename in ('pinfo.exe', 'pinfo.sh', 'pinfo.py'):
-      self._pinfo_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._pinfo_path):
-        break
+    self._pinfo_path = os.path.join(self._tools_path, 'pinfo.py')
 
   def _InitializePsortPath(self):
     """Initializes the location of psort."""
-    for filename in ('psort.exe', 'psort.sh', 'psort.py'):
-      self._psort_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._psort_path):
-        break
+    self._psort_path = os.path.join(self._tools_path, 'psort.py')
 
   def _RunPinfo(self, test_definition, temp_directory, storage_file):
     """Runs pinfo on the storage file.
@@ -652,7 +646,7 @@ class StorageFileTestCase(TestCase):
     command.extend(analysis_options)
     command.extend(output_options)
     command.extend(logging_options)
-    command.extend(['--status-view', 'none'])
+    command.extend(['--status-view', 'none', '--unattended'])
     command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
@@ -733,11 +727,7 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
 
   def _InitializeLog2TimelinePath(self):
     """Initializes the location of log2timeline."""
-    for filename in (
-        'log2timeline.exe', 'log2timeline.sh', 'log2timeline.py'):
-      self._log2timeline_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._log2timeline_path):
-        break
+    self._log2timeline_path = os.path.join(self._tools_path, 'log2timeline.py')
 
   def _RunLog2Timeline(
       self, test_definition, temp_directory, storage_file, source_path):
@@ -752,7 +742,7 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     Returns:
       bool: True if log2timeline ran successfully.
     """
-    extract_options = ['--status-view=none']
+    extract_options = ['--status-view=none', '--unattended']
     extract_options.extend(test_definition.extract_options)
 
     logging_options = [
@@ -911,10 +901,7 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
 
   def _InitializePstealPath(self):
     """Initializes the location of psteal."""
-    for filename in ('psteal.exe', 'psteal.sh', 'psteal.py'):
-      self._psteal_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._psteal_path):
-        break
+    self._psteal_path = os.path.join(self._tools_path, 'psteal.py')
 
   def _RunPsteal(
       self, test_definition, temp_directory, storage_file, source_path):
@@ -932,7 +919,8 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
     psteal_options = [
         '--source={0:s}'.format(source_path),
         '--status-view=none',
-        '--storage-file={0:s}'.format(storage_file)]
+        '--storage-file={0:s}'.format(storage_file),
+        '--unattended']
     psteal_options.extend(test_definition.extract_options)
 
     if test_definition.output_format:
@@ -1161,11 +1149,7 @@ class ImageExportTestCase(TestCase):
 
   def _InitializeImageExportPath(self):
     """Initializes the location of image_export."""
-    for filename in (
-        'image_export.exe', 'image_export.sh', 'image_export.py'):
-      self._image_export_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._image_export_path):
-        break
+    self._image_export_path = os.path.join(self._tools_path, 'image_export.py')
 
   def _RunImageExport(self, test_definition, temp_directory, source_path):
     """Runs image_export on a storage media image.

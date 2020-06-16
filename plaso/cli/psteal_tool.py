@@ -428,6 +428,8 @@ class PstealTool(
 
     info_group = argument_parser.add_argument_group('informational arguments')
 
+    self.AddInformationalOptions(info_group)
+
     info_group.add_argument(
         '--no_dependencies_check', '--no-dependencies-check',
         dest='dependencies_check', action='store_false', default=True,
