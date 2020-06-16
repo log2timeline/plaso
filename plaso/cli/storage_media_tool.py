@@ -191,6 +191,10 @@ class StorageMediaTool(tools.CLITool):
         return selected_volume_identifiers
 
     if len(volume_identifiers) > 1:
+      if self._unattended_mode:
+        raise errors.SourceScannerError(
+            'More than 1 volume found but no volumes specified.')
+
       try:
         volume_identifiers = self._PromptUserForAPFSVolumeIdentifiers(
             volume_system, volume_identifiers)
@@ -244,14 +248,16 @@ class StorageMediaTool(tools.CLITool):
       if not set(selected_volume_identifiers).difference(volume_identifiers):
         return selected_volume_identifiers
 
-    if len(volume_identifiers) == 1:
-      return volume_identifiers
+    if len(volume_identifiers) > 1:
+      if self._unattended_mode:
+        raise errors.SourceScannerError(
+            'More than 1 parition found but no paritions specified.')
 
-    try:
-      volume_identifiers = self._PromptUserForPartitionIdentifiers(
-          volume_system, volume_identifiers)
-    except KeyboardInterrupt:
-      raise errors.UserAbort('File system scan aborted.')
+      try:
+        volume_identifiers = self._PromptUserForPartitionIdentifiers(
+            volume_system, volume_identifiers)
+      except KeyboardInterrupt:
+        raise errors.UserAbort('File system scan aborted.')
 
     return self._NormalizedVolumeIdentifiers(
         volume_system, volume_identifiers, prefix='p')
@@ -294,6 +300,9 @@ class StorageMediaTool(tools.CLITool):
 
       if not set(selected_volume_identifiers).difference(volume_identifiers):
         return selected_volume_identifiers
+
+    if self._unattended_mode:
+      return []
 
     try:
       volume_identifiers = self._PromptUserForVSSStoreIdentifiers(
@@ -944,7 +953,7 @@ class StorageMediaTool(tools.CLITool):
             scan_node.path_spec, credential_type, credential_data)
         break
 
-    if not is_unlocked:
+    if not is_unlocked and self._unattended_mode:
       is_unlocked = self._PromptUserForEncryptedVolumeCredential(
           scan_context, scan_node, credentials)
 

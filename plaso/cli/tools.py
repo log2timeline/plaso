@@ -71,6 +71,7 @@ class CLITool(object):
     self._output_writer = output_writer
     self._preferred_time_zone = None
     self._quiet_mode = False
+    self._unattended_mode = False
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
     self._vfs_back_end = 'auto'
 
@@ -136,6 +137,7 @@ class CLITool(object):
     """
     self._debug_mode = getattr(options, 'debug', False)
     self._quiet_mode = getattr(options, 'quiet', False)
+    self._unattended_mode = getattr(options, 'unattended', False)
 
     if self._debug_mode and self._quiet_mode:
       logger.warning(
@@ -226,6 +228,12 @@ class CLITool(object):
     argument_group.add_argument(
         '-q', '--quiet', dest='quiet', action='store_true', default=False,
         help='Disable informational output.')
+
+    argument_group.add_argument(
+        '-u', '--unattended', dest='unattended', action='store_true',
+        default=False, help=(
+            'Enable unattended mode and do not ask the user for additional '
+            'input when needed, but terminate with an error instead.'))
 
   def AddLogFileOptions(self, argument_group):
     """Adds the log file option to the argument group.

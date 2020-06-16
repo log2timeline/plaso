@@ -34,13 +34,16 @@ optional arguments:
 """
 
   _EXPECTED_INFORMATIONAL_OPTIONS = """\
-usage: tool_test.py [-d] [-q]
+usage: tool_test.py [-d] [-q] [-u]
 
 Test argument parser.
 
 optional arguments:
-  -d, --debug  Enable debug output.
-  -q, --quiet  Disable informational output.
+  -d, --debug       Enable debug output.
+  -q, --quiet       Disable informational output.
+  -u, --unattended  Enable unattended mode and do not ask the user for
+                    additional input when needed, but terminate with an error
+                    instead.
 """
 
   _EXPECTED_TIMEZONE_OPTION = """\
