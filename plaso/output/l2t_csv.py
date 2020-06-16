@@ -7,10 +7,11 @@ http://forensicswiki.org/wiki/L2T_CSV
 
 from __future__ import unicode_literals
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+import datetime
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
+from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
 from plaso.output import manager
@@ -118,11 +119,6 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    # TODO: preserve dfdatetime as an object.
-    # TODO: add support for self._output_mediator.timezone
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=event.timestamp)
-
     unformatted_attributes = (
         formatters_manager.FormattersManager.GetUnformattedAttributes(
             event_data))
@@ -159,12 +155,16 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     else:
       notes = '-'
 
-    year, month, day_of_month = date_time.GetDate()
-    hours, minutes, seconds = date_time.GetTimeOfDay()
     try:
-      date_string = '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
-      time_string = '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
-    except (TypeError, ValueError):
+      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
+          event.timestamp, timezone=self._output_mediator.timezone,
+          raise_error=True)
+
+      date_string = '{0:s}/{1:s}/{2:s}'.format(
+          iso_date_time[5:7], iso_date_time[8:10], iso_date_time[:4])
+      time_string = iso_date_time[11:19]
+
+    except (OverflowError, ValueError):
       self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable date and time. '
           'Defaulting to: "00/00/0000" "--:--:--"').format(event.timestamp))
@@ -172,10 +172,19 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       date_string = '00/00/0000'
       time_string = '--:--:--'
 
+    # For tzname to work the datetime object must be naive (without a time
+    # zone).
+    try:
+      datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+      datetime_object += datetime.timedelta(microseconds=event.timestamp)
+      timezone_string = self._output_mediator.timezone.tzname(datetime_object)
+    except OverflowError:
+      timezone_string = '-'
+
     output_values = [
         date_string,
         time_string,
-        '{0!s}'.format(self._output_mediator.timezone),
+        timezone_string,
         '....',
         source_short,
         source,

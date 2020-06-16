@@ -74,8 +74,19 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
   def testGetOutputValues(self):
     """Tests the _GetOutputValues function."""
+    event, event_data = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
     formatters_manager.FormattersManager.RegisterFormatter(
         L2TTestEventFormatter)
+
+    try:
+      output_values = self._formatter._GetOutputValues(event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          L2TTestEventFormatter)
+
+    self.assertEqual(len(output_values), 17)
 
     expected_output_values = [
         '06/27/2012',
@@ -98,36 +109,44 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         'test_parser',
         'a_binary_field: binary; my_number: 123; some_additional_foo: True']
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    output_values = self._formatter._GetOutputValues(event, event_data, None)
-    self.assertEqual(len(output_values), 17)
     self.assertEqual(output_values, expected_output_values)
 
     event.timestamp = -9223372036854775808
-    output_values = self._formatter._GetOutputValues(event, event_data, None)
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        L2TTestEventFormatter)
+
+    try:
+      output_values = self._formatter._GetOutputValues(event, event_data, None)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          L2TTestEventFormatter)
+
     self.assertEqual(len(output_values), 17)
+
     expected_output_values[0] = '00/00/0000'
     expected_output_values[1] = '--:--:--'
+    expected_output_values[2] = '-'
     self.assertEqual(output_values, expected_output_values)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        L2TTestEventFormatter)
 
   # TODO: add coverage for _WriteOutputValues
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    formatters_manager.FormattersManager.RegisterFormatter(
-        L2TTestEventFormatter)
-
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
 
-    self._formatter.WriteEventBody(event, event_data, event_tag)
+    formatters_manager.FormattersManager.RegisterFormatter(
+        L2TTestEventFormatter)
+
+    try:
+      self._formatter.WriteEventBody(event, event_data, event_tag)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          L2TTestEventFormatter)
 
     expected_event_body = (
         '06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
@@ -142,9 +161,6 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     # Ensure that the only commas returned are the 16 delimiters.
     self.assertEqual(event_body.count(','), 16)
-
-    formatters_manager.FormattersManager.DeregisterFormatter(
-        L2TTestEventFormatter)
 
   # TODO: add coverage for WriteEventMACBGroup
 
