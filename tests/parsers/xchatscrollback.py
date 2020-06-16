@@ -24,90 +24,66 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'text': '* Speaking now on ##plaso##',
+        'timestamp': '2009-01-16 02:56:19.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2009-01-16 02:56:19.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'text': '* Joachim \xe8 uscito (Client exited)',
+        'timestamp': '2009-01-16 02:56:27.000000'}
 
-    expected_message = '[] * Speaking now on ##plaso##'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event = events[1]
+    expected_event_values = {
+        'text': 'Tcl interface unloaded',
+        'timestamp': '2009-01-18 21:58:36.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2009-01-16 02:56:27.000000')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'text': 'Python interface unloaded',
+        'timestamp': '2009-01-18 21:58:36.000000'}
 
-    expected_message = '[] * Joachim \xe8 uscito (Client exited)'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    event = events[2]
+    expected_event_values = {
+        'nickname': 'fpi',
+        'text': '0 is a good timestamp',
+        'timestamp': 0}
 
-    self.CheckTimestamp(event.timestamp, '2009-01-18 21:58:36.000000')
+    self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'text': '* Topic of #plasify \xe8: .',
+        'timestamp': '2009-01-26 08:50:56.000000'}
 
-    expected_message = '[] Tcl interface unloaded'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
-    event = events[3]
+    expected_event_values = {
+        'timestamp': '2009-01-26 08:51:02.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2009-01-18 21:58:36.000000')
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'nickname': 'fpi',
+        'text': 'Hi Kristinn!',
+        'timestamp': '2009-01-26 08:52:12.000000'}
 
-    expected_message = '[] Python interface unloaded'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
-    event = events[5]
-    self.assertEqual(event.timestamp, 0)
+    expected_event_values = {
+        'nickname': 'Kristinn',
+        'text': 'GO AND WRITE PARSERS!!! O_o',
+        'timestamp': '2009-01-26 08:53:13.000000'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = '[nickname: fpi] 0 is a good timestamp'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
-
-    event = events[6]
-
-    self.CheckTimestamp(event.timestamp, '2009-01-26 08:50:56.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = '[] * Topic of #plasify \xe8: .'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
-
-    event = events[7]
-
-    self.CheckTimestamp(event.timestamp, '2009-01-26 08:51:02.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    event = events[8]
-
-    self.CheckTimestamp(event.timestamp, '2009-01-26 08:52:12.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = '[nickname: fpi] Hi Kristinn!'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
-
-    event = events[9]
-
-    self.CheckTimestamp(event.timestamp, '2009-01-26 08:53:13.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_message = '[nickname: Kristinn] GO AND WRITE PARSERS!!! O_o'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[9])
+    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

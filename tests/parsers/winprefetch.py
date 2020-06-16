@@ -26,21 +26,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # The prefetch last run event.
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2013-03-10 10:11:49.281250')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:prefetch:execution')
-    self.assertEqual(event_data.version, 17)
-
-    self.assertEqual(event_data.executable, 'CMD.EXE')
-    self.assertEqual(event_data.prefetch_hash, 0x087b4001)
-    self.assertEqual(event_data.volume_serial_numbers[0], 0x24cb074b)
-
+    # Check the prefetch last run event.
     expected_mapped_files = [
         '\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL',
         '\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\KERNEL32.DLL',
@@ -81,17 +67,25 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
          'IERESETICONS.EXE'),
         '\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\IE7\\SPUNINST\\IERESETICONS.EXE']
 
-    self.assertEqual(event_data.mapped_files, expected_mapped_files)
+    expected_event_values = {
+        'data_type': 'windows:prefetch:execution',
+        'executable': 'CMD.EXE',
+        'mapped_files': expected_mapped_files,
+        'prefetch_hash': 0x087b4001,
+        'timestamp': '2013-03-10 10:11:49.281250',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'version': 17,
+        'volume_serial_numbers': [0x24cb074b]}
 
-    # The volume creation event.
-    event = events[0]
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2013-03-10 10:19:46.234375')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    # Check the volume creation event.
+    expected_event_values = {
+        'data_type': 'windows:volume:creation',
+        'timestamp': '2013-03-10 10:19:46.234375',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:volume:creation')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '\\DEVICE\\HARDDISKVOLUME1 '
@@ -102,6 +96,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         '\\DEVICE\\HARDDISKVOLUME1 '
         'Origin: CMD.EXE-087B4001.pf')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -116,22 +111,19 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
-    event = events[1]
+    expected_event_values = {
+        'data_type': 'windows:prefetch:execution',
+        'executable': 'PING.EXE',
+        'path_hints': ['\\WINDOWS\\SYSTEM32\\PING.EXE'],
+        'prefetch_hash': 0xb29f6629,
+        'run_count': 14,
+        'timestamp': '2012-04-06 19:00:55.932956',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'version': 23,
+        'volume_device_paths': ['\\DEVICE\\HARDDISKVOLUME1'],
+        'volume_serial_numbers': [0xac036525]}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-06 19:00:55.932956')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:prefetch:execution')
-    self.assertEqual(event_data.version, 23)
-    self.assertEqual(event_data.executable, 'PING.EXE')
-    self.assertEqual(event_data.prefetch_hash, 0xb29f6629)
-    self.assertEqual(event_data.path_hints, ['\\WINDOWS\\SYSTEM32\\PING.EXE'])
-    self.assertEqual(event_data.run_count, 14)
-    self.assertEqual(
-        event_data.volume_device_paths[0], '\\DEVICE\\HARDDISKVOLUME1')
-    self.assertEqual(event_data.volume_serial_numbers[0], 0xac036525)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         'Prefetch [PING.EXE] was executed - run count 14 '
@@ -142,18 +134,17 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     expected_short_message = 'PING.EXE was run 14 time(s)'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # The volume creation event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:volume:creation',
+        'timestamp': '2010-11-10 17:37:26.484375',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 17:37:26.484375')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:volume:creation')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testParse23MultiVolume(self):
     """Tests the Parse function on a multi volume version 23 Prefetch file."""
@@ -167,24 +158,25 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
-    event = events[5]
+    expected_event_values = {
+        'data_type': 'windows:prefetch:execution',
+        'executable': 'WUAUCLT.EXE',
+        'path_hints': ['\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE'],
+        'prefetch_hash': 0x830bcc14,
+        'run_count': 25,
+        'timestamp': '2012-03-15 21:17:39.807996',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'version': 23,
+        'volume_device_paths': [
+            '\\DEVICE\\HARDDISKVOLUME1',
+            '\\DEVICE\\HARDDISKVOLUMESHADOWCOPY2',
+            '\\DEVICE\\HARDDISKVOLUMESHADOWCOPY4',
+            '\\DEVICE\\HARDDISKVOLUMESHADOWCOPY7',
+            '\\DEVICE\\HARDDISKVOLUMESHADOWCOPY8'],
+        'volume_serial_numbers': [
+            0xac036525, 0xac036525, 0xac036525, 0xac036525, 0xac036525]}
 
-    self.CheckTimestamp(event.timestamp, '2012-03-15 21:17:39.807996')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:prefetch:execution')
-    self.assertEqual(event_data.version, 23)
-
-    self.assertEqual(event_data.executable, 'WUAUCLT.EXE')
-    self.assertEqual(event_data.prefetch_hash, 0x830bcc14)
-    self.assertEqual(
-        event_data.path_hints, ['\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE'])
-    self.assertEqual(event_data.run_count, 25)
-    self.assertEqual(
-        event_data.volume_device_paths[0], '\\DEVICE\\HARDDISKVOLUME1')
-    self.assertEqual(event_data.volume_serial_numbers[0], 0xac036525)
+    self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_message = (
         'Prefetch [WUAUCLT.EXE] was executed - run count 25 '
@@ -203,18 +195,17 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     expected_short_message = 'WUAUCLT.EXE was run 25 time(s)'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[5])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # The volume creation event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:volume:creation',
+        'timestamp': '2010-11-10 17:37:26.484375',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 17:37:26.484375')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:volume:creation')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '\\DEVICE\\HARDDISKVOLUME1 '
@@ -225,6 +216,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         '\\DEVICE\\HARDDISKVOLUME1 '
         'Origin: WUAUCLT.EXE-830BCC14.pf')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -240,29 +232,18 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
-    event = events[1]
+    expected_event_values = {
+        'data_type': 'windows:prefetch:execution',
+        'executable': 'TASKHOST.EXE',
+        'prefetch_hash': 0x3ae259fc,
+        'run_count': 4,
+        'timestamp': '2013-10-04 15:40:09.037833',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'version': 26}
 
-    self.CheckTimestamp(event.timestamp, '2013-10-04 15:40:09.037833')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:prefetch:execution')
-    self.assertEqual(event_data.version, 26)
-
-    self.assertEqual(event_data.executable, 'TASKHOST.EXE')
-    self.assertEqual(event_data.prefetch_hash, 0x3ae259fc)
-    self.assertEqual(event_data.run_count, 4)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # The prefetch previous last run event.
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2013-10-04 15:28:09.010357')
-
-    expected_timestamp_desc = 'Previous {0:s}'.format(
-        definitions.TIME_DESCRIPTION_LAST_RUN)
-    self.assertEqual(event.timestamp_desc, expected_timestamp_desc)
-
     expected_mapped_files = [
         '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTDLL.DLL [46299-1]',
         '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TASKHOST.EXE',
@@ -325,17 +306,21 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\BCRYPT.DLL [44346-1]',
         '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTASN1.DLL [46261-1]']
 
-    self.assertEqual(event_data.mapped_files, expected_mapped_files)
+    expected_event_values = {
+        'mapped_files': expected_mapped_files,
+        'timestamp': '2013-10-04 15:28:09.010357',
+        'timestamp_desc': 'Previous {0:s}'.format(
+            definitions.TIME_DESCRIPTION_LAST_RUN)}
+
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # The volume creation event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:volume:creation',
+        'timestamp': '2013-10-04 15:57:26.146548',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-10-04 15:57:26.146548')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:volume:creation')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testParse30Compressed(self):
     """Tests the Parse function on a compressed version 30 Prefetch file."""
@@ -349,39 +334,35 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
-    event = events[1]
+    expected_event_values = {
+        'data_type': 'windows:prefetch:execution',
+        'executable': 'BYTECODEGENERATOR.EXE',
+        'prefetch_hash': 0xc1e9bce6,
+        'run_count': 7,
+        'timestamp': '2015-05-14 22:11:58.091134',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'version': 30}
 
-    self.CheckTimestamp(event.timestamp, '2015-05-14 22:11:58.091134')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:prefetch:execution')
-    self.assertEqual(event_data.version, 30)
-    self.assertEqual(event_data.executable, 'BYTECODEGENERATOR.EXE')
-    self.assertEqual(event_data.prefetch_hash, 0xc1e9bce6)
-    self.assertEqual(event_data.run_count, 7)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # The prefetch previous last run event.
-    event = events[2]
+    expected_event_values = {
+        'timestamp': '2015-05-14 22:11:55.357652',
+        'timestamp_desc': 'Previous {0:s}'.format(
+            definitions.TIME_DESCRIPTION_LAST_RUN)}
 
-    self.CheckTimestamp(event.timestamp, '2015-05-14 22:11:55.357652')
-    expected_timestamp_desc = 'Previous {0:s}'.format(
-        definitions.TIME_DESCRIPTION_LAST_RUN)
-    self.assertEqual(event.timestamp_desc, expected_timestamp_desc)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self.assertEqual(len(event_data.mapped_files), 1085)
 
     # The volume creation event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:volume:creation',
+        'timestamp': '2015-05-15 06:54:55.139294',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2015-05-15 06:54:55.139294')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:volume:creation')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testParse30Variant2Compressed(self):
     """Tests the Parse function on a compressed version 30 variant 2 file."""
@@ -394,38 +375,35 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
-    event = events[1]
+    expected_event_values = {
+        'data_type': 'windows:prefetch:execution',
+        'executable': 'NOTEPAD.EXE',
+        'prefetch_hash': 0xd8414f97,
+        'run_count': 2,
+        'timestamp': '2019-06-05 19:55:04.877779',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'version': 30}
 
-    self.CheckTimestamp(event.timestamp, '2019-06-05 19:55:04.877779')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:prefetch:execution')
-    self.assertEqual(event_data.version, 30)
-    self.assertEqual(event_data.executable, 'NOTEPAD.EXE')
-    self.assertEqual(event_data.prefetch_hash, 0xd8414f97)
-    self.assertEqual(event_data.run_count, 2)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # The prefetch previous last run event.
-    event = events[2]
+    expected_event_values = {
+        'timestamp': '2019-06-05 19:23:00.815705',
+        'timestamp_desc': 'Previous {0:s}'.format(
+            definitions.TIME_DESCRIPTION_LAST_RUN)}
 
-    self.CheckTimestamp(event.timestamp, '2019-06-05 19:23:00.815705')
-    expected_timestamp_desc = 'Previous {0:s}'.format(
-        definitions.TIME_DESCRIPTION_LAST_RUN)
-    self.assertEqual(event.timestamp_desc, expected_timestamp_desc)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self.assertEqual(len(event_data.mapped_files), 56)
 
     # The volume creation event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:volume:creation',
+        'timestamp': '2017-07-30 19:40:03.548784',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2017-07-30 19:40:03.548784')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:volume:creation')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':
