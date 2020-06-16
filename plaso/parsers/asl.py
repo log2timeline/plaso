@@ -165,15 +165,13 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     # Note that the user_sid value is expected to be a string.
     event_data.user_sid = '{0:d}'.format(record.user_identifier)
 
-    microseconds, _ = divmod(record.written_time_nanoseconds, 1000)
-    timestamp = (record.written_time * 1000000) + microseconds
+    timestamp = (
+        (record.written_time * 1000000000) + record.written_time_nanoseconds)
 
-    # TODO: replace by PosixTimeInNanoseconds.
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+    date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
         timestamp=timestamp)
-    # TODO: replace by written time.
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     return record.next_record_offset
