@@ -4,13 +4,6 @@ os: linux
 dist: bionic
 jobs:
   include:
-  - name: "Pylint on Ubuntu Bionic (20.04) (Docker) with Python 3.8"
-    env: [TARGET="pylint", UBUNTU_VERSION="20.04"]
-    group: edge
-    language: python
-    python: 3.8
-    services:
-    - docker
   - name: "Fedora 31 (Docker) with Python 3.7"
     env: FEDORA_VERSION="31"
     group: edge
@@ -69,6 +62,15 @@ jobs:
   - name: "Sphinx on Ubuntu Focal (20.04) (Docker) with Python 3.8 (tox)"
     env:
     - TOXENV="docs"
+    - UBUNTU_VERSION="20.04"
+    group: edge
+    language: python
+    python: 3.8
+    services:
+    - docker
+  - name: "Pylint on Ubuntu Focal (20.04) (Docker) with Python 3.8 (tox)"
+    env:
+    - TOXENV="pylint"
     - UBUNTU_VERSION="20.04"
     group: edge
     language: python
