@@ -158,7 +158,8 @@ class OutputModuleOptions(object):
       OutputModule: output module.
 
     Raises:
-      RuntimeError: if the output module cannot be created.
+      RuntimeError: if the output module cannot be created or parameters are
+          missing while running in unattended mode.
     """
     formatter_mediator = formatters_mediator.FormatterMediator(
         data_location=self._data_location)
@@ -194,23 +195,35 @@ class OutputModuleOptions(object):
     # in order for the output module to continue. Prompt user to supply
     # those that may be missing.
     missing_parameters = output_module.GetMissingArguments()
+    if missing_parameters and self._unattended_mode:
+      raise RuntimeError(
+          'Unable to create output module missing parameters: {0:s}'.format(
+              ', '.join(missing_parameters)))
+
     while missing_parameters:
-      for parameter in missing_parameters:
-        value = self._PromptUserForInput(
-            'Missing parameter {0:s} for output module'.format(parameter))
-        if value is None:
-          logger.warning(
-              'Unable to set the missing parameter for: {0:s}'.format(
-                  parameter))
-          continue
+      self._PromptUserForMissingOutputModuleParameters(
+          options, missing_parameters)
 
-        setattr(options, parameter, value)
-
-      helpers_manager.ArgumentHelperManager.ParseOptions(
-          options, output_module)
+      helpers_manager.ArgumentHelperManager.ParseOptions(options, output_module)
       missing_parameters = output_module.GetMissingArguments()
 
     return output_module
+
+  def _PromptUserForMissingOutputModuleParameters(
+      self, options, missing_parameters):
+    """Prompts the user for missing output module parameters.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+      missing_parameters (list[str]): names of missing output module parameters.
+    """
+    for parameter in missing_parameters:
+      value = None
+      while not value:
+        value = self._PromptUserForInput(
+            'Please specific a value for {0:s}'.format(parameter))
+
+      setattr(options, parameter, value)
 
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""
