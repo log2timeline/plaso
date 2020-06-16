@@ -65,7 +65,8 @@ then
 
 	docker build --build-arg PPA_TRACK="dev" -f Dockerfile -t ${CONTAINER_NAME} .
 
-	docker run -v ${SOURCE_PATH}:/data ${CONTAINER_NAME} log2timeline --status_view linear /data/test.plaso /data/test_data;
+	# The Docker CI test seems to be timing out when run on /data/test_data
+	docker run -v ${SOURCE_PATH}:/data ${CONTAINER_NAME} log2timeline --status_view linear /data/test.plaso /data/test_data/image.qcow2;
 
 	docker run -v ${SOURCE_PATH}:/data ${CONTAINER_NAME} psort --status_view linear -w /data/timeline.log /data/test.plaso;
 
