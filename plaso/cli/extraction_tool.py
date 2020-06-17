@@ -28,13 +28,19 @@ from plaso.lib import errors
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
 
+import pytz  # pylint: disable=wrong-import-order
+
 
 class ExtractionTool(
     storage_media_tool.StorageMediaTool,
     tool_options.HashersOptions,
     tool_options.ProfilingOptions,
     tool_options.StorageFileOptions):
-  """Extraction CLI tool."""
+  """Extraction CLI tool.
+
+  Attributes:
+    list_time_zones (bool): True if the time zones should be listed.
+  """
 
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
@@ -57,6 +63,7 @@ class ExtractionTool(
     self._artifacts_registry = None
     self._buffer_size = 0
     self._parser_filter_expression = None
+    self._preferred_time_zone = None
     self._preferred_year = None
     self._presets_file = None
     self._presets_manager = parsers_presets.ParserPresetsManager()
@@ -72,6 +79,8 @@ class ExtractionTool(
     self._temporary_directory = None
     self._text_prepend = None
     self._yara_rules_string = None
+
+    self.list_time_zones = False
 
   def _CreateProcessingConfiguration(self, knowledge_base):
     """Creates a processing configuration.
@@ -204,6 +213,29 @@ class ExtractionTool(
       dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK)
 
+  def _ParseTimeZoneOption(self, options):
+    """Parses the time zone options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    time_zone_string = self.ParseStringOption(options, 'timezone')
+    if isinstance(time_zone_string, str):
+      if time_zone_string.lower() == 'list':
+        self.list_time_zones = True
+
+      elif time_zone_string:
+        try:
+          pytz.timezone(time_zone_string)
+        except pytz.UnknownTimeZoneError:
+          raise errors.BadConfigOption(
+              'Unknown time zone: {0:s}'.format(time_zone_string))
+
+        self._preferred_time_zone = time_zone_string
+
   def _PreprocessSources(self, extraction_engine):
     """Preprocesses the sources.
 
@@ -309,6 +341,22 @@ class ExtractionTool(
       argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, names=argument_helper_names)
+
+  def AddTimeZoneOption(self, argument_group):
+    """Adds the time zone option to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    # Note the default here is None so we can determine if the time zone
+    # option was set.
+    argument_group.add_argument(
+        '-z', '--zone', '--timezone', dest='timezone', action='store',
+        metavar='TIME_ZONE', type=str, default=None, help=(
+            'preferred time zone of extracted date and time values that are '
+            'stored without a time zone indicator. The time zone is determined '
+            'based on the source data where possible otherwise it will default '
+            'to UTC. Use "list" to see a list of available time zones.'))
 
   def ListParsersAndPlugins(self):
     """Lists information about the available parsers and plugins."""

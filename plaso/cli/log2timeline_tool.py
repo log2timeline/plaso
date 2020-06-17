@@ -296,7 +296,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    self._ParseTimezoneOption(options)
+    self._ParseTimeZoneOption(options)
 
     self.list_hashers = self._hasher_names_string == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
@@ -311,7 +311,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.dependencies_check = getattr(options, 'dependencies_check', True)
 
     if (self.list_hashers or self.list_parsers_and_plugins or
-        self.list_profilers or self.list_timezones or self.show_info or
+        self.list_profilers or self.list_time_zones or self.show_info or
         self.show_troubleshooting):
       return
 

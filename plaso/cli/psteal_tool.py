@@ -30,6 +30,8 @@ from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import factory as storage_factory
 
+import pytz  # pylint: disable=wrong-import-order
+
 
 class PstealTool(
     extraction_tool.ExtractionTool,
@@ -108,6 +110,7 @@ class PstealTool(
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
     self._output_format = None
+    self._output_time_zone = None
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
     self._preferred_year = None
@@ -121,7 +124,7 @@ class PstealTool(
     self.list_language_identifiers = False
     self.list_output_modules = False
     self.list_parsers_and_plugins = False
-    self.list_timezones = False
+    self.list_time_zones = False
 
   def _GenerateStorageFileName(self):
     """Generates a name for the storage file.
@@ -153,6 +156,29 @@ class PstealTool(
 
     return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
+  def _ParseOutputTimeZoneOption(self, options):
+    """Parses the output time zone options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    time_zone_string = self.ParseStringOption(options, 'output_time_zone')
+    if isinstance(time_zone_string, str):
+      if time_zone_string.lower() == 'list':
+        self.list_time_zones = True
+
+      elif time_zone_string:
+        try:
+          pytz.timezone(time_zone_string)
+        except pytz.UnknownTimeZoneError:
+          raise errors.BadConfigOption(
+              'Unknown time zone: {0:s}'.format(time_zone_string))
+
+        self._output_time_zone = time_zone_string
+
   def _PrintAnalysisReportsDetails(
       self, storage_reader, number_of_analysis_reports):
     """Prints the details of the analysis reports.
@@ -173,6 +199,22 @@ class PstealTool(
       table_view.AddRow(['String', analysis_report.GetString()])
 
       table_view.Write(self._output_writer)
+
+  def AddOutputTimeZoneOption(self, argument_group):
+    """Adds the output time zone option to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    # Note the default here is None so we can determine if the time zone
+    # option was set.
+    argument_group.add_argument(
+        '--output_time_zone', '--output-time-zone', dest='output_time_zone',
+        action='store', metavar='TIME_ZONE', type=str, default=None, help=(
+            'time zone of date and time values written to the output, if '
+            'supported by the output format. Output formats that support '
+            'this are: dynamic and l2t_csv. Use "list" to see a list of '
+            'available time zones.'))
 
   def AnalyzeEvents(self):
     """Analyzes events from a plaso storage file and generate a report.
@@ -380,6 +422,7 @@ class PstealTool(
             'in the form <timestamp>-<source>.plaso'))
 
     self.AddStorageMediaImageOptions(extraction_group)
+    self.AddTimeZoneOption(extraction_group)
     self.AddVSSProcessingOptions(extraction_group)
     self.AddCredentialOptions(extraction_group)
 
@@ -403,7 +446,7 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_group, names=['language'])
 
-    self.AddTimeZoneOption(output_group)
+    self.AddOutputTimeZoneOption(output_group)
 
     output_format_group = argument_parser.add_argument_group(
         'output format arguments')
@@ -456,14 +499,16 @@ class PstealTool(
     self._ReadParserPresetsFromFile()
     self._ReadEventFormatters()
 
-    # The output modules options are dependent on the preferred language
-    # and preferred time zone options.
-    self._ParseTimezoneOption(options)
+    # The output modules options are dependent on the preferred_language
+    # and output_time_zone options.
+    self._ParseOutputTimeZoneOption(options)
 
     argument_helper_names = [
         'artifact_definitions', 'hashers', 'language', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
+
+    self._ParseTimeZoneOption(options)
 
     self.list_hashers = self._hasher_names_string == 'list'
     self.list_language_identifiers = self._preferred_language == 'list'
@@ -475,7 +520,7 @@ class PstealTool(
 
     # Check the list options first otherwise required options will raise.
     if (self.list_hashers or self.list_language_identifiers or
-        self.list_parsers_and_plugins or self.list_timezones or
+        self.list_parsers_and_plugins or self.list_time_zones or
         self.show_troubleshooting):
       return
 

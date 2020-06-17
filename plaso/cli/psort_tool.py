@@ -55,6 +55,7 @@ class PsortTool(
     list_output_modules (bool): True if information about the output modules
         should be shown.
     list_profilers (bool): True if the profilers should be listed.
+    list_time_zones (bool): True if the time zones should be listed.
   """
 
   NAME = 'psort'
@@ -82,6 +83,7 @@ class PsortTool(
     self._event_filter = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
+    self._output_time_zone = None
     self._preferred_language = 'en-US'
     self._process_memory_limit = None
     self._status_view_mode = status_view.StatusView.MODE_WINDOW
@@ -98,6 +100,7 @@ class PsortTool(
     self.list_language_identifiers = False
     self.list_output_modules = False
     self.list_profilers = False
+    self.list_time_zones = False
 
   def _CheckStorageFile(self, storage_file_path):  # pylint: disable=arguments-differ
     """Checks if the storage file path is valid.
@@ -213,11 +216,8 @@ class PsortTool(
 
     time_slice_event_timestamp = None
     if time_slice_event_time_string:
-      # Note self._preferred_time_zone is None when not set but represents UTC.
-      preferred_time_zone = self._preferred_time_zone or 'UTC'
-      timezone = pytz.timezone(preferred_time_zone)
       time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
-          time_slice_event_time_string, timezone=timezone)
+          time_slice_event_time_string, timezone=pytz.UTC)
       if time_slice_event_timestamp is None:
         raise errors.BadConfigOption(
             'Unsupported time slice event date and time: {0:s}'.format(
@@ -243,6 +243,29 @@ class PsortTool(
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['status_view'])
+
+  def _ParseOutputTimeZoneOption(self, options):
+    """Parses the output time zone options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    time_zone_string = self.ParseStringOption(options, 'output_time_zone')
+    if isinstance(time_zone_string, str):
+      if time_zone_string.lower() == 'list':
+        self.list_time_zones = True
+
+      elif time_zone_string:
+        try:
+          pytz.timezone(time_zone_string)
+        except pytz.UnknownTimeZoneError:
+          raise errors.BadConfigOption(
+              'Unknown time zone: {0:s}'.format(time_zone_string))
+
+        self._output_time_zone = time_zone_string
 
   def _ParseProcessingOptions(self, options):
     """Parses the processing options.
@@ -284,6 +307,22 @@ class PsortTool(
       table_view.AddRow(['String', analysis_report.GetString()])
 
       table_view.Write(self._output_writer)
+
+  def AddOutputTimeZoneOption(self, argument_group):
+    """Adds the output time zone option to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    # Note the default here is None so we can determine if the time zone
+    # option was set.
+    argument_group.add_argument(
+        '--output_time_zone', '--output-time-zone', dest='output_time_zone',
+        action='store', metavar='TIME_ZONE', type=str, default=None, help=(
+            'time zone of date and time values written to the output, if '
+            'supported by the output format. Output formats that support '
+            'this are: dynamic and l2t_csv. Use "list" to see a list of '
+            'available time zones.'))
 
   def AddProcessingOptions(self, argument_group):
     """Adds processing options to the argument group
@@ -366,7 +405,7 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_group, names=['language'])
 
-    self.AddTimeZoneOption(output_group)
+    self.AddOutputTimeZoneOption(output_group)
 
     output_format_group = argument_parser.add_argument_group(
         'Output Format Arguments')
@@ -425,9 +464,9 @@ class PsortTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    # The output modules options are dependent on the preferred language
-    # and preferred time zone options.
-    self._ParseTimezoneOption(options)
+    # The output modules options are dependent on the preferred_language
+    # and output_time_zone options.
+    self._ParseOutputTimeZoneOption(options)
 
     names = ['analysis_plugins', 'language', 'profiling']
     helpers_manager.ArgumentHelperManager.ParseOptions(
@@ -440,7 +479,7 @@ class PsortTool(
     self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
 
     if (self.list_analysis_plugins or self.list_language_identifiers or
-        self.list_profilers or self.list_timezones or
+        self.list_profilers or self.list_time_zones or
         self.show_troubleshooting):
       return
 

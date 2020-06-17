@@ -119,6 +119,21 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
 class PsortToolTest(test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
+  # pylint: disable=protected-access
+
+  _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
+usage: psort_test.py [--output_time_zone TIME_ZONE]
+
+Test argument parser.
+
+optional arguments:
+  --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
+                        time zone of date and time values written to the
+                        output, if supported by the output format. Output
+                        formats that support this are: dynamic and l2t_csv.
+                        Use "list" to see a list of available time zones.
+"""
+
   if resource is None:
     _EXPECTED_PROCESSING_OPTIONS = """\
 usage: psort_test.py [--temporary_directory DIRECTORY]
@@ -169,11 +184,41 @@ optional arguments:
   # TODO: add test for _FormatStatusTableRow.
   # TODO: add test for _GetAnalysisPlugins.
   # TODO: add test for _ParseAnalysisPluginOptions.
-  # TODO: add test for _ParseProcessingOptions.
   # TODO: add test for _ParseInformationalOptions.
+
+  def testParseOutputTimeZoneOption(self):
+    """Tests the _ParseOutputTimeZoneOption function."""
+    test_tool = psort_tool.PsortTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertIsNone(test_tool._output_time_zone)
+
+    options.output_time_zone = 'list'
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertIsNone(test_tool._output_time_zone)
+
+    options.output_time_zone = 'CET'
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertEqual(test_tool._output_time_zone, 'CET')
+
+  # TODO: add test for _ParseProcessingOptions.
   # TODO: add test for _PrintStatusHeader.
   # TODO: add test for _PrintStatusUpdate.
   # TODO: add test for _PrintStatusUpdateStream.
+
+  def testAddOutputTimeZoneOption(self):
+    """Tests the AddOutputTimeZoneOption function."""
+    argument_parser = argparse.ArgumentParser(
+        prog='psort_test.py', description='Test argument parser.',
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+
+    test_tool = psort_tool.PsortTool()
+    test_tool.AddOutputTimeZoneOption(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_OUTPUT_TIME_ZONE_OPTION)
 
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""

@@ -173,7 +173,7 @@ class OutputModuleOptions(object):
     mediator = output_mediator.OutputMediator(
         self._knowledge_base, formatter_mediator,
         preferred_encoding=self.preferred_encoding)
-    mediator.SetTimezone(self._preferred_time_zone)
+    mediator.SetTimezone(self._output_time_zone)
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(

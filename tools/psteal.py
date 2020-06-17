@@ -51,7 +51,7 @@ def Main():
 
   have_list_option = False
 
-  if tool.list_timezones:
+  if tool.list_time_zones:
     tool.ListTimeZones()
     have_list_option = True
 
@@ -59,7 +59,7 @@ def Main():
     tool.ListOutputModules()
     have_list_option = True
 
-  if tool.list_timezones:
+  if tool.list_time_zones:
     tool.ListTimeZones()
     have_list_option = True
 

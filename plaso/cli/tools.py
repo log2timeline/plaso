@@ -27,7 +27,6 @@ class CLITool(object):
   """Command line interface tool.
 
   Attributes:
-    list_timezones (bool): True if the time zones should be listed.
     preferred_encoding (str): preferred encoding of single-byte or multi-byte
         character strings, sometimes referred to as extended ASCII.
     show_troubleshooting (bool): True if troubleshooting information should
@@ -69,13 +68,11 @@ class CLITool(object):
     self._input_reader = input_reader
     self._log_file = None
     self._output_writer = output_writer
-    self._preferred_time_zone = None
     self._quiet_mode = False
     self._unattended_mode = False
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
     self._vfs_back_end = 'auto'
 
-    self.list_timezones = False
     self.preferred_encoding = preferred_encoding
     self.show_troubleshooting = False
 
@@ -159,29 +156,6 @@ class CLITool(object):
               local_date_time.day, local_date_time.hour, local_date_time.minute,
               local_date_time.second)
 
-  def _ParseTimezoneOption(self, options):
-    """Parses the timezone options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    time_zone_string = self.ParseStringOption(options, 'timezone')
-    if isinstance(time_zone_string, str):
-      if time_zone_string.lower() == 'list':
-        self.list_timezones = True
-
-      elif time_zone_string:
-        try:
-          pytz.timezone(time_zone_string)
-        except pytz.UnknownTimeZoneError:
-          raise errors.BadConfigOption(
-              'Unknown time zone: {0:s}'.format(time_zone_string))
-
-        self._preferred_time_zone = time_zone_string
-
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input.
 
@@ -248,22 +222,6 @@ class CLITool(object):
             'this file will be named: "{0:s}-YYYYMMDDThhmmss.log.gz". Note '
             'that the file will be gzip compressed if the extension is '
             '".gz".').format(self.NAME))
-
-  def AddTimeZoneOption(self, argument_group):
-    """Adds the time zone option to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    # Note the default here is None so we can determine if the time zone
-    # option was set.
-    argument_group.add_argument(
-        '-z', '--zone', '--timezone', dest='timezone', action='store',
-        type=str, default=None, help=(
-            'explicitly define the timezone. Typically the timezone is '
-            'determined automatically where possible otherwise it will '
-            'default to UTC. Use "-z list" to see a list of available '
-            'timezones.'))
 
   def CheckOutDated(self):
     """Checks if the version of plaso is outdated and warns the user."""
