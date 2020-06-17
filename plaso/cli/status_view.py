@@ -17,7 +17,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 
 import plaso
 
-from plaso.lib import definitions
 from plaso.cli import tools
 from plaso.cli import views
 
@@ -189,6 +188,33 @@ class StatusView(object):
 
     return '{0:d} B'.format(size)
 
+  def _FormatProcessingTime(self, processing_status):
+    """Formats the processing time.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+
+    Returns:
+      str: processing time formatted as: "5 days, 12:34:56".
+    """
+    processing_time = 0
+    if processing_status:
+      processing_time = time.time() - processing_status.start_time
+
+    processing_time, seconds = divmod(int(processing_time), 60)
+    processing_time, minutes = divmod(processing_time, 60)
+    days, hours = divmod(processing_time, 24)
+
+    if days == 0:
+      days_string = ''
+    elif days == 1:
+      days_string = '1 day, '
+    else:
+      days_string = '{0:d} days, '.format(days)
+
+    return '{0:s}{1:02d}:{2:02d}:{3:02d}'.format(
+        days_string, hours, minutes, seconds)
+
   def _PrintAnalysisStatusHeader(self, processing_status):
     """Prints the analysis status header.
 
@@ -198,7 +224,9 @@ class StatusView(object):
     self._output_writer.Write(
         'Storage file\t\t: {0:s}\n'.format(self._storage_file_path))
 
-    self._PrintProcessingTime(processing_status)
+    processing_time = self._FormatProcessingTime(processing_status)
+    self._output_writer.Write(
+        'Processing time\t\t: {0:s}\n'.format(processing_time))
 
     if processing_status and processing_status.events_status:
       self._PrintEventsStatus(processing_status.events_status)
@@ -211,14 +239,26 @@ class StatusView(object):
     Args:
       processing_status (ProcessingStatus): processing status.
     """
+    processing_time = self._FormatProcessingTime(processing_status)
+    self._output_writer.Write(
+        'Processing time: {0:s}\n'.format(processing_time))
+
+    status_line = (
+        '{0:s} (PID: {1:d}) status: {2:s}, events consumed: {3:d}\n').format(
+            processing_status.foreman_status.identifier,
+            processing_status.foreman_status.pid,
+            processing_status.foreman_status.status,
+            processing_status.foreman_status.number_of_consumed_events)
+    self._output_writer.Write(status_line)
+
     for worker_status in processing_status.workers_status:
       status_line = (
-          '{0:s} (PID: {1:d}) - events consumed: {2:d} - running: '
-          '{3!s}\n').format(
-              worker_status.identifier, worker_status.pid,
-              worker_status.number_of_consumed_events,
-              worker_status.status not in definitions.ERROR_STATUS_INDICATORS)
+          '{0:s} (PID: {1:d}) status: {2:s}, events consumed: {3:d}\n').format(
+              worker_status.identifier, worker_status.pid, worker_status.status,
+              worker_status.number_of_consumed_events)
       self._output_writer.Write(status_line)
+
+    self._output_writer.Write('\n')
 
   def _PrintAnalysisStatusUpdateWindow(self, processing_status):
     """Prints an analysis status update in window mode.
@@ -262,15 +302,30 @@ class StatusView(object):
     Args:
       processing_status (ProcessingStatus): processing status.
     """
+    processing_time = self._FormatProcessingTime(processing_status)
+    self._output_writer.Write(
+        'Processing time: {0:s}\n'.format(processing_time))
+
+    status_line = (
+        '{0:s} (PID: {1:d}) status: {2:s}, events produced: {3:d}, file: '
+        '{4:s}\n').format(
+            processing_status.foreman_status.identifier,
+            processing_status.foreman_status.pid,
+            processing_status.foreman_status.status,
+            processing_status.foreman_status.number_of_produced_events,
+            processing_status.foreman_status.display_name)
+    self._output_writer.Write(status_line)
+
     for worker_status in processing_status.workers_status:
       status_line = (
-          '{0:s} (PID: {1:d}) - events produced: {2:d} - file: {3:s} '
-          '- running: {4!s}\n').format(
-              worker_status.identifier, worker_status.pid,
+          '{0:s} (PID: {1:d}) status: {2:s}, events produced: {3:d}, file: '
+          '{4:s}\n').format(
+              worker_status.identifier, worker_status.pid, worker_status.status,
               worker_status.number_of_produced_events,
-              worker_status.display_name,
-              worker_status.status not in definitions.ERROR_STATUS_INDICATORS)
+              worker_status.display_name)
       self._output_writer.Write(status_line)
+
+    self._output_writer.Write('\n')
 
   def _PrintExtractionStatusUpdateWindow(self, processing_status):
     """Prints an extraction status update in window mode.
@@ -332,31 +387,6 @@ class StatusView(object):
 
       self._output_writer.Write('\n')
       table_view.Write(self._output_writer)
-
-  def _PrintProcessingTime(self, processing_status):
-    """Prints the processing time.
-
-    Args:
-      processing_status (ProcessingStatus): processing status.
-    """
-    processing_time = 0
-    if processing_status:
-      processing_time = time.time() - processing_status.start_time
-
-    processing_time, seconds = divmod(int(processing_time), 60)
-    processing_time, minutes = divmod(processing_time, 60)
-    days, hours = divmod(processing_time, 24)
-
-    if days == 0:
-      days_string = ''
-    elif days == 1:
-      days_string = '1 day, '
-    else:
-      days_string = '{0:d} days, '.format(days)
-
-    self._output_writer.Write(
-        'Processing time\t\t: {0:s}{1:02d}:{2:02d}:{3:02d}\n'.format(
-            days_string, hours, minutes, seconds))
 
   def _PrintTasksStatus(self, processing_status):
     """Prints the status of the tasks.
@@ -430,7 +460,10 @@ class StatusView(object):
       self._output_writer.Write('Filter file\t\t: {0:s}\n'.format(
           self._filter_file))
 
-    self._PrintProcessingTime(processing_status)
+    processing_time = self._FormatProcessingTime(processing_status)
+    self._output_writer.Write(
+        'Processing time\t\t: {0:s}\n'.format(processing_time))
+
     self._PrintTasksStatus(processing_status)
     self._output_writer.Write('\n')
 
