@@ -6,8 +6,7 @@ This script requires the matplotlib and numpy Python modules.
 """
 
 from __future__ import print_function
-# mathplotlib does not support Unicode strings a column names.
-# from __future__ import unicode_literals
+from __future__ import unicode_literals
 
 import argparse
 import glob
@@ -57,7 +56,9 @@ def Main():
 
     label = os.path.basename(csv_file_name)
     label = label.replace('memory-', '').replace('.csv.gz', '')
-    pyplot.plot(data['time'], data['memory'], label=label)
+
+    if data.size > 0:
+      pyplot.plot(data['time'], data['memory'], label=label)
 
   pyplot.title('Memory usage over time')
 

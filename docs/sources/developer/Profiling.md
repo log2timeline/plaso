@@ -3,30 +3,44 @@ tuning.
 
 ## Profiling CPU usage
 
-### Profiling parsers
+The CPU usage of various parts of Plaso its procseeing can be profiled with the
+CPU ussage profiler.
 
-To profile the CPU usage of the parsers, run log2timeline.py with the following
- options:
+To profile the CPU usage run log2timeline.py with the following options:
+
 ```bash
-log2timeline.py --profilers=parsers --profiling-directory=profile plaso.db image.raw
+log2timeline.py --profilers=${PROFILERS} --profiling-directory=profile plaso.db image.raw
 ```
 
-### Profiling serialization
+Where ${PROFILERS} is comma separated list of one or more of the following
+CPU usage profilers:
 
-To profile the CPU usage of the serialization, run log2timeline.py with the
-following options:
+Name | Description
+--- | --- 
+analyzers | Profile CPU time of analyzers, like hashing
+parsers | Profile CPU time per parser
+processing | Profile CPU time of processing phases
+serializers | Profile CPU time of serialization
+
+## Profiling memory usage
+
+The memory usage of the main (foreman) and worker processes can be profiled with
+the memory profiler.
+
+To profile the memory usage run log2timeline.py with the following options:
+
 ```bash
-log2timeline.py --profilers=serializers --profiling-directory=profile plaso.db image.raw
+log2timeline.py --profilers=memory --profiling-directory=profile plaso.db image.raw
 ```
 
 ## Profiling storage
 
-The storage profiler tracks:
-
-* the amount of data of serialized attribute containers read and / or written
+The amount of data read and / or written by the storage con be profiled with
+the storage profiler.
 
 To profile the storage run log2timeline.py with the following options:
-```
+
+```bash
 log2timeline.py --profilers=storage --profiling-directory=profile plaso.db image.raw
 ```
 
@@ -41,26 +55,19 @@ The task queue profiler tracks:
 * total number of tasks, included completed tasks
 
 To profile the task queue statue run log2timeline.py with the following options:
+
 ```bash
 log2timeline.py --profilers=task_queue --profiling-directory=profile plaso.db image.raw
 ```
 
-## Profiling memory usage
-
-The memory usage of the worker processes used by log2timeline.py can be profiled
- with the memory profiler.
-
-### Profiling Python memory usage with the memory profiler
-
-To profile the amount of data read and/or written of the storage run
-log2timeline.py with the following options:
-```
-log2timeline.py --profilers=memory --profiling-directory=profile plaso.db image.raw
-```
-
 ## Graphing profiles
 
-Requires matplotlib and numpy
+To graph profiling data you will need to have the matplotlib and numpy Python
+modules installed.
+
+### Graphing CPU usage over time
+
+`./utils/plot-cpu-usage.py profile`
 
 ### Graphing memory usage over time
 
@@ -69,7 +76,6 @@ Requires matplotlib and numpy
 ### Graphing task queue over time
 
 `./utils/plot-task-queue.py profile`
-
 
 ### Also see
 

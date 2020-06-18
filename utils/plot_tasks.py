@@ -6,8 +6,7 @@ This script requires the matplotlib and numpy Python modules.
 """
 
 from __future__ import print_function
-# mathplotlib does not support Unicode strings a column names.
-# from __future__ import unicode_literals
+from __future__ import unicode_literals
 
 import argparse
 import glob
@@ -155,29 +154,30 @@ def Main():
     queued_duration[task_measurement.scheduled_time] = (
         task_measurement.processing_time - task_measurement.scheduled_time)
 
-  keys = sorted(before_pending_merge_duration.keys())
-  values = [before_pending_merge_duration[key] for key in keys]
-  pyplot.plot(keys, values, label='Before pending merge')
+  if data.size > 0:
+    keys = sorted(before_pending_merge_duration.keys())
+    values = [before_pending_merge_duration[key] for key in keys]
+    pyplot.plot(keys, values, label='Before pending merge')
 
-  keys = sorted(before_queued_duration.keys())
-  values = [before_queued_duration[key] for key in keys]
-  pyplot.plot(keys, values, label='Before queued')
+    keys = sorted(before_queued_duration.keys())
+    values = [before_queued_duration[key] for key in keys]
+    pyplot.plot(keys, values, label='Before queued')
 
-  keys = sorted(merging_duration.keys())
-  values = [merging_duration[key] for key in keys]
-  pyplot.plot(keys, values, label='Merging')
+    keys = sorted(merging_duration.keys())
+    values = [merging_duration[key] for key in keys]
+    pyplot.plot(keys, values, label='Merging')
 
-  keys = sorted(pending_merge_duration.keys())
-  values = [pending_merge_duration[key] for key in keys]
-  pyplot.plot(keys, values, label='Pending merge')
+    keys = sorted(pending_merge_duration.keys())
+    values = [pending_merge_duration[key] for key in keys]
+    pyplot.plot(keys, values, label='Pending merge')
 
-  keys = sorted(processing_duration.keys())
-  values = [processing_duration[key] for key in keys]
-  pyplot.plot(keys, values, label='Processing')
+    keys = sorted(processing_duration.keys())
+    values = [processing_duration[key] for key in keys]
+    pyplot.plot(keys, values, label='Processing')
 
-  keys = sorted(queued_duration.keys())
-  values = [queued_duration[key] for key in keys]
-  pyplot.plot(keys, values, label='Queued')
+    keys = sorted(queued_duration.keys())
+    values = [queued_duration[key] for key in keys]
+    pyplot.plot(keys, values, label='Queued')
 
   pyplot.title('Task status duration')
 
