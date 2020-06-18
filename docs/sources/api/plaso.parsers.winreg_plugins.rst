@@ -20,6 +20,14 @@ plaso.parsers.winreg\_plugins.bagmru module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.winreg\_plugins.bam module
+----------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.bam
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.winreg\_plugins.ccleaner module
 ---------------------------------------------
 

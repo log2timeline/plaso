@@ -1,3 +1,4 @@
+mock
 # Pyparsing doesn't mock very well, and it's easily pip installable.
 pyparsing
 sphinx==2.0.1

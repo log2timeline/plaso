@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Output module for the TLN format.
 
-For documentation on the TLN format see: http://forensicswiki.org/wiki/TLN
+For documentation on the TLN format see:
+https://forensicswiki.xyz/wiki/index.php?title=TLN
 """
 
 from __future__ import unicode_literals

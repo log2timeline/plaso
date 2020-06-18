@@ -33,7 +33,7 @@ Once you've set up your development environment we recommend start simple:
 Overview of the general architecture of Plaso:
 
 * [Architecture](Internals.md)
-* [API documentation](../api/plaso.html)
+* [API documentation](https://plaso.readthedocs.io/en/latest/sources/api/plaso.html)
 
 ## Roadmap
 
@@ -66,7 +66,7 @@ If your code requires adding a new dependency please check out these instruction
 
 ### Before you submit your first code review
 
-1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev)
+1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/#%21forum/log2timeline-dev)
 and [Slack channel](https://github.com/open-source-dfir/slack), we recommend
 using the same account as step 1
 1. Install the required development tools like pylint and python-mock

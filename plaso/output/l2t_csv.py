@@ -2,7 +2,7 @@
 """Output module for the log2timeline (L2T) CSV format.
 
 For documentation on the L2T CSV format see:
-http://forensicswiki.org/wiki/L2T_CSV
+https://forensicswiki.xyz/wiki/index.php?title=L2T_CSV
 """
 
 from __future__ import unicode_literals

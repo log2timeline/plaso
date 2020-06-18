@@ -58,7 +58,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
     """Looks up hashes in VirusTotal using the VirusTotal HTTP API.
 
     The API is documented here:
-      https://www.virustotal.com/en/documentation/public-api/
+    https://developers.virustotal.com/reference
 
     Args:
       hashes (list[str]): hashes to look up.

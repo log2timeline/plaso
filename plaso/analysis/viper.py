@@ -14,7 +14,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting Viper.
 
   REST API reference:
-    https://viper-framework.readthedocs.org/en/latest/usage/web.html#api
+  https://viper-framework.readthedocs.io/en/latest/usage/web.html#api
   """
 
   SUPPORTED_HASHES = ['md5', 'sha256']

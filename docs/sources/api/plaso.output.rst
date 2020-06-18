@@ -108,6 +108,14 @@ plaso.output.shared\_elastic module
     :undoc-members:
     :show-inheritance:
 
+plaso.output.shared\_json module
+--------------------------------
+
+.. automodule:: plaso.output.shared_json
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.output.timesketch\_out module
 -----------------------------------
 

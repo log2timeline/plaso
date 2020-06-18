@@ -38,5 +38,5 @@ psort.py --analysis tagging --tagging-file tagging-file.txt timeline.plaso
 
 ## Also see
 
-* [Event filters](Event-Filters.md)
-* [Tagging rules](Taggging-Rules.md)
+* [Event filters](Event-filters.md)
+* [Tagging rules](Tagging-Rules.md)

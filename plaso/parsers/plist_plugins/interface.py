@@ -59,8 +59,8 @@ class PlistPlugin(plugins.BasePlugin):
 
   # This is expected to be overridden by the processing plugin.
   # URLS should contain a list of URLs with additional information about
-  # this key or value.
-  # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
+  # this key or value, for example:
+  # ['https://forensicswiki.xyz/wiki/index.php?title=Property_list_(plist)']
   URLS = []
 
   def _GetKeys(self, top_level, keys, depth=1):

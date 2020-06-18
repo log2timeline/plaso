@@ -236,6 +236,14 @@ plaso.cli.helpers.timesketch\_output module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.helpers.vfs\_backend module
+-------------------------------------
+
+.. automodule:: plaso.cli.helpers.vfs_backend
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.helpers.viper\_analysis module
 ----------------------------------------
 
@@ -280,14 +288,6 @@ plaso.cli.helpers.yara\_rules module
 ------------------------------------
 
 .. automodule:: plaso.cli.helpers.yara_rules
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.cli.helpers.zeromq module
--------------------------------
-
-.. automodule:: plaso.cli.helpers.zeromq
     :members:
     :undoc-members:
     :show-inheritance:

@@ -51,10 +51,7 @@ class GoogleLogEventData(events.EventData):
 
 
 class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
-  """A parser for Google log formatted files.
-
-  See https://google.io/docs/python/guides/logging
-  """
+  """A parser for Google log formatted files."""
   NAME = 'googlelog'
 
   DESCRIPTION = 'Parser for handling Google log formatted files.'

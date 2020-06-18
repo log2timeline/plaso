@@ -36,14 +36,6 @@ plaso.multi\_processing.logger module
     :undoc-members:
     :show-inheritance:
 
-plaso.multi\_processing.multi\_process\_queue module
-----------------------------------------------------
-
-.. automodule:: plaso.multi_processing.multi_process_queue
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.multi\_processing.plaso\_xmlrpc module
 --------------------------------------------
 
