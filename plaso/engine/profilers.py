@@ -177,20 +177,53 @@ class StorageProfiler(SampleFileProfiler):
   _FILENAME_PREFIX = 'storage'
 
   _FILE_HEADER = (
-      'Time\tOperation\tDescription\tData size\tCompressed data size\n')
+      'Time\tName\tOperation\tDescription\tProcessing time\tData size\t'
+      'Compressed data size\n')
 
-  def Sample(self, operation, description, data_size, compressed_data_size):
+  def StartTiming(self, profile_name):
+    """Starts timing CPU time.
+
+    Args:
+      profile_name (str): name of the profile to sample.
+    """
+    if profile_name not in self._profile_measurements:
+      self._profile_measurements[profile_name] = CPUTimeMeasurement()
+
+    self._profile_measurements[profile_name].SampleStart()
+
+  def StopTiming(self, profile_name):
+    """Stops timing CPU time.
+
+    Args:
+      profile_name (str): name of the profile to sample.
+    """
+    measurements = self._profile_measurements.get(profile_name)
+    if measurements:
+      measurements.SampleStop()
+
+  def Sample(
+      self, profile_name, operation, description, data_size,
+      compressed_data_size):
     """Takes a sample of data read or written for profiling.
 
     Args:
+      profile_name (str): name of the profile to sample.
       operation (str): operation, either 'read' or 'write'.
       description (str): description of the data read.
       data_size (int): size of the data read in bytes.
       compressed_data_size (int): size of the compressed data read in bytes.
     """
-    sample_time = time.time()
-    sample = '{0:f}\t{1:s}\t{2:s}\t{3:d}\t{4:d}\n'.format(
-        sample_time, operation, description, data_size, compressed_data_size)
+    measurements = self._profile_measurements.get(profile_name)
+    if measurements:
+      sample_time = measurements.start_sample_time
+      processing_time = measurements.total_cpu_time
+    else:
+      sample_time = time.time()
+      processing_time = 0.0
+
+    sample = '{0:f}\t{1:s}\t{2:s}\t{3:s}\t{4:f}\t{5:d}\t{6:d}\n'.format(
+        sample_time, profile_name, operation, description,
+        processing_time, data_size, compressed_data_size)
     self._WritesString(sample)
 
 

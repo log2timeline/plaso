@@ -308,7 +308,16 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
-    row = self._cursor.fetchone()
+    if self._storage_profiler:
+      self._storage_profiler.StartTiming('get_container_by_index')
+
+    try:
+      row = self._cursor.fetchone()
+
+    finally:
+      if self._storage_profiler:
+        self._storage_profiler.StopTiming('get_container_by_index')
+
     if row:
       identifier = identifiers.SQLTableIdentifier(
           container_type, sequence_number)
@@ -320,7 +329,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
       if self._storage_profiler:
         self._storage_profiler.Sample(
-            'read', container_type, len(serialized_data), len(row[0]))
+            'get_container_by_index', 'read', container_type,
+            len(serialized_data), len(row[0]))
 
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
@@ -377,7 +387,16 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
-    row = cursor.fetchone()
+    if self._storage_profiler:
+      self._storage_profiler.StartTiming('get_containers')
+
+    try:
+      row = cursor.fetchone()
+
+    finally:
+      if self._storage_profiler:
+        self._storage_profiler.StopTiming('get_containers')
+
     while row:
       identifier = identifiers.SQLTableIdentifier(container_type, row[0])
 
@@ -388,7 +407,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
       if self._storage_profiler:
         self._storage_profiler.Sample(
-            'read', container_type, len(serialized_data), len(row[1]))
+            'get_containers', 'read', container_type, len(serialized_data),
+            len(row[1]))
 
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
@@ -546,18 +566,26 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     else:
       compressed_data = ''
 
-    if self._storage_profiler:
-      self._storage_profiler.Sample(
-          'write', attribute_container.CONTAINER_TYPE, len(serialized_data),
-          len(compressed_data))
-
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
-      self._cursor.execute(query, (timestamp, serialized_data))
+      values = (timestamp, serialized_data)
     else:
       query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(
           attribute_container.CONTAINER_TYPE)
-      self._cursor.execute(query, (serialized_data, ))
+      values = (serialized_data, )
+
+    if self._storage_profiler:
+      self._storage_profiler.StartTiming('write_container')
+
+    try:
+      self._cursor.execute(query, values)
+
+    finally:
+      if self._storage_profiler:
+        self._storage_profiler.StopTiming('write_container')
+        self._storage_profiler.Sample(
+            'write_container', 'write', attribute_container.CONTAINER_TYPE,
+            len(serialized_data), len(compressed_data))
 
     identifier = identifiers.SQLTableIdentifier(
         attribute_container.CONTAINER_TYPE, self._cursor.lastrowid)
@@ -592,6 +620,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     else:
       query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(container_type)
 
+    total_compressed_data_size = 0
+    total_serialized_data_size = 0
+
     # TODO: directly use container_list instead of values_tuple_list.
     values_tuple_list = []
     for _ in range(number_of_attribute_containers):
@@ -607,15 +638,26 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         compressed_data = ''
 
       if self._storage_profiler:
-        self._storage_profiler.Sample(
-            'write', container_type, len(serialized_data), len(compressed_data))
+        total_compressed_data_size += len(compressed_data)
+        total_serialized_data_size += len(serialized_data)
 
       if container_type == self._CONTAINER_TYPE_EVENT:
         values_tuple_list.append((timestamp, serialized_data))
       else:
         values_tuple_list.append((serialized_data, ))
 
-    self._cursor.executemany(query, values_tuple_list)
+    if self._storage_profiler:
+      self._storage_profiler.StartTiming('write_containers_list')
+
+    try:
+      self._cursor.executemany(query, values_tuple_list)
+
+    finally:
+      if self._storage_profiler:
+        self._storage_profiler.StopTiming('write_containers_list')
+        self._storage_profiler.Sample(
+            'write_containers_list', 'write', container_type,
+            total_serialized_data_size, total_compressed_data_size)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming('write')

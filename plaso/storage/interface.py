@@ -629,6 +629,7 @@ class StorageMergeReader(object):
       storage_writer (StorageWriter): storage writer.
     """
     super(StorageMergeReader, self).__init__()
+    self._storage_profiler = None
     self._storage_writer = storage_writer
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
@@ -684,6 +685,14 @@ class StorageMergeReader(object):
     Returns:
       bool: True if the entire task storage file has been merged.
     """
+
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profile.
+    """
+    self._storage_profiler = storage_profiler
 
 
 # pylint: disable=redundant-returns-doc,redundant-yields-doc

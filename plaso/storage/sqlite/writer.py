@@ -139,10 +139,13 @@ class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
       StorageMergeReader: storage merge reader.
     """
     if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
-      return redis_merge_reader.RedisMergeReader(self, task)
+      task_merge_reader = redis_merge_reader.RedisMergeReader(self, task)
+    else:
+      path = self._GetMergeTaskStorageFilePath(task)
+      task_merge_reader = merge_reader.SQLiteStorageMergeReader(self, path)
 
-    path = self._GetMergeTaskStorageFilePath(task)
-    return merge_reader.SQLiteStorageMergeReader(self, path)
+    task_merge_reader.SetStorageProfiler(self._storage_profiler)
+    return task_merge_reader
 
   def _CreateTaskStorageWriter(self, task):
     """Creates a task storage writer.
@@ -154,6 +157,9 @@ class SQLiteStorageFileWriter(file_interface.StorageFileWriter):
       SQLiteStorageFileWriter: storage writer.
     """
     storage_file_path = self._GetTaskStorageFilePath(task)
-    return SQLiteStorageFileWriter(
+    task_storage_writer = SQLiteStorageFileWriter(
         self._session, storage_file_path,
         storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+
+    task_storage_writer.SetStorageProfiler(self._storage_profiler)
+    return task_storage_writer

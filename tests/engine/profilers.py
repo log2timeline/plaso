@@ -183,8 +183,10 @@ class StorageProfilerTest(shared_test_lib.BaseTestCase):
       test_profiler.Start()
 
       for _ in range(5):
-        test_profiler.Sample('read', 'test', 1024, 128)
+        test_profiler.StartTiming('test_profile')
         time.sleep(0.01)
+        test_profiler.StopTiming('test_profile')
+        test_profiler.Sample('test_profile', 'read', 'test', 1024, 128)
 
       test_profiler.Stop()
 
