@@ -219,6 +219,34 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
     return False
 
 
+class SourceConfigurationArtifact(ArtifactAttributeContainer):
+  """Source configuration artifact attribute container.
+
+  The source configuration contains the configuration data of a source
+  that is (or going to be) processed such as volume in a storage media
+  image or a mounted directory.
+
+  Attributes:
+    path_spec (dfvfs.PathSpec): path specification of the source that is
+        processed.
+    system_configuration (SystemConfigurationArtifact): system configuration of
+        a specific system installation, such as Windows or Linux, detected by
+        the pre-processing on the source.
+  """
+  CONTAINER_TYPE = 'source_configuration'
+
+  def __init__(self, path_spec=None):
+    """Initializes a source configuration artifact.
+
+    Args:
+      path_spec (Optional[dfvfs.PathSpec]): path specification of the source
+          that is processed.
+    """
+    super(SourceConfigurationArtifact, self).__init__()
+    self.path_spec = path_spec
+    self.system_configuration = None
+
+
 class SystemConfigurationArtifact(ArtifactAttributeContainer):
   """System configuration artifact attribute container.
 
@@ -331,5 +359,5 @@ class UserAccountArtifact(ArtifactAttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EnvironmentVariableArtifact, HostnameArtifact, SystemConfigurationArtifact,
-    TimeZoneArtifact, UserAccountArtifact])
+    EnvironmentVariableArtifact, HostnameArtifact, SourceConfigurationArtifact,
+    SystemConfigurationArtifact, TimeZoneArtifact, UserAccountArtifact])
