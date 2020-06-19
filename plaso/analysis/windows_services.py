@@ -125,12 +125,10 @@ class WindowsService(yaml.YAMLObject):
     else:
       source = ('Unknown', 'Unknown')
 
-    service_dll = getattr(event_data, 'service_dll', None)
-
     return cls(
         event_data.name, event_data.service_type, event_data.image_path,
         event_data.start_type, event_data.object_name, source,
-        service_dll=service_dll)
+        service_dll=event_data.service_dll)
 
   def HumanReadableType(self):
     """Return a human readable string describing the type value.
