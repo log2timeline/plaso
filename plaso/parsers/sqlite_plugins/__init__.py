@@ -23,6 +23,7 @@ from plaso.parsers.sqlite_plugins import mac_knowledgec
 from plaso.parsers.sqlite_plugins import mac_notes
 from plaso.parsers.sqlite_plugins import mac_notificationcenter
 from plaso.parsers.sqlite_plugins import mackeeper_cache
+from plaso.parsers.sqlite_plugins import macos_tcc
 from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import tango_android
