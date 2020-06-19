@@ -296,7 +296,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        path_spec, resolver_context=self._resolver_context)
 
     if not file_entry:
       logger.warning('Unable to open file entry for path spec: {0:s}'.format(
