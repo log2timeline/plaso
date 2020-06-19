@@ -754,6 +754,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
+    if self._vfs_back_end == 'tsk':
+      dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK)
+
     self._ParseFilterOptions(options)
 
     if (getattr(options, 'no_vss', False) or
