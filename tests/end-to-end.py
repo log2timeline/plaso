@@ -494,7 +494,7 @@ class StorageFileTestCase(TestCase):
           for line in output_file:
             line = line.replace('/tmp/test/test_data/', '')
             line = line.replace('C:\\tmp\\test\\test_data\\', '')
-            line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
+            line = line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
             output_list.append(line)
           differences = list(difflib.unified_diff(
               reference_output_list, output_list,

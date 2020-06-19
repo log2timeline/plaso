@@ -17,7 +17,7 @@ install:
 - cmd: "%PYTHON%\\python.exe -m pip install pywin32 WMI"
 - cmd: "%PYTHON%\\python.exe %PYTHON%\\Scripts\\pywin32_postinstall.py -install"
 - cmd: git clone https://github.com/log2timeline/l2tdevtools.git ..\l2tdevtools
-- cmd: if [%PYTHON_VERSION%]==[3.8] (
+- cmd: IF [%PYTHON_VERSION%]==[3.8] (
     mkdir dependencies &&
     set PYTHONPATH=..\l2tdevtools &&
     "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type %MACHINE_TYPE% --msi-targetdir "%PYTHON%" --track "%L2TBINARIES_TRACK%" PyYAML XlsxWriter artifacts bencode biplist certifi cffi chardet cryptography dateutil defusedxml dfdatetime dfvfs dfwinreg dtfabric elasticsearch-py fakeredis future idna libbde libesedb libevt libevtx libewf libfsapfs libfsntfs libfvde libfwnt libfwsi liblnk libluksde libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lz4 mock pbr pefile psutil pyparsing pytsk3 pytz pyzmq redis requests six sortedcontainers urllib3 yara-python )
@@ -25,5 +25,8 @@ install:
 build: off
 
 test_script:
-- cmd: if [%TARGET%]==[unittests] (
-    "%PYTHON%\\python.exe" run_tests.py )
+- cmd: IF [%TARGET%]==[unittests] (
+    "%PYTHON%\\python.exe" run_tests.py &
+    IF EXIST "tests\\end-to-end.py" (
+        set PYTHONPATH=. &&
+        "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" ) )
