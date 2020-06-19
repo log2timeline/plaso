@@ -137,7 +137,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if not created_timestamp and not modified_timestamp:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
         event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
         parser_mediator.ProduceEventWithEventData(event, event_data)

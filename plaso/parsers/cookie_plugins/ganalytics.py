@@ -163,7 +163,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
     elif first_visit_posix_time is None and previous_visit_posix_time is None:
       # If both creation_time and written_time are None produce an event
       # object without a timestamp.
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
     if date_time is not None:
@@ -249,7 +249,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
           timestamp=last_visit_posix_time)
       timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
     event_data = GoogleAnalyticsEventData('utmb')
@@ -306,7 +306,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
           timestamp=last_visit_posix_time)
       timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
     event_data = GoogleAnalyticsEventData('utmt')
@@ -410,7 +410,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
           timestamp=last_visit_posix_time)
       timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
     event_data = GoogleAnalyticsEventData('utmz')

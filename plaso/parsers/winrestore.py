@@ -87,7 +87,7 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
     description = file_header.description.rstrip('\0')
 
     if file_footer.creation_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
       date_time = dfdatetime_filetime.Filetime(
           timestamp=file_footer.creation_time)

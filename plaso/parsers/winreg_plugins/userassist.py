@@ -231,7 +231,7 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
 
       timestamp = user_assist_entry.last_execution_time
       if not timestamp:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
       else:
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 

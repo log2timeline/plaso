@@ -673,7 +673,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
       if cached_entry_object.last_modification_time is not None:
         if not cached_entry_object.last_modification_time:
-          date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+          date_time = dfdatetime_semantic_time.NotSet()
         else:
           date_time = dfdatetime_filetime.Filetime(
               timestamp=cached_entry_object.last_modification_time)
@@ -685,7 +685,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
       if cached_entry_object.last_update_time is not None:
         if not cached_entry_object.last_update_time:
-          date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+          date_time = dfdatetime_semantic_time.NotSet()
         else:
           date_time = dfdatetime_filetime.Filetime(
               timestamp=cached_entry_object.last_update_time)

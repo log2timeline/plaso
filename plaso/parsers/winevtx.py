@@ -182,7 +182,7 @@ class WinEvtxParser(interface.FileObjectParser):
       written_time = None
 
     if written_time is None:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
       date_time = dfdatetime_filetime.Filetime(timestamp=written_time)
 

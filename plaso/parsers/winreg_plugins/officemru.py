@@ -133,7 +133,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       entries.append('{0:s}: {1:s}'.format(registry_value.name, value_string))
 
       if not timestamp:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
       else:
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 

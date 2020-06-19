@@ -50,7 +50,7 @@ class AirportPlugin(interface.PlistPlugin):
             datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
 
       else:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
         event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
 

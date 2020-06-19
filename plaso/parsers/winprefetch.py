@@ -156,7 +156,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     timestamp = scca_file.get_last_run_time_as_integer(0)
     if not timestamp:
       parser_mediator.ProduceExtractionWarning('missing last run time')
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
       date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 

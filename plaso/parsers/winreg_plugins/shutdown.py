@@ -99,7 +99,7 @@ class ShutdownWindowsRegistryPlugin(
       return
 
     if not date_time:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
 
     event_data = ShutdownWindowsRegistryEventData()
     event_data.key_path = registry_key.path
