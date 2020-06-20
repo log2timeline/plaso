@@ -38,4 +38,5 @@ class MacOSTCCFormatter(interface.ConditionalEventFormatter):
 
     self.helpers.append(helper)
 
+
 manager.FormattersManager.RegisterFormatter(MacOSTCCFormatter)
