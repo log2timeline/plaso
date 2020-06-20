@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for Apple's Transaprency, Consent, Control
-framework database.
+"""Parser for Apple's Transaprency, Consent, Control (TCC) framework database.
 
 The TCC data is stored in SQLite databases at the following locations:
-
-    - /Library/Application Support/com.apple.TCC/TCC.db
-    - %homedir%/Library/Application Support/com.apple.TCC/TCC.db
+* /Library/Application Support/com.apple.TCC/TCC.db
+* %homedir%/Library/Application Support/com.apple.TCC/TCC.db
 """
 
 from __future__ import unicode_literals
@@ -22,11 +20,11 @@ class MacOSTCCEntry(events.EventData):
   """macOS TCC event data.
 
   Attributes:
-    service (str): name of the service.
-    client (str): name of the client requesting access to the service.
     allowed (bool): whether access to the service was allowed.
+    client (str): name of the client requesting access to the service.
     prompt_count (int): number of times an appplication prompted for access
         to a service.
+    service (str): name of the service.
     timestamp (int): last time the application's privacy permissions were
         modified.
   """
@@ -37,10 +35,10 @@ class MacOSTCCEntry(events.EventData):
     """Initializes event data."""
     super(MacOSTCCEntry, self).__init__(
         data_type=self.DATA_TYPE)
-    self.service = None
-    self.client = None
     self.allowed = None
+    self.client = None
     self.prompt_count = None
+    self.service = None
     self.timestamp = None
 
 
