@@ -80,8 +80,7 @@ class MacOSTCCPlugin(interface.SQLitePlugin):
             FOREIGN KEY (policy_id)
             REFERENCES policies(id) ON DELETE CASCADE ON UPDATE CASCADE);""")}]
 
-  def ParseTCCEntry(
-      self, parser_mediator, query, row, **unused_kwargs):
+  def ParseTCCEntry(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an application usage row.
 
     Args:
