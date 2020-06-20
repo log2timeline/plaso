@@ -33,8 +33,7 @@ class MacOSTCCEntry(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSTCCEntry, self).__init__(
-        data_type=self.DATA_TYPE)
+    super(MacOSTCCEntry, self).__init__(data_type=self.DATA_TYPE)
     self.allowed = None
     self.client = None
     self.prompt_count = None
