@@ -25,15 +25,15 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # Check the first event.
-    event = events[0]
+    expected_event_values = {
+        'subject_uri': 'application://rhythmbox.desktop',
+        'timestamp': '2013-10-22 08:53:19.477000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-10-22 08:53:19.477000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.subject_uri, 'application://rhythmbox.desktop')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = 'application://rhythmbox.desktop'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
