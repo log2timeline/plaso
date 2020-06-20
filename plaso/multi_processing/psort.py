@@ -8,10 +8,10 @@ import heapq
 import os
 import time
 
+from plaso.containers import tasks
 from plaso.engine import plaso_queue
 from plaso.engine import processing_status
 from plaso.engine import zeromq_queue
-from plaso.containers import tasks
 from plaso.lib import bufferlib
 from plaso.lib import definitions
 from plaso.multi_processing import analysis_process
@@ -900,10 +900,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       # the ZIP storage file will remain locked as long as the worker processes
       # are alive.
       storage_writer.Open()
-      storage_writer.ReadSystemConfiguration(knowledge_base_object)
       storage_writer.WriteSessionStart()
 
       try:
+        storage_writer.WriteSessionConfiguration()
+
         self._AnalyzeEvents(
             storage_writer, analysis_plugins, event_filter=event_filter)
 
@@ -980,10 +981,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           an event of interest.
     """
     self._events_status = processing_status.EventsStatus()
+    self._knowledge_base = knowledge_base_object
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
-
-    storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
     total_number_of_events = 0
     for session in storage_reader.GetSessions():
@@ -1022,4 +1022,5 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # Reset values.
     self._status_update_callback = None
     self._processing_configuration = None
+    self._knowledge_base = None
     self._events_status = None

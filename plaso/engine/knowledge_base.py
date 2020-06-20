@@ -172,7 +172,26 @@ class KnowledgeBase(object):
 
     return hostname_artifact.name or ''
 
-  def GetSystemConfigurationArtifact(self, session_identifier=None):
+  def GetSourceConfigurationArtifacts(self, session_identifier=None):
+    """Retrieves the knowledge base as a source configuration artifacts.
+
+    Args:
+      session_identifier (Optional[str])): session identifier, where
+          None represents the active session.
+
+    Returns:
+      list[SourceConfigurationArtifact]: source configuration artifacts.
+    """
+    source_configuration = artifacts.SourceConfigurationArtifact()
+
+    # TODO: set path_spec
+    source_configuration.system_configuration = (
+        self._GetSystemConfigurationArtifact(
+            session_identifier=session_identifier))
+
+    return [source_configuration]
+
+  def _GetSystemConfigurationArtifact(self, session_identifier=None):
     """Retrieves the knowledge base as a system configuration artifact.
 
     Args:

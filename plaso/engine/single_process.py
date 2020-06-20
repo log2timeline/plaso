@@ -213,11 +213,12 @@ class SingleProcessEngine(engine.BaseEngine):
     self._last_status_update_timestamp = current_timestamp
 
   def ProcessSources(
-      self, source_path_specs, storage_writer, resolver_context,
+      self, session, source_path_specs, storage_writer, resolver_context,
       processing_configuration, status_update_callback=None):
     """Processes the sources.
 
     Args:
+      session (Session): session in which the sources are processed.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
@@ -275,8 +276,12 @@ class SingleProcessEngine(engine.BaseEngine):
     storage_writer.Open()
     storage_writer.WriteSessionStart()
 
+    # TODO: decouple session and storage writer?
+    session.source_configurations = (
+        self.knowledge_base.GetSourceConfigurationArtifacts())
+
     try:
-      storage_writer.WritePreprocessingInformation(self.knowledge_base)
+      storage_writer.WriteSessionConfiguration()
 
       self._ProcessSources(
           source_path_specs, extraction_worker, parser_mediator, storage_writer)

@@ -320,6 +320,17 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     raise IOError('Session completion is not supported by the redis store.')
 
+  def WriteSessionConfiguration(self):
+    """Writes session configuration information.
+
+    Raises:
+      IOError: always, as the Redis store does not support writing a session
+          configuration.
+      OSError: always, as the Redis store does not support writing a session
+          configuration.
+    """
+    raise IOError('Session configuration is not supported by the redis store.')
+
   def WriteSessionStart(self):
     """Writes session start information.
 

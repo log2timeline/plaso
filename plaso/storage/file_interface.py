@@ -406,6 +406,7 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.HasWarnings()
 
+  # TODO: remove, this method is kept for backwards compatibility reasons.
   def ReadSystemConfiguration(self, knowledge_base):
     """Reads system configuration information.
 
@@ -891,24 +892,6 @@ class StorageFileWriter(interface.StorageWriter):
             'Unable to rename task storage file: {0:s} with error: '
             '{1!s}').format(processed_storage_file_path, exception))
 
-  def ReadSystemConfiguration(self, knowledge_base):
-    """Reads system configuration information.
-
-    The system configuration contains information about various system specific
-    configuration data, for example the user accounts.
-
-    Args:
-      knowledge_base (KnowledgeBase): is used to store the system configuration.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    if not self._storage_file:
-      raise IOError('Unable to read from closed storage writer.')
-
-    self._storage_file.ReadSystemConfiguration(knowledge_base)
-
   def RemoveProcessedTaskStorage(self, task):
     """Removes a processed task storage.
 
@@ -1053,25 +1036,6 @@ class StorageFileWriter(interface.StorageWriter):
     self._processed_task_storage_path = None
     self._task_storage_path = None
 
-  def WritePreprocessingInformation(self, knowledge_base):
-    """Writes preprocessing information.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains the preprocessing information.
-
-    Raises:
-      IOError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-      OSError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Preprocessing information not supported by storage type.')
-
-    self._storage_file.WritePreprocessingInformation(knowledge_base)
-
   def WriteSessionCompletion(self, aborted=False):
     """Writes session completion information.
 
@@ -1089,9 +1053,28 @@ class StorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
+    # TODO: move self._session out of the StorageFileWriter?
     self._session.aborted = aborted
     session_completion = self._session.CreateSessionCompletion()
     self._storage_file.WriteSessionCompletion(session_completion)
+
+  def WriteSessionConfiguration(self):
+    """Writes session configuration information.
+
+    Raises:
+      IOError: if the storage type does not support writing session
+          configuration information or when the storage writer is closed.
+      OSError: if the storage type does not support writing session
+          configuration information or when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Session configuration not supported by storage type.')
+
+    # TODO: move self._session out of the StorageFileWriter?
+    session_configuration = self._session.CreateSessionConfiguration()
+    self._storage_file.WriteSessionConfiguration(session_configuration)
 
   def WriteSessionStart(self):
     """Writes session start information.
@@ -1107,6 +1090,7 @@ class StorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
+    # TODO: move self._session out of the StorageFileWriter?
     session_start = self._session.CreateSessionStart()
     self._storage_file.WriteSessionStart(session_start)
 

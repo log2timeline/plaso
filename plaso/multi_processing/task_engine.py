@@ -714,14 +714,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               process.name, task_identifier))
 
   def ProcessSources(
-      self, session_identifier, source_path_specs, storage_writer,
+      self, session, source_path_specs, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
       number_of_worker_processes=0, status_update_callback=None,
       worker_memory_limit=None):
     """Processes the sources and extract events.
 
     Args:
-      session_identifier (str): identifier of the session.
+      session (Session): session in which the sources are processed.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
@@ -777,7 +777,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._debug_output = processing_configuration.debug_output
     self._log_filename = processing_configuration.log_filename
-    self._session_identifier = session_identifier
+    self._session_identifier = session.identifier
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
 
@@ -816,6 +816,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._StartStatusUpdateThread()
 
+    # TODO: decouple session and storage writer?
+    session.source_configurations = (
+        self.knowledge_base.GetSourceConfigurationArtifacts())
+
     try:
       # Open the storage file after creating the worker processes otherwise
       # the ZIP storage file will remain locked as long as the worker processes
@@ -824,7 +828,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       storage_writer.WriteSessionStart()
 
       try:
-        storage_writer.WritePreprocessingInformation(self.knowledge_base)
+        storage_writer.WriteSessionConfiguration()
 
         self._ProcessSources(source_path_specs, storage_writer)
 
