@@ -9,6 +9,8 @@
 # Exit on error.
 set -e
 
+GIFT_PPA_TRACK=${GIFT_PPA_TRACK:-dev}
+
 export DEBIAN_FRONTEND=noninteractive
 
 # Dependencies for running plaso, alphabetized, one per line.
@@ -130,7 +132,7 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvslvm-dbg
                     libvslvm-python3-dbg";
 
-sudo add-apt-repository ppa:gift/dev -y
+sudo add-apt-repository ppa:gift/${GIFT_PPA_TRACK} -y
 sudo apt-get update -q
 sudo apt-get install -y ${PYTHON_DEPENDENCIES}
 
