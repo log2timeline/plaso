@@ -41,7 +41,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      python3-bencode
                      python3-biplist
                      python3-certifi
-                     python3-cffi
+                     python3-cffi-backend
                      python3-chardet
                      python3-cryptography
                      python3-dateutil
