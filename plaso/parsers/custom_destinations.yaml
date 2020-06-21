@@ -73,6 +73,7 @@ attributes:
 members:
 - name: signature
   data_type: uint32
+  value: 0xbabffbab
 ---
 name: custom_entry_header
 type: structure

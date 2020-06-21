@@ -34,8 +34,6 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
   _LNK_GUID = (
       b'\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46')
 
-  _FILE_FOOTER_SIGNATURE = 0xbabffbab
-
   def _ParseLNKFile(
       self, parser_mediator, file_entry, file_offset, remaining_file_size):
     """Parses a LNK file stored within the .customDestinations-ms file.
@@ -181,13 +179,8 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
 
         try:
           # Check if we found the footer instead of an entry header.
-          file_footer, _ = self._ReadStructureFromFileObject(
+          self._ReadStructureFromFileObject(
               file_object, file_offset, file_footer_map)
-
-          if file_footer.signature != self._FILE_FOOTER_SIGNATURE:
-            parser_mediator.ProduceExtractionWarning(
-                'invalid entry header signature at offset: 0x{0:08x}'.format(
-                    file_offset))
 
         except (ValueError, errors.ParseError) as exception:
           parser_mediator.ProduceExtractionWarning((
@@ -209,12 +202,8 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
       remaining_file_size -= lnk_file_size
 
     try:
-      file_footer, _ = self._ReadStructureFromFileObject(
+      self._ReadStructureFromFileObject(
           file_object, file_offset, file_footer_map)
-
-      if file_footer.signature != self._FILE_FOOTER_SIGNATURE:
-        parser_mediator.ProduceExtractionWarning(
-            'invalid footer signature at offset: 0x{0:08x}'.format(file_offset))
 
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionWarning((

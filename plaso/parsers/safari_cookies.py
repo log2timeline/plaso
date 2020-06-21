@@ -51,8 +51,6 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'safari_cookies.yaml'
 
-  _SIGNATURE = b'cook'
-
   def __init__(self):
     """Initializes a parser object."""
     super(BinaryCookieParser, self).__init__()
@@ -219,9 +217,6 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to read file header with error: {0!s}.'.format(exception))
-
-    if file_header.signature != self._SIGNATURE:
-      raise errors.UnableToParseFile('Unsupported file signature.')
 
     file_offset = file_header_data_size
 
