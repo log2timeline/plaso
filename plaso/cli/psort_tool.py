@@ -20,7 +20,6 @@ from plaso import output   # pylint: disable=unused-import
 from plaso.analysis import manager as analysis_manager
 from plaso.cli import logger
 from plaso.cli import status_view
-from plaso.cli import time_slices
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
@@ -28,10 +27,8 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import knowledge_base
-from plaso.filters import event_filter
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.lib import timelib
 from plaso.multi_processing import psort
 from plaso.storage import factory as storage_factory
 
@@ -184,49 +181,6 @@ class PsortTool(
     for analysis_plugin in self._analysis_plugins:
       helpers_manager.ArgumentHelperManager.ParseOptions(
           options, analysis_plugin)
-
-  def _ParseFilterOptions(self, options):
-    """Parses the filter options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._event_filter_expression = self.ParseStringOption(options, 'filter')
-    if self._event_filter_expression:
-      self._event_filter = event_filter.EventObjectFilter()
-
-      try:
-        self._event_filter.CompileFilter(self._event_filter_expression)
-      except errors.ParseError as exception:
-        raise errors.BadConfigOption((
-            'Unable to compile filter expression with error: '
-            '{0!s}').format(exception))
-
-    time_slice_event_time_string = getattr(options, 'slice', None)
-    time_slice_duration = getattr(options, 'slice_size', 5)
-    self._use_time_slicer = getattr(options, 'slicer', False)
-
-    # The slice and slicer cannot be set at the same time.
-    if time_slice_event_time_string and self._use_time_slicer:
-      raise errors.BadConfigOption(
-          'Time slice and slicer cannot be used at the same time.')
-
-    time_slice_event_timestamp = None
-    if time_slice_event_time_string:
-      time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
-          time_slice_event_time_string, timezone=pytz.UTC)
-      if time_slice_event_timestamp is None:
-        raise errors.BadConfigOption(
-            'Unsupported time slice event date and time: {0:s}'.format(
-                time_slice_event_time_string))
-
-    if time_slice_event_timestamp is not None or self._use_time_slicer:
-      # Note that time slicer uses the time slice to determine the duration.
-      self._time_slice = time_slices.TimeSlice(
-          time_slice_event_timestamp, duration=time_slice_duration)
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.

@@ -112,7 +112,7 @@ Or to a specific dataset:
 
 Or to just present a small time slice based on a particular event of interest:
 
-    psort.py --slice "2012-10-10 12:00:00" /cases/timeline/myhost.dump
+    psort.py --slice "2012-10-10T12:00:00" /cases/timeline/myhost.dump
 
 More on the usage of filters [here](http://plaso.kiddaland.net/usage/filters).
 

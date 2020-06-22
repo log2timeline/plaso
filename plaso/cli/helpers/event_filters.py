@@ -3,15 +3,14 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.cli import time_slices
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
 from plaso.filters import event_filter
 from plaso.lib import errors
-from plaso.lib import timelib
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
@@ -35,12 +34,14 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        '--slice', metavar='DATE', dest='slice', type=str, default='',
+        '--slice', metavar='DATE_TIME', dest='slice', type=str, default='',
         action='store', help=(
-            'Create a time slice around a certain date. This parameter, if '
-            'defined will display all events that happened X minutes before '
-            'and after the defined date. X is controlled by the parameter '
-            '--slice_size but defaults to 5 minutes.'))
+            'Date and time to create a time slice around. This parameter, if '
+            'defined, will display all events that happened X minutes before '
+            'and after the defined date, where X is controlled by the '
+            '--slice_size option, which is 5 minutes by default. The date and '
+            'time must be specified in ISO 8601 format including time zone '
+            'offset, for example: 20200619T20:09:23+02:00.'))
 
     argument_group.add_argument(
         '--slice_size', '--slice-size', dest='slice_size', type=int, default=5,
@@ -108,16 +109,23 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
 
     time_slice_event_timestamp = None
     if time_slice_event_time_string:
-      # Note self._preferred_time_zone is None when not set but represents UTC.
-      preferred_time_zone = getattr(
-          configuration_object, '_preferred_time_zone', None) or 'UTC'
-      timezone = pytz.timezone(preferred_time_zone)
-      time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
-          time_slice_event_time_string, timezone=timezone)
-      if time_slice_event_timestamp is None:
+      if ' ' in time_slice_event_time_string:
         raise errors.BadConfigOption(
-            'Unsupported time slice event date and time: {0:s}'.format(
-                time_slice_event_time_string))
+            'Time slice date and time must be defined in ISO 8601 format, '
+            'for example: 20200619T20:09:23+02:00.')
+
+      date_time = dfdatetime_time_elements.TimeElements()
+
+      try:
+        date_time.CopyFromStringISO8601(time_slice_event_time_string)
+      except ValueError:
+        raise errors.BadConfigOption((
+            'Unsupported time slice date and time: {0:s}. The date and time '
+            'must be defined in ISO 8601 format, for example: '
+            '20200619T20:09:23+02:00').format(time_slice_event_time_string))
+
+      # TODO: directly use dfDateTime objects in time slice.
+      time_slice_event_timestamp = date_time.GetPlasoTimestamp()
 
     setattr(configuration_object, '_event_filter_expression', filter_expression)
 

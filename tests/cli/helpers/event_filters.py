@@ -20,7 +20,7 @@ class EventFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--slice DATE] [--slice_size SLICE_SIZE] [--slicer]
+usage: cli_helper.py [--slice DATE_TIME] [--slice_size SLICE_SIZE] [--slicer]
                      [FILTER]
 
 Test argument parser.
@@ -33,11 +33,13 @@ positional arguments:
                         filters.html
 
 optional arguments:
-  --slice DATE          Create a time slice around a certain date. This
-                        parameter, if defined will display all events that
-                        happened X minutes before and after the defined date.
-                        X is controlled by the parameter --slice_size but
-                        defaults to 5 minutes.
+  --slice DATE_TIME     Date and time to create a time slice around. This
+                        parameter, if defined, will display all events that
+                        happened X minutes before and after the defined date,
+                        where X is controlled by the --slice_size option,
+                        which is 5 minutes by default. The date and time must
+                        be specified in ISO 8601 format including time zone
+                        offset, for example: 20200619T20:09:23+02:00.
   --slice_size SLICE_SIZE, --slice-size SLICE_SIZE
                         Defines the slice size. In the case of a regular time
                         slice it defines the number of minutes the slice size
@@ -69,6 +71,8 @@ optional arguments:
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
     options.filter = 'event.timestamp == 0'
+    options.slice = '2020-06-13T06:33:10'
+    options.slicer = False
 
     test_tool = tools.CLITool()
     event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
@@ -78,6 +82,28 @@ optional arguments:
 
     with self.assertRaises(errors.BadConfigObject):
       event_filters.EventFiltersArgumentsHelper.ParseOptions(options, None)
+
+    options.filter = 'BOGUS'
+
+    with self.assertRaises(errors.BadConfigOption):
+      event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
+
+    options.filter = 'event.timestamp == 0'
+    options.slice = '2020-06-13 06:33:10'
+
+    with self.assertRaises(errors.BadConfigOption):
+      event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
+
+    options.slice = 'YEAR-06-13T06:33:10'
+
+    with self.assertRaises(errors.BadConfigOption):
+      event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
+
+    options.slice = '2020-06-13T06:33:10'
+    options.slicer = True
+
+    with self.assertRaises(errors.BadConfigOption):
+      event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
     # TODO: improve test coverage.
 
