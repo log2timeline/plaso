@@ -8,6 +8,7 @@ import yaml
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
+from plaso.parsers.winreg_plugins import services
 from plaso.winnt import human_readable_service_enums
 
 
@@ -191,8 +192,6 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  _SUPPORTED_EVENT_DATA_TYPES = frozenset([
-      'windows:registry:service'])
 
   def __init__(self):
     """Initializes the Windows Services plugin."""
@@ -263,11 +262,15 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
       event (EventObject): event to examine.
       event_data (EventData): event data.
     """
-    if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
+    # TODO: Handle event log entries here also (ie, event id 4697).
+    if event_data.data_type != 'windows:registry:service':
       return
 
-    # TODO: Handle event log entries here also (ie, event id 4697).
-    service = WindowsService.FromEventData(event_data)
+    event_data_attributes = event_data.CopyToDict()
+    service_event_data = services.WindowsRegistryServiceEventData()
+    service_event_data.CopyFromDict(event_data_attributes)
+
+    service = WindowsService.FromEventData(service_event_data)
     self._service_collection.AddService(service)
 
   def SetOutputFormat(self, output_format):
