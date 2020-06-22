@@ -7,12 +7,12 @@ import codecs
 import json
 
 from dfdatetime import java_time as dfdatetime_java_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -249,20 +249,18 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     time_value = self._GetRowValue(query_hash, row, 'time_string')
     if isinstance(time_value, int):
       date_time = dfdatetime_java_time.JavaTime(timestamp=time_value)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_ADDED)
-
     else:
       try:
-        timestamp = timelib.Timestamp.FromTimeString(time_value)
-      except errors.TimestampError:
+        date_time = dfdatetime_time_elements.TimeElements()
+        date_time.CopyFromDateTimeString(time_value)
+      except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse time string: {0:s}'.format(time_value))
-        return
+            'Unable to parse time string: {0:s} with error: {1!s}'.format(
+                time_value, exception))
+        date_time = dfdatetime_semantic_time.InvalidTime()
 
-      event = time_events.TimestampEvent(
-          timestamp, definitions.TIME_DESCRIPTION_ADDED)
-
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
