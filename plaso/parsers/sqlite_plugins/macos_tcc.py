@@ -12,7 +12,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import defintions
+from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
