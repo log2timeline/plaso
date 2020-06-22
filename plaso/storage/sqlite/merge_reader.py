@@ -28,6 +28,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
   _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
@@ -39,6 +40,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
   # all the container types they reference.
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_EVENT_SOURCE,
+      _CONTAINER_TYPE_EVENT_DATA_STREAM,
       _CONTAINER_TYPE_EVENT_DATA,
       _CONTAINER_TYPE_EVENT,
       _CONTAINER_TYPE_EVENT_TAG,
@@ -49,6 +51,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       _CONTAINER_TYPE_ANALYSIS_REPORT: '_AddAnalysisReport',
       _CONTAINER_TYPE_EVENT: '_AddEvent',
       _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
+      _CONTAINER_TYPE_EVENT_DATA_STREAM: '_AddEventDataStream',
       _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
       _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
       _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddWarning',
@@ -79,6 +82,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     self._cursor = None
     self._deserialization_errors = []
     self._event_data_identifier_mappings = {}
+    self._event_data_stream_identifier_mappings = {}
     self._path = path
 
     # Create a runtime lookup table for the add container type method. This
@@ -154,6 +158,32 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
       event_data (EventData): event data.
       serialized_data (bytes): serialized form of the event data.
     """
+    row_identifier = getattr(
+        event_data, '_event_data_stream_row_identifier', None)
+    # TODO: error if row_identifier is None
+    if row_identifier is not None:
+      event_data_stream_identifier = identifiers.SQLTableIdentifier(
+          self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+      lookup_key = event_data_stream_identifier.CopyToString()
+
+      event_data_stream_identifier = (
+          self._event_data_stream_identifier_mappings.get(lookup_key, None))
+
+      if event_data_stream_identifier:
+        event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+      elif lookup_key in self._deserialization_errors:
+        event_data_identifier = event_data.GetIdentifier()
+        event_data_identifier = event_data_identifier.CopyToString()
+
+        # TODO: store this as an extraction warning so this is preserved
+        # in the storage file.
+        logger.error((
+            'Unable to merge event data attribute container: {0:s} since '
+            'corresponding event data stream: {1:s} could not be '
+            'deserialized.').format(event_data_identifier, lookup_key))
+        return
+
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
@@ -162,6 +192,22 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     last_write_identifier = event_data.GetIdentifier()
     self._event_data_identifier_mappings[lookup_key] = last_write_identifier
+
+  def _AddEventDataStream(self, event_data_stream, serialized_data=None):
+    """Adds an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+      serialized_data (bytes): serialized form of the event data stream.
+    """
+    identifier = event_data_stream.GetIdentifier()
+    lookup_key = identifier.CopyToString()
+
+    self._storage_writer.AddEventDataStream(
+        event_data_stream, serialized_data=serialized_data)
+
+    identifier = event_data_stream.GetIdentifier()
+    self._event_data_stream_identifier_mappings[lookup_key] = identifier
 
   def _AddEventSource(self, event_source, serialized_data=None):
     """Adds an event source.

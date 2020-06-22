@@ -10,6 +10,7 @@ import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
+from plaso.containers import events
 from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
@@ -53,6 +54,7 @@ class ParserMediator(object):
     super(ParserMediator, self).__init__()
     self._abort = False
     self._cpu_time_profiler = None
+    self._event_data_stream = None
     self._extra_event_attributes = {}
     self._file_entry = None
     self._knowledge_base = knowledge_base
@@ -493,6 +495,15 @@ class ParserMediator(object):
       self.ProcessEventData(
           event_data, parser_chain=self.GetParserChain(),
           file_entry=self._file_entry)
+
+      # TODO: replace this work-around with actually setting the event data
+      # stream.
+      if not self._event_data_stream:
+        self._event_data_stream = events.EventDataStream()
+        self._storage_writer.AddEventDataStream(self._event_data_stream)
+
+      event_data_stream_identifier = self._event_data_stream.GetIdentifier()
+      event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
       self._storage_writer.AddEventData(event_data)
 

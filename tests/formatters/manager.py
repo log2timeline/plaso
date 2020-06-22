@@ -223,7 +223,8 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
 
     unformatted_attributes = manager.FormattersManager.GetUnformattedAttributes(
         event_data)
-    self.assertEqual(unformatted_attributes, ['random'])
+    self.assertEqual(
+        unformatted_attributes, ['_event_data_stream_row_identifier', 'random'])
 
     manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 
