@@ -47,6 +47,5 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
         event_data, expected_message, expected_short_message)
 
 
-
 if __name__ == '__main__':
   unittest.main()
