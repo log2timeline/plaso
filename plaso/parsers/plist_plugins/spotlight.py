@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -58,8 +60,11 @@ class SpotlightPlugin(interface.PlistPlugin):
       event_data.key = search_text
       event_data.root = '/UserShortcuts'
 
-      event = time_events.PythonDatetimeEvent(
-          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromDatetime(datetime_value)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

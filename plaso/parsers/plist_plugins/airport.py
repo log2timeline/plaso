@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
@@ -46,14 +47,13 @@ class AirportPlugin(interface.PlistPlugin):
 
       datetime_value = wifi.get('LastConnected', None)
       if datetime_value:
-        event = time_events.PythonDatetimeEvent(
-            datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
-
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromDatetime(datetime_value)
       else:
         date_time = dfdatetime_semantic_time.NotSet()
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
 
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
