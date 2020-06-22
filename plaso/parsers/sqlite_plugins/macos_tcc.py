@@ -25,8 +25,6 @@ class MacOSTCCEntry(events.EventData):
     prompt_count (int): number of times an appplication prompted for access
         to a service.
     service (str): name of the service.
-    timestamp (int): last time the application's privacy permissions were
-        modified.
   """
 
   DATA_TYPE = 'macos:tcc_entry'
@@ -38,7 +36,6 @@ class MacOSTCCEntry(events.EventData):
     self.client = None
     self.prompt_count = None
     self.service = None
-    self.timestamp = None
 
 
 class MacOSTCCPlugin(interface.SQLitePlugin):
