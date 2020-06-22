@@ -22,8 +22,8 @@ class MacOSTCCEntry(events.EventData):
   Attributes:
     allowed (bool): whether access to the service was allowed.
     client (str): name of the client requesting access to the service.
-    prompt_count (int): number of times an appplication prompted for access
-        to a service.
+    prompt_count (int): number of times an appplication prompted the user for
+        access to a service.
     service (str): name of the service.
   """
 
