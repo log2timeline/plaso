@@ -25,27 +25,27 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'allowed': 1,
+        'client': 'com.apple.weather',
+        'service': 'kTCCServiceUbiquity',
+        'prompt_count': 1,
+        'timestamp': '2020-05-29 12:09:51.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_PROMPTED_USER}
 
-    self.CheckTimestamp(event.timestamp, '2020-05-29 12:09:51.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = ('Service: kTCCServiceUbiquity Client: com.apple.weather'
-                        ' Allowed: True Prompt count: 1')
-
+    expected_message = (
+        'Service: kTCCServiceUbiquity '
+        'Client: com.apple.weather '
+        'Allowed: True '
+        'Prompt count: 1')
     expected_short_message = 'kTCCServiceUbiquity: com.apple.weather'
+    
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    expected_event_values = {
-        'timestamp': '2020-05-29 12:09:51.000000',
-        'service': 'kTCCServiceUbiquity',
-        'client': 'com.apple.weather',
-        'allowed': 1,
-        'prompt_count': 1
-    }
-    self.CheckEventValues(storage_writer, event, expected_event_values)
 
 
 if __name__ == '__main__':
