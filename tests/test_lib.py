@@ -10,6 +10,7 @@ import re
 import tempfile
 import unittest
 
+from dfdatetime import time_elements
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -43,6 +44,29 @@ def GetTestFilePath(path_segments):
   # Note that we need to pass the individual path segments to os.path.join
   # and not a list.
   return os.path.join(TEST_DATA_PATH, *path_segments)
+
+
+def CopyTimestampFromSring(time_string):
+  """Copies a date and time string to a Plaso timestamp.
+
+  Args:
+    time_string (str): a date and time string formatted as:
+        "YYYY-MM-DD hh:mm:ss.######[+-]##:##", where # are numeric digits
+        ranging from 0 to 9 and the seconds fraction can be either 3 or 6
+        digits. The time of day, seconds fraction and timezone offset are
+        optional. The default timezone is UTC.
+
+  Returns:
+    int: timestamp which contains the number of microseconds since January 1,
+        1970, 00:00:00 UTC.
+
+  Raises:
+    ValueError: if the time string is invalid or not supported.
+  """
+  date_time = time_elements.TimeElementsInMicroseconds()
+  date_time.CopyFromDateTimeString(time_string)
+
+  return date_time.GetPlasoTimestamp()
 
 
 class BaseTestCase(unittest.TestCase):

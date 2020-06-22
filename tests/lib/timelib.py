@@ -11,120 +11,18 @@ from plaso.lib import timelib
 
 import pytz  # pylint: disable=wrong-import-order
 
+from tests import test_lib as shared_test_lib
 
-class TimeLibTest(unittest.TestCase):
+
+class TimeLibTest(shared_test_lib.BaseTestCase):
   """Tests for timestamp."""
-
-  def testCopyFromString(self):
-    """Tests the CopyFromString function."""
-    timestamp = timelib.Timestamp.CopyFromString('2012-06-27')
-    expected_timestamp = 1340755200000000
-    self.assertEqual(timestamp, expected_timestamp)
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString(None)
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-6-27')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-00-27')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-13-27')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-01-00')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-01-32')
-
-    timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01')
-    expected_timestamp = 1340821021000000
-    self.assertEqual(timestamp, expected_timestamp)
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:1')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27T18:17:01')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 24:17:01')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:60:01')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:60')
-
-    timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01.123')
-    expected_timestamp = 1340821021123000
-    self.assertEqual(timestamp, expected_timestamp)
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01.')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01.12')
-
-    timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01.123456')
-    expected_timestamp = 1340821021123456
-    self.assertEqual(timestamp, expected_timestamp)
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01.1234')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01.1234567')
-
-    timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01+00:00')
-    expected_timestamp = 1340821021000000
-    self.assertEqual(timestamp, expected_timestamp)
-
-    timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01+01:00')
-    expected_timestamp = 1340817421000000
-    self.assertEqual(timestamp, expected_timestamp)
-
-    timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01-07:00')
-    expected_timestamp = 1340846221000000
-    self.assertEqual(timestamp, expected_timestamp)
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01+1')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01+01')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01+01:0')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01+00:00:0')
-
-    with self.assertRaises(ValueError):
-      _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01Z')
 
   def testCopyToIsoFormat(self):
     """Test the CopyToIsoFormat function."""
     timezone = pytz.timezone('CET')
 
-    timestamp = timelib.Timestamp.CopyFromString('2013-03-14 20:20:08.850041')
+    timestamp = shared_test_lib.CopyTimestampFromSring(
+        '2013-03-14 20:20:08.850041')
     date_time_string = timelib.Timestamp.CopyToIsoFormat(
         timestamp, timezone=timezone)
     self.assertEqual(date_time_string, '2013-03-14T21:20:08.850041+01:00')
@@ -142,50 +40,53 @@ class TimeLibTest(unittest.TestCase):
     """Test the localtime to UTC conversion."""
     timezone = pytz.timezone('CET')
 
-    local_timestamp = timelib.Timestamp.CopyFromString('2013-01-01 01:00:00')
+    local_timestamp = shared_test_lib.CopyTimestampFromSring(
+        '2013-01-01 01:00:00')
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-01-01 00:00:00')
     self.assertEqual(timestamp, expected_timestamp)
 
-    local_timestamp = timelib.Timestamp.CopyFromString('2013-07-01 02:00:00')
+    local_timestamp = shared_test_lib.CopyTimestampFromSring(
+        '2013-07-01 02:00:00')
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-07-01 00:00:00')
     self.assertEqual(timestamp, expected_timestamp)
 
     # In the local timezone this is a non-existent timestamp.
-    local_timestamp = timelib.Timestamp.CopyFromString(
+    local_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-03-31 02:00:00')
     with self.assertRaises(pytz.NonExistentTimeError):
       timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
 
     timestamp = timelib.Timestamp.LocaltimeToUTC(
         local_timestamp, timezone, is_dst=True)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-03-31 00:00:00')
     self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.LocaltimeToUTC(
         local_timestamp, timezone, is_dst=False)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-03-31 01:00:00')
     self.assertEqual(timestamp, expected_timestamp)
 
     # In the local timezone this is an ambiguous timestamp.
-    local_timestamp = timelib.Timestamp.CopyFromString('2013-10-27 02:30:00')
+    local_timestamp = shared_test_lib.CopyTimestampFromSring(
+        '2013-10-27 02:30:00')
 
     with self.assertRaises(pytz.AmbiguousTimeError):
       timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
 
     timestamp = timelib.Timestamp.LocaltimeToUTC(
         local_timestamp, timezone, is_dst=True)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-10-27 00:30:00')
     self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-10-27 01:30:00')
     self.assertEqual(timestamp, expected_timestamp)
 
@@ -197,16 +98,17 @@ class TimeLibTest(unittest.TestCase):
     # Use a timezone in the Western Hemisphere.
     timezone = pytz.timezone('EST')
 
-    local_timestamp = timelib.Timestamp.CopyFromString('2013-01-01 00:00:00')
+    local_timestamp = shared_test_lib.CopyTimestampFromSring(
+        '2013-01-01 00:00:00')
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-01-01 05:00:00')
     self.assertEqual(timestamp, expected_timestamp)
 
   def testTimestampFromTimeString(self):
     """The the FromTimeString function."""
     # Test daylight savings.
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2013-10-01 12:00:00')
 
     # Check certain variance of this timestamp.
@@ -223,7 +125,7 @@ class TimeLibTest(unittest.TestCase):
     self.assertEqual(timestamp, expected_timestamp)
 
     # Now to test outside of the daylight savings.
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2014-02-01 12:00:00')
 
     timestamp = timelib.Timestamp.FromTimeString(

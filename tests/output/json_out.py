@@ -14,9 +14,9 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import json_out
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
@@ -81,7 +81,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.DeregisterFormatter(
         test_lib.TestEventFormatter)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
+    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2012-06-27 18:17:01')
 
     if sys.platform.startswith('win'):
