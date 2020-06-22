@@ -42,7 +42,7 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
         'Allowed: True '
         'Prompt count: 1')
     expected_short_message = 'kTCCServiceUbiquity: com.apple.weather'
-    
+
     event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
