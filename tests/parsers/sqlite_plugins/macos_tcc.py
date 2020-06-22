@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import macos_tcc
 
 from tests.parsers.sqlite_plugins import test_lib
