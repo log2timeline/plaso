@@ -12,6 +12,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
+from plaso.lib import defintions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -98,8 +99,8 @@ class MacOSTCCPlugin(interface.SQLitePlugin):
     timestamp = self._GetRowValue(query_hash, row, 'last_modified')
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
-    message = '{0:s}: {1:s}'.format(event_data.service, event_data.client)
-    event = time_events.DateTimeValuesEvent(date_time, message)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_LAST_PROMPTED_USER)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
