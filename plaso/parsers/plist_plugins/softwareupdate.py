@@ -22,7 +22,7 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
       timestamp when MacOS was partially update.
   """
 
-  NAME = 'maxos_software_update'
+  NAME = 'macos_software_update'
   DESCRIPTION = 'Parser for MacOS software update plist files.'
 
   PLIST_PATH = 'com.apple.SoftwareUpdate.plist'

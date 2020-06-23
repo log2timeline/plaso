@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin for the Zeitgeist SQLite database.
+"""Parser for Zeitgeist SQLite databaseo files.
 
 Zeitgeist is a service which logs the user activities and events, anywhere
 from files opened to websites visited and conversations.
@@ -32,7 +32,7 @@ class ZeitgeistActivityEventData(events.EventData):
 
 
 class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
-  """SQLite plugin for Zeitgeist activity database."""
+  """Parser for Zeitgeist activity SQLite database files."""
 
   NAME = 'zeitgeist'
   DESCRIPTION = 'Parser for Zeitgeist activity SQLite database files.'

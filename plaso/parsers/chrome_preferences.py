@@ -97,7 +97,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
   NAME = 'chrome_preferences'
 
-  DESCRIPTION = 'Parser for Chrome Preferences files.'
+  DESCRIPTION = 'Parser for Google Chrome Preferences files.'
 
   REQUIRED_KEYS = frozenset(['browser', 'extensions'])
 

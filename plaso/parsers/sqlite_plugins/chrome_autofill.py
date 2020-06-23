@@ -40,7 +40,7 @@ class ChromeAutofillPlugin(interface.SQLitePlugin):
   """Plugin to parse Chrome Autofill entries from Web Data database files."""
 
   NAME = 'chrome_autofill'
-  DESCRIPTION = 'Parser for Chrome autofill SQLite database files.'
+  DESCRIPTION = 'Parser for Google Chrome autofill SQLite database files.'
 
   REQUIRED_STRUCTURE = {
       'autofill': frozenset([

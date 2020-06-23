@@ -102,6 +102,7 @@ parsers:
 - sqlite/firefox_cookies
 - sqlite/firefox_downloads
 - sqlite/firefox_history
+- sqlite/safari_historydb
 ---
 name: win_gen
 description: Preset for generic Windows, intended as template for other Windows presets.

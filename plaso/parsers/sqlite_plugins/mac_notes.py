@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for mac notes database.
+"""Parser for MacOS notes SQLite database file.
 
 SQLite database path: test_data/NotesV7.storedata
 SQLite database Name: NotesV7.storedata
@@ -19,7 +19,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class _ZHTMLStringTextExtractor(HTMLParser.HTMLParser):
-  """HTML parser for extracting text from a mac notes zhtmlstring."""
+  """HTML parser for extracting text from a MacOS notes zhtmlstring."""
 
   # pylint: disable=abstract-method
   # Method 'error' is abstract in class 'ParserBase' but is not overridden
@@ -74,16 +74,16 @@ class MacNotesEventData(events.EventData):
 
 
 class MacNotesPlugin(interface.SQLitePlugin):
-  """Plugin for the Mac OS Notes database."""
+  """Parser plugin for MacOS notes SQLite database files."""
 
   NAME = 'mac_notes'
-  DESCRIPTION = 'Parser for Mac Notes'
+  DESCRIPTION = 'Parser for MacOS Notes SQLite database files'
 
-  QUERIES = [('SELECT nb.ZHTMLSTRING AS zhtmlstring, '
-              'n.ZDATECREATED AS timestamp, '
-              'n.ZDATEEDITED AS last_modified_time, n.ZTITLE as title '
-              'FROM ZNOTEBODY nb, ZNOTE n '
-              'WHERE nb.Z_PK = n.Z_PK', 'ParseZHTMLSTRINGRow')]
+  QUERIES = [(
+      ('SELECT nb.ZHTMLSTRING AS zhtmlstring, n.ZDATECREATED AS timestamp, '
+       'n.ZDATEEDITED AS last_modified_time, n.ZTITLE as title '
+       'FROM ZNOTEBODY nb, ZNOTE n WHERE nb.Z_PK = n.Z_PK'),
+      'ParseZHTMLSTRINGRow')]
 
   REQUIRED_TABLES = frozenset(['ZNOTEBODY', 'ZNOTE'])
 

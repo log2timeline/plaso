@@ -52,7 +52,8 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
   """Plugin to parse Chrome extension activity database files."""
 
   NAME = 'chrome_extension_activity'
-  DESCRIPTION = 'Parser for Chrome extension activity SQLite database files.'
+  DESCRIPTION = (
+      'Parser for Google Chrome extension activity SQLite database files.')
 
   REQUIRED_STRUCTURE = {
       'activitylog_compressed': frozenset([

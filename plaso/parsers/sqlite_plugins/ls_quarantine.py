@@ -41,7 +41,7 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
   """
 
   NAME = 'ls_quarantine'
-  DESCRIPTION = 'Parser for LS quarantine events SQLite database files.'
+  DESCRIPTION = 'Parser for MacOS LS quarantine events SQLite database files.'
 
   REQUIRED_STRUCTURE = {
       'LSQuarantineEvent': frozenset([

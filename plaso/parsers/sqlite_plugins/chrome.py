@@ -388,7 +388,7 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
   NAME = 'chrome_27_history'
   DESCRIPTION = (
-      'Parser for Google Chrome 27 and up history SQLite database files.')
+      'Parser for Google Chrome 27 and later history SQLite database files.')
 
   REQUIRED_STRUCTURE = {
       'downloads': frozenset([

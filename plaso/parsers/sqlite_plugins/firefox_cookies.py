@@ -48,7 +48,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
   """Parser for the Firefox Cookie database."""
 
   NAME = 'firefox_cookies'
-  DESCRIPTION = 'Parser for Firefox cookies SQLite database files.'
+  DESCRIPTION = 'Parser for Mozilla Firefox cookies SQLite database files.'
 
   REQUIRED_STRUCTURE = {
       'moz_cookies': frozenset([

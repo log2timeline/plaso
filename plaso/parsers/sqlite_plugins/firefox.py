@@ -148,7 +148,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
   """
 
   NAME = 'firefox_history'
-  DESCRIPTION = 'Parser for Firefox history SQLite database files.'
+  DESCRIPTION = 'Parser for Mozilla Firefox history SQLite database files.'
 
   REQUIRED_STRUCTURE = {
       'moz_places': frozenset([
@@ -525,7 +525,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   """
 
   NAME = 'firefox_downloads'
-  DESCRIPTION = 'Parser for Firefox downloads SQLite database files.'
+  DESCRIPTION = 'Parser for Mozilla Firefox downloads SQLite database files.'
 
   REQUIRED_STRUCTURE = {
       'moz_downloads': frozenset([

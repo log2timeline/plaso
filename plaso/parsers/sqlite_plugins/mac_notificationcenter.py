@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Notification Center database on MacOS.
+"""Parser for the MacOS Notification Center SQLite database file.
 
 Notification Center events on MacOS are stored in a
 SQLite database file named "db", path is usually something like
@@ -27,8 +27,9 @@ from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
+
 class MacNotificationCenterEventData(events.EventData):
-  """ MacOS NotificationCenter database event data
+  """MacOS NotificationCenter event data.
 
   Attributes:
     body (str): body of the notification message
@@ -56,10 +57,11 @@ class MacNotificationCenterEventData(events.EventData):
 
 
 class MacNotificationCenterPlugin(interface.SQLitePlugin):
-  """Parse the MacOS Notification Center SQLite database"""
+  """Parser for MacOS Notification Center SQLite database files."""
 
   NAME = 'mac_notificationcenter'
-  DESCRIPTION = 'Parser for the Notification Center SQLite database'
+  DESCRIPTION = (
+      'Parser for the MacOS Notification Center SQLite database files')
 
   REQUIRED_STRUCTURE = {
       'app': frozenset([

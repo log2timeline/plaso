@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the MacOS MacKeeper cache database."""
+"""Parser for MacOS MacKeeper cache SQLite database files."""
 
 from __future__ import unicode_literals
 
@@ -46,7 +46,7 @@ class MacKeeperCacheEventData(events.EventData):
 
 
 class MacKeeperCachePlugin(interface.SQLitePlugin):
-  """Plugin for the MacKeeper Cache database file."""
+  """Parser for MacOS MacKeeper Cache SQLite database files."""
 
   NAME = 'mackeeper_cache'
   DESCRIPTION = 'Parser for MacKeeper Cache SQLite database files.'

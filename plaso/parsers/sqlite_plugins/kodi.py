@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Kodi MyVideos.db
-
-Kodi videos events are stored in a database called MyVideos.db
-"""
+"""Parser for the Kodi videos SQLite database file (MyVideos.db)."""
 
 from __future__ import unicode_literals
 
@@ -16,7 +13,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class KodiVideoEventData(events.EventData):
-  """Kodi event data.
+  """Kodi video event data.
 
   Attributes:
     filename (str): video filename.
@@ -31,11 +28,12 @@ class KodiVideoEventData(events.EventData):
     self.filename = None
     self.play_count = None
 
+
 class KodiMyVideosPlugin(interface.SQLitePlugin):
-  """Parser for Kodi Video databases."""
+  """Parser for Kodi videos SQLite database files (MyVideos.db)."""
 
   NAME = 'kodi'
-  DESCRIPTION = 'Parser for Kodi MyVideos.db files.'
+  DESCRIPTION = 'Parser for Kodi videos SQLite database files (MyVideos.db)'
 
   REQUIRED_STRUCTURE = {
       'files': frozenset([
@@ -181,5 +179,6 @@ class KodiMyVideosPlugin(interface.SQLitePlugin):
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(KodiMyVideosPlugin)
