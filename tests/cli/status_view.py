@@ -83,8 +83,14 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         'f_test_file', 1, 29, 3, 456, 5, 6, 9, 10, 7, 8)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
+    expected_output = (
+        'Processing time: 00:00:00\n'
+        'f_identifier (PID: 123) status: f_status, events produced: 456, '
+        'file: f_test_file\n'
+        '\n')
+
     output = output_writer.ReadOutput()
-    self.assertEqual(output, '')
+    self.assertEqual(output, expected_output)
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
@@ -92,8 +98,12 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
     expected_output = (
-        'w_identifier (PID: 123) - events produced: 4 - '
-        'file: w_test_file - running: True\n')
+        'Processing time: 00:00:00\n'
+        'f_identifier (PID: 123) status: f_status, events produced: 456, '
+        'file: f_test_file\n'
+        'w_identifier (PID: 123) status: w_status, events produced: 4, '
+        'file: w_test_file\n'
+        '\n')
 
     output = output_writer.ReadOutput()
     self.assertEqual(output, expected_output)
@@ -178,8 +188,8 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
     self._CheckOutput(output, expected_output)
 
-  def testPrintProcessingTime(self):
-    """Tests the _PrintProcessingTime function."""
+  def testFormatProcessingTime(self):
+    """Tests the _FormatProcessingTime function."""
     output_writer = test_lib.TestOutputWriter()
 
     process_status = processing_status.ProcessingStatus()
@@ -189,28 +199,24 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         '/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
 
     process_status.start_time = 0
-    test_view._PrintProcessingTime(process_status)
-    expected_output = 'Processing time\t\t: 00:00:00\n'
-    output = output_writer.ReadOutput()
-    self.assertEqual(output, expected_output)
+    processing_time = test_view._FormatProcessingTime(process_status)
+
+    self.assertEqual(processing_time, '00:00:00')
 
     self._mocked_time = 12 * 60 * 60 + 31 * 60 +15
-    test_view._PrintProcessingTime(process_status)
-    expected_output = 'Processing time\t\t: 12:31:15\n'
-    output = output_writer.ReadOutput()
-    self.assertEqual(output, expected_output)
+    processing_time = test_view._FormatProcessingTime(process_status)
+
+    self.assertEqual(processing_time, '12:31:15')
 
     self._mocked_time = 24 * 60 * 60
-    test_view._PrintProcessingTime(process_status)
-    expected_output = 'Processing time\t\t: 1 day, 00:00:00\n'
-    output = output_writer.ReadOutput()
-    self.assertEqual(output, expected_output)
+    processing_time = test_view._FormatProcessingTime(process_status)
+
+    self.assertEqual(processing_time, '1 day, 00:00:00')
 
     self._mocked_time = 5 * 24 * 60 * 60 + 5 * 60 * 60 + 61
-    test_view._PrintProcessingTime(process_status)
-    expected_output = 'Processing time\t\t: 5 days, 05:01:01\n'
-    output = output_writer.ReadOutput()
-    self.assertEqual(output, expected_output)
+    processing_time = test_view._FormatProcessingTime(process_status)
+
+    self.assertEqual(processing_time, '5 days, 05:01:01')
 
   # TODO: add tests for _PrintTasksStatus
   # TODO: add tests for GetAnalysisStatusUpdateCallback
