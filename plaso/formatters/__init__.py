@@ -14,6 +14,7 @@ from plaso.formatters import hangouts_messages
 from plaso.formatters import imessage
 from plaso.formatters import kik_ios
 from plaso.formatters import mac_notificationcenter
+from plaso.formatters import macos_tcc
 from plaso.formatters import msiecf
 from plaso.formatters import olecf
 from plaso.formatters import recycler
