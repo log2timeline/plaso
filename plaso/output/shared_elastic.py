@@ -3,9 +3,10 @@
 
 from __future__ import unicode_literals
 
-import os
 import logging
+import os
 
+from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
 try:
@@ -14,9 +15,9 @@ except ImportError:
   elasticsearch = None
 
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
+
 
 # Configure the Elasticsearch logger.
 if elasticsearch:
@@ -169,21 +170,13 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
                 attribute_name, event_data.data_type, attribute_value))
         event_values[attribute_name] = attribute_value
 
-    # Add a string representation of the timestamp.
-    try:
-      attribute_value = timelib.Timestamp.RoundToSeconds(event.timestamp)
-    except TypeError as exception:
-      logger.warning((
-          'Unable to round timestamp {0!s}. error: {1!s}. '
-          'Defaulting to 0').format(event.timestamp, exception))
-      attribute_value = 0
-
-    attribute_value = timelib.Timestamp.CopyToIsoFormat(
-        attribute_value, timezone=self._output_mediator.timezone)
-    event_values['datetime'] = attribute_value
-
     event_values['timestamp'] = event.timestamp
     event_values['timestamp_desc'] = event.timestamp_desc
+
+    # Add a date and time string representation of the timestamp.
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
+    event_values['datetime'] = date_time.CopyToDateTimeStringISO8601()
 
     message, _ = self._output_mediator.GetFormattedMessages(event_data)
     if message is None:

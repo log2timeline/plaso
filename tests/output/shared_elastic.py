@@ -103,7 +103,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_event_values = {
         'data_type': 'syslog:line',
-        'datetime': '2012-06-27T18:17:01+00:00',
+        'datetime': '2012-06-27T18:17:01.000000Z',
         'display_name': 'log/syslog.1',
         'filename': 'log/syslog.1',
         'hostname': 'ubuntu',
