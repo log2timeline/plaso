@@ -47,6 +47,7 @@ from plaso.parsers import selinux
 from plaso.parsers import setupapi
 from plaso.parsers import skydrivelog
 from plaso.parsers import sophos_av
+from plaso.parsers import spotlight_storedb
 from plaso.parsers import sqlite
 from plaso.parsers import symantec
 from plaso.parsers import systemd_journal

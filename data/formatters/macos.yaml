@@ -173,3 +173,13 @@ short_message:
 - ' {desc}'
 short_source: 'PLIST'
 source: 'Plist Entry'
+---
+type: 'conditional'
+data_type: 'spotlight:metadata_item'
+message:
+- '{file_name}'
+- '{content_type}'
+short_message:
+- '{file_name}'
+short_source: 'SPOTLIGHT'
+source: 'Spotlight store database'
