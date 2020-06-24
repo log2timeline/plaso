@@ -67,6 +67,9 @@ class FormattersManager(object):
     if formatter_data_type in cls._formatter_objects:
       del cls._formatter_objects[formatter_data_type]
 
+    if formatter_data_type in cls._unformatted_attributes:
+      del cls._unformatted_attributes[formatter_data_type]
+
   @classmethod
   def GetFormatterObject(cls, data_type):
     """Retrieves the formatter object for a specific data type.

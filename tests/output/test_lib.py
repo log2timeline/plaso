@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 from plaso.engine import knowledge_base
-from plaso.formatters import interface as formatters_interface
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import timelib
 from plaso.output import interface
@@ -15,14 +14,6 @@ from tests import test_lib as shared_test_lib
 
 class TestConfig(object):
   """Test configuration."""
-
-
-class TestEventFormatter(formatters_interface.EventFormatter):
-  """Test event formatter."""
-  DATA_TYPE = 'test:output'
-  FORMAT_STRING = '{text}'
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Syslog'
 
 
 class TestOutputModule(interface.LinearOutputModule):

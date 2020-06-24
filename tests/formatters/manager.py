@@ -66,15 +66,10 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
        'text': 'Mr. Evil just logged into the machine and got root.',
        'timestamp': '2012-04-30 13:06:47.939596',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
-      {'body': (
-          'This is a line by someone not reading the log line properly. And '
-          'since this log line exceeds the accepted 80 chars it will be '
-          'shortened.'),
-       'data_type': 'text:entry',
+      {'data_type': 'test:event',
        'filename': 'c:/Temp/evil.exe',
        'hostname': 'nomachine',
        'offset': 12,
-       # TODO: fix missing body attribute
        'text': (
            'This is a line by someone not reading the log line properly. And '
            'since this log line exceeds the accepted 80 chars it will be '
@@ -156,28 +151,31 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
 
   def testMessageStrings(self):
     """Tests the GetMessageStrings and GetSourceStrings functions."""
-    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
-
     formatter_mediator = mediator.FormatterMediator()
 
     message_strings = []
     text_message = None
     text_message_short = None
 
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
-      message, message_short = manager.FormattersManager.GetMessageStrings(
-          formatter_mediator, event_data)
-      source_short, source_long = manager.FormattersManager.GetSourceStrings(
-          event, event_data)
+    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
 
-      if source_short == 'LOG' and not text_message:
+    try:
+      for event, event_data in containers_test_lib.CreateEventsFromValues(
+          self._TEST_EVENTS):
+        message, message_short = manager.FormattersManager.GetMessageStrings(
+            formatter_mediator, event_data)
+        source_short, source_long = manager.FormattersManager.GetSourceStrings(
+            event, event_data)
+
         text_message = message
         text_message_short = message_short
 
-      csv_message_strings = '{0:d},{1:s},{2:s},{3:s}'.format(
-          event.timestamp, source_short, source_long, message)
-      message_strings.append(csv_message_strings)
+        csv_message_strings = '{0:d},{1:s},{2:s},{3:s}'.format(
+            event.timestamp, source_short, source_long, message)
+        message_strings.append(csv_message_strings)
+
+    finally:
+      manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 
     self.assertIn((
         '1334961526929596,REG,UNKNOWN,[MY AutoRun key] '
@@ -192,13 +190,13 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
         '[HKEY_CURRENT_USER\\Windows\\Normal] '
         'Value: run all the benign stuff'), message_strings)
     self.assertIn((
-        '1335781787929596,FILE,Weird Log File,This log line reads '
+        '1335781787929596,FILE,Test log file,This log line reads '
         'ohh so much.'), message_strings)
     self.assertIn((
-        '1335781787929596,FILE,Weird Log File,Nothing of interest '
+        '1335781787929596,FILE,Test log file,Nothing of interest '
         'here, move on.'), message_strings)
     self.assertIn((
-        '1335791207939596,FILE,Weird Log File,Mr. Evil just logged '
+        '1335791207939596,FILE,Test log file,Mr. Evil just logged '
         'into the machine and got root.'), message_strings)
 
     expected_text_message = (
@@ -212,21 +210,21 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
         'And since this l...')
     self.assertEqual(text_message_short, expected_text_message_short)
 
-    manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
-
   def testGetUnformattedAttributes(self):
     """Tests the GetUnformattedAttributes function."""
-    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
-
     _, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
-    unformatted_attributes = manager.FormattersManager.GetUnformattedAttributes(
-        event_data)
+    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
+
+    try:
+      unformatted_attributes = (
+          manager.FormattersManager.GetUnformattedAttributes(event_data))
+    finally:
+      manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
+
     self.assertEqual(
         unformatted_attributes, ['_event_data_stream_row_identifier', 'random'])
-
-    manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 
 
 if __name__ == '__main__':
