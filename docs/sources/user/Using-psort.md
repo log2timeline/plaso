@@ -11,8 +11,8 @@ Looking for [tips and tricks](Using-psort.md#how-do-i)?
 To see a list of all available parameters you can pass to psort use ``-h`` or
 ``--help``.
 
-Basic usage of **psort** is straightforward, just provide it with a storage file
-and the necessary output options, for example:
+The most basic way to use **psort** is to provide it with a storage file and
+output file, for example:
 
 ```
 $ psort.py -w test.log test.plaso
@@ -22,15 +22,18 @@ This will use the default dynamic output format and write to test.log all
 extracted events, merging detected duplicate events. All date and time values
 will be in UTC.
 
-The generic options are:
+**Note that as of 1.5.0 psort no longer supports writing output to stdout.**
+
+Some other basic options are:
 
 ```
-$ psort.py [-a] [-o FORMAT] [-w OUTPUTFILE] [-z TIMEZONE] STORAGE_FILE FILTER
+$ psort.py [-a] [-o FORMAT] [-w OUTPUTFILE] [--output-time-zone TIME_ZONE] STORAGE_FILE FILTER
 ```
 
-### Output
+### Output format
 
-To see a list of all supported output modules use the ``-o list`` switch:
+**psort** uses output modules to output in different formats. To see a list of
+the available supported output modules use the ``-o list`` parameter:
 
 ```
 $ psort.py -o list
@@ -72,32 +75,33 @@ timesketch : Create a Timesketch timeline.
 
 Also see [output and formatting](Output-and-formatting.md).
 
-#### Changing Output Format
+#### Changing output format
 
-To change the output simply use the ``-o FORMAT`` for example:
+To change the output use the ``-o FORMAT`` parameter, for example:
 
 ```
 $ psort.py -o l2tcsv -w test.l2tcsv test.plaso
 ```
 
-This would use the "l2tcsv" module, or the default CSV output of the older Perl
-version of log2timeline.
+This would use the "l2tcsv" output module, which is the CSV output of the older
+Perl version of log2timeline.
 
-**Note that psort 1.5.0 no longer supports output to stdout.**
+#### Modify the output time zone
 
-#### Modify the Timezone
-
-**psort** uses UTC as it's default timezone when outputting events. This can be
-controlled using the ``-z TIMEZONE`` parameter.
-
-```
-$ psort.py -z EST5EDT test.plaso
-```
-
-To see a list of all supported timezones use the ```-z list``` parameter:
+**psort** uses UTC as its default time zone when outputting events. Some
+output formats, like dynamic and l2tcsv can output date and time values in
+a different time zone. This can be controlled using the
+``--output-time-zone TIME_ZONE`` parameter, for example.
 
 ```
-$ psort.py -z list
+$ psort.py --output-time-zone EST5EDT test.plaso
+```
+
+To see a list of all supported time zones use the ```--output-time-zone list```
+parameter:
+
+```
+$ psort.py --output-time-zone list
 
 ************************************ Zones *************************************
                         Timezone : UTC Offset
@@ -353,8 +357,8 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 #### Filter and Include Surrounding Events
 
 If you have something interesting that you want to filter but you also want to
-include some context surrounding those hits you can run the tool with the flag
-``--slicer`` in addition to the filter.
+include some context surrounding those matches you can run the tool with the
+flag ``--slicer`` in addition to the filter.
 
 An example:
 ```
@@ -383,7 +387,7 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 ...
 ```
 
-By default the tool will include five events before and after each filter hit.
+By default the tool will include five events before and after each filter match.
 This can be controlled using the ``--slice_size``.
 
 ```
@@ -416,7 +420,9 @@ is raised it prints the traceback of the exception and drops into a
 This can be used to debug the problem and fix the issue.
 
 ## How do I?
+
 ### How do I filter on tags?
+
 ```
 psort.py -w timeline.log timeline.plaso "tag contains 'browser_search'"
 ```
