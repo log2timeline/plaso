@@ -10,6 +10,7 @@ import abc
 import argparse
 import configparser
 import difflib
+import hashlib
 import logging
 import os
 import shutil
@@ -463,7 +464,7 @@ class StorageFileTestCase(TestCase):
       temp_directory (str): name of a temporary directory.
 
     Returns:
-      bool: True if he output files are identical.
+      bool: True if the output files are identical.
     """
     output_file_path = os.path.join(temp_directory, test_definition.output_file)
 
@@ -496,6 +497,7 @@ class StorageFileTestCase(TestCase):
             line = line.replace('C:\\tmp\\test\\test_data\\', '')
             line = line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
             output_list.append(line)
+
           differences = list(difflib.unified_diff(
               reference_output_list, output_list,
               fromfile=reference_output_file_path, tofile=output_file_path))
@@ -1129,6 +1131,8 @@ class ImageExportTestCase(TestCase):
 
   NAME = 'image_export'
 
+  _READ_BUFFER_SIZE = 4 * 1024 * 1024
+
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
@@ -1147,6 +1151,90 @@ class ImageExportTestCase(TestCase):
     self._image_export_path = None
     self._InitializeImageExportPath()
 
+  def _CompareHashesFile(self, test_definition, temp_directory):
+    """Compares the hashes file with a reference hashes file.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+
+    Returns:
+      bool: True if the hashes files are identical.
+    """
+    hashes_file_path = os.path.join(temp_directory, test_definition.hashes_file)
+
+    result = False
+    if test_definition.reference_hashes_file:
+      reference_hashes_file_path = test_definition.reference_hashes_file
+      if self._test_references_path:
+        reference_hashes_file_path = os.path.join(
+            self._test_references_path, reference_hashes_file_path)
+
+      if not os.path.exists(reference_hashes_file_path):
+        logging.error('No such reference hashes file: {0:s}'.format(
+            reference_hashes_file_path))
+        return False
+
+      with open(reference_hashes_file_path, 'r') as reference_hashes_file:
+        with open(hashes_file_path, 'r') as hashes_file:
+          reference_hashes_list = reference_hashes_file.readlines()
+          hashes_list = hashes_file.readlines()
+
+          differences = list(difflib.unified_diff(
+              reference_hashes_list, hashes_list,
+              fromfile=reference_hashes_file_path, tofile=hashes_file_path))
+
+      if differences:
+        differences_output = []
+        for difference in differences:
+          differences_output.append(difference)
+        differences_output = '\n'.join(differences_output)
+        logging.error('Differences: {0:s}'.format(differences_output))
+
+      if not differences:
+        result = True
+
+    return result
+
+  def _CreateHashesFile(self, test_definition, temp_directory):
+    """Calculates the SHA-256 hashes of the exported files.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+    """
+    hashes_file_path = os.path.join(temp_directory, test_definition.hashes_file)
+    exported_files_path = os.path.join(temp_directory, 'export')
+
+    with open(hashes_file_path, 'wt', encoding='utf-8') as hashes_file_object:
+      for path, _, filenames in sorted(os.walk(exported_files_path)):
+        for filename in sorted(filenames):
+          file_path = os.path.join(path, filename)
+          if not os.path.isfile(file_path):
+            continue
+
+          relative_file_path = file_path[len(temp_directory):]
+          # Hack to change Windows paths to POSIX ones, so we can easily
+          # compare them against the reference file.
+          relative_file_path = relative_file_path.replace('\\', '/')
+
+          # Skip the hashes.json and compare it separately.
+          if relative_file_path == '/export/hashes.json':
+            continue
+
+          hash_context = hashlib.sha256()
+          with open(file_path, 'rb') as file_object:
+            data = file_object.read(self._READ_BUFFER_SIZE)
+            while data:
+              hash_context.update(data)
+              data = file_object.read(self._READ_BUFFER_SIZE)
+
+          hashes_file_object.write('{0:s}\t{1:s}\n'.format(
+              hash_context.hexdigest(), relative_file_path))
+
+    if os.path.exists(hashes_file_path):
+      shutil.copy(hashes_file_path, self._test_results_path)
+
   def _InitializeImageExportPath(self):
     """Initializes the location of image_export."""
     self._image_export_path = os.path.join(self._tools_path, 'image_export.py')
@@ -1162,8 +1250,8 @@ class ImageExportTestCase(TestCase):
     Returns:
       bool: True if image_export ran successfully.
     """
-    output_file_path = os.path.join(temp_directory, 'export')
-    output_options = ['-w', output_file_path]
+    exported_files_path = os.path.join(temp_directory, 'export')
+    output_options = ['-w', exported_files_path]
 
     logging_options = [
         option.replace('%command%', 'image_export')
@@ -1189,8 +1277,6 @@ class ImageExportTestCase(TestCase):
         output_data = file_object.read()
         print(output_data)
 
-    # TODO: hash the files.
-
     if os.path.exists(stdout_file):
       shutil.copy(stdout_file, self._test_results_path)
     if os.path.exists(stderr_file):
@@ -1211,12 +1297,19 @@ class ImageExportTestCase(TestCase):
     test_definition.filter_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'filter_file')
 
+    test_definition.hashes_file = test_definition_reader.GetConfigValue(
+        test_definition.name, 'hashes_file')
+
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)
 
     test_definition.profiling_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'profiling_options', default=[],
         split_string=True)
+
+    test_definition.reference_hashes_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_hashes_file'))
 
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, 'source')
@@ -1245,6 +1338,14 @@ class ImageExportTestCase(TestCase):
       if not self._RunImageExport(
           test_definition, temp_directory, source_path):
         return False
+
+      if test_definition.hashes_file:
+        self._CreateHashesFile(test_definition, temp_directory)
+
+        # Compare hashes file with a reference hashes file.
+        if test_definition.reference_hashes_file:
+          if not self._CompareHashesFile(test_definition, temp_directory):
+            return False
 
     return True
 
