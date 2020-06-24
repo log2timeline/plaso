@@ -472,6 +472,35 @@ short_message:
 short_source: 'REG'
 source: 'Registry Key : Winlogon'
 ---
+type: 'conditional'
+data_type: 'windows:restore_point:info'
+enumeration_helpers:
+- input_attribute: 'restore_point_event_type'
+  output_attribute: 'restore_point_event_type'
+  default_value: 'UNKNOWN'
+  values:
+    100: 'BEGIN_SYSTEM_CHANGE'
+    101: 'END_SYSTEM_CHANGE'
+    102: 'BEGIN_NESTED_SYSTEM_CHANGE'
+    103: 'END_NESTED_SYSTEM_CHANGE'
+- input_attribute: 'restore_point_type'
+  output_attribute: 'restore_point_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'APPLICATION_INSTALL'
+    1: 'APPLICATION_UNINSTALL'
+    10: 'DEVICE_DRIVER_INSTALL'
+    12: 'MODIFY_SETTINGS'
+    13: 'CANCELLED_OPERATION'
+message:
+- '{description}'
+- 'Event type: {restore_point_event_type}'
+- 'Restore point type: {restore_point_type}'
+short_message:
+- '{description}'
+short_source: 'RP'
+source: 'Windows Restore Point'
+---
 type: 'basic'
 data_type: 'winrar:history'
 message: '[{key_path}] {entries}'
