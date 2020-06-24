@@ -175,8 +175,6 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       0x82: 'bsm_token_data_sockunix',
   }
 
-  _TRAILER_TOKEN_SIGNATURE = 0xb105
-
   _TOKEN_DATA_FORMAT_FUNCTIONS = {
       0x11: '_FormatOtherFileToken',
       0x21: '_FormatDataToken',
@@ -683,9 +681,6 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
             '{2:d}}}').format(
                 token_values['error'], token_values['token_status'],
                 token_values['call_status'])
-
-    if token_data.signature != self._TRAILER_TOKEN_SIGNATURE:
-      raise errors.ParseError('Unsupported signature in trailer token.')
 
     if token_data.record_size != header_record_size:
       raise errors.ParseError(

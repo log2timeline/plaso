@@ -48,8 +48,6 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'systemd_journal.yaml'
 
-  _FILE_SIGNATURE = b'LPKSHHRH'
-
   _OBJECT_COMPRESSED_FLAG_XZ = 1
   _OBJECT_COMPRESSED_FLAG_LZ4 = 2
 
@@ -271,7 +269,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(cls._FILE_SIGNATURE, offset=0)
+    format_specification.AddNewSignature(b'LPKSHHRH', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):
@@ -293,9 +291,6 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.UnableToParseFile(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.UnableToParseFile('Invalid file signature.')
 
     if file_header.header_size not in self._SUPPORTED_FILE_HEADER_SIZES:
       raise errors.UnableToParseFile(

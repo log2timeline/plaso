@@ -48,6 +48,7 @@ members:
   type: stream
   element_data_type: byte
   elements_data_size: 8
+  value: "LPKSHHRH"
 - name: compatible_flags
   data_type: uint32
 - name: incompatible_flags

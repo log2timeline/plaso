@@ -84,6 +84,7 @@ members:
   type: stream
   element_data_type: byte
   elements_data_size: 4
+  value: "kych"
 - name: major_format_version
   data_type: uint16
 - name: minor_format_version

@@ -63,8 +63,6 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'asl.yaml'
 
-  _FILE_SIGNATURE = b'ASL DB\x00\x00\x00\x00\x00\x00'
-
   # Most significant bit of a 64-bit string offset.
   _STRING_OFFSET_MSB = 1 << 63
 
@@ -262,7 +260,8 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(cls._FILE_SIGNATURE, offset=0)
+    format_specification.AddNewSignature(
+        b'ASL DB\x00\x00\x00\x00\x00\x00', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):
@@ -285,9 +284,6 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.UnableToParseFile(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.UnableToParseFile('Invalid file signature.')
 
     # TODO: generate event for creation time.
 

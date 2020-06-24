@@ -120,8 +120,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'mac_keychain.yaml'
 
-  _FILE_SIGNATURE = b'kych'
-
   _MAJOR_VERSION = 1
   _MINOR_VERSION = 0
 
@@ -323,9 +321,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     file_header, _ = self._ReadStructureFromFileObject(
         file_object, 0, data_type_map)
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.ParseError('Unsupported file signature.')
 
     if (file_header.major_format_version != self._MAJOR_VERSION or
         file_header.minor_format_version != self._MINOR_VERSION):
@@ -855,7 +850,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(cls._FILE_SIGNATURE, offset=0)
+    format_specification.AddNewSignature(b'kych', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):

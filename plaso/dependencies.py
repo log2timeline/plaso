@@ -30,7 +30,7 @@ PYTHON_DEPENDENCIES = {
     'dfdatetime': ('__version__', '20200613', None, True),
     'dfvfs': ('__version__', '20200604', None, True),
     'dfwinreg': ('__version__', '20180712', None, True),
-    'dtfabric': ('__version__', '20181128', None, True),
+    'dtfabric': ('__version__', '20200621', None, True),
     'elasticsearch': ('__versionstr__', '6.0', None, False),
     'future': ('__version__', '0.16.0', None, True),
     'idna': ('__version__', '2.5', None, True),

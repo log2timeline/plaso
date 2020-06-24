@@ -202,13 +202,10 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
             'Unable to map record data at offset: 0x{0:08x} with error: '
             '{1!s}').format(record_offset, exception))
 
-      unicode_filename = unicode_filename.rstrip('\x00')
-
     if record.deletion_time == 0:
       date_time = dfdatetime_semantic_time.NotSet()
     else:
-      date_time = dfdatetime_filetime.Filetime(
-          timestamp=record.deletion_time)
+      date_time = dfdatetime_filetime.Filetime(timestamp=record.deletion_time)
 
     event_data = WinRecycleBinEventData()
     event_data.drive_number = record.drive_number

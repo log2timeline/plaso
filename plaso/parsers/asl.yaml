@@ -47,6 +47,7 @@ members:
   type: stream
   element_data_type: byte
   elements_data_size: 12
+  value: "ASL DB\x00\x00\x00\x00\x00\x00"
 - name: format_version
   data_type: uint32
 - name: first_log_entry_offset

@@ -56,8 +56,6 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
   # The version 2 format was introduced in MacOS High Sierra (10.13).
   _DLS_V2_SIGNATURE = b'2SLD'
 
-  _DLS_SIGNATURES = [_DLS_V1_SIGNATURE, _DLS_V2_SIGNATURE]
-
   _DEFINITION_FILE = 'fseventsd.yaml'
 
   @classmethod
@@ -98,11 +96,6 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError(
           'Unable to parse page header at offset: 0x{0:08x} '
           'with error: {1!s}'.format(page_offset, exception))
-
-    if page_header.signature not in self._DLS_SIGNATURES:
-      raise errors.ParseError(
-          'Unsupported page header signature at offset: 0x{0:08x}'.format(
-              page_offset))
 
     return page_header, page_size
 
@@ -169,9 +162,6 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.UnableToParseFile(
           'Unable to parse page header with error: {0!s}'.format(
               exception))
-
-    if page_header.signature not in self._DLS_SIGNATURES:
-      raise errors.UnableToParseFile('Invalid file signature')
 
     current_page_end = page_header.page_size
 

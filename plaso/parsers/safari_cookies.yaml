@@ -60,6 +60,7 @@ members:
   type: stream
   element_data_type: byte
   number_of_elements: 4
+  value: "cook"
 - name: number_of_pages
   data_type: uint32
 ---

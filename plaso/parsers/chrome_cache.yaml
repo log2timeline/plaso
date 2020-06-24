@@ -46,6 +46,7 @@ attributes:
 members:
 - name: signature
   data_type: uint32
+  value: 0xc104cac3
 - name: minor_version
   data_type: uint16
 - name: major_version
@@ -130,6 +131,7 @@ attributes:
 members:
 - name: signature
   data_type: uint32
+  value: 0xc103cac3
 - name: minor_version
   data_type: uint16
 - name: major_version

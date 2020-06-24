@@ -611,6 +611,7 @@ attributes:
 members:
 - name: signature
   data_type: uint16
+  value: 0xb105
 - name: record_size
   data_type: uint32
 ---

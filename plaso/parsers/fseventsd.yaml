@@ -32,6 +32,7 @@ members:
   type: stream
   element_data_type: byte
   number_of_elements: 4
+  values: ["1SLD", "2SLD"]
 - name: padding
   type: stream
   element_data_type: byte

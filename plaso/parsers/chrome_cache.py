@@ -113,8 +113,6 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'chrome_cache.yaml'
 
-  _FILE_SIGNATURE = 0xc103cac3
-
   def __init__(self):
     """Initializes an index file."""
     super(ChromeCacheIndexFileParser, self).__init__()
@@ -139,9 +137,6 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError(
           'Unable to parse index file header with error: {0!s}'.format(
               exception))
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.ParseError('Unsupported index file signature')
 
     format_version = '{0:d}.{1:d}'.format(
         file_header.major_version, file_header.minor_version)
@@ -208,8 +203,6 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'chrome_cache.yaml'
 
-  _FILE_SIGNATURE = 0xc104cac3
-
   def _ParseFileHeader(self, file_object):
     """Parses the file header.
 
@@ -229,9 +222,6 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError(
           'Unable to parse data block file header with error: {0!s}'.format(
               exception))
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.ParseError('Unsupported data block file signature')
 
     format_version = '{0:d}.{1:d}'.format(
         file_header.major_version, file_header.minor_version)
