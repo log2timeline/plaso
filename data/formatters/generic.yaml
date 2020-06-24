@@ -443,24 +443,6 @@ short_source: 'LOG'
 source: 'Santa FSEvent'
 ---
 type: 'conditional'
-data_type: 'selinux:line'
-message:
-- '['
-- 'audit_type: {audit_type}'
-- ', pid: {pid}'
-- ']'
-- ' {body}'
-separator: ''
-short_message:
-- '['
-- 'audit_type: {audit_type}'
-- ', pid: {pid}'
-- ']'
-- ' {body}'
-short_source: 'LOG'
-source: 'Audit log File'
----
-type: 'conditional'
 data_type: 'shell:zsh:history'
 message:
 - '{command}'

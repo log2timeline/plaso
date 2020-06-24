@@ -501,6 +501,36 @@ short_message:
 short_source: 'RP'
 source: 'Windows Restore Point'
 ---
+type: 'conditional'
+data_type: 'windows:tasks:job'
+enumeration_helpers:
+- input_attribute: 'trigger_type'
+  output_attribute: 'trigger_type'
+  default_value: 'UNKNOWN'
+  values:
+    0x0000: 'ONCE'
+    0x0001: 'DAILY'
+    0x0002: 'WEEKLY'
+    0x0003: 'MONTHLYDATE'
+    0x0004: 'MONTHLYDOW'
+    0x0005: 'EVENT_ON_IDLE'
+    0x0006: 'EVENT_AT_SYSTEMSTART'
+    0x0007: 'EVENT_AT_LOGON'
+message:
+- 'Application: {application}'
+- '{parameters}'
+- 'Scheduled by: {username}'
+- 'Working directory: {working_directory}'
+- 'Trigger type: {trigger_type}'
+short_message:
+- 'Application: {application}'
+- '{parameters}'
+- 'Scheduled by: {username}'
+- 'Working directory: {working_directory}'
+- 'Trigger type: {trigger_type}'
+short_source: 'JOB'
+source: 'Windows Scheduled Task Job'
+---
 type: 'basic'
 data_type: 'winrar:history'
 message: '[{key_path}] {entries}'

@@ -24,6 +24,31 @@ short_source: 'LOG'
 source: 'Android Call History'
 ---
 type: 'conditional'
+data_type: 'android:messaging:hangouts'
+enumeration_helpers:
+- input_attribute: 'message_status'
+  output_attribute: 'message_status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'UNREAD'
+    4: 'READ'
+- input_attribute: 'message_type'
+  output_attribute: 'message_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'SENT'
+    2: 'RECEIVED'
+message:
+- 'Sender: {sender}'
+- 'Body: {body}'
+- 'Status: {message_status}'
+- 'Type: {message_type}'
+short_message:
+- '{body}'
+short_source: 'HANGOUTS'
+source: 'Google Hangouts Message'
+---
+type: 'conditional'
 data_type: 'android:messaging:sms'
 message:
 - 'Type: {sms_type}'
@@ -97,3 +122,29 @@ short_message:
 - 'Query: {search_query}'
 short_source: 'Twitter Android'
 source: 'Twitter Android Search'
+---
+type: 'conditional'
+data_type: 'twitter:android:status'
+enumeration_helpers:
+- input_attribute: 'favorited'
+  output_attribute: 'favorited'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+- input_attribute: 'retweeted'
+  output_attribute: 'retweeted'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'User: {username}'
+- 'Status: {content}'
+- 'Favorited: {favorited}'
+- 'Retweeted: {retweeted}'
+short_message:
+- 'User: {username}'
+- 'Status: {content}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Status'
