@@ -6,7 +6,7 @@ potential issues with Plaso and its dependencies.
 ## Quick list
 
 1. Check the [commit history](https://github.com/log2timeline/plaso/commits/master) and [issue tracker](https://github.com/log2timeline/plaso/issues?q=is%3Aissue) if the bug has already been fixed;
-2. If you are running the development release make sure Plaso and dependencies are up to date, see: [Developers Guide](../developer/Developers-Guide.md)
+2. If you are running the development release make sure Plaso and dependencies are up to date, see: [Developers Guide](developer/Developers-Guide.md)
 3. If you are experiencing an issue that cannot directly be attributed to some broken code e.g. the test are getting killed, check your system logs it might be a problem with resources available to Plaso;
 4. Try to isolate the error, see below.
 
@@ -31,9 +31,8 @@ Hence please provide us with the following details:
 * Were you able to isolate the error to a specific file? Is it possible to share the file with the developer?
 * Any additional information that could be of use e.g. build logs, error logs, debug logs, etc.
 
-**Note that the github issue tracker uses
-[markdown](https://help.github.com/articles/markdown-basics/) and thus please
-escape blocks of error output accordingly.**
+**Note that the github issue tracker uses [markdown](https://help.github.com/articles/markdown-basics/)
+and thus please escape blocks of error output accordingly.**
 
 Also see the sections below on how to troubleshoot issues of a specific nature.
 
@@ -52,7 +51,8 @@ Also see the sections below on how to troubleshoot issues of a specific nature.
 The most important part of troubleshooting is isolating the error.
 
 Can you run the tests successfully?
-```
+
+```bash
 $ python run_tests.py
 ...
 ----------------------------------------------------------------------
@@ -67,7 +67,7 @@ storage image media file will bypass libraries (modules) supporting the storage
 image media format. Running [source_analyzer.py](https://github.com/log2timeline/dfvfs/blob/master/examples/source_analyzer.py)
 can help pinpointing the issue, e.g.
 
-```
+```bash
 PYTHONPATH=. python examples/source_analyzer.py --no-auto-recurse
 ```
 
@@ -94,7 +94,8 @@ compressed logs can be reviewed with unzip tools like `zless` and `zgrep`.
 ## Import errors
 
 It sometimes happen that the tests fail with an import error e.g.
-```
+
+```bash
 ImportError: Failed to import test module:
 plaso.parsers.winreg_plugins.shutdown_test
 Traceback (most recent call last):
@@ -111,7 +112,8 @@ ImportError: cannot import name asl
 This does not necessarily mean that the code cannot find the asl module. The
 import error can mask an underlying issue. Try running the following commands
 in a Python shell:
-```
+
+```bash
 $ python
 import sys
 sys.path.insert(0, u'.')
@@ -158,12 +160,14 @@ The following command help you determine which Plaso processes are running on
 your system:
 
 Linux:
-```
+
+```bash
 top -p `ps -ef | grep log2timeline.py | grep python | awk '{ print $2 }' | tr '\n' ',' | sed 's/,$//'`
 ```
 
 MacOS:
-```
+
+```bash
 ps aux | grep log2timeline.py | grep python | awk '{print $2}' | tr '\n' ',' | sed 's/,$//'
 ```
 
@@ -180,7 +184,8 @@ Use:
 * `l` to print source code of the current frame.
 
 Note that typically the top-level (oldest) frame will contain the exception:
-```
+
+```python
 p execption
 ```
 
@@ -190,12 +195,14 @@ exclamation mark (!) to indicate that you want to run a Python command as an
 opposed to a debug shell one.
 
 To print the attributes of the current object you are looking for.
-```
+
+```python
 !self.__dict__
 ```
 
 To print the current argument stack to see what arguments are available to you.
-```
+
+```python
 args
 ```
 
@@ -207,11 +214,13 @@ file you can generate a back trace that can help us fix the error.
 First make sure you have the debug symbols installed.
 
 Then run Plaso as a single process with gdb:
-```
+
+```bash
 gdb --ex r --args log2timeline.py --single-process -d /tmp/test.dump /tmp/file_that_crashes_the_tool
 ```
 
 To generate a back trace:
+
 ```
 bt
 ```
@@ -220,12 +229,14 @@ Note that often the first 10 lines of the back trace are sufficient information.
 
 An alternative approach is to attach a debugger to it once the program is
 running:
-```
+
+```bash
 gdb python -p PID
 ```
 
 Where PID is the process identifier of the program. Once the debugger is
 attached continue running:
+
 ```
 c
 ```
@@ -240,11 +251,112 @@ Also see: [DebuggingWithGdb](https://wiki.python.org/moin/DebuggingWithGdb),
 Plaso consists of various components. It can happen that one of these
 components uses a lot of memory or even leaks memory. In these cases it is
 important to isolate the error, see before, to track down what the possible
-culprit is. Also see: [Profiling memory usage](../developer/Profiling.md#profiling-memory-usage)
+culprit is. Also see: [Profiling memory usage](developer/Profiling.md#profiling-memory-usage)
 
-## Also see
+Also see [Troubleshooting Plaso Issues - Memory Edition](http://blog.kiddaland.net/2014/11/troubleshooting-plaso-issues-memory.html)
 
-* [Troubleshooting MacOS specific issues](Troubleshooting-MacOS.md)
-* [Troubleshooting Ubuntu specific issues](Troubleshooting-Ubuntu.md)
-* [Troubleshooting Windows specific issues](Troubleshooting-Windows.md)
-* [Troubleshooting Plaso Issues - Memory Edition](http://blog.kiddaland.net/2014/11/troubleshooting-plaso-issues-memory.html)
+## MacOS specific issues
+
+### How do I remove a Plaso installation
+
+If you installed Plaso via the installer script in the .dmg, the MacOS package
+manager can be used to remove a Plaso installation. For more information about
+using the MacOS package manager see:
+
+* http://superuser.com/questions/36567/how-do-i-uninstall-any-apple-pkg-package-file
+
+### PyParsing errors
+
+MacOS bundles its own version of PyParsing that is older than the version
+required by Plaso. Fix this by using the special wrapper scripts
+(log2timeline**.sh**, et. al.), or if you don't want to do that, manipulate
+PYTHONPATH so that the newer version is loaded. This is detailed on the
+[MacOS development page](developer/Developing-MacOS.md).
+
+### ImportError: cannot import name dependencies
+
+There can be numerous reasons for imports to fail on MacOS here we describe
+some of the more common ones encountered:
+
+* clashing versions; you have multiple clashing versions installed on your system check the Python site-packages paths such as: `/Library/Python/2.7/site-packages/`, `/usr/local/lib/python2.7/site-packages/`.
+* you used `pip` without `virtualenv` and have messed up your site-packages
+
+### You used `pip` without `virtualenv` and have messed up your site-packages
+
+The use of `pip` without `virtualenv` on MacOS is **strongly** discouraged,
+unless you are very familiar with these tools. You might have already messed up
+your site-packages beyond a state of a timely repair.
+
+## Ubuntu Linux specific issues
+
+### Origin of an installed package
+
+To determine the origin of an installed package
+
+```bash
+apt-cache showpkg <package name>
+```
+
+## Windows specific issues
+
+### Not a valid Win32 application
+
+When I load one of the Python modules I get:
+
+```
+ImportError: DLL load failed: %1 is not a valid Win32 application.
+```
+
+This means your Python interpreter (on Windows) cannot load a Python module
+since the module is not a valid Win32 DLL file. One cause of this could be
+mismatch between a 64-bit Python and 32-bit build module (or vice versa).
+
+### Unable to find an entry point in DLL
+
+When I try to import one of the Python-bindings I get:
+
+```
+ImportError: DLL load failed: The specified procedure could not be found.
+```
+
+Make sure the DLL is built for the right WINAPI version, check the value of
+WINVER of your build.
+
+### setup.py and build errors
+
+#### Unable to find vcvarsall.bat
+
+When running setup.py I get:
+
+```
+error: Unable to find vcvarsall.bat
+```
+
+Make sure the environment variable VS90COMNTOOLS is set, e.g. for Visual Studio
+2010:
+
+```
+set VS90COMNTOOLS=%VS100COMNTOOLS%
+```
+
+Or set it to a path:
+
+```
+set VS90COMNTOOLS="C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\Tools\"
+```
+
+#### ValueError: [u'path'] when running setup.py
+
+When running setup.py I get:
+
+```
+ValueError: [u'path']
+```
+
+Try running the command from the "Windows SDK 7.1" or "Visual Studio" Command
+Prompt.
+
+#### I'm getting linker "unresolved externals" errors when running setup.py
+
+If you're building a 64-bit version of a Python binding Visual Studio 2010
+express make sure to use "Windows SDK 7.1 Command Prompt".
