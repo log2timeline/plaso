@@ -3,7 +3,7 @@ Welcome to the Plaso documentation!
 Plaso (Plaso Langar Að Safna Öllu) is a computer forensic tool for timeline generation and analysis.
 
 
-Plaso's documentation is split into several parts:
+The documentation is split into several parts:
 
 
 -  `User documentation <sources/user/Users-Guide.html>`__
@@ -11,9 +11,8 @@ Plaso's documentation is split into several parts:
 -  `API documentation <sources/api/plaso.html>`__
 
 
-The project's code is available from https://github.com/log2timeline/plaso
-
-Plaso is licensed under the Apache license version 2.
+The source code is available from https://github.com/log2timeline/plaso and
+provided under the Apache license version 2.
 
 Contents:
 
