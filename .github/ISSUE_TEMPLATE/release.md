@@ -2,6 +2,8 @@
   - `review.py update-version`
 - [ ] Update parser and plugins documentation
   - `PYTHONPATH=. ./tools/log2timeline.py --parsers list --use-markdown > docs/sources/user/Parsers-and-plugins.md`
+- [ ] Update API documentation
+  - `tox -edocs`
 - [ ] Create github release and tag
 - [ ] Upload source package and signature to Github release page
   - `./setup.py sdist_test_data`
