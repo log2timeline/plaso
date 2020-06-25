@@ -873,7 +873,7 @@ class EventExtractionWorker(object):
       return
 
     for find_spec in excluded_find_specs or []:
-      if find_spec.Matches(file_entry) == (True, True):
+      if find_spec.CompareLocation(file_entry):
         logger.info('Skipped: {0:s} because of exclusion filter.'.format(
             file_entry.path_spec.location))
         return
