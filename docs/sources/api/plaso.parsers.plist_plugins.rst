@@ -68,6 +68,14 @@ plaso.parsers.plist\_plugins.ipod module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.plist\_plugins.launchd module
+-------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.launchd
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.plist\_plugins.macuser module
 -------------------------------------------
 

@@ -30,7 +30,7 @@ sources:
 conditions: [os_major_version < 6]
 labels: [Logs]
 supported_os: [Windows]
-urls: ['http://www.forensicswiki.org/wiki/Windows_Event_Log_(EVT)']
+urls: ['https://forensicswiki.xyz/wiki/index.php?title=Windows_Event_Log_(EVT)']
 ```
 
 'WindowsEventLogSystem' refers to the path '%SystemRoot%\System32\winevt\Logs\SysEvent.evt'.
@@ -65,9 +65,8 @@ To use:
 A text-based filter can be used to describe the path of each file or
 directory Plaso should include in parsing.
 
-**Note that the text-based filter file does not support exclusion filters (or
-blacklisting). If you need this functionality use the YAML-based filter file
-instead.**
+**Note that the text-based filter file does not support exclusion filters.
+If you need this functionality use the YAML-based filter file instead.**
 
 The text-based filter file itself contains a path filter per line or a line
 starting `#` for comment.

@@ -156,6 +156,22 @@ plaso.parsers.sqlite\_plugins.mac\_document\_versions module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.mac\_knowledgec module
+----------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.mac_knowledgec
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.mac\_notes module
+-----------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.mac_notes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.mac\_notificationcenter module
 ------------------------------------------------------------
 

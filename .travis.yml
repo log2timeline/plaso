@@ -66,6 +66,15 @@ jobs:
     python: 3.8
     services:
     - docker
+  - name: "Sphinx on Ubuntu Focal (20.04) (Docker) with Python 3.8 (tox)"
+    env:
+    - TOXENV="docs"
+    - UBUNTU_VERSION="20.04"
+    group: edge
+    language: python
+    python: 3.8
+    services:
+    - docker
   - name: "MacOS 10.14 with Python 3.7 (tox)"
     env: TOXENV="py37"
     os: osx

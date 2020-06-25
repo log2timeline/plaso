@@ -44,6 +44,14 @@ plaso.parsers.apache\_access module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.apt\_history module
+---------------------------------
+
+.. automodule:: plaso.parsers.apt_history
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.asl module
 ------------------------
 
@@ -188,10 +196,10 @@ plaso.parsers.gdrive\_synclog module
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.hachoir module
-----------------------------
+plaso.parsers.google\_logging module
+------------------------------------
 
-.. automodule:: plaso.parsers.hachoir
+.. automodule:: plaso.parsers.google_logging
     :members:
     :undoc-members:
     :show-inheritance:
@@ -296,6 +304,14 @@ plaso.parsers.msiecf module
 ---------------------------
 
 .. automodule:: plaso.parsers.msiecf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.networkminer module
+---------------------------------
+
+.. automodule:: plaso.parsers.networkminer
     :members:
     :undoc-members:
     :show-inheritance:
@@ -412,6 +428,14 @@ plaso.parsers.selinux module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.setupapi module
+-----------------------------
+
+.. automodule:: plaso.parsers.setupapi
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.skydrivelog module
 --------------------------------
 
@@ -488,6 +512,14 @@ plaso.parsers.utmpx module
 --------------------------
 
 .. automodule:: plaso.parsers.utmpx
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.vsftpd module
+---------------------------
+
+.. automodule:: plaso.parsers.vsftpd
     :members:
     :undoc-members:
     :show-inheritance:

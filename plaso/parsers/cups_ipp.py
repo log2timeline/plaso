@@ -2,18 +2,18 @@
 """The CUPS IPP files parser.
 
 CUPS IPP version 1.0:
-* http://tools.ietf.org/html/rfc2565
-* http://tools.ietf.org/html/rfc2566
-* http://tools.ietf.org/html/rfc2567
-* http://tools.ietf.org/html/rfc2568
-* http://tools.ietf.org/html/rfc2569
-* http://tools.ietf.org/html/rfc2639
+* https://tools.ietf.org/html/rfc2565
+* https://tools.ietf.org/html/rfc2566
+* https://tools.ietf.org/html/rfc2567
+* https://tools.ietf.org/html/rfc2568
+* https://tools.ietf.org/html/rfc2569
+* https://tools.ietf.org/html/rfc2639
 
 CUPS IPP version 1.1:
-* http://tools.ietf.org/html/rfc2910
-* http://tools.ietf.org/html/rfc2911
-* http://tools.ietf.org/html/rfc3196
-* http://tools.ietf.org/html/rfc3510
+* https://tools.ietf.org/html/rfc2910
+* https://tools.ietf.org/html/rfc2911
+* https://tools.ietf.org/html/rfc3196
+* https://tools.ietf.org/html/rfc3510
 
 CUPS IPP version 2.0:
 * N/A

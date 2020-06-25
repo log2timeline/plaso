@@ -19,7 +19,7 @@ needed for the plugin.
 * Start by [installing the l2t_scaffolder
   tool](https://l2tscaffolder.readthedocs.io/en/latest/sources/user/Installation.html)
 * Have your git repo for Plaso correctly setup (personal fork, see
-  [here](Developers-Guide.html)).
+  [here](Developers-Guide.md)).
 * Then follow the [usage
   instructions](https://l2tscaffolder.readthedocs.io/en/latest/sources/user/Using-The-Tool.html).
   * Essentially run this command (you'll need to remember the path to the test

@@ -10,7 +10,7 @@ The syntax has changed somewhat from the older version, the largest user facing 
  * Parameters have changed considerably and options are different, **so please read this page**.
  * The post-processing tool is no longer called l2t_process, it is now named **psort**.
  * The name plaso can come up in the discussion, that is the name of the new backend (as an opposed to Log2Timeline which is the old Perl backend). Hence plaso refers to the backend, log2timeline to the CLI based front-end of the tool.
- There are other front-ends to the tool though, for instance [timesketch](http://www.timesketch.org/).
+ There are other front-ends to the tool though, for instance [timesketch](https://github.com/google/timesketch).
 
 
 Let's go over the old and new method of collecting a timeline from a simple image file.
@@ -46,7 +46,7 @@ However, you could not limit the output of the timeline to a more narrow timefra
     l2t_process.py -b myhost.csv 10-10-2012..10-11-2012 | grep ",1[8-9]:[0-5][0-9]:[0-9][0-9],"
 
 And filtering based on content was constrained to few options:
- * Use a keyword file that contained case-insensitive potentially regular expressions and supply that as a white- or blacklist.
+ * Use a keyword file that contained case-insensitive regular expressions to include or exclude events.
  * Use a YARA rule that matched against the description_long field.
  * Use grep/sed/awk.
 
@@ -126,7 +126,7 @@ The most common usage of the filters will most likely be constrained to the comm
 
 For now, the new version does not have some of the capabilities that the older version had, that is to say the:
  * Yara rules to filter out content.
- * White/black lists.
+ * Inclusion/exclusion regular expressions.
 
 These are things that are on the roadmap and should hopefully be added before too long.
 

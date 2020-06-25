@@ -13,25 +13,21 @@
 #
 # Valid options are documented at http://sphinx-doc.org/config.html.
 
-from __future__ import print_function
 from __future__ import unicode_literals
 
-import re
 import os
 import sys
-import time
 
-from mock import Mock as MagicMock
 from sphinx.ext import apidoc
 
-from docutils import nodes, transforms
+from docutils import nodes
+from docutils import transforms
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
+# Change PYTHONPATH to include plaso module and dependencies.
 sys.path.insert(0, os.path.abspath('..'))
 
 import plaso
+
 from plaso import dependencies
 
 
@@ -43,8 +39,6 @@ needs_sphinx = '2.0.1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-
-
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
@@ -55,80 +49,15 @@ extensions = [
     'recommonmark'
 ]
 
-
 # There are many of dependencies we can't install on readthedocs, as it's
 # not possible to install any python library that has a C dependency, and
 # installing non-PyPi packages requires a complicated requirements.txt,
 # so instead, we need to mock them.
-class Mock(MagicMock):
-  # Ensure the mock sqlite method will be loaded.
-  sqlite_version_info = (3, 7, 9)
+pip_installed_modules = set(['pyparsing', 'six'])
+modules_to_mock = set(dependencies.PYTHON_DEPENDENCIES.keys())
+modules_to_mock = modules_to_mock.difference(pip_installed_modules)
 
-  @classmethod
-  def __getattr__(cls, name):
-    return Mock()
-
-  # We always have the most up to date version of everything.
-  def get_version(self):
-    return time.strftime('%Y%m%d')
-
-  # We're mocking pyparsing, and some parsers use the + method in their init,
-  # So mock it.
-  def __add__(self, other):
-    return self
-
-
-modules_to_mock = list(dependencies.PYTHON_DEPENDENCIES.keys())
-
-# We also need to mock some modules that we don't have explicit dependencies on
-# so that we can generate documentation for those components. We also need
-# to explicitly mock each submodule.
-# TODO: Find a better way to do this
-ADDITIONAL_MODULES = set([
-    'artifacts.knowledge_base',
-    'dateutil.parser',
-    'dfvfs.analyzer',
-    'dfvfs.credentials',
-    'dfvfs.file_io',
-    'dfvfs.helpers',
-    'dfvfs.lib',
-    'dfvfs.path',
-    'dfvfs.resolver',
-    'dfvfs.serializer',
-    'dfvfs.serializer.json_serializer',
-    'dfvfs.vfs',
-    'dfvfs.volume',
-    'dfwinreg.definitions',
-    'dtfabric.runtime',
-    'elasticsearch',
-    'elasticsearch.exceptions',
-    'flask',
-    'lz4.block',
-    'MySQLdb',
-    'pyelasticsearch',
-    'timesketch',
-    'timesketch.lib',
-    'timesketch.lib.datastores',
-    'timesketch.lib.datastores.elastic',
-    'timesketch.models',
-    'timesketch.models.sketch',
-    'timesketch.models.user'])
-modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
-
-# Readthedocs has it's own install of chardet, requests and urllib3, so remove
-# them from mocking.
-modules_to_mock.remove('chardet')
-modules_to_mock.remove('requests')
-modules_to_mock.remove('urllib3')
-
-# There are some modules we install via pip on readthedocs that we don't need
-# to mock.
-PIP_INSTALLED_MODULES = set(['pyparsing', 'six'])
-modules_to_mock = set(modules_to_mock).difference(PIP_INSTALLED_MODULES)
-modules_to_mock = sorted(modules_to_mock)
-print('Mocking modules')
-
-sys.modules.update((module_name, Mock()) for module_name in modules_to_mock)
+autodoc_mock_imports = sorted(modules_to_mock)
 
 # Options for the Sphinx Napoleon extension, which reads google style
 # docstrings.
@@ -301,8 +230,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [(
-  'index', 'Plaso.tex', 'Plaso Documentation',
-  'The Plaso Project Authors', 'manual'), ]
+    'index', 'Plaso.tex', 'Plaso Documentation',
+    'The Plaso Project Authors', 'manual'), ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -330,8 +259,8 @@ latex_documents = [(
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [(
-  'index', 'plaso', 'Plaso Documentation',
-  ['The Plaso Project Authors'], 1)]
+    'index', 'plaso', 'Plaso Documentation',
+    ['The Plaso Project Authors'], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -343,9 +272,9 @@ man_pages = [(
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [(
-  'index', 'Plaso', 'Plaso Documentation',
-  'The Plaso Project Authors', 'Plaso', 'One line description of project.',
-  'Miscellaneous'), ]
+    'index', 'Plaso', 'Plaso Documentation',
+    'The Plaso Project Authors', 'Plaso', 'One line description of project.',
+    'Miscellaneous'), ]
 
 # Documents to append as an appendix to all manuals.
 # texinfo_appendices = []
@@ -358,6 +287,19 @@ texinfo_documents = [(
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+
+# -- Options linkcheck ----------------------------------------------------
+
+linkcheck_ignore = [
+    'https://github.com/libyal/libsigscan/wiki/Internals#',
+    'https://github.com/log2timeline/dfvfs/wiki#',
+    'https://groups.google.com/forum/#',
+    'https://developers.virustotal.com/reference#',
+]
+
+
+# -- Code to rewrite links for readthedocs --------------------------------
 
 # This function is a Sphinx core event callback, the format of which is detailed
 # here: https://www.sphinx-doc.org/en/master/extdev/appapi.html#events
@@ -373,31 +315,35 @@ def RunSphinxAPIDoc(unused_app):
   api_directory = os.path.join(current_directory, 'sources', 'api')
   apidoc.main(['-o', api_directory, module_path, '--force'])
 
+
 class L2TDocsLinkFixer(transforms.Transform):
   """Transform definition to parse .md references to internal pages."""
 
   default_priority = 1000
 
-  ANCHOR_REGEX = re.compile(
-      r'(?P<uri>[a-zA-Z0-9-./]+?).md#(?P<anchor>[a-zA-Z0-9-]+)')
+  _URI_PREFIXES = [
+      'https://github.com/log2timeline/l2tdocs/blob/',
+      'https://github.com/log2timeline/l2tbinaries/blob/',
+      'https://github.com/google/timesketch/blob/']
 
   def _FixLinks(self, node):
-    """Corrects links to .md files hosted on l2tdocs.
+    """Corrects links to .md files not part of the Plaso documentation.
 
     Args:
       node (docutils.nodes.Node): docutils node.
 
     Returns:
-      docutils.nodes.Node: docutils node, with URIs point to l2tdocs
-          corrected.
+      docutils.nodes.Node: docutils node, with correct URIs outside
+          of Markdown pages outside the Plaso documentation.
     """
     if isinstance(node, nodes.reference) and 'refuri' in node:
       reference_uri = node['refuri']
-      l2tdocs_prefix = 'https://github.com/log2timeline/l2tdocs/blob/'
-      if (
-          reference_uri.startswith(l2tdocs_prefix) and
-          not reference_uri.endswith('.asciidoc')):
-        node['refuri'] = reference_uri + '.md'
+      for uri_prefix in self._URI_PREFIXES:
+        if (reference_uri.startswith(uri_prefix) and
+            not reference_uri.endswith('.asciidoc')):
+          node['refuri'] = reference_uri + '.md'
+          break
+
     return node
 
   def _Traverse(self, node):
@@ -416,6 +362,7 @@ class L2TDocsLinkFixer(transforms.Transform):
     """Applies this transform on document tree."""
     self._Traverse(self.document)
 
+
 def setup(app):
   """Called at Sphinx initialization.
 
@@ -425,7 +372,5 @@ def setup(app):
   # Triggers sphinx-apidoc to generate API documentation.
   app.connect('builder-inited', RunSphinxAPIDoc)
   app.add_config_value(
-      'recommonmark_config', {
-        'enable_auto_toc_tree': True},
-      True)
+      'recommonmark_config', {'enable_auto_toc_tree': True}, True)
   app.add_transform(L2TDocsLinkFixer)

@@ -47,7 +47,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
   """USBStor key plugin.
 
   Also see:
-    http://www.forensicswiki.org/wiki/USB_History_Viewing
+  https://forensicswiki.xyz/wiki/index.php?title=USB_History_Viewing
   """
 
   NAME = 'windows_usbstor_devices'
