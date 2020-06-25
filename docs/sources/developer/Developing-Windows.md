@@ -27,7 +27,7 @@ Install the dependencies, using the
 Check if you have all the dependencies installed and have the right minimum
 version:
 ```
-C:\Python27\python.exe utils\check_dependencies.py
+C:\Python38\python.exe utils\check_dependencies.py
 ```
 
 **Note that some dependencies are actively under development and can be
