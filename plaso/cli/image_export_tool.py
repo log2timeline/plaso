@@ -679,17 +679,17 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     argument_parser.add_argument(
         '--include_duplicates', dest='include_duplicates',
         action='store_true', default=False, help=(
-            'If extraction from VSS is enabled, by default a digest hash '
-            'is calculated for each file. These hashes are compared to the '
-            'previously exported files and duplicates are skipped. Use '
-            'this option to include duplicate files in the export.'))
+            'By default a digest hash (SHA-256) is calculated for each file '
+            '(data stream). These hashes are compared to the previously '
+            'exported files and duplicates are skipped. Use this option to '
+            'include duplicate files in the export.'))
 
     argument_parser.add_argument(
         self._SOURCE_OPTION, nargs='?', action='store', metavar='IMAGE',
         default=None, type=str, help=(
             'The full path to the image file that we are about to extract '
             'files from, it should be a raw image or another image that '
-            'plaso supports.'))
+            'Plaso supports.'))
 
     try:
       options = argument_parser.parse_args(arguments)
@@ -760,9 +760,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self._ParseFilterOptions(options)
 
-    if (getattr(options, 'no_vss', False) or
-        getattr(options, 'include_duplicates', False)):
-      self._skip_duplicates = False
+    include_duplicates = getattr(options, 'include_duplicates', False)
+    self._skip_duplicates = not include_duplicates
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
