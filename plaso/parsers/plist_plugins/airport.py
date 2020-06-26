@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Airport plist plugin."""
+"""Plist parser plugin for Airport plist files."""
 
 from __future__ import unicode_literals
 
@@ -14,10 +14,10 @@ from plaso.parsers.plist_plugins import interface
 
 
 class AirportPlugin(interface.PlistPlugin):
-  """Plist plugin that extracts WiFi information."""
+  """Plist parser plugin for Airport plist files."""
 
   NAME = 'airport'
-  DESCRIPTION = 'Parser for Airport plist files.'
+  DATA_FORMAT = 'Airport plist file'
 
   PLIST_PATH = 'com.apple.airport.preferences.plist'
   PLIST_KEYS = frozenset(['RememberedNetworks'])

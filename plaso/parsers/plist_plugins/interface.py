@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plist_interface contains basic interface for plist plugins within Plaso.
+"""Interface for plist parser plugins.
 
 Plist files are only one example of a type of object that the Plaso tool is
 expected to encounter and process.  There can be and are many other parsers
@@ -111,7 +111,7 @@ class PlistPlugin(plugins.BasePlugin):
   @abc.abstractmethod
   def GetEntries(
       self, parser_mediator, top_level=None, match=None, **unused_kwargs):
-    """Extracts event objects from the values of entries within a plist.
+    """Extracts events from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
 

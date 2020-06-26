@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Install history plist plugin."""
+"""Plist parser plugin for MacOS install history plist files."""
 
 from __future__ import unicode_literals
 
@@ -13,10 +13,10 @@ from plaso.parsers.plist_plugins import interface
 
 
 class InstallHistoryPlugin(interface.PlistPlugin):
-  """Plist plugin that extracts the installation history."""
+  """Plist parser plugin for MacOS install history plist files."""
 
   NAME = 'macosx_install_history'
-  DESCRIPTION = 'Parser for installation history plist files.'
+  DATA_FORMAT = 'MacOS installation history plist file'
 
   PLIST_PATH = 'InstallHistory.plist'
   PLIST_KEYS = frozenset([

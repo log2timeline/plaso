@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""TimeMachine plist plugin."""
+"""Plist parser plugin for TimeMachine plist files."""
 
 from __future__ import unicode_literals
 
@@ -14,7 +14,7 @@ from plaso.parsers.plist_plugins import dtfabric_plugin
 
 
 class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
-  """Basic plugin to extract time machine hard disk and the backups.
+  """Plist parser plugin for TimeMachine plist files.
 
   Further details about the extracted fields:
     DestinationID:
@@ -28,7 +28,7 @@ class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
   """
 
   NAME = 'time_machine'
-  DESCRIPTION = 'Parser for TimeMachine plist files.'
+  DATA_FORMAT = 'TimeMachine plist file'
 
   PLIST_PATH = 'com.apple.TimeMachine.plist'
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])

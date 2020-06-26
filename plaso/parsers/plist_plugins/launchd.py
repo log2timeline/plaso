@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Launchd plist plugin."""
+"""Plist parser plugin for launchd plist files."""
 
 from __future__ import unicode_literals
 
@@ -13,7 +13,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class LaunchdPlugin(interface.PlistPlugin):
-  """Basic plugin to extract launchd configuration information.
+  """Plist parser plugin for launchd plist files.
 
   Further details about fields within the key:
     Label:
@@ -31,7 +31,7 @@ class LaunchdPlugin(interface.PlistPlugin):
   """
 
   NAME = 'launchd_plist'
-  DESCRIPTION = 'Parser for Launchd plist files.'
+  DATA_FORMAT = 'Launchd plist file'
 
   # The PLIST_PATH is dynamic, the prefix filename is, by default, named using
   # reverse-domain notation. For example, Chrome is com.google.chrome.plist.

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Spotlight searched terms plist plugin."""
+"""Plist parser plugin for Spotlight searched terms plist files."""
 
 from __future__ import unicode_literals
 
@@ -13,7 +13,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class SpotlightPlugin(interface.PlistPlugin):
-  """Basic plugin to extract information from Spotlight plist file.
+  """Plist parser plugin for Spotlight searched terms plist files.
 
   Further information about extracted fields:
     name of the item:
@@ -30,7 +30,7 @@ class SpotlightPlugin(interface.PlistPlugin):
   """
 
   NAME = 'spotlight'
-  DESCRIPTION = 'Parser for Spotlight plist files.'
+  DATA_FORMAT = 'Spotlight plist file'
 
   PLIST_PATH = 'com.apple.spotlight.plist'
   PLIST_KEYS = frozenset(['UserShortcuts'])

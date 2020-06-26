@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Spotlight Volume Configuration plist plugin."""
+"""Plist parser plugin for Spotlight volume configuration plist files."""
 
 from __future__ import unicode_literals
 
@@ -13,10 +13,10 @@ from plaso.parsers.plist_plugins import interface
 
 
 class SpotlightVolumePlugin(interface.PlistPlugin):
-  """Basic plugin to extract the Spotlight Volume Configuration."""
+  """Plist parser plugin for Spotlight volume configuration plist files."""
 
   NAME = 'spotlight_volume'
-  DESCRIPTION = 'Parser for Spotlight volume configuration plist files.'
+  DATA_FORMAT = 'Spotlight volume configuration plist file'
 
   PLIST_PATH = 'VolumeConfiguration.plist'
   PLIST_KEYS = frozenset(['Stores'])

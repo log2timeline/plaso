@@ -56,7 +56,17 @@ class FileNameFileEntryFilter(BaseFileEntryFilter):
 class BaseParser(object):
   """The parser interface."""
 
+  # The name of the parser. This is the name that is used in the registration
+  # and used for parser/plugin selection, so this needs to be concise and unique
+  # for all plugins/parsers, such as 'Chrome', 'Safari' or 'UserAssist'.
   NAME = 'base_parser'
+
+  # Data format supported by the parser plugin. This information is used by
+  # the parser manager to generate parser and plugin information.
+  DATA_FORMAT = ''
+
+  # Description of the purpose of the parser plugin. This information is used
+  # by the parser manager to generate parser and plugin information.
   DESCRIPTION = ''
 
   # List of filters that should match for the parser to be applied.

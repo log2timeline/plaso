@@ -36,6 +36,12 @@ class BasePlugin(object):
   # for all plugins/parsers, such as 'Chrome', 'Safari' or 'UserAssist'.
   NAME = 'base_plugin'
 
+  # Data format supported by the parser plugin. This information is used by
+  # the parser manager to generate parser and plugin information.
+  DATA_FORMAT = ''
+
+  # Description of the purpose of the parser plugin. This information is used
+  # by the parser manager to generate parser and plugin information.
   DESCRIPTION = ''
 
   # The URLS should contain a list of URLs with additional information about

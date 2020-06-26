@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Software update plist plugin."""
+"""Plist parser plugin for MacOS software update plist files."""
 
 from __future__ import unicode_literals
 
@@ -13,7 +13,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class SoftwareUpdatePlugin(interface.PlistPlugin):
-  """Basic plugin to extract the MacOS update status.
+  """Plist parser plugin for MacOS software update plist files.
 
   Further details about the extracted fields:
     LastFullSuccessfulDate:
@@ -23,7 +23,7 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
   """
 
   NAME = 'macos_software_update'
-  DESCRIPTION = 'Parser for MacOS software update plist files.'
+  DATA_FORMAT = 'MacOS software update plist file'
 
   PLIST_PATH = 'com.apple.SoftwareUpdate.plist'
   PLIST_KEYS = frozenset([
