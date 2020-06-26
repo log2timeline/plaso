@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Zeitgeist SQLite databaseo files.
-
-Zeitgeist is a service which logs the user activities and events, anywhere
-from files opened to websites visited and conversations.
-"""
+"""SQLite parser plugin for Zeitgeist activity database files."""
 
 from __future__ import unicode_literals
 
@@ -32,10 +28,14 @@ class ZeitgeistActivityEventData(events.EventData):
 
 
 class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
-  """Parser for Zeitgeist activity SQLite database files."""
+  """SQLite parser plugin for Zeitgeist activity database files.
+
+  Zeitgeist is a service which logs the user activities and events, anywhere
+  from files opened to websites visited and conversations.
+  """
 
   NAME = 'zeitgeist'
-  DESCRIPTION = 'Parser for Zeitgeist activity SQLite database files.'
+  DATA_FORMAT = 'Zeitgeist activity SQLite database file'
 
   # TODO: Explore the database more and make this parser cover new findings.
 

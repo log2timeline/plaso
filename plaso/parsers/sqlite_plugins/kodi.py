@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Kodi videos SQLite database file (MyVideos.db)."""
+"""SQLite parser plugin for Kodi videos database files."""
 
 from __future__ import unicode_literals
 
@@ -30,10 +30,14 @@ class KodiVideoEventData(events.EventData):
 
 
 class KodiMyVideosPlugin(interface.SQLitePlugin):
-  """Parser for Kodi videos SQLite database files (MyVideos.db)."""
+  """SQLite parser plugin for Kodi videos database files.
+
+  The Kodi videos database file is typically stored in:
+  MyVideos.db
+  """
 
   NAME = 'kodi'
-  DESCRIPTION = 'Parser for Kodi videos SQLite database files (MyVideos.db)'
+  DATA_FORMAT = 'Kodi videos SQLite database (MyVideos.db) file'
 
   REQUIRED_STRUCTURE = {
       'files': frozenset([

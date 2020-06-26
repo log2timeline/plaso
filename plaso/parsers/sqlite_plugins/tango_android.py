@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Parser for Tango on Android SQLite database files."""
+"""SQLite parser plugin for Tango on Android database files."""
 
 from __future__ import unicode_literals
 
@@ -82,10 +82,10 @@ class TangoAndroidContactEventData(events.EventData):
 
 
 class TangoAndroidTCPlugin(interface.SQLitePlugin):
-  """Parser for Tango on Android tc database."""
+  """SQLite parser plugin for Tango on Android TC database files."""
 
   NAME = 'tango_android_tc'
-  DESCRIPTION = 'Parser for Tango on Android tc SQLite database.'
+  DATA_FORMAT = 'Tango on Android TC SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'conversations': frozenset([
@@ -197,10 +197,10 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
 
 
 class TangoAndroidProfilePlugin(interface.SQLitePlugin):
-  """Parser for Tango on Android profile database."""
+  """SQLite parser plugin for Tango on Android profile database files."""
 
   NAME = 'tango_android_profile'
-  DESCRIPTION = 'Parser for Tango on Android profile SQLite database.'
+  DATA_FORMAT = 'Tango on Android profile SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'profiletable': frozenset([

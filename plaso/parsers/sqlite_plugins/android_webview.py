@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Android WebView databases."""
+"""SQLite parser plugin for Android WebView database files."""
 
 from __future__ import unicode_literals
 
@@ -44,10 +44,10 @@ class WebViewCookieEventData(events.EventData):
 
 
 class WebViewPlugin(interface.SQLitePlugin):
-  """Parser for WebView databases."""
+  """SQLite parser plugin for Android WebView database files."""
 
   NAME = 'android_webview'
-  DESCRIPTION = 'Parser for Android WebView databases'
+  DATA_FORMAT = 'Android WebView SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'android_metadata': frozenset([]),

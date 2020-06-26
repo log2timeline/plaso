@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the MacOS document revisions SQLite database files."""
+"""SQLite parser plugin for MacOS document revision database files."""
 
 from __future__ import unicode_literals
 
@@ -37,10 +37,10 @@ class MacDocumentVersionsEventData(events.EventData):
 
 
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
-  """Parser for MacOS document revisions SQLite database files."""
+  """SQLite parser plugin for MacOS document revision database files."""
 
   NAME = 'mac_document_versions'
-  DESCRIPTION = 'Parser for MacOS document revisions SQLite database files.'
+  DATA_FORMAT = 'MacOS document revisions SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'files': frozenset([

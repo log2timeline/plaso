@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Apple's Transaprency, Consent, Control (TCC) framework database.
-
-The TCC data is stored in SQLite databases at the following locations:
-* /Library/Application Support/com.apple.TCC/TCC.db
-* %homedir%/Library/Application Support/com.apple.TCC/TCC.db
-"""
+"""SQLite parser plugin for MacOS TCC database files."""
 
 from __future__ import unicode_literals
 
@@ -40,10 +35,18 @@ class MacOSTCCEntry(events.EventData):
 
 
 class MacOSTCCPlugin(interface.SQLitePlugin):
-  """Parse Apple's TCC SQLite database."""
+  """SQLite parser plugin for MacOS TCC database files.
+
+  The MacOS Transaprency, Consent, Control (TCC) database file is typically
+  stored in:
+  /Library/Application Support/com.apple.TCC/TCC.db
+  /Users/<username>/Library/Application Support/com.apple.TCC/TCC.db
+  """
 
   NAME = 'macostcc'
-  DESCRIPTION = 'Parser for macOS TCC SQLite database files.'
+  DATA_FORMAT = (
+      'MacOS Transaprency, Consent, Control (TCC) SQLite database (TCC.db) '
+      'file')
 
   REQUIRED_STRUCTURE = {
       'access': frozenset([

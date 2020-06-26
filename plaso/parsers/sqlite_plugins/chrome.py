@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Google Chrome History files.
-
-The Chrome History is stored in SQLite database files named History
-and Archived History. Where the Archived History does not contain
-the downloads table.
-"""
+"""SQLite parser plugin for Google Chrome history database files."""
 
 from __future__ import unicode_literals
 
@@ -69,7 +64,14 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
 
 
 class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
-  """Google Chrome history SQLite database plugin."""
+  """SQLite parser plugin for Google Chrome history database files.
+
+  The Google Chrome history database file is typically stored in:
+  Archived History
+  History
+
+  Note that the Archived History database does not contain the downloads table.
+  """
 
   _SYNC_CACHE_QUERY = 'SELECT id, source FROM visit_source'
 
@@ -79,7 +81,6 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h?l=108
   _PAGE_TRANSITION_CORE_MASK = 0xff
-
 
   def _GetUrl(self, url, cache, database):
     """Retrieves an URL from a reference to an entry in the from_visit table.
@@ -180,11 +181,10 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
 
 class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
-  """Google Chrome 8 - 25 history SQLite database plugin."""
+  """SQLite parser plugin for Google Chrome 8 - 25 history database files."""
 
   NAME = 'chrome_8_history'
-  DESCRIPTION = (
-      'Parser for Google Chrome 8 - 25 history SQLite database files.')
+  DATA_FORMAT = 'Google Chrome 8 - 25 history SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'downloads': frozenset([
@@ -384,11 +384,10 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
 
 class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
-  """Google Chrome 27 - 65 history SQLite database plugin."""
+  """SQLite parser plugin for Google Chrome 27+ history database files."""
 
   NAME = 'chrome_27_history'
-  DESCRIPTION = (
-      'Parser for Google Chrome 27 and later history SQLite database files.')
+  DATA_FORMAT = 'Google Chrome 27 and later history SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'downloads': frozenset([

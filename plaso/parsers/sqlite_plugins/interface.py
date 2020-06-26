@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The SQLite parser plugin interface."""
+"""Interface for SQLite database file parser plugins."""
 
 from __future__ import unicode_literals
 
@@ -13,7 +13,7 @@ class SQLitePlugin(plugins.BasePlugin):
   """SQLite parser plugin."""
 
   NAME = 'sqlite_plugin'
-  DESCRIPTION = 'Parser for SQLite database files.'
+  DATA_FORMAT = 'SQLite database file'
 
   # Dictionary of frozensets containing the columns in tables that must be
   # present in the database for the plugin to run.

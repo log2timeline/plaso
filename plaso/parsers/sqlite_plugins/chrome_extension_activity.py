@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Google Chrome extension activity database files.
-
-The Chrome extension activity is stored in SQLite database files named
-Extension Activity.
-"""
+"""SQLite parser plugin for Google Chrome extension activity database files."""
 
 from __future__ import unicode_literals
 
@@ -49,11 +45,14 @@ class ChromeExtensionActivityEventData(events.EventData):
 
 
 class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
-  """Plugin to parse Chrome extension activity database files."""
+  """SQLite parser plugin for Google Chrome extension activity database files.
+
+  The Google Chrome extension activity database file is typically stored in:
+  Extension Activity
+  """
 
   NAME = 'chrome_extension_activity'
-  DESCRIPTION = (
-      'Parser for Google Chrome extension activity SQLite database files.')
+  DATA_FORMAT = 'Google Chrome extension activity SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'activitylog_compressed': frozenset([

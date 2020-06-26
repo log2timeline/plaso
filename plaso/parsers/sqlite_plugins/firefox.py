@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Mozilla Firefox history."""
+"""SQLite parser plugin for Mozilla Firefox history database files."""
 
 from __future__ import unicode_literals
 
@@ -14,7 +14,7 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-# Check SQlite version, bail out early if too old.
+# Check SQLite version, bail out early if too old.
 if sqlite3.sqlite_version_info < (3, 7, 8):
   raise ImportWarning(
       'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
@@ -141,14 +141,14 @@ class FirefoxDownloadEventData(events.EventData):
 
 
 class FirefoxHistoryPlugin(interface.SQLitePlugin):
-  """Parses a Firefox history file.
+  """SQLite parser plugin for Mozilla Firefox history database files.
 
-     The Firefox history is stored in a SQLite database file named
-     places.sqlite.
+  The Mozilla Firefox history database file is typically stored in:
+  places.sqlite
   """
 
   NAME = 'firefox_history'
-  DESCRIPTION = 'Parser for Mozilla Firefox history SQLite database files.'
+  DATA_FORMAT = 'Mozilla Firefox history SQLite database (places.sqlite) file'
 
   REQUIRED_STRUCTURE = {
       'moz_places': frozenset([
@@ -518,14 +518,15 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
 
 class FirefoxDownloadsPlugin(interface.SQLitePlugin):
-  """Parses a Firefox downloads file.
+  """SQLite parser plugin for Mozilla Firefox downloads database files.
 
-  The Firefox downloads history is stored in a SQLite database file named
-  downloads.sqlite.
+  The Mozilla Firefox downloads database file is typically stored in:
+  downloads.sqlite
   """
 
   NAME = 'firefox_downloads'
-  DESCRIPTION = 'Parser for Mozilla Firefox downloads SQLite database files.'
+  DATA_FORMAT = (
+      'Mozilla Firefox downloads SQLite database (downloads.sqlite) file')
 
   REQUIRED_STRUCTURE = {
       'moz_downloads': frozenset([

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Google Chrome Cookie database."""
+"""SQLite parser plugin for Google Chrome cookies database files."""
 
 from __future__ import unicode_literals
 
@@ -47,7 +47,7 @@ class ChromeCookieEventData(events.EventData):
 
 
 class BaseChromeCookiePlugin(interface.SQLitePlugin):
-  """Parse Chrome Cookies file."""
+  """SQLite parser plugin for Google Chrome cookies database files."""
 
   # Point to few sources for URL information.
   URLS = [
@@ -146,11 +146,10 @@ class BaseChromeCookiePlugin(interface.SQLitePlugin):
 
 
 class Chrome17CookiePlugin(BaseChromeCookiePlugin):
-  """Parse Chrome Cookies file, versions 17 - 65."""
+  """SQLite parser plugin for Google Chrome 17 - 65 cookies database files."""
 
   NAME = 'chrome_17_cookies'
-  DESCRIPTION = (
-      'Parser for Google Chrome 17 - 65 cookies SQLite database files.')
+  DATA_FORMAT = 'Google Chrome 17 - 65 cookies SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'cookies': frozenset([
@@ -178,11 +177,10 @@ class Chrome17CookiePlugin(BaseChromeCookiePlugin):
 
 
 class Chrome66CookiePlugin(BaseChromeCookiePlugin):
-  """Parse Chrome Cookies file, versions 66 and above."""
+  """SQLite parser plugin for Google Chrome 66+ cookies database files."""
 
   NAME = 'chrome_66_cookies'
-  DESCRIPTION = (
-      'Parser for Google Chrome 66 and later cookies SQLite database files.')
+  DATA_FORMAT = 'Google Chrome 66 and later cookies SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'cookies': frozenset([

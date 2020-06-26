@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Android contacts2 Call History.
-
-Android Call History is stored in SQLite database files named contacts2.db.
-"""
+"""SQLite parser plugin for Android call history database files."""
 
 from __future__ import unicode_literals
 
@@ -36,14 +33,17 @@ class AndroidCallEventData(events.EventData):
 
 
 class AndroidCallPlugin(interface.SQLitePlugin):
-  """Parse Android contacts2 database."""
+  """SQLite parser plugin for Android call history database files.
+
+  The Android call history database file is typically stored in:
+  contacts2.db
+  """
 
   NAME = 'android_calls'
-  DESCRIPTION = 'Parser for Android calls SQLite database files.'
+  DATA_FORMAT = 'Android call history SQLite database (contacts2.db) file'
 
   REQUIRED_STRUCTURE = {
-      'calls': frozenset([
-          '_id', 'date', 'number', 'name', 'duration', 'type'])}
+      'calls': frozenset(['_id', 'date', 'number', 'name', 'duration', 'type'])}
 
   QUERIES = [
       ('SELECT _id AS id, date, number, name, duration, type FROM calls',

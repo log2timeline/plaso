@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the iMessage database on MacOS and iOS.
-
-iMessage and SMS data in MacOS and iOS are stored in SQLite databases named
-chat.db and sms.db respectively.
-"""
+"""SQLite parser plugin for MacOS and iOS iMessage database files."""
 
 from __future__ import unicode_literals
 
@@ -44,11 +40,15 @@ class IMessageEventData(events.EventData):
 
 
 class IMessagePlugin(interface.SQLitePlugin):
-  """SQLite plugin for the iMessage and SMS database."""
+  """SQLite parser plugin for MacOS and iOS iMessage database files.
+
+  The iMessage database file is typically stored in:
+  chat.db
+  sms.db
+  """
 
   NAME = 'imessage'
-  DESCRIPTION = (
-      'Parser for the iMessage and SMS SQLite databases on MacOS and iOS.')
+  DATA_FORMAT = 'MacOS and iOS iMessage database (chat.db, sms.db) file'
 
   REQUIRED_STRUCTURE = {
       'message': frozenset([

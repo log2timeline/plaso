@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Skype SQLite database (main.db) files."""
+"""SQLite parser plugin for Skype database files."""
 
 from __future__ import unicode_literals
 
@@ -121,10 +121,10 @@ class SkypeTransferFileEventData(events.EventData):
 
 
 class SkypePlugin(interface.SQLitePlugin):
-  """Parser for Skype SQlite database (main.db) files."""
+  """SQLite parser plugin for Skype database files."""
 
   NAME = 'skype'
-  DESCRIPTION = 'Parser for Skype SQLite database (main.db) files.'
+  DATA_FORMAT = 'Skype SQLite database (main.db) file'
 
   REQUIRED_STRUCTURE = {
       'Accounts': frozenset([

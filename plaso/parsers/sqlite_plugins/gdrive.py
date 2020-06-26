@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Google Drive snapshots.
-
-The Google Drive snapshots are stored in SQLite database files named
-snapshot.db.
-"""
+"""SQLite parser plugin for Google Drive snapshot database files."""
 
 from __future__ import unicode_literals
 
@@ -59,10 +55,14 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
 
 
 class GoogleDrivePlugin(interface.SQLitePlugin):
-  """SQLite plugin for Google Drive snapshot.db files."""
+  """SQLite parser plugin for Google Drive snapshot database files.
+
+  The Google Drive snapshot database file is typically stored in:
+  snapshot.db
+  """
 
   NAME = 'google_drive'
-  DESCRIPTION = 'Parser for Google Drive SQLite database files.'
+  DATA_FORMAT = 'Google Drive snapshot SQLite database (snapshot.db) file'
 
   REQUIRED_STRUCTURE = {
       'cloud_entry': frozenset([

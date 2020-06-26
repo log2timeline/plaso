@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for MacOS Duet/KnowledgeC SQLite database files."""
+"""SQLite parser plugin for MacOS Duet/KnowledgeC database files."""
 
 from __future__ import unicode_literals
 
@@ -52,10 +52,10 @@ class MacKnowledgeCSafariEventData(events.EventData):
 
 
 class MacKnowledgeCPlugin(interface.SQLitePlugin):
-  """Parser for MacOS Duet / KnowledgeC SQLite database files."""
+  """SQLite parser plugin for MacOS Duet/KnowledgeC database files."""
 
   NAME = 'mac_knowledgec'
-  DESCRIPTION = 'Parser for MacOS Duet / KnowledgeC SQLites database files.'
+  DATA_FORMAT = 'MacOS Duet / KnowledgeC SQLites database file'
 
   # Define the needed queries.
   # entry_creation: when the entry was created in the database.

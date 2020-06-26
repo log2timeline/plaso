@@ -89,20 +89,10 @@ class DataFormatInformationExractor(object):
           'AMCache Windows NT Registry file (AMCache.hve)', ''),
       'android_app_usage': (
           'Android usage-history (app usage)', ''),
-      'android_calls': (
-          'Android calls SQLite database', ''),
-      'android_sms': (
-          'Android text messages (SMS) SQLite database', ''),
-      'android_webview': (
-          'Android WebView SQLite database', ''),
-      'android_webviewcache': (
-          'Android WebViewCache SQLite database', ''),
       'apache_access': (
           'Apache access log file (access.log)', ''),
       'appcompatcache': (
           'Application Compatibility Cache data', ''),
-      'appusage': (
-          'MacOS application usage SQLite database file', ''),
       'apt_history': (
           'Advanced Packaging Tool (APT) History log file', ''),
       'asl_log': (
@@ -128,21 +118,9 @@ class DataFormatInformationExractor(object):
           'dtformats:Basic Security Module (BSM) event auditing file format'),
       'ccleaner': (
           'CCleaner data', ''),
-      'chrome_17_cookies': (
-          'Google Chrome 17 - 65 cookies SQLite database', ''),
-      'chrome_27_history': (
-          'Google Chrome 27 and later history SQLite database', ''),
-      'chrome_66_cookies': (
-          'Google Chrome 66 and later cookies SQLite database', ''),
-      'chrome_8_history': (
-          'Google Chrome 8 - 25 history SQLite database', ''),
-      'chrome_autofill': (
-          'Google Chrome autofill SQLite database', ''),
       'chrome_cache': (
           'Chrome Cache file',
           'dtformats:Chrome Cache file format'),
-      'chrome_extension_activity': (
-          'Google Chrome extension activity SQLite database', ''),
       'chrome_preferences': (
           'Google Chrome preferences', ''),
       'cron': (
@@ -172,12 +150,6 @@ class DataFormatInformationExractor(object):
           'Mozilla Firefox Cache version 1 file (version 31 or earlier)', ''),
       'firefox_cache2': (
           'Mozilla Firefox Cache version 2 file (version 32 or later)', ''),
-      'firefox_cookies': (
-          'Mozilla Firefox cookies SQLite database', ''),
-      'firefox_downloads': (
-          'Mozilla Firefox downloads SQLite database', ''),
-      'firefox_history': (
-          'Mozilla Firefox history SQLite database', ''),
       'fseventsd': (
           'MacOS File System Events Disk Log Stream files (fseventsd)',
           'dtformats:MacOS File System Events Disk Log Stream format'),
@@ -191,43 +163,21 @@ class DataFormatInformationExractor(object):
           'Google Analytics __utmt cookie', ''),
       'google_analytics_utmz': (
           'Google Analytics __utmz cookie', ''),
-      'google_drive': (
-          'Google Drive SQLite database', ''),
       'googlelog': (
           'Google-formatted log file', ''),
-      'hangouts_messages': (
-          'Google Hangouts Messages SQLite database', ''),
-      'imessage': (
-          'iMessage and SMS SQLite databases', ''),
       'java_idx': (
           'Java WebStart IDX',
           'dtformats:Java WebStart Cache IDX file format'),
-      'kik_messenger': (
-          'iOS Kik messenger SQLite database', ''),
-      'kodi': (
-          'Kodi videos SQLite database (MyVideos.db)', ''),
       'lnk': (
           'Windows Shortcut File (LNK) format',
           'libyal:liblnk:Windows Shortcut File (LNK) format'),
-      'ls_quarantine': (
-          'MacOS LS quarantine events SQLite database', ''),
       'mac_appfirewall_log': (
           'MacOS Application firewall', ''),
-      'mac_document_versions': (
-          'MacOS document revisions SQLite database', ''),
       'mac_keychain': (
           'MacOS Keychain',
           'dtformats:MacOS keychain database file format'),
-      'mac_knowledgec': (
-          'MacOS Duet / KnowledgeC SQLites database', ''),
-      'mac_notes': (
-          'MacOS notes SQLite database (NotesV7.storedata)', ''),
-      'mac_notificationcenter': (
-          'MacOS Notification Center SQLite database', ''),
       'mac_securityd': (
           'MacOS Securityd', ''),
-      'mackeeper_cache': (
-          'MacOS MacKeeper cache SQLite database', ''),
       'mactime': (
           'mactime file',
           'https://wiki.sleuthkit.org/index.php?title=Mactime'),
@@ -298,8 +248,6 @@ class DataFormatInformationExractor(object):
       'rplog': (
           'Restore Point log file (rp.log)',
           'dtformats:Restore point formats'),
-      'safari_historydb': (
-          'Safari history SQLite database (History.db)', ''),
       'santa': (
           'Santa log file (santa.log)', ''),
       'sccm': (
@@ -314,8 +262,6 @@ class DataFormatInformationExractor(object):
           'OneDrive (or SkyDrive) log file', ''),
       'skydrive_log_old': (
           'OneDrive (or SkyDrive) old log file', ''),
-      'skype': (
-          'Skype SQLite database (main.db)', ''),
       'sophos_av': (
           'Sophos Anti-Virus log file (SAV.txt)', ''),
       'sqlite': (
@@ -330,18 +276,10 @@ class DataFormatInformationExractor(object):
           'Syslog file', ''),
       'systemd_journal': (
           'Systemd journal file', ''),
-      'tango_android_profile': (
-          'Tango on Android profile SQlite database', ''),
-      'tango_android_tc': (
-          'Tango on Android tc SQLite database', ''),
       'trendmicro_url': (
           'Trend Micro Office Web Reputation log file', ''),
       'trendmicro_vd': (
           'Trend Micro Office Scan Virus Detection log file', ''),
-      'twitter_android': (
-          'Twitter on Android SQLite database', ''),
-      'twitter_ios': (
-          'Twitter on iOS 8+ SQLite database', ''),
       'userassist': (
           'User Assist data', ''),
       'usnjrnl': (
@@ -369,8 +307,6 @@ class DataFormatInformationExractor(object):
           'Windows last shutdown data', ''),
       'windows_task_cache': (
           'Windows Task Scheduler cache data', ''),
-      'windows_timeline': (
-          'Windows 10 Timeline SQLite database', ''),
       'windows_timezone': (
           'Windows timezone settings', ''),
       'windows_typed_urls': (
@@ -405,8 +341,6 @@ class DataFormatInformationExractor(object):
           'Xchat log file', ''),
       'xchatscrollback': (
           'Xchat scrollback log file', ''),
-      'zeitgeist': (
-          'Zeitgeist activity SQLite database', ''),
       'zsh_extended_history': (
           'Zsh history file', ''),
   }

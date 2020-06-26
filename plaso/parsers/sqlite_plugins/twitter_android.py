@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Parser for Twitter on Android SQlite database files."""
+"""SQLite parser plugin for Twitter on Android database files."""
 
 from __future__ import unicode_literals
 
@@ -93,10 +93,10 @@ class TwitterAndroidSearchEventData(events.EventData):
 
 
 class TwitterAndroidPlugin(interface.SQLitePlugin):
-  """Parser plugin for Twitter on Android SQLite database files."""
+  """SQLite parser plugin for Twitter on Android database files."""
 
   NAME = 'twitter_android'
-  DESCRIPTION = 'Parser for Twitter on Android SQLite database files'
+  DATA_FORMAT = 'Twitter on Android SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'search_queries': frozenset([

@@ -1,10 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Parser for Twitter on iOS 8+ SQLite database files.
-
-SQLite database path:
-/private/var/mobile/Containers/Data/Application/Library/Caches/databases/
-SQLite database name: twitter.db
-"""
+"""SQLite parser plugin for Twitter on iOS 8+ database files."""
 
 from __future__ import unicode_literals
 
@@ -74,10 +69,15 @@ class TwitterIOSStatusEventData(events.EventData):
 
 
 class TwitterIOSPlugin(interface.SQLitePlugin):
-  """Parser for Twitter on iOS 8+ SQLite database files."""
+  """SQLite parser plugin for Twitter on iOS 8+ database files.
+
+  The Twitter on iOS 8+ database file is typically stored in:
+  /private/var/mobile/Containers/Data/Application/Library/Caches/databases/
+  twitter.db
+  """
 
   NAME = 'twitter_ios'
-  DESCRIPTION = 'Parser for Twitter on iOS 8+ SQLite database files'
+  DATA_FORMAT = 'Twitter on iOS 8 and later SQLite database (twitter.db) file'
 
   REQUIRED_STRUCTURE = {
       'Users': frozenset([

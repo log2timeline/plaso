@@ -1,19 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the MacOS Notification Center SQLite database file.
-
-Notification Center events on MacOS are stored in a
-SQLite database file named "db", path is usually something like
-/private/var/folders/<W><d>/../0/com.apple.notificationcenter/db2/
-
-At the moment it takes into consideration only the main table, 'record'.
-Documentation of the behavior of each table still work in progress,
-current tables and supposed related content is the following:
-    Record: contains historical records
-    Requests: contain pending requests
-    Delivered: delivered requests
-    Displayed: displayed requests, by app_id
-    Snoozed: snoozed by user requests
-"""
+"""SQLite parser plugin for MacOS Notification Center database files."""
 
 from __future__ import unicode_literals
 
@@ -32,12 +18,12 @@ class MacNotificationCenterEventData(events.EventData):
   """MacOS NotificationCenter event data.
 
   Attributes:
-    body (str): body of the notification message
+    body (str): body of the notification message.
     bundle_name (str): name of the application's bundle that generated
         the notification.
     presented (int): either 1 or 0 if the notification has been shown to the
         user.
-    subtitle (str): optional. Subtitle   of the notification message.
+    subtitle (str): optional. Subtitle of the notification message.
     title (str): title of the message. Usually the name of the application
         that generated the notification. Occasionally the name of the sender
         of the notification for example, in case of chat messages.
@@ -57,11 +43,22 @@ class MacNotificationCenterEventData(events.EventData):
 
 
 class MacNotificationCenterPlugin(interface.SQLitePlugin):
-  """Parser for MacOS Notification Center SQLite database files."""
+  """SQLite parser plugin for MacOS Notification Center database files.
+
+  The MacOS Notification Center database file is typically stored in:
+  /private/var/folders/<W><d>/../0/com.apple.notificationcenter/db2/db
+
+  At the moment it takes into consideration only the main table, 'record'.
+  Currently supported tables and related content:
+    Record: contains historical records
+    Requests: contain pending requests
+    Delivered: delivered requests
+    Displayed: displayed requests, by app_id
+    Snoozed: snoozed by user requests
+  """
 
   NAME = 'mac_notificationcenter'
-  DESCRIPTION = (
-      'Parser for the MacOS Notification Center SQLite database files')
+  DATA_FORMAT = 'MacOS Notification Center SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'app': frozenset([

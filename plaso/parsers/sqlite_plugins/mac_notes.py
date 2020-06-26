@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for MacOS notes SQLite database file.
-
-SQLite database path: test_data/NotesV7.storedata
-SQLite database Name: NotesV7.storedata
-"""
+"""SQLite parser plugin for MacOS Notes database files."""
 
 from __future__ import unicode_literals
 
@@ -74,10 +70,14 @@ class MacNotesEventData(events.EventData):
 
 
 class MacNotesPlugin(interface.SQLitePlugin):
-  """Parser plugin for MacOS notes SQLite database files."""
+  """SQLite parser plugin for MacOS notes database files.
+
+  The MacOS Notes database file is typically stored in:
+  test_data/NotesV7.storedata
+  """
 
   NAME = 'mac_notes'
-  DESCRIPTION = 'Parser for MacOS Notes SQLite database files'
+  DATA_FORMAT = 'MacOS Notes SQLite database (NotesV7.storedata) file'
 
   QUERIES = [(
       ('SELECT nb.ZHTMLSTRING AS zhtmlstring, n.ZDATECREATED AS timestamp, '

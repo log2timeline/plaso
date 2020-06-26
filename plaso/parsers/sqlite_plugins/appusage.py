@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the MacOS application usage.
-
-The application usage is stored in SQLite database files named
-/var/db/application_usage.sqlite
-"""
+"""SQLite parser plugin for MacOS application usage database files."""
 
 from __future__ import unicode_literals
 
@@ -38,21 +34,23 @@ class MacOSApplicationUsageEventData(events.EventData):
 
 
 class ApplicationUsagePlugin(interface.SQLitePlugin):
-  """Parse Application Usage history files.
+  """SQLite parser plugin for MacOS application usage database files.
 
-  Application usage is a SQLite database that logs down entries
-  triggered by NSWorkspaceWillLaunchApplicationNotification and
+  The MacOS application usage database is typlically stored in:
+  /var/db/application_usage.sqlite
+
+  Application usage is a SQLite database that logs down entries triggered by
+  NSWorkspaceWillLaunchApplicationNotification and
   NSWorkspaceDidTerminateApplicationNotification NSWorkspace notifications by
   crankd.
 
-  See the code here:
+  More information can be found here:
   https://github.com/google/macops/blob/master/crankd/ApplicationUsage.py
-
-  Default installation: /var/db/application_usage.sqlite
   """
 
   NAME = 'appusage'
-  DESCRIPTION = 'Parser for MacOS application usage SQLite database files.'
+  DATA_FORMAT = (
+      'MacOS application usage SQLite database (application_usage.sqlite) file')
 
   REQUIRED_STRUCTURE = {
       'application_usage': frozenset([

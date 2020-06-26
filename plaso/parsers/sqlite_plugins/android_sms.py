@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Android SMS database.
-
-Android SMS messages are stored in SQLite database files named mmssms.dbs.
-"""
+"""SQLite parser plugin for Android text messages (SMS) database files."""
 
 from __future__ import unicode_literals
 
@@ -37,14 +34,17 @@ class AndroidSMSEventData(events.EventData):
 
 
 class AndroidSMSPlugin(interface.SQLitePlugin):
-  """Parser for Android SMS databases."""
+  """SQLite parser plugin for Android text messages (SMS) database files.
+
+  The Android text messages (SMS) database file is typically stored in:
+  mmssms.dbs
+  """
 
   NAME = 'android_sms'
-  DESCRIPTION = 'Parser for Android text messages SQLite database files.'
+  DATA_FORMAT = 'Android text messages (SMS) SQLite database (mmssms.dbs) file'
 
   REQUIRED_STRUCTURE = {
-      'sms': frozenset([
-          '_id', 'address', 'date', 'read', 'type', 'body'])}
+      'sms': frozenset(['_id', 'address', 'date', 'read', 'type', 'body'])}
 
   QUERIES = [
       ('SELECT _id AS id, address, date, read, type, body FROM sms',
