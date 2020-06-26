@@ -13,21 +13,6 @@ from plaso.containers import time_events
 from tests import test_lib as shared_test_lib
 
 
-class TimestampEventTest(shared_test_lib.BaseTestCase):
-  """Tests for the Plaso timestamp-based event attribute container."""
-
-  def testGetAttributeNames(self):
-    """Tests the GetAttributeNames function."""
-    attribute_container = time_events.TimestampEvent(0, 'usage')
-
-    expected_attribute_names = [
-        '_event_data_row_identifier', 'parser', 'timestamp', 'timestamp_desc']
-
-    attribute_names = sorted(attribute_container.GetAttributeNames())
-
-    self.assertEqual(attribute_names, expected_attribute_names)
-
-
 class DateTimeValuesEventTest(shared_test_lib.BaseTestCase):
   """Tests for the dfDateTime-based event attribute container."""
 
