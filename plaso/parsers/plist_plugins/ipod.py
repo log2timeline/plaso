@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a plist plugin for the iPod/iPhone storage plist."""
+"""Plist parser plugin for iPod, iPad and iPhone storage plist files."""
 
 from __future__ import unicode_literals
 
@@ -29,10 +29,10 @@ class IPodPlistEventData(events.EventData):
 
 
 class IPodPlugin(interface.PlistPlugin):
-  """Plugin to extract iPod/iPad/iPhone device information."""
+  """Plist parser plugin for iPod, iPad and iPhone storage plist files."""
 
   NAME = 'ipod_device'
-  DESCRIPTION = 'Parser for iPod, iPad and iPhone plist files.'
+  DATA_FORMAT = 'iPod, iPad and iPhone plist file'
 
   PLIST_PATH = 'com.apple.iPod.plist'
   PLIST_KEYS = frozenset(['Devices'])

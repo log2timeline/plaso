@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the MacOS user plist plugin."""
+"""Plist parser plugin for MacOS user plist files."""
 
 from __future__ import unicode_literals
 
@@ -25,7 +25,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class MacUserPlugin(interface.PlistPlugin):
-  """Basic plugin to extract timestamp Mac user information.
+  """Plist parser plugin for MacOS user plist files.
 
   Further details about the extracted fields.
     name:
@@ -39,7 +39,7 @@ class MacUserPlugin(interface.PlistPlugin):
     lastLoginTimestamp:
       last time the user was authenticated depending on the situation,
       these timestamps are reset (0 value). It is translated by the
-      library as a 2001-01-01 00:00:00 (COCAO zero time representation).
+      library as a 2001-01-01 00:00:00 (Cocoa zero time representation).
       If this happens, the event is not yield.
     failedLoginTimestamp:
       last time the user passwd was incorrectly(*).
@@ -48,7 +48,7 @@ class MacUserPlugin(interface.PlistPlugin):
   """
 
   NAME = 'macuser'
-  DESCRIPTION = 'Parser for MacOS user plist files.'
+  DATA_FORMAT = 'MacOS user plist file'
 
   # The PLIST_PATH is dynamic, "user".plist is the name of the
   # MacOS user.

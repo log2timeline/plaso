@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a default plist plugin in Plaso."""
+"""Plist parser plugin for Safari history plist files."""
 
 from __future__ import unicode_literals
 
@@ -37,10 +37,10 @@ class SafariHistoryEventData(events.EventData):
 
 
 class SafariHistoryPlugin(interface.PlistPlugin):
-  """Plugin to extract Safari history timestamps."""
+  """Plist parser plugin for Safari history plist files."""
 
   NAME = 'safari_history'
-  DESCRIPTION = 'Parser for Safari history plist files.'
+  DATA_FORMAT = 'Safari history plist file'
 
   PLIST_PATH = 'History.plist'
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])

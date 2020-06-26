@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Apple Account plist plugin."""
+"""Plist parser plugin for Apple Account plist files."""
 
 from __future__ import unicode_literals
 
@@ -14,7 +14,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class AppleAccountPlugin(interface.PlistPlugin):
-  """Basic plugin to extract the apple account information.
+  """Plist parser plugin for Apple Account plist files.
 
   Further details about fields within the key:
     Accounts: account name.
@@ -26,11 +26,10 @@ class AppleAccountPlugin(interface.PlistPlugin):
   """
 
   NAME = 'apple_id'
-  DESCRIPTION = 'Parser for Apple account information plist files.'
+  DATA_FORMAT = 'Apple account information plist file'
 
   PLIST_PATH = 'com.apple.coreservices.appleidauthenticationinfo'
-  PLIST_KEYS = frozenset(
-      ['AuthCertificates', 'AccessorVersions', 'Accounts'])
+  PLIST_KEYS = frozenset(['AuthCertificates', 'AccessorVersions', 'Accounts'])
 
   def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Check if it is a valid Apple account plist file name.

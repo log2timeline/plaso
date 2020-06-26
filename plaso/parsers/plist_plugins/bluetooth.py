@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Bluetooth plist plugin."""
+"""Plist parser plugin for Bluetooth plist files."""
 
 from __future__ import unicode_literals
 
@@ -13,7 +13,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class BluetoothPlugin(interface.PlistPlugin):
-  """Basic plugin to extract interesting Bluetooth related keys.
+  """Plist parser plugin for Bluetooth plist files.
 
   Additional details about the fields.
 
@@ -32,7 +32,7 @@ class BluetoothPlugin(interface.PlistPlugin):
   """
 
   NAME = 'macosx_bluetooth'
-  DESCRIPTION = 'Parser for Bluetooth plist files.'
+  DATA_FORMAT = 'Bluetooth plist file'
 
   PLIST_PATH = 'com.apple.bluetooth.plist'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])

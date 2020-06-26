@@ -85,8 +85,6 @@ class DataFormatInformationExractor(object):
   # TODO: consider extending Plaso parsers and parser plugins with metadata that
   # contain this information.
   _DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME = {
-      'airport': (
-          'Airport plist file ', ''),
       'amcache': (
           'AMCache Windows NT Registry file (AMCache.hve)', ''),
       'android_app_usage': (
@@ -103,8 +101,6 @@ class DataFormatInformationExractor(object):
           'Apache access log file (access.log)', ''),
       'appcompatcache': (
           'Application Compatibility Cache data', ''),
-      'apple_id': (
-          'Apple account information plist file', ''),
       'appusage': (
           'MacOS application usage SQLite database file', ''),
       'apt_history': (
@@ -203,8 +199,6 @@ class DataFormatInformationExractor(object):
           'Google Hangouts Messages SQLite database', ''),
       'imessage': (
           'iMessage and SMS SQLite databases', ''),
-      'ipod_device': (
-          'iPod, iPad and iPhone plist file', ''),
       'java_idx': (
           'Java WebStart IDX',
           'dtformats:Java WebStart Cache IDX file format'),
@@ -212,8 +206,6 @@ class DataFormatInformationExractor(object):
           'iOS Kik messenger SQLite database', ''),
       'kodi': (
           'Kodi videos SQLite database (MyVideos.db)', ''),
-      'launchd_plist': (
-          'MacOS launchd plist file', ''),
       'lnk': (
           'Windows Shortcut File (LNK) format',
           'libyal:liblnk:Windows Shortcut File (LNK) format'),
@@ -236,17 +228,9 @@ class DataFormatInformationExractor(object):
           'MacOS Securityd', ''),
       'mackeeper_cache': (
           'MacOS MacKeeper cache SQLite database', ''),
-      'macos_software_update': (
-          'MacOS software update plist file', ''),
-      'macosx_bluetooth': (
-          'MacOS Bluetooth plist file', ''),
-      'macosx_install_history': (
-          'MacOS installation history plist file', ''),
       'mactime': (
           'mactime file',
           'https://wiki.sleuthkit.org/index.php?title=Mactime'),
-      'macuser': (
-          'MacOS user plist file', ''),
       'macwifi': (
           'MacOS Wifi', ''),
       'mcafee_protection': (
@@ -314,8 +298,6 @@ class DataFormatInformationExractor(object):
       'rplog': (
           'Restore Point log file (rp.log)',
           'dtformats:Restore point formats'),
-      'safari_history': (
-          'Safari history plist file', ''),
       'safari_historydb': (
           'Safari history SQLite database (History.db)', ''),
       'santa': (
@@ -336,10 +318,6 @@ class DataFormatInformationExractor(object):
           'Skype SQLite database (main.db)', ''),
       'sophos_av': (
           'Sophos Anti-Virus log file (SAV.txt)', ''),
-      'spotlight': (
-          'Spotlight searched terms plist file', ''),
-      'spotlight_volume': (
-          'Spotlight volume configuration plist file', ''),
       'sqlite': (
           'SQLite database file', ''),
       'srum': (
@@ -356,8 +334,6 @@ class DataFormatInformationExractor(object):
           'Tango on Android profile SQlite database', ''),
       'tango_android_tc': (
           'Tango on Android tc SQLite database', ''),
-      'time_machine': (
-          'TimeMachine plist file', ''),
       'trendmicro_url': (
           'Trend Micro Office Web Reputation log file', ''),
       'trendmicro_vd': (
@@ -578,8 +554,11 @@ class DataFormatInformationExractor(object):
             category = self._DATA_FORMAT_CATEGORY_PER_PACKAGE_PATH.get(
                 package_path, 'File formats')
 
-            name, url = self._DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME.get(
-                parser_name, (parser_name, ''))
+            name = getattr(cls, 'DATA_FORMAT', None)
+            url = ''
+            if not name:
+              name, url = self._DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME.get(
+                  parser_name, (parser_name, ''))
 
             data_format_descriptor = DataFormatDescriptor(
                 category=category, name=name, url=url)
