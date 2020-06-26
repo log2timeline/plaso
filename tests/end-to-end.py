@@ -1306,6 +1306,15 @@ class ImageExportTestCase(TestCase):
       bool: True if image_export ran successfully.
     """
     exported_files_path = os.path.join(temp_directory, 'export')
+    export_options = list(test_definition.export_options)
+
+    if test_definition.filter_file:
+      filter_file_path = test_definition.filter_file
+      if self._test_sources_path:
+        filter_file_path = os.path.join(
+            self._test_sources_path, filter_file_path)
+      export_options.extend(['--filter-file', filter_file_path])
+
     output_options = ['-w', exported_files_path]
 
     logging_options = [
@@ -1318,7 +1327,7 @@ class ImageExportTestCase(TestCase):
         temp_directory, '{0:s}-image_export.err'.format(test_definition.name))
 
     command = [self._image_export_path]
-    command.extend(test_definition.export_options)
+    command.extend(export_options)
     command.extend(output_options)
     command.extend(logging_options)
     command.extend(test_definition.profiling_options)
