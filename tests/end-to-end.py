@@ -492,7 +492,7 @@ class StorageFileTestCase(TestCase):
             reference_output_list.append(line)
 
           output_list = []
-          for line in output_file:
+          for line in output_file.readlines():
             line = line.replace('/tmp/test/test_data/', '')
             line = line.replace('C:\\tmp\\test\\test_data\\', '')
             line = line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
@@ -1196,6 +1196,61 @@ class ImageExportTestCase(TestCase):
 
     return result
 
+  def _CompareHashesJSONFile(self, test_definition, temp_directory):
+    """Compares the hashes.json file with a reference hashes file.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+
+    Returns:
+      bool: True if the hashes files are identical.
+    """
+    hashes_json_file_path = os.path.join(
+        temp_directory, 'export', 'hashes.json')
+
+    result = False
+    if test_definition.reference_hashes_json_file:
+      reference_hashes_json_file_path = (
+          test_definition.reference_hashes_json_file)
+      if self._test_references_path:
+        reference_hashes_json_file_path = os.path.join(
+            self._test_references_path, reference_hashes_json_file_path)
+
+      if not os.path.exists(reference_hashes_json_file_path):
+        logging.error('No such reference hashes.json file: {0:s}'.format(
+            reference_hashes_json_file_path))
+        return False
+
+      with open(reference_hashes_json_file_path, 'r') as (
+          reference_hashes_json_file):
+        with open(hashes_json_file_path, 'r') as hashes_json_file:
+          reference_hashes_list = reference_hashes_json_file.readlines()
+
+          hashes_list = []
+          for line in hashes_json_file.readlines():
+            # Hack to change Windows paths to POSIX ones, so we can easily
+            # compare them against the reference file.
+            line = line.replace('\\\\', '/')
+            hashes_list.append(line)
+
+          differences = list(difflib.unified_diff(
+              reference_hashes_list, hashes_list,
+              fromfile=reference_hashes_json_file_path,
+              tofile=hashes_json_file_path))
+
+      if differences:
+        differences_output = []
+        for difference in differences:
+          differences_output.append(difference)
+        differences_output = '\n'.join(differences_output)
+        logging.error('Differences: {0:s}'.format(differences_output))
+
+      if not differences:
+        result = True
+
+    return result
+
   def _CreateHashesFile(self, test_definition, temp_directory):
     """Calculates the SHA-256 hashes of the exported files.
 
@@ -1263,6 +1318,7 @@ class ImageExportTestCase(TestCase):
         temp_directory, '{0:s}-image_export.err'.format(test_definition.name))
 
     command = [self._image_export_path]
+    command.extend(test_definition.export_options)
     command.extend(output_options)
     command.extend(logging_options)
     command.extend(test_definition.profiling_options)
@@ -1282,6 +1338,14 @@ class ImageExportTestCase(TestCase):
     if os.path.exists(stderr_file):
       shutil.copy(stderr_file, self._test_results_path)
 
+    hashes_json_file_path = os.path.join(
+        temp_directory, 'export', 'hashes.json')
+    if os.path.exists(hashes_json_file_path):
+      result_hashes_json_file_path = os.path.join(
+          self._test_results_path,
+          '{0:s}-hashes.json'.format(test_definition.name))
+      shutil.copy(hashes_json_file_path, result_hashes_json_file_path)
+
     return result
 
   def ReadAttributes(self, test_definition_reader, test_definition):
@@ -1300,6 +1364,9 @@ class ImageExportTestCase(TestCase):
     test_definition.hashes_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'hashes_file')
 
+    test_definition.export_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'export_options', default=[], split_string=True)
+
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)
 
@@ -1310,6 +1377,10 @@ class ImageExportTestCase(TestCase):
     test_definition.reference_hashes_file = (
         test_definition_reader.GetConfigValue(
             test_definition.name, 'reference_hashes_file'))
+
+    test_definition.reference_hashes_json_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_hashes_json_file'))
 
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, 'source')
@@ -1346,6 +1417,11 @@ class ImageExportTestCase(TestCase):
         if test_definition.reference_hashes_file:
           if not self._CompareHashesFile(test_definition, temp_directory):
             return False
+
+      # Compare hashes.json file with a reference hashes.json file.
+      if test_definition.reference_hashes_json_file:
+        if not self._CompareHashesJSONFile(test_definition, temp_directory):
+          return False
 
     return True
 
