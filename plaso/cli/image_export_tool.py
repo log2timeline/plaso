@@ -167,8 +167,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     parent_path_spec = getattr(source_file_entry.path_spec, 'parent', None)
 
     while parent_path_spec:
-      if parent_path_spec.type_indicator == (
-          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      if parent_path_spec.type_indicator in (
+          dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS):
         path_segments.insert(0, parent_path_spec.location[1:])
         break
 
@@ -206,7 +206,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     for path_spec in path_spec_generator:
       self._ExtractFileEntry(
           path_spec, destination_path, skip_duplicates=skip_duplicates)
-
 
   def _ExtractDataStream(
       self, file_entry, data_stream_name, destination_path,
