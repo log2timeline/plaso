@@ -31,7 +31,7 @@ command from the l2tdevtools source directory:
 
 ```
 set PYTHONPATH=.
-C:\Python37\python.exe tools\update.py
+C:\Python38\python.exe tools\update.py --preset plaso --track stable
 ```
 
 ## Packaging
@@ -67,7 +67,7 @@ From the l2tdevtools source directory run:
 
 ```
 set PYTHONPATH=.
-C:\Python37 (x86)\python.exe tools\update.py --machine-type x86
+C:\Python38 (x86)\python.exe tools\update.py --machine-type x86 --preset plaso --track stable
 ```
 
 From the plaso source directory run:
