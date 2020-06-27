@@ -20,6 +20,81 @@ from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
+class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
+  """Test the TLN output module field formatting helper."""
+
+  # pylint: disable=protected-access
+
+  _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
+      dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
+          os.path.sep, os.path.join('cases', 'image.dd')))
+
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'display_name': 'OS: /var/log/syslog.1',
+       'hostname': 'ubuntu',
+       'inode': 12345678,
+       'pathspec': path_spec_factory.Factory.NewPathSpec(
+           dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
+           location='/var/log/syslog.1', parent=_OS_PATH_SPEC),
+       'text': (
+           'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\n '
+           'closed for user root)'),
+       'timestamp': '2012-06-27 18:17:01',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
+       'username': 'root'}]
+
+  def testFormatDescription(self):
+    """Tests the _FormatDescription function."""
+    output_mediator = self._CreateOutputMediator()
+    formatting_helper = tln.TLNFieldFormattingHelper(output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      description_string = formatting_helper._FormatDescription(
+          event, event_data, event_data_stream)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
+    expected_description_string = (
+        '2012-06-27T18:17:01+00:00; '
+        'Unknown Time; '
+        'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session closed '
+        'for user root)')
+    self.assertEqual(description_string, expected_description_string)
+
+  def testFormatNotes(self):
+    """Tests the _FormatNotes function."""
+    output_mediator = self._CreateOutputMediator()
+    formatting_helper = tln.TLNFieldFormattingHelper(output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    notes_string = formatting_helper._FormatNotes(
+        event, event_data, event_data_stream)
+
+    self.assertEqual(
+        notes_string, 'File: OS: /var/log/syslog.1 inode: 12345678')
+
+  def test_FormatTimestamp(self):
+    """Tests the __FormatTimestamp function."""
+    output_mediator = self._CreateOutputMediator()
+    formatting_helper = tln.TLNFieldFormattingHelper(output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    timestamp_string = formatting_helper._FormatTimestamp(
+        event, event_data, event_data_stream)
+
+    self.assertEqual(timestamp_string, '1340821021')
+
+
 class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the TLN output module."""
 
@@ -68,7 +143,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
     try:
       self._output_module.WriteEventBody(
-          event, event_data, event_data_stream, None)
+          event, event_data, event_data_stream, event_data_stream)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -131,7 +206,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
     try:
       self._output_module.WriteEventBody(
-          event, event_data, event_data_stream, None)
+          event, event_data, event_data_stream, event_data_stream)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)

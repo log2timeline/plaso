@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Contains a formatter for a dynamic output module for plaso."""
+"""Dynamic selected delimiter separated values output module."""
 
 from __future__ import unicode_literals
 
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.output import interface
+from plaso.output import formatting_helper
 from plaso.output import logger
 from plaso.output import manager
+from plaso.output import shared_dsv
 
 
-class DynamicFieldsHelper(object):
-  """Helper for outputting a dynamic selection of fields."""
+class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
+  """Dynamic output module field formatting helper."""
 
   # TODO: determine why _FormatTimestampDescription is mapped to both
   # timestamp_desc and type.
@@ -32,27 +33,21 @@ class DynamicFieldsHelper(object):
       'source': '_FormatSourceShort',
       'sourcetype': '_FormatSource',
       'source_long': '_FormatSource',
+      'tag': '_FormatTag',
       'time': '_FormatTime',
       'timestamp_desc': '_FormatTimestampDescription',
-      'timezone': '_FormatZone',
+      'timezone': '_FormatTimeZone',
       'type': '_FormatTimestampDescription',
       'user': '_FormatUsername',
       'username': '_FormatUsername',
-      'zone': '_FormatZone'}
+      'zone': '_FormatTimeZone'}
 
-  def __init__(self, output_mediator):
-    """Initializes a dynamic fields helper.
-
-    Args:
-      output_mediator (OutputMediator): output mediator.
-    """
-    super(DynamicFieldsHelper, self).__init__()
-    self._output_mediator = output_mediator
-
+  # The field format callback methods require specific arguments hence
+  # the check for unused arguments is disabled here.
   # pylint: disable=unused-argument
 
   def _FormatDate(self, event, event_data, event_data_stream):
-    """Formats the date.
+    """Formats a date field.
 
     Args:
       event (EventObject): event.
@@ -77,7 +72,7 @@ class DynamicFieldsHelper(object):
       return '0000-00-00'
 
   def _FormatDateTime(self, event, event_data, event_data_stream):
-    """Formats the date and time in ISO 8601 format.
+    """Formats a date and time field in ISO 8601 format.
 
     Args:
       event (EventObject): event.
@@ -100,42 +95,8 @@ class DynamicFieldsHelper(object):
 
       return '0000-00-00T00:00:00'
 
-  def _FormatHostname(self, event, event_data, event_data_stream):
-    """Formats the hostname.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: hostname field.
-    """
-    return self._output_mediator.GetHostname(event_data)
-
-  def _FormatInode(self, event, event_data, event_data_stream):
-    """Formats the inode.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: inode field.
-    """
-    inode = getattr(event_data, 'inode', None)
-    if inode is None:
-      pathspec = getattr(event_data, 'pathspec', None)
-      if pathspec and hasattr(pathspec, 'inode'):
-        inode = pathspec.inode
-    if inode is None:
-      inode = '-'
-
-    return inode
-
   def _FormatMACB(self, event, event_data, event_data_stream):
-    """Formats the legacy MACB representation.
+    """Formats a legacy MACB representation field.
 
     Args:
       event (EventObject): event.
@@ -148,7 +109,7 @@ class DynamicFieldsHelper(object):
     return self._output_mediator.GetMACBRepresentation(event, event_data)
 
   def _FormatMessage(self, event, event_data, event_data_stream):
-    """Formats the message.
+    """Formats a message field.
 
     Args:
       event (EventObject): event.
@@ -172,7 +133,7 @@ class DynamicFieldsHelper(object):
     return message
 
   def _FormatMessageShort(self, event, event_data, event_data_stream):
-    """Formats the short message.
+    """Formats a short message field.
 
     Args:
       event (EventObject): event.
@@ -196,7 +157,7 @@ class DynamicFieldsHelper(object):
     return message_short
 
   def _FormatSource(self, event, event_data, event_data_stream):
-    """Formats the source.
+    """Formats a source field.
 
     Args:
       event (EventObject): event.
@@ -219,47 +180,8 @@ class DynamicFieldsHelper(object):
 
     return source
 
-  def _FormatSourceShort(self, event, event_data, event_data_stream):
-    """Formats the short source.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: short source field.
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-          type in the event data.
-    """
-    source_short, _ = self._output_mediator.GetFormattedSources(
-        event, event_data)
-    if source_short is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to create source for event with data type: {0:s}.'.format(
-              data_type))
-
-    return source_short
-
-  def _FormatTag(self, event_tag):
-    """Formats the event tag.
-
-    Args:
-      event_tag (EventTag): event tag or None if not set.
-
-    Returns:
-      str: event tag labels or "-" if event tag is not set.
-    """
-    if not event_tag:
-      return '-'
-
-    return ' '.join(event_tag.labels)
-
   def _FormatTime(self, event, event_data, event_data_stream):
-    """Formats the time.
+    """Formats a time field.
 
     Args:
       event (EventObject): event.
@@ -284,7 +206,7 @@ class DynamicFieldsHelper(object):
       return '--:--:--'
 
   def _FormatTimestampDescription(self, event, event_data, event_data_stream):
-    """Formats the timestamp description.
+    """Formats a timestamp description field.
 
     Args:
       event (EventObject): event.
@@ -296,31 +218,7 @@ class DynamicFieldsHelper(object):
     """
     return event.timestamp_desc or '-'
 
-  def _FormatUsername(self, event, event_data, event_data_stream):
-    """Formats the username.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: username field.
-    """
-    return self._output_mediator.GetUsername(event_data)
-
-  def _FormatZone(self, event, event_data, event_data_stream):
-    """Formats the time zone.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: time zone field.
-    """
-    return '{0!s}'.format(self._output_mediator.timezone)
+  # pylint: enable=unused-argument
 
   def _ReportEventError(self, event, event_data, error_message):
     """Reports an event related error.
@@ -341,54 +239,15 @@ class DynamicFieldsHelper(object):
             parser_chain, error_message)
     logger.error(error_message)
 
-  def GetFormattedField(
-      self, field_name, event, event_data, event_data_stream, event_tag):
-    """Formats the specified field.
 
-    Args:
-      field_name (str): name of the field.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      str: value of the field.
-    """
-    if field_name == 'tag':
-      return self._FormatTag(event_tag)
-
-    callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
-    callback_function = None
-    if callback_name:
-      callback_function = getattr(self, callback_name, None)
-
-    if callback_function:
-      output_value = callback_function(event, event_data, event_data_stream)
-    elif hasattr(event_data_stream, field_name):
-      output_value = getattr(event_data_stream, field_name, None)
-    else:
-      output_value = getattr(event_data, field_name, None)
-
-    if output_value is None:
-      output_value = '-'
-
-    elif not isinstance(output_value, str):
-      output_value = '{0!s}'.format(output_value)
-
-    return output_value
-
-
-class DynamicOutputModule(interface.LinearOutputModule):
-  """Dynamic selection of fields for a separated value output format."""
+class DynamicOutputModule(shared_dsv.DSVOutputModule):
+  """Dynamic selected delimiter separated values output module."""
 
   NAME = 'dynamic'
   DESCRIPTION = (
       'Dynamic selection of fields for a separated value output format.')
 
-  _DEFAULT_FIELD_DELIMITER = ','
-
-  _DEFAULT_FIELDS = [
+  _DEFAULT_NAMES = [
       'datetime', 'timestamp_desc', 'source', 'source_long',
       'message', 'parser', 'display_name', 'tag']
 
@@ -398,67 +257,9 @@ class DynamicOutputModule(interface.LinearOutputModule):
     Args:
       output_mediator (OutputMediator): an output mediator.
     """
-    super(DynamicOutputModule, self).__init__(output_mediator)
-    self._dynamic_fields_helper = DynamicFieldsHelper(output_mediator)
-    self._field_delimiter = self._DEFAULT_FIELD_DELIMITER
-    self._fields = self._DEFAULT_FIELDS
-
-  def _SanitizeField(self, field):
-    """Sanitizes a field for output.
-
-    This method replaces any field delimiters with a space.
-
-    Args:
-      field (str): name of the field to sanitize.
-
-    Returns:
-      str: value of the field.
-    """
-    if self._field_delimiter and isinstance(field, str):
-      return field.replace(self._field_delimiter, ' ')
-    return field
-
-  def SetFieldDelimiter(self, field_delimiter):
-    """Sets the field delimiter.
-
-    Args:
-      field_delimiter (str): field delimiter.
-    """
-    self._field_delimiter = field_delimiter
-
-  def SetFields(self, fields):
-    """Sets the fields to output.
-
-    Args:
-      fields (list[str]): names of the fields to output.
-    """
-    self._fields = fields
-
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
-    output_values = []
-    for field_name in self._fields:
-      output_value = self._dynamic_fields_helper.GetFormattedField(
-          field_name, event, event_data, event_data_stream, event_tag)
-
-      output_value = self._SanitizeField(output_value)
-      output_values.append(output_value)
-
-    output_line = '{0:s}\n'.format(self._field_delimiter.join(output_values))
-    self._output_writer.Write(output_line)
-
-  def WriteHeader(self):
-    """Writes the header to the output."""
-    output_text = self._field_delimiter.join(self._fields)
-    output_text = '{0:s}\n'.format(output_text)
-    self._output_writer.Write(output_text)
+    formatting_helper_object = DynamicFieldFormattingHelper(output_mediator)
+    super(DynamicOutputModule, self).__init__(
+        output_mediator, formatting_helper_object, self._DEFAULT_NAMES)
 
 
 manager.OutputManager.RegisterOutput(DynamicOutputModule)

@@ -21,9 +21,6 @@ class OutputModule(object):
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
-
-    Raises:
-      ValueError: when there are unused keyword arguments.
     """
     super(OutputModule, self).__init__()
     self._output_mediator = output_mediator
@@ -161,9 +158,6 @@ class LinearOutputModule(OutputModule):
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
-
-    Raises:
-      ValueError: if the output writer is missing.
     """
     super(LinearOutputModule, self).__init__(output_mediator)
     self._output_writer = None
