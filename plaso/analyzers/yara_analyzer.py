@@ -5,6 +5,16 @@ from __future__ import unicode_literals
 
 import yara
 
+try:
+  from yara import Error as YaraError
+except ImportError:
+  from yara import YaraError
+
+try:
+  from yara import TimeoutError as YaraTimeoutError
+except ImportError:
+  from yara import YaraTimeoutError
+
 from plaso.analyzers import interface
 from plaso.analyzers import logger
 from plaso.analyzers import manager
@@ -41,12 +51,15 @@ class YaraAnalyzer(interface.BaseAnalyzer):
     """
     if not self._rules:
       return
+
     try:
       self._matches = self._rules.match(data=data, timeout=self._MATCH_TIMEOUT)
-    except yara.YaraTimeoutError:
+
+    except YaraTimeoutError:
       logger.error('Could not process file within timeout: {0:d}'.format(
           self._MATCH_TIMEOUT))
-    except yara.YaraError as exception:
+
+    except YaraError as exception:
       logger.error('Error processing file with Yara: {0!s}.'.format(
           exception))
 

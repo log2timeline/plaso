@@ -102,23 +102,28 @@ class YAMLFormattersFile(object):
       raise errors.ParseError(
           'Invalid event formatter definition missing source.')
 
+    # TODO: pylint will complain about invalid-name because of the override
+    # of class "constants", hence that setattr is used. Change this once
+    # formatters have been migrated to configuration file. Also see:
+    # https://github.com/log2timeline/plaso/issues/444
     if formatter_type == 'basic':
       formatter = interface.EventFormatter()
       # TODO: check if message and short_message are strings
-      formatter.FORMAT_STRING = message
-      formatter.FORMAT_STRING_SHORT = short_message
+      setattr(formatter, 'FORMAT_STRING', message)
+      setattr(formatter, 'FORMAT_STRING_SHORT', short_message)
 
     elif formatter_type == 'conditional':
       formatter = interface.ConditionalEventFormatter()
-      # TODO: check if message and short_message are list of strings
-      formatter.FORMAT_STRING_PIECES = message
-      formatter.FORMAT_STRING_SHORT_PIECES = short_message
-      formatter.FORMAT_STRING_SEPARATOR = formatter_definition_values.get(
+      separator = formatter_definition_values.get(
           'separator', formatter.FORMAT_STRING_SEPARATOR)
+      # TODO: check if message and short_message are list of strings
+      setattr(formatter, 'FORMAT_STRING_PIECES', message)
+      setattr(formatter, 'FORMAT_STRING_SHORT_PIECES', short_message)
+      setattr(formatter, 'FORMAT_STRING_SEPARATOR', separator)
 
-    formatter.DATA_TYPE = data_type
-    formatter.SOURCE_LONG = source
-    formatter.SOURCE_SHORT = short_source
+    setattr(formatter, 'DATA_TYPE', data_type)
+    setattr(formatter, 'SOURCE_LONG', source)
+    setattr(formatter, 'SOURCE_SHORT', short_source)
 
     return formatter
 
