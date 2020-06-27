@@ -70,6 +70,10 @@ class SharedJSONOutputModule(interface.LinearOutputModule):
           event_data_stream)
       del event_data_stream_json_dict['__container_type__']
 
+      path_spec = event_data_stream_json_dict.pop('path_spec', None)
+      if path_spec:
+        event_data_stream_json_dict['pathspec'] = path_spec
+
       event_json_dict.update(event_data_stream_json_dict)
 
     if event_tag:

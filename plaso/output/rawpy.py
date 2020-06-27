@@ -36,13 +36,19 @@ class NativePythonFormatterHelper(object):
         '[Timestamp]:',
         '  {0:s}'.format(date_time_string)]
 
-    pathspec = getattr(event_data, 'pathspec', None)
-    if pathspec:
+    path_specification = getattr(event_data_stream, 'path_spec', None)
+    if not path_specification:
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility.
+      path_specification = getattr(event_data, 'pathspec', None)
+
+    if path_specification:
       lines_of_text.extend([
           '',
           '[Pathspec]:'])
       lines_of_text.extend([
-          '  {0:s}'.format(line) for line in pathspec.comparable.split('\n')])
+          '  {0:s}'.format(line)
+          for line in path_specification.comparable.split('\n')])
 
       # Remove additional empty line.
       lines_of_text.pop()
@@ -67,7 +73,9 @@ class NativePythonFormatterHelper(object):
             '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
                 attribute_name, event_data.data_type, attribute_value))
 
-      if attribute_name == 'pathspec':
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility. The current value is event_data_stream.path_spec.
+      if attribute_name in ('path_spec', 'pathspec'):
         continue
 
       attribute_string = '  {{{0!s}}} {1!s}'.format(

@@ -111,17 +111,24 @@ class WindowsService(yaml.YAMLObject):
     return True
 
   @classmethod
-  def FromEventData(cls, event_data):
+  def FromEventData(cls, event_data, event_data_stream):
     """Creates a service object from event data.
 
     Args:
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       WindowsService: service.
     """
-    if event_data.pathspec:
-      source = (event_data.pathspec.location, event_data.key_path)
+    path_specification = getattr(event_data_stream, 'path_spec', None)
+    if not path_specification:
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility.
+      path_specification = getattr(event_data, 'pathspec', None)
+
+    if path_specification:
+      source = (path_specification.location, event_data.key_path)
     else:
       source = ('Unknown', 'Unknown')
 
@@ -271,7 +278,7 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
     service_event_data = services.WindowsRegistryServiceEventData()
     service_event_data.CopyFromDict(event_data_attributes)
 
-    service = WindowsService.FromEventData(service_event_data)
+    service = WindowsService.FromEventData(event_data, event_data_stream)
     self._service_collection.AddService(service)
 
   def SetOutputFormat(self, output_format):

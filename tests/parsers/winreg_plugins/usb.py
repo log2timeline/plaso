@@ -50,7 +50,6 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:usb')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
     self.assertEqual(event_data.subkey_name, 'VID_0E0F&PID_0002')
     self.assertEqual(event_data.vendor, 'VID_0E0F')
     self.assertEqual(event_data.product, 'PID_0002')

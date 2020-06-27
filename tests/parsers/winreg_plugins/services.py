@@ -169,7 +169,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:service')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
     self.assertEqual(event_data.service_type, 0x20)
     self.assertEqual(event_data.start_type, 3)
     self.assertEqual(event_data.service_dll, '%SystemRoot%\\System32\\qmgr.dll')

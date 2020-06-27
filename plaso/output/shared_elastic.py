@@ -159,7 +159,9 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     event_values = {}
     for attribute_name, attribute_value in sorted(event_attributes):
-      if attribute_name == 'pathspec':
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility. The current value is event_data_stream.path_spec.
+      if attribute_name in ('path_spec', 'pathspec'):
         try:
           attribute_value = JsonPathSpecSerializer.WriteSerialized(
               attribute_value)
