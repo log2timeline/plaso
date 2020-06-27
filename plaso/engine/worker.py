@@ -17,6 +17,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.analyzers import hashing_analyzer
 from plaso.analyzers import manager as analyzers_manager
 from plaso.containers import event_sources
+from plaso.containers import events
 from plaso.engine import extractors
 from plaso.engine import logger
 from plaso.lib import definitions
@@ -123,25 +124,27 @@ class EventExtractionWorker(object):
     self.last_activity_timestamp = 0.0
     self.processing_status = definitions.STATUS_INDICATOR_IDLE
 
-  def _AnalyzeDataStream(self, mediator, file_entry, data_stream_name):
+  def _AnalyzeDataStream(
+      self, file_entry, data_stream_name, display_name, event_data_stream):
     """Analyzes the contents of a specific data stream of a file entry.
 
-    The results of the analyzers are set in the parser mediator as attributes
-    that are added to produced event objects. Note that some file systems
-    allow directories to have data streams, such as NTFS.
+    The results of the analyzers are set in the event data stream as
+    attributes that are added to produced event objects. Note that some
+    file systems allow directories to have data streams, such as NTFS.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry whose data stream is to be
           analyzed.
       data_stream_name (str): name of the data stream.
+      display_name (str): human readable representation of the file entry
+          currently being analyzed.
+      event_data_stream (EventDataStream): event data stream attribute
+           container.
 
     Raises:
       RuntimeError: if the file-like object cannot be retrieved from
           the file entry.
     """
-    display_name = mediator.GetDisplayName()
     logger.debug('[AnalyzeDataStream] analyzing file: {0:s}'.format(
         display_name))
 
@@ -156,7 +159,7 @@ class EventExtractionWorker(object):
             '{0:s}.').format(display_name))
 
       try:
-        self._AnalyzeFileObject(mediator, file_object)
+        self._AnalyzeFileObject(file_object, display_name, event_data_stream)
       finally:
         file_object.close()
 
@@ -164,17 +167,18 @@ class EventExtractionWorker(object):
       if self._processing_profiler:
         self._processing_profiler.StopTiming('analyzing')
 
-    logger.debug(
-        '[AnalyzeDataStream] completed analyzing file: {0:s}'.format(
-            display_name))
+    logger.debug('[AnalyzeDataStream] completed analyzing file: {0:s}'.format(
+        display_name))
 
-  def _AnalyzeFileObject(self, mediator, file_object):
+  def _AnalyzeFileObject(self, file_object, display_name, event_data_stream):
     """Processes a file-like object with analyzers.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
       file_object (dfvfs.FileIO): file-like object to process.
+      display_name (str): human readable representation of the file entry
+          currently being analyzed.
+      event_data_stream (EventDataStream): event data stream attribute
+           container.
     """
     maximum_read_size = max([
         analyzer_object.SIZE_LIMIT for analyzer_object in self._analyzers])
@@ -226,19 +230,15 @@ class EventExtractionWorker(object):
 
       data = file_object.read(maximum_read_size)
 
-    display_name = mediator.GetDisplayName()
     for analyzer_object in self._analyzers:
-      if self._abort:
-        break
-
       for result in analyzer_object.GetResults():
         logger.debug((
             '[AnalyzeFileObject] attribute {0:s}:{1:s} calculated for '
             'file: {2:s}.').format(
                 result.attribute_name, result.attribute_value, display_name))
 
-        mediator.AddEventAttribute(
-            result.attribute_name, result.attribute_value)
+        setattr(event_data_stream, result.attribute_name,
+                result.attribute_value)
 
       analyzer_object.Reset()
 
@@ -716,10 +716,16 @@ class EventExtractionWorker(object):
 
     mediator.ClearEventAttributes()
 
+    event_data_stream = None
     if data_stream and self._analyzers:
-      # Since AnalyzeDataStream generates event attributes it needs to be
-      # called before producing events.
-      self._AnalyzeDataStream(mediator, file_entry, data_stream.name)
+      display_name = mediator.GetDisplayName()
+      event_data_stream = events.EventDataStream()
+      # Since AnalyzeDataStream generates event data stream attributes it
+      # needs to be called before producing events.
+      self._AnalyzeDataStream(
+          file_entry, data_stream.name, display_name, event_data_stream)
+
+    mediator.ProduceEventDataStream(event_data_stream)
 
     self._ExtractMetadataFromFileEntry(mediator, file_entry, data_stream)
 

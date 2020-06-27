@@ -10,7 +10,6 @@ import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.containers import events
 from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
@@ -54,7 +53,7 @@ class ParserMediator(object):
     super(ParserMediator, self).__init__()
     self._abort = False
     self._cpu_time_profiler = None
-    self._event_data_stream = None
+    self._event_data_stream_identifier = None
     self._extra_event_attributes = {}
     self._file_entry = None
     self._knowledge_base = knowledge_base
@@ -447,6 +446,28 @@ class ParserMediator(object):
 
       setattr(event_data, attribute, value)
 
+  def ProduceEventDataStream(self, event_data_stream):
+    """Produces an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): an event data stream or None if no
+          event data stream is needed.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
+    """
+    if not self._storage_writer:
+      raise RuntimeError('Storage writer not set.')
+
+    if event_data_stream:
+      self._storage_writer.AddEventDataStream(event_data_stream)
+
+      self._event_data_stream_identifier = event_data_stream.GetIdentifier()
+    else:
+      self._event_data_stream_identifier = None
+
+    self.last_activity_timestamp = time.time()
+
   def ProduceEventSource(self, event_source):
     """Produces an event source.
 
@@ -496,14 +517,9 @@ class ParserMediator(object):
           event_data, parser_chain=self.GetParserChain(),
           file_entry=self._file_entry)
 
-      # TODO: replace this work-around with actually setting the event data
-      # stream.
-      if not self._event_data_stream:
-        self._event_data_stream = events.EventDataStream()
-        self._storage_writer.AddEventDataStream(self._event_data_stream)
-
-      event_data_stream_identifier = self._event_data_stream.GetIdentifier()
-      event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
+      if self._event_data_stream_identifier:
+        event_data.SetEventDataStreamIdentifier(
+            self._event_data_stream_identifier)
 
       self._storage_writer.AddEventData(event_data)
 
