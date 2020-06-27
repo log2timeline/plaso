@@ -9,7 +9,7 @@ Plaso supports several output formats:
 
 Name | Description
 --- | ---
-dynamic | Output events to a delimeter (comma by default) separated value output format, that supports a dynamic selection of fields.
+dynamic | Output events to a delimiter (comma by default) separated value output format, that supports a dynamic selection of fields.
 elastic | Output events to an ElasticSearch database. Requires elasticsearch-py.
 json | Output events to JSON format.
 json_line | Output events to JSON line format.

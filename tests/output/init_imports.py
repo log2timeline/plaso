@@ -13,8 +13,8 @@ class OutputImportTest(test_lib.ImportCheckTestCase):
   """Tests that analysis plugin classes are imported correctly."""
 
   _IGNORABLE_FILES = frozenset([
-      'logger.py', 'manager.py', 'mediator.py', 'interface.py',
-      'shared_elastic.py', 'shared_json.py'])
+      'formatting_helper.py', 'interface.py', 'logger.py', 'manager.py',
+      'mediator.py', 'shared_dsv.py', 'shared_elastic.py', 'shared_json.py'])
 
   def testOutputModulesImported(self):
     """Tests that all output modules are imported."""
