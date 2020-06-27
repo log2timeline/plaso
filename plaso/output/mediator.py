@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+from plaso.engine import path_helper
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 
@@ -69,6 +70,20 @@ class OutputMediator(object):
           event_data.data_type)
 
     return None
+
+  def GetDisplayNameForPathSpec(self, path_spec):
+    """Retrieves the display name for a path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: human readable version of the path specification.
+    """
+    mount_path = self._knowledge_base.GetMountPath()
+    text_prepend = self._knowledge_base.GetTextPrepend()
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(
+        path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
   def GetFormattedMessages(self, event_data):
     """Retrieves the formatted messages related to the event data.
@@ -245,6 +260,19 @@ class OutputMediator(object):
       macb_representation.append('.')
 
     return ''.join(macb_representation)
+
+  def GetRelativePathForPathSpec(self, path_spec):
+    """Retrieves the relative path for a path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: relateive path of the path specification.
+    """
+    mount_path = self._knowledge_base.GetMountPath()
+    return path_helper.PathHelper.GetRelativePathForPathSpec(
+        path_spec, mount_path=mount_path)
 
   def GetStoredHostname(self):
     """Retrieves the stored hostname.

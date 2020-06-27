@@ -17,9 +17,11 @@ class FileStatEventData(events.EventData):
   """File system stat event data.
 
   Attributes:
+    display_name (str): display name.
     file_entry_type (int): dfVFS file entry type.
     file_size (int): file size in bytes.
     file_system_type (str): file system type.
+    filename (str): name of the file.
     inode (int): inode of the file.
     is_allocated (bool): True if the file is allocated.
   """
@@ -29,9 +31,11 @@ class FileStatEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(FileStatEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.display_name = None
     self.file_entry_type = None
     self.file_size = None
     self.file_system_type = None
+    self.filename = None
     self.inode = None
     self.is_allocated = None
 
@@ -87,9 +91,14 @@ class FileStatParser(interface.FileEntryParser):
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
     event_data = FileStatEventData()
+    event_data.display_name = parser_mediator.GetDisplayNameForPathSpec(
+        file_entry.path_spec)
     event_data.file_entry_type = stat_object.type
     event_data.file_size = getattr(stat_object, 'size', None)
     event_data.file_system_type = file_system_type
+    event_data.filename = parser_mediator.GetRelativePathForPathSpec(
+        file_entry.path_spec)
+    event_data.inode = getattr(stat_object, 'ino', None)
     event_data.is_allocated = file_entry.IsAllocated()
 
     if file_entry.access_time:

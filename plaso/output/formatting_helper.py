@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 import abc
 import datetime
 
+from dfvfs.lib import definitions as dfvfs_definitions
+
 from plaso.lib import errors
 from plaso.output import logger
 
@@ -81,6 +83,8 @@ class FieldFormattingHelper(object):
       str: inode field.
     """
     inode = getattr(event_data, 'inode', None)
+
+    # Note that inode can contain 0.
     if inode is None:
       path_specification = getattr(event_data_stream, 'path_spec', None)
       if not path_specification:
@@ -88,10 +92,25 @@ class FieldFormattingHelper(object):
         # compatibility.
         path_specification = getattr(event_data, 'pathspec', None)
 
-      inode = getattr(path_specification, 'inode', None)
+      if path_specification:
+        if path_specification.type_indicator == (
+            dfvfs_definitions.TYPE_INDICATOR_APFS):
+          inode = getattr(path_specification, 'identifier', None)
+
+        elif path_specification.type_indicator == (
+            dfvfs_definitions.TYPE_INDICATOR_NTFS):
+          inode = getattr(path_specification, 'mft_entry', None)
+
+        elif path_specification.type_indicator == (
+            dfvfs_definitions.TYPE_INDICATOR_TSK):
+          # Note that inode contains the TSK metadata address.
+          inode = getattr(path_specification, 'inode', None)
 
     if inode is None:
       inode = '-'
+
+    elif isinstance(inode, int):
+      inode = '{0:d}'.format(inode)
 
     return inode
 

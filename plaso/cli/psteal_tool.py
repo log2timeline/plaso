@@ -354,6 +354,10 @@ class PstealTool(
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
+    # TODO: set mount path in knowledge base with
+    # extraction_engine.knowledge_base.SetMountPath()
+    extraction_engine.knowledge_base.SetTextPrepend(self._text_prepend)
+
     try:
       extraction_engine.BuildCollectionFilters(
           self._artifact_definitions_path, self._custom_artifacts_path,

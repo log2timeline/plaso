@@ -10,6 +10,7 @@ of the source data.
 from __future__ import unicode_literals
 
 import codecs
+import os
 
 from plaso.containers import artifacts
 from plaso.engine import logger
@@ -30,6 +31,8 @@ class KnowledgeBase(object):
     self._codepage = 'cp1252'
     self._environment_variables = {}
     self._hostnames = {}
+    self._mount_path = None
+    self._text_prepend = None
     self._time_zone = pytz.UTC
     self._user_accounts = {}
     self._values = {}
@@ -172,6 +175,14 @@ class KnowledgeBase(object):
 
     return hostname_artifact.name or ''
 
+  def GetMountPath(self):
+    """Retrieves the mount path of the source.
+
+    Returns:
+      str: mount path of the source or None if not set.
+    """
+    return self._mount_path
+
   def GetSourceConfigurationArtifacts(self, session_identifier=None):
     """Retrieves the knowledge base as a source configuration artifacts.
 
@@ -237,6 +248,14 @@ class KnowledgeBase(object):
     system_configuration.user_accounts = list(user_accounts.values())
 
     return system_configuration
+
+  def GetTextPrepend(self):
+    """Retrieves the text to prepend to the display name.
+
+    Returns:
+      str: text to prepend to the display name or None if not set.
+    """
+    return self._text_prepend
 
   def GetUsernameByIdentifier(
       self, user_identifier, session_identifier=None):
@@ -407,6 +426,29 @@ class KnowledgeBase(object):
     session_identifier = session_identifier or self._active_session
 
     self._hostnames[session_identifier] = hostname
+
+  def SetMountPath(self, mount_path):
+    """Sets the text to prepend to the display name.
+
+    Args:
+      mount_path (str): mount path of the source or None if the source is
+          not a mounted onto a directory.
+    """
+    # Remove a trailing path separator from the mount path so the relative
+    # paths will start with a path separator.
+    if mount_path and mount_path.endswith(os.sep):
+      mount_path = mount_path[:-1]
+
+    self._mount_path = mount_path
+
+  def SetTextPrepend(self, text_prepend):
+    """Sets the text to prepend to the display name.
+
+    Args:
+      text_prepend (str): text to prepend to the display name or None if no
+          text should be prepended.
+    """
+    self._text_prepend = text_prepend
 
   def SetTimeZone(self, time_zone):
     """Sets the time zone.

@@ -36,15 +36,6 @@ class ExtractionConfigurationTest(unittest.TestCase):
     self.assertIsNotNone(configuration)
 
 
-class InputSourceConfigurationTest(unittest.TestCase):
-  """Tests the input source configuration settings."""
-
-  def testInitialization(self):
-    """Tests the __init__ function."""
-    configuration = configurations.InputSourceConfiguration()
-    self.assertIsNotNone(configuration)
-
-
 class ProfilingConfigurationTest(unittest.TestCase):
   """Tests the profiling configuration settings."""
 

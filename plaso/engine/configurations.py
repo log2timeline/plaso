@@ -39,7 +39,6 @@ class EventExtractionConfiguration(interface.AttributeContainer):
   Attributes:
     filter_object (objectfilter.Filter): filter that specifies which
         events to include.
-    text_prepend (str): text to prepend to every event.
   """
   CONTAINER_TYPE = 'event_extraction_configuration'
 
@@ -47,7 +46,6 @@ class EventExtractionConfiguration(interface.AttributeContainer):
     """Initializes an event extraction configuration object."""
     super(EventExtractionConfiguration, self).__init__()
     self.filter_object = None
-    self.text_prepend = None
 
 
 class ExtractionConfiguration(interface.AttributeContainer):
@@ -76,20 +74,6 @@ class ExtractionConfiguration(interface.AttributeContainer):
     self.process_archives = False
     self.process_compressed_streams = True
     self.yara_rules_string = None
-
-
-class InputSourceConfiguration(interface.AttributeContainer):
-  """Configuration settings of an input source.
-
-  Attributes:
-    mount_path (str): path of a "mounted" directory input source.
-  """
-  CONTAINER_TYPE = 'input_source'
-
-  def __init__(self):
-    """Initializes an input source configuration object."""
-    super(InputSourceConfiguration, self).__init__()
-    self.mount_path = None
 
 
 class ProfilingConfiguration(interface.AttributeContainer):
@@ -199,7 +183,6 @@ class ProcessingConfiguration(interface.AttributeContainer):
         configuration.
     extraction (ExtractionConfiguration): extraction configuration.
     filter_file (str): path to a file with find specifications.
-    input_source (InputSourceConfiguration): input source configuration.
     log_filename (str): name of the log file.
     parser_filter_expression (str): parser filter expression,
         where None represents all parsers and plugins.
@@ -221,7 +204,6 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.event_extraction = EventExtractionConfiguration()
     self.extraction = ExtractionConfiguration()
     self.filter_file = None
-    self.input_source = InputSourceConfiguration()
     self.log_filename = None
     self.parser_filter_expression = None
     self.preferred_year = None

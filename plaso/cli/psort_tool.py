@@ -522,6 +522,8 @@ class PsortTool(
               source_configuration.system_configuration,
               session_identifier=session.identifier)
 
+      self._knowledge_base.SetTextPrepend(session.text_prepend)
+
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
