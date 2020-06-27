@@ -73,7 +73,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     try:
       output_values = self._output_module._GetOutputValues(
-          event, event_data, None)
+          event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -110,7 +110,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     try:
       output_values = self._output_module._GetOutputValues(
-          event, event_data, None)
+          event, event_data, None, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -136,7 +136,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      self._output_module.WriteEventBody(event, event_data, event_tag)
+      self._output_module.WriteEventBody(event, event_data, None, event_tag)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)

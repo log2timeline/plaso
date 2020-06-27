@@ -117,7 +117,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
           formatters_test_lib.TestEventFormatter)
 
       try:
-        output_module.WriteEvent(event, event_data, None)
+        output_module.WriteEvent(event, event_data, None, None)
       finally:
         formatters_manager.FormattersManager.DeregisterFormatter(
             formatters_test_lib.TestEventFormatter)

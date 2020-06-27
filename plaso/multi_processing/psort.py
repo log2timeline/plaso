@@ -44,7 +44,7 @@ class PsortEventHeap(object):
     """int: number of events on the heap."""
     return len(self._heap)
 
-  def _GetEventIdentifiers(self, event, event_data):
+  def _GetEventIdentifiers(self, event, event_data, event_data_stream):
     """Retrieves different identifiers of the event.
 
     The event data attributes and values can be represented as a string and used
@@ -65,6 +65,7 @@ class PsortEventHeap(object):
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       tuple: containing:
@@ -78,7 +79,11 @@ class PsortEventHeap(object):
     attribute_string = 'data_type: {0:s}'.format(event_data.data_type)
     attributes.append(attribute_string)
 
-    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+    event_attributes = list(event_data.GetAttributes())
+    if event_data_stream:
+      event_attributes.extend(event_data_stream.GetAttributes())
+
+    for attribute_name, attribute_value in sorted(event_attributes):
       if attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES:
         continue
 
@@ -138,13 +143,15 @@ class PsortEventHeap(object):
         str: identifier of the event content.
         EventObject: event.
         EventData: event data.
+        EventDataStream: event data stream.
     """
     try:
-      macb_group_identifier, content_identifier, event, event_data = (
-          heapq.heappop(self._heap))
+      (macb_group_identifier, content_identifier, event, event_data,
+       event_data_stream) = heapq.heappop(self._heap)
       if macb_group_identifier == '':
         macb_group_identifier = None
-      return macb_group_identifier, content_identifier, event, event_data
+      return (macb_group_identifier, content_identifier, event, event_data,
+              event_data_stream)
 
     except IndexError:
       return None
@@ -160,26 +167,29 @@ class PsortEventHeap(object):
         str: identifier of the event content.
         EventObject: event.
         EventData: event data.
+        EventDataStream: event data stream.
     """
     heap_values = self.PopEvent()
     while heap_values:
       yield heap_values
       heap_values = self.PopEvent()
 
-  def PushEvent(self, event, event_data):
+  def PushEvent(self, event, event_data, event_data_stream):
     """Pushes an event onto the heap.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     macb_group_identifier, content_identifier = self._GetEventIdentifiers(
-        event, event_data)
+        event, event_data, event_data_stream)
 
     # We can ignore the timestamp here because the psort engine only stores
     # events with the same timestamp in the event heap.
     heap_values = (
-        macb_group_identifier or '', content_identifier, event, event_data)
+        macb_group_identifier or '', content_identifier, event, event_data,
+        event_data_stream)
     heapq.heappush(self._heap, heap_values)
 
 
@@ -262,12 +272,20 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       event_data = storage_writer.GetEventDataByIdentifier(
           event_data_identifier)
 
+      event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+      if event_data_stream_identifier:
+        event_data_stream = storage_writer.GetEventDataStreamByIdentifier(
+            event_data_stream_identifier)
+      else:
+        event_data_stream = None
+
       event_identifier = event.GetIdentifier()
       event_tag = self._event_tag_index.GetEventTagByIdentifier(
           storage_writer, event_identifier)
 
       if event_filter:
-        filter_match = event_filter.Match(event, event_data, event_tag)
+        filter_match = event_filter.Match(
+            event, event_data, event_data_stream, event_tag)
       else:
         filter_match = None
 
@@ -278,7 +296,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       for event_queue in self._event_queues.values():
         # TODO: Check for premature exit of analysis plugins.
-        event_queue.PushItem((event, event_data))
+        event_queue.PushItem((event, event_data, event_data_stream))
 
       self._number_of_consumed_events += 1
 
@@ -425,7 +443,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._TerminateProcessByPid(pid)
 
   def _ExportEvent(
-      self, storage_reader, output_module, event, event_data,
+      self, storage_reader, output_module, event, event_data, event_data_stream,
       deduplicate_events=True):
     """Exports an event using an output module.
 
@@ -434,6 +452,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       output_module (OutputModule): output module.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
     """
@@ -443,7 +462,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           deduplicate_events=deduplicate_events)
       self._export_event_timestamp = event.timestamp
 
-    self._export_event_heap.PushEvent(event, event_data)
+    self._export_event_heap.PushEvent(event, event_data, event_data_stream)
 
   def _ExportEvents(
       self, storage_reader, output_module, deduplicate_events=True,
@@ -486,6 +505,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       event_data = storage_reader.GetEventDataByIdentifier(
           event_data_identifier)
 
+      event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+      if event_data_stream_identifier:
+        event_data_stream = storage_reader.GetEventDataStreamByIdentifier(
+            event_data_stream_identifier)
+      else:
+        event_data_stream = None
+
       event_identifier = event.GetIdentifier()
       event_tag = self._event_tag_index.GetEventTagByIdentifier(
           storage_reader, event_identifier)
@@ -494,7 +520,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._events_status.number_of_events_from_time_slice += 1
 
       if event_filter:
-        filter_match = event_filter.Match(event, event_data, event_tag)
+        filter_match = event_filter.Match(
+            event, event_data, event_data_stream, event_tag)
       else:
         filter_match = None
 
@@ -510,7 +537,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         elif forward_entries <= time_slice_buffer.size:
           self._ExportEvent(
               storage_reader, output_module, event, event_data,
-              deduplicate_events=deduplicate_events)
+              event_data_stream, deduplicate_events=deduplicate_events)
           self._number_of_consumed_events += 1
           self._events_status.number_of_events_from_time_slice += 1
           forward_entries += 1
@@ -529,7 +556,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
               time_slice_buffer.Flush()):
             self._ExportEvent(
                 storage_reader, output_module, event_in_buffer,
-                event_data_in_buffer, deduplicate_events=deduplicate_events)
+                event_data_in_buffer, event_data_stream,
+                deduplicate_events=deduplicate_events)
             self._number_of_consumed_events += 1
             self._events_status.number_of_filtered_events += 1
             self._events_status.number_of_events_from_time_slice += 1
@@ -538,7 +566,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
         self._ExportEvent(
             storage_reader, output_module, event, event_data,
-            deduplicate_events=deduplicate_events)
+            event_data_stream, deduplicate_events=deduplicate_events)
         self._number_of_consumed_events += 1
 
         # pylint: disable=singleton-comparison
@@ -564,8 +592,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     generator = self._export_event_heap.PopEvents()
 
-    for macb_group_identifier, content_identifier, event, event_data in (
-        generator):
+    for (macb_group_identifier, content_identifier, event, event_data,
+         event_data_stream) in generator:
       if deduplicate_events and last_content_identifier == content_identifier:
         self._events_status.number_of_duplicate_events += 1
         continue
@@ -579,16 +607,17 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           output_module.WriteEventMACBGroup(macb_group)
           macb_group = []
 
-        output_module.WriteEvent(event, event_data, event_tag)
+        output_module.WriteEvent(
+            event, event_data, event_data_stream, event_tag)
 
       else:
         if (last_macb_group_identifier == macb_group_identifier or
             not macb_group):
-          macb_group.append((event, event_data, event_tag))
+          macb_group.append((event, event_data, event_data_stream, event_tag))
 
         else:
           output_module.WriteEventMACBGroup(macb_group)
-          macb_group = [(event, event_data, event_tag)]
+          macb_group = [(event, event_data, event_data_stream, event_tag)]
 
         self._events_status.number_of_macb_grouped_events += 1
 

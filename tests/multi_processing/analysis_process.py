@@ -35,7 +35,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     """
     return
 
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event.
 
     Args:
@@ -43,6 +43,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     return
 

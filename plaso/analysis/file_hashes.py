@@ -22,7 +22,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     self._paths_with_hashes = {}
 
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event and creates extracts hashes as required.
 
     Args:
@@ -30,6 +30,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     pathspec = getattr(event_data, 'pathspec', None)
     if pathspec is None:

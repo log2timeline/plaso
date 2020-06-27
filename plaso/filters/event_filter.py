@@ -33,12 +33,13 @@ class EventObjectFilter(interface.FilterObject):
     self._event_filter = expression.Compile()
     self._filter_expression = filter_expression
 
-  def Match(self, event, event_data, event_tag):
+  def Match(self, event, event_data, event_data_stream, event_tag):
     """Determines if an event matches the filter.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
 
     Returns:
@@ -47,4 +48,5 @@ class EventObjectFilter(interface.FilterObject):
     if not self._event_filter:
       return True
 
-    return self._event_filter.Matches(event, event_data, event_tag)
+    return self._event_filter.Matches(
+        event, event_data, event_data_stream, event_tag)

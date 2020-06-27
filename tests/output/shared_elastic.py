@@ -12,6 +12,7 @@ except ImportError:
   from unittest.mock import MagicMock
 
 from plaso.containers import events
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import shared_elastic
 
@@ -69,6 +70,10 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testFlushEvents(self):
     """Tests the _FlushEvents function."""
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
+
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
@@ -77,7 +82,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    output_module._InsertEvent(event, event_data, None)
+    output_module._InsertEvent(event, event_data, None, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
@@ -89,6 +94,10 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testGetSanitizedEventValues(self):
     """Tests the _GetSanitizedEventValues function."""
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
+
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
@@ -99,7 +108,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag.AddLabel('Test')
 
     event_values = output_module._GetSanitizedEventValues(
-        event, event_data, event_tag)
+        event, event_data, None, event_tag)
 
     expected_event_values = {
         'data_type': 'syslog:line',
@@ -124,6 +133,10 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testInsertEvent(self):
     """Tests the _InsertEvent function."""
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
+
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
@@ -136,12 +149,12 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-    output_module._InsertEvent(event, event_data, None)
+    output_module._InsertEvent(event, event_data, None, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
 
-    output_module._InsertEvent(event, event_data, None)
+    output_module._InsertEvent(event, event_data, None, None)
 
     self.assertEqual(len(output_module._event_documents), 4)
     self.assertEqual(output_module._number_of_buffered_events, 2)
@@ -236,6 +249,10 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
+
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
@@ -247,7 +264,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event, event_data = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data, None)
+    output_module.WriteEventBody(event, event_data, None, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)

@@ -151,7 +151,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     return analysis_report
 
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event.
 
     Args:
@@ -159,6 +159,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
       return

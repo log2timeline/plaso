@@ -131,7 +131,8 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._event_documents = []
     self._number_of_buffered_events = 0
 
-  def _GetSanitizedEventValues(self, event, event_data, event_tag):
+  def _GetSanitizedEventValues(
+      self, event, event_data, event_data_stream, event_tag):
     """Sanitizes the event for use in Elasticsearch.
 
     The event values need to be sanitized to prevent certain values from
@@ -142,6 +143,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
 
     Returns:
@@ -151,8 +153,12 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
+    event_attributes = event_data.GetAttributes()
+    if event_data_stream:
+      event_attributes.extend(event_data_stream.GetAttributes())
+
     event_values = {}
-    for attribute_name, attribute_value in event_data.GetAttributes():
+    for attribute_name, attribute_value in sorted(event_attributes):
       if attribute_name == 'pathspec':
         try:
           attribute_value = JsonPathSpecSerializer.WriteSerialized(
@@ -208,7 +214,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     return event_values
 
-  def _InsertEvent(self, event, event_data, event_tag):
+  def _InsertEvent(self, event, event_data, event_data_stream, event_tag):
     """Inserts an event.
 
     Events are buffered in the form of documents and inserted to Elasticsearch
@@ -217,6 +223,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     event_document = {'index': {'_index': self._index_name}}
@@ -225,7 +232,8 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     if self._GetClientMajorVersion() < 7:
       event_document['index']['_type'] = self._document_type
 
-    event_values = self._GetSanitizedEventValues(event, event_data, event_tag)
+    event_values = self._GetSanitizedEventValues(
+        event, event_data, event_data_stream, event_tag)
 
     self._event_documents.append(event_document)
     self._event_documents.append(event_values)
@@ -347,12 +355,13 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._url_prefix = url_prefix
     logger.debug('Elasticsearch URL prefix: {0!s}')
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    self._InsertEvent(event, event_data, event_tag)
+    self._InsertEvent(event, event_data, event_data_stream, event_tag)
