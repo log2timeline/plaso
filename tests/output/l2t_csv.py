@@ -51,29 +51,29 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
   def testFormatHostname(self):
     """Tests the _FormatHostname function."""
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
     hostname_string = self._output_module._FormatHostname(event_data)
     self.assertEqual(hostname_string, 'ubuntu')
 
   def testFormatUsername(self):
     """Tests the _FormatUsername function."""
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
     username_string = self._output_module._FormatUsername(event_data)
     self.assertEqual(username_string, '-')
 
   def testGetOutputValues(self):
     """Tests the _GetOutputValues function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     formatters_manager.FormattersManager.RegisterFormatter(
         formatters_test_lib.TestEventFormatter)
 
     try:
       output_values = self._output_module._GetOutputValues(
-          event, event_data, None, None)
+          event, event_data, event_data_stream, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -110,7 +110,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     try:
       output_values = self._output_module._GetOutputValues(
-          event, event_data, None, None)
+          event, event_data, event_data_stream, None)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -126,8 +126,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
@@ -136,7 +136,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      self._output_module.WriteEventBody(event, event_data, None, event_tag)
+      self._output_module.WriteEventBody(
+          event, event_data, event_data_stream, event_tag)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)

@@ -68,6 +68,7 @@ class SharedJSONOutputModule(interface.LinearOutputModule):
     if event_data_stream:
       event_data_stream_json_dict = self._JSON_SERIALIZER.WriteSerializedDict(
           event_data_stream)
+      del event_data_stream_json_dict['__container_type__']
 
       event_json_dict.update(event_data_stream_json_dict)
 

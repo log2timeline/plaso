@@ -41,7 +41,7 @@ class EventHeapTest(test_lib.StorageTestCase):
     self.assertIsNone(test_event)
 
     event_index = 0
-    for event, _ in containers_test_lib.CreateEventsFromValues(
+    for event, _, _ in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
       event_heap.PushEvent(event, event_index)
       event_index += 1
@@ -63,7 +63,7 @@ class EventHeapTest(test_lib.StorageTestCase):
     self.assertEqual(len(test_events), 0)
 
     event_index = 0
-    for event, _ in containers_test_lib.CreateEventsFromValues(
+    for event, _, _ in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
       event_heap.PushEvent(event, event_index)
       event_index += 1
@@ -81,7 +81,8 @@ class EventHeapTest(test_lib.StorageTestCase):
 
     self.assertEqual(len(event_heap._heap), 0)
 
-    event, _ = containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+    event, _, _ = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
     event_heap.PushEvent(event, 0)
 
     self.assertEqual(len(event_heap._heap), 1)

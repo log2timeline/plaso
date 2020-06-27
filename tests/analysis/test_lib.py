@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import artifacts
+from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.parsers import interface as parsers_interface
@@ -38,20 +39,23 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     test_events = []
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        event_values_list):
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(event_values_list)):
+      storage_writer.AddEventDataStream(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
       storage_writer.AddEventData(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
 
-      test_events.append((event, event_data))
+      test_events.append((event, event_data, event_data_stream))
 
     mediator = analysis_mediator.AnalysisMediator(
         storage_writer, knowledge_base_object)
 
-    for event, event_data in test_events:
-      plugin.ExamineEvent(mediator, event, event_data, None)
+    for event, event_data, event_data_stream in test_events:
+      plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
@@ -124,19 +128,22 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    mediator = parsers_mediator.ParserMediator(
+    parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, knowledge_base_object)
 
     file_entry = self._GetTestFileEntry(path_segments)
-    mediator.SetFileEntry(file_entry)
+    parser_mediator.SetFileEntry(file_entry)
+
+    event_data_stream = events.EventDataStream()
+    parser_mediator.ProduceEventDataStream(event_data_stream)
 
     if isinstance(parser, parsers_interface.FileEntryParser):
-      parser.Parse(mediator)
+      parser.Parse(parser_mediator)
 
     elif isinstance(parser, parsers_interface.FileObjectParser):
       file_object = file_entry.GetFileObject()
       try:
-        parser.Parse(mediator, file_object)
+        parser.Parse(parser_mediator, file_object)
       finally:
         file_object.close()
 

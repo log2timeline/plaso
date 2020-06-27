@@ -160,7 +160,7 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
     manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
 
     try:
-      for event, event_data in containers_test_lib.CreateEventsFromValues(
+      for event, event_data, _ in containers_test_lib.CreateEventsFromValues(
           self._TEST_EVENTS):
         message, message_short = manager.FormattersManager.GetMessageStrings(
             formatter_mediator, event_data)
@@ -212,7 +212,7 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
 
   def testGetUnformattedAttributes(self):
     """Tests the GetUnformattedAttributes function."""
-    _, event_data = containers_test_lib.CreateEventFromValues(
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
     manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
