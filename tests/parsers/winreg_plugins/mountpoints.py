@@ -54,7 +54,6 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:mount_points2')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
     self.assertEqual(event_data.share_name, '\\home\\nfury')
 
     expected_message = (

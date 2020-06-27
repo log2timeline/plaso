@@ -63,7 +63,12 @@ class EventDataStreamTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventDataStream()
 
     expected_attribute_names = [
-        'file_entropy', 'md5_hash', 'sha1_hash', 'sha256_hash', 'yara_match']
+        'file_entropy',
+        'md5_hash',
+        'path_spec',
+        'sha1_hash',
+        'sha256_hash',
+        'yara_match']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

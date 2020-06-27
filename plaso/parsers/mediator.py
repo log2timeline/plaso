@@ -408,8 +408,7 @@ class ParserMediator(object):
 
     display_name = None
     if file_entry:
-      event_data.pathspec = file_entry.path_spec
-
+      # TODO: move filename to event data stream or derive when needed.
       if not getattr(event_data, 'filename', None):
         path_spec = getattr(file_entry, 'path_spec', None)
         event_data.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
@@ -420,6 +419,7 @@ class ParserMediator(object):
         # specification contains the full information.
         display_name = self.GetDisplayName(file_entry)
 
+      # TODO: move inode to event data stream or derive when needed.
       stat_object = file_entry.GetStat()
       inode_value = getattr(stat_object, 'ino', None)
       if getattr(event_data, 'inode', None) is None and inode_value is not None:
@@ -459,12 +459,16 @@ class ParserMediator(object):
     if not self._storage_writer:
       raise RuntimeError('Storage writer not set.')
 
-    if event_data_stream:
+    if not event_data_stream:
+      self._event_data_stream_identifier = None
+    else:
+      if not event_data_stream.path_spec:
+        event_data_stream.path_spec = getattr(
+            self._file_entry, 'path_spec', None)
+
       self._storage_writer.AddEventDataStream(event_data_stream)
 
       self._event_data_stream_identifier = event_data_stream.GetIdentifier()
-    else:
-      self._event_data_stream_identifier = None
 
     self.last_activity_timestamp = time.time()
 
@@ -641,6 +645,7 @@ class ParserMediator(object):
       file_entry (dfvfs.FileEntry): file entry.
     """
     self._file_entry = file_entry
+    self._event_data_stream_identifier = None
 
   def SetStorageWriter(self, storage_writer):
     """Sets the storage writer.

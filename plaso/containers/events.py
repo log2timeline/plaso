@@ -103,6 +103,7 @@ class EventDataStream(interface.AttributeContainer):
   Attributes:
     file_entropy (str): byte entropy value of the data stream.
     md5_hash (str): MD5 digest hash of the data stream.
+    path_spec (dfvfs.PathSpec): path specification of the data stream.
     sha1_hash (str): SHA-1 digest hash of the data stream.
     sha256_hash (str): SHA-256 digest hash of the data stream.
     yara_match (list[str]): names of the Yara rules that matched the data
@@ -115,6 +116,7 @@ class EventDataStream(interface.AttributeContainer):
     super(EventDataStream, self).__init__()
     self.file_entropy = None
     self.md5_hash = None
+    self.path_spec = None
     self.sha1_hash = None
     self.sha256_hash = None
     self.yara_match = None

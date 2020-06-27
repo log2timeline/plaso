@@ -32,7 +32,7 @@ def CreateEventFromValues(event_values):
       setattr(event, attribute_name, attribute_value)
 
   event_data_stream = events.EventDataStream()
-  for attribute_name in ('md5_hash', 'sha256_hash'):
+  for attribute_name in ('path_spec', 'md5_hash', 'sha256_hash'):
     attribute_value = copy_of_event_values.pop(attribute_name, None)
     if attribute_value is not None:
       setattr(event_data_stream, attribute_name, attribute_value)

@@ -19,26 +19,27 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [
       {'data_type': 'test:event',
-       'pathspec': fake_path_spec.FakePathSpec(
+       'md5_hash': '4',
+       'path_spec': fake_path_spec.FakePathSpec(
            location='/var/testing directory with space/file.txt'),
-       'test_hash': '4',
        'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
-       'pathspec': fake_path_spec.FakePathSpec(
+       'md5_hash': '4',
+       'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\Windows\\a.file.txt'),
-       'test_hash': '4',
        'timestamp': '2015-01-01 17:00:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
+       'md5_hash': '4',
        'pathspec': fake_path_spec.FakePathSpec(location='/opt/dfvfs'),
-       'test_hash': '4',
        'timestamp': '2015-01-01 17:00:02',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'alternate_test_hash': '5',
        'data_type': 'test:event',
+       'md5_hash': '4',
        'pathspec': fake_path_spec.FakePathSpec(location='/opt/2hash_file'),
-       'test_hash': '4',
+       'sha256_hash': '5',
        'timestamp': '2015-01-01 17:00:03',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
@@ -57,11 +58,11 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
 
     expected_text = (
         'Listing file paths and hashes\n'
-        'FAKE:/opt/2hash_file: alternate_test_hash=5 test_hash=4\n'
-        'FAKE:/opt/dfvfs: test_hash=4\n'
+        'FAKE:/opt/2hash_file: md5_hash=4 sha256_hash=5\n'
+        'FAKE:/opt/dfvfs: md5_hash=4\n'
         'FAKE:/opt/no_hash_file:\n'
-        'FAKE:/var/testing directory with space/file.txt: test_hash=4\n'
-        'FAKE:C:\\Windows\\a.file.txt: test_hash=4\n')
+        'FAKE:/var/testing directory with space/file.txt: md5_hash=4\n'
+        'FAKE:C:\\Windows\\a.file.txt: md5_hash=4\n')
 
     self.assertEqual(expected_text, analysis_report.text)
     self.assertEqual(analysis_report.plugin_name, 'file_hashes')

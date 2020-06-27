@@ -719,7 +719,14 @@ class EventExtractionWorker(object):
     event_data_stream = None
     if data_stream and self._analyzers:
       display_name = mediator.GetDisplayName()
+
+      path_spec = copy.deepcopy(file_entry.path_spec)
+      if not data_stream.IsDefault():
+        path_spec.data_stream = data_stream.name
+
       event_data_stream = events.EventDataStream()
+      event_data_stream.path_spec = path_spec
+
       # Since AnalyzeDataStream generates event data stream attributes it
       # needs to be called before producing events.
       self._AnalyzeDataStream(
@@ -743,6 +750,7 @@ class EventExtractionWorker(object):
       self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
 
+    # TODO: merge with previous deepcopy
     path_spec = copy.deepcopy(file_entry.path_spec)
     if data_stream and not data_stream.IsDefault():
       path_spec.data_stream = data_stream.name
@@ -788,6 +796,16 @@ class EventExtractionWorker(object):
     for data_stream in file_entry.data_streams:
       if self._abort:
         break
+
+      path_spec = copy.deepcopy(file_entry.path_spec)
+      if not data_stream.IsDefault():
+        path_spec.data_stream = data_stream.name
+
+      event_data_stream = events.EventDataStream()
+      event_data_stream.path_spec = path_spec
+
+      mediator.ProduceEventDataStream(event_data_stream)
+
       self.last_activity_timestamp = time.time()
 
       self._event_extractor.ParseMetadataFile(

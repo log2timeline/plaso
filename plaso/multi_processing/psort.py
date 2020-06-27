@@ -84,13 +84,22 @@ class PsortEventHeap(object):
       event_attributes.extend(event_data_stream.GetAttributes())
 
     for attribute_name, attribute_value in sorted(event_attributes):
-      if attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES:
+      # The filestat parser operates on file entry level and has no event data
+      # stream with a path specification. Therefore we need filename and inode
+      # to make sure events of different file entries are considered unique.
+      if event_data.data_type == 'fs:stat' and attribute_name in (
+          'filename', 'inode'):
+        pass
+
+      elif attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES:
         continue
 
       if not attribute_value:
         continue
 
-      if attribute_name == 'pathspec':
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility. The current value is event_data_stream.path_spec.
+      if attribute_name in ('path_spec', 'pathspec'):
         attribute_value = attribute_value.comparable
 
       elif isinstance(attribute_value, dict):

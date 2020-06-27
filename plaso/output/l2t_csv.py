@@ -53,20 +53,26 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     hostname = self._output_mediator.GetHostname(event_data)
     return self._FormatField(hostname)
 
-  def _FormatInode(self, event_data):
+  def _FormatInode(self, event_data, event_data_stream):
     """Formats the inode.
 
     Args:
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       str: inode field.
     """
     inode = getattr(event_data, 'inode', None)
     if inode is None:
-      pathspec = getattr(event_data, 'pathspec', None)
-      if pathspec and hasattr(pathspec, 'inode'):
-        inode = pathspec.inode
+      path_specification = getattr(event_data_stream, 'path_spec', None)
+      if not path_specification:
+        # Note that support for event_data.pathspec is kept for backwards
+        # compatibility.
+        path_specification = getattr(event_data, 'pathspec', None)
+
+      inode = getattr(path_specification, 'inode', None)
+
     if inode is None:
       inode = '-'
 
@@ -151,7 +157,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     extra_attributes = '; '.join(extra_attributes)
     extra_attributes = extra_attributes.replace('\n', '-').replace('\r', '')
 
-    inode = self._FormatInode(event_data)
+    inode = self._FormatInode(event_data, event_data_stream)
     hostname = self._FormatHostname(event_data)
     username = self._FormatUsername(event_data)
 

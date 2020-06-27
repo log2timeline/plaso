@@ -53,7 +53,6 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:usbstor')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
     self.assertEqual(event_data.subkey_name, 'Disk&Ven_HP&Prod_v100w&Rev_1024')
     self.assertEqual(event_data.device_type, 'Disk')
     self.assertEqual(event_data.vendor, 'Ven_HP')

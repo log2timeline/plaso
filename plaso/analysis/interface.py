@@ -201,7 +201,11 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
 
     self._EnsureRequesterStarted()
 
-    path_specification = getattr(event_data, 'pathspec', None)
+    path_specification = getattr(event_data_stream, 'path_spec', None)
+    if not path_specification:
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility.
+      path_specification = getattr(event_data, 'pathspec', None)
 
     event_identifiers = self._event_identifiers_by_path_spec[path_specification]
 

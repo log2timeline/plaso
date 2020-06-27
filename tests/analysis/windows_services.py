@@ -24,7 +24,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
        'key_path': '\\ControlSet001\\services\\TestbDriver',
        'name': 'TestbDriver',
        'object_name': None,
-       'pathspec': fake_path_spec.FakePathSpec(
+       'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\SYSTEM'),
        'service_dll': None,
        'service_type': 2,
@@ -38,7 +38,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
        'key_path': '\\ControlSet003\\services\\TestbDriver',
        'name': 'TestbDriver',
        'object_name': None,
-       'pathspec': fake_path_spec.FakePathSpec(
+       'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\SYSTEM'),
        'service_dll': None,
        'service_type': 2,

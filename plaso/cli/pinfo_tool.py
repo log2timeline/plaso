@@ -339,9 +339,8 @@ class PinfoTool(
         column_names=['Number of warnings', 'Pathspec'],
         title='Pathspecs with most warnings')
 
-    top_pathspecs = warnings_by_path_spec.most_common(10)
-    for pathspec, count in top_pathspecs:
-      for path_index, line in enumerate(pathspec.split('\n')):
+    for path_spec, count in warnings_by_path_spec.most_common(10):
+      for path_index, line in enumerate(path_spec.split('\n')):
         if not line:
           continue
 

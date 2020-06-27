@@ -87,7 +87,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       expected_event_counters (dict[str, int|list[int]]): expected event
           counters per event data type.
       extraction_worker (Optional[EventExtractorWorker]): worker to process the
-          pathspec. If None, a new worker will be created.
+          path specification. If None, a new worker will be created.
       knowledge_base_values (Optional[dict]): knowledge base values.
       process_archives (Optional[bool]): whether archive files should be
           processed.

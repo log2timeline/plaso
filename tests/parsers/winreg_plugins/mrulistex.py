@@ -180,7 +180,6 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
 
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
@@ -268,7 +267,6 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:mrulistex')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] '
@@ -363,7 +361,6 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     # and not through the parser.
     self.assertEqual(event_data.parser, plugin.plugin_name)
     self.assertEqual(event_data.data_type, 'windows:registry:mrulistex')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
 
     expected_message = (
         '[{0:s}] '
