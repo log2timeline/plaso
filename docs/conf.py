@@ -92,6 +92,9 @@ linkcheck_ignore = [
     'https://github.com/log2timeline/dfvfs/wiki#',
     'https://groups.google.com/forum/#',
     'https://developers.virustotal.com/reference#',
+    # The Viper-framework site seems to have some temporary issues.
+    # https://github.com/viper-framework/viper/issues/786
+    'https://viper-framework.readthedocs.io',
 ]
 
 
