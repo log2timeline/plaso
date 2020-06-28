@@ -12,46 +12,46 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2012-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,syslog,GZIP:\syslog.gz,-
 2012-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] No true exit can exist (124 job run),syslog,GZIP:\syslog.gz,-
 2012-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] Another one just like this (124 job run),syslog,GZIP:\syslog.gz,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend Type: directory,filestat,NTFS:\$Extend,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend Type: directory,filestat,NTFS:\$Extend,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend Type: directory,filestat,NTFS:\$Extend,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend Type: directory,filestat,NTFS:\$Extend,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$UpCase Type: file,filestat,NTFS:\$UpCase,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$UpCase Type: file,filestat,NTFS:\$UpCase,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$UpCase Type: file,filestat,NTFS:\$UpCase,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$UpCase Type: file,filestat,NTFS:\$UpCase,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$AttrDef Type: file,filestat,NTFS:\$AttrDef,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$AttrDef Type: file,filestat,NTFS:\$AttrDef,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$AttrDef Type: file,filestat,NTFS:\$AttrDef,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$AttrDef Type: file,filestat,NTFS:\$AttrDef,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT Type: file,filestat,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT Type: file,filestat,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT Type: file,filestat,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT Type: file,filestat,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Bitmap Type: file,filestat,NTFS:\$Bitmap,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Bitmap Type: file,filestat,NTFS:\$Bitmap,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Bitmap Type: file,filestat,NTFS:\$Bitmap,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Bitmap Type: file,filestat,NTFS:\$Bitmap,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr Type: file,filestat,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr Type: file,filestat,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr Type: file,filestat,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr Type: file,filestat,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$LogFile Type: file,filestat,NTFS:\$LogFile,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$LogFile Type: file,filestat,NTFS:\$LogFile,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$LogFile Type: file,filestat,NTFS:\$LogFile,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$LogFile Type: file,filestat,NTFS:\$LogFile,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Boot Type: file,filestat,NTFS:\$Boot,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Boot Type: file,filestat,NTFS:\$Boot,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Boot Type: file,filestat,NTFS:\$Boot,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Boot Type: file,filestat,NTFS:\$Boot,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$BadClus Type: file,filestat,NTFS:\$BadClus,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$BadClus Type: file,filestat,NTFS:\$BadClus,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$BadClus Type: file,filestat,NTFS:\$BadClus,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$BadClus Type: file,filestat,NTFS:\$BadClus,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Bitmap Type: file,filestat,NTFS:\$Bitmap,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Bitmap Type: file,filestat,NTFS:\$Bitmap,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Bitmap Type: file,filestat,NTFS:\$Bitmap,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Bitmap Type: file,filestat,NTFS:\$Bitmap,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Boot Type: file,filestat,NTFS:\$Boot,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Boot Type: file,filestat,NTFS:\$Boot,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Boot Type: file,filestat,NTFS:\$Boot,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Boot Type: file,filestat,NTFS:\$Boot,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend Type: directory,filestat,NTFS:\$Extend,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend Type: directory,filestat,NTFS:\$Extend,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend Type: directory,filestat,NTFS:\$Extend,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend Type: directory,filestat,NTFS:\$Extend,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$LogFile Type: file,filestat,NTFS:\$LogFile,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$LogFile Type: file,filestat,NTFS:\$LogFile,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$LogFile Type: file,filestat,NTFS:\$LogFile,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$LogFile Type: file,filestat,NTFS:\$LogFile,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT Type: file,filestat,NTFS:\$MFT,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT Type: file,filestat,NTFS:\$MFT,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT Type: file,filestat,NTFS:\$MFT,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT Type: file,filestat,NTFS:\$MFT,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr Type: file,filestat,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr Type: file,filestat,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr Type: file,filestat,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr Type: file,filestat,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Secure Type: file,filestat,NTFS:\$Secure,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Secure Type: file,filestat,NTFS:\$Secure,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Secure Type: file,filestat,NTFS:\$Secure,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Secure Type: file,filestat,NTFS:\$Secure,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$UpCase Type: file,filestat,NTFS:\$UpCase,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$UpCase Type: file,filestat,NTFS:\$UpCase,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$UpCase Type: file,filestat,NTFS:\$UpCase,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$UpCase Type: file,filestat,NTFS:\$UpCase,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Volume Type: file,filestat,NTFS:\$Volume,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Volume Type: file,filestat,NTFS:\$Volume,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Volume Type: file,filestat,NTFS:\$Volume,-
@@ -81,18 +81,10 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 10-10 Attribute name: $STANDARD_INFORMATION Path hints: \$UpCase,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 10-10 Attribute name: $STANDARD_INFORMATION Path hints: \$UpCase,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 10-10 Attribute name: $STANDARD_INFORMATION Path hints: \$UpCase,mft,NTFS:\$MFT,-
@@ -121,14 +113,22 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 3-3 Attribute name: $STANDARD_INFORMATION Path hints: \$Volume,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 3-3 Attribute name: $STANDARD_INFORMATION Path hints: \$Volume,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 3-3 Attribute name: $STANDARD_INFORMATION Path hints: \$Volume,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 3-3 Attribute name: $STANDARD_INFORMATION Path hints: \$Volume,mft,NTFS:\$MFT,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $STANDARD_INFORMATION Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $STANDARD_INFORMATION Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 3-3 Attribute name: $STANDARD_INFORMATION Path hints: \$Volume,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 3-3 Attribute name: $STANDARD_INFORMATION Path hints: \$Volume,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 3-3 Attribute name: $STANDARD_INFORMATION Path hints: \$Volume,mft,NTFS:\$MFTMirr,-
@@ -165,18 +165,10 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 10-10 Attribute name: $FILE_NAME Name: $UpCase Parent file reference: 5-5 Path hints: \$UpCase,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 10-10 Attribute name: $FILE_NAME Name: $UpCase Parent file reference: 5-5 Path hints: \$UpCase,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 10-10 Attribute name: $FILE_NAME Name: $UpCase Parent file reference: 5-5 Path hints: \$UpCase,mft,NTFS:\$MFT,-
@@ -185,34 +177,26 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFT,-
-2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 3-3 Attribute name: $FILE_NAME Name: $Volume Parent file reference: 5-5 Path hints: \$Volume,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 3-3 Attribute name: $FILE_NAME Name: $Volume Parent file reference: 5-5 Path hints: \$Volume,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 3-3 Attribute name: $FILE_NAME Name: $Volume Parent file reference: 5-5 Path hints: \$Volume,mft,NTFS:\$MFT,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 3-3 Attribute name: $FILE_NAME Name: $Volume Parent file reference: 5-5 Path hints: \$Volume,mft,NTFS:\$MFT,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 0-1 Attribute name: $FILE_NAME Name: $MFT Parent file reference: 5-5 Path hints: \$MFT,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 1-1 Attribute name: $FILE_NAME Name: $MFTMirr Parent file reference: 5-5 Path hints: \$MFTMirr,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
+2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 2-2 Attribute name: $FILE_NAME Name: $LogFile Parent file reference: 5-5 Path hints: \$LogFile,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFTMirr File reference: 3-3 Attribute name: $FILE_NAME Name: $Volume Parent file reference: 5-5 Path hints: \$Volume,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFTMirr File reference: 3-3 Attribute name: $FILE_NAME Name: $Volume Parent file reference: 5-5 Path hints: \$Volume,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFTMirr File reference: 3-3 Attribute name: $FILE_NAME Name: $Volume Parent file reference: 5-5 Path hints: \$Volume,mft,NTFS:\$MFTMirr,-
 2013-12-03T06:30:41.807908+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFTMirr File reference: 3-3 Attribute name: $FILE_NAME Name: $Volume Parent file reference: 5-5 Path hints: \$Volume,mft,NTFS:\$MFTMirr,-
-2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata Type: directory,filestat,NTFS:\$Extend\$RmMetadata,-
-2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata Type: directory,filestat,NTFS:\$Extend\$RmMetadata,-
-2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata Type: directory,filestat,NTFS:\$Extend\$RmMetadata,-
-2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata Type: directory,filestat,NTFS:\$Extend\$RmMetadata,-
-2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$Txf Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$Txf,-
-2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata\$Txf Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$Txf,-
-2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata\$Txf Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$Txf,-
-2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$Txf Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$Txf,-
-2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog,-
-2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata\$TxfLog Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog,-
-2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata\$TxfLog Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog,-
-2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog,-
-2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops,-
-2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops,-
-2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops,-
-2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops,-
 2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$ObjId Type: file,filestat,NTFS:\$Extend\$ObjId,-
 2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$ObjId Type: file,filestat,NTFS:\$Extend\$ObjId,-
 2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$ObjId Type: file,filestat,NTFS:\$Extend\$ObjId,-
@@ -225,10 +209,26 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$Reparse Type: file,filestat,NTFS:\$Extend\$Reparse,-
 2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$Reparse Type: file,filestat,NTFS:\$Extend\$Reparse,-
 2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$Reparse Type: file,filestat,NTFS:\$Extend\$Reparse,-
+2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata Type: directory,filestat,NTFS:\$Extend\$RmMetadata,-
+2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata Type: directory,filestat,NTFS:\$Extend\$RmMetadata,-
+2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata Type: directory,filestat,NTFS:\$Extend\$RmMetadata,-
+2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata Type: directory,filestat,NTFS:\$Extend\$RmMetadata,-
 2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$Repair Type: file,filestat,NTFS:\$Extend\$RmMetadata\$Repair,-
 2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata\$Repair Type: file,filestat,NTFS:\$Extend\$RmMetadata\$Repair,-
 2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata\$Repair Type: file,filestat,NTFS:\$Extend\$RmMetadata\$Repair,-
 2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$Repair Type: file,filestat,NTFS:\$Extend\$RmMetadata\$Repair,-
+2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$Txf Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$Txf,-
+2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata\$Txf Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$Txf,-
+2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata\$Txf Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$Txf,-
+2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$Txf Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$Txf,-
+2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog,-
+2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata\$TxfLog Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog,-
+2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata\$TxfLog Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog,-
+2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog Type: directory,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog,-
+2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops,-
+2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops,-
+2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops,-
+2013-12-03T06:30:42.915510+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$Tops,-
 2013-12-03T06:30:42.915510+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 24-1 Attribute name: $STANDARD_INFORMATION Path hints: \$Extend\$Quota,mft,NTFS:\$MFT,-
 2013-12-03T06:30:42.915510+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 24-1 Attribute name: $STANDARD_INFORMATION Path hints: \$Extend\$Quota,mft,NTFS:\$MFT,-
 2013-12-03T06:30:42.915510+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 24-1 Attribute name: $STANDARD_INFORMATION Path hints: \$Extend\$Quota,mft,NTFS:\$MFT,-
@@ -430,12 +430,12 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2013-12-03T06:38:53.783972+00:00,Creation Time,FILE,NTFS Creation Time,NTFS:\$MFT File reference: 41-1 Attribute name: $FILE_NAME Name: password.txt Parent file reference: 5-5 Path hints: \password.txt,mft,NTFS:\$MFT,-
 2013-12-03T06:38:53.783972+00:00,Last Access Time,FILE,NTFS Last Access Time,NTFS:\$MFT File reference: 41-1 Attribute name: $FILE_NAME Name: password.txt Parent file reference: 5-5 Path hints: \password.txt,mft,NTFS:\$MFT,-
 2013-12-03T06:38:53.783972+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 41-1 Attribute name: $FILE_NAME Name: password.txt Parent file reference: 5-5 Path hints: \password.txt,mft,NTFS:\$MFT,-
+2013-12-03T06:39:02.020787+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLog.blf Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLog.blf,-
+2013-12-03T06:39:02.020787+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLog.blf Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLog.blf,-
 2013-12-03T06:39:02.020787+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000001 Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000001,-
 2013-12-03T06:39:02.020787+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000001 Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000001,-
 2013-12-03T06:39:02.020787+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000002 Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000002,-
 2013-12-03T06:39:02.020787+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000002 Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000002,-
-2013-12-03T06:39:02.020787+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLog.blf Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLog.blf,-
-2013-12-03T06:39:02.020787+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLog.blf Type: file,filestat,NTFS:\$Extend\$RmMetadata\$TxfLog\$TxfLog.blf,-
 2013-12-03T06:39:02.020787+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 32-1 Attribute name: $STANDARD_INFORMATION Path hints: \$Extend\$RmMetadata\$TxfLog\$TxfLog.blf,mft,NTFS:\$MFT,-
 2013-12-03T06:39:02.020787+00:00,Metadata Modification Time,FILE,NTFS Metadata Modification Time,NTFS:\$MFT File reference: 32-1 Attribute name: $STANDARD_INFORMATION Path hints: \$Extend\$RmMetadata\$TxfLog\$TxfLog.blf,mft,NTFS:\$MFT,-
 2013-12-03T06:39:02.020787+00:00,Content Modification Time,FILE,NTFS Content Modification Time,NTFS:\$MFT File reference: 33-1 Attribute name: $STANDARD_INFORMATION Path hints: \$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000001,mft,NTFS:\$MFT,-

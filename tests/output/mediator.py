@@ -59,6 +59,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     self.assertIsInstance(
         event_formatter, formatters_test_lib.TestEventFormatter)
 
+  # TODO: add tests for GetDisplayNameForPathSpec
+
   def testGetFormattedMessages(self):
     """Tests the GetFormattedMessages function."""
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
@@ -113,6 +115,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     macb_representation = self._output_mediator.GetMACBRepresentation(
         event, event_data)
     self.assertEqual(macb_representation, '..C.')
+
+  # TODO: add tests for GetRelativePathForPathSpec
 
   def testGetStoredHostname(self):
     """Tests the GetStoredHostname function."""

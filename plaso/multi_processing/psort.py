@@ -26,9 +26,6 @@ class PsortEventHeap(object):
 
   _IDENTIFIER_EXCLUDED_ATTRIBUTES = frozenset([
       'data_type',
-      'display_name',
-      'filename',
-      'inode',
       'parser',
       'tag',
       'timestamp',
@@ -81,7 +78,8 @@ class PsortEventHeap(object):
 
     event_attributes = list(event_data.GetAttributes())
     if event_data_stream:
-      event_attributes.extend(event_data_stream.GetAttributes())
+      event_data_stream_attributes = event_data_stream.GetAttributes()
+      event_attributes.extend(event_data_stream_attributes)
 
     for attribute_name, attribute_value in sorted(event_attributes):
       # The filestat parser operates on file entry level and has no event data
@@ -467,8 +465,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     """
     if event.timestamp != self._export_event_timestamp:
       self._FlushExportBuffer(
-          storage_reader, output_module,
-          deduplicate_events=deduplicate_events)
+          storage_reader, output_module, deduplicate_events=deduplicate_events)
       self._export_event_timestamp = event.timestamp
 
     self._export_event_heap.PushEvent(event, event_data, event_data_stream)
@@ -574,8 +571,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           forward_entries = 1
 
         self._ExportEvent(
-            storage_reader, output_module, event, event_data,
-            event_data_stream, deduplicate_events=deduplicate_events)
+            storage_reader, output_module, event, event_data, event_data_stream,
+            deduplicate_events=deduplicate_events)
         self._number_of_consumed_events += 1
 
         # pylint: disable=singleton-comparison
@@ -935,7 +932,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     try:
       # Open the storage file after creating the worker processes otherwise
-      # the ZIP storage file will remain locked as long as the worker processes
+      # the session store will remain locked as long as the worker processes
       # are alive.
       storage_writer.Open()
       storage_writer.WriteSessionStart()

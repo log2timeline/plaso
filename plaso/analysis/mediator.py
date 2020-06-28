@@ -41,9 +41,7 @@ class AnalysisMediator(object):
     self._data_location = data_location
     self._event_filter_expression = None
     self._knowledge_base = knowledge_base
-    self._mount_path = None
     self._storage_writer = storage_writer
-    self._text_prepend = None
 
     self.last_activity_timestamp = 0.0
     self.number_of_produced_analysis_reports = 0
@@ -73,8 +71,10 @@ class AnalysisMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
+    mount_path = self._knowledge_base.GetMountPath()
+    text_prepend = self._knowledge_base.GetTextPrepend()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=self._mount_path, text_prepend=self._text_prepend)
+        path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.

@@ -384,7 +384,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         filter_file_path=self._filter_file,
         preferred_encoding=self.preferred_encoding,
         preferred_time_zone=self._preferred_time_zone,
-        preferred_year=self._preferred_year)
+        preferred_year=self._preferred_year,
+        text_prepend=self._text_prepend)
 
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
         self._storage_format, session, self._storage_file_path)
@@ -412,6 +413,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
+
+    # TODO: set mount path in knowledge base with
+    # extraction_engine.knowledge_base.SetMountPath()
+    extraction_engine.knowledge_base.SetTextPrepend(self._text_prepend)
 
     try:
       extraction_engine.BuildCollectionFilters(

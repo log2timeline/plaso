@@ -22,6 +22,8 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'datetime': '_FormatDateTime',
       'description': '_FormatMessage',
       'description_short': '_FormatMessageShort',
+      'display_name': '_FormatDisplayName',
+      'filename': '_FormatFilename',
       'host': '_FormatHostname',
       'hostname': '_FormatHostname',
       'inode': '_FormatInode',
@@ -92,6 +94,61 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
               event.timestamp, exception))
 
       return '0000-00-00T00:00:00'
+
+  def _FormatDisplayName(self, event, event_data, event_data_stream):
+    """Formats the display name.
+
+    The display_name field can be set as an attribute to event_data otherwise
+    it is derived from the path specificiation.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: date field.
+    """
+    display_name = getattr(event_data, 'display_name', None)
+    if not display_name:
+      path_spec = getattr(event_data_stream, 'path_spec', None)
+      if not path_spec:
+        path_spec = getattr(event_data, 'pathspec', None)
+
+      if path_spec:
+        display_name = self._output_mediator.GetDisplayNameForPathSpec(
+            path_spec)
+      else:
+        display_name = '-'
+
+    return display_name
+
+  def _FormatFilename(self, event, event_data, event_data_stream):
+    """Formats the filename.
+
+    The filename field can be set as an attribute to event_data otherwise
+    it is derived from the path specificiation.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: date field.
+    """
+    filename = getattr(event_data, 'filename', None)
+    if not filename:
+      path_spec = getattr(event_data_stream, 'path_spec', None)
+      if not path_spec:
+        path_spec = getattr(event_data, 'pathspec', None)
+
+      if path_spec:
+        filename = self._output_mediator.GetRelativePathForPathSpec(path_spec)
+      else:
+        filename = '-'
+
+    return filename
 
   def _FormatTime(self, event, event_data, event_data_stream):
     """Formats a time field.
