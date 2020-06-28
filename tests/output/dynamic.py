@@ -63,83 +63,6 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '0000-00-00T00:00:00')
 
-  def testFormatMACB(self):
-    """Tests the _FormatMACB function."""
-    output_mediator = self._CreateOutputMediator()
-    formatting_helper = dynamic.DynamicFieldFormattingHelper(output_mediator)
-
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    macb_string = formatting_helper._FormatMACB(
-        event, event_data, event_data_stream)
-    self.assertEqual(macb_string, '..C.')
-
-  def testFormatMessage(self):
-    """Tests the _FormatMessage function."""
-    output_mediator = self._CreateOutputMediator()
-    formatting_helper = dynamic.DynamicFieldFormattingHelper(output_mediator)
-
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      message_string = formatting_helper._FormatMessage(
-          event, event_data, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
-
-    expected_message_string = (
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
-        'for user root)')
-    self.assertEqual(message_string, expected_message_string)
-
-  def testFormatMessageShort(self):
-    """Tests the _FormatMessageShort function."""
-    output_mediator = self._CreateOutputMediator()
-    formatting_helper = dynamic.DynamicFieldFormattingHelper(output_mediator)
-
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      message_short_string = formatting_helper._FormatMessageShort(
-          event, event_data, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
-
-    expected_message_short_string = (
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
-        'for user root)')
-    self.assertEqual(message_short_string, expected_message_short_string)
-
-  def testFormatSource(self):
-    """Tests the _FormatSource function."""
-    output_mediator = self._CreateOutputMediator()
-    formatting_helper = dynamic.DynamicFieldFormattingHelper(output_mediator)
-
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      source_string = formatting_helper._FormatSource(
-          event, event_data, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
-
-    self.assertEqual(source_string, 'Test log file')
-
   def testFormatTime(self):
     """Tests the _FormatTime function."""
     output_mediator = self._CreateOutputMediator()
@@ -167,8 +90,6 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         formatting_helper._FormatTimestampDescription(
             event, event_data, event_data_stream))
     self.assertEqual(timestamp_description_string, 'Metadata Modification Time')
-
-  # TODO: add coverage for _ReportEventError
 
 
 class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):

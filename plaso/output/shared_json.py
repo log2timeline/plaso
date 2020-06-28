@@ -3,35 +3,17 @@
 
 from __future__ import unicode_literals
 
-import abc
 import json
 
 from plaso.lib import errors
-from plaso.output import interface
+from plaso.output import formatting_helper
 from plaso.serializer import json_serializer
 
 
-class SharedJSONOutputModule(interface.LinearOutputModule):
-  """Shared functionality for a JSON output module."""
+class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
+  """JSON output module event formatting helper."""
 
   _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
-
-  def _WriteSerialized(self, event, event_data, event_data_stream, event_tag):
-    """Writes an event, event data and event tag to serialized form.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      str: A JSON string containing the serialized form.
-    """
-    json_dict = self._WriteSerializedDict(
-        event, event_data, event_data_stream, event_tag)
-
-    return json.dumps(json_dict, sort_keys=True)
 
   def _WriteSerializedDict(
       self, event, event_data, event_data_stream, event_tag):
@@ -83,13 +65,19 @@ class SharedJSONOutputModule(interface.LinearOutputModule):
 
     return event_json_dict
 
-  @abc.abstractmethod
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
+  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
+    """Retrieves a string representation of the event.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
+
+    Returns:
+      str: string representation of the event.
     """
+    json_dict = self._WriteSerializedDict(
+        event, event_data, event_data_stream, event_tag)
+
+    return json.dumps(json_dict, sort_keys=True)

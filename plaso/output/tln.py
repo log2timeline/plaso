@@ -130,9 +130,9 @@ class TLNOutputModule(shared_dsv.DSVOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    formatting_helper_object = TLNFieldFormattingHelper(output_mediator)
+    field_formatting_helper = TLNFieldFormattingHelper(output_mediator)
     super(TLNOutputModule, self).__init__(
-        output_mediator, formatting_helper_object, self._FIELD_NAMES,
+        output_mediator, field_formatting_helper, self._FIELD_NAMES,
         delimiter='|', header=self._HEADER)
 
 
@@ -165,9 +165,9 @@ class L2TTLNOutputModule(shared_dsv.DSVOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    formatting_helper_object = TLNFieldFormattingHelper(output_mediator)
+    field_formatting_helper = TLNFieldFormattingHelper(output_mediator)
     super(L2TTLNOutputModule, self).__init__(
-        output_mediator, formatting_helper_object, self._FIELD_NAMES,
+        output_mediator, field_formatting_helper, self._FIELD_NAMES,
         delimiter='|', header=self._HEADER)
 
 
