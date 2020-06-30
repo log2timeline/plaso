@@ -80,11 +80,15 @@ else:
 
       description = []
       requires = ''
+      summary = ''
       in_description = False
 
       python_spec_file = []
       for line in iter(spec_file):
-        if line.startswith('BuildRequires: '):
+        if line.startswith('Summary: '):
+          summary = line[9:]
+
+        elif line.startswith('BuildRequires: '):
           line = 'BuildRequires: {0:s}-setuptools, {0:s}-devel'.format(
               python_package)
 
@@ -141,7 +145,7 @@ else:
 
           python_spec_file.extend([
               '%package -n %{name}-data',
-              'Summary: Data files for plaso (log2timeline)',
+              'Summary: Data files for {0:s}'.format(summary),
               '',
               '%description -n %{name}-data'])
 
@@ -149,11 +153,12 @@ else:
 
           python_spec_file.append(
               '%package -n {0:s}-%{{name}}'.format(python_package))
+          python_summary = 'Python 3 module of {0:s}'.format(summary)
 
           python_spec_file.extend([
               'Requires: plaso-data >= %{{version}} {0:s}'.format(
                   requires),
-              'Summary: Python 3 module of plaso (log2timeline)',
+              'Summary: {0:s}'.format(python_summary),
               '',
               '%description -n {0:s}-%{{name}}'.format(python_package)])
 
@@ -163,7 +168,7 @@ else:
               '%package -n %{name}-tools',
               'Requires: {0:s}-plaso >= %{{version}}'.format(
                   python_package),
-              'Summary: Tools for plaso (log2timeline)',
+              'Summary: Tools for {0:s}'.format(summary),
               '',
               '%description -n %{name}-tools'])
 
@@ -187,7 +192,7 @@ else:
 
 
 plaso_description = (
-    'Super timeline all the things.')
+    'Plaso (log2timeline) - Super timeline all the things')
 
 plaso_long_description = (
     'Plaso (log2timeline) is a framework to create super timelines. Its '
