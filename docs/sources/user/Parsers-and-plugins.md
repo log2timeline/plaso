@@ -12,7 +12,7 @@ bencode | Parser for bencoded files.
 binary_cookies | Parser for Safari Binary Cookie files.
 bsm_log | Parser for BSM log files.
 chrome_cache | Parser for Chrome Cache files.
-chrome_preferences | Parser for Chrome Preferences files.
+chrome_preferences | Parser for Google Chrome Preferences files.
 cups_ipp | Parser for CUPS IPP files.
 custom_destinations | Parser for *.customDestinations-ms files.
 czip | Parser for compound ZIP files.
@@ -20,10 +20,11 @@ dockerjson | Parser for JSON Docker files.
 dpkg | Parser for Debian dpkg.log files.
 esedb | Parser for Extensible Storage Engine (ESE) database files.
 filestat | Parser for file system stat information.
-firefox_cache | Parser for Firefox Cache version 1 files (Firefox 31 or earlier).
-firefox_cache2 | Parser for Firefox Cache version 2 files (Firefox 32 or later).
+firefox_cache | Parser for Mozilla Firefox Cache version 1 files (version 31 or earlier).
+firefox_cache2 | Parser for Mozilla Firefox Cache version 2 files (version 32 or later).
 fseventsd | Parser for fseventsd files.
 gdrive_synclog | Parser for Google Drive Sync log files.
+googlelog | Parser for handling Google log formatted files.
 java_idx | Parser for Java WebStart Cache IDX files.
 lnk | Parser for Windows Shortcut (LNK) files.
 mac_appfirewall_log | Parser for appfirewall.log files.
@@ -113,7 +114,7 @@ ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
 macos_software_update | Parser for MacOS software update plist files.
 macosx_bluetooth | Parser for Bluetooth plist files.
-macosx_install_history | Parser for installation history plist files.
+macosx_install_history | Parser for MacOS installation history plist files.
 macuser | Parser for MacOS user plist files.
 plist_default | Parser for plist files.
 safari_history | Parser for Safari history plist files.
@@ -130,33 +131,34 @@ android_sms | Parser for Android text messages SQLite database files.
 android_webview | Parser for Android WebView databases
 android_webviewcache | Parser for Android WebViewCache databases
 appusage | Parser for MacOS application usage SQLite database files.
-chrome_17_cookies | Parser for Chrome 17 - 65 cookies SQLite database files.
-chrome_27_history | Parser for Google Chrome 27 and up history SQLite database files.
-chrome_66_cookies | Parser for Chrome 66+ cookies SQLite database files.
+chrome_17_cookies | Parser for Google Chrome 17 - 65 cookies SQLite database files.
+chrome_27_history | Parser for Google Chrome 27 and later history SQLite database files.
+chrome_66_cookies | Parser for Google Chrome 66 and later cookies SQLite database files.
 chrome_8_history | Parser for Google Chrome 8 - 25 history SQLite database files.
-chrome_autofill | Parser for Chrome autofill SQLite database files.
-chrome_extension_activity | Parser for Chrome extension activity SQLite database files.
-firefox_cookies | Parser for Firefox cookies SQLite database files.
-firefox_downloads | Parser for Firefox downloads SQLite database files.
-firefox_history | Parser for Firefox history SQLite database files.
+chrome_autofill | Parser for Google Chrome autofill SQLite database files.
+chrome_extension_activity | Parser for Google Chrome extension activity SQLite database files.
+firefox_cookies | Parser for Mozilla Firefox cookies SQLite database files.
+firefox_downloads | Parser for Mozilla Firefox downloads SQLite database files.
+firefox_history | Parser for Mozilla Firefox history SQLite database files.
 google_drive | Parser for Google Drive SQLite database files.
 hangouts_messages | Parser for Google Hangouts Messages SQLite database files.
-imessage | Parser for the iMessage and SMS SQLite databases on OSX and iOS.
+imessage | Parser for the iMessage and SMS SQLite databases on MacOS and iOS.
 kik_messenger | Parser for iOS Kik messenger SQLite database files.
-kodi | Parser for Kodi MyVideos.db files.
-ls_quarantine | Parser for LS quarantine events SQLite database files.
-mac_document_versions | Parser for document revisions SQLite database files.
-mac_knowledgec | Parser for Duet / KnowledgeC database file.
-mac_notes | Parser for Mac Notes
-mac_notificationcenter | Parser for the Notification Center SQLite database
+kodi | Parser for Kodi videos SQLite database files (MyVideos.db)
+ls_quarantine | Parser for MacOS LS quarantine events SQLite database files.
+mac_document_versions | Parser for MacOS document revisions SQLite database files.
+mac_knowledgec | Parser for MacOS Duet / KnowledgeC SQLites database files.
+mac_notes | Parser for MacOS Notes SQLite database files
+mac_notificationcenter | Parser for the MacOS Notification Center SQLite database files
 mackeeper_cache | Parser for MacKeeper Cache SQLite database files.
+macostcc | Parser for macOS TCC SQLite database files.
 safari_historydb | Parser for Safari history SQLite database files.
-skype | Parser for Skype SQLite database files.
-tango_android_profile | Parser for Tango on Android profile database.
-tango_android_tc | Parser for Tango on Android tc database.
-twitter_android | Parser for Twitter on android database
-twitter_ios | Parser for Twitter on iOS 8+ database
-windows_timeline | Parser for the Windows Timeline SQLite database
+skype | Parser for Skype SQLite database (main.db) files.
+tango_android_profile | Parser for Tango on Android profile SQLite database.
+tango_android_tc | Parser for Tango on Android tc SQLite database.
+twitter_android | Parser for Twitter on Android SQLite database files
+twitter_ios | Parser for Twitter on iOS 8+ SQLite database files
+windows_timeline | Parser for the Windows 10 Timeline SQLite database files
 zeitgeist | Parser for Zeitgeist activity SQLite database files.
 
 ### Parser plugins: syslog
@@ -187,7 +189,7 @@ mrulistex_string_and_shell_item_list | Parser for Most Recently Used (MRU) Regis
 msie_zone | Parser for Internet Explorer zone settings Registry data.
 mstsc_rdp | Parser for Terminal Server Client Connection Registry data.
 mstsc_rdp_mru | Parser for Terminal Server Client MRU Registry data.
-network_drives | Parser for Network Registry data.
+network_drives | Parser for Windows network drives Registry data.
 networks | Parser for NetworkList data.
 userassist | Parser for User Assist Registry data.
 windows_boot_execute | Parser for Boot Execution Registry data.
@@ -211,7 +213,7 @@ winreg_default | Parser for Registry data.
 Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
-linux | apt_history, bash_history, bencode, czip/oxml, dockerjson, dpkg, filestat, gdrive_synclog, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, vsftpd, webhist, xchatlog, xchatscrollback, zsh_extended_history
+linux | apt_history, bash_history, bencode, czip/oxml, dockerjson, dpkg, filestat, gdrive_synclog, googlelog, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, vsftpd, webhist, xchatlog, xchatscrollback, zsh_extended_history
 macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | amcache, custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen

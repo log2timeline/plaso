@@ -8,15 +8,15 @@ plaso.unix.bsmtoken module
 --------------------------
 
 .. automodule:: plaso.unix.bsmtoken
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
 Module contents
 ---------------
 
 .. automodule:: plaso.unix
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
