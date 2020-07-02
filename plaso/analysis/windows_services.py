@@ -278,7 +278,8 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
     service_event_data = services.WindowsRegistryServiceEventData()
     service_event_data.CopyFromDict(event_data_attributes)
 
-    service = WindowsService.FromEventData(event_data, event_data_stream)
+    service = WindowsService.FromEventData(
+        service_event_data, event_data_stream)
     self._service_collection.AddService(service)
 
   def SetOutputFormat(self, output_format):
