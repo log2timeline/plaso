@@ -747,6 +747,13 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     extract_options = ['--status-view=none', '--unattended']
     extract_options.extend(test_definition.extract_options)
 
+    filter_file_path = getattr(test_definition, 'filter_file', None)
+    if filter_file_path:
+      if self._test_sources_path:
+        filter_file_path = os.path.join(
+            self._test_sources_path, filter_file_path)
+      extract_options.extend(['--filter-file', filter_file_path])
+
     logging_options = [
         option.replace('%command%', 'log2timeline')
         for option in test_definition.logging_options]
@@ -792,6 +799,9 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     """
     test_definition.extract_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'extract_options', default=[], split_string=True)
+
+    test_definition.filter_file = test_definition_reader.GetConfigValue(
+        test_definition.name, 'filter_file')
 
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)
@@ -1367,14 +1377,14 @@ class ImageExportTestCase(TestCase):
     Returns:
       bool: True if the read was successful.
     """
+    test_definition.export_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'export_options', default=[], split_string=True)
+
     test_definition.filter_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'filter_file')
 
     test_definition.hashes_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'hashes_file')
-
-    test_definition.export_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'export_options', default=[], split_string=True)
 
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)

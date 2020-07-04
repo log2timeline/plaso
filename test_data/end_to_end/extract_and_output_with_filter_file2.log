@@ -1,0 +1,13 @@
+datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
+0000-00-00T00:00:00,Creation Time,FILE,EXT4 Creation Time,TSK:/bin/bzcat Type: file,filestat,TSK:/bin/bzcat,-
+0000-00-00T00:00:00,Creation Time,FILE,EXT4 Creation Time,TSK:/sbin/tune2fs Type: file,filestat,TSK:/sbin/tune2fs,-
+0000-00-00T00:00:00,Creation Time,FILE,EXT4 Creation Time,TSK:/sbin/visudo Type: file,filestat,TSK:/sbin/visudo,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,EXT4 Content Modification Time,TSK:/bin/bzcat Type: file,filestat,TSK:/bin/bzcat,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,EXT4 Last Access Time,TSK:/bin/bzcat Type: file,filestat,TSK:/bin/bzcat,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,EXT4 Metadata Modification Time,TSK:/bin/bzcat Type: file,filestat,TSK:/bin/bzcat,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,EXT4 Content Modification Time,TSK:/sbin/tune2fs Type: file,filestat,TSK:/sbin/tune2fs,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,EXT4 Last Access Time,TSK:/sbin/tune2fs Type: file,filestat,TSK:/sbin/tune2fs,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,EXT4 Metadata Modification Time,TSK:/sbin/tune2fs Type: file,filestat,TSK:/sbin/tune2fs,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,EXT4 Content Modification Time,TSK:/sbin/visudo Type: file,filestat,TSK:/sbin/visudo,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,EXT4 Last Access Time,TSK:/sbin/visudo Type: file,filestat,TSK:/sbin/visudo,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,EXT4 Metadata Modification Time,TSK:/sbin/visudo Type: file,filestat,TSK:/sbin/visudo,-
