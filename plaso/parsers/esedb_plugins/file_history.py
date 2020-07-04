@@ -41,7 +41,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
   """Parses a File History ESE database file."""
 
   NAME = 'file_history'
-  DESCRIPTION = 'Parser for File History ESE database files.'
+  DATA_FORMAT = 'Windows 8 File History ESE database file'
 
   # TODO: Add support for other tables as well, backupset, file, library, etc.
   REQUIRED_TABLES = {

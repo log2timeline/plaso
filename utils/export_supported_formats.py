@@ -9,10 +9,14 @@ import argparse
 import collections
 import importlib
 import inspect
+import os
 import pkgutil
 import sys
 
 from urllib import parse as urllib_parse
+
+from dtfabric import reader as dtfabric_reader
+from dtfabric import registry as dtfabric_registry
 
 import plaso
 
@@ -85,10 +89,6 @@ class DataFormatInformationExractor(object):
   # TODO: consider extending Plaso parsers and parser plugins with metadata that
   # contain this information.
   _DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME = {
-      'bencode_transmission': (
-          'Transmission BitTorrent activity file', ''),
-      'bencode_utorrent': (
-          'uTorrent active torrent file', ''),
       'binary_cookies': (
           'Safari Cookies file (Cookies.binarycookies)',
           'dtformats:Safari Cookies'),
@@ -98,14 +98,6 @@ class DataFormatInformationExractor(object):
           'Windows Explorer mount points data', ''),
       'explorer_programscache': (
           'Windows Explorer Programs Cache data', ''),
-      'google_analytics_utma': (
-          'Google Analytics __utma cookie', ''),
-      'google_analytics_utmb': (
-          'Google Analytics __utmb cookie', ''),
-      'google_analytics_utmt': (
-          'Google Analytics __utmt cookie', ''),
-      'google_analytics_utmz': (
-          'Google Analytics __utmz cookie', ''),
       'mft': (
           'NTFS $MFT file system metadata file',
           'libyal:libfsntfs:New Technologies File System (NTFS)'),
@@ -114,15 +106,6 @@ class DataFormatInformationExractor(object):
            'including shell items'), ''),
       'msie_zone': (
           'Microsofer Internet Explorer zone settings data', ''),
-      'olecf_automatic_destinations': (
-          'Automatic destinations jump list file (.automaticDestinations-ms)',
-          'dtformats:Jump lists format'),
-      'olecf_document_summary': (
-          'Document summary information', ''),
-      'olecf_summary': (
-          'Summary information (top-level only)', ''),
-      'oxml': (
-          'OpenXML (OXML) file', ''),
       'pe': (
           'Portable Executable (PE) file', ''),
       'plist': (
@@ -135,8 +118,6 @@ class DataFormatInformationExractor(object):
            'setupapi-text-logs')),
       'sqlite': (
           'SQLite database file', ''),
-      'srum': (
-          'System Resource Usage Monitor (SRUM) database', ''),
       'ssh': (
           'SSH syslog file', ''),
       'symantec_scanlog': (
@@ -294,14 +275,29 @@ class DataFormatInformationExractor(object):
             category = self._DATA_FORMAT_CATEGORY_PER_PACKAGE_PATH.get(
                 package_path, 'File formats')
 
-            name = getattr(cls, 'DATA_FORMAT', None)
+            data_format = getattr(cls, 'DATA_FORMAT', None)
             url = ''
-            if not name:
-              name, url = self._DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME.get(
-                  parser_name, (parser_name, ''))
+
+            if not data_format:
+              data_format, url = (
+                  self._DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME.get(
+                      parser_name, (parser_name, '')))
+
+            dtfabric_file = os.path.join(package_path, ''.join([name, '.yaml']))
+            if os.path.exists(dtfabric_file):
+              definitions_registry = (
+                  dtfabric_registry.DataTypeDefinitionsRegistry())
+              definitions_reader = (
+                  dtfabric_reader.YAMLDataTypeDefinitionsFileReader())
+
+              try:
+                definitions_reader.ReadFile(definitions_registry, dtfabric_file)
+                # TODO: determine the URL using definitions_registry.
+              except Exception:  # pylint: disable=broad-except
+                pass
 
             data_format_descriptor = DataFormatDescriptor(
-                category=category, name=name, url=url)
+                category=category, name=data_format, url=url)
             data_format_descriptors.append(data_format_descriptor)
 
     return data_format_descriptors

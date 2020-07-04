@@ -120,7 +120,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
   """Parses a MSIE WebCache ESE database file."""
 
   NAME = 'msie_webcache'
-  DESCRIPTION = 'Parser for MSIE WebCache ESE database files.'
+  DATA_FORMAT = (
+      'Internet Explorer WebCache ESE database (WebCacheV01.dat, '
+      'WebCacheV24.dat) file')
 
   # TODO: add support for AppCache_#, AppCacheEntry_#, DependencyEntry_#
 

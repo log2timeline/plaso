@@ -16,7 +16,7 @@ class BaseCookiePlugin(plugins.BasePlugin):
   cookies from all browsers.
   """
   NAME = 'cookie_plugin'
-  DESCRIPTION = ''
+  DATA_FORMAT = 'Browser cookie data'
 
   # The name of the cookie value that this plugin is designed to parse.
   # This value is used to evaluate whether the plugin is the correct one

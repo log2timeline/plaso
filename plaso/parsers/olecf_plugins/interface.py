@@ -13,6 +13,7 @@ class OLECFPlugin(plugins.BasePlugin):
   """The OLECF parser plugin interface."""
 
   NAME = 'olecf_plugin'
+  DATA_FORMAT = 'OLE compound file'
 
   # List of tables that should be present in the database, for verification.
   REQUIRED_ITEMS = frozenset([])

@@ -44,7 +44,7 @@ class UTorrentPlugin(interface.BencodePlugin):
   """
 
   NAME = 'bencode_utorrent'
-  DESCRIPTION = 'Parser for uTorrent bencoded files.'
+  DATA_FORMAT = 'uTorrent active torrent file'
 
   # The following set is used to determine if the bencoded data is appropriate
   # for this plugin. If there's a match, the entire bencoded data block is
