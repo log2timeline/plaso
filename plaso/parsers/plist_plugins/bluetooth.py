@@ -34,7 +34,9 @@ class BluetoothPlugin(interface.PlistPlugin):
   NAME = 'macosx_bluetooth'
   DATA_FORMAT = 'Bluetooth plist file'
 
-  PLIST_PATH = 'com.apple.bluetooth.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.bluetooth.plist')])
+
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
   # pylint: disable=arguments-differ

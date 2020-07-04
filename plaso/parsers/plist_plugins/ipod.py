@@ -34,7 +34,9 @@ class IPodPlugin(interface.PlistPlugin):
   NAME = 'ipod_device'
   DATA_FORMAT = 'iPod, iPad and iPhone plist file'
 
-  PLIST_PATH = 'com.apple.iPod.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.iPod.plist')])
+
   PLIST_KEYS = frozenset(['Devices'])
 
   # pylint: disable=arguments-differ

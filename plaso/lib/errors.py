@@ -112,10 +112,6 @@ class WrongFormatter(Error):
   """Raised when the formatter is not applicable for a particular event."""
 
 
-class WrongPlistPlugin(Error):
-  """Error reporting wrong plist plugin used."""
-
-
 class WrongPlugin(Error):
   """Raised when the plugin is of the wrong type."""
 

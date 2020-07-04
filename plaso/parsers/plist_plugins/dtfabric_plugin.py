@@ -155,7 +155,7 @@ class DtFabricBasePlistPlugin(interface.PlistPlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_mediator, top_level=None, match=None, **unused_kwargs):
+      self, parser_mediator, match=None, top_level=None, **unused_kwargs):
     """Extracts event objects from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
@@ -168,14 +168,13 @@ class DtFabricBasePlistPlugin(interface.PlistPlugin):
     For example if you want to note the timestamps of when devices were
     LastInquiryUpdated you would need to examine the bluetooth config file
     called 'com.apple.bluetooth' and need to look at devices under the key
-    'DeviceCache'.  To do this the plugin needs to define
-    PLIST_PATH = 'com.apple.bluetooth' and PLIST_KEYS =
-    frozenset(['DeviceCache']). IMPORTANT: this interface requires exact names
-    and is case sensitive. A unit test based on a real world file is expected
-    for each plist plugin.
+    'DeviceCache'. To do this the plugin needs to define:
+        PLIST_PATH_FILTERS = frozenset([
+            interface.PlistPathFilter('com.apple.bluetooth')])
+        PLIST_KEYS = frozenset(['DeviceCache']).
 
     When a file with this key is encountered during processing self.matched is
-    populated and the plugin's GetEntries() is called.  The plugin would have
+    populated and the plugin's GetEntries() is called. The plugin would have
     self.matched = {'DeviceCache': [{'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}, 'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}'...}]} and needs to implement logic here to extract
@@ -183,16 +182,16 @@ class DtFabricBasePlistPlugin(interface.PlistPlugin):
 
     The attributes for a PlistEvent should include the following:
       root = Root key this event was extracted from. E.g. DeviceCache/
-      key = Key the value resided in.  E.g. 'DE:AD:BE:EF:01'
+      key = Key the value resided in. E.g. 'DE:AD:BE:EF:01'
       time = Date this artifact was created in number of micro seconds
              (usec) since January 1, 1970, 00:00:00 UTC.
-      desc = Short description.  E.g. 'Device LastInquiryUpdated'
+      desc = Short description. E.g. 'Device LastInquiryUpdated'
 
     See plist/bluetooth.py for the implemented example plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      top_level (Optional[dict[str, object]]): plist top-level key.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
+      top_level (Optional[dict[str, object]]): plist top-level item.
     """

@@ -18,7 +18,9 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
   NAME = 'spotlight_volume'
   DATA_FORMAT = 'Spotlight volume configuration plist file'
 
-  PLIST_PATH = 'VolumeConfiguration.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('VolumeConfiguration.plist')])
+
   PLIST_KEYS = frozenset(['Stores'])
 
   # pylint: disable=arguments-differ

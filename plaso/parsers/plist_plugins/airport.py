@@ -19,7 +19,9 @@ class AirportPlugin(interface.PlistPlugin):
   NAME = 'airport'
   DATA_FORMAT = 'Airport plist file'
 
-  PLIST_PATH = 'com.apple.airport.preferences.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.airport.preferences.plist')])
+
   PLIST_KEYS = frozenset(['RememberedNetworks'])
 
   # pylint: disable=arguments-differ

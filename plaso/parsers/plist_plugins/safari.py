@@ -42,7 +42,9 @@ class SafariHistoryPlugin(interface.PlistPlugin):
   NAME = 'safari_history'
   DATA_FORMAT = 'Safari history plist file'
 
-  PLIST_PATH = 'History.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('History.plist')])
+
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
 
   # pylint: disable=arguments-differ

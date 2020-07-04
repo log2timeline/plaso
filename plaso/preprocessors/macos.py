@@ -8,7 +8,6 @@ import abc
 from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.lib import plist
-from plaso.parsers.plist_plugins import interface as plist_interface
 from plaso.preprocessors import interface
 from plaso.preprocessors import manager
 
@@ -207,32 +206,23 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
   _KEYS = frozenset(['gid', 'home', 'name', 'realname', 'shell', 'uid'])
 
-  def _GetKeysDefaultEmpty(self, top_level, keys, depth=1):
-    """Retrieves plist keys, defaulting to empty values.
+  def _GetTopLevelKeys(self, top_level, keys):
+    """Retrieves top-level plist keys.
 
     Args:
       top_level (plistlib._InternalDict): top level plist object.
-      keys (set[str]): names of keys that should be returned.
-      depth (int): depth within the plist, where 1 is top level.
+      keys (set[str]): names of the top-level keys that should be retrieved.
 
     Returns:
-      dict[str, str]: values of the requested keys.
+      dict[str, str]: values of the requested keys or an empty dictionary if
+          no corresponding top-level keys were found.
     """
-    keys = set(keys)
     match = {}
+    for key in set(keys):
+      value = top_level.get(key, None)
+      if value is not None:
+        match[key] = value
 
-    if depth == 1:
-      for key in keys:
-        value = top_level.get(key, None)
-        if value is not None:
-          match[key] = value
-    else:
-      for _, parsed_key, parsed_value in plist_interface.RecurseKey(
-          top_level, depth=depth):
-        if parsed_key in keys:
-          match[parsed_key] = parsed_value
-          if set(match.keys()) == keys:
-            return match
     return match
 
   def _GetPlistRootKey(self, file_entry):
@@ -283,7 +273,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
           'key.').format(self.ARTIFACT_DEFINITION_NAME, location))
 
     try:
-      match = self._GetKeysDefaultEmpty(root_key, self._KEYS)
+      match = self._GetTopLevelKeys(root_key, self._KEYS)
     except KeyError as exception:
       location = getattr(file_entry.path_spec, 'location', '')
       raise errors.PreProcessFail(

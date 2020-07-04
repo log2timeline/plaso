@@ -11,6 +11,7 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import dtfabric_plugin
+from plaso.parsers.plist_plugins import interface
 
 
 class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
@@ -30,7 +31,9 @@ class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
   NAME = 'time_machine'
   DATA_FORMAT = 'TimeMachine plist file'
 
-  PLIST_PATH = 'com.apple.TimeMachine.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.TimeMachine.plist')])
+
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
 
   _DEFINITION_FILE = 'timemachine.yaml'

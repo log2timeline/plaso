@@ -18,7 +18,9 @@ class InstallHistoryPlugin(interface.PlistPlugin):
   NAME = 'macosx_install_history'
   DATA_FORMAT = 'MacOS installation history plist file'
 
-  PLIST_PATH = 'InstallHistory.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('InstallHistory.plist')])
+
   PLIST_KEYS = frozenset([
       'date', 'displayName', 'displayVersion', 'processName',
       'packageIdentifiers'])
@@ -30,7 +32,7 @@ class InstallHistoryPlugin(interface.PlistPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      top_level (dict[str, object]): plist top-level key.
+      top_level (Optional[dict[str, object]]): plist top-level item.
     """
     for entry in top_level:
       datetime_value = entry.get('date', None)
