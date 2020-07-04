@@ -204,12 +204,26 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
   """Psort multi-processing engine."""
 
   _PROCESS_JOIN_TIMEOUT = 5.0
-  _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   _QUEUE_TIMEOUT = 10 * 60
 
-  def __init__(self):
-    """Initializes a psort multi-processing engine."""
+  def __init__(self, worker_memory_limit=None, worker_timeout=None):
+    """Initializes a psort multi-processing engine.
+
+    Args:
+      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
+          allowed to consume, where None represents the default memory limit
+          and 0 represents no limit.
+      worker_timeout (Optional[float]): number of minutes before a worker
+          process that is not providing status updates is considered inactive,
+          where None or 0.0 represents the default timeout.
+    """
+    if worker_memory_limit is None:
+      worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
+
+    if not worker_timeout:
+      worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
+
     super(PsortMultiProcessEngine, self).__init__()
     self._analysis_plugins = {}
     self._completed_analysis_processes = set()
@@ -240,7 +254,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._serializers_profiler = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
-    self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
+    self._worker_memory_limit = worker_memory_limit
+    self._worker_timeout = worker_timeout
 
   def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
     """Analyzes events in a plaso storage.
@@ -801,7 +816,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           'last_activity_timestamp', 0.0)
 
       if last_activity_timestamp:
-        last_activity_timestamp += self._PROCESS_WORKER_TIMEOUT
+        last_activity_timestamp += self._worker_timeout
 
         current_timestamp = time.time()
         if current_timestamp > last_activity_timestamp:
@@ -876,8 +891,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
   def AnalyzeEvents(
       self, knowledge_base_object, storage_writer, data_location,
       analysis_plugins, processing_configuration, event_filter=None,
-      event_filter_expression=None, status_update_callback=None,
-      worker_memory_limit=None):
+      event_filter_expression=None, status_update_callback=None):
     """Analyzes events in a plaso storage.
 
     Args:
@@ -894,9 +908,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
           updates.
-      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
-          allowed to consume, where None represents the default memory limit
-          and 0 represents no limit.
 
     Raises:
       KeyboardInterrupt: if a keyboard interrupt was raised.
@@ -913,11 +924,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._knowledge_base = knowledge_base_object
     self._status_update_callback = status_update_callback
     self._processing_configuration = processing_configuration
-
-    if worker_memory_limit is None:
-      self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
-    else:
-      self._worker_memory_limit = worker_memory_limit
 
     self._StartProfiling(self._processing_configuration.profiling)
 
@@ -984,7 +990,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._knowledge_base = None
     self._processing_configuration = None
     self._status_update_callback = None
-    self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
     if keyboard_interrupt:
       raise KeyboardInterrupt

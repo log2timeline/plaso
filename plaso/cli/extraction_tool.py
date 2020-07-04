@@ -79,6 +79,8 @@ class ExtractionTool(
     self._temporary_directory = None
     self._text_prepend = None
     self._yara_rules_string = None
+    self._worker_memory_limit = None
+    self._worker_timeout = None
 
     self.list_time_zones = False
 

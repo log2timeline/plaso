@@ -14,7 +14,11 @@ COMPRESSION_FORMATS = frozenset([
     COMPRESSION_FORMAT_NONE,
     COMPRESSION_FORMAT_ZLIB])
 
+# Default worker process memory limit of 2 GiB.
 DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
+
+# Consider a worker process inactive after 15 minutes of no status updates.
+DEFAULT_WORKER_TIMEOUT = 15.0 * 60.0
 
 FAILURE_MODE_EXHAUST_MEMORY = 'exhaust_memory'
 FAILURE_MODE_NOT_RESPONDING = 'not_responding'

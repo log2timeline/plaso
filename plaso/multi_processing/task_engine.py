@@ -94,9 +94,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
-  # Consider a worker inactive after 15 minutes of no activity.
-  _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
-
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
 
@@ -105,13 +102,55 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
   def __init__(
-      self, maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS):
+      self, maximum_number_of_tasks=None, number_of_worker_processes=0,
+      worker_memory_limit=None, worker_timeout=None):
     """Initializes an engine.
 
     Args:
       maximum_number_of_tasks (Optional[int]): maximum number of concurrent
           tasks, where 0 represents no limit.
+      number_of_worker_processes (Optional[int]): number of worker processes.
+      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
+          allowed to consume, where None represents the default memory limit
+          and 0 represents no limit.
+      worker_timeout (Optional[float]): number of minutes before a worker
+          process that is not providing status updates is considered inactive,
+          where None or 0.0 represents the default timeout.
     """
+    if maximum_number_of_tasks is None:
+      maximum_number_of_tasks = self._MAXIMUM_NUMBER_OF_TASKS
+
+    if number_of_worker_processes < 1:
+      # One worker for each "available" CPU (minus other processes).
+      # The number here is derived from the fact that the engine starts up:
+      # * A main process.
+      #
+      # If we want to utilize all CPUs on the system we therefore need to start
+      # up workers that amounts to the total number of CPUs - the other
+      # processes.
+      try:
+        cpu_count = multiprocessing.cpu_count() - 1
+
+        if cpu_count <= self._WORKER_PROCESSES_MINIMUM:
+          cpu_count = self._WORKER_PROCESSES_MINIMUM
+
+        elif cpu_count >= self._WORKER_PROCESSES_MAXIMUM:
+          cpu_count = self._WORKER_PROCESSES_MAXIMUM
+
+      except NotImplementedError:
+        logger.error((
+            'Unable to determine number of CPUs defaulting to {0:d} worker '
+            'processes.').format(self._WORKER_PROCESSES_MINIMUM))
+        cpu_count = self._WORKER_PROCESSES_MINIMUM
+
+      number_of_worker_processes = cpu_count
+
+    if worker_memory_limit is None:
+      worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
+
+    if not worker_timeout:
+      worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
+
     super(TaskMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
     self._last_worker_number = 0
@@ -128,7 +167,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_produced_warnings = 0
-    self._number_of_worker_processes = 0
+    self._number_of_worker_processes = number_of_worker_processes
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._processing_configuration = None
     self._redis_client = None
@@ -140,6 +179,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._task_queue = None
     self._task_queue_port = None
     self._task_manager = task_manager.TaskManager()
+    self._worker_memory_limit = worker_memory_limit
+    self._worker_timeout = worker_timeout
 
   def _FillEventSourceHeap(
       self, storage_writer, event_source_heap, start_with_first=False):
@@ -684,7 +725,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           'last_activity_timestamp', 0.0)
 
       if last_activity_timestamp:
-        last_activity_timestamp += self._PROCESS_WORKER_TIMEOUT
+        last_activity_timestamp += self._worker_timeout
 
         current_timestamp = time.time()
         if current_timestamp > last_activity_timestamp:
@@ -716,8 +757,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   def ProcessSources(
       self, session, source_path_specs, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
-      number_of_worker_processes=0, status_update_callback=None,
-      worker_memory_limit=None):
+      status_update_callback=None):
     """Processes the sources and extract events.
 
     Args:
@@ -729,48 +769,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           configuration.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
-      number_of_worker_processes (Optional[int]): number of worker processes.
       status_update_callback (Optional[function]): callback function for status
           updates.
-      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
-          allowed to consume, where None represents the default memory limit
-          and 0 represents no limit.
 
     Returns:
       ProcessingStatus: processing status.
     """
-    if number_of_worker_processes < 1:
-      # One worker for each "available" CPU (minus other processes).
-      # The number here is derived from the fact that the engine starts up:
-      # * A main process.
-      #
-      # If we want to utilize all CPUs on the system we therefore need to start
-      # up workers that amounts to the total number of CPUs - the other
-      # processes.
-      try:
-        cpu_count = multiprocessing.cpu_count() - 1
-
-        if cpu_count <= self._WORKER_PROCESSES_MINIMUM:
-          cpu_count = self._WORKER_PROCESSES_MINIMUM
-
-        elif cpu_count >= self._WORKER_PROCESSES_MAXIMUM:
-          cpu_count = self._WORKER_PROCESSES_MAXIMUM
-
-      except NotImplementedError:
-        logger.error((
-            'Unable to determine number of CPUs defaulting to {0:d} worker '
-            'processes.').format(self._WORKER_PROCESSES_MINIMUM))
-        cpu_count = self._WORKER_PROCESSES_MINIMUM
-
-      number_of_worker_processes = cpu_count
-
     self._enable_sigsegv_handler = enable_sigsegv_handler
-    self._number_of_worker_processes = number_of_worker_processes
-
-    if worker_memory_limit is None:
-      self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
-    else:
-      self._worker_memory_limit = worker_memory_limit
 
     # Keep track of certain values so we can spawn new extraction workers.
     self._processing_configuration = processing_configuration
@@ -807,7 +812,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Set up the storage writer before the worker processes.
     storage_writer.StartTaskStorage()
 
-    for worker_number in range(number_of_worker_processes):
+    for worker_number in range(self._number_of_worker_processes):
       # First argument to _StartWorkerProcess is not used.
       extraction_process = self._StartWorkerProcess('', storage_writer)
       if not extraction_process:
@@ -884,8 +889,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     # Reset values.
     self._enable_sigsegv_handler = None
-    self._number_of_worker_processes = None
-    self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
     self._processing_configuration = None
 
