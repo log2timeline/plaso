@@ -11,7 +11,6 @@ import json
 import os
 import textwrap
 
-from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
@@ -186,27 +185,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     return target_directory, target_filename
 
-  # TODO: merge with collector and/or engine.
-  def _Extract(
-      self, source_path_specs, destination_path, output_writer,
-      skip_duplicates=True):
-    """Extracts files.
-
-    Args:
-      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
-      destination_path (str): path where the extracted files should be stored.
-      output_writer (CLIOutputWriter): output writer.
-      skip_duplicates (Optional[bool]): True if files with duplicate content
-          should be skipped.
-    """
-    output_writer.Write('Extracting file entries.\n')
-    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, resolver_context=self._resolver_context)
-
-    for path_spec in path_spec_generator:
-      self._ExtractFileEntry(
-          path_spec, destination_path, skip_duplicates=skip_duplicates)
-
   def _ExtractDataStream(
       self, file_entry, data_stream_name, destination_path,
       skip_duplicates=True):
@@ -286,23 +264,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         pass
 
   def _ExtractFileEntry(
-      self, path_spec, destination_path, skip_duplicates=True):
+      self, file_entry, destination_path, skip_duplicates=True):
     """Extracts a file entry.
 
     Args:
-      path_spec (dfvfs.PathSpec): path specification of the source file.
+      file_entry (dfvfs.FileEntry): file entry whose content is to be written.
       destination_path (str): path where the extracted files should be stored.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        path_spec, resolver_context=self._resolver_context)
-
-    if not file_entry:
-      logger.warning('Unable to open file entry for path spec: {0:s}'.format(
-          path_spec.comparable))
-      return
-
     if not self._filter_collection.Matches(file_entry):
       return
 
@@ -321,11 +291,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           file_entry, '', destination_path, skip_duplicates=skip_duplicates)
 
   # TODO: merge with collector and/or engine.
-  def _ExtractWithFilter(
+  def _Extract(
       self, source_path_specs, destination_path, output_writer,
       artifact_filters, filter_file, artifact_definitions_path,
       custom_artifacts_path, skip_duplicates=True):
-    """Extracts files using a filter expression.
+    """Extracts files.
 
     This method runs the file extraction process on the image and
     potentially on every VSS if that is wanted.
@@ -353,33 +323,50 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
-    for source_path_spec in source_path_specs:
-      file_system, mount_point = extraction_engine.GetSourceFileSystem(
-          source_path_spec, resolver_context=self._resolver_context)
+    try:
+      extraction_engine.BuildCollectionFilters(
+          artifact_definitions_path, custom_artifacts_path,
+          extraction_engine.knowledge_base, artifact_filters, filter_file)
+    except errors.InvalidFilter as exception:
+      raise errors.BadConfigOption(
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
 
-      display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
-          source_path_spec)
-      output_writer.Write('Extracting file entries from: {0:s}\n'.format(
-          display_name))
+    filters_helper = extraction_engine.collection_filters_helper
 
-      try:
-        extraction_engine.BuildCollectionFilters(
-            artifact_definitions_path, custom_artifacts_path,
-            extraction_engine.knowledge_base, artifact_filters, filter_file)
-      except errors.InvalidFilter as exception:
-        raise errors.BadConfigOption(
-            'Unable to build collection filters with error: {0!s}'.format(
-                exception))
+    excluded_find_specs = None
+    included_find_specs = None
+    if filters_helper:
+      excluded_find_specs = filters_helper.excluded_file_system_find_specs
+      included_find_specs = filters_helper.included_file_system_find_specs
 
-      searcher = file_system_searcher.FileSystemSearcher(
-          file_system, mount_point)
-      filters_helper = extraction_engine.collection_filters_helper
-      for path_spec in searcher.Find(find_specs=(
-          filters_helper.included_file_system_find_specs)):
-        self._ExtractFileEntry(
-            path_spec, destination_path, skip_duplicates=skip_duplicates)
+    output_writer.Write('Extracting file entries.\n')
+    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+        source_path_specs, find_specs=included_find_specs,
+        resolver_context=self._resolver_context)
 
-      file_system.Close()
+    for path_spec in path_spec_generator:
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=self._resolver_context)
+
+      if not file_entry:
+        logger.warning('Unable to open file entry for path spec: {0:s}'.format(
+            path_spec.comparable))
+        continue
+
+      skip_file_entry = False
+      for find_spec in excluded_find_specs or []:
+        skip_file_entry = find_spec.CompareLocation(file_entry)
+        if skip_file_entry:
+          break
+
+      if skip_file_entry:
+        logger.info('Skipped: {0:s} because of exclusion filter.'.format(
+            file_entry.path_spec.location))
+        continue
+
+      self._ExtractFileEntry(
+          file_entry, destination_path, skip_duplicates=skip_duplicates)
 
   def _ParseExtensionsString(self, extensions_string):
     """Parses the extensions string.
@@ -784,16 +771,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not os.path.isdir(self._destination_path):
       os.makedirs(self._destination_path)
 
-    if self._artifact_filters or self._filter_file:
-      self._ExtractWithFilter(
-          self._source_path_specs, self._destination_path,
-          self._output_writer, self._artifact_filters, self._filter_file,
-          self._artifact_definitions_path, self._custom_artifacts_path,
-          skip_duplicates=self._skip_duplicates)
-    else:
-      self._Extract(
-          self._source_path_specs, self._destination_path,
-          self._output_writer, skip_duplicates=self._skip_duplicates)
+    self._Extract(
+        self._source_path_specs, self._destination_path,
+        self._output_writer, self._artifact_filters, self._filter_file,
+        self._artifact_definitions_path, self._custom_artifacts_path,
+        skip_duplicates=self._skip_duplicates)
 
     json_data = []
 

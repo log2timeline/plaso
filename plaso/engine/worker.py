@@ -876,6 +876,7 @@ class EventExtractionWorker(object):
       if find_spec.CompareLocation(file_entry):
         logger.info('Skipped: {0:s} because of exclusion filter.'.format(
             file_entry.path_spec.location))
+        self.processing_status = definitions.STATUS_INDICATOR_IDLE
         return
 
     mediator.SetFileEntry(file_entry)
