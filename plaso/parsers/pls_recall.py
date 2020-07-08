@@ -72,7 +72,14 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
     Returns:
       bool: True if this is a valid PLS Recall record, False otherwise.
     """
-    current_year = parser_mediator.GetCurrentYear()
+    # The maximal correct date supported by TDateTime values is limited to:
+    # 9999-12-31 23:59:59.999 (approximate 2958465 days since epoch).
+    # The minimal correct date is unknown hence assuming it is limited to:
+    # 0001-01-01 00:00:00.000 (approximate -693593 days since epoch).
+
+    if (pls_record.last_written_time < -693593.0 or
+        pls_record.last_written_time > 2958465.0):
+      return False
 
     pls_date_time = dfdatetime_delphi_date_time.DelphiDateTime(
         timestamp=pls_record.last_written_time)
@@ -86,6 +93,8 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
     # timestamp is before 1980 we are pretty sure it is invalid?
     # TODO: This is a very flaky assumption, maybe use the # file entry time
     # range instead?
+    current_year = parser_mediator.GetCurrentYear()
+
     if pls_year > current_year + 6:
       return False
 
