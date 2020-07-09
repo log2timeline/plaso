@@ -77,10 +77,10 @@ jobs:
     python: 3.8
     services:
     - docker
-  - name: "MacOS 10.14 with Python 3.7 (tox)"
-    env: TOXENV="py37"
+  - name: "MacOS 10.14 with Python 3.8 (tox)"
+    env: TOXENV="py38"
     os: osx
-    osx_image: xcode10
+    osx_image: xcode11
   - name: "Dockerfile"
     env: TARGET="dockerfile"
     group: edge
