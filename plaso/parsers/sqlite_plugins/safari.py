@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Safari History files.
+"""SQLite parser plugin for Safari history database files."""
 
-The Safari History is stored in SQLite database files named History.db
-"""
 from __future__ import unicode_literals
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -41,13 +39,14 @@ class SafariHistoryPageVisitedEventData(events.EventData):
 
 
 class SafariHistoryPluginSqlite(interface.SQLitePlugin):
-  """Parse Safari History Files.
+  """SQLite parser plugin for Safari history database files.
 
-  Safari history file is stored in a SQLite database file named History.db
+  The Safari history database file is typically stored in:
+  History.db
   """
 
   NAME = 'safari_historydb'
-  DESCRIPTION = 'Parser for Safari history SQLite database files.'
+  DATA_FORMAT = 'Safari history SQLite database (History.db) file'
 
   REQUIRED_STRUCTURE = {
       'history_items': frozenset([

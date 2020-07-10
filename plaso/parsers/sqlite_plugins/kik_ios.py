@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Kik database on iOS.
-
-Kik messages on iOS devices are stored in an
-SQLite database file named kik.sqlite.
-"""
+"""SQLite parser plugin for iOS Kik messenger database files."""
 
 from __future__ import unicode_literals
 
@@ -40,10 +36,14 @@ class KikIOSMessageEventData(events.EventData):
 
 
 class KikIOSPlugin(interface.SQLitePlugin):
-  """SQLite plugin for Kik iOS database."""
+  """SQLite parser plugin for iOS Kik messenger database files.
+
+  The OS Kik messenger database file is typically stored in:
+  kik.sqlite
+  """
 
   NAME = 'kik_messenger'
-  DESCRIPTION = 'Parser for iOS Kik messenger SQLite database files.'
+  DATA_FORMAT = 'iOS Kik messenger SQLite database (kik.sqlite) file'
 
   REQUIRED_STRUCTURE = {
       'ZKIKMESSAGE': frozenset([

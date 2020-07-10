@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin for the MacOS launch services quarantine events."""
+"""SQLite parser plugin for MacOS LS quarantine events database files."""
 
 from __future__ import unicode_literals
 
@@ -33,15 +33,16 @@ class LsQuarantineEventData(events.EventData):
 
 
 class LsQuarantinePlugin(interface.SQLitePlugin):
-  """Parses the launch services quarantine events database.
+  """SQLite parser plugin for MacOS LS quarantine events database files.
 
-  The LS quarantine events are stored in SQLite database files named
-  /Users/<username>/Library/Preferences/
-       QuarantineEvents.com.apple.LaunchServices
+  The MacOS launch services (LS) quarantine database file is typically stored
+  in: /Users/<username>/Library/Preferences/
+      QuarantineEvents.com.apple.LaunchServices
   """
 
   NAME = 'ls_quarantine'
-  DESCRIPTION = 'Parser for MacOS LS quarantine events SQLite database files.'
+  DATA_FORMAT = (
+      'MacOS launch services quarantine events database SQLite database file')
 
   REQUIRED_STRUCTURE = {
       'LSQuarantineEvent': frozenset([

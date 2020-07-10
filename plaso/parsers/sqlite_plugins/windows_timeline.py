@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Windows 10 Timeline SQLite database files.
-
-Timeline events on Windows are stored in a SQLite
-database file usually found in ActivitiesCache.db,
-path is usually something like:
-%APPDATA%\\Local\\ConnectedDevicesPlatform\\L.<username>
-"""
+"""SQLite parser plugin for Windows 10 Timeline database files."""
 
 from __future__ import unicode_literals
 
@@ -75,10 +69,14 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
 
 
 class WindowsTimelinePlugin(interface.SQLitePlugin):
-  """Parser for Windows 10 Timeline SQLite database files."""
+  """SQLite parser plugin for Windows 10 Timeline database files.
+
+  The Windows 10 Timeline database file is typically stored in:
+  %APPDATA%\\Local\\ConnectedDevicesPlatform\\L.<username>\\ActivitiesCache.db
+  """
 
   NAME = 'windows_timeline'
-  DESCRIPTION = 'Parser for the Windows 10 Timeline SQLite database files'
+  DATA_FORMAT = 'Windows 10 Timeline SQLite database (ActivitiesCache.db) file'
 
   REQUIRED_STRUCTURE = {
       'Activity': frozenset([

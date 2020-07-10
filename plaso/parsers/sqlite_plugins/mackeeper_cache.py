@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for MacOS MacKeeper cache SQLite database files."""
+"""SQLite parser plugin for MacOS MacKeeper cache database files."""
 
 from __future__ import unicode_literals
 
@@ -46,10 +46,10 @@ class MacKeeperCacheEventData(events.EventData):
 
 
 class MacKeeperCachePlugin(interface.SQLitePlugin):
-  """Parser for MacOS MacKeeper Cache SQLite database files."""
+  """SQLite parser plugin for MacOS MacKeeper cache database files."""
 
   NAME = 'mackeeper_cache'
-  DESCRIPTION = 'Parser for MacKeeper Cache SQLite database files.'
+  DATA_FORMAT = 'MacOS MacKeeper cache SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'cfurl_cache_blob_data': frozenset([]),

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Android WebviewCache databases."""
+"""SQLite parser plugin for Android WebviewCache database files."""
 
 from __future__ import unicode_literals
 
@@ -30,15 +30,14 @@ class AndroidWebViewCacheEventData(events.EventData):
 
 
 class AndroidWebViewCachePlugin(interface.SQLitePlugin):
-  """Parser for Android WebViewCache databases."""
+  """SQLite parser plugin for Android WebviewCache database files."""
 
   NAME = 'android_webviewcache'
-  DESCRIPTION = 'Parser for Android WebViewCache databases'
+  DATA_FORMAT = 'Android WebViewCache SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'android_metadata': frozenset([]),
-      'cache': frozenset([
-          'url', 'contentlength', 'expires', 'lastmodify'])}
+      'cache': frozenset(['url', 'contentlength', 'expires', 'lastmodify'])}
 
   QUERIES = frozenset([
       ('SELECT url, contentlength, expires, lastmodify FROM cache',

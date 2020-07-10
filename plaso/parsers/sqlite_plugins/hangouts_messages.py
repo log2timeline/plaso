@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Google Hangouts Active Conversations DB.
-
-/data/com.google.android.talk/databases/babel.db
-
-This SQLite database is the conversation database for conversations,
-participant names, messages, and information about the Google Hangout event.
-There can be multiple babel.db databases, and each database name will be
-followed by an integer starting with 0, for example:
-"babel0.db,babel1.db,babel3.db".
-"""
+"""SQLite parser plugin for Google Hangouts conversations database files."""
 
 from __future__ import unicode_literals
 
@@ -43,10 +34,20 @@ class HangoutsMessageData(events.EventData):
 
 
 class HangoutsMessagePlugin(interface.SQLitePlugin):
-  """Parser for Google Hangouts databases."""
+  """SQLite parser plugin for Google Hangouts conversations database files.
+
+  The Google Hangouts conversations database file is typically stored in:
+  /data/com.google.android.talk/databases/babel.db
+
+  This SQLite database is the conversation database for conversations,
+  participant names, messages, and information about the Google Hangout event.
+  There can be multiple babel.db databases, and each database name will be
+  followed by an integer starting with 0, for example:
+  "babel0.db,babel1.db,babel3.db".
+  """
 
   NAME = 'hangouts_messages'
-  DESCRIPTION = 'Parser for Google Hangouts Messages SQLite database files.'
+  DATA_FORMAT = 'Google Hangouts conversations SQLite database (babel.db) file'
 
   REQUIRED_STRUCTURE = {
       'blocked_people': frozenset([]),

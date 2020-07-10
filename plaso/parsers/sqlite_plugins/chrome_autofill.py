@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Google Chrome autofill entries.
-
-The Chrome autofill information is stored in SQLite database files named
-Web Data.
-"""
+"""SQLite parser plugin for Google Chrome autofill database (Web Data) files."""
 
 from __future__ import unicode_literals
 
@@ -37,10 +33,14 @@ class ChromeAutofillEventData(events.EventData):
 
 
 class ChromeAutofillPlugin(interface.SQLitePlugin):
-  """Plugin to parse Chrome Autofill entries from Web Data database files."""
+  """SQLite parser plugin for Google Chrome autofill database (Web Data) files.
+
+  The Google Chrome autofill database (Web Data) file is typically stored in:
+  Web Data
+  """
 
   NAME = 'chrome_autofill'
-  DESCRIPTION = 'Parser for Google Chrome autofill SQLite database files.'
+  DATA_FORMAT = 'Google Chrome autofill SQLite database (Web Data) file'
 
   REQUIRED_STRUCTURE = {
       'autofill': frozenset([

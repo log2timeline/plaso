@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Firefox Cookie database."""
+"""SQLite parser plugin for Mozilla Firefox cookies database files."""
 
 from __future__ import unicode_literals
 
@@ -45,10 +45,10 @@ class FirefoxCookieEventData(events.EventData):
 
 
 class FirefoxCookiePlugin(interface.SQLitePlugin):
-  """Parser for the Firefox Cookie database."""
+  """SQLite parser plugin for Mozilla Firefox cookies database files."""
 
   NAME = 'firefox_cookies'
-  DESCRIPTION = 'Parser for Mozilla Firefox cookies SQLite database files.'
+  DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'moz_cookies': frozenset([
