@@ -32,7 +32,9 @@ class SpotlightPlugin(interface.PlistPlugin):
   NAME = 'spotlight'
   DATA_FORMAT = 'Spotlight plist file'
 
-  PLIST_PATH = 'com.apple.spotlight.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.spotlight.plist')])
+
   PLIST_KEYS = frozenset(['UserShortcuts'])
 
   # pylint: disable=arguments-differ

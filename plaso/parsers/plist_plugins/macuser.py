@@ -57,18 +57,6 @@ class MacUserPlugin(interface.PlistPlugin):
 
   _ROOT = '/'
 
-  def Process(self, parser_mediator, plist_name, top_level, **kwargs):
-    """Check if it is a valid MacOS system  account plist file name.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      plist_name (str): name of the plist.
-      top_level (dict[str, object]): plist top-level key.
-    """
-    super(MacUserPlugin, self).Process(
-        parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
-
   # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant user timestamp entries.

@@ -8,7 +8,6 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -28,26 +27,11 @@ class AppleAccountPlugin(interface.PlistPlugin):
   NAME = 'apple_id'
   DATA_FORMAT = 'Apple account information plist file'
 
-  PLIST_PATH = 'com.apple.coreservices.appleidauthenticationinfo'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PrefixPlistPathFilter(
+          'com.apple.coreservices.appleidauthenticationinfo')])
+
   PLIST_KEYS = frozenset(['AuthCertificates', 'AccessorVersions', 'Accounts'])
-
-  def Process(self, parser_mediator, plist_name, top_level, **kwargs):
-    """Check if it is a valid Apple account plist file name.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      plist_name (str): name of the plist.
-      top_level (dict[str, object]): plist top-level key.
-
-    Raises:
-      WrongPlistPlugin: if this plugin is not able to process the given file
-    """
-    if not plist_name.startswith(self.PLIST_PATH):
-      raise errors.WrongPlistPlugin(self.NAME, plist_name)
-
-    super(AppleAccountPlugin, self).Process(
-        parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
   # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):

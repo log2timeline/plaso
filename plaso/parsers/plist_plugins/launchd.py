@@ -50,26 +50,13 @@ class LaunchdPlugin(interface.PlistPlugin):
   ])
 
   # pylint: disable=arguments-differ
-  def Process(self, parser_mediator, plist_name, top_level, **kwargs):
-    """Check if it is a valid MacOS plist file name.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      plist_name (str): name of the plist.
-      top_level (dict[str, object]): plist top-level key.
-    """
-    super(LaunchdPlugin, self).Process(
-        parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
-
-  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts launchd information from the plist.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
         and other components, such as storage and dfvfs.
-      top_level (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
+      top_level (Optional[dict[str, object]]): plist top-level item.
     """
 
     label = top_level.get('Label')

@@ -25,7 +25,9 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
   NAME = 'macos_software_update'
   DATA_FORMAT = 'MacOS software update plist file'
 
-  PLIST_PATH = 'com.apple.SoftwareUpdate.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.SoftwareUpdate.plist')])
+
   PLIST_KEYS = frozenset([
       'LastFullSuccessfulDate', 'LastSuccessfulDate',
       'LastAttemptSystemVersion', 'LastUpdatesAvailable',

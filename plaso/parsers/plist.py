@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Property List (Plist) Parser.
-
-Plaso's engine calls PlistParser when it encounters Plist files to be processed.
-"""
+"""Parser for binary and text Property List (plist) files."""
 
 from __future__ import unicode_literals
-
 
 import biplist
 
@@ -17,7 +13,7 @@ from plaso.parsers import manager
 
 
 class PlistParser(interface.FileObjectParser):
-  """Parses binary and text plist plist files.
+  """Parser for binary and text Property List (plist) files.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
   Parse() has GetTopLevel() which deserializes plist files using the biplist
@@ -96,21 +92,41 @@ class PlistParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           'Unable to parse: {0:s} skipping.'.format(filename))
 
-    # TODO: add a parser filter.
-    matching_plugin = None
+    filename_lower_case = filename.lower()
+    top_level_keys = set(top_level_object.keys())
+
+    found_matching_plugin = False
     for plugin in self._plugins:
+      if parser_mediator.abort:
+        break
+
+      if not plugin.PLIST_PATH_FILTERS:
+        path_filter_match = True
+      else:
+        path_filter_match = False
+        for path_filter in plugin.PLIST_PATH_FILTERS:
+          if path_filter.Match(filename_lower_case):
+            path_filter_match = True
+
+      if (not path_filter_match or
+          not top_level_keys.issuperset(plugin.PLIST_KEYS)):
+        continue
+
+      logger.debug('Plist plugin used: {0:s}'.format(plugin.NAME))
+
       try:
         plugin.UpdateChainAndProcess(
-            parser_mediator, plist_name=filename, top_level=top_level_object)
-        matching_plugin = plugin
+            parser_mediator, top_level=top_level_object)
+        found_matching_plugin = True
 
-      except errors.WrongPlistPlugin as exception:
-        logger.debug('Wrong plugin: {0:s} for: {1:s}'.format(
-            exception.args[0], exception.args[1]))
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionWarning((
+            'plugin: {0:s} unable to parse plist file with error: '
+            '{1!s}').format(plugin.NAME, exception))
 
-    if not matching_plugin and self._default_plugin:
+    if not found_matching_plugin and self._default_plugin:
       self._default_plugin.UpdateChainAndProcess(
-          parser_mediator, plist_name=filename, top_level=top_level_object)
+          parser_mediator, top_level=top_level_object)
 
 
 manager.ParsersManager.RegisterParser(PlistParser)

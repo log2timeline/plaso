@@ -80,7 +80,7 @@ class BencodeParser(interface.FileObjectParser):
       if not bencode_keys.issuperset(plugin.BENCODE_KEYS):
         continue
 
-      logger.debug('Bencode Plugin Used: {0:s}'.format(plugin.NAME))
+      logger.debug('Bencode plugin used: {0:s}'.format(plugin.NAME))
 
       try:
         plugin.UpdateChainAndProcess(
