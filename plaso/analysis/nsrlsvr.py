@@ -5,12 +5,12 @@ from __future__ import unicode_literals
 
 import socket
 
-from plaso.analysis import interface
+from plaso.analysis import hash_tagging
 from plaso.analysis import logger
 from plaso.analysis import manager
 
 
-class NsrlsvrAnalyzer(interface.HashAnalyzer):
+class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
   """Analyzes file hashes by consulting an nsrlsvr instance.
 
   Attributes:
@@ -114,7 +114,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       if response is None:
         continue
 
-      hash_analysis = interface.HashAnalysis(digest, response)
+      hash_analysis = hash_tagging.HashAnalysis(digest, response)
       hash_analyses.append(hash_analysis)
 
     nsrl_socket.close()
@@ -160,7 +160,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     return response is not None
 
 
-class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
+class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   """Analysis plugin for looking up hashes in nsrlsvr."""
 
   # The NSRL contains files of all different types, and can handle a high load
@@ -181,8 +181,7 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
     Args:
       hash_information (bool): whether the analyzer received a response from
-          nsrlsvr indicating that the hash was present in its loaded NSRL
-          set.
+          nsrlsvr indicating that the hash was present in its loaded NSRL set.
 
     Returns:
       list[str]: strings describing the results from nsrlsvr.

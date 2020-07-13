@@ -3,14 +3,14 @@
 
 from __future__ import unicode_literals
 
-from plaso.analysis import interface
+from plaso.analysis import hash_tagging
 from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.containers import events
 from plaso.lib import errors
 
 
-class ViperAnalyzer(interface.HTTPHashAnalyzer):
+class ViperAnalyzer(hash_tagging.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting Viper.
 
   REST API reference:
@@ -77,7 +77,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
     hash_analyses = []
     for digest in hashes:
       json_response = self._QueryHash(digest)
-      hash_analysis = interface.HashAnalysis(digest, json_response)
+      hash_analysis = hash_tagging.HashAnalysis(digest, json_response)
       hash_analyses.append(hash_analysis)
 
     return hash_analyses
@@ -129,7 +129,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
     return json_response is not None
 
 
-class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
+class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up SHA256 hashes in Viper."""
 
   # TODO: Check if there are other file types worth checking Viper for.

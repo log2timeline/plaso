@@ -13,8 +13,8 @@ class AnalysisImportTest(test_lib.ImportCheckTestCase):
   """Tests that analysis plugin classes are imported correctly."""
 
   _IGNORABLE_FILES = frozenset([
-      'logger.py', 'manager.py', 'definitions.py', 'mediator.py',
-      'interface.py'])
+      'definitions.py', 'hash_tagging.py', 'interface.py', 'logger.py',
+      'manager.py', 'mediator.py'])
 
   def testAnalysisPluginsImported(self):
     """Tests that all parsers are imported."""
