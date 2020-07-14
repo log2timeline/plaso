@@ -92,6 +92,7 @@ class PsortTool(
     self._time_slice = None
     self._use_time_slicer = False
     self._worker_memory_limit = None
+    self._worker_timeout = None
 
     self.list_analysis_plugins = False
     self.list_language_identifiers = False
@@ -238,10 +239,19 @@ class PsortTool(
     worker_memory_limit = getattr(options, 'worker_memory_limit', None)
 
     if worker_memory_limit and worker_memory_limit < 0:
-      raise errors.BadConfigOption(
-          'Invalid worker memory limit value cannot be negative.')
+      raise errors.BadConfigOption((
+          'Invalid worker memory limit: {0:d}, value must be 0 or '
+          'greater.').format(worker_memory_limit))
+
+    worker_timeout = getattr(options, 'worker_timeout', None)
+
+    if worker_timeout is not None and worker_timeout <= 0.0:
+      raise errors.BadConfigOption((
+          'Invalid worker timeout: {0:f}, value must be greater than '
+          '0.0 minutes.').format(worker_timeout))
 
     self._worker_memory_limit = worker_memory_limit
+    self._worker_timeout = worker_timeout
 
   def _PrintAnalysisReportsDetails(self, storage_reader):
     """Prints the details of the analysis reports.
@@ -291,14 +301,22 @@ class PsortTool(
         argument_group, names=argument_helper_names)
 
     argument_group.add_argument(
-        '--worker-memory-limit', '--worker_memory_limit',
+        '--worker_memory_limit', '--worker-memory-limit',
         dest='worker_memory_limit', action='store', type=int,
         metavar='SIZE', help=(
             'Maximum amount of memory (data segment and shared memory) '
             'a worker process is allowed to consume in bytes, where 0 '
             'represents no limit. The default limit is 2147483648 (2 GiB). '
-            'If a worker process exceeds this limit is is killed by the main '
+            'If a worker process exceeds this limit it is killed by the main '
             '(foreman) process.'))
+
+    argument_group.add_argument(
+        '--worker_timeout', '--worker-timeout', dest='worker_timeout',
+        action='store', type=float, metavar='MINUTES', help=(
+            'Number of minutes before a worker process that is not providing '
+            'status updates is considered inactive. The default timeout is '
+            '15.0 minutes. If a worker process exceeds this timeout it is '
+            'killed by the main (foreman) process.'))
 
   def ParseArguments(self, arguments):
     """Parses the command line arguments.
@@ -547,15 +565,16 @@ class PsortTool(
                 self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine()
+      analysis_engine = psort.PsortMultiProcessEngine(
+          worker_memory_limit=self._worker_memory_limit,
+          worker_timeout=self._worker_timeout)
 
       analysis_engine.AnalyzeEvents(
           self._knowledge_base, storage_writer, self._data_location,
           self._analysis_plugins, configuration,
           event_filter=self._event_filter,
           event_filter_expression=self._event_filter_expression,
-          status_update_callback=status_update_callback,
-          worker_memory_limit=self._worker_memory_limit)
+          status_update_callback=status_update_callback)
 
       analysis_counter = collections.Counter()
       for item, value in session.analysis_reports_counter.items():
@@ -567,7 +586,9 @@ class PsortTool(
               self._storage_file_path))
 
       # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine()
+      analysis_engine = psort.PsortMultiProcessEngine(
+          worker_memory_limit=self._worker_memory_limit,
+          worker_timeout=self._worker_timeout)
 
       analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,

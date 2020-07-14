@@ -20,7 +20,8 @@ class WorkersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--worker_memory_limit SIZE] [--workers WORKERS]
+usage: cli_helper.py [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
+                     [--workers WORKERS]
 
 Test argument parser.
 
@@ -30,9 +31,16 @@ optional arguments:
                         memory) a worker process is allowed to consume in
                         bytes, where 0 represents no limit. The default limit
                         is 2147483648 (2 GiB). If a worker process exceeds
-                        this limit is is killed by the main (foreman) process.
-  --workers WORKERS     Number of worker processes [defaults to available
-                        system CPUs minus one].
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout MINUTES, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
+  --workers WORKERS     Number of worker processes. The default is the number
+                        of available system CPUs minus one, for the main
+                        (foreman) process.
 """
 
   def testAddArguments(self):

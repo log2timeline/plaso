@@ -134,7 +134,7 @@ optional arguments:
   if resource is None:
     _EXPECTED_PROCESSING_OPTIONS = """\
 usage: psort_test.py [--temporary_directory DIRECTORY]
-                     [--worker-memory-limit SIZE]
+                     [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
 
 Test argument parser.
 
@@ -142,18 +142,24 @@ optional arguments:
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
-  --worker-memory-limit SIZE, --worker_memory_limit SIZE
+  --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
                         bytes, where 0 represents no limit. The default limit
                         is 2147483648 (2 GiB). If a worker process exceeds
-                        this limit is is killed by the main (foreman) process.
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout MINUTES, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
 """
   else:
     _EXPECTED_PROCESSING_OPTIONS = """\
 usage: psort_test.py [--process_memory_limit SIZE]
                      [--temporary_directory DIRECTORY]
-                     [--worker-memory-limit SIZE]
+                     [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
 
 Test argument parser.
 
@@ -169,12 +175,18 @@ optional arguments:
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
-  --worker-memory-limit SIZE, --worker_memory_limit SIZE
+  --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
                         bytes, where 0 represents no limit. The default limit
                         is 2147483648 (2 GiB). If a worker process exceeds
-                        this limit is is killed by the main (foreman) process.
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout MINUTES, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
 """
 
   # TODO: add test for _CreateOutputModule.

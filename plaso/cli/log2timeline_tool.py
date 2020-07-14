@@ -99,7 +99,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
-    self._worker_memory_limit = None
 
     self.dependencies_check = True
     self.list_hashers = False
@@ -401,7 +400,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
     else:
-      extraction_engine = multi_process_engine.TaskMultiProcessEngine()
+      extraction_engine = multi_process_engine.TaskMultiProcessEngine(
+          number_of_worker_processes=self._number_of_extraction_workers,
+          worker_memory_limit=self._worker_memory_limit,
+          worker_timeout=self._worker_timeout)
 
     # If the source is a directory or a storage media image
     # run pre-processing.
@@ -443,9 +445,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       processing_status = extraction_engine.ProcessSources(
           session, self._source_path_specs, storage_writer,
           configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
-          number_of_worker_processes=self._number_of_extraction_workers,
-          status_update_callback=status_update_callback,
-          worker_memory_limit=self._worker_memory_limit)
+          status_update_callback=status_update_callback)
 
     self._status_view.PrintExtractionSummary(processing_status)
 

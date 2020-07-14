@@ -44,7 +44,7 @@ usage: extraction_tool_test.py [--single_process]
                                [--temporary_directory DIRECTORY]
                                [--vfs_back_end TYPE]
                                [--worker_memory_limit SIZE]
-                               [--workers WORKERS]
+                               [--worker_timeout MINUTES] [--workers WORKERS]
 
 Test argument parser.
 
@@ -61,9 +61,16 @@ optional arguments:
                         memory) a worker process is allowed to consume in
                         bytes, where 0 represents no limit. The default limit
                         is 2147483648 (2 GiB). If a worker process exceeds
-                        this limit is is killed by the main (foreman) process.
-  --workers WORKERS     Number of worker processes [defaults to available
-                        system CPUs minus one].
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout MINUTES, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
+  --workers WORKERS     Number of worker processes. The default is the number
+                        of available system CPUs minus one, for the main
+                        (foreman) process.
 """)
   else:
     _EXPECTED_PROCESSING_OPTIONS = ("""\
@@ -72,7 +79,7 @@ usage: extraction_tool_test.py [--single_process]
                                [--temporary_directory DIRECTORY]
                                [--vfs_back_end TYPE]
                                [--worker_memory_limit SIZE]
-                               [--workers WORKERS]
+                               [--worker_timeout MINUTES] [--workers WORKERS]
 
 Test argument parser.
 
@@ -97,9 +104,16 @@ optional arguments:
                         memory) a worker process is allowed to consume in
                         bytes, where 0 represents no limit. The default limit
                         is 2147483648 (2 GiB). If a worker process exceeds
-                        this limit is is killed by the main (foreman) process.
-  --workers WORKERS     Number of worker processes [defaults to available
-                        system CPUs minus one].
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout MINUTES, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
+  --workers WORKERS     Number of worker processes. The default is the number
+                        of available system CPUs minus one, for the main
+                        (foreman) process.
 """)
 
   _EXPECTED_TIME_ZONE_OPTION = """\
