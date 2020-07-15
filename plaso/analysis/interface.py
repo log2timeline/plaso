@@ -207,6 +207,10 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       # compatibility.
       path_specification = getattr(event_data, 'pathspec', None)
 
+    # Not all events have a path specification, such as "fs:stat".
+    if not path_specification:
+      return
+
     event_identifiers = self._event_identifiers_by_path_spec[path_specification]
 
     event_identifier = event.GetIdentifier()

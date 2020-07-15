@@ -247,13 +247,10 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
           mediator, event, event_data, event_data_stream)
 
     except Exception as exception:  # pylint: disable=broad-except
-      self.SignalAbort()
+      # TODO: write analysis error and change logger to debug only.
 
-      # TODO: write analysis error.
-
-      if self._debug_output:
-        logger.warning('Unhandled exception while processing event object.')
-        logger.exception(exception)
+      logger.warning('Unhandled exception while processing event object.')
+      logger.exception(exception)
 
   def SignalAbort(self):
     """Signals the process to abort."""

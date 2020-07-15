@@ -304,7 +304,8 @@ class PathHelper(object):
       text_prepend (Optional[str]): text to prepend.
 
     Returns:
-      str: human readable version of the path specification or None.
+      str: human readable version of the path specification or None if no path
+          specification was provided.
     """
     if not path_spec:
       return None
