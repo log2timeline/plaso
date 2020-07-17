@@ -1053,6 +1053,79 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
     return True
 
 
+class ExtractAndAnalyzeTestCase(ExtractAndOutputTestCase):
+  """Extract and analyze test case.
+
+  The extract and analyze test case runs log2timeline to extract data
+  from a source, specified by the test definition. After the data has been
+  extracted psort is run to analyze events in the resulting storage file.
+  """
+
+  NAME = 'extract_and_analyze'
+
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+    if not super(ExtractAndAnalyzeTestCase, self).ReadAttributes(
+        test_definition_reader, test_definition):
+      return False
+
+    test_definition.analysis_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'analysis_options', default=[], split_string=True)
+
+    return True
+
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error('No such source: {0:s}'.format(source_path))
+      return False
+
+    with TempDirectory() as temp_directory:
+      storage_file = os.path.join(
+          temp_directory, '{0:s}.plaso'.format(test_definition.name))
+
+      # Extract events with log2timeline.
+      if not self._RunLog2Timeline(
+          test_definition, temp_directory, storage_file, source_path):
+        return False
+
+      # Analyze events with psort.
+      output_options = ['--output-format', 'null']
+
+      if not self._RunPsort(
+          test_definition, temp_directory, storage_file,
+          analysis_options=test_definition.analysis_options,
+          output_options=output_options):
+        return False
+
+      # Check if the resulting storage file can be read with psort.
+      if not self._RunPsort(
+          test_definition, temp_directory, storage_file,
+          output_options=test_definition.output_options):
+        return False
+
+    return True
+
+
 class ExtractAndTagTestCase(ExtractAndOutputTestCase):
   """Extract and tag test case.
 
@@ -1864,9 +1937,10 @@ class OutputTestCase(StorageFileTestCase):
 
 TestCasesManager.RegisterTestCases([
     AnalyzeAndOutputTestCase, ExtractAndOutputTestCase,
-    ExtractAndOutputWithPstealTestCase, ExtractAndTagTestCase,
-    ImageExportTestCase, MultiAnalyzeAndOutputTestCase,
-    MultiExtractAndOutputTestCase, OutputTestCase])
+    ExtractAndOutputWithPstealTestCase, ExtractAndAnalyzeTestCase,
+    ExtractAndTagTestCase, ImageExportTestCase,
+    MultiAnalyzeAndOutputTestCase, MultiExtractAndOutputTestCase,
+    OutputTestCase])
 
 
 def Main():
