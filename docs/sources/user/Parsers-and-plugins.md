@@ -126,39 +126,39 @@ time_machine | Parser for TimeMachine plist files.
 
 Name | Description
 --- | ---
-android_calls | Parser for Android calls SQLite database files.
-android_sms | Parser for Android text messages SQLite database files.
-android_webview | Parser for Android WebView databases
-android_webviewcache | Parser for Android WebViewCache databases
-appusage | Parser for MacOS application usage SQLite database files.
+android_calls | Parser for Android call history SQLite database (contacts2.db) files.
+android_sms | Parser for Android text messages (SMS) SQLite database (mmssms.dbs) files.
+android_webview | Parser for Android WebView SQLite database files.
+android_webviewcache | Parser for Android WebViewCache SQLite database files.
+appusage | Parser for MacOS application usage SQLite database (application_usage.sqlite) files.
 chrome_17_cookies | Parser for Google Chrome 17 - 65 cookies SQLite database files.
 chrome_27_history | Parser for Google Chrome 27 and later history SQLite database files.
 chrome_66_cookies | Parser for Google Chrome 66 and later cookies SQLite database files.
 chrome_8_history | Parser for Google Chrome 8 - 25 history SQLite database files.
-chrome_autofill | Parser for Google Chrome autofill SQLite database files.
+chrome_autofill | Parser for Google Chrome autofill SQLite database (Web Data) files.
 chrome_extension_activity | Parser for Google Chrome extension activity SQLite database files.
 firefox_cookies | Parser for Mozilla Firefox cookies SQLite database files.
-firefox_downloads | Parser for Mozilla Firefox downloads SQLite database files.
-firefox_history | Parser for Mozilla Firefox history SQLite database files.
-google_drive | Parser for Google Drive SQLite database files.
-hangouts_messages | Parser for Google Hangouts Messages SQLite database files.
-imessage | Parser for the iMessage and SMS SQLite databases on MacOS and iOS.
-kik_messenger | Parser for iOS Kik messenger SQLite database files.
-kodi | Parser for Kodi videos SQLite database files (MyVideos.db)
-ls_quarantine | Parser for MacOS LS quarantine events SQLite database files.
+firefox_downloads | Parser for Mozilla Firefox downloads SQLite database (downloads.sqlite) files.
+firefox_history | Parser for Mozilla Firefox history SQLite database (places.sqlite) files.
+google_drive | Parser for Google Drive snapshot SQLite database (snapshot.db) files.
+hangouts_messages | Parser for Google Hangouts conversations SQLite database (babel.db) files.
+imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.
+kik_messenger | Parser for iOS Kik messenger SQLite database (kik.sqlite) files.
+kodi | Parser for Kodi videos SQLite database (MyVideos.db) files.
+ls_quarantine | Parser for MacOS launch services quarantine events database SQLite database files.
 mac_document_versions | Parser for MacOS document revisions SQLite database files.
 mac_knowledgec | Parser for MacOS Duet / KnowledgeC SQLites database files.
-mac_notes | Parser for MacOS Notes SQLite database files
-mac_notificationcenter | Parser for the MacOS Notification Center SQLite database files
-mackeeper_cache | Parser for MacKeeper Cache SQLite database files.
-macostcc | Parser for macOS TCC SQLite database files.
-safari_historydb | Parser for Safari history SQLite database files.
+mac_notes | Parser for MacOS Notes SQLite database (NotesV7.storedata) files.
+mac_notificationcenter | Parser for MacOS Notification Center SQLite database files.
+mackeeper_cache | Parser for MacOS MacKeeper cache SQLite database files.
+macostcc | Parser for MacOS Transaprency, Consent, Control (TCC) SQLite database (TCC.db) files.
+safari_historydb | Parser for Safari history SQLite database (History.db) files.
 skype | Parser for Skype SQLite database (main.db) files.
-tango_android_profile | Parser for Tango on Android profile SQLite database.
-tango_android_tc | Parser for Tango on Android tc SQLite database.
-twitter_android | Parser for Twitter on Android SQLite database files
-twitter_ios | Parser for Twitter on iOS 8+ SQLite database files
-windows_timeline | Parser for the Windows 10 Timeline SQLite database files
+tango_android_profile | Parser for Tango on Android profile SQLite database files.
+tango_android_tc | Parser for Tango on Android TC SQLite database files.
+twitter_android | Parser for Twitter on Android SQLite database files.
+twitter_ios | Parser for Twitter on iOS 8 and later SQLite database (twitter.db) files.
+windows_timeline | Parser for Windows 10 Timeline SQLite database (ActivitiesCache.db) files.
 zeitgeist | Parser for Zeitgeist activity SQLite database files.
 
 ### Parser plugins: syslog
