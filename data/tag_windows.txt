@@ -322,7 +322,7 @@ autorun
 
 # Tags PowerShell execution events.
 powershell_execute
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-PowerShell' AND (event_identifier is 4103 OR event_identifier is 4104 OR event_identifier is 400 OR event_identifier is 403 OR event_identifier is 600 OR event_identifier is 800 OR event_identifier is 4100)
+  data_type is 'windows:evtx:record' AND (source_name is 'Microsoft-Windows-PowerShell' OR source_name is 'PowerShell') AND (event_identifier is 4103 OR event_identifier is 4104 OR event_identifier is 400 OR event_identifier is 403 OR event_identifier is 600 OR event_identifier is 800 OR event_identifier is 4100)
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1 AND xml_string contains 'powershell'
 
 # Tags PowerShell configuration logging change events.
