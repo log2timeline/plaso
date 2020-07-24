@@ -43,6 +43,7 @@ class OLECFParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
+
     parser = olecf.OLECFParser()
     parser.ParseFileObject(parser_mediator, None)
 
