@@ -9,6 +9,7 @@ import datetime
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.lib import errors
+from plaso.lib import timelib
 from plaso.output import logger
 
 
@@ -57,6 +58,34 @@ class FieldFormattingHelper(object):
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.
   # pylint: disable=unused-argument
+
+  def _FormatDisplayName(self, event, event_data, event_data_stream):
+    """Formats the display name.
+
+    The display_name field can be set as an attribute to event_data otherwise
+    it is derived from the path specificiation.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: date field.
+    """
+    display_name = getattr(event_data, 'display_name', None)
+    if not display_name:
+      path_spec = getattr(event_data_stream, 'path_spec', None)
+      if not path_spec:
+        path_spec = getattr(event_data, 'pathspec', None)
+
+      if path_spec:
+        display_name = self._output_mediator.GetDisplayNameForPathSpec(
+            path_spec)
+      else:
+        display_name = '-'
+
+    return display_name
 
   def _FormatHostname(self, event, event_data, event_data_stream):
     """Formats a hostname field.
@@ -237,6 +266,31 @@ class FieldFormattingHelper(object):
       return '-'
 
     return ' '.join(event_tag.labels)
+
+  def _FormatTime(self, event, event_data, event_data_stream):
+    """Formats a time field.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: time field.
+    """
+    try:
+      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
+          event.timestamp, timezone=self._output_mediator.timezone,
+          raise_error=True)
+
+      return iso_date_time[11:19]
+
+    except (OverflowError, ValueError):
+      self._ReportEventError(event, event_data, (
+          'unable to copy timestamp: {0!s} to a human readable time. '
+          'Defaulting to: "--:--:--"').format(event.timestamp))
+
+      return '--:--:--'
 
   def _FormatTimeZone(self, event, event_data, event_data_stream):
     """Formats a time zone field.

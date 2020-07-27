@@ -109,19 +109,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
       return '00/00/0000'
 
-  def _FormatDisplayName(self, event, event_data, event_data_stream):
-    """Formats a display name field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: display name field.
-    """
-    return getattr(event_data, 'display_name', '-')
-
   def _FormatExtraAttributes(self, event, event_data, event_data_stream):
     """Formats an extra attributes field.
 
@@ -186,31 +173,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       str: parser field.
     """
     return getattr(event_data, 'parser', '-')
-
-  def _FormatTime(self, event, event_data, event_data_stream):
-    """Formats a time field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: time field.
-    """
-    try:
-      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
-          event.timestamp, timezone=self._output_mediator.timezone,
-          raise_error=True)
-
-      return iso_date_time[11:19]
-
-    except (OverflowError, ValueError):
-      self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable time. '
-          'Defaulting to: "--:--:--"').format(event.timestamp))
-
-      return '--:--:--'
 
   def _FormatType(self, event, event_data, event_data_stream):
     """Formats a type field.

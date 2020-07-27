@@ -32,10 +32,10 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     This method replaces any field delimiters with a space.
 
     Args:
-      field (str): name of the field to sanitize.
+      field (str): value of the field to sanitize.
 
     Returns:
-      str: value of the field.
+      str: sanitized value of the field.
     """
     if self._field_delimiter and isinstance(field, str):
       return field.replace(self._field_delimiter, ' ')
