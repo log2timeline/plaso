@@ -20,7 +20,7 @@ case "$1" in
   log2timeline|log2timeline.py)
     /usr/bin/log2timeline.py --unattended "${@:2}" ;;
   pinfo|pinfo.py)
-    /usr/bin/pinfo.py --unattended "${@:2}" ;;
+    /usr/bin/pinfo.py "${@:2}" ;;
   psort|psort.py)
     /usr/bin/psort.py --unattended "${@:2}" ;;
   psteal|psteal.py)
