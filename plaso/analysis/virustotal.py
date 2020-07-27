@@ -3,13 +3,13 @@
 
 from __future__ import unicode_literals
 
-from plaso.analysis import interface
+from plaso.analysis import hash_tagging
 from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.lib import errors
 
 
-class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
+class VirusTotalAnalyzer(hash_tagging.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting VirusTotal."""
 
   _VIRUSTOTAL_API_REPORT_URL = (
@@ -83,7 +83,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
 
     for result in json_response:
       resource = result['resource']
-      hash_analysis = interface.HashAnalysis(resource, result)
+      hash_analysis = hash_tagging.HashAnalysis(resource, result)
       hash_analyses.append(hash_analysis)
 
     return hash_analyses
@@ -106,7 +106,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
     return json_response is not None
 
 
-class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
+class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in VirusTotal."""
 
   # TODO: Check if there are other file types worth checking VirusTotal for.
