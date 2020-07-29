@@ -20,6 +20,40 @@ rawpy | Output events in "raw" (or native) Python format.
 timesketch | Output events to a Timesketch ElasticSearch database. Requires elasticsearch-py.
 tln | Output events to TLN format, with 5 fixed fields. Also see: [TLN](https://forensicswiki.xyz/wiki/index.php?title=TLN).
 
+### Dynamic output module fields
+
+The dynamic output module defines the following command line options to specify
+which fields should be represented in the output, namely `--fields` and
+`--additional_fields`. The name of the fields typically map 1-to-1 to the names
+of attributes of the event data. However there are "special" fields that are
+composed at runtime.
+
+Name | Description
+--- | ---
+date | The date of the event
+datetime | The date and time of the event in ISO 8601 format
+description | The event message string as defined by the message formatter
+description_short | The short event message string as defined by the message formatter
+display_name | Human readable representation of the path specification
+filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
+host | The hostname derived by pre-processing
+hostname | The hostname derived by pre-processing
+inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifer (such as inode, mft entry) in the path specification
+macb | MACB (Modification, Access, Change, Birth) group representation
+message | The event message string as defined by the message formatter
+message_short | The short event message string as defined by the message formatter
+source | The short event source as defined by the message formatter
+sourcetype | The event source as defined by the message formatter
+source_long | The event source as defined by the message formatter
+tag | The labels defined by event tags
+time | The time of the event
+timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
+timezone | Time zone indicator
+type | Indication of what the event time represents such as Creation Time or Program Execution Duration
+user | The username derived by pre-processing
+username | The username derived by pre-processing
+zone | Time zone indicator
+
 ## Message formatting
 
 In log2timeline.pl the l2tcsv format introduced the `desc` and `short` fields
