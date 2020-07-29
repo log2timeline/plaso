@@ -717,7 +717,7 @@ class EventExtractionWorker(object):
     mediator.ClearEventAttributes()
 
     event_data_stream = None
-    if data_stream and self._analyzers:
+    if data_stream:
       display_name = mediator.GetDisplayName()
 
       path_spec = copy.deepcopy(file_entry.path_spec)
@@ -727,10 +727,11 @@ class EventExtractionWorker(object):
       event_data_stream = events.EventDataStream()
       event_data_stream.path_spec = path_spec
 
-      # Since AnalyzeDataStream generates event data stream attributes it
-      # needs to be called before producing events.
-      self._AnalyzeDataStream(
-          file_entry, data_stream.name, display_name, event_data_stream)
+      if self._analyzers:
+        # Since AnalyzeDataStream generates event data stream attributes it
+        # needs to be called before producing events.
+        self._AnalyzeDataStream(
+            file_entry, data_stream.name, display_name, event_data_stream)
 
     mediator.ProduceEventDataStream(event_data_stream)
 
