@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -61,6 +62,8 @@ class MactimeParser(dsv_parser.DSVParser):
 
   DELIMITER = '|'
 
+  ESCAPE_CHARACTER = '\\'
+
   _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
 
   # Mapping according to:
@@ -71,6 +74,22 @@ class MactimeParser(dsv_parser.DSVParser):
       'ctime': definitions.TIME_DESCRIPTION_CHANGE,
       'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
   }
+
+  def _GetFloatingPointValue(self, row, value_name):
+    """Converts a specific value of the row to a floating-point number.
+
+    Args:
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+      value_name (str): name of the value within the row.
+
+    Returns:
+      float: value or None if the value cannot be converted.
+    """
+    value = row.get(value_name, None)
+    try:
+      return float(value)
+    except (TypeError, ValueError):
+      return None
 
   def _GetIntegerValue(self, row, value_name):
     """Converts a specific value of the row to an integer.
@@ -130,12 +149,26 @@ class MactimeParser(dsv_parser.DSVParser):
       event_data.user_sid = '{0:d}'.format(user_uid)
 
     for value_name, timestamp_description in self._TIMESTAMP_DESC_MAP.items():
-      posix_time = self._GetIntegerValue(row, value_name)
+      posix_time = self._GetFloatingPointValue(row, value_name)
+
       # mactime will return 0 if the timestamp is not set.
+      if not posix_time:
+        posix_time = self._GetIntegerValue(row, value_name)
+
       if not posix_time:
         continue
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=posix_time)
+      if posix_time == 0:
+        date_time = dfdatetime_semantic_time.NotSet()
+
+      elif isinstance(posix_time, float):
+        posix_time = int(posix_time * definitions.NANOSECONDS_PER_SECOND)
+        date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+            timestamp=posix_time)
+
+      else:
+        date_time = dfdatetime_posix_time.PosixTime(timestamp=posix_time)
+
       event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
@@ -159,14 +192,23 @@ class MactimeParser(dsv_parser.DSVParser):
       return False
 
     # Check if the following columns contain a base 10 integer value if set.
-    for column_name in (
-        'uid', 'gid', 'size', 'atime', 'mtime', 'ctime', 'crtime'):
+    for column_name in ('uid', 'gid', 'size'):
       column_value = row.get(column_name, None)
       if not column_value:
         continue
 
       try:
         int(column_value, 10)
+      except (TypeError, ValueError):
+        return False
+
+    for column_name in ('atime', 'mtime', 'ctime', 'crtime'):
+      column_value = row.get(column_name, None)
+      if not column_value:
+        continue
+
+      try:
+        float(column_value)
       except (TypeError, ValueError):
         return False
 

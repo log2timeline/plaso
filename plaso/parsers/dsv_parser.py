@@ -32,6 +32,10 @@ class DSVParser(interface.FileObjectParser):
   # starts.
   NUMBER_OF_HEADER_LINES = 0
 
+  # If there is a special escape character used inside the structured text
+  # it can be defined here.
+  ESCAPE_CHARACTER = ''
+
   # If there is a special quote character used inside the structured text
   # it can be defined here.
   QUOTE_CHAR = '"'
@@ -69,10 +73,20 @@ class DSVParser(interface.FileObjectParser):
     Returns:
       iter: a reader of dictionaries, as returned by csv.DictReader().
     """
-    return csv.DictReader(
-        line_reader, delimiter=self.DELIMITER, fieldnames=self.COLUMNS,
-        quotechar=self.QUOTE_CHAR, restkey=self._MAGIC_TEST_STRING,
-        restval=self._MAGIC_TEST_STRING)
+    # Note that doublequote overrules ESCAPE_CHARACTER and needs to be set
+    # to False if an escape character is used.
+    if self.ESCAPE_CHARACTER:
+      csv_dict_reader = csv.DictReader(
+          line_reader, delimiter=self.DELIMITER, doublequote=False,
+          escapechar=self.ESCAPE_CHARACTER, fieldnames=self.COLUMNS,
+          restkey=self._MAGIC_TEST_STRING, restval=self._MAGIC_TEST_STRING)
+    else:
+      csv_dict_reader = csv.DictReader(
+          line_reader, delimiter=self.DELIMITER, fieldnames=self.COLUMNS,
+          quotechar=self.QUOTE_CHAR, restkey=self._MAGIC_TEST_STRING,
+          restval=self._MAGIC_TEST_STRING)
+
+    return csv_dict_reader
 
   def _CreateLineReader(self, file_object, encoding=None):
     """Creates an object that reads lines from a text file.
