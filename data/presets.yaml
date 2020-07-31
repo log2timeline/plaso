@@ -66,6 +66,7 @@ parsers:
 - macwifi
 - olecf
 - plist
+- spotlight_storedb
 - sqlite/appusage
 - sqlite/google_drive
 - sqlite/imessage
