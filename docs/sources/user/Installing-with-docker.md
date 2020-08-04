@@ -88,5 +88,5 @@ If you're not interested in running any of these, and just want to drop to a
 prompt inside your Plaso container, you can run:
 
 ```
-docker run -t -i --entrypoint=/bin/bash -v /data:/data log2timeline.plaso
+docker run -t -i --entrypoint=/bin/bash -v /data:/data log2timeline/plaso
 ```
