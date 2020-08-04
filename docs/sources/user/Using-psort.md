@@ -368,7 +368,7 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 ...
 ```
 
-Here the filter ``cached_file_size is 43``` is applied to the output searching
+Here the filter ``cached_file_size is 43`` is applied to the output searching
 for all IE cache files that are 43 bytes in size. If we wanted to gather some
 context surrounding these events we can supply the ``--slicer`` flag, for
 example:
