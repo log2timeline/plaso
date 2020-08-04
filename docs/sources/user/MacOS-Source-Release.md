@@ -1,10 +1,15 @@
 # MacOS Source release
 
-To install the "Source code" release of Plaso on MacOS you need to download the latest version from https://github.com/log2timeline/plaso/releases/latest
+To install the "Source code" release of Plaso on MacOS you need to download the
+latest version from https://github.com/log2timeline/plaso/releases/latest
 
-For the purposes of this guide it will use 20200430 to represent the latest Plaso release in the examples below. However, you will need to adjust this based on the latest version available from the link above.
+For the purposes of this guide it will use 20200430 to represent the latest
+Plaso release in the examples below. However, you will need to adjust this
+based on the latest version available from the link above.
 
-Under the latest release you should see four links to different packages, you will need to download the "**Source code (tar.gz)**" package file, for example https://github.com/log2timeline/plaso/archive/20200430.tar.gz
+Under the latest release you should see four links to different packages, you
+will need to download the "**Source code (tar.gz)**" package file, for example
+https://github.com/log2timeline/plaso/archive/20200430.tar.gz
 
 Extract the source code:
 
@@ -13,7 +18,8 @@ cd /tmp
 tar zxf ~/Downloads/plaso-20200430.tar.gz
 ```
 
-In some cases, MacOS will automatically ungzip the downloaded file. In which case, untar with:
+In some cases, MacOS will automatically ungzip the downloaded file. In which
+case, untar with:
 
 ```
 cd /tmp
@@ -26,18 +32,20 @@ XCode Command Line Tools is required. It can be installed with:
 xcode-select --install
 ```
 
-If python3 is not already installed, it can be downloaded from https://www.python.org/downloads/
+If python3 is not already installed, it can be downloaded from
+https://www.python.org/downloads/
 
 ## Install Plaso contained within a virtual environment
 
-Plaso can be installed within a virtual environment so that dependency packages are not installed system-wide.
-To do this, install Virtualenv:
+Plaso can be installed within a virtual environment so that dependency packages
+are not installed system-wide. To do this, install Virtualenv:
 
 ```
 sudo pip3 install virtualenv
 ```
 
-Create a virtual environment to install Plaso into (in this instance, it's named "plaso_env" created under the home directory):
+Create a virtual environment to install Plaso into (in this instance, it is
+named "plaso_env" created under the home directory):
 
 ```
 virtualenv -p python3 ~/plaso_env
@@ -72,6 +80,9 @@ deactivate
 *In order to run Plaso, the virtual environment needs to be activated.*
 
 ## Install Plaso system-wide
+
+**We strongly discourage installing Plaso system-wide with pip. If you aren't
+comfortable debugging package installation, this is not for you.**
 
 Install the Plaso dependencies:
 
