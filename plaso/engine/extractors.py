@@ -333,6 +333,7 @@ class EventExtractor(object):
       file_entry (dfvfs.FileEntry): file entry.
       data_stream_name (str): data stream name.
     """
+    logger.info('X: %s', file_entry.name)
     parent_path_spec = getattr(file_entry.path_spec, 'parent', None)
     filename_upper = file_entry.name.upper()
     if (self._mft_parser and parent_path_spec and
@@ -342,6 +343,7 @@ class EventExtractor(object):
 
     elif (self._usnjrnl_parser and parent_path_spec and
           filename_upper == '$USNJRNL' and data_stream_name == '$J'):
+      logger.info('Y: %s', file_entry.name)
       # To be able to ignore the sparse data ranges the UsnJrnl parser
       # needs to read directly from the volume.
       volume_file_object = path_spec_resolver.Resolver.OpenFileObject(

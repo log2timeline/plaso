@@ -39,7 +39,8 @@ class EventDataAttributeContainersSchemaExtractor(object):
 
       lines.append('{0:s}'.format(event_data.data_type))
       for name in sorted(event_data.GetAttributeNames()):
-        lines.append('  {0:s}'.format(name))
+        if name and name[0] != '_':
+          lines.append('  {0:s}'.format(name))
       lines.append('')
 
     return '\n'.join(lines)
