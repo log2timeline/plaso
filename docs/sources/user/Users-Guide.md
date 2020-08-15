@@ -31,7 +31,7 @@ discuss the tool:
 
 ### I know the good old Perl version
 
-If you are one of those people that liked the old perl version of log2timeline
+If you are one of those people that liked the old Perl version of log2timeline
 but really would like to switch use all the nifty features of the Python
 version. Fear not, [here](Log2Timeline-Perl-(Legacy).md) is a guide to help you
 migrate.
