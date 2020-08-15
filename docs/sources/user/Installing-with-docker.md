@@ -4,7 +4,7 @@
 
 To install docker see: https://docs.docker.com/install/
 
-## Obtaining a plaso docker image
+## Obtaining a Plaso Docker image
 
 ### From Docker Hub
 
@@ -20,10 +20,19 @@ $ cd plaso/config/docker
 $ docker build -f Dockerfile .
 ```
 
-## Copying the Plaso docker image to a non-Internet connected system
+### Testing your Plaso Docker image
 
-Figure out the name of the docker image you want to run, using the IMAGE ID
-(docker images will list all the images you have installed) if you've built
+To test your Plaso Docker image:
+
+```
+$ docker run log2timeline/plaso log2timeline.py --version
+plaso - log2timeline version 20200717
+```
+
+## Copying the Plaso Docker image to a non-Internet connected system
+
+Figure out the name of the Docker image you want to run, using the IMAGE ID
+(Docker images will list all the images you have installed) if you've built
 from the Dockerfile. Use "log2timeline/plaso" if you've just made the image
 from Docker Hub.
 
@@ -41,22 +50,25 @@ Finally, on the other system, and from the mounted external disk, run:
 $ zcat saved_docker_image.tgz | docker load
 ```
 
-## Run Plaso from your new docker image
+## Run Plaso from your new Docker image
 
-Figure out the name of the docker image you want to run (see before)
+Figure out the name of the Docker image you want to run (see before)
 
 First start the extraction with log2timeline. Should your evidence files/images
 should be present on the host, and not in the container (which is the default
 scenario), you'll have to set up a bridge between the two.
 For example, if you store your current evidences to analyse in
-/data/evidences/, you could tell log2timeline to generate the plaso storage
+/data/evidences/, you could tell log2timeline to generate the Plaso storage
 file as /data/evidences.plaso this way:
 
 ```
 $ docker run -v /data/:/data log2timeline/plaso log2timeline /data/evidences.plaso /data/evidences
 ```
 
-This way your plaso file will also be stored on the host filesystem.
+This way your Plaso file will also be stored on the host filesystem.
+
+Note that if you are running SELinux you likely need to add the `:z` volume
+flag. Also see: https://docs.docker.com/storage/bind-mounts/#configure-the-selinux-label
 
 Next step is to run analysis with psort:
 
