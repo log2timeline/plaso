@@ -137,10 +137,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    event_attributes = list(event_data.GetAttributes())
-    if event_data_stream:
-      event_attributes.extend(event_data_stream.GetAttributes())
-
     # TODO: reverse logic and get formatted attributes instead.
     unformatted_attributes = (
         formatters_manager.FormattersManager.GetUnformattedAttributes(
@@ -151,12 +147,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
           'Unable to find event formatter for: {0:s}.'.format(
               event_data.data_type))
 
-    event_attributes = list(event_data.GetAttributes())
-    if event_data_stream:
-      event_attributes.extend(event_data_stream.GetAttributes())
-
     extra_attributes = []
-    for attribute_name, attribute_value in sorted(event_attributes):
+    for attribute_name, attribute_value in event_data.GetAttributes():
       if attribute_name in unformatted_attributes:
         # Some parsers have written bytes values to storage.
         if isinstance(attribute_value, bytes):
@@ -172,7 +164,13 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         extra_attributes.append('{0:s}: {1!s}'.format(
             attribute_name, attribute_value))
 
-    extra_attributes = '; '.join(extra_attributes)
+    if event_data_stream:
+      for attribute_name, attribute_value in event_data_stream.GetAttributes():
+        if attribute_name != 'path_spec':
+          extra_attributes.append('{0:s}: {1!s}'.format(
+              attribute_name, attribute_value))
+
+    extra_attributes = '; '.join(sorted(extra_attributes))
 
     return extra_attributes.replace('\n', '-').replace('\r', '')
 
