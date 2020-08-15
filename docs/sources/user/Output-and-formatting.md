@@ -54,6 +54,17 @@ user | The username derived by pre-processing
 username | The username derived by pre-processing
 zone | Time zone indicator
 
+Output fields that are not part of the event data but of the data stream the
+event data originates from.
+
+Name | Description
+--- | ---
+file_entropy | Byte entropy of the data stream content. This is a value ranging from 0.0 to 8.0, where 8.0 indicates the distribution of byte values is highly random.
+md5_hash | MD5 hash of the data stream content.
+sha1_hash | SHA-1 hash of the data stream content.
+sha256_hash | SHA-256 hash of the data stream content.
+yara_match | Names of the Yara rules that matched the data stream content.
+
 ## Message formatting
 
 In log2timeline.pl the l2tcsv format introduced the `desc` and `short` fields
