@@ -1,13 +1,13 @@
 # Troubleshooting
 
 This page contains instructions that can be used to assist you in debugging
-potential issues with the plaso and its dependencies.
+potential issues with Plaso and its dependencies.
 
 ## Quick list
 
 1. Check the [commit history](https://github.com/log2timeline/plaso/commits/master) and [issue tracker](https://github.com/log2timeline/plaso/issues?q=is%3Aissue) if the bug has already been fixed;
-2. If you are running the development release make sure plaso and dependencies are up to date, see: [Developers Guide](../developer/Developers-Guide.md)
-3. If you are experiencing an issue that cannot directly be attributed to some broken code e.g. the test are getting killed, check your system logs it might be a problem with resources available to plaso;
+2. If you are running the development release make sure Plaso and dependencies are up to date, see: [Developers Guide](../developer/Developers-Guide.md)
+3. If you are experiencing an issue that cannot directly be attributed to some broken code e.g. the test are getting killed, check your system logs it might be a problem with resources available to Plaso;
 4. Try to isolate the error, see below.
 
 If everything fails create a new issue on the [issue tracker](https://github.com/log2timeline/plaso/issues).
@@ -36,6 +36,16 @@ Hence please provide us with the following details:
 escape blocks of error output accordingly.**
 
 Also see the sections below on how to troubleshoot issues of a specific nature.
+
+### Performance related issues
+
+* On what type of media is your source data stored? What type of media are you writing to?
+  * A local disk, a removable disk or network storage?
+  * Both removable media and network storage can add additional latency to reads and writes making overall processing slow. It is recommended to at least write to local low-latency media.
+* Are you seeing workers being killed?
+  * Respawning of workers creates more overhead and slower processing times.
+  * Workers being typically indicates one of the parser misbehaving and consumie of the parser misbehaving and consuming a high amount of memory. See section "High memory usage" below.
+* Are you running Plaso in a VM or Docker container?
 
 ## Isolating errors
 
@@ -108,19 +118,19 @@ sys.path.insert(0, u'.')
 import plaso
 ```
 
-It also sometimes means that you have multiple versions of plaso installed on
+It also sometimes means that you have multiple versions of Plaso installed on
 your system and Python tries to import for the wrong one.
 
 ## Crashes, hangs and tracebacks
 
-In the context of plaso crashes and tracebacks have different meanings:
+In the context of Plaso crashes and tracebacks have different meanings:
 
 * crash; an error that causes an abrupt termination of the program you were running e.g. a segfault (SIGSEGV)
 * traceback; the back trace of an error that was caught by an exception handler that can cause a termination of the program you were running
 
 ### A worker segfault-ing
 
-Since plaso relies on several compiled dependencies it is possible that a
+Since Plaso relies on several compiled dependencies it is possible that a
 worker segfault (SIGSEGV).
 
 As part of the 1.3 pre-release bug hunting a SIGSEGV signal handler was added
@@ -144,7 +154,7 @@ Your system logs might indicate why the worker was killed.
 
 ### Which processes are running
 
-The following command help you determine which plaso processes are running on
+The following command help you determine which Plaso processes are running on
 your system:
 
 Linux:
@@ -196,7 +206,7 @@ file you can generate a back trace that can help us fix the error.
 
 First make sure you have the debug symbols installed.
 
-Then run the plaso as a single process with gdb:
+Then run Plaso as a single process with gdb:
 ```
 gdb --ex r --args log2timeline.py --single-process -d /tmp/test.dump /tmp/file_that_crashes_the_tool
 ```
