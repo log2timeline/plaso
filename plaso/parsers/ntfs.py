@@ -96,6 +96,7 @@ class NTFSMFTParser(interface.FileObjectParser):
   _MFT_ATTRIBUTE_STANDARD_INFORMATION = 0x00000010
   _MFT_ATTRIBUTE_FILE_NAME = 0x00000030
   _MFT_ATTRIBUTE_OBJECT_ID = 0x00000040
+  _MFT_ATTRIBUTE_DATA = 0x00000080
 
   _NAMESPACE_DOS = 2
 
@@ -107,7 +108,6 @@ class NTFSMFTParser(interface.FileObjectParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'BAAD', offset=0)
     format_specification.AddNewSignature(b'FILE', offset=0)
     return format_specification
 
@@ -276,9 +276,11 @@ class NTFSMFTParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       mft_entry (pyfsntfs.file_entry): MFT entry.
     """
+    data_stream_names = []
     path_hints = []
     standard_information_attribute = None
     standard_information_attribute_index = None
+
     for attribute_index in range(0, mft_entry.number_of_attributes):
       try:
         mft_attribute = mft_entry.get_attribute(attribute_index)
@@ -298,16 +300,36 @@ class NTFSMFTParser(interface.FileObjectParser):
           self._ParseObjectIDAttribute(
               parser_mediator, mft_entry, mft_attribute)
 
+        elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_DATA:
+          data_stream_names.append(mft_attribute.attribute_name)
+
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
             'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
                 attribute_index, exception))
 
     if standard_information_attribute:
+      path_hints_with_data_streams = []
+      for path_hint in path_hints:
+        if not path_hint:
+          path_hint = '\\'
+
+        if not data_stream_names:
+          path_hints_with_data_streams.append(path_hint)
+        else:
+          for data_stream_name in data_stream_names:
+            if not data_stream_name:
+              path_hint_with_data_stream = path_hint
+            else:
+              path_hint_with_data_stream = '{0:s}:{1:s}'.format(
+                  path_hint, data_stream_name)
+
+            path_hints_with_data_streams.append(path_hint_with_data_stream)
+
       try:
         self._ParseFileStatAttribute(
             parser_mediator, mft_entry, standard_information_attribute,
-            path_hints)
+            path_hints_with_data_streams)
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
             'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
