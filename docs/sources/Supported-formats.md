@@ -1,38 +1,20 @@
-## Plaso Overview
-
-plaso (Plaso Langar Að Safna Öllu) is a Python-based backend engine for the tool log2timeline.
-
-log2timeline is a tool designed to extract timestamps from various files found on a typical computer system(s) and aggregate them.
-
-The initial purpose of plaso was to have the timestamps in a single place for computer forensic analysis (aka Super Timeline).
-
-However plaso has become a framework that supports:
-* adding new parsers or parsing plug-ins;
-* adding new analysis plug-ins;
-* writing one-off scripts to automate repetitive tasks in computer forensic analysis or equivalent.
-
-And is moving to support:
-* adding new general purpose parses/plugins that may not have timestamps associated to them;
-* adding more analysis context;
-* allowing more targeted approach to the collection/parsing.
-
-### Supported Formats
+## Supported Formats
 
 The information below is based of version 1.5.0
 
-#### Storage Media Image File Formats
+### Storage Media Image File Formats
 
 Storage Media Image File Format support is provided by [dfvfs](https://github.com/log2timeline/dfvfs/wiki#storage-media-types).
 
-#### Volume System Formats
+### Volume System Formats
 
 Volume System Format support is provided by [dfvfs](https://github.com/log2timeline/dfvfs/wiki#volume-systems).
 
-#### File System Formats
+### File System Formats
 
 File System Format support is provided by [dfvfs](https://github.com/log2timeline/dfvfs/wiki#file-systems).
 
-#### File formats
+### File formats
 
 * Apple System Log (ASL)
 * Android usage-history (app usage)
@@ -82,23 +64,23 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 * Xchat and Xchat scrollback files
 * Zsh history files
 
-#### Bencode file formats
+### Bencode file formats
 
 * Transmission
 * uTorrent
 
-#### ESE database file formats
+### ESE database file formats
 
 * Internet Explorer WebCache format
 * Windows 8 File History
 
-#### OLE Compound File formats
+### OLE Compound File formats
 
 * Document summary information
 * Summary information (top-level only)
 * [Jump Lists](https://forensicswiki.xyz/wiki/index.php?title=Jump_Lists) .automaticDestinations-ms files
 
-#### Property list (plist) formats
+### Property list (plist) formats
 
 * Airport
 * Apple Account
@@ -112,7 +94,7 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 * Spotlight Volume Information
 * Timemachine
 
-#### SQLite database file formats
+### SQLite database file formats
 
 * Android call logs
 * Android SMS
@@ -131,7 +113,7 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 * Twitter (iOS)
 * Zeitgeist activity database
 
-#### Windows Registry formats
+### Windows Registry formats
 
 * AppCompatCache
 * BagMRU (or ShellBags)
@@ -157,22 +139,8 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 * WinRar
 * Windows version information
 
-#### Hashers Supported
+### Hashers Supported
 
 * MD5
 * SHA1
 * SHA256
-
-### Also see
-
-* [Project documentation](http://wiki.log2timeline.net/)
-  * [Developers Guide](../developer/Developers-Guide.md)
-  * [Users Guide](Users-Guide.md)
-* [Downloads](https://github.com/log2timeline/plaso/releases)
-* Blogs:
-  * [All things time related....](http://blog.kiddaland.net/)
-  * [Open Source DFIR](https://osdfir.blogspot.com/)
-* Contact information:
-  * Plaso channel on [Open Source DFIR Slack community](https://github.com/open-source-dfir/slack)
-  * Mailing list for general discussions: [log2timeline-discuss](https://groups.google.com/forum/#%21forum/log2timeline-discuss)
-  * Mailing list for development: [log2timeline-dev](https://groups.google.com/forum/#%21forum/log2timeline-dev)

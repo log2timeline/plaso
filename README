@@ -1,8 +1,9 @@
 Plaso (Plaso Langar Að Safna Öllu) - super timeline all the things
 
-Plaso (Plaso Langar Að Safna Öllu) is the Python-based engine used by tools
-for automatic creation of timelines. Plaso default behavior is to create
-super timelines but it also supports creating more targeted timelines.
+Plaso (Plaso Langar Að Safna Öllu), super timeline all the things, is a
+Python-based engine used by several tools for automatic creation of timelines.
+Plaso default behavior is to create super timelines but it also supports
+creating more targeted timelines.
 
 These timelines support digital forensic investigators/analysts, to correlate
 the large amount of information found in logs and other files found on an
