@@ -2,7 +2,7 @@
 
 ## Install Docker
 
-To install docker see: https://docs.docker.com/install/
+To install Docker see: [https://docs.docker.com/get-docker](https://docs.docker.com/get-docker)
 
 ## Obtaining a Plaso Docker image
 
@@ -87,8 +87,7 @@ Duplicate Removals : 23
 
 Last step, forensication, is left to the reader.
 
-The entry_point of the docker container is
-[plaso-switch.sh](https://github.com/log2timeline/plaso/blob/master/config/docker/plaso-switch.sh).
+The entry_point of the Docker container is [plaso-switch.sh](https://github.com/log2timeline/plaso/blob/master/config/docker/plaso-switch.sh).
 It understands the following commands, and runs the appropriate programs:
 
 * log2timeline or log2timeline.py
