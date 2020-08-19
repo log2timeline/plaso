@@ -14,7 +14,7 @@ from docutils import transforms
 # Change PYTHONPATH to include plaso module and dependencies.
 sys.path.insert(0, os.path.abspath('..'))
 
-import plaso
+import plaso  # pylint: disable=wrong-import-position
 
 import utils.dependencies  # pylint: disable=wrong-import-position
 
@@ -56,8 +56,9 @@ napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = True
 
 # General information about the project.
-project = 'Plaso'
-copyright = 'The Plaso Project Authors'
+# pylint: disable=redefined-builtin
+project = 'Plaso (log2timeline)'
+copyright = 'The Plaso (log2timeline) Project Authors'
 version = plaso.__version__
 release = plaso.__version__
 
@@ -102,6 +103,8 @@ linkcheck_ignore = [
 
 # This function is a Sphinx core event callback, the format of which is detailed
 # here: https://www.sphinx-doc.org/en/master/extdev/appapi.html#events
+
+# pylint: disable=unused-argument
 def RunSphinxAPIDoc(app):
   """Runs sphinx-apidoc to auto-generate documentation.
 
@@ -115,7 +118,7 @@ def RunSphinxAPIDoc(app):
   apidoc.main(['-o', api_directory, module_path, '--force'])
 
 
-class L2TDocsLinkFixer(transforms.Transform):
+class MarkdownLinkFixer(transforms.Transform):
   """Transform definition to parse .md references to internal pages."""
 
   default_priority = 1000
@@ -126,14 +129,14 @@ class L2TDocsLinkFixer(transforms.Transform):
       'https://github.com/google/timesketch/blob/']
 
   def _FixLinks(self, node):
-    """Corrects links to .md files not part of the Plaso documentation.
+    """Corrects links to .md files not part of the documentation.
 
     Args:
       node (docutils.nodes.Node): docutils node.
 
     Returns:
       docutils.nodes.Node: docutils node, with correct URIs outside
-          of Markdown pages outside the Plaso documentation.
+          of Markdown pages outside the documentation.
     """
     if isinstance(node, nodes.reference) and 'refuri' in node:
       reference_uri = node['refuri']
@@ -162,6 +165,7 @@ class L2TDocsLinkFixer(transforms.Transform):
     self._Traverse(self.document)
 
 
+# pylint: invalid-name
 def setup(app):
   """Called at Sphinx initialization.
 
@@ -172,4 +176,4 @@ def setup(app):
   app.connect('builder-inited', RunSphinxAPIDoc)
   app.add_config_value(
       'recommonmark_config', {'enable_auto_toc_tree': True}, True)
-  app.add_transform(L2TDocsLinkFixer)
+  app.add_transform(MarkdownLinkFixer)
