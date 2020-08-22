@@ -2,7 +2,6 @@
 """This file contains an import statement for each formatter."""
 
 from plaso.formatters import asl
-from plaso.formatters import bsm
 from plaso.formatters import chrome
 from plaso.formatters import chrome_extension_activity
 from plaso.formatters import chrome_preferences
