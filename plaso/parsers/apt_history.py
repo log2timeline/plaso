@@ -115,13 +115,22 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       dfdatetime.TimeElements: date and time extracted from the structure or
           None f the structure does not represent a valid string.
     """
+    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+    # overriding __getattr__ with a function that returns an empty string when
+    # named token does not exists.
     try:
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_structure)
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
+          year, month, day_of_month, hours, minutes, seconds))
+
       # APT History logs store date and time values in local time.
       date_time.is_local_time = True
       return date_time
-    except ValueError:
+    except (TypeError, ValueError):
       return None
 
   def _ParseRecordStart(self, parser_mediator, structure):
@@ -133,12 +142,10 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a log entry.
     """
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'start_date')
-    self._date_time = self._BuildDateTime(time_elements_structure)
+    self._date_time = self._BuildDateTime(structure.get('start_date', None))
     if not self._date_time:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_structure))
+          'invalid date time value: {0!s}'.format(self._date_time))
       return
 
     self._event_data = APTHistoryLogEventData()

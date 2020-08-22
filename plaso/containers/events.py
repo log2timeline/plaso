@@ -131,6 +131,7 @@ class EventObject(interface.AttributeContainer):
   attributes.
 
   Attributes:
+    date_time (dfdatetime.DateTimeValues): date and time values.
     parser (str): string identifying the parser that produced the event.
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
@@ -145,6 +146,7 @@ class EventObject(interface.AttributeContainer):
     super(EventObject, self).__init__()
     self._event_data_identifier = None
     self._event_data_row_identifier = None
+    self.date_time = None
     self.parser = None
     self.timestamp = None
     # TODO: rename timestamp_desc to timestamp_description
