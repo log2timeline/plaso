@@ -84,8 +84,9 @@ As of version 20200227 Plaso supports formatter configuration files.
 An event formatter is defined as a set of attributes:
 
 * "data_type"; required event data type;
+* "enumeration_helpers"; optional enumeration helpers.
 * "message"; required formatter message string, for a basic type, or list of messages string pieces, for a conditional type.
-* "separator"; optional conditional message string piece separator;
+* "separator"; optional conditional message string piece separator, the default is a single space;
 * "short_message"; required formatter short message string, for a basic type, or list of short messages string pieces, for a conditional type.
 * "short_source"; required formatter short source identifier that corresponds with the l2tcsv and tln source field.
 * "source"; required formatter source identifier that corresponds with the l2tcsv sourcetype field.
@@ -114,3 +115,53 @@ short_message:
 short_source: 'LOG'
 source: 'Cron log'
 ```
+
+#### Enumeration helpers
+
+Enumeration helpers can be defined to map a value of an event attribute to
+a more descriptive value, for example mapping 100 to BEGIN_SYSTEM_CHANGE in
+the example below.
+
+```
+type: 'conditional'
+data_type: 'windows:restore_point:info'
+enumeration_helpers:
+- input_attribute: 'restore_point_event_type'
+  output_attribute: 'restore_point_event_type'
+  default_value: 'UNKNOWN'
+  values:
+    100: 'BEGIN_SYSTEM_CHANGE'
+    101: 'END_SYSTEM_CHANGE'
+    102: 'BEGIN_NESTED_SYSTEM_CHANGE'
+    103: 'END_NESTED_SYSTEM_CHANGE'
+- input_attribute: 'restore_point_type'
+  output_attribute: 'restore_point_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'APPLICATION_INSTALL'
+    1: 'APPLICATION_UNINSTALL'
+    10: 'DEVICE_DRIVER_INSTALL'
+    12: 'MODIFY_SETTINGS'
+    13: 'CANCELLED_OPERATION'
+message:
+- '{description}'
+- 'Event type: {restore_point_event_type}'
+- 'Restore point type: {restore_point_type}'
+short_message:
+- '{description}'
+short_source: 'RP'
+source: 'Windows Restore Point'
+```
+
+enumeration helpers are defined as a set of attributes:
+
+* "input_attribute"; required name of the attribute which the value that needs to be mapped is read from.
+* "output_attribute"; required name of the attribute which the mapped value is written to.
+* "default_value"; optional default value if there is no corresponding mapping in "values".
+* "values"; required value mappings, contains key value pairs.
+
+#### Change log
+
+* 20200227 Added support for formatter configuration files.
+* 20200822 Added support for enumeration helpers.
+
