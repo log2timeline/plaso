@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfvfs.path import fake_path_spec
+
 from plaso.containers import events
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
@@ -23,14 +25,15 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'data_type': 'test:event',
-       'display_name': 'log/syslog.1',
+      {'a_binary_field': b'binary',
+       'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
+       'path_spec': fake_path_spec.FakePathSpec(
+           location='log/syslog.1'),
        'parser': 'test_parser',
        'some_additional_foo': True,
-       'a_binary_field': b'binary',
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
@@ -52,17 +55,6 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '00/00/0000')
-
-  def testFormatDisplayName(self):
-    """Tests the _FormatDisplayName function."""
-    output_mediator = self._CreateOutputMediator()
-    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper(output_mediator)
-
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    display_name_string = formatting_helper._FormatDisplayName(
-        event, event_data, event_data_stream)
-    self.assertEqual(display_name_string, 'log/syslog.1')
 
   def testFormatExtraAttributes(self):
     """Tests the _FormatExtraAttributes function."""
@@ -99,8 +91,6 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(parser_string, 'test_parser')
 
-  # TODO: add coverage for _FormatTime
-
   def testFormatType(self):
     """Tests the _FormatType function."""
     output_mediator = self._CreateOutputMediator()
@@ -130,14 +120,15 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'data_type': 'test:event',
-       'display_name': 'log/syslog.1',
+      {'a_binary_field': b'binary',
+       'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
        'parser': 'test_parser',
+       'path_spec': fake_path_spec.FakePathSpec(
+           location='log/syslog.1'),
        'some_additional_foo': True,
-       'a_binary_field': b'binary',
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
@@ -174,8 +165,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         'Time,-,ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
         'session closed for user root),Reporter <CRON> PID: 8442 '
         '(pam_unix(cron:session): session closed for user root),'
-        '2,log/syslog.1,-,Malware Printed,test_parser,a_binary_field: binary; '
-        'my_number: 123; some_additional_foo: True\n')
+        '2,FAKE:log/syslog.1,-,Malware Printed,test_parser,a_binary_field: '
+        'binary; my_number: 123; some_additional_foo: True\n')
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)

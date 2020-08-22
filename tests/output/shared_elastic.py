@@ -11,6 +11,8 @@ try:
 except ImportError:
   from unittest.mock import MagicMock
 
+from dfvfs.path import fake_path_spec
+
 from plaso.containers import events
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
@@ -36,13 +38,14 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'data_type': 'syslog:line',
-       'display_name': 'log/syslog.1',
+      {'a_binary_field': b'binary',
+       'data_type': 'syslog:line',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
        'some_additional_foo': True,
-       'a_binary_field': b'binary',
+       'path_spec': fake_path_spec.FakePathSpec(
+           location='log/syslog.1'),
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
@@ -113,7 +116,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     expected_event_values = {
         'data_type': 'syslog:line',
         'datetime': '2012-06-27T18:17:01.000000Z',
-        'display_name': 'log/syslog.1',
+        'display_name': 'FAKE:log/syslog.1',
         'filename': 'log/syslog.1',
         'hostname': 'ubuntu',
         'message': '[',

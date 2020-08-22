@@ -90,10 +90,10 @@ class XLSXOutputModule(interface.OutputModule):
     replacement character (\ufffd).
 
     Args:
-      field (str): name of the field to sanitize.
+      field (str): value of the field to sanitize.
 
     Returns:
-      str: value of the field.
+      str: sanitized value of the field.
     """
     return self._ILLEGAL_XML_RE.sub('\ufffd', field)
 

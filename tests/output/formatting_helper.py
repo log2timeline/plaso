@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfvfs.path import fake_path_spec
+
 from plaso.containers import events
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
@@ -25,11 +27,24 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
       {'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
+       'path_spec': fake_path_spec.FakePathSpec(
+           location='log/syslog.1'),
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
+
+  def testFormatDisplayName(self):
+    """Tests the _FormatDisplayName function."""
+    output_mediator = self._CreateOutputMediator()
+    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    display_name_string = test_helper._FormatDisplayName(
+        event, event_data, event_data_stream)
+    self.assertEqual(display_name_string, 'FAKE:log/syslog.1')
 
   def testFormatHostname(self):
     """Tests the _FormatHostname function."""
@@ -163,6 +178,22 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
     tag_string = test_helper._FormatTag(event_tag)
     self.assertEqual(tag_string, 'one two')
+
+  def testFormatTime(self):
+    """Tests the _FormatTime function."""
+    output_mediator = self._CreateOutputMediator()
+    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '18:17:01')
+
+    event.timestamp = -9223372036854775808
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '--:--:--')
 
   def testFormatTimeZone(self):
     """Tests the _FormatTimeZone function."""
