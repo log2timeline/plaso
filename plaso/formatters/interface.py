@@ -214,6 +214,14 @@ class EventFormatter(object):
 
     return set(self._format_string_attribute_names)
 
+  def AddHelper(self, helper):
+    """Adds an event formatter helper.
+
+    Args:
+      helper (EventFormatterHelper): event formatter helper to add.
+    """
+    self.helpers.append(helper)
+
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.

@@ -38,6 +38,7 @@ class YAMLFormattersFile(object):
 
   _SUPPORTED_KEYS = frozenset([
       'data_type',
+      'enumeration_helpers',
       'message',
       'separator',
       'short_message',
@@ -124,6 +125,20 @@ class YAMLFormattersFile(object):
     setattr(formatter, 'DATA_TYPE', data_type)
     setattr(formatter, 'SOURCE_LONG', source)
     setattr(formatter, 'SOURCE_SHORT', short_source)
+
+    enumeration_helpers = formatter_definition_values.get(
+        'enumeration_helpers', [])
+    for enumeration_helper in enumeration_helpers:
+      input_attribute = enumeration_helper.get('input_attribute', None)
+      output_attribute = enumeration_helper.get('output_attribute', None)
+      default_value = enumeration_helper.get('default_value', None)
+      values = enumeration_helper.get('values', None)
+
+      helper = interface.EnumerationEventFormatterHelper(
+          default=default_value, input_attribute=input_attribute,
+          output_attribute=output_attribute, values=values)
+
+      formatter.AddHelper(helper)
 
     return formatter
 
