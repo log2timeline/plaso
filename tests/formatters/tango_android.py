@@ -10,27 +10,6 @@ from plaso.formatters import tango_android
 from tests.formatters import test_lib
 
 
-class TangoAndroidMessageFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests the Tango on Android message event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = tango_android.TangoAndroidMessageFormatter()
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = tango_android.TangoAndroidMessageFormatter()
-
-    expected_attribute_names = [
-        'direction',
-        'message_identifier',
-    ]
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-
 class TangoAndroidContactFormatterTest(test_lib.EventFormatterTestCase):
   """Tests the Tango on Android contact event formatter."""
 

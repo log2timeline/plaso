@@ -61,6 +61,24 @@ short_source: 'LOG'
 source: 'Android SMS messages'
 ---
 type: 'conditional'
+data_type: 'tango:android:message'
+enumeration_helpers:
+- input_attribute: 'direction'
+  output_attribute: 'direction'
+  default_value: 'Unknown'
+  values:
+    1: 'Incoming'
+    2: 'Outgoing'
+message:
+- '{direction}'
+- 'Message ({message_identifier})'
+short_message:
+- '{direction}'
+- 'Message ({message_identifier})'
+short_source: 'Tango Android'
+source: 'Tango Android Message'
+---
+type: 'conditional'
 data_type: 'webview:cookie'
 message:
 - 'Domain: {domain}'

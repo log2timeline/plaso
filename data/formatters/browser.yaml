@@ -37,6 +37,37 @@ short_source: 'WEBHIST'
 source: 'Chrome Cookies'
 ---
 type: 'conditional'
+data_type: 'chrome:extension_activity:activity_log'
+enumeration_helpers:
+- input_attribute: 'action_type'
+  output_attribute: 'action_type_string'
+  default_value: 'unknown'
+  values:
+    1: 'API event callback'
+    2: 'API action blocked'
+    3: 'Content Script inserted'
+    4: 'DOM access'
+    5: 'DOM event'
+    6: 'WebRequest'
+    1001: 'Unspecified'
+message:
+- 'Chrome extension: {extension_id}'
+- 'Action type: {action_type_string}'
+- '(type {action_type})'
+- 'Activity identifier: {activity_id}'
+- 'Page URL: {page_url}'
+- 'Page title: {page_title}'
+- 'API name: {api_name}'
+- 'Args: {args}'
+- 'Other: {other}'
+short_message:
+- '{extension_id}'
+- '{api_name}'
+- '{args}'
+short_source: 'WEBHIST'
+source: 'Chrome Extension Activity'
+---
+type: 'conditional'
 data_type: 'chrome:history:file_downloaded'
 message:
 - '{url}'
