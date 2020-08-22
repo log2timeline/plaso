@@ -74,20 +74,4 @@ class GDriveCloudEntryFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-class GDriveLocalEntryFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Google Drive snapshot local event."""
-
-  DATA_TYPE = 'gdrive:snapshot:local_entry'
-
-  FORMAT_STRING_PIECES = [
-      'File Path: {path}',
-      'Size: {size}']
-
-  FORMAT_STRING_SHORT_PIECES = ['{path}']
-
-  SOURCE_LONG = 'Google Drive (local entry)'
-  SOURCE_SHORT = 'LOG'
-
-
-manager.FormattersManager.RegisterFormatters([
-    GDriveCloudEntryFormatter, GDriveLocalEntryFormatter])
+manager.FormattersManager.RegisterFormatters([GDriveCloudEntryFormatter])

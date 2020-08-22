@@ -10,7 +10,6 @@ from plaso.formatters import gdrive
 from plaso.formatters import msiecf
 from plaso.formatters import olecf
 from plaso.formatters import safari_cookies
-from plaso.formatters import services
 from plaso.formatters import shell_items
 from plaso.formatters import tango_android
 from plaso.formatters import winevt

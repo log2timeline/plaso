@@ -208,6 +208,16 @@ short_source: 'FILE'
 source: 'Mactime Bodyfile'
 ---
 type: 'conditional'
+data_type: 'gdrive:snapshot:local_entry'
+message:
+- 'File Path: {path}'
+- 'Size: {size}'
+short_message:
+- '{path}'
+short_source: 'LOG'
+source: 'Google Drive (local entry)'
+---
+type: 'conditional'
 data_type: 'gdrive_sync:log:line'
 message:
 - '[{log_level}'
@@ -313,6 +323,31 @@ short_message:
 - '{file_md5}'
 short_source: 'NetworkMiner'
 source: 'NetworkMiner fileinfos'
+---
+type: 'conditional'
+data_type: 'olecf:dest_list:entry'
+enumeration_helpers:
+- input_attribute: 'pin_status'
+  output_attribute: 'pin_status'
+  default_value: 'UNKNOWN'
+  values:
+    -1: 'Unpinned'
+    0: 'Pinned'
+message:
+- 'Entry: {entry_number}'
+- 'Pin status: {pin_status}'
+- 'Hostname: {hostname}'
+- 'Path: {path}'
+- 'Droid volume identifier: {droid_volume_identifier}'
+- 'Droid file identifier: {droid_file_identifier}'
+- 'Birth droid volume identifier: {birth_droid_volume_identifier}'
+- 'Birth droid file identifier: {birth_droid_file_identifier}'
+short_message:
+- 'Entry: {entry_number}'
+- 'Pin status: {pin_status}'
+- 'Path: {path}'
+short_source: 'OLECF'
+source: 'OLECF Dest list entry'
 ---
 type: 'conditional'
 data_type: 'olecf:document_summary_info'
