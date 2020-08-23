@@ -75,6 +75,50 @@ class EnumerationEventFormatterHelper(object):
         input_value, self.default)
 
 
+class FlagsEventFormatterHelper(object):
+  """Helper for formatting flags event data.
+
+  Attributes:
+    input_attribute (str): name of the attribute that contains the flags
+        input value.
+    output_attribute (str): name of the attribute where the flags output
+        value should be stored.
+    values (dict[str, str]): mapping of flags input and output values.
+  """
+
+  def __init__(
+      self, input_attribute=None, output_attribute=None, values=None):
+    """Initialized a helper for formatting flags event data.
+
+    Args:
+      input_attribute (Optional[str]): name of the attribute that contains
+          the flags input value.
+      output_attribute (Optional[str]): name of the attribute where the
+          flags output value should be stored.
+      values (Optional[dict[str, str]]): mapping of flags input and output
+          values.
+    """
+    super(FlagsEventFormatterHelper, self).__init__()
+    self.input_attribute = input_attribute
+    self.output_attribute = output_attribute
+    self.values = values or {}
+
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
+
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+    input_value = event_values.get(self.input_attribute, None)
+
+    output_values = []
+    for flag, mapped_value in self.values.items():
+      if flag & input_value:
+        output_values.append(mapped_value)
+
+    event_values[self.output_attribute] = ', '.join(output_values)
+
+
 class EventFormatter(object):
   """Base class to format event data using a format string.
 
