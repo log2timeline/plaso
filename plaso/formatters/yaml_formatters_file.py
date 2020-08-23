@@ -39,12 +39,81 @@ class YAMLFormattersFile(object):
   _SUPPORTED_KEYS = frozenset([
       'data_type',
       'enumeration_helpers',
+      'flags_helpers',
       'message',
       'separator',
       'short_message',
       'short_source',
       'source',
       'type'])
+
+  def _ReadEnumerationHelpers(
+      self, formatter, enumeration_helpers_definition_values):
+    """Reads enumeration helper definitions from a list.
+
+    Args:
+      formatter (EventFormatter): an event formatter.
+      enumeration_helpers_definition_values (list[dict[str, object]]):
+           enumeration helpers definition values.
+
+    Raises:
+      ParseError: if the format of the enumeration helper definitions are
+          incorrect.
+    """
+    for enumeration_helper in enumeration_helpers_definition_values:
+      input_attribute = enumeration_helper.get('input_attribute', None)
+      if not input_attribute:
+        raise errors.ParseError(
+            'Invalid enumeration helper missing input attribute.')
+
+      output_attribute = enumeration_helper.get('output_attribute', None)
+      if not output_attribute:
+        raise errors.ParseError(
+            'Invalid enumeration helper missing output attribute.')
+
+      values = enumeration_helper.get('values', None)
+      if not values:
+        raise errors.ParseError('Invalid enumeration helper missing values.')
+
+      default_value = enumeration_helper.get('default_value', None)
+
+      helper = interface.EnumerationEventFormatterHelper(
+          default=default_value, input_attribute=input_attribute,
+          output_attribute=output_attribute, values=values)
+
+      formatter.AddHelper(helper)
+
+  def _ReadFlagsHelpers(self, formatter, flags_helpers_definition_values):
+    """Reads flags helper definitions from a list.
+
+    Args:
+      formatter (EventFormatter): an event formatter.
+      flags_helpers_definition_values (list[dict[str, object]]): flags helpers
+          definition values.
+
+    Raises:
+      ParseError: if the format of the flags helper definitions are incorrect.
+    """
+    for flags_helper in flags_helpers_definition_values:
+      input_attribute = flags_helper.get('input_attribute', None)
+      if not input_attribute:
+        raise errors.ParseError(
+            'Invalid flags helper missing input attribute.')
+
+      output_attribute = flags_helper.get('output_attribute', None)
+      if not output_attribute:
+        raise errors.ParseError(
+            'Invalid flags helper missing output attribute.')
+
+      values = flags_helper.get('values', None)
+      if not values:
+        raise errors.ParseError('Invalid flags helper missing values.')
+
+      helper = interface.FlagsEventFormatterHelper(
+          input_attribute=input_attribute, output_attribute=output_attribute,
+          values=values)
+
+      formatter.AddHelper(helper)
 
   def _ReadFormatterDefinition(self, formatter_definition_values):
     """Reads an event formatter definition from a dictionary.
@@ -128,28 +197,10 @@ class YAMLFormattersFile(object):
 
     enumeration_helpers = formatter_definition_values.get(
         'enumeration_helpers', [])
-    for enumeration_helper in enumeration_helpers:
-      input_attribute = enumeration_helper.get('input_attribute', None)
-      if not input_attribute:
-        raise errors.ParseError(
-            'Invalid enumeration helper missing input attribute.')
+    self._ReadEnumerationHelpers(formatter, enumeration_helpers)
 
-      output_attribute = enumeration_helper.get('output_attribute', None)
-      if not output_attribute:
-        raise errors.ParseError(
-            'Invalid enumeration helper missing output attribute.')
-
-      values = enumeration_helper.get('values', None)
-      if not values:
-        raise errors.ParseError('Invalid enumeration helper missing values.')
-
-      default_value = enumeration_helper.get('default_value', None)
-
-      helper = interface.EnumerationEventFormatterHelper(
-          default=default_value, input_attribute=input_attribute,
-          output_attribute=output_attribute, values=values)
-
-      formatter.AddHelper(helper)
+    flags_helpers = formatter_definition_values.get('flags_helpers', [])
+    self._ReadFlagsHelpers(formatter, flags_helpers)
 
     return formatter
 
