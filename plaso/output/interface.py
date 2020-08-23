@@ -70,8 +70,6 @@ class OutputModule(object):
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    self.WriteEventStart()
-
     try:
       self.WriteEventBody(event, event_data, event_data_stream, event_tag)
 
@@ -84,8 +82,6 @@ class OutputModule(object):
       error_message = 'wrong formatter with error: {0!s}'.format(exception)
       self._ReportEventError(event, event_data, error_message)
 
-    self.WriteEventEnd()
-
   @abc.abstractmethod
   def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
@@ -96,15 +92,6 @@ class OutputModule(object):
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-
-  # TODO: this method does not appear to be used remove it.
-  def WriteEventEnd(self):
-    """Writes the end of an event to the output.
-
-    Can be used for post-processing or output after an individual event
-    has been written, such as writing closing XML tags, etc.
-    """
-    return
 
   def WriteEventMACBGroup(self, event_macb_group):
     """Writes an event MACB group to the output.
@@ -124,15 +111,6 @@ class OutputModule(object):
     """
     for event, event_data, event_data_stream, event_tag in event_macb_group:
       self.WriteEvent(event, event_data, event_data_stream, event_tag)
-
-  # TODO: this method does not appear to be used remove it.
-  def WriteEventStart(self):
-    """Writes the start of an event to the output.
-
-    Can be used for pre-processing or output before an individual event
-    has been written, such as writing opening XML tags, etc.
-    """
-    return
 
   def WriteFooter(self):
     """Writes the footer to the output.
