@@ -24,7 +24,7 @@ class FormatterMediator(object):
     """Initializes a formatter mediator object.
 
     Args:
-      data_location (str): path of the formatter data files.
+      data_location (Optional[str]): path of the formatter data files.
     """
     super(FormatterMediator, self).__init__()
     self._data_location = data_location
