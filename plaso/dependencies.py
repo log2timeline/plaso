@@ -21,7 +21,6 @@ import re
 PYTHON_DEPENDENCIES = {
     'artifacts': ('__version__', '20190305', None, True),
     'bencode': ('', '', None, True),
-    'biplist': ('', '1.0.3', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'chardet': ('__version__', '2.0.1', None, True),
     'cryptography': ('__version__', '2.0.2', None, True),

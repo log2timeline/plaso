@@ -3,9 +3,9 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
+import plistlib
 
-import biplist
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -108,23 +108,23 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
     event_data.bundle_name = self._GetRowValue(query_hash, row, 'bundle_name')
     event_data.presented = self._GetRowValue(query_hash, row, 'presented')
 
-    blob = self._GetRowValue(query_hash, row, 'dataBlob')
+    data_blob = self._GetRowValue(query_hash, row, 'dataBlob')
 
     try:
-      full_biplist = biplist.readPlistFromString(blob)
-      # req is the 'req' dictionary from the plist containing extra information
-      # about the notification entry.
-      req = full_biplist['req']
+      property_list = plistlib.loads(data_blob)
+      # req_property is the 'req' dictionary from the plist containing extra
+      # information about the notification entry.
+      req_property = property_list['req']
 
-    except (biplist.InvalidPlistException, KeyError) as exception:
+    except (KeyError, plistlib.InvalidFileException) as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to read plist from database with error: {0!s}'.format(
               exception))
       return
 
-    event_data.title = req.get('titl', None)
-    event_data.subtitle = req.get('subt', None)
-    event_data.body = req.get('body', None)
+    event_data.title = req_property.get('titl', None)
+    event_data.subtitle = req_property.get('subt', None)
+    event_data.body = req_property.get('body', None)
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)

@@ -35,7 +35,6 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-XlsxWriter
                       python3-artifacts
                       python3-bencode
-                      python3-biplist
                       python3-certifi
                       python3-cffi
                       python3-chardet
