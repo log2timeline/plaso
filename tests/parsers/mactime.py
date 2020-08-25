@@ -20,13 +20,13 @@ class MactimeTest(test_lib.ParserTestCase):
     parser = mactime.MactimeParser()
     storage_writer = self._ParseFile(['mactime.body'], parser)
 
-    # The file contains 13 lines x 4 timestamps per line, which should be
-    # 52 events in total. However several of these events have an empty
+    # The file contains 17 lines x 4 timestamps per line, which should be
+    # 68 events in total. However several of these events have an empty
     # timestamp value and are omitted.
-    # Total entries: 11 * 3 + 2 * 4 = 41
+    # Total entries: ( 11 * 3 ) + ( 6 * 4 ) = 41
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 41)
+    self.assertEqual(storage_writer.number_of_events, 57)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
@@ -60,6 +60,19 @@ class MactimeTest(test_lib.ParserTestCase):
     expected_filename = '/a_directory/another_file'
     self.assertEqual(event_data.filename, expected_filename)
     self.assertEqual(event_data.mode_as_string, 'r/rrw-------')
+
+    self._TestGetMessageStrings(
+        event_data, expected_filename, expected_filename)
+
+    event = events[48]
+
+    self.CheckTimestamp(event.timestamp, '2020-07-30 06:41:05.354067')
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_CHANGE)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_filename = '/file|with|pipes'
+    self.assertEqual(event_data.filename, expected_filename)
+    self.assertEqual(event_data.mode_as_string, 'r/rrwxrwxrwx')
 
     self._TestGetMessageStrings(
         event_data, expected_filename, expected_filename)
