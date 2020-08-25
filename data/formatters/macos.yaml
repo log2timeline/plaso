@@ -1,6 +1,34 @@
 # Mac-OS related event formatters.
 
 type: 'conditional'
+data_type: 'imessage:event:chat'
+enumeration_helpers:
+- input_attribute: 'message_type'
+  output_attribute: 'message_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Received'
+    1: 'Sent'
+- input_attribute: 'read_receipt'
+  output_attribute: 'read_receipt'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'False'
+    1: 'True'
+message:
+- 'Row ID: {identifier}'
+- 'iMessage ID: {imessage_id}'
+- 'Read Receipt: {read_receipt}'
+- 'Message Type: {message_type}'
+- 'Service: {service}'
+- 'Attachment Location: {attachment_location}'
+- 'Message Content: {text}'
+short_message:
+- '{text}'
+short_source: 'iMessage'
+source: 'Apple iMessage Application'
+---
+type: 'conditional'
 data_type: 'ipod:device:entry'
 message:
 - 'Device ID: {device_id}'
@@ -118,6 +146,27 @@ short_source: 'Mac Note'
 source: 'Mac Notes'
 ---
 type: 'conditional'
+data_type: 'mac:notificationcenter:db'
+enumeration_helpers:
+- input_attribute: 'presented'
+  output_attribute: 'presented'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Title: {title}'
+- '(, subtitle: {subtitle}),'
+- 'registered by: {bundle_name}.'
+- 'Presented: {presented},'
+- 'Content: {body}'
+short_message:
+- 'Title: {title},'
+- 'Content: {body}'
+short_source: 'NOTIFICATION'
+source: 'Notification Center'
+---
+type: 'conditional'
 data_type: 'mac:securityd:line'
 message:
 - 'Sender: {sender}'
@@ -173,6 +222,59 @@ short_message:
 - ' {desc}'
 short_source: 'PLIST'
 source: 'Plist Entry'
+---
+type: 'conditional'
+data_type: 'mac:utmpx:event'
+enumeration_helpers:
+- input_attribute: 'type'
+  output_attribute: 'status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'EMPTY'
+    1: 'RUN_LVL'
+    2: 'BOOT_TIME'
+    3: 'OLD_TIME'
+    4: 'NEW_TIME'
+    5: 'INIT_PROCESS'
+    6: 'LOGIN_PROCESS'
+    7: 'USER_PROCESS'
+    8: 'DEAD_PROCESS'
+    9: 'ACCOUNTING'
+    10: 'SIGNATURE'
+    11: 'SHUTDOWN_TIME'
+message:
+- 'User: {username}'
+- 'Status: {status}'
+- 'Hostname: {hostname}'
+- 'Terminal: {terminal}'
+- 'PID: {pid}'
+- 'Terminal identifier: {terminal_identifier}'
+short_message:
+- 'User: {username}'
+- 'PID: {pid}'
+- 'Status: {status}'
+short_source: 'LOG'
+source: 'UTMPX session'
+---
+type: 'conditional'
+data_type: 'macos:tcc_entry'
+enumeration_helpers:
+- input_attribute: 'allowed'
+  output_attribute: 'allowed'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'False'
+    1: 'True'
+message:
+- 'Service: {service}'
+- 'Client: {client}'
+- 'Allowed: {allowed}'
+- 'Prompt count: {prompt_count}'
+short_message:
+- '{service}:'
+- '{client}'
+short_source: 'macOS TCC'
+source: 'macOS Transparenty, Control and Consent logs'
 ---
 type: 'conditional'
 data_type: 'spotlight:metadata_item'

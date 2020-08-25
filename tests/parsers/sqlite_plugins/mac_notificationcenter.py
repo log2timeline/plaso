@@ -56,8 +56,7 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_data.bundle_name, "com.google.drivefs")
 
     expected_message = (
-        'Title: Drive File Stream'
-        ' '
+        'Title: Drive File Stream '
         'registered by: com.google.drivefs. '
         'Presented: Yes, '
         'Content: Drive File Stream is loading your'
@@ -78,8 +77,7 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_data.bundle_name, "com.google.santagui")
 
     expected_message = (
-        'Title: Santa'
-        ' '
+        'Title: Santa '
         'registered by: com.google.santagui. '
         'Presented: Yes, '
         'Content: PyCharm can now be run')
