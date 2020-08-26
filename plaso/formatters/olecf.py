@@ -35,15 +35,11 @@ class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
       'Author: {author}',
       'Revision number: {revision_number}']
 
-  SOURCE_LONG = 'OLECF Summary Info'
-  SOURCE_SHORT = 'OLECF'
-
   _SECURITY_VALUES = {
       0x00000001: 'Password protected',
       0x00000002: 'Read-only recommended',
       0x00000004: 'Read-only enforced',
-      0x00000008: 'Locked for annotations',
-  }
+      0x00000008: 'Locked for annotations'}
 
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.

@@ -291,27 +291,6 @@ class EventFormatter(object):
     return self._FormatMessages(
         self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
 
-  # pylint: disable=unused-argument
-  def GetSources(self, event, event_data):
-    """Determines the the short and long source for an event.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): short and long source string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter(
-          'Unsupported data type: {0:s} expected {1:s}.'.format(
-              event_data.data_type, self.DATA_TYPE))
-
-    return self.SOURCE_SHORT, self.SOURCE_LONG
-
 
 class ConditionalEventFormatter(EventFormatter):
   """Base class to conditionally format event data using format string pieces.

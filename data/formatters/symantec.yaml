@@ -148,5 +148,3 @@ short_message:
 - '{action0_map}'
 - '{action1_map}'
 - '{action2_map}'
-short_source: 'LOG'
-source: 'Symantec AV Log'

@@ -31,9 +31,6 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
       '0x{event_identifier:04x}]',
       'Strings: {strings}']
 
-  SOURCE_LONG = 'WinEVT'
-  SOURCE_SHORT = 'EVT'
-
   # Mapping of the numeric event types to a descriptive string.
   _EVENT_TYPES = [
       'Error event',

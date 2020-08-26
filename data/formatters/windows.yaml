@@ -4,8 +4,6 @@ type: 'basic'
 data_type: 'ccleaner:configuration'
 message: '[{key_path}] {configuration}'
 short_message: '[{key_path}] {configuration}'
-short_source: 'REG'
-source: 'Registry Key : CCleaner Registry key'
 ---
 type: 'conditional'
 data_type: 'ccleaner:update'
@@ -13,8 +11,6 @@ message:
 - 'Origin: {key_path}'
 short_message:
 - 'Origin: {key_path}'
-short_source: 'LOG'
-source: 'System'
 ---
 type: 'conditional'
 data_type: 'iis:log:line'
@@ -43,8 +39,6 @@ short_message:
 - ':'
 - '{dest_port}'
 - ']'
-short_source: 'LOG'
-source: 'IIS Log'
 ---
 type: 'conditional'
 data_type: 'setupapi:log:line'
@@ -56,8 +50,6 @@ separator: ' - '
 short_message:
 - '{exit_status}'
 - '{entry_type}'
-short_source: 'LOG'
-source: 'Windows Setupapi Log'
 ---
 type: 'conditional'
 data_type: 'software_management:sccm:log'
@@ -66,8 +58,6 @@ message:
 - '{text}'
 short_message:
 - '{text}'
-short_source: 'LOG'
-source: 'SCCM Event'
 ---
 type: 'conditional'
 data_type: 'task_scheduler:task_cache:entry'
@@ -77,8 +67,6 @@ message:
 - '[Identifier: {task_identifier}]'
 short_message:
 - 'Task: {task_name}'
-short_source: 'REG'
-source: 'Task Cache'
 ---
 type: 'conditional'
 data_type: 'windows:distributed_link_tracking:creation'
@@ -89,8 +77,6 @@ message:
 short_message:
 - '{uuid}'
 - 'Origin: {origin}'
-short_source: 'LOG'
-source: 'System'
 ---
 # TODO: Add more "elegant" formatting, as in transform ICMP code/type into
 # a more human readable format as well as translating the additional info
@@ -124,8 +110,6 @@ short_message:
 - '>'
 - '{dest_ip}'
 - ': {dest_port}'
-short_source: 'LOG'
-source: 'Windows Firewall Log'
 ---
 type: 'conditional'
 data_type: 'windows:metadata:deleted_item'
@@ -167,8 +151,6 @@ message:
 - '(from drive: {drive_letter})'
 short_message:
 - 'Deleted file: {original_filename}'
-short_source: 'RECBIN'
-source: 'Recycle Bin'
 ---
 type: 'conditional'
 data_type: 'windows:registry:explorer:programcache'
@@ -180,8 +162,6 @@ short_message:
 - 'Key: {key_path}'
 - 'Value: {value_name}'
 - 'Entries: [{entries}]'
-short_source: 'REG'
-source: 'Registry Key'
 ---
 type: 'conditional'
 data_type: 'windows:registry:amcache'
@@ -198,8 +178,6 @@ message:
 - 'program_identifier: {program_identifier}'
 short_message:
 - 'path: {full_path}'
-short_source: 'AMCACHE'
-source: 'Amcache Registry Entry'
 ---
 type: 'conditional'
 data_type: 'windows:registry:amcache:programs'
@@ -218,8 +196,6 @@ message:
 - 'files: {files}'
 short_message:
 - 'name: {name}'
-short_source: 'AMCACHEPROGRAM'
-source: 'Amcache Programs Registry Entry'
 ---
 type: 'conditional'
 data_type: 'windows:registry:appcompatcache'
@@ -229,15 +205,11 @@ message:
 - 'Path: {path}'
 short_message:
 - 'Path: {path}'
-short_source: 'REG'
-source: 'AppCompatCache Registry Entry'
 ---
 type: 'basic'
 data_type: 'windows:registry:bagmru'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : BagMRU'
 ---
 type: 'conditional'
 data_type: 'windows:registry:bam'
@@ -246,22 +218,16 @@ message:
 - '[{user_sid}]'
 short_message:
 - '{binary_path}'
-short_source: 'REG'
-source: 'Background Activity Moderator Registry Entry'
 ---
 type: 'basic'
 data_type: 'windows:registry:boot_execute'
 message: '[{key_path}] BootExecute: {value}'
 short_message: '[{key_path}] BootExecute: {value}'
-short_source: 'REG'
-source: 'Registry Key'
 ---
 type: 'basic'
 data_type: 'windows:registry:boot_verification'
 message: '[{key_path}] ImagePath: {image_path}'
 short_message: '[{key_path}] ImagePath: {image_path}'
-short_source: 'REG'
-source: 'Registry Key'
 ---
 type: 'conditional'
 data_type: 'windows:registry:installation'
@@ -278,8 +244,6 @@ short_message:
 - '{build_number}'
 - '{service_pack}'
 - 'Origin: {key_path}'
-short_source: 'LOG'
-source: 'System'
 ---
 type: 'conditional'
 data_type: 'windows:registry:mount_points2'
@@ -297,29 +261,21 @@ short_message:
 - 'Share_Name: {share_name}'
 - 'Type: {type}'
 - 'Volume: {name}'
-short_source: 'REG'
-source: 'Registry Key'
 ---
 type: 'basic'
 data_type: 'windows:registry:mrulist'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : MRUList'
 ---
 type: 'basic'
 data_type: 'windows:registry:mrulistex'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : MRUListEx'
 ---
 type: 'basic'
 data_type: 'windows:registry:msie_zone_settings'
 message: '[{key_path}] {settings}'
 short_message: '[{key_path}] {settings}'
-short_source: 'REG'
-source: 'Registry Key'
 ---
 type: 'conditional'
 data_type: 'windows:registry:network'
@@ -335,8 +291,6 @@ short_message:
 - 'Connection Type: {connection_type}'
 - 'Default Gateway Mac: {default_gateway_mac}'
 - 'DNS Suffix: {dns_suffix}'
-short_source: 'LOG'
-source: 'System: Network Connection'
 ---
 type: 'conditional'
 data_type: 'windows:registry:network_drive'
@@ -352,8 +306,6 @@ short_message:
 - 'RemoteServer: {server_name}'
 - 'ShareName: {share_name}'
 - 'Type: Mapped Drive'
-short_source: 'REG'
-source: 'Registry Key : Network Drive'
 ---
 type: 'conditional'
 data_type: 'windows:registry:office_mru'
@@ -362,29 +314,21 @@ message:
 - 'Value: {value_string}'
 short_message:
 - '{value_string}'
-short_source: 'REG'
-source: 'Registry Key: Microsoft Office MRU'
 ---
 type: 'basic'
 data_type: 'windows:registry:office_mru_list'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : Microsoft Office MRU'
 ---
 type: 'basic'
 data_type: 'windows:registry:outlook_search_mru'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : PST Paths'
 ---
 type: 'basic'
 data_type: 'windows:registry:run'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : Run Key'
 ---
 type: 'conditional'
 data_type: 'windows:registry:sam_users'
@@ -399,8 +343,6 @@ short_message:
 - '{username}'
 - 'RID: {account_rid}'
 - 'Login count: {login_count}'
-short_source: 'REG'
-source: 'Registry Key: User Account Information'
 ---
 type: 'conditional'
 data_type: 'windows:registry:service'
@@ -445,8 +387,6 @@ short_message:
 - 'Image path: {image_path}'
 - 'Error control: {error_control}'
 - '{values}'
-short_source: 'REG'
-source: 'Registry Key Service'
 ---
 type: 'conditional'
 data_type: 'windows:registry:shutdown'
@@ -455,8 +395,6 @@ message:
 - 'Description: {value_name}'
 short_message:
 - '{value_name}'
-short_source: 'REG'
-source: 'Registry Key Shutdown Entry'
 ---
 type: 'conditional'
 data_type: 'windows:registry:mstsc:connection'
@@ -465,29 +403,21 @@ message:
 - 'Username hint: {username}'
 short_message:
 - '[{key_path}]'
-short_source: 'REG'
-source: 'Registry Key : RDP Connection'
 ---
 type: 'basic'
 data_type: 'windows:registry:mstsc:mru'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : RDP Connection'
 ---
 type: 'basic'
 data_type: 'windows:registry:timezone'
 message: '[{key_path}] {configuration}'
 short_message: '[{key_path}] {configuration}'
-short_source: 'REG'
-source: 'Registry Key'
 ---
 type: 'basic'
 data_type: 'windows:registry:typedurls'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : Typed URLs'
 ---
 type: 'conditional'
 data_type: 'windows:registry:usb'
@@ -503,8 +433,6 @@ short_message:
 - 'Serial: {serial}'
 - 'Subkey name: {subkey_name}'
 - 'Vendor: {vendor}'
-short_source: 'REG'
-source: 'Registry Key : USB Entries'
 ---
 type: 'conditional'
 data_type: 'windows:registry:usbstor'
@@ -526,8 +454,6 @@ short_message:
 - 'Serial: {serial}'
 - 'Subkey name: {subkey_name}'
 - 'Vendor: {vendor}'
-short_source: 'REG'
-source: 'Registry Key : USBStor Entries'
 ---
 type: 'conditional'
 data_type: 'windows:registry:userassist'
@@ -541,8 +467,6 @@ message:
 short_message:
 - '{value_name}'
 - 'Count: {number_of_executions}'
-short_source: 'REG'
-source: 'Registry Key: UserAssist'
 ---
 type: 'conditional'
 data_type: 'windows:registry:winlogon'
@@ -558,8 +482,6 @@ short_message:
 - 'Command: {command}'
 - 'Handler: {handler}'
 - 'Trigger: {trigger}'
-short_source: 'REG'
-source: 'Registry Key : Winlogon'
 ---
 type: 'conditional'
 data_type: 'windows:restore_point:info'
@@ -587,8 +509,6 @@ message:
 - 'Restore point type: {restore_point_type}'
 short_message:
 - '{description}'
-short_source: 'RP'
-source: 'Windows Restore Point'
 ---
 type: 'conditional'
 data_type: 'windows:tasks:job'
@@ -617,15 +537,11 @@ short_message:
 - 'Scheduled by: {username}'
 - 'Working directory: {working_directory}'
 - 'Trigger type: {trigger_type}'
-short_source: 'JOB'
-source: 'Windows Scheduled Task Job'
 ---
 type: 'basic'
 data_type: 'winrar:history'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'Registry Key : WinRAR History'
 ---
 type: 'conditional'
 data_type: 'windows:srum:application_usage'
@@ -633,8 +549,6 @@ message:
 - 'Application: {application}'
 short_message:
 - '{application}'
-short_source: 'LOG'
-source: 'System Resource Usage Monitor'
 ---
 type: 'conditional'
 data_type: 'windows:srum:network_usage'
@@ -646,8 +560,6 @@ message:
 - 'User identifier: {user_identifier}'
 short_message:
 - '{application}'
-short_source: 'LOG'
-source: 'System Resource Usage Monitor'
 ---
 type: 'conditional'
 data_type: 'windows:srum:network_connectivity'
@@ -655,8 +567,6 @@ message:
 - 'Application: {application}'
 short_message:
 - '{application}'
-short_source: 'LOG'
-source: 'System Resource Usage Monitor'
 ---
 type: 'conditional'
 data_type: 'windows:timeline:generic'
@@ -666,8 +576,6 @@ message:
 - 'Description: {description}'
 short_message:
 - '{package_identifier}'
-short_source: 'Windows Timeline'
-source: 'Windows Timeline - Generic'
 ---
 type: 'conditional'
 data_type: 'windows:timeline:user_engaged'
@@ -677,8 +585,6 @@ message:
 - 'Reporting App: {reporting_app}'
 short_message:
 - '{package_identifier}'
-short_source: 'Windows Timeline'
-source: 'Windows Timeline - User Engaged'
 ---
 type: 'conditional'
 data_type: 'windows:volume:creation'
@@ -689,5 +595,3 @@ message:
 short_message:
 - '{device_path}'
 - 'Origin: {origin}'
-short_source: 'LOG'
-source: 'System'

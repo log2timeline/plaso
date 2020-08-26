@@ -25,8 +25,6 @@ message:
 - 'Message Content: {text}'
 short_message:
 - '{text}'
-short_source: 'iMessage'
-source: 'Apple iMessage Application'
 ---
 type: 'conditional'
 data_type: 'ipod:device:entry'
@@ -44,8 +42,6 @@ short_message:
 - 'Connected {use_count} times'
 - 'Serial nr: {serial_number}'
 - 'IMEI [{imei}]'
-short_source: 'LOG'
-source: 'iPod Connections'
 ---
 type: 'conditional'
 data_type: 'mac:appfirewall:line'
@@ -58,15 +54,11 @@ message:
 short_message:
 - 'Process name: {process_name}'
 - 'Status: {status}'
-short_source: 'LOG'
-source: 'Mac AppFirewall Log'
 ---
 type: 'basic'
 data_type: 'macosx:application_usage'
 message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
 short_message: '{application} ({count} time(s))'
-short_source: 'LOG'
-source: 'Application Usage'
 ---
 type: 'conditional'
 data_type: 'mac:document_versions:file'
@@ -77,8 +69,6 @@ message:
 - 'by {user_sid}'
 short_message:
 - 'Stored a document version of [{name}]'
-short_source: 'HISTORY'
-source: 'Document Versions'
 ---
 type: 'conditional'
 data_type: 'macos:fseventsd:record'
@@ -119,8 +109,6 @@ message:
 short_message:
 - '{path}'
 - '{flag_values}'
-short_source: 'FSEVENT'
-source: 'fseventsd'
 ---
 type: 'conditional'
 data_type: 'mac:keychain:application'
@@ -129,8 +117,6 @@ message:
 - 'Account: {account_name}'
 short_message:
 - '{entry_name}'
-short_source: 'LOG'
-source: 'Keychain Application password'
 ---
 type: 'conditional'
 data_type: 'mac:keychain:internet'
@@ -142,8 +128,6 @@ message:
 - '({type_protocol})'
 short_message:
 - '{entry_name}'
-short_source: 'LOG'
-source: 'Keychain Internet password'
 ---
 type: 'conditional'
 data_type: 'mac:knowledgec:application'
@@ -152,8 +136,6 @@ message:
 - 'for {duration} seconds'
 short_message:
 - 'Application {bundle_identifier}'
-short_source: 'LOG'
-source: 'KnowledgeC Application'
 ---
 type: 'conditional'
 data_type: 'mac:knowledgec:safari'
@@ -163,8 +145,6 @@ message:
 - 'Duration: {duration}'
 short_message:
 - 'Safari: {url}'
-short_source: 'WEBHIST'
-source: 'KnowledgeC Safari'
 ---
 type: 'conditional'
 data_type: 'macosx:lsquarantine'
@@ -174,8 +154,6 @@ message:
 - '<{data}>'
 short_message:
 - '{url}'
-short_source: 'LOG'
-source: 'LS Quarantine Event'
 ---
 type: 'conditional'
 data_type: 'mac:notes:note'
@@ -184,8 +162,6 @@ message:
 - 'note_text:{text}'
 short_message:
 - 'title:{title}'
-short_source: 'Mac Note'
-source: 'Mac Notes'
 ---
 type: 'conditional'
 data_type: 'mac:notificationcenter:db'
@@ -205,8 +181,6 @@ message:
 short_message:
 - 'Title: {title},'
 - 'Content: {body}'
-short_source: 'NOTIFICATION'
-source: 'Notification Center'
 ---
 type: 'conditional'
 data_type: 'mac:securityd:line'
@@ -218,8 +192,6 @@ message:
 - 'Text: {message}'
 short_message:
 - 'Text: {message}'
-short_source: 'LOG'
-source: 'Mac Securityd Log'
 ---
 type: 'conditional'
 data_type: 'mac:wifilog:line'
@@ -230,8 +202,6 @@ message:
 - 'Log: {text}'
 short_message:
 - 'Action: {action}'
-short_source: 'LOG'
-source: 'Mac Wifi Log'
 ---
 type: 'conditional'
 data_type: 'mackeeper:cache'
@@ -248,8 +218,6 @@ message:
 short_message:
 - '<{event_type}>'
 - '{text}'
-short_source: 'LOG'
-source: 'MacKeeper Cache'
 ---
 type: 'conditional'
 data_type: 'plist:key'
@@ -262,8 +230,6 @@ short_message:
 - '{root}/'
 - '{key}'
 - ' {desc}'
-short_source: 'PLIST'
-source: 'Plist Entry'
 ---
 type: 'conditional'
 data_type: 'mac:utmpx:event'
@@ -295,8 +261,6 @@ short_message:
 - 'User: {username}'
 - 'PID: {pid}'
 - 'Status: {status}'
-short_source: 'LOG'
-source: 'UTMPX session'
 ---
 type: 'conditional'
 data_type: 'macos:tcc_entry'
@@ -315,8 +279,6 @@ message:
 short_message:
 - '{service}:'
 - '{client}'
-short_source: 'macOS TCC'
-source: 'macOS Transparenty, Control and Consent logs'
 ---
 type: 'conditional'
 data_type: 'spotlight:metadata_item'
@@ -325,5 +287,3 @@ message:
 - '{content_type}'
 short_message:
 - '{file_name}'
-short_source: 'SPOTLIGHT'
-source: 'Spotlight store database'

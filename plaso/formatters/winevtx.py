@@ -28,9 +28,6 @@ class WinEVTXFormatter(interface.ConditionalEventFormatter):
       '0x{event_identifier:04x}]',
       'Strings: {strings}']
 
-  SOURCE_LONG = 'WinEVTX'
-  SOURCE_SHORT = 'EVT'
-
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.
 

@@ -23,9 +23,6 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       '{filename}']
 
-  SOURCE_SHORT = 'FILE'
-  SOURCE_LONG = 'File stat'
-
   # The numeric values are for backwards compatibility with plaso files
   # generated with older versions of dfvfs.
   _FILE_ENTRY_TYPES = {
@@ -97,13 +94,9 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
       '{file_reference}',
       '{attribute_name}']
 
-  SOURCE_SHORT = 'FILE'
-  SOURCE_LONG = 'NTFS file stat'
-
   _ATTRIBUTE_NAMES = {
       0x00000010: '$STANDARD_INFORMATION',
-      0x00000030: '$FILE_NAME'
-  }
+      0x00000030: '$FILE_NAME'}
 
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.
@@ -166,9 +159,6 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
       '{filename}',
       '{file_reference}',
       '{update_reason}']
-
-  SOURCE_SHORT = 'FILE'
-  SOURCE_LONG = 'NTFS USN change'
 
   _USN_REASON_FLAGS = {
       0x00000001: 'USN_REASON_DATA_OVERWRITE',

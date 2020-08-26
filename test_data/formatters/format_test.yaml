@@ -8,5 +8,3 @@ message:
 - '({unallocated})'
 short_message:
 - '{filename}'
-short_source: 'FILE'
-source: 'File system'

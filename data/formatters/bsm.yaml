@@ -638,5 +638,3 @@ message:
 short_message:
 - 'Type: {event_type}'
 - 'Return: {return_value}'
-short_source: 'LOG'
-source: 'BSM entry'

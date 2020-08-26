@@ -38,9 +38,6 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = ['URL: {url}']
 
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.

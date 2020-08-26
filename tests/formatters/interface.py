@@ -122,8 +122,6 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
     self.assertEqual(
         message, 'but we\'re still trying to say something about the event')
 
-  # TODO: add tests for GetSources
-
 
 class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the conditional event formatter."""
@@ -171,8 +169,6 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
         'Description: this is beyond words Comment Value: 0x0c '
         'Text: but we\'re still trying to say something about the event')
     self.assertEqual(message, expected_message)
-
-  # TODO: add test for GetSources.
 
 
 if __name__ == '__main__':

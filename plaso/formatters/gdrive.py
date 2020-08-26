@@ -22,9 +22,6 @@ class GDriveCloudEntryFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = ['{path}']
 
-  SOURCE_LONG = 'Google Drive (cloud entry)'
-  SOURCE_SHORT = 'LOG'
-
   # The following definition for values can be found on Patrick Olson's blog:
   # http://www.sysforensics.org/2012/05/google-drive-forensics-notes.html
   _DOC_TYPES = {
