@@ -303,7 +303,6 @@ data_type: 'pe'
 message:
 - 'PE Type: {pe_type}'
 - 'Import hash: {imphash}'
-separator: ' '
 short_message:
 - 'pe_type'
 short_source: 'PE'
@@ -314,7 +313,6 @@ data_type: 'pe:compilation:compilation_time'
 message:
 - 'PE Type: {pe_type}'
 - 'Import hash: {imphash}'
-separator: ' '
 short_message:
 - 'pe_type'
 short_source: 'PE'
@@ -326,7 +324,6 @@ message:
 - 'DLL name: {dll_name}'
 - 'PE Type: {pe_type}'
 - 'Import hash: {imphash}'
-separator: ' '
 short_message:
 - '{dll_name}'
 short_source: 'PE'
@@ -338,7 +335,6 @@ message:
 - 'DLL name: {dll_name}'
 - 'PE Type: {pe_type}'
 - 'Import hash: {imphash}'
-separator: ' '
 short_message:
 - '{dll_name}'
 short_source: 'PE'
@@ -349,7 +345,6 @@ data_type: 'pe:load_config:modification_time'
 message:
 - 'PE Type: {pe_type}'
 - 'Import hash: {imphash}'
-separator: ' '
 short_message:
 - 'pe_type'
 short_source: 'PE'
@@ -360,7 +355,6 @@ data_type: 'pe:resource:creation_time'
 message:
 - 'PE Type: {pe_type}'
 - 'Import hash: {imphash}'
-separator: ' '
 short_message:
 - 'pe_type'
 short_source: 'PE'

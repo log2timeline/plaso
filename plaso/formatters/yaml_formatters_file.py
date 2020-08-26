@@ -130,9 +130,20 @@ class YAMLFormattersFile(object):
         'enumeration_helpers', [])
     for enumeration_helper in enumeration_helpers:
       input_attribute = enumeration_helper.get('input_attribute', None)
+      if not input_attribute:
+        raise errors.ParseError(
+            'Invalid enumeration helper missing input attribute.')
+
       output_attribute = enumeration_helper.get('output_attribute', None)
-      default_value = enumeration_helper.get('default_value', None)
+      if not output_attribute:
+        raise errors.ParseError(
+            'Invalid enumeration helper missing output attribute.')
+
       values = enumeration_helper.get('values', None)
+      if not values:
+        raise errors.ParseError('Invalid enumeration helper missing values.')
+
+      default_value = enumeration_helper.get('default_value', None)
 
       helper = interface.EnumerationEventFormatterHelper(
           default=default_value, input_attribute=input_attribute,
