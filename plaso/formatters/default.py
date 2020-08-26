@@ -14,6 +14,9 @@ class DefaultFormatter(interface.EventFormatter):
   FORMAT_STRING = '<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'
   FORMAT_STRING_SHORT = '<DEFAULT> {attribute_driven}'
 
+  SOURCE_SHORT = '<DEFAULT>'
+  SOURCE_LONG = '<WARNING DEFAULT FORMATTER>'
+
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.
@@ -42,16 +45,3 @@ class DefaultFormatter(interface.EventFormatter):
 
     return self._FormatMessages(
         self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
-
-  # pylint: disable=unused-argument
-  def GetSources(self, event, event_data):
-    """Determines the the short and long source for an event.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): short and long source string.
-    """
-    return '<DEFAULT>', '<WARNING DEFAULT FORMATTER>'

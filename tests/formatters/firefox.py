@@ -30,7 +30,6 @@ class FirefoxPageVisitFormatterTest(test_lib.EventFormatterTestCase):
         event_formatter, expected_attribute_names)
 
   # TODO: add test for GetMessages.
-  # TODO: add test for GetSources.
 
 
 if __name__ == '__main__':

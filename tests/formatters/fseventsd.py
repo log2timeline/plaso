@@ -29,8 +29,6 @@ class FseventsdFormatterTest(test_lib.EventFormatterTestCase):
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
 
-  # TODO: add test for GetSources.
-
 
 if __name__ == '__main__':
   unittest.main()

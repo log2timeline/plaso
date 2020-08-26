@@ -178,15 +178,15 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
       manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 
     self.assertIn((
-        '1334961526929596,REG,UNKNOWN,[MY AutoRun key] '
+        '1334961526929596,REG,Registry Key,[MY AutoRun key] '
         'Value: c:/Temp/evil.exe'), message_strings)
 
     self.assertIn((
-        '1334966206929596,REG,UNKNOWN,'
+        '1334966206929596,REG,Registry Key,'
         '[HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key] '
         'Value: send all the exes to the other world'), message_strings)
     self.assertIn((
-        '1334940286000000,REG,UNKNOWN,'
+        '1334940286000000,REG,Registry Key,'
         '[HKEY_CURRENT_USER\\Windows\\Normal] '
         'Value: run all the benign stuff'), message_strings)
     self.assertIn((

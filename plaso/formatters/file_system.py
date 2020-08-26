@@ -24,6 +24,7 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
       '{filename}']
 
   SOURCE_SHORT = 'FILE'
+  SOURCE_LONG = 'File stat'
 
   # The numeric values are for backwards compatibility with plaso files
   # generated with older versions of dfvfs.
@@ -76,29 +77,6 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
 
     return self._ConditionalFormatMessages(event_values)
 
-  def GetSources(self, event, event_data):
-    """Determines the the short and long source for an event.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): short and long source string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    file_system_type = getattr(event_data, 'file_system_type', 'UNKNOWN')
-    timestamp_desc = getattr(event, 'timestamp_desc', 'Time')
-    source_long = '{0:s} {1:s}'.format(file_system_type, timestamp_desc)
-
-    return self.SOURCE_SHORT, source_long
-
 
 class NTFSFileStatEventFormatter(FileStatEventFormatter):
   """The NTFS file system stat event formatter."""
@@ -120,6 +98,7 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
       '{attribute_name}']
 
   SOURCE_SHORT = 'FILE'
+  SOURCE_LONG = 'NTFS file stat'
 
   _ATTRIBUTE_NAMES = {
       0x00000010: '$STANDARD_INFORMATION',
@@ -189,6 +168,7 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
       '{update_reason}']
 
   SOURCE_SHORT = 'FILE'
+  SOURCE_LONG = 'NTFS USN change'
 
   _USN_REASON_FLAGS = {
       0x00000001: 'USN_REASON_DATA_OVERWRITE',
