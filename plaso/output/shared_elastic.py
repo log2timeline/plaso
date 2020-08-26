@@ -147,6 +147,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
   # Number of seconds to wait before a request to Elasticsearch is timed out.
   _DEFAULT_REQUEST_TIMEOUT = 300
 
+  _DEFAULT_FIELD_NAMES = [
+      'datetime',
+      'display_name',
+      'message',
+      'source_long',
+      'source_short',
+      'tag',
+      'timestamp',
+      'timestamp_desc']
+
   def __init__(self, output_mediator):
     """Initializes an Elasticsearch output module.
 
@@ -186,8 +196,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
         [elastic_host],
         http_auth=elastic_http_auth,
         use_ssl=self._use_ssl,
-        ca_certs=self._ca_certs
-    )
+        ca_certs=self._ca_certs)
 
     logger.debug((
         'Connected to Elasticsearch server: {0:s} port: {1:d} URL prefix: '
@@ -271,23 +280,22 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    event_attributes = [
-        ('datetime', None),
-        ('display_name', None),
-        ('message', None),
-        ('source_long', None),
-        ('source_short', None),
-        ('tag', None),
-        ('timestamp', None),
-        ('timestamp_desc', None)]
+    event_values = {}
 
     if event_data:
-      event_attributes.extend(event_data.GetAttributes())
+      for attribute_name, attribute_value in event_data.GetAttributes():
+        event_values[attribute_name] = attribute_value
+
     if event_data_stream:
-      event_attributes.extend(event_data_stream.GetAttributes())
+      for attribute_name, attribute_value in event_data_stream.GetAttributes():
+        event_values[attribute_name] = attribute_value
+
+    for attribute_name in self._DEFAULT_FIELD_NAMES:
+      if attribute_name not in event_values:
+        event_values[attribute_name] = None
 
     field_values = {}
-    for attribute_name, attribute_value in sorted(event_attributes):
+    for attribute_name, attribute_value in event_values.items():
       # Note that support for event_data.pathspec is kept for backwards
       # compatibility. The current value is event_data_stream.path_spec.
       if attribute_name in ('path_spec', 'pathspec'):
