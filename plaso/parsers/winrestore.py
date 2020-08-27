@@ -40,7 +40,7 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
   """A parser for Windows Restore Point (rp.log) files."""
 
   NAME = 'rplog'
-  DESCRIPTION = 'Parser for Windows Restore Point (rp.log) files.'
+  DATA_FORMAT = 'Windows Restore Point log (rp.log) file'
 
   FILTERS = frozenset([
       interface.FileNameFileEntryFilter('rp.log')])

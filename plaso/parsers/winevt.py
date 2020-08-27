@@ -59,7 +59,7 @@ class WinEvtParser(interface.FileObjectParser):
   _INITIAL_FILE_OFFSET = None
 
   NAME = 'winevt'
-  DESCRIPTION = 'Parser for Windows EventLog (EVT) files.'
+  DATA_FORMAT = 'Windows EventLog (EVT) file'
 
   @classmethod
   def GetFormatSpecification(cls):

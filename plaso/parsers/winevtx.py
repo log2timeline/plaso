@@ -57,7 +57,7 @@ class WinEvtxParser(interface.FileObjectParser):
   _INITIAL_FILE_OFFSET = None
 
   NAME = 'winevtx'
-  DESCRIPTION = 'Parser for Windows XML EventLog (EVTX) files.'
+  DATA_FORMAT = 'Windows XML EventLog (EVTX) file'
 
   def _GetCreationTimeFromXMLString(
       self, parser_mediator, record_index, xml_string):

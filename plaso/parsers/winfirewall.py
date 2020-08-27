@@ -64,7 +64,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   """Parses the Windows Firewall Log file."""
 
   NAME = 'winfirewall'
-  DESCRIPTION = 'Parser for Windows Firewall Log files.'
+  DATA_FORMAT = 'Windows Firewall log file'
 
   _ENCODING = 'ascii'
 

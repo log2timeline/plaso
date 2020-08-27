@@ -181,7 +181,7 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
   """Parses the Trend Micro Office Scan Virus Detection Log."""
 
   NAME = 'trendmicro_vd'
-  DESCRIPTION = 'Parser for Trend Micro Office Scan Virus Detection log files.'
+  DATA_FORMAT = 'Trend Micro Office Scan Virus Detection log file'
 
   COLUMNS = [
       'date', 'time', 'threat', 'action', 'scan_type', 'unused1',
@@ -294,7 +294,7 @@ class TrendMicroUrlEventData(events.EventData):
 class OfficeScanWebReputationParser(TrendMicroBaseParser):
   """Parses the Trend Micro Office Scan Web Reputation detection log."""
   NAME = 'trendmicro_url'
-  DESCRIPTION = 'Parser for Trend Micro Office Web Reputation log files.'
+  DATA_FORMAT = 'Trend Micro Office Web Reputation log file'
 
   COLUMNS = (
       'date', 'time', 'block_mode', 'url', 'group_code', 'group_name',

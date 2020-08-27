@@ -52,7 +52,7 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
   """
 
   NAME = 'pls_recall'
-  DESCRIPTION = 'Parser for PL/SQL Recall files.'
+  DATA_FORMATE = 'PL SQL cache file (PL-SQL developer recall file)'
 
   _DEFINITION_FILE = 'pls_recall.yaml'
 

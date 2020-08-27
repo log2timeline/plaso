@@ -39,7 +39,7 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses Anti-Virus logs (SAV.txt) files."""
 
   NAME = 'sophos_av'
-  DESCRIPTION = 'Parser for Anti-Virus log (SAV.txt) files.'
+  DATA_FORMAT = 'Sophos Anti-Virus log file (SAV.txt) file'
 
   _ENCODING = 'utf-16-le'
 

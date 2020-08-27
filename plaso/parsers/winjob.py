@@ -44,7 +44,7 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
   """Parse Windows Scheduled Task files for job events."""
 
   NAME = 'winjob'
-  DESCRIPTION = 'Parser for Windows Scheduled Task job (or At-job) files.'
+  DATA_FORMAT = 'Windows Scheduled Task job (or at-job) file'
 
   _DEFINITION_FILE = 'winjob.yaml'
 

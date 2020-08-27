@@ -120,9 +120,6 @@ class DataFormatInformationExractor(object):
       'java_idx': (
           'Java WebStart IDX',
           'dtformats:Java WebStart Cache IDX file format'),
-      'lnk': (
-          'Windows Shortcut File (LNK) format',
-          'libyal:liblnk:Windows Shortcut File (LNK) format'),
       'mac_appfirewall_log': (
           'MacOS Application firewall', ''),
       'mac_keychain': (
@@ -171,36 +168,12 @@ class DataFormatInformationExractor(object):
           'Portable Executable (PE) file', ''),
       'plist': (
           'Property list (plist) file', ''),
-      'pls_recall': (
-          'PL SQL cache file (PL-SQL developer recall file)', ''),
       'popularity_contest': (
           'Popularity Contest log', ''),
-      'prefetch': (
-          'Windows Prefetch File (PF)',
-          'libyal:libscca:Windows Prefetch File (PF) format'),
-      'recycle_bin': (
-          'Windows Recycle bin $I/$R files', ''),
-      'recycle_bin_info2': (
-          'Windows Recycle bin INFO2 file', ''),
-      'rplog': (
-          'Restore Point log file (rp.log)',
-          'dtformats:Restore point formats'),
-      'santa': (
-          'Santa log file (santa.log)', ''),
-      'sccm': (
-          'SCCM client log file', ''),
-      'selinux': (
-          'SELinux audit log file', ''),
       'setupapi': (
           'Windows SetupAPI text log file',
           ('https://docs.microsoft.com/en-us/windows-hardware/drivers/install/'
            'setupapi-text-logs')),
-      'skydrive_log': (
-          'OneDrive (or SkyDrive) log file', ''),
-      'skydrive_log_old': (
-          'OneDrive (or SkyDrive) old log file', ''),
-      'sophos_av': (
-          'Sophos Anti-Virus log file (SAV.txt)', ''),
       'sqlite': (
           'SQLite database file', ''),
       'srum': (
@@ -211,47 +184,14 @@ class DataFormatInformationExractor(object):
           'Symantec AV Corporate Edition and Endpoint Protection log', ''),
       'syslog': (
           'Syslog file', ''),
-      'systemd_journal': (
-          'Systemd journal file', ''),
-      'trendmicro_url': (
-          'Trend Micro Office Web Reputation log file', ''),
-      'trendmicro_vd': (
-          'Trend Micro Office Scan Virus Detection log file', ''),
       'usnjrnl': (
           'NTFS $UsnJrnl:$J file system metadata file',
           'libyal:libfsntfs:New Technologies File System (NTFS)'),
-      'utmp': (
-          'Linux libc6 utmp login records file (btmp, utmp, wtmp)',
-          'dtformats:Utmp login records format'),
-      'utmpx': (
-          'Mac OS X 10.5 utmpx login records file',
-          'dtformats:Utmp login records format'),
-      'vsftpd': (
-          'vsftpd log file', ''),
       'windows_boot_execute': (
           'Windows boot execution data', ''),
-      'winevt': (
-          'Windows Event Log (EVT) file',
-          'libyal:libevt:Windows Event Log (EVT) format'),
-      'winevtx': (
-          'Windows XML Event Log (EVTX) file',
-          'libyal:libevtx:Windows XML Event Log (EVTX)'),
-      'winfirewall': (
-          'Windows Firewall', ''),
-      'winiis': (
-          'Microsoft IIS log file', ''),
-      'winjob': (
-          'Windows Job file (also known as "at jobs"',
-          'dtformats:Job file format'),
       'winreg': (
           'Windows NT Registry File (REGF)',
           'libyal:libregf:Windows NT Registry File (REGF) format'),
-      'xchatlog': (
-          'Xchat log file', ''),
-      'xchatscrollback': (
-          'Xchat scrollback log file', ''),
-      'zsh_extended_history': (
-          'Zsh history file', ''),
   }
 
   _DTFORMATS_URL_PREFIX = (

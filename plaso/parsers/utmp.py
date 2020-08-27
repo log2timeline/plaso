@@ -46,7 +46,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for Linux libc6 utmp files."""
 
   NAME = 'utmp'
-  DESCRIPTION = 'Parser for Linux libc6 utmp files.'
+  DATA_FORMAT = 'Linux libc6 utmp file'
 
   _DEFINITION_FILE = 'utmp.yaml'
 
