@@ -33,7 +33,7 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
   """A Windows Registry plugin for typed URLs history."""
 
   NAME = 'windows_typed_urls'
-  DESCRIPTION = 'Parser for Explorer typed URLs Registry data.'
+  DATA_FORMAT = 'Windows Explorer typed URLs Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

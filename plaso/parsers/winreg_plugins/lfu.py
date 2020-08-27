@@ -57,7 +57,7 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_boot_verify'
-  DESCRIPTION = 'Parser for Boot Verification Registry data.'
+  DATA_FORMAT = 'Windows boot verification Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -108,7 +108,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_boot_execute'
-  DESCRIPTION = 'Parser for Boot Execution Registry data.'
+  DATA_FORMAT = 'Boot Execution Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

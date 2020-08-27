@@ -51,7 +51,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_usbstor_devices'
-  DESCRIPTION = 'Parser for USB Plug And Play Manager USBStor Registry Key.'
+  DATA_FORMAT = 'Windows USB Plug And Play Manager USBStor Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

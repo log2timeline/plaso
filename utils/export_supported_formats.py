@@ -91,17 +91,11 @@ class DataFormatInformationExractor(object):
           'Android usage-history (app usage)', ''),
       'apache_access': (
           'Apache access log file (access.log)', ''),
-      'appcompatcache': (
-          'Application Compatibility Cache data', ''),
       'apt_history': (
           'Advanced Packaging Tool (APT) History log file', ''),
       'asl_log': (
           'Apple System Log (ASL) file',
           'dtformats:Apple System Log (ASL) file format'),
-      'bagmru': (
-          'BagMRU (or ShellBags) data', ''),
-      'bam': (
-          'Background Activity Moderator (BAM) data', ''),
       'bash_history': (
           'Bash history file', ''),
       'bencode': (
@@ -116,8 +110,6 @@ class DataFormatInformationExractor(object):
       'bsm_log': (
           'Basic Security Module (BSM) event auditing file',
           'dtformats:Basic Security Module (BSM) event auditing file format'),
-      'ccleaner': (
-          'CCleaner data', ''),
       'chrome_cache': (
           'Chrome Cache file',
           'dtformats:Chrome Cache file format'),
@@ -144,8 +136,6 @@ class DataFormatInformationExractor(object):
           'Windows Explorer mount points data', ''),
       'explorer_programscache': (
           'Windows Explorer Programs Cache data', ''),
-      'file_history': (
-          'Windows 8 File History database', ''),
       'firefox_cache': (
           'Mozilla Firefox Cache version 1 file (version 31 or earlier)', ''),
       'firefox_cache2': (
@@ -188,32 +178,17 @@ class DataFormatInformationExractor(object):
       'mft': (
           'NTFS $MFT file system metadata file',
           'libyal:libfsntfs:New Technologies File System (NTFS)'),
-      'microsoft_office_mru': (
-          'Microsoft Office MRU data', ''),
-      'microsoft_outlook_mru': (
-          'Microsoft Outlook search MRU data', ''),
       'mrulist_string': (
           ('Most Recently Used (MRU) list (MRUList and MRUListEx) data, '
            'including shell items'), ''),
       'msie_zone': (
           'Microsofer Internet Explorer zone settings data', ''),
-      'msie_webcache': (
-          ('Internet Explorer WebCache database (WebCacheV01.dat, '
-           'WebCacheV24.dat)'), ''),
       'msiecf': (
           ('Microsoft Internet Explorer History File Format (also known as '
            'MSIE 4 - 9 Cache Files or index.dat)'),
           'libyal:libmsiecf:MSIE Cache File (index.dat) format'),
-      'mstsc_rdp': (
-          'Terminal Server client connection data', ''),
-      'mstsc_rdp_mru': (
-          'Terminal Server client Most Recently Used (MRU) data', ''),
-      'network_drives': (
-          'Windows network drives data', ''),
       'networkminer_fileinfo': (
           'NetworkMiner .fileinfos file', ''),
-      'networks': (
-          'Windows networks data (NetworkList)', ''),
       'olecf': (
           'OLE Compound File',
           'libyal:libolecf:OLE Compound File format'),
@@ -280,8 +255,6 @@ class DataFormatInformationExractor(object):
           'Trend Micro Office Web Reputation log file', ''),
       'trendmicro_vd': (
           'Trend Micro Office Scan Virus Detection log file', ''),
-      'userassist': (
-          'User Assist data', ''),
       'usnjrnl': (
           'NTFS $UsnJrnl:$J file system metadata file',
           'libyal:libfsntfs:New Technologies File System (NTFS)'),
@@ -295,28 +268,6 @@ class DataFormatInformationExractor(object):
           'vsftpd log file', ''),
       'windows_boot_execute': (
           'Windows boot execution data', ''),
-      'windows_boot_verify': (
-          'Windows boot verification data', ''),
-      'windows_run': (
-          'Run and run once data', ''),
-      'windows_sam_users': (
-          'Security Accounts Manager (SAM) users data', ''),
-      'windows_services': (
-          'Windows drivers and services data', ''),
-      'windows_shutdown': (
-          'Windows last shutdown data', ''),
-      'windows_task_cache': (
-          'Windows Task Scheduler cache data', ''),
-      'windows_timezone': (
-          'Windows timezone settings', ''),
-      'windows_typed_urls': (
-          'Windows Explorer typed URLs data', ''),
-      'windows_usb_devices': (
-          'Windows USB device data', ''),
-      'windows_usbstor_devices': (
-          'Windows USB storage device data', ''),
-      'windows_version': (
-          'Windows version information', ''),
       'winevt': (
           'Windows Event Log (EVT) file',
           'libyal:libevt:Windows Event Log (EVT) format'),
@@ -330,10 +281,6 @@ class DataFormatInformationExractor(object):
       'winjob': (
           'Windows Job file (also known as "at jobs"',
           'dtformats:Job file format'),
-      'winlogon': (
-          'Windows log-on data', ''),
-      'winrar_mru': (
-          'WinRar archives history data', ''),
       'winreg': (
           'Windows NT Registry File (REGF)',
           'libyal:libregf:Windows NT Registry File (REGF) format'),

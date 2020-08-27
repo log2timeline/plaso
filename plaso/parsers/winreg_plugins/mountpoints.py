@@ -40,7 +40,7 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the MountPoints2 key."""
 
   NAME = 'explorer_mountpoints2'
-  DESCRIPTION = 'Parser for mount points Registry data.'
+  DATA_FORMAT = 'Windows Explorer mount points Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

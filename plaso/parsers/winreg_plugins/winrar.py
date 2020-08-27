@@ -33,7 +33,7 @@ class WinRARHistoryPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing WinRAR History keys."""
 
   NAME = 'winrar_mru'
-  DESCRIPTION = 'Parser for WinRAR History Registry data.'
+  DATA_FORMAT = 'WinRAR History Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

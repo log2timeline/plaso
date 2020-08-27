@@ -35,7 +35,7 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_run'
-  DESCRIPTION = 'Parser for run and run once Registry data.'
+  DATA_FORMAT = 'Run and run once Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

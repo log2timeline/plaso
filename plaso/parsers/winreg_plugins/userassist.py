@@ -74,7 +74,7 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """
 
   NAME = 'userassist'
-  DESCRIPTION = 'Parser for User Assist Registry data.'
+  DATA_FORMAT = 'User Assist Registry data'
 
   FILTERS = frozenset([
       UserAssistWindowsRegistryKeyPathFilter(

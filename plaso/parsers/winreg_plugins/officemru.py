@@ -53,7 +53,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   """Plugin that parses Microsoft Office MRU keys."""
 
   NAME = 'microsoft_office_mru'
-  DESCRIPTION = 'Parser for Microsoft Office MRU Registry data.'
+  DATA_FORMAT = 'Microsoft Office MRU Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

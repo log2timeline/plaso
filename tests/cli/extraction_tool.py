@@ -260,7 +260,7 @@ optional arguments:
     expected_line = 'ssh : Parser for SSH syslog entries.'
     self.assertIn(expected_line, lines)
 
-    expected_line = 'winreg_default : Parser for Registry data.'
+    expected_line = 'winreg_default : Parser for Windows Registry data.'
     self.assertIn(expected_line, lines)
 
 

@@ -37,7 +37,7 @@ class BagMRUWindowsRegistryPlugin(
   """Class that defines a BagMRU Windows Registry plugin."""
 
   NAME = 'bagmru'
-  DESCRIPTION = 'Parser for BagMRU Registry data.'
+  DATA_FORMAT = 'BagMRU (or ShellBags) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

@@ -32,7 +32,7 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect information about the Windows timezone settings."""
 
   NAME = 'windows_timezone'
-  DESCRIPTION = 'Parser for Windows timezone settings.'
+  DATA_FORMAT = 'Windows time zone Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

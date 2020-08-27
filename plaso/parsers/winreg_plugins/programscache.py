@@ -43,7 +43,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
   """Class that parses the Explorer ProgramsCache Registry data."""
 
   NAME = 'explorer_programscache'
-  DESCRIPTION = 'Parser for Explorer ProgramsCache Registry data.'
+  DATA_FORMAT = 'Windows Explorer Programs Cache Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

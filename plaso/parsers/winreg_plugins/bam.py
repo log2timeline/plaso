@@ -38,7 +38,7 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
   """Background Activity Moderator data Windows Registry plugin."""
 
   NAME = 'bam'
-  DESCRIPTION = 'Parser for Background Activity Moderator Registry data.'
+  DATA_FORMAT = 'Background Activity Moderator (BAM) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
