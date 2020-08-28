@@ -32,7 +32,7 @@ class BencodeParser(interface.FileObjectParser):
   _BENCODE_RE = re.compile(b'd[0-9]')
 
   NAME = 'bencode'
-  DESCRIPTION = 'Parser for bencoded files.'
+  DATA_FORMAT = 'Bencoded file'
 
   _plugin_classes = {}
 

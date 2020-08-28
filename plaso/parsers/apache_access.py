@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Apache access log (access.log) parser.
+"""Apache access log (access.log) file parser.
 
 Parser based on the two default apache formats, common and combined log format
 defined in https://httpd.apache.org/docs/2.4/logs.html
@@ -53,10 +53,10 @@ class ApacheAccessEventData(events.EventData):
 
 
 class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
-  """Apache access log file parser"""
+  """Apache access log (access.log) file parser."""
 
   NAME = 'apache_access'
-  DESCRIPTION = 'Apache access Parser'
+  DATA_FORMAT = 'Apache access log (access.log) file'
 
   MAX_LINE_LENGTH = 2048
 

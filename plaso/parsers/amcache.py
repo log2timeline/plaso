@@ -89,7 +89,7 @@ class AMCacheParser(interface.FileObjectParser):
   """AMCache Registry plugin for recently run programs."""
 
   NAME = 'amcache'
-  DESCRIPTION = 'Parser for AMCache Registry entries.'
+  DATA_FORMAT = 'AMCache Windows NT Registry (AMCache.hve) file'
 
   # Contains: {value name: attribute name}
   _FILE_REFERENCE_KEY_VALUES = {

@@ -36,10 +36,10 @@ class BSMEventData(events.EventData):
 
 
 class BSMParser(dtfabric_parser.DtFabricBaseParser):
-  """Parser for BSM files."""
+  """Parser for Basic Security Module (BSM) event auditing files."""
 
   NAME = 'bsm_log'
-  DESCRIPTION = 'Parser for BSM log files.'
+  DATA_FORMAT = 'Basic Security Module (BSM) event auditing file'
 
   _DEFINITION_FILE = 'bsm.yaml'
 
@@ -171,8 +171,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       0x7f: 'bsm_token_data_socket_ex',
       0x80: 'bsm_token_data_sockinet32',
       0x81: 'bsm_token_data_sockinet64',
-      0x82: 'bsm_token_data_sockunix',
-  }
+      0x82: 'bsm_token_data_sockunix'}
 
   _TOKEN_DATA_FORMAT_FUNCTIONS = {
       0x11: '_FormatOtherFileToken',

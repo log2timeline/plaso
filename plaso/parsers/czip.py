@@ -20,7 +20,7 @@ class CompoundZIPParser(interface.FileObjectParser):
   """
 
   NAME = 'czip'
-  DESCRIPTION = 'Parser for compound ZIP files.'
+  DATA_FORMAT = 'Compound ZIP file'
 
   _plugin_classes = {}
 

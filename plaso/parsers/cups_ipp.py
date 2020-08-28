@@ -77,7 +77,7 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for CUPS IPP files."""
 
   NAME = 'cups_ipp'
-  DESCRIPTION = 'Parser for CUPS IPP files.'
+  DATA_FORMAT = 'CUPS IPP file'
 
   _DEFINITION_FILE = 'cups_ipp.yaml'
 

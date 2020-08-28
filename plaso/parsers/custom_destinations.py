@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for .customDestinations-ms files."""
+"""Parser for custom destinations jump list (.customDestinations-ms) files."""
 
 from __future__ import unicode_literals
 
@@ -18,10 +18,10 @@ from plaso.parsers import winlnk
 
 
 class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
-  """Parses .customDestinations-ms files."""
+  """Parses custom destinations jump list (.customDestinations-ms) files."""
 
   NAME = 'custom_destinations'
-  DESCRIPTION = 'Parser for *.customDestinations-ms files.'
+  DATA_FORMAT = 'Custom destinations jump list (.customDestinations-ms) file'
 
   _INITIAL_FILE_OFFSET = None
 
