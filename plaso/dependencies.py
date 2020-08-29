@@ -34,7 +34,7 @@ PYTHON_DEPENDENCIES = {
     'elasticsearch': ('__versionstr__', '6.0', None, False),
     'future': ('__version__', '0.16.0', None, True),
     'idna': ('__version__', '2.5', None, True),
-    'lz4': ('', '0.10.0', None, True),
+    'lz4': ('__version__', '0.10.0', None, True),
     'pefile': ('__version__', '2018.8.8', None, True),
     'psutil': ('__version__', '5.4.3', None, True),
     'pybde': ('get_version()', '20140531', None, True),
