@@ -135,9 +135,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
   """Parses Firefox cache version 1 files (Firefox 31 or earlier)."""
 
   NAME = 'firefox_cache'
-  DESCRIPTION = (
-      'Parser for Mozilla Firefox Cache version 1 files (version 31 or '
-      'earlier).')
+  DATA_FORMAT = 'Mozilla Firefox Cache version 1 file (version 31 or earlier)'
 
   _DEFINITION_FILE = 'firefox_cache.yaml'
 
@@ -368,8 +366,7 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
   """Parses Firefox cache version 2 files (Firefox 32 or later)."""
 
   NAME = 'firefox_cache2'
-  DESCRIPTION = (
-      'Parser for Mozilla Firefox Cache version 2 files (version 32 or later).')
+  DATA_FORMAT = 'Mozilla Firefox Cache version 2 file (version 32 or later)'
 
   _DEFINITION_FILE = 'firefox_cache.yaml'
 

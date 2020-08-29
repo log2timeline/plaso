@@ -53,10 +53,10 @@ class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
   structures.
   """
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = 'java_idx'
-  DESCRIPTION = 'Parser for Java WebStart Cache IDX files.'
+  DATA_FORMAT = 'Java WebStart Cache IDX file'
+
+  _INITIAL_FILE_OFFSET = None
 
   _DEFINITION_FILE = 'java_idx.yaml'
 

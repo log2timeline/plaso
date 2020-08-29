@@ -52,7 +52,7 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
   _DEFINITION_FILE = 'safari_cookies.yaml'
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(BinaryCookieParser, self).__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())

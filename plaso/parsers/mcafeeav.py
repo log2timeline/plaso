@@ -46,7 +46,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
   NAME = 'mcafee_protection'
-  DESCRIPTION = 'Parser for McAfee AV Access Protection log files.'
+  DATA_FORMAT = 'McAfee Anti-Virus access protection log file'
 
   DELIMITER = '\t'
   COLUMNS = [

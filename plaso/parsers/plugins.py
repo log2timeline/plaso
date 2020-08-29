@@ -40,10 +40,6 @@ class BasePlugin(object):
   # the parser manager to generate parser and plugin information.
   DATA_FORMAT = ''
 
-  # Description of the purpose of the parser plugin. This information is used
-  # by the parser manager to generate parser and plugin information.
-  DESCRIPTION = ''
-
   # The URLS should contain a list of URLs with additional information about
   # the plugin, for instance some additional reading material. That can be
   # a description of the data structure, or how to read the data that comes

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for MacOS Keychain files."""
+"""Parser for MacOS keychain database files."""
 
 from __future__ import unicode_literals
 
@@ -113,10 +113,10 @@ class KeychainDatabaseTable(object):
 
 
 class KeychainParser(dtfabric_parser.DtFabricBaseParser):
-  """Parser for Keychain files."""
+  """Parser for MacOS keychain database files."""
 
   NAME = 'mac_keychain'
-  DESCRIPTION = 'Parser for MacOS Keychain files.'
+  DATA_FORMAT = 'MacOS keychain database file'
 
   _DEFINITION_FILE = 'mac_keychain.yaml'
 

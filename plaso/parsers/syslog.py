@@ -66,9 +66,9 @@ class SyslogCommentEventData(events.EventData):
 
 class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses syslog formatted log files"""
-  NAME = 'syslog'
 
-  DESCRIPTION = 'Syslog Parser'
+  NAME = 'syslog'
+  DATA_FORMAT = 'System log (syslog) file'
 
   _ENCODING = 'utf-8'
 

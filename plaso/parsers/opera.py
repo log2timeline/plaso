@@ -71,7 +71,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
   """Parses the Opera typed_history.xml file."""
 
   NAME = 'opera_typed_history'
-  DESCRIPTION = 'Parser for Opera typed_history.xml files.'
+  DATA_FORMAT = 'Opera typed history (typed_history.xml) file'
 
   _HEADER_READ_SIZE = 128
 
@@ -136,7 +136,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = 'opera_global'
-  DESCRIPTION = 'Parser for Opera global_history.dat files.'
+  DATA_FORMAT = 'Opera global history (global_history.dat) file'
 
   _ENCODING = 'utf-8'
 

@@ -325,7 +325,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   ]
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(SkyDriveOldLogParser, self).__init__()
     self._last_date_time = None
     self._last_event_data = None

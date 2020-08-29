@@ -65,10 +65,6 @@ class BaseParser(object):
   # the parser manager to generate parser and plugin information.
   DATA_FORMAT = ''
 
-  # Description of the purpose of the parser plugin. This information is used
-  # by the parser manager to generate parser and plugin information.
-  DESCRIPTION = ''
-
   # List of filters that should match for the parser to be applied.
   FILTERS = frozenset()
 

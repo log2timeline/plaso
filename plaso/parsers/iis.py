@@ -152,7 +152,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   _ENCODING = 'utf-8'
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(WinIISParser, self).__init__()
     self._day_of_month = None
     self._month = None

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the wifi.log (MacOS) parser."""
+"""Parses for MacOS Wifi log (wifi.log) files."""
 
 from __future__ import unicode_literals
 
@@ -43,10 +43,10 @@ class MacWifiLogEventData(events.EventData):
 
 
 class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parse text based on wifi.log file."""
+  """Parses MacOS Wifi log (wifi.log) files."""
 
   NAME = 'macwifi'
-  DESCRIPTION = 'Parser for MacOS wifi.log files.'
+  DATA_FORMAT = 'MacOS Wifi log (wifi.log) file'
 
   _ENCODING = 'utf-8'
 
@@ -120,7 +120,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(MacWifiLogParser, self).__init__()
     self._last_month = 0
     self._year_use = 0

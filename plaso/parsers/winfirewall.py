@@ -119,7 +119,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   ]
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(WinFirewallParser, self).__init__()
     self._software = None
     self._use_local_timezone = False

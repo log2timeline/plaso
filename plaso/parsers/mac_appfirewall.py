@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a appfirewall.log (MacOS Firewall) parser."""
+"""Parser for MacOS Application firewall log (appfirewall.log) files."""
 
 from __future__ import unicode_literals
 
@@ -18,7 +18,7 @@ from plaso.parsers import text_parser
 
 
 class MacAppFirewallLogEventData(events.EventData):
-  """MacOS Firewall log event data.
+  """MacOS Application firewall log (appfirewall.log) file event data.
 
   Attributes:
     action (str): action.
@@ -41,10 +41,10 @@ class MacAppFirewallLogEventData(events.EventData):
 
 
 class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
-  """Parse text based on appfirewall.log file."""
+  """Parser for MacOS Application firewall log (appfirewall.log) files."""
 
   NAME = 'mac_appfirewall_log'
-  DESCRIPTION = 'Parser for appfirewall.log files.'
+  DATA_FORMAT = 'MacOS Application firewall log (appfirewall.log) file'
 
   _ENCODING = 'utf-8'
 
@@ -83,7 +83,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       ('repeated', REPEATED_LINE)]
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(MacAppFirewallParser, self).__init__()
     self._last_month = 0
     self._previous_structure = None

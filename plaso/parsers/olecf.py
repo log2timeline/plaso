@@ -15,10 +15,10 @@ class OLECFParser(interface.FileObjectParser):
 
   # pylint: disable=no-member
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = 'olecf'
-  DESCRIPTION = 'Parser for OLE Compound Files (OLECF).'
+  DATA_FILE = 'OLE Compound file (OLECF)'
+
+  _INITIAL_FILE_OFFSET = None
 
   _plugin_classes = {}
 
