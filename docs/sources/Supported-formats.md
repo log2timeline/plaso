@@ -43,7 +43,7 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 * Portable Executable (PE) files using [pefile](https://github.com/erocarrera/pefile)
 * PL SQL cache file (PL-SQL developer recall files)
 * Popularity Contest log
-* [Property list (plist) format](https://forensicswiki.xyz/wiki/index.php?title=Property_list_(plist)) using [biplist](https://bitbucket.org/wooster/biplist)
+* [Property list (plist) format](https://forensicswiki.xyz/wiki/index.php?title=Property_list_(plist)) using plistlib
 * [Restore Point logs (rp.log)](https://github.com/libyal/dtformats/blob/master/documentation/Restore%20point%20formats.asciidoc)
 * [Safari Binary Cookies](https://github.com/libyal/dtformats/blob/master/documentation/Safari%20Cookies.asciidoc)
 * SCCM client logs

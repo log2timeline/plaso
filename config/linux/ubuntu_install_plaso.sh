@@ -41,7 +41,6 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libvslvm-python3
                      python3-artifacts
                      python3-bencode
-                     python3-biplist
                      python3-certifi
                      python3-cffi-backend
                      python3-chardet

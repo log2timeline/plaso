@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 
-import biplist
+import plistlib
 
 from plaso.lib import errors
 from plaso.lib import specification
@@ -16,7 +16,7 @@ class PlistParser(interface.FileObjectParser):
   """Parser for binary and text Property List (plist) files.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
-  Parse() has GetTopLevel() which deserializes plist files using the biplist
+  Parse() has GetTopLevel() which deserializes plist files using the plistlib
   library and calls plugins (PlistPlugin) registered through the
   interface by their Process() to produce event objects.
 
@@ -55,10 +55,8 @@ class PlistParser(interface.FileObjectParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     try:
-      top_level_object = biplist.readPlist(file_object)
-
-    except (biplist.InvalidPlistException,
-            biplist.NotBinaryPlistException) as exception:
+      top_level_object = plistlib.load(file_object)
+    except plistlib.InvalidFileException as exception:
       raise errors.UnableToParseFile(
           'Unable to parse plist with error: {0!s}'.format(exception))
 
