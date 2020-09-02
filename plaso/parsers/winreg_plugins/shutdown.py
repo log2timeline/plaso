@@ -38,7 +38,7 @@ class ShutdownWindowsRegistryPlugin(
   """Windows Registry plugin for parsing the last shutdown time of a system."""
 
   NAME = 'windows_shutdown'
-  DESCRIPTION = 'Parser for ShutdownTime Registry value.'
+  DATA_FORMAT = 'Windows last shutdown Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

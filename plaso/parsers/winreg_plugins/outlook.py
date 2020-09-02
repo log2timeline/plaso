@@ -31,7 +31,7 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin parsing Outlook Search MRU keys."""
 
   NAME = 'microsoft_outlook_mru'
-  DESCRIPTION = 'Parser for Microsoft Outlook search MRU Registry data.'
+  DATA_FORMAT = 'Microsoft Outlook search MRU Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

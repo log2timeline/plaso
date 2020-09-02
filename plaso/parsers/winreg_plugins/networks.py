@@ -43,7 +43,7 @@ class NetworksWindowsRegistryPlugin(
   """Windows Registry plugin for parsing the NetworkList key."""
 
   NAME = 'networks'
-  DESCRIPTION = 'Parser for NetworkList data.'
+  DATA_FORMAT = 'Windows networks (NetworkList) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

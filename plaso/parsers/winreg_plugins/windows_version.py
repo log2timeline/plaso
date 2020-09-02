@@ -43,7 +43,7 @@ class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect information about the Windows version."""
 
   NAME = 'windows_version'
-  DESCRIPTION = 'Parser for Windows version Registry data.'
+  DATA_FORMAT = 'Windows version (product) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

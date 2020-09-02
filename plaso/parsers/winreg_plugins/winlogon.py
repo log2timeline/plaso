@@ -37,7 +37,7 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the Winlogon key."""
 
   NAME = 'winlogon'
-  DESCRIPTION = 'Parser for winlogon Registry data.'
+  DATA_FORMAT = 'Windows log-on Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

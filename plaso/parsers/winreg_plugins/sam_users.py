@@ -44,7 +44,7 @@ class SAMUsersWindowsRegistryPlugin(
   """Windows Registry plugin for SAM Users Account information."""
 
   NAME = 'windows_sam_users'
-  DESCRIPTION = 'Parser for SAM Users and Names Registry keys.'
+  DATA_FORMAT = 'Security Accounts Manager (SAM) users Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

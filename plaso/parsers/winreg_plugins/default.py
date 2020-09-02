@@ -20,7 +20,7 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'winreg_default'
-  DESCRIPTION = 'Parser for Registry data.'
+  DATA_FORMAT = 'Windows Registry data'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.

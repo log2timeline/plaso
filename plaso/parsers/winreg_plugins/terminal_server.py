@@ -55,7 +55,7 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection keys."""
 
   NAME = 'mstsc_rdp'
-  DESCRIPTION = 'Parser for Terminal Server Client Connection Registry data.'
+  DATA_FORMAT = 'Terminal Server Client Connection Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -106,7 +106,7 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
 
   NAME = 'mstsc_rdp_mru'
-  DESCRIPTION = 'Parser for Terminal Server Client MRU Registry data.'
+  DATA_FORMAT = 'Terminal Server Client Most Recently Used (MRU) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

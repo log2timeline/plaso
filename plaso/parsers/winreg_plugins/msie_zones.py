@@ -40,7 +40,7 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'msie_zone'
-  DESCRIPTION = 'Parser for Internet Explorer zone settings Registry data.'
+  DATA_FORMAT = 'Microsoft Internet Explorer zone settings Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

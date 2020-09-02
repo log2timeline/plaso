@@ -67,7 +67,7 @@ class AppCompatCacheWindowsRegistryPlugin(
   """Application Compatibility Cache data Windows Registry plugin."""
 
   NAME = 'appcompatcache'
-  DESCRIPTION = 'Parser for Application Compatibility Cache Registry data.'
+  DATA_FORMAT = 'Application Compatibility Cache Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

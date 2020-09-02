@@ -206,7 +206,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   """The Windows Registry plugin interface."""
 
   NAME = 'winreg_plugin'
-  DESCRIPTION = 'Parser for Windows Registry value data.'
+  DATA_FORMAT = 'Windows Registry data'
 
   # List of Windows Registry key filters (instances of
   # BaseWindowsRegistryKeyFilter) that should match for the plugin to
