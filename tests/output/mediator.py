@@ -43,7 +43,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     self._output_mediator = mediator.OutputMediator(knowledge_base_object, None)
 
   def testGetEventFormatter(self):
-    """Tests the _GetEventFormatter function."""
+    """Tests the GetEventFormatter function."""
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
@@ -51,7 +51,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      event_formatter = self._output_mediator._GetEventFormatter(event_data)
+      event_formatter = self._output_mediator.GetEventFormatter(event_data)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -82,24 +82,6 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
     self.assertEqual(message, expected_message)
     self.assertEqual(message_short, expected_message)
-
-  def testGetFormattedSources(self):
-    """Tests the GetFormattedSources function."""
-    event, event_data, _ = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      source_short, source = self._output_mediator.GetFormattedSources(
-          event, event_data)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
-
-    self.assertEqual(source, 'Test log file')
-    self.assertEqual(source_short, 'FILE')
 
   def testGetHostname(self):
     """Tests the GetHostname function."""

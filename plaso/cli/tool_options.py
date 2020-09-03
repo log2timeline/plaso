@@ -172,6 +172,7 @@ class OutputModuleOptions(object):
 
     mediator = output_mediator.OutputMediator(
         self._knowledge_base, formatter_mediator,
+        data_location=self._data_location,
         preferred_encoding=self.preferred_encoding)
     mediator.SetTimezone(self._output_time_zone)
 
