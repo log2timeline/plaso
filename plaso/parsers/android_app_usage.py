@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Android usage-history.xml files."""
+"""Parser for the Android usage history (usage-history.xml) files."""
 
 from __future__ import unicode_literals
 
@@ -17,7 +17,7 @@ from plaso.parsers import manager
 
 
 class AndroidAppUsageEventData(events.EventData):
-  """Android Application event data.
+  """Android application usage event data.
 
   Attributes:
     package (str): name of the Android application.
@@ -34,13 +34,12 @@ class AndroidAppUsageEventData(events.EventData):
 
 
 class AndroidAppUsageParser(interface.FileObjectParser):
-  """Parses the Android usage-history.xml file."""
+  """Parses the Android usage history (usage-history.xml) file."""
 
   NAME = 'android_app_usage'
-  DESCRIPTION = 'Parser for Android usage-history.xml files.'
+  DATA_FORMAT = 'Android usage history (usage-history.xml) file'
 
   _HEADER_READ_SIZE = 128
-
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an Android usage-history file-like object.

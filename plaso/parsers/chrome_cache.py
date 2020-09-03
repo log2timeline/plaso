@@ -312,7 +312,7 @@ class ChromeCacheParser(interface.FileEntryParser):
   """Parses Chrome Cache files."""
 
   NAME = 'chrome_cache'
-  DESCRIPTION = 'Parser for Chrome Cache files.'
+  DATA_FORMAT = 'Google Chrome or Chromium Cache file'
 
   def __init__(self):
     """Initializes a Chrome Cache files parser."""

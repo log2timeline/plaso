@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Debian dpkg.log file parser.
+"""Parser for Debian package manager log (dpkg.log) files.
 
 Information updated 02 September 2016.
 
@@ -55,10 +55,10 @@ class DpkgEventData(events.EventData):
 
 
 class DpkgParser(text_parser.PyparsingSingleLineTextParser):
-  """Parser for Debian dpkg.log files."""
+  """Parser for Debian package manager log (dpkg.log) files."""
 
   NAME = 'dpkg'
-  DESCRIPTION = 'Parser for Debian dpkg.log files.'
+  DATA_FORMAT = 'Debian package manager log (dpkg.log) file'
 
   _ENCODING = 'utf-8'
 

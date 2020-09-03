@@ -76,7 +76,7 @@ class DockerJSONLayerEventData(events.EventData):
 
 
 class DockerJSONParser(interface.FileObjectParser):
-  """Generates various events from Docker json config and log files.
+  """Parser for Docker json configuration and log files.
 
   This handles :
   * Per container config file
@@ -88,7 +88,7 @@ class DockerJSONParser(interface.FileObjectParser):
   """
 
   NAME = 'dockerjson'
-  DESCRIPTION = 'Parser for JSON Docker files.'
+  DATA_FORMAT = 'Docker configuration and log JSON file'
 
   _ENCODING = 'utf-8'
 

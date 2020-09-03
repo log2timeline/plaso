@@ -85,21 +85,6 @@ class DataFormatInformationExractor(object):
   # TODO: consider extending Plaso parsers and parser plugins with metadata that
   # contain this information.
   _DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME = {
-      'amcache': (
-          'AMCache Windows NT Registry file (AMCache.hve)', ''),
-      'android_app_usage': (
-          'Android usage-history (app usage)', ''),
-      'apache_access': (
-          'Apache access log file (access.log)', ''),
-      'apt_history': (
-          'Advanced Packaging Tool (APT) History log file', ''),
-      'asl_log': (
-          'Apple System Log (ASL) file',
-          'dtformats:Apple System Log (ASL) file format'),
-      'bash_history': (
-          'Bash history file', ''),
-      'bencode': (
-          'Bencoded file', ''),
       'bencode_transmission': (
           'Transmission BitTorrent activity file', ''),
       'bencode_utorrent': (
@@ -107,31 +92,8 @@ class DataFormatInformationExractor(object):
       'binary_cookies': (
           'Safari Cookies file (Cookies.binarycookies)',
           'dtformats:Safari Cookies'),
-      'bsm_log': (
-          'Basic Security Module (BSM) event auditing file',
-          'dtformats:Basic Security Module (BSM) event auditing file format'),
-      'chrome_cache': (
-          'Chrome Cache file',
-          'dtformats:Chrome Cache file format'),
-      'chrome_preferences': (
-          'Google Chrome preferences', ''),
       'cron': (
           'Cron syslog file', ''),
-      'cups_ipp': (
-          'CUPS IPP', ''),
-      'custom_destinations': (
-          'Custom destinations jump list file (.customDestinations-ms)',
-          'dtformats:Jump lists format'),
-      'czip': (
-          'Compound ZIP file', ''),
-      'dockerjson': (
-          'Docker configuration and log JSON files', ''),
-      'dpkg': (
-          'Debian package manager log file (dpkg.log)', ''),
-      'esedb': (
-          'Extensible Storage Engine (ESE) Database File (EDB) format',
-          ('libyal:libesedb:Extensible Storage Engine (ESE) Database File '
-           '(EDB) format')),
       'explorer_mountpoints2': (
           'Windows Explorer mount points data', ''),
       'explorer_programscache': (
