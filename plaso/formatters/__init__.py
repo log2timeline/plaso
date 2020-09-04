@@ -6,7 +6,6 @@ from plaso.formatters import chrome
 from plaso.formatters import chrome_preferences
 from plaso.formatters import file_system
 from plaso.formatters import firefox
-from plaso.formatters import fseventsd
 from plaso.formatters import gdrive
 from plaso.formatters import msiecf
 from plaso.formatters import olecf
