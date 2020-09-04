@@ -68,7 +68,10 @@ $ docker run -v /data/:/data log2timeline/plaso log2timeline /data/evidences.pla
 This way your Plaso file will also be stored on the host filesystem.
 
 Note that if you are running SELinux you likely need to add the `:z` volume
-flag. Also see: https://docs.docker.com/storage/bind-mounts/#configure-the-selinux-label
+flag. Also see: [Configure the selinux label](https://docs.docker.com/storage/bind-mounts/#configure-the-selinux-label).
+
+Note that if you are running Windows adding a "Mapped Network Drive" might not
+work with WSL. Also see: [Mapped drives as shared drives with linux containers: This shared resource does not exist. #2163](https://github.com/docker/for-win/issues/2163).
 
 Next step is to run analysis with psort:
 
