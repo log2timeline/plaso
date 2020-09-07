@@ -98,7 +98,7 @@ class MacUserPlugin(interface.PlistPlugin):
         shadow_hash_data = match.get('ShadowHashData', None)
         if date_time and isinstance(shadow_hash_data, (list, tuple)):
           # Extract the hash password information, which is stored in
-          # the attribute ShadowHasData which is a binary plist data.
+          # the attribute ShadowHashData which is a binary plist data.
           try:
             property_list = plistlib.loads(shadow_hash_data[0])
           except plistlib.InvalidFileException as exception:
