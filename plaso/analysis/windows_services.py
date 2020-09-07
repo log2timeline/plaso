@@ -9,7 +9,6 @@ from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
 from plaso.parsers.winreg_plugins import services
-from plaso.winnt import human_readable_service_enums
 
 
 class WindowsService(yaml.YAMLObject):
@@ -36,6 +35,20 @@ class WindowsService(yaml.YAMLObject):
   yaml_tag = '!WindowsService'
   yaml_loader = yaml.SafeLoader
   yaml_dumper = yaml.SafeDumper
+
+  _SERVICE_TYPES = {
+      1: 'Kernel Device Driver (0x1)',
+      2: 'File System Driver (0x2)',
+      4: 'Adapter (0x4)',
+      16: 'Service - Own Process (0x10)',
+      32: 'Service - Share Process (0x20)'}
+
+  _START_TYPES = {
+      0: 'Boot (0)',
+      1: 'System (1)',
+      2: 'Auto Start (2)',
+      3: 'Manual (3)',
+      4: 'Disabled (4)'}
 
   def __init__(
       self, name, service_type, image_path, start_type, object_name, source,
@@ -145,8 +158,9 @@ class WindowsService(yaml.YAMLObject):
     """
     if isinstance(self.service_type, str):
       return self.service_type
-    return human_readable_service_enums.SERVICE_ENUMS['Type'].get(
-        self.service_type, '{0:d}'.format(self.service_type))
+
+    default_service_type = '{0:d}'.format(self.service_type)
+    return self._SERVICE_TYPES.get(self.service_type, default_service_type)
 
   def HumanReadableStartType(self):
     """Return a human readable string describing the start type value.
@@ -156,8 +170,9 @@ class WindowsService(yaml.YAMLObject):
     """
     if isinstance(self.start_type, str):
       return self.start_type
-    return human_readable_service_enums.SERVICE_ENUMS['Start'].get(
-        self.start_type, '{0:d}'.format(self.start_type))
+
+    default_start_type = '{0:d}'.format(self.start_type)
+    return self._START_TYPES.get(self.start_type, default_start_type)
 
 
 class WindowsServiceCollection(object):
