@@ -89,7 +89,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat log files."""
 
   NAME = 'xchatlog'
-  DESCRIPTION = 'Parser for XChat log files.'
+  DATA_FORMAT = 'XChat log file'
 
   _ENCODING = 'utf-8'
 

@@ -62,7 +62,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses SkyDrive log files."""
 
   NAME = 'skydrive_log'
-  DESCRIPTION = 'Parser for OneDrive (or SkyDrive) log files.'
+  DATA_FORMAT = 'OneDrive (or SkyDrive) log file'
 
   _ENCODING = 'utf-8'
 
@@ -272,7 +272,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse SkyDrive old log files."""
 
   NAME = 'skydrive_log_old'
-  DESCRIPTION = 'Parser for OneDrive (or SkyDrive) old log files.'
+  DATA_FORMAT = 'OneDrive (or SkyDrive) old log file'
 
   _ENCODING = 'utf-8'
 

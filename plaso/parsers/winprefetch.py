@@ -55,7 +55,7 @@ class WinPrefetchParser(interface.FileObjectParser):
   _INITIAL_FILE_OFFSET = None
 
   NAME = 'prefetch'
-  DESCRIPTION = 'Parser for Windows Prefetch files.'
+  DATA_FORMAT = 'Windows Prefetch File (PF)'
 
   @classmethod
   def GetFormatSpecification(cls):

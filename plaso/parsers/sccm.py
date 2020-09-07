@@ -38,7 +38,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for Windows System Center Configuration Manager (SCCM) logs."""
 
   NAME = 'sccm'
-  DESCRIPTION = 'Parser for SCCM logs files.'
+  DATA_FORMAT = 'System Center Configuration Manager (SCCM) client log file'
 
   _ENCODING = 'utf-8-sig'
 

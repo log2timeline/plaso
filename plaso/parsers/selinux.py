@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains SELinux audit.log file parser.
+"""This file contains SELinux audit log (audit.log) file parser.
 
 Information updated 16 january 2013.
 
@@ -58,10 +58,10 @@ class SELinuxLogEventData(events.EventData):
 
 
 class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
-  """Parser for SELinux audit.log files."""
+  """Parser for SELinux audit log (audit.log) files."""
 
   NAME = 'selinux'
-  DESCRIPTION = 'Parser for SELinux audit.log files.'
+  DATA_FORMAT = 'SELinux audit log (audit.log) file'
 
   _ENCODING = 'utf-8'
 

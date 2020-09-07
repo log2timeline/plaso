@@ -43,7 +43,7 @@ class UtmpxParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for Mac OS X 10.5 utmpx files."""
 
   NAME = 'utmpx'
-  DESCRIPTION = 'Parser for Mac OS X 10.5 utmpx files.'
+  DATA_FORMAT = 'Mac OS X 10.5 utmpx file'
 
   _DEFINITION_FILE = 'utmp.yaml'
 

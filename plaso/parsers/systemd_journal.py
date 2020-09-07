@@ -43,8 +43,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
   """Parses Systemd Journal files."""
 
   NAME = 'systemd_journal'
-
-  DESCRIPTION = 'Parser for Systemd Journal files.'
+  DATA_FORMAT = 'Systemd journal file'
 
   _DEFINITION_FILE = 'systemd_journal.yaml'
 
