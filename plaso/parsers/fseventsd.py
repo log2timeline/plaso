@@ -46,8 +46,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
   """
 
   NAME = 'fseventsd'
-
-  DESCRIPTION = 'Parser for fseventsd files.'
+  DATA_FORMAT = 'MacOS File System Events Disk Log Stream (fseventsd) file'
 
   # The version 1 format was used in Mac OS X 10.5 (Leopard) through macOS 10.12
   # (Sierra).

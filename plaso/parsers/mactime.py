@@ -54,7 +54,7 @@ class MactimeParser(dsv_parser.DSVParser):
   """SleuthKit bodyfile parser."""
 
   NAME = 'mactime'
-  DESCRIPTION = 'Parser for SleuthKit version 3 bodyfiles.'
+  DATA_FORMAT = 'SleuthKit version 3 bodyfile'
 
   COLUMNS = [
       'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',

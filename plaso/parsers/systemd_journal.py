@@ -62,7 +62,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
   _SUPPORTED_FILE_HEADER_SIZES = frozenset([208, 224, 240])
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(SystemdJournalParser, self).__init__()
     self._maximum_journal_file_offset = 0
 

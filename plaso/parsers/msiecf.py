@@ -91,7 +91,8 @@ class MSIECFParser(interface.FileObjectParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
   NAME = 'msiecf'
-  DESCRIPTION = 'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
+  DATA_FORMAT = (
+      'Microsoft Internet Explorer (MSIE) 4 - 9 cache (index.dat) file')
 
   def _ParseLeak(
       self, parser_mediator, cache_directories, msiecf_item, recovered=False):

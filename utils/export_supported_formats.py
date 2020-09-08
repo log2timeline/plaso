@@ -98,15 +98,6 @@ class DataFormatInformationExractor(object):
           'Windows Explorer mount points data', ''),
       'explorer_programscache': (
           'Windows Explorer Programs Cache data', ''),
-      'firefox_cache': (
-          'Mozilla Firefox Cache version 1 file (version 31 or earlier)', ''),
-      'firefox_cache2': (
-          'Mozilla Firefox Cache version 2 file (version 32 or later)', ''),
-      'fseventsd': (
-          'MacOS File System Events Disk Log Stream files (fseventsd)',
-          'dtformats:MacOS File System Events Disk Log Stream format'),
-      'gdrive_synclog': (
-          'Google Drive Sync log file', ''),
       'google_analytics_utma': (
           'Google Analytics __utma cookie', ''),
       'google_analytics_utmb': (
@@ -115,25 +106,6 @@ class DataFormatInformationExractor(object):
           'Google Analytics __utmt cookie', ''),
       'google_analytics_utmz': (
           'Google Analytics __utmz cookie', ''),
-      'googlelog': (
-          'Google-formatted log file', ''),
-      'java_idx': (
-          'Java WebStart IDX',
-          'dtformats:Java WebStart Cache IDX file format'),
-      'mac_appfirewall_log': (
-          'MacOS Application firewall', ''),
-      'mac_keychain': (
-          'MacOS Keychain',
-          'dtformats:MacOS keychain database file format'),
-      'mac_securityd': (
-          'MacOS Securityd', ''),
-      'mactime': (
-          'mactime file',
-          'https://wiki.sleuthkit.org/index.php?title=Mactime'),
-      'macwifi': (
-          'MacOS Wifi', ''),
-      'mcafee_protection': (
-          'McAfee Anti-Virus Logs', ''),
       'mft': (
           'NTFS $MFT file system metadata file',
           'libyal:libfsntfs:New Technologies File System (NTFS)'),
@@ -142,15 +114,6 @@ class DataFormatInformationExractor(object):
            'including shell items'), ''),
       'msie_zone': (
           'Microsofer Internet Explorer zone settings data', ''),
-      'msiecf': (
-          ('Microsoft Internet Explorer History File Format (also known as '
-           'MSIE 4 - 9 Cache Files or index.dat)'),
-          'libyal:libmsiecf:MSIE Cache File (index.dat) format'),
-      'networkminer_fileinfo': (
-          'NetworkMiner .fileinfos file', ''),
-      'olecf': (
-          'OLE Compound File',
-          'libyal:libolecf:OLE Compound File format'),
       'olecf_automatic_destinations': (
           'Automatic destinations jump list file (.automaticDestinations-ms)',
           'dtformats:Jump lists format'),
@@ -158,10 +121,6 @@ class DataFormatInformationExractor(object):
           'Document summary information', ''),
       'olecf_summary': (
           'Summary information (top-level only)', ''),
-      'opera_global': (
-          'Opera global_history.dat file', ''),
-      'opera_typed_history': (
-          'Opera typed_history.xml file', ''),
       'oxml': (
           'OpenXML (OXML) file', ''),
       'pe': (
@@ -182,8 +141,6 @@ class DataFormatInformationExractor(object):
           'SSH syslog file', ''),
       'symantec_scanlog': (
           'Symantec AV Corporate Edition and Endpoint Protection log', ''),
-      'syslog': (
-          'Syslog file', ''),
       'usnjrnl': (
           'NTFS $UsnJrnl:$J file system metadata file',
           'libyal:libfsntfs:New Technologies File System (NTFS)'),

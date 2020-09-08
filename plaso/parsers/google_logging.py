@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Parser for Google-formatted log files."""
 
 from __future__ import unicode_literals
@@ -17,7 +18,7 @@ from plaso.parsers import text_parser
 
 
 class GoogleLogEventData(events.EventData):
-  """Google log file event data.
+  """Google-formatted log file event data.
 
   See: https://github.com/google/glog. This format is also used by
   Kubernetes, see https://github.com/kubernetes/klog
@@ -51,10 +52,10 @@ class GoogleLogEventData(events.EventData):
 
 
 class GoogleLogParser(text_parser.PyparsingMultiLineTextParser):
-  """A parser for Google log formatted files."""
-  NAME = 'googlelog'
+  """Parser for Google-formatted log files."""
 
-  DESCRIPTION = 'Parser for handling Google log formatted files.'
+  NAME = 'googlelog'
+  DATA_FORMAT = 'Google-formatted log file'
 
   # PyParsing components used to construct grammars for parsing lines.
   _PYPARSING_COMPONENTS = {
