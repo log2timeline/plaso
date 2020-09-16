@@ -47,7 +47,7 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
-  DESCRIPTION = 'Parser for Safari Binary Cookie files.'
+  DATA_FORMAT = 'Safari Binary Cookie file'
 
   _DEFINITION_FILE = 'safari_cookies.yaml'
 

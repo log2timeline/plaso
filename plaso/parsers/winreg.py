@@ -45,7 +45,7 @@ class WinRegistryParser(interface.FileObjectParser):
   """Parses Windows NT Registry (REGF) files."""
 
   NAME = 'winreg'
-  DESCRIPTION = 'Parser for Windows NT Registry (REGF) files.'
+  DATA_FORMAT = 'Windows NT Registry (REGF) file'
 
   _plugin_classes = {}
 

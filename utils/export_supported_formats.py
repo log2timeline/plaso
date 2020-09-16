@@ -84,54 +84,6 @@ class DataFormatInformationExractor(object):
       'plaso/parsers/syslog_plugins': 'Syslog file formats',
       'plaso/parsers/winreg_plugins': 'Windows Registry formats'}
 
-  # Mapping of parser name to tuples of the data format name and an optional URL
-  # with more information about the data format.
-  # TODO: consider extending Plaso parsers and parser plugins with metadata that
-  # contain this information.
-  _DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME = {
-      'binary_cookies': (
-          'Safari Cookies file (Cookies.binarycookies)',
-          'dtformats:Safari Cookies'),
-      'cron': (
-          'Cron syslog file', ''),
-      'explorer_mountpoints2': (
-          'Windows Explorer mount points data', ''),
-      'explorer_programscache': (
-          'Windows Explorer Programs Cache data', ''),
-      'mft': (
-          'NTFS $MFT file system metadata file',
-          'libyal:libfsntfs:New Technologies File System (NTFS)'),
-      'mrulist_string': (
-          ('Most Recently Used (MRU) list (MRUList and MRUListEx) data, '
-           'including shell items'), ''),
-      'msie_zone': (
-          'Microsofer Internet Explorer zone settings data', ''),
-      'pe': (
-          'Portable Executable (PE) file', ''),
-      'plist': (
-          'Property list (plist) file', ''),
-      'popularity_contest': (
-          'Popularity Contest log', ''),
-      'setupapi': (
-          'Windows SetupAPI text log file',
-          ('https://docs.microsoft.com/en-us/windows-hardware/drivers/install/'
-           'setupapi-text-logs')),
-      'sqlite': (
-          'SQLite database file', ''),
-      'ssh': (
-          'SSH syslog file', ''),
-      'symantec_scanlog': (
-          'Symantec AV Corporate Edition and Endpoint Protection log', ''),
-      'usnjrnl': (
-          'NTFS $UsnJrnl:$J file system metadata file',
-          'libyal:libfsntfs:New Technologies File System (NTFS)'),
-      'windows_boot_execute': (
-          'Windows boot execution data', ''),
-      'winreg': (
-          'Windows NT Registry File (REGF)',
-          'libyal:libregf:Windows NT Registry File (REGF) format'),
-  }
-
   _DTFORMATS_URL_PREFIX = (
       'https://github.com/libyal/dtformats/blob/master/documentation')
 
@@ -277,11 +229,6 @@ class DataFormatInformationExractor(object):
 
             data_format = getattr(cls, 'DATA_FORMAT', None)
             url = ''
-
-            if not data_format:
-              data_format, url = (
-                  self._DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME.get(
-                      parser_name, (parser_name, '')))
 
             dtfabric_file = os.path.join(package_path, ''.join([name, '.yaml']))
             if os.path.exists(dtfabric_file):

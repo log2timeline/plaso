@@ -96,7 +96,7 @@ class SpotlightStoreDatabaseParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for Apple Spotlight store database (store.db) files."""
 
   NAME = 'spotlight_storedb'
-  DESCRIPTION = 'Parser for Apple Spotlight store database (store.db) files.'
+  DATA_FORMAT = 'Apple Spotlight store database (store.db) file'
 
   _DEFINITION_FILE = 'spotlight_storedb.yaml'
 
