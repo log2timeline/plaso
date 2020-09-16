@@ -18,21 +18,22 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
+  _FORMATTERS_YAML = {
+      'type': 'conditional',
+      'data_type': 'test:fs:stat',
+      'message': [
+          '{display_name}',
+          'Type: {file_entry_type}',
+          '({unallocated})'],
+      'short_message': [
+          '{filename}']}
+
   def testReadFormatterDefinition(self):
     """Tests the _ReadFormatterDefinition function."""
     test_formatters_file = yaml_formatters_file.YAMLFormattersFile()
 
-    formatter = test_formatters_file._ReadFormatterDefinition({
-        'type': 'conditional',
-        'data_type': 'test:fs:stat',
-        'message': [
-            '{display_name}',
-            'Type: {file_entry_type}',
-            '({unallocated})'],
-        'short_message': [
-            '{filename}'],
-        'short_source': 'FILE',
-        'source': 'File system'})
+    formatter = test_formatters_file._ReadFormatterDefinition(
+        self._FORMATTERS_YAML)
 
     self.assertIsNotNone(formatter)
     self.assertEqual(formatter.DATA_TYPE, 'test:fs:stat')
@@ -67,21 +68,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
           'message': [
               '{display_name}',
               'Type: {file_entry_type}',
-              '({unallocated})'],
-          'short_message': [
-              '{filename}']})
-
-    with self.assertRaises(errors.ParseError):
-      test_formatters_file._ReadFormatterDefinition({
-          'type': 'conditional',
-          'data_type': 'test:fs:stat',
-          'message': [
-              '{display_name}',
-              'Type: {file_entry_type}',
-              '({unallocated})'],
-          'short_message': [
-              '{filename}'],
-          'short_source': 'FILE'})
+              '({unallocated})']})
 
     with self.assertRaises(errors.ParseError):
       test_formatters_file._ReadFormatterDefinition({'bogus': 'error'})

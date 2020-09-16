@@ -16,9 +16,6 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
   FORMAT_STRING = '[{key_path}] {values}'
   FORMAT_STRING_ALTERNATIVE = '{values}'
 
-  SOURCE_LONG = 'Registry Key'
-  SOURCE_SHORT = 'REG'
-
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.

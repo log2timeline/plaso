@@ -34,8 +34,6 @@ message:
 - 'Message: {body}'
 short_message:
 - '{body}'
-short_source: 'Kik iOS'
-source: 'Kik iOS messages'
 ---
 type: 'conditional'
 data_type: 'twitter:ios:contact'
@@ -60,8 +58,6 @@ short_message:
 - 'Screen name: {screen_name}'
 - 'Description: {description}'
 - 'URL: {url}'
-short_source: 'Twitter iOS'
-source: 'Twitter iOS Contacts'
 ---
 type: 'conditional'
 data_type: 'twitter:ios:status'
@@ -82,5 +78,3 @@ message:
 short_message:
 - 'Name: {name}'
 - 'Message: {text}'
-short_source: 'Twitter iOS'
-source: 'Twitter iOS Status'

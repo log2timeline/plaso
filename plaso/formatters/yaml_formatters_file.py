@@ -22,8 +22,6 @@ class YAMLFormattersFile(object):
   - '({unallocated})'
   short_message:
   - '{filename}'
-  short_source: 'FILE'
-  source: 'File system'
 
   Where:
   * type, defines the formatter data type, which can be "basic" or
@@ -32,8 +30,6 @@ class YAMLFormattersFile(object):
   * message, defines a list of message string pieces;
   * separator, defines the message and short message string pieces separator;
   * short_message, defines the short message string pieces;
-  * short_source, defines the short source;
-  * source, defines the source.
   """
 
   _SUPPORTED_KEYS = frozenset([
@@ -43,8 +39,6 @@ class YAMLFormattersFile(object):
       'message',
       'separator',
       'short_message',
-      'short_source',
-      'source',
       'type'])
 
   def _ReadEnumerationHelpers(
@@ -162,16 +156,6 @@ class YAMLFormattersFile(object):
       raise errors.ParseError(
           'Invalid event formatter definition missing short message.')
 
-    short_source = formatter_definition_values.get('short_source', None)
-    if not short_source:
-      raise errors.ParseError(
-          'Invalid event formatter definition missing short source.')
-
-    source = formatter_definition_values.get('source', None)
-    if not source:
-      raise errors.ParseError(
-          'Invalid event formatter definition missing source.')
-
     # TODO: pylint will complain about invalid-name because of the override
     # of class "constants", hence that setattr is used. Change this once
     # formatters have been migrated to configuration file. Also see:
@@ -192,8 +176,6 @@ class YAMLFormattersFile(object):
       setattr(formatter, 'FORMAT_STRING_SEPARATOR', separator)
 
     setattr(formatter, 'DATA_TYPE', data_type)
-    setattr(formatter, 'SOURCE_LONG', source)
-    setattr(formatter, 'SOURCE_SHORT', short_source)
 
     enumeration_helpers = formatter_definition_values.get(
         'enumeration_helpers', [])

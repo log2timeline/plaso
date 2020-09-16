@@ -30,8 +30,6 @@ short_message:
 - 'User: {username}'
 - 'PID: {pid}'
 - 'Status: {status}'
-short_source: 'LOG'
-source: 'UTMP session'
 ---
 type: 'conditional'
 data_type: 'selinux:line'
@@ -48,5 +46,3 @@ short_message:
 - ', pid: {pid}'
 - ']'
 - ' {body}'
-short_source: 'LOG'
-source: 'Audit log File'

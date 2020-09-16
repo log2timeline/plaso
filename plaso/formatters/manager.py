@@ -117,22 +117,6 @@ class FormattersManager(object):
     return formatter_object.GetMessages(formatter_mediator, event_data)
 
   @classmethod
-  def GetSourceStrings(cls, event, event_data):
-    """Retrieves the formatted source strings for a specific event.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-
-    Returns:
-      list[str, str]: short and long version of the source of the event.
-    """
-    # TODO: change this to return the long variant first so it is consistent
-    # with GetMessageStrings.
-    formatter_object = cls.GetFormatterObject(event_data.data_type)
-    return formatter_object.GetSources(event, event_data)
-
-  @classmethod
   def GetUnformattedAttributes(cls, event_data):
     """Retrieves names of the event data attributes that are not formatted.
 

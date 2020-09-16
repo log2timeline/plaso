@@ -146,8 +146,8 @@ class DynamicOutputModule(shared_dsv.DSVOutputModule):
       'Dynamic selection of fields for a separated value output format.')
 
   _DEFAULT_NAMES = [
-      'datetime', 'timestamp_desc', 'source', 'source_long',
-      'message', 'parser', 'display_name', 'tag']
+      'datetime', 'timestamp_desc', 'source', 'source_long', 'message',
+      'parser', 'display_name', 'tag']
 
   def __init__(self, output_mediator):
     """Initializes a dynamic delimiter separated values output module object.

@@ -26,9 +26,6 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       '{url}',
       '({title})']
 
-  SOURCE_LONG = 'Chrome History'
-  SOURCE_SHORT = 'WEBHIST'
-
   # The following definition for values can be found here:
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h
   _PAGE_TRANSITIONS = {

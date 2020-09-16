@@ -10,8 +10,6 @@ short_message:
 - '{field_name}:'
 - '{value}'
 - '({usage_count})'
-short_source: 'WEBHIST'
-source: 'Chrome Autofill'
 ---
 type: 'conditional'
 data_type: 'chrome:cache:entry'
@@ -19,8 +17,6 @@ message:
 - 'Original URL: {original_url}'
 short_message:
 - 'Original URL: {original_url}'
-short_source: 'WEBHIST'
-source: 'Chrome Cache'
 ---
 type: 'conditional'
 data_type: 'chrome:cookie:entry'
@@ -33,8 +29,6 @@ message:
 short_message:
 - '{host}'
 - '({cookie_name})'
-short_source: 'WEBHIST'
-source: 'Chrome Cookies'
 ---
 type: 'conditional'
 data_type: 'chrome:extension_activity:activity_log'
@@ -64,8 +58,6 @@ short_message:
 - '{extension_id}'
 - '{api_name}'
 - '{args}'
-short_source: 'WEBHIST'
-source: 'Chrome Extension Activity'
 ---
 type: 'conditional'
 data_type: 'chrome:history:file_downloaded'
@@ -77,8 +69,6 @@ message:
 short_message:
 - '{full_path} downloaded'
 - '({received_bytes} bytes)'
-short_source: 'WEBHIST'
-source: 'Chrome History'
 ---
 type: 'conditional'
 data_type: 'chrome:preferences:clear_history'
@@ -86,8 +76,6 @@ message:
 - '{message}'
 short_message:
 - '{message}'
-short_source: 'LOG'
-source: 'Chrome History Deletion'
 ---
 type: 'conditional'
 data_type: 'chrome:preferences:extensions_autoupdater'
@@ -95,8 +83,6 @@ message:
 - '{message}'
 short_message:
 - '{message}'
-short_source: 'LOG'
-source: 'Chrome Extensions Autoupdater'
 ---
 type: 'conditional'
 data_type: 'chrome:preferences:extension_installation'
@@ -107,8 +93,6 @@ message:
 short_message:
 - '{extension_id}'
 - '{path}'
-short_source: 'LOG'
-source: 'Chrome Extension Installation'
 ---
 type: 'conditional'
 data_type: 'cookie:google:analytics:utma'
@@ -121,8 +105,6 @@ message:
 short_message:
 - '{url}'
 - '({cookie_name})'
-short_source: 'WEBHIST'
-source: 'Google Analytics Cookies'
 ---
 type: 'conditional'
 data_type: 'cookie:google:analytics:utmb'
@@ -134,8 +116,6 @@ message:
 short_message:
 - '{url}'
 - '({cookie_name})'
-short_source: 'WEBHIST'
-source: 'Google Analytics Cookies'
 ---
 type: 'conditional'
 data_type: 'cookie:google:analytics:utmt'
@@ -145,8 +125,6 @@ message:
 short_message:
 - '{url}'
 - '({cookie_name})'
-short_source: 'WEBHIST'
-source: 'Google Analytics Cookies'
 ---
 type: 'conditional'
 data_type: 'cookie:google:analytics:utmz'
@@ -164,8 +142,6 @@ message:
 short_message:
 - '{url}'
 - '({cookie_name})'
-short_source: 'WEBHIST'
-source: 'Google Analytics Cookies'
 ---
 type: 'conditional'
 data_type: 'firefox:cache:record'
@@ -178,8 +154,6 @@ short_message:
 - '[{response_code}]'
 - '{request_method}'
 - '"{url}"'
-short_source: 'WEBHIST'
-source: 'Firefox Cache'
 ---
 type: 'conditional'
 data_type: 'firefox:cookie:entry'
@@ -192,8 +166,6 @@ message:
 short_message:
 - '{host}'
 - '({cookie_name})'
-short_source: 'WEBHIST'
-source: 'Firefox Cache'
 ---
 type: 'conditional'
 data_type: 'firefox:places:bookmark'
@@ -206,8 +178,6 @@ message:
 short_message:
 - 'Bookmarked {title}'
 - '({url})'
-short_source: 'WEBHIST'
-source: 'Firefox History'
 ---
 type: 'conditional'
 data_type: 'firefox:places:bookmark_annotation'
@@ -217,22 +187,16 @@ message:
 - '({url})'
 short_message:
 - 'Bookmark Annotation: {title}'
-short_source: 'WEBHIST'
-source: 'Firefox History'
 ---
 type: 'basic'
 data_type: 'firefox:places:bookmark_folder'
 message: '{title}'
 short_message: '{title}'
-short_source: 'WEBHIST'
-source: 'Firefox History'
 ---
 type: 'basic'
 data_type: 'firefox:downloads:download'
 message: '{url} ({full_path}). Received: {received_bytes} bytes out of: {total_bytes} bytes.'
 short_message: '{full_path} downloaded ({received_bytes} bytes)'
-short_source: 'WEBHIST'
-source: 'Firefox History'
 ---
 type: 'conditional'
 data_type: 'msie:webcache:container'
@@ -251,8 +215,6 @@ message:
 - 'Cache identifier: {cache_identifier}'
 short_message:
 - 'URL: {url}'
-short_source: 'WEBHIST'
-source: 'MSIE WebCache container record'
 ---
 type: 'conditional'
 data_type: 'msie:webcache:containers'
@@ -264,8 +226,6 @@ message:
 - 'Set identifier: {set_identifier}'
 short_message:
 - 'Directory: {directory}'
-short_source: 'WEBHIST'
-source: 'MSIE WebCache containers record'
 ---
 type: 'conditional'
 data_type: 'msie:webcache:leak_file'
@@ -274,8 +234,6 @@ message:
 - 'Leak identifier: {leak_identifier}'
 short_message:
 - 'Filename: {cached_filename}'
-short_source: 'WEBHIST'
-source: 'MSIE WebCache leak file record'
 ---
 type: 'conditional'
 data_type: 'msie:webcache:partitions'
@@ -286,8 +244,6 @@ message:
 - 'Table identifier: {table_identifier}'
 short_message:
 - 'Directory: {directory}'
-short_source: 'WEBHIST'
-source: 'MSIE WebCache partitions record'
 ---
 type: 'conditional'
 data_type: 'opera:history:entry'
@@ -299,8 +255,6 @@ short_message:
 - '{url}'
 - '({title})'
 - '[{description}]'
-short_source: 'WEBHIST'
-source: 'Opera Browser History'
 ---
 type: 'conditional'
 data_type: 'opera:history:typed_entry'
@@ -310,8 +264,6 @@ message:
 short_message:
 - '{url}'
 - '({entry_selection})'
-short_source: 'WEBHIST'
-source: 'Opera Browser History'
 ---
 type: 'conditional'
 data_type: 'safari:history:visit'
@@ -327,8 +279,6 @@ short_message:
 - '- {display_title}'
 - ')'
 - 'Visit Count: {visit_count}'
-short_source: 'WEBHIST'
-source: 'Safari History'
 ---
 type: 'conditional'
 data_type: 'safari:history:visit_sqlite'
@@ -342,5 +292,3 @@ short_message:
 - 'Title: ({title})'
 - '[count: {visit_count}]'
 - 'http_non_get: {was_http_non_get}'
-short_source: 'WEBHIST'
-source: 'Safari History'

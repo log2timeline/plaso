@@ -150,8 +150,9 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
         number_of_formatters)
 
   def testMessageStrings(self):
-    """Tests the GetMessageStrings and GetSourceStrings functions."""
-    formatter_mediator = mediator.FormatterMediator()
+    """Tests the GetMessageStrings function."""
+    formatter_mediator = mediator.FormatterMediator(
+        data_location=shared_test_lib.TEST_DATA_PATH)
 
     message_strings = []
     text_message = None
@@ -164,40 +165,36 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
           self._TEST_EVENTS):
         message, message_short = manager.FormattersManager.GetMessageStrings(
             formatter_mediator, event_data)
-        source_short, source_long = manager.FormattersManager.GetSourceStrings(
-            event, event_data)
 
         text_message = message
         text_message_short = message_short
 
-        csv_message_strings = '{0:d},{1:s},{2:s},{3:s}'.format(
-            event.timestamp, source_short, source_long, message)
+        csv_message_strings = '{0:d},{1:s}'.format(event.timestamp, message)
         message_strings.append(csv_message_strings)
 
     finally:
       manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 
-    self.assertIn((
-        '1334961526929596,REG,Registry Key,[MY AutoRun key] '
-        'Value: c:/Temp/evil.exe'), message_strings)
+    self.assertIn(
+        '1334961526929596,[MY AutoRun key] Value: c:/Temp/evil.exe',
+        message_strings)
 
+    self.assertIn(
+        ('1334966206929596,[HKEY_CURRENT_USER\\Secret\\EvilEmpire\\'
+         'Malicious_key] Value: send all the exes to the other world'),
+        message_strings)
     self.assertIn((
-        '1334966206929596,REG,Registry Key,'
-        '[HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key] '
-        'Value: send all the exes to the other world'), message_strings)
-    self.assertIn((
-        '1334940286000000,REG,Registry Key,'
-        '[HKEY_CURRENT_USER\\Windows\\Normal] '
+        '1334940286000000,[HKEY_CURRENT_USER\\Windows\\Normal] '
         'Value: run all the benign stuff'), message_strings)
-    self.assertIn((
-        '1335781787929596,FILE,Test log file,This log line reads '
-        'ohh so much.'), message_strings)
-    self.assertIn((
-        '1335781787929596,FILE,Test log file,Nothing of interest '
-        'here, move on.'), message_strings)
-    self.assertIn((
-        '1335791207939596,FILE,Test log file,Mr. Evil just logged '
-        'into the machine and got root.'), message_strings)
+    self.assertIn(
+        '1335781787929596,This log line reads ohh so much.',
+        message_strings)
+    self.assertIn(
+        '1335781787929596,Nothing of interest here, move on.',
+        message_strings)
+    self.assertIn(
+        '1335791207939596,Mr. Evil just logged into the machine and got root.',
+        message_strings)
 
     expected_text_message = (
         'This is a line by someone not reading the log line properly. And '

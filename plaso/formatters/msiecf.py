@@ -63,9 +63,6 @@ class MsiecfLeakFormatter(MsiecfItemFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       'Cached file: {cached_file_path}']
 
-  SOURCE_LONG = 'MSIE Cache File leak record'
-  SOURCE_SHORT = 'WEBHIST'
-
 
 class MsiecfRedirectedFormatter(MsiecfItemFormatter):
   """Formatter for a MSIECF leak redirected event."""
@@ -78,9 +75,6 @@ class MsiecfRedirectedFormatter(MsiecfItemFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [
       'Location: {url}']
-
-  SOURCE_LONG = 'MSIE Cache File redirected record'
-  SOURCE_SHORT = 'WEBHIST'
 
 
 class MsiecfUrlFormatter(MsiecfItemFormatter):
@@ -99,9 +93,6 @@ class MsiecfUrlFormatter(MsiecfItemFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       'Location: {url}',
       'Cached file: {cached_file_path}']
-
-  SOURCE_LONG = 'MSIE Cache File URL record'
-  SOURCE_SHORT = 'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatters([
