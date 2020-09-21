@@ -20,7 +20,7 @@ install:
 - cmd: IF [%PYTHON_VERSION%]==[3.8] (
     mkdir dependencies &&
     set PYTHONPATH=..\l2tdevtools &&
-    "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type %MACHINE_TYPE% --msi-targetdir "%PYTHON%" --track "%L2TBINARIES_TRACK%" PyYAML XlsxWriter artifacts bencode certifi cffi chardet cryptography dateutil defusedxml dfdatetime dfvfs dfwinreg dtfabric elasticsearch-py fakeredis future idna libbde libesedb libevt libevtx libewf libfsapfs libfsntfs libfvde libfwnt libfwsi liblnk libluksde libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lz4 mock pbr pefile psutil pyparsing pytsk3 pytz pyzmq redis requests six sortedcontainers urllib3 yara-python )
+    "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type %MACHINE_TYPE% --msi-targetdir "%PYTHON%" --track "%L2TBINARIES_TRACK%" PyYAML XlsxWriter artifacts bencode certifi cffi chardet cryptography dateutil defusedxml dfdatetime dfvfs dfwinreg dtfabric elasticsearch-py fakeredis future idna libbde libesedb libevt libevtx libewf libfsapfs libfsext libfsntfs libfvde libfwnt libfwsi liblnk libluksde libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lz4 mock pbr pefile psutil pyparsing pytsk3 pytz pyzmq redis requests six sortedcontainers urllib3 yara-python )
 
 build: off
 
