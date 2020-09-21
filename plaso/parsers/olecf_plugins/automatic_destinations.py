@@ -56,7 +56,9 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
   """Plugin that parses an .automaticDestinations-ms OLECF file."""
 
   NAME = 'olecf_automatic_destinations'
-  DESCRIPTION = 'Parser for *.automaticDestinations-ms OLECF files.'
+  DATA_FORMAT = (
+      'Automatic destinations jump list OLE compound file '
+      '(.automaticDestinations-ms)')
 
   REQUIRED_ITEMS = frozenset(['DestList'])
 

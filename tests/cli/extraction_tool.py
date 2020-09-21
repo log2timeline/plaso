@@ -238,14 +238,15 @@ optional arguments:
     expected_line = 'filestat : Parser for file system stat information.'
     self.assertIn(expected_line, lines)
 
-    expected_line = 'bencode_utorrent : Parser for uTorrent bencoded files.'
+    expected_line = (
+        'bencode_utorrent : Parser for uTorrent active torrent files.')
     self.assertIn(expected_line, lines)
 
     expected_line = (
-        'msie_webcache : Parser for MSIE WebCache ESE database files.')
+        'msie_webcache : Parser for Internet Explorer WebCache ESE database')
     self.assertIn(expected_line, lines)
 
-    expected_line = 'olecf_default : Parser for a generic OLECF item.'
+    expected_line = 'olecf_default : Parser for Generic OLE compound item.'
     self.assertIn(expected_line, lines)
 
     expected_line = 'plist_default : Parser for plist files.'

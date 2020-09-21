@@ -148,8 +148,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   """Parses a System Resource Usage Monitor (SRUM) ESE database file."""
 
   NAME = 'srum'
-  DESCRIPTION = (
-      'Parser for System Resource Usage Monitor (SRUM) ESE database files.')
+  DATA_FORMAT = 'System Resource Usage Monitor (SRUM) ESE database file'
 
   # TODO: add support for tables:
   # {5C8CF1C7-7257-4F13-B223-970EF5939312}

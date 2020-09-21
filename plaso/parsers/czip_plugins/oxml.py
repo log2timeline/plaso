@@ -72,7 +72,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
   """Parse metadata from OXML files."""
 
   NAME = 'oxml'
-  DESCRIPTION = 'Parser for OpenXML (OXML) files.'
+  DATA_FORMAT = 'OpenXML (OXML) file'
 
   REQUIRED_PATHS = frozenset(
       ['[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])

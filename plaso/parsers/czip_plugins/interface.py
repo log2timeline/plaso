@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Interface for compound zip file plugins.
+"""Interface for compound ZIP file plugins.
 """
 
 from __future__ import unicode_literals
@@ -11,7 +11,7 @@ from plaso.parsers import logger
 from plaso.parsers import plugins
 
 class CompoundZIPPlugin(plugins.BasePlugin):
-  """Compound zip parser plugin."""
+  """Compound ZIP parser plugin."""
 
   # REQUIRED_PATHS is a list of paths required by a plugin.
   # This is used to understand whether a plugin is suited for a given compound
@@ -20,6 +20,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
   REQUIRED_PATHS = frozenset()
 
   NAME = 'czip_plugin'
+  DATA_FORMAT = 'Compound ZIP file'
 
   @abc.abstractmethod
   def InspectZipFile(self, parser_mediator, zip_file):
@@ -30,7 +31,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      zip_file (zipfile.ZipFile): the zip file. It should not be closed in
+      zip_file (zipfile.ZipFile): the ZIP file. It should not be closed in
           this method, but will be closed by the parser logic in czip.py.
     """
 
@@ -38,14 +39,14 @@ class CompoundZIPPlugin(plugins.BasePlugin):
   def Process(self, parser_mediator, zip_file, archive_members):
     """Determines if this is the correct plugin; if so proceed with processing.
 
-    This method checks if the zip file being contains the paths specified in
+    This method checks if the ZIP file being contains the paths specified in
     REQUIRED_PATHS. If all paths are present, the plugin logic processing
     continues in InspectZipFile.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      zip_file (zipfile.ZipFile): the zip file. It should not be closed in
+      zip_file (zipfile.ZipFile): the ZIP file. It should not be closed in
           this method, but will be closed by the parser logic in czip.py.
       archive_members (list[str]): file paths in the archive.
 

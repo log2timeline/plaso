@@ -223,7 +223,8 @@ class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
   """Plugin that parses DocumentSummaryInformation item from an OLECF file."""
 
   NAME = 'olecf_document_summary'
-  DESCRIPTION = 'Parser for a DocumentSummaryInformation OLECF stream.'
+  DATA_FORMAT = (
+      'Document summary information (\\0x05DocumentSummaryInformation)')
 
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005DocumentSummaryInformation'])
@@ -275,7 +276,8 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
   """Plugin that parses the SummaryInformation item from an OLECF file."""
 
   NAME = 'olecf_summary'
-  DESCRIPTION = 'Parser for a SummaryInformation OLECF stream.'
+  DATA_FORMAT = (
+      'Summary information (\\0x05SummaryInformation) (top-level only)')
 
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005SummaryInformation'])

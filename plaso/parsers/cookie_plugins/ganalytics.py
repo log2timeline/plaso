@@ -69,7 +69,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
   """
 
   NAME = 'google_analytics_utma'
-  DESCRIPTION = 'Google Analytics utma cookie parser'
+  DATA_FORMAT = 'Google Analytics __utma cookie'
 
   COOKIE_NAME = '__utma'
 
@@ -190,7 +190,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
   """
 
   NAME = 'google_analytics_utmb'
-  DESCRIPTION = 'Google Analytics utmb cookie parser'
+  DATA_FORMAT = 'Google Analytics __utmb cookie'
 
   COOKIE_NAME = '__utmb'
 
@@ -273,7 +273,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
   """
 
   NAME = 'google_analytics_utmt'
-  DESCRIPTION = 'Google Analytics utmt cookie parser'
+  DATA_FORMAT = 'Google Analytics __utmt cookie'
 
   COOKIE_NAME = '__utmt'
 
@@ -335,7 +335,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
   """
 
   NAME = 'google_analytics_utmz'
-  DESCRIPTION = 'Google Analytics utmz cookie parser'
+  DATA_FORMAT = 'Google Analytics __utmz cookie'
 
   COOKIE_NAME = '__utmz'
 
