@@ -14,7 +14,7 @@ class TestCookiePlugin(interface.BaseCookiePlugin):
   """Test cookie plugin."""
 
   NAME = 'test_cookie_plugin'
-  DESCRIPTION = 'Test cookie plugin.'
+  DATA_FORMAT = 'Test cookie file'
 
   # pylint: disable=unused-argument
   def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):

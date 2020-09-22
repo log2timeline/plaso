@@ -20,7 +20,7 @@ class MockPlugin(interface.PlistPlugin):
   """Mock plugin."""
 
   NAME = 'mock_plist_plugin'
-  DESCRIPTION = 'Parser for testing parsing plist files.'
+  DATA_FORMAT = 'Test plist file'
 
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])

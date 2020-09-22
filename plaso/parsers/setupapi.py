@@ -43,8 +43,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses events from Windows Setupapi log files."""
 
   NAME = 'setupapi'
-
-  DESCRIPTION = 'Parser for Windows Setupapi log files.'
+  DATA_FORMAT = 'Windows SetupAPI log file'
 
   _ENCODING = 'utf-8'
 

@@ -88,10 +88,10 @@ class NTFSUSNChangeEventData(events.EventData):
 class NTFSMFTParser(interface.FileObjectParser):
   """Parses a NTFS $MFT metadata file."""
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = 'mft'
-  DESCRIPTION = 'Parser for NTFS $MFT metadata files.'
+  DATA_FORMAT = 'NTFS $MFT metadata file'
+
+  _INITIAL_FILE_OFFSET = None
 
   _MFT_ATTRIBUTE_STANDARD_INFORMATION = 0x00000010
   _MFT_ATTRIBUTE_FILE_NAME = 0x00000030
@@ -370,10 +370,11 @@ class NTFSMFTParser(interface.FileObjectParser):
 class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
   """Parses a NTFS USN change journal."""
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = 'usnjrnl'
-  DESCRIPTION = 'Parser for NTFS USN change journal ($UsnJrnl).'
+  DATA_FORMAT = (
+      'NTFS USN change journal ($UsnJrnl:$J) file system metadata file')
+
+  _INITIAL_FILE_OFFSET = None
 
   _DEFINITION_FILE = 'ntfs.yaml'
 

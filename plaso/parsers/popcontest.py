@@ -140,7 +140,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   """Parse popularity contest log files."""
 
   NAME = 'popularity_contest'
-  DESCRIPTION = 'Parser for popularity contest log files.'
+  DATA_FORMAT = 'Popularity Contest log file'
 
   _ASCII_PRINTABLES = pyparsing.printables
   _UNICODE_PRINTABLES = ''.join(

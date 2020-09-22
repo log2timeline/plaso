@@ -258,7 +258,7 @@ optional arguments:
         'chrome_27_history : Parser for Google Chrome 27 and later history')
     self.assertIn(expected_line, lines)
 
-    expected_line = 'ssh : Parser for SSH syslog entries.'
+    expected_line = 'ssh : Parser for SSH syslog line.'
     self.assertIn(expected_line, lines)
 
     expected_line = 'winreg_default : Parser for Windows Registry data.'

@@ -32,7 +32,8 @@ class CronSyslogPlugin(interface.SyslogPlugin):
   """A syslog plugin for parsing cron messages."""
 
   NAME = 'cron'
-  DESCRIPTION = 'Parser for syslog cron messages.'
+  DATA_FORMAT = 'Cron syslog line'
+
   REPORTER = 'CRON'
 
   _PYPARSING_COMPONENTS = {

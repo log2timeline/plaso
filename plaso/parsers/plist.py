@@ -27,7 +27,7 @@ class PlistParser(interface.FileObjectParser):
   """
 
   NAME = 'plist'
-  DESCRIPTION = 'Parser for binary and text plist files.'
+  DATA_FORMAT = 'Property list (plist) file'
 
   _plugin_classes = {}
 

@@ -43,7 +43,7 @@ class PEParser(interface.FileObjectParser):
   """Parser for Portable Executable (PE) files."""
 
   NAME = 'pe'
-  DESCRIPTION = 'Parser for Portable Executable (PE) files.'
+  DATA_FORMAT = 'Portable Executable (PE) file'
 
   _PE_DIRECTORIES = [
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
