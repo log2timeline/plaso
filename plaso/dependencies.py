@@ -133,10 +133,13 @@ def _CheckPythonModule(
   # Make sure the module version is a string.
   module_version = '{0!s}'.format(module_version)
 
+  # Remove a version suffix, such as: 0.7.0~rc1
+  sanitized_module_version, _, _ = module_version.partition('~')
+
   # Split the version string and convert every digit into an integer.
   # A string compare of both version strings will yield an incorrect result.
   module_version_map = list(
-      map(int, _VERSION_SPLIT_REGEX.split(module_version)))
+      map(int, _VERSION_SPLIT_REGEX.split(sanitized_module_version)))
   minimum_version_map = list(
       map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
 
