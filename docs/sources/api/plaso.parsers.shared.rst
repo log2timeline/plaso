@@ -12,7 +12,6 @@ plaso.parsers.shared.shell\_items module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

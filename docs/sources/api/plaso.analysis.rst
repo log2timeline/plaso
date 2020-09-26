@@ -36,6 +36,14 @@ plaso.analysis.file\_hashes module
    :undoc-members:
    :show-inheritance:
 
+plaso.analysis.hash\_tagging module
+-----------------------------------
+
+.. automodule:: plaso.analysis.hash_tagging
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.analysis.interface module
 -------------------------------
 
@@ -123,7 +131,6 @@ plaso.analysis.windows\_services module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

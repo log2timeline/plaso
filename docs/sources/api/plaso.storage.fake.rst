@@ -12,7 +12,6 @@ plaso.storage.fake.writer module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

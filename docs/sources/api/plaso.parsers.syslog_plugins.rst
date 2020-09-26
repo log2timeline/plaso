@@ -28,7 +28,6 @@ plaso.parsers.syslog\_plugins.ssh module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

@@ -52,7 +52,6 @@ plaso.analyzers.hashers.sha256 module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

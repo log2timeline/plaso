@@ -52,7 +52,6 @@ plaso.analyzers.yara\_analyzer module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

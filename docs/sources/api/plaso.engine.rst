@@ -156,7 +156,6 @@ plaso.engine.zeromq\_queue module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

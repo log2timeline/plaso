@@ -156,7 +156,6 @@ plaso.output.xlsx module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 
