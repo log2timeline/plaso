@@ -134,12 +134,16 @@ def _CheckPythonModule(
   module_version = '{0!s}'.format(module_version)
 
   # Remove a version suffix, such as: 0.7.0~rc1
-  sanitized_module_version, _, _ = module_version.partition('~')
+  module_version_list = _VERSION_SPLIT_REGEX.split(module_version)
+
+  try:
+    int(module_version_list[-1], 10)
+  except (TypeError, ValueError):
+    module_version_list.pop()
 
   # Split the version string and convert every digit into an integer.
   # A string compare of both version strings will yield an incorrect result.
-  module_version_map = list(
-      map(int, _VERSION_SPLIT_REGEX.split(sanitized_module_version)))
+  module_version_map = list(map(int, module_version_list))
   minimum_version_map = list(
       map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
 
