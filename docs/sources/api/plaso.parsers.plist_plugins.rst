@@ -124,7 +124,6 @@ plaso.parsers.plist\_plugins.timemachine module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

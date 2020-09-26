@@ -84,7 +84,6 @@ plaso.multi\_processing.worker\_process module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

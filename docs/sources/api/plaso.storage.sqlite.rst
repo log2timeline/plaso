@@ -36,7 +36,6 @@ plaso.storage.sqlite.writer module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

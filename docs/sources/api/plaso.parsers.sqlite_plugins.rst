@@ -252,7 +252,6 @@ plaso.parsers.sqlite\_plugins.zeitgeist module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

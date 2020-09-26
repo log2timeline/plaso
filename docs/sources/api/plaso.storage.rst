@@ -78,7 +78,6 @@ plaso.storage.time\_range module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

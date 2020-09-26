@@ -252,7 +252,6 @@ plaso.parsers.winreg\_plugins.winrar module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 
