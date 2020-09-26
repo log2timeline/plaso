@@ -251,7 +251,7 @@ class StorageMediaTool(tools.CLITool):
     if len(volume_identifiers) > 1:
       if self._unattended_mode:
         raise errors.SourceScannerError(
-            'More than 1 parition found but no paritions specified.')
+            'More than 1 partition found but no partitions specified.')
 
       try:
         volume_identifiers = self._PromptUserForPartitionIdentifiers(
