@@ -7,14 +7,10 @@ from __future__ import unicode_literals
 #       versions as well.
 
 import codecs
-
-import biplist
+import plistlib
 
 from defusedxml import ElementTree
 from dfdatetime import time_elements as dfdatetime_time_elements
-from dfvfs.file_io import fake_file_io
-from dfvfs.path import fake_path_spec
-from dfvfs.resolver import context
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
@@ -101,28 +97,19 @@ class MacUserPlugin(interface.PlistPlugin):
 
         shadow_hash_data = match.get('ShadowHashData', None)
         if date_time and isinstance(shadow_hash_data, (list, tuple)):
-          # Extract the hash password information.
-          # It is store in the attribute ShadowHasData which is
-          # a binary plist data; However biplist only extracts one
-          # level of binary plist, then it returns this information
-          # as a string.
-
-          # TODO: change this into a DataRange instead. For this we
-          # need the file offset and size of the ShadowHashData value data.
-          shadow_hash_data = shadow_hash_data[0]
-
-          resolver_context = context.Context()
-          fake_file = fake_file_io.FakeFile(
-              resolver_context, shadow_hash_data)
-          shadow_hash_data_path_spec = fake_path_spec.FakePathSpec(
-              location='ShadowHashData')
-          fake_file.open(path_spec=shadow_hash_data_path_spec)
-
+          # Extract the hash password information, which is stored in
+          # the attribute ShadowHashData which is a binary plist data.
           try:
-            plist_file = biplist.readPlist(fake_file)
-          except biplist.InvalidPlistException:
-            plist_file = {}
-          salted_hash = plist_file.get('SALTED-SHA512-PBKDF2', None)
+            property_list = plistlib.loads(shadow_hash_data[0])
+          except plistlib.InvalidFileException as exception:
+            parser_mediator.ProduceExtractionWarning(
+                'unable to parse ShadowHashData with error: {0!s}'.format(
+                    exception))
+            property_list = {}
+
+          password_hash = 'N/A'
+
+          salted_hash = property_list.get('SALTED-SHA512-PBKDF2', None)
           if salted_hash:
             salt_hex_bytes = codecs.encode(salted_hash['salt'], 'hex')
             salt_string = codecs.decode(salt_hex_bytes, 'ascii')
@@ -130,8 +117,6 @@ class MacUserPlugin(interface.PlistPlugin):
             entropy_string = codecs.decode(entropy_hex_bytes, 'ascii')
             password_hash = '$ml${0:d}${1:s}${2:s}'.format(
                 salted_hash['iterations'], salt_string, entropy_string)
-          else:
-            password_hash = 'N/A'
 
           event_data = plist_event.PlistTimeEventData()
           event_data.desc = (

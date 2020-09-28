@@ -43,7 +43,7 @@ class USBPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_usb_devices'
-  DESCRIPTION = 'Parser for USB device Registry entries.'
+  DATA_FORMAT = 'Windows USB device Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

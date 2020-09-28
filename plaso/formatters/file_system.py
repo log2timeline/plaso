@@ -23,8 +23,6 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       '{filename}']
 
-  SOURCE_SHORT = 'FILE'
-
   # The numeric values are for backwards compatibility with plaso files
   # generated with older versions of dfvfs.
   _FILE_ENTRY_TYPES = {
@@ -76,29 +74,6 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
 
     return self._ConditionalFormatMessages(event_values)
 
-  def GetSources(self, event, event_data):
-    """Determines the the short and long source for an event.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): short and long source string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    file_system_type = getattr(event_data, 'file_system_type', 'UNKNOWN')
-    timestamp_desc = getattr(event, 'timestamp_desc', 'Time')
-    source_long = '{0:s} {1:s}'.format(file_system_type, timestamp_desc)
-
-    return self.SOURCE_SHORT, source_long
-
 
 class NTFSFileStatEventFormatter(FileStatEventFormatter):
   """The NTFS file system stat event formatter."""
@@ -119,12 +94,9 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
       '{file_reference}',
       '{attribute_name}']
 
-  SOURCE_SHORT = 'FILE'
-
   _ATTRIBUTE_NAMES = {
       0x00000010: '$STANDARD_INFORMATION',
-      0x00000030: '$FILE_NAME'
-  }
+      0x00000030: '$FILE_NAME'}
 
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.
@@ -187,8 +159,6 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
       '{filename}',
       '{file_reference}',
       '{update_reason}']
-
-  SOURCE_SHORT = 'FILE'
 
   _USN_REASON_FLAGS = {
       0x00000001: 'USN_REASON_DATA_OVERWRITE',

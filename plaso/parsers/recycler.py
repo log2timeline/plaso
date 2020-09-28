@@ -41,7 +41,7 @@ class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
   """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = 'recycle_bin'
-  DESCRIPTION = 'Parser for Windows $Recycle.Bin $I files.'
+  DATA_FORMAT = 'Windows $Recycle.Bin $I file'
 
   _DEFINITION_FILE = 'recycler.yaml'
 
@@ -141,7 +141,7 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
   """Parses the Windows Recycler INFO2 file."""
 
   NAME = 'recycle_bin_info2'
-  DESCRIPTION = 'Parser for Windows Recycler INFO2 files.'
+  DATA_FORMAT = 'Windows Recycler INFO2 file'
 
   _DEFINITION_FILE = 'recycler.yaml'
 

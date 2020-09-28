@@ -453,6 +453,14 @@ plaso.parsers.sophos\_av module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.spotlight\_storedb module
+---------------------------------------
+
+.. automodule:: plaso.parsers.spotlight_storedb
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite module
 ---------------------------
 
@@ -612,7 +620,6 @@ plaso.parsers.zsh\_extended\_history module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

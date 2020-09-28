@@ -54,6 +54,28 @@ user | The username derived by pre-processing
 username | The username derived by pre-processing
 zone | Time zone indicator
 
+Output fields that are not part of the event data but of the data stream the
+event data originates from.
+
+Name | Description
+--- | ---
+file_entropy | Byte entropy of the data stream content. This is a value ranging from 0.0 to 8.0, where 8.0 indicates the distribution of byte values is highly random.
+md5_hash | MD5 hash of the data stream content.
+sha1_hash | SHA-1 hash of the data stream content.
+sha256_hash | SHA-256 hash of the data stream content.
+yara_match | Names of the Yara rules that matched the data stream content.
+
+## Output field formatting
+
+### Source fields
+
+As of Plaso 20200916 the value of the long and short source fields are defined
+in `data/sources.config`. This file contains 3 tab separated values:
+
+* data_type; event data type.
+* short_source; short source identifier that corresponds with the l2tcsv and tln source field.
+* source; source identifier that corresponds with the l2tcsv sourcetype field.
+
 ## Message formatting
 
 In log2timeline.pl the l2tcsv format introduced the `desc` and `short` fields
@@ -72,12 +94,11 @@ As of version 20200227 Plaso supports formatter configuration files.
 
 An event formatter is defined as a set of attributes:
 
-* "data_type"; required event data type;
+* "data_type"; required event data type.
+* "enumeration_helpers"; optional enumeration helpers.
 * "message"; required formatter message string, for a basic type, or list of messages string pieces, for a conditional type.
-* "separator"; optional conditional message string piece separator;
+* "separator"; optional conditional message string piece separator, the default is a single space.
 * "short_message"; required formatter short message string, for a basic type, or list of short messages string pieces, for a conditional type.
-* "short_source"; required formatter short source identifier that corresponds with the l2tcsv and tln source field.
-* "source"; required formatter source identifier that corresponds with the l2tcsv sourcetype field.
 * "type"; required event formatter type either "basic" or "conditional".
 
 For example:
@@ -88,8 +109,6 @@ type: 'basic'
 data_type: 'bash:history:command'
 message: 'Command executed: {command}'
 short_message: '{command}'
-short_source: 'LOG'
-source: 'Bash History'
 ---
 type: 'conditional'
 data_type: 'syslog:cron:task_run'
@@ -100,6 +119,101 @@ message:
 separator: ', '
 short_message:
 - '{body}'
-short_source: 'LOG'
-source: 'Cron log'
 ```
+
+#### Enumeration helpers
+
+Enumeration helpers can be defined to map a value of an event attribute to
+a more descriptive value, for example mapping 100 to BEGIN_SYSTEM_CHANGE in
+the example below.
+
+```
+type: 'conditional'
+data_type: 'windows:restore_point:info'
+enumeration_helpers:
+- input_attribute: 'restore_point_event_type'
+  output_attribute: 'restore_point_event_type'
+  default_value: 'UNKNOWN'
+  values:
+    100: 'BEGIN_SYSTEM_CHANGE'
+    101: 'END_SYSTEM_CHANGE'
+    102: 'BEGIN_NESTED_SYSTEM_CHANGE'
+    103: 'END_NESTED_SYSTEM_CHANGE'
+- input_attribute: 'restore_point_type'
+  output_attribute: 'restore_point_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'APPLICATION_INSTALL'
+    1: 'APPLICATION_UNINSTALL'
+    10: 'DEVICE_DRIVER_INSTALL'
+    12: 'MODIFY_SETTINGS'
+    13: 'CANCELLED_OPERATION'
+message:
+- '{description}'
+- 'Event type: {restore_point_event_type}'
+- 'Restore point type: {restore_point_type}'
+short_message:
+- '{description}'
+```
+
+enumeration helpers are defined as a set of attributes:
+
+* "input_attribute"; required name of the attribute which the value that needs to be mapped is read from.
+* "output_attribute"; required name of the attribute which the mapped value is written to.
+* "default_value"; optional default value if there is no corresponding mapping in "values".
+* "values"; required value mappings, contains key value pairs.
+
+#### Flags helpers
+
+Flags helpers can be defined to map a value of an event attribute to a more
+descriptive value, for example mapping 0x00000040 to FinderInfoModified in
+the example below.
+
+```
+type: 'conditional'
+data_type: 'macos:fseventsd:record'
+flags_helpers:
+- input_attribute: 'flags'
+  output_attribute: 'flag_values'
+  # The include header sys/fsevents.h defines various FSE constants, e.g.
+  # #define FSE_CREATE_FILE          0
+  # The flag values correspond to: FLAG = 1 << CONSTANT
+  values:
+    0x00000000: 'None'
+    0x00000001: 'Created'
+    0x00000002: 'Removed'
+    0x00000004: 'InodeMetadataModified'
+    0x00000008: 'Renamed'
+    0x00000010: 'Modified'
+    0x00000020: 'Exchange'
+    0x00000040: 'FinderInfoModified'
+    0x00000080: 'DirectoryCreated'
+    0x00000100: 'PermissionChanged'
+    0x00000200: 'ExtendedAttributeModified'
+    0x00000400: 'ExtendedAttributeRemoved'
+    0x00001000: 'DocumentRevision'
+    0x00004000: 'ItemCloned'
+    0x00080000: 'LastHardLinkRemoved'
+    0x00100000: 'IsHardLink'
+    0x00400000: 'IsSymbolicLink'
+    0x00800000: 'IsFile'
+    0x01000000: 'IsDirectory'
+    0x02000000: 'Mount'
+    0x04000000: 'Unmount'
+    0x20000000: 'EndOfTransaction'
+message:
+- '{path}'
+- 'Flag Values: {flag_values}'
+- 'Flags: 0x{flags:08x}'
+- 'Event Identifier: {event_identifier}'
+short_message:
+- '{path}'
+- '{flag_values}'
+```
+
+#### Change log
+
+* 20200227 Added support for formatter configuration files.
+* 20200822 Added support for enumeration helpers.
+* 20200904 Added support for flags helpers.
+* 20200916 Removed source types from formatters.

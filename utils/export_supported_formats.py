@@ -9,10 +9,14 @@ import argparse
 import collections
 import importlib
 import inspect
+import os
 import pkgutil
 import sys
 
 from urllib import parse as urllib_parse
+
+from dtfabric import reader as dtfabric_reader
+from dtfabric import registry as dtfabric_registry
 
 import plaso
 
@@ -79,271 +83,6 @@ class DataFormatInformationExractor(object):
       'plaso/parsers/sqlite_plugins': 'SQLite database file formats',
       'plaso/parsers/syslog_plugins': 'Syslog file formats',
       'plaso/parsers/winreg_plugins': 'Windows Registry formats'}
-
-  # Mapping of parser name to tuples of the data format name and an optional URL
-  # with more information about the data format.
-  # TODO: consider extending Plaso parsers and parser plugins with metadata that
-  # contain this information.
-  _DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME = {
-      'amcache': (
-          'AMCache Windows NT Registry file (AMCache.hve)', ''),
-      'android_app_usage': (
-          'Android usage-history (app usage)', ''),
-      'apache_access': (
-          'Apache access log file (access.log)', ''),
-      'appcompatcache': (
-          'Application Compatibility Cache data', ''),
-      'apt_history': (
-          'Advanced Packaging Tool (APT) History log file', ''),
-      'asl_log': (
-          'Apple System Log (ASL) file',
-          'dtformats:Apple System Log (ASL) file format'),
-      'bagmru': (
-          'BagMRU (or ShellBags) data', ''),
-      'bam': (
-          'Background Activity Moderator (BAM) data', ''),
-      'bash_history': (
-          'Bash history file', ''),
-      'bencode': (
-          'Bencoded file', ''),
-      'bencode_transmission': (
-          'Transmission BitTorrent activity file', ''),
-      'bencode_utorrent': (
-          'uTorrent active torrent file', ''),
-      'binary_cookies': (
-          'Safari Cookies file (Cookies.binarycookies)',
-          'dtformats:Safari Cookies'),
-      'bsm_log': (
-          'Basic Security Module (BSM) event auditing file',
-          'dtformats:Basic Security Module (BSM) event auditing file format'),
-      'ccleaner': (
-          'CCleaner data', ''),
-      'chrome_cache': (
-          'Chrome Cache file',
-          'dtformats:Chrome Cache file format'),
-      'chrome_preferences': (
-          'Google Chrome preferences', ''),
-      'cron': (
-          'Cron syslog file', ''),
-      'cups_ipp': (
-          'CUPS IPP', ''),
-      'custom_destinations': (
-          'Custom destinations jump list file (.customDestinations-ms)',
-          'dtformats:Jump lists format'),
-      'czip': (
-          'Compound ZIP file', ''),
-      'dockerjson': (
-          'Docker configuration and log JSON files', ''),
-      'dpkg': (
-          'Debian package manager log file (dpkg.log)', ''),
-      'esedb': (
-          'Extensible Storage Engine (ESE) Database File (EDB) format',
-          ('libyal:libesedb:Extensible Storage Engine (ESE) Database File '
-           '(EDB) format')),
-      'explorer_mountpoints2': (
-          'Windows Explorer mount points data', ''),
-      'explorer_programscache': (
-          'Windows Explorer Programs Cache data', ''),
-      'file_history': (
-          'Windows 8 File History database', ''),
-      'firefox_cache': (
-          'Mozilla Firefox Cache version 1 file (version 31 or earlier)', ''),
-      'firefox_cache2': (
-          'Mozilla Firefox Cache version 2 file (version 32 or later)', ''),
-      'fseventsd': (
-          'MacOS File System Events Disk Log Stream files (fseventsd)',
-          'dtformats:MacOS File System Events Disk Log Stream format'),
-      'gdrive_synclog': (
-          'Google Drive Sync log file', ''),
-      'google_analytics_utma': (
-          'Google Analytics __utma cookie', ''),
-      'google_analytics_utmb': (
-          'Google Analytics __utmb cookie', ''),
-      'google_analytics_utmt': (
-          'Google Analytics __utmt cookie', ''),
-      'google_analytics_utmz': (
-          'Google Analytics __utmz cookie', ''),
-      'googlelog': (
-          'Google-formatted log file', ''),
-      'java_idx': (
-          'Java WebStart IDX',
-          'dtformats:Java WebStart Cache IDX file format'),
-      'lnk': (
-          'Windows Shortcut File (LNK) format',
-          'libyal:liblnk:Windows Shortcut File (LNK) format'),
-      'mac_appfirewall_log': (
-          'MacOS Application firewall', ''),
-      'mac_keychain': (
-          'MacOS Keychain',
-          'dtformats:MacOS keychain database file format'),
-      'mac_securityd': (
-          'MacOS Securityd', ''),
-      'mactime': (
-          'mactime file',
-          'https://wiki.sleuthkit.org/index.php?title=Mactime'),
-      'macwifi': (
-          'MacOS Wifi', ''),
-      'mcafee_protection': (
-          'McAfee Anti-Virus Logs', ''),
-      'mft': (
-          'NTFS $MFT file system metadata file',
-          'libyal:libfsntfs:New Technologies File System (NTFS)'),
-      'microsoft_office_mru': (
-          'Microsoft Office MRU data', ''),
-      'microsoft_outlook_mru': (
-          'Microsoft Outlook search MRU data', ''),
-      'mrulist_string': (
-          ('Most Recently Used (MRU) list (MRUList and MRUListEx) data, '
-           'including shell items'), ''),
-      'msie_zone': (
-          'Microsofer Internet Explorer zone settings data', ''),
-      'msie_webcache': (
-          ('Internet Explorer WebCache database (WebCacheV01.dat, '
-           'WebCacheV24.dat)'), ''),
-      'msiecf': (
-          ('Microsoft Internet Explorer History File Format (also known as '
-           'MSIE 4 - 9 Cache Files or index.dat)'),
-          'libyal:libmsiecf:MSIE Cache File (index.dat) format'),
-      'mstsc_rdp': (
-          'Terminal Server client connection data', ''),
-      'mstsc_rdp_mru': (
-          'Terminal Server client Most Recently Used (MRU) data', ''),
-      'network_drives': (
-          'Windows network drives data', ''),
-      'networkminer_fileinfo': (
-          'NetworkMiner .fileinfos file', ''),
-      'networks': (
-          'Windows networks data (NetworkList)', ''),
-      'olecf': (
-          'OLE Compound File',
-          'libyal:libolecf:OLE Compound File format'),
-      'olecf_automatic_destinations': (
-          'Automatic destinations jump list file (.automaticDestinations-ms)',
-          'dtformats:Jump lists format'),
-      'olecf_document_summary': (
-          'Document summary information', ''),
-      'olecf_summary': (
-          'Summary information (top-level only)', ''),
-      'opera_global': (
-          'Opera global_history.dat file', ''),
-      'opera_typed_history': (
-          'Opera typed_history.xml file', ''),
-      'oxml': (
-          'OpenXML (OXML) file', ''),
-      'pe': (
-          'Portable Executable (PE) file', ''),
-      'plist': (
-          'Property list (plist) file', ''),
-      'pls_recall': (
-          'PL SQL cache file (PL-SQL developer recall file)', ''),
-      'popularity_contest': (
-          'Popularity Contest log', ''),
-      'prefetch': (
-          'Windows Prefetch File (PF)',
-          'libyal:libscca:Windows Prefetch File (PF) format'),
-      'recycle_bin': (
-          'Windows Recycle bin $I/$R files', ''),
-      'recycle_bin_info2': (
-          'Windows Recycle bin INFO2 file', ''),
-      'rplog': (
-          'Restore Point log file (rp.log)',
-          'dtformats:Restore point formats'),
-      'santa': (
-          'Santa log file (santa.log)', ''),
-      'sccm': (
-          'SCCM client log file', ''),
-      'selinux': (
-          'SELinux audit log file', ''),
-      'setupapi': (
-          'Windows SetupAPI text log file',
-          ('https://docs.microsoft.com/en-us/windows-hardware/drivers/install/'
-           'setupapi-text-logs')),
-      'skydrive_log': (
-          'OneDrive (or SkyDrive) log file', ''),
-      'skydrive_log_old': (
-          'OneDrive (or SkyDrive) old log file', ''),
-      'sophos_av': (
-          'Sophos Anti-Virus log file (SAV.txt)', ''),
-      'sqlite': (
-          'SQLite database file', ''),
-      'srum': (
-          'System Resource Usage Monitor (SRUM) database', ''),
-      'ssh': (
-          'SSH syslog file', ''),
-      'symantec_scanlog': (
-          'Symantec AV Corporate Edition and Endpoint Protection log', ''),
-      'syslog': (
-          'Syslog file', ''),
-      'systemd_journal': (
-          'Systemd journal file', ''),
-      'trendmicro_url': (
-          'Trend Micro Office Web Reputation log file', ''),
-      'trendmicro_vd': (
-          'Trend Micro Office Scan Virus Detection log file', ''),
-      'userassist': (
-          'User Assist data', ''),
-      'usnjrnl': (
-          'NTFS $UsnJrnl:$J file system metadata file',
-          'libyal:libfsntfs:New Technologies File System (NTFS)'),
-      'utmp': (
-          'Linux libc6 utmp login records file (btmp, utmp, wtmp)',
-          'dtformats:Utmp login records format'),
-      'utmpx': (
-          'Mac OS X 10.5 utmpx login records file',
-          'dtformats:Utmp login records format'),
-      'vsftpd': (
-          'vsftpd log file', ''),
-      'windows_boot_execute': (
-          'Windows boot execution data', ''),
-      'windows_boot_verify': (
-          'Windows boot verification data', ''),
-      'windows_run': (
-          'Run and run once data', ''),
-      'windows_sam_users': (
-          'Security Accounts Manager (SAM) users data', ''),
-      'windows_services': (
-          'Windows drivers and services data', ''),
-      'windows_shutdown': (
-          'Windows last shutdown data', ''),
-      'windows_task_cache': (
-          'Windows Task Scheduler cache data', ''),
-      'windows_timezone': (
-          'Windows timezone settings', ''),
-      'windows_typed_urls': (
-          'Windows Explorer typed URLs data', ''),
-      'windows_usb_devices': (
-          'Windows USB device data', ''),
-      'windows_usbstor_devices': (
-          'Windows USB storage device data', ''),
-      'windows_version': (
-          'Windows version information', ''),
-      'winevt': (
-          'Windows Event Log (EVT) file',
-          'libyal:libevt:Windows Event Log (EVT) format'),
-      'winevtx': (
-          'Windows XML Event Log (EVTX) file',
-          'libyal:libevtx:Windows XML Event Log (EVTX)'),
-      'winfirewall': (
-          'Windows Firewall', ''),
-      'winiis': (
-          'Microsoft IIS log file', ''),
-      'winjob': (
-          'Windows Job file (also known as "at jobs"',
-          'dtformats:Job file format'),
-      'winlogon': (
-          'Windows log-on data', ''),
-      'winrar_mru': (
-          'WinRar archives history data', ''),
-      'winreg': (
-          'Windows NT Registry File (REGF)',
-          'libyal:libregf:Windows NT Registry File (REGF) format'),
-      'xchatlog': (
-          'Xchat log file', ''),
-      'xchatscrollback': (
-          'Xchat scrollback log file', ''),
-      'zsh_extended_history': (
-          'Zsh history file', ''),
-  }
 
   _DTFORMATS_URL_PREFIX = (
       'https://github.com/libyal/dtformats/blob/master/documentation')
@@ -488,14 +227,24 @@ class DataFormatInformationExractor(object):
             category = self._DATA_FORMAT_CATEGORY_PER_PACKAGE_PATH.get(
                 package_path, 'File formats')
 
-            name = getattr(cls, 'DATA_FORMAT', None)
+            data_format = getattr(cls, 'DATA_FORMAT', None)
             url = ''
-            if not name:
-              name, url = self._DATA_FORMAT_NAME_AND_URL_PER_PARSER_NAME.get(
-                  parser_name, (parser_name, ''))
+
+            dtfabric_file = os.path.join(package_path, ''.join([name, '.yaml']))
+            if os.path.exists(dtfabric_file):
+              definitions_registry = (
+                  dtfabric_registry.DataTypeDefinitionsRegistry())
+              definitions_reader = (
+                  dtfabric_reader.YAMLDataTypeDefinitionsFileReader())
+
+              try:
+                definitions_reader.ReadFile(definitions_registry, dtfabric_file)
+                # TODO: determine the URL using definitions_registry.
+              except Exception:  # pylint: disable=broad-except
+                pass
 
             data_format_descriptor = DataFormatDescriptor(
-                category=category, name=name, url=url)
+                category=category, name=data_format, url=url)
             data_format_descriptors.append(data_format_descriptor)
 
     return data_format_descriptors

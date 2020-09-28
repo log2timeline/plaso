@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import recycler as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import recycler
 
@@ -104,11 +103,6 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
-
-    event = events[2]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self._TestGetSourceStrings(event, event_data, 'Recycle Bin', 'RECBIN')
 
 
 if __name__ == '__main__':

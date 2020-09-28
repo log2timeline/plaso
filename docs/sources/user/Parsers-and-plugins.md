@@ -2,84 +2,85 @@
 
 Name | Description
 --- | ---
-amcache | Parser for AMCache Registry entries.
-android_app_usage | Parser for Android usage-history.xml files.
-apache_access | Apache access Parser
-apt_history | Parser for APT History log files.
-asl_log | Parser for ASL log files.
-bash_history | Parser for Bash history files
-bencode | Parser for bencoded files.
+amcache | Parser for AMCache Windows NT Registry (AMCache.hve) files.
+android_app_usage | Parser for Android usage history (usage-history.xml) files.
+apache_access | Parser for Apache access log (access.log) files.
+apt_history | Parser for Advanced Packaging Tool (APT) History log files.
+asl_log | Parser for Apple System Log (ASL) files.
+bash_history | Parser for Bash history files.
+bencode | Parser for Bencoded files.
 binary_cookies | Parser for Safari Binary Cookie files.
-bsm_log | Parser for BSM log files.
-chrome_cache | Parser for Chrome Cache files.
+bsm_log | Parser for Basic Security Module (BSM) event auditing files.
+chrome_cache | Parser for Google Chrome or Chromium Cache files.
 chrome_preferences | Parser for Google Chrome Preferences files.
 cups_ipp | Parser for CUPS IPP files.
-custom_destinations | Parser for *.customDestinations-ms files.
-czip | Parser for compound ZIP files.
-dockerjson | Parser for JSON Docker files.
-dpkg | Parser for Debian dpkg.log files.
-esedb | Parser for Extensible Storage Engine (ESE) database files.
+custom_destinations | Parser for Custom destinations jump list (.customDestinations-ms) files.
+czip | Parser for Compound ZIP files.
+dockerjson | Parser for Docker configuration and log JSON files.
+dpkg | Parser for Debian package manager log (dpkg.log) files.
+esedb | Parser for Extensible Storage Engine (ESE) Database File (EDB) format.
 filestat | Parser for file system stat information.
-firefox_cache | Parser for Mozilla Firefox Cache version 1 files (version 31 or earlier).
-firefox_cache2 | Parser for Mozilla Firefox Cache version 2 files (version 32 or later).
-fseventsd | Parser for fseventsd files.
+firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or earlier).
+firefox_cache2 | Parser for Mozilla Firefox Cache version 2 file (version 32 or later).
+fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) files.
 gdrive_synclog | Parser for Google Drive Sync log files.
-googlelog | Parser for handling Google log formatted files.
+googlelog | Parser for Google-formatted log files.
 java_idx | Parser for Java WebStart Cache IDX files.
 lnk | Parser for Windows Shortcut (LNK) files.
-mac_appfirewall_log | Parser for appfirewall.log files.
-mac_keychain | Parser for MacOS Keychain files.
-mac_securityd | Parser for MacOS securityd log files.
-mactime | Parser for SleuthKit version 3 bodyfiles.
-macwifi | Parser for MacOS wifi.log files.
-mcafee_protection | Parser for McAfee AV Access Protection log files.
+mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
+mac_keychain | Parser for MacOS keychain database files.
+mac_securityd | Parser for MacOS security daemon (securityd) log files.
+mactime | Parser for SleuthKit version 3 bodyfile.
+macwifi | Parser for MacOS Wifi log (wifi.log) files.
+mcafee_protection | Parser for McAfee Anti-Virus access protection log files.
 mft | Parser for NTFS $MFT metadata files.
-msiecf | Parser for MSIE Cache Files (MSIECF) also known as index.dat.
+msiecf | Parser for Microsoft Internet Explorer (MSIE) 4 - 9 cache (index.dat) files.
 networkminer_fileinfo | Parser for NetworkMiner .fileinfos files.
-olecf | Parser for OLE Compound Files (OLECF).
-opera_global | Parser for Opera global_history.dat files.
-opera_typed_history | Parser for Opera typed_history.xml files.
+olecf | 
+opera_global | Parser for Opera global history (global_history.dat) files.
+opera_typed_history | Parser for Opera typed history (typed_history.xml) files.
 pe | Parser for Portable Executable (PE) files.
-plist | Parser for binary and text plist files.
-pls_recall | Parser for PL/SQL Recall files.
-popularity_contest | Parser for popularity contest log files.
-prefetch | Parser for Windows Prefetch files.
+plist | Parser for Property list (plist) files.
+pls_recall | 
+popularity_contest | Parser for Popularity Contest log files.
+prefetch | Parser for Windows Prefetch File (PF).
 recycle_bin | Parser for Windows $Recycle.Bin $I files.
 recycle_bin_info2 | Parser for Windows Recycler INFO2 files.
-rplog | Parser for Windows Restore Point (rp.log) files.
-santa | Santa Parser
-sccm | Parser for SCCM logs files.
-selinux | Parser for SELinux audit.log files.
-setupapi | Parser for Windows Setupapi log files.
+rplog | Parser for Windows Restore Point log (rp.log) files.
+santa | Parser for Santa log (santa.log) files.
+sccm | Parser for System Center Configuration Manager (SCCM) client log files.
+selinux | Parser for SELinux audit log (audit.log) files.
+setupapi | Parser for Windows SetupAPI log files.
 skydrive_log | Parser for OneDrive (or SkyDrive) log files.
 skydrive_log_old | Parser for OneDrive (or SkyDrive) old log files.
-sophos_av | Parser for Anti-Virus log (SAV.txt) files.
+sophos_av | Parser for Sophos Anti-Virus log file (SAV.txt) files.
+spotlight_storedb | Parser for Apple Spotlight store database (store.db) files.
 sqlite | Parser for SQLite database files.
-symantec_scanlog | Parser for Symantec Anti-Virus log files.
-syslog | Syslog Parser
-systemd_journal | Parser for Systemd Journal files.
+symantec_scanlog | Parser for AV Corporate Edition and Endpoint Protection log files.
+syslog | Parser for System log (syslog) files.
+systemd_journal | Parser for Systemd journal files.
 trendmicro_url | Parser for Trend Micro Office Web Reputation log files.
 trendmicro_vd | Parser for Trend Micro Office Scan Virus Detection log files.
-usnjrnl | Parser for NTFS USN change journal ($UsnJrnl).
+usnjrnl | Parser for NTFS USN change journal ($UsnJrnl:$J) file system metadata files.
 utmp | Parser for Linux libc6 utmp files.
 utmpx | Parser for Mac OS X 10.5 utmpx files.
 vsftpd | Parser for vsftpd log files.
 winevt | Parser for Windows EventLog (EVT) files.
 winevtx | Parser for Windows XML EventLog (EVTX) files.
-winfirewall | Parser for Windows Firewall Log files.
+winfirewall | Parser for Windows Firewall log files.
 winiis | Parser for Microsoft IIS log files.
-winjob | Parser for Windows Scheduled Task job (or At-job) files.
+winjob | Parser for Windows Scheduled Task job (or at-job) files.
 winreg | Parser for Windows NT Registry (REGF) files.
 xchatlog | Parser for XChat log files.
 xchatscrollback | Parser for XChat scrollback log files.
-zsh_extended_history | Parser for ZSH extended history files
+zsh_extended_history | Parser for ZSH extended history files.
 
 ### Parser plugins: bencode
 
 Name | Description
 --- | ---
-bencode_transmission | Parser for Transmission bencoded files.
-bencode_utorrent | Parser for uTorrent bencoded files.
+bencode_transmission | Parser for Transmission BitTorrent activity files.
+bencode_utorrent | Parser for uTorrent active torrent files.
 
 ### Parser plugins: czip
 
@@ -91,18 +92,18 @@ oxml | Parser for OpenXML (OXML) files.
 
 Name | Description
 --- | ---
-file_history | Parser for File History ESE database files.
-msie_webcache | Parser for MSIE WebCache ESE database files.
+file_history | Parser for Windows 8 File History ESE database files.
+msie_webcache | Parser for Internet Explorer WebCache ESE database (WebCacheV01.dat, WebCacheV24.dat) files.
 srum | Parser for System Resource Usage Monitor (SRUM) ESE database files.
 
 ### Parser plugins: olecf
 
 Name | Description
 --- | ---
-olecf_automatic_destinations | Parser for *.automaticDestinations-ms OLECF files.
-olecf_default | Parser for a generic OLECF item.
-olecf_document_summary | Parser for a DocumentSummaryInformation OLECF stream.
-olecf_summary | Parser for a SummaryInformation OLECF stream.
+olecf_automatic_destinations | Parser for Automatic destinations jump list OLE compound file (.automaticDestinations-ms).
+olecf_default | Parser for Generic OLE compound item.
+olecf_document_summary | Parser for Document summary information (\0x05DocumentSummaryInformation).
+olecf_summary | Parser for Summary information (\0x05SummaryInformation) (top-level only).
 
 ### Parser plugins: plist
 
@@ -165,19 +166,19 @@ zeitgeist | Parser for Zeitgeist activity SQLite database files.
 
 Name | Description
 --- | ---
-cron | Parser for syslog cron messages.
-ssh | Parser for SSH syslog entries.
+cron | Parser for Cron syslog line.
+ssh | Parser for SSH syslog line.
 
 ### Parser plugins: winreg
 
 Name | Description
 --- | ---
 appcompatcache | Parser for Application Compatibility Cache Registry data.
-bagmru | Parser for BagMRU Registry data.
-bam | Parser for Background Activity Moderator Registry data.
+bagmru | Parser for BagMRU (or ShellBags) Registry data.
+bam | Parser for Background Activity Moderator (BAM) Registry data.
 ccleaner | Parser for CCleaner Registry data.
-explorer_mountpoints2 | Parser for mount points Registry data.
-explorer_programscache | Parser for Explorer ProgramsCache Registry data.
+explorer_mountpoints2 | Parser for Windows Explorer mount points Registry data.
+explorer_programscache | Parser for Windows Explorer Programs Cache Registry data.
 microsoft_office_mru | Parser for Microsoft Office MRU Registry data.
 microsoft_outlook_mru | Parser for Microsoft Outlook search MRU Registry data.
 mrulist_shell_item_list | Parser for Most Recently Used (MRU) Registry data.
@@ -186,27 +187,27 @@ mrulistex_shell_item_list | Parser for Most Recently Used (MRU) Registry data.
 mrulistex_string | Parser for Most Recently Used (MRU) Registry data.
 mrulistex_string_and_shell_item | Parser for Most Recently Used (MRU) Registry data.
 mrulistex_string_and_shell_item_list | Parser for Most Recently Used (MRU) Registry data.
-msie_zone | Parser for Internet Explorer zone settings Registry data.
+msie_zone | Parser for Microsoft Internet Explorer zone settings Registry data.
 mstsc_rdp | Parser for Terminal Server Client Connection Registry data.
-mstsc_rdp_mru | Parser for Terminal Server Client MRU Registry data.
+mstsc_rdp_mru | Parser for Terminal Server Client Most Recently Used (MRU) Registry data.
 network_drives | Parser for Windows network drives Registry data.
-networks | Parser for NetworkList data.
+networks | Parser for Windows networks (NetworkList) Registry data.
 userassist | Parser for User Assist Registry data.
 windows_boot_execute | Parser for Boot Execution Registry data.
-windows_boot_verify | Parser for Boot Verification Registry data.
-windows_run | Parser for run and run once Registry data.
-windows_sam_users | Parser for SAM Users and Names Registry keys.
-windows_services | Parser for services and drivers Registry data.
-windows_shutdown | Parser for ShutdownTime Registry value.
-windows_task_cache | Parser for Task Scheduler cache Registry data.
-windows_timezone | Parser for Windows timezone settings.
-windows_typed_urls | Parser for Explorer typed URLs Registry data.
-windows_usb_devices | Parser for USB device Registry entries.
-windows_usbstor_devices | Parser for USB Plug And Play Manager USBStor Registry Key.
-windows_version | Parser for Windows version Registry data.
-winlogon | Parser for winlogon Registry data.
+windows_boot_verify | Parser for Windows boot verification Registry data.
+windows_run | Parser for Run and run once Registry data.
+windows_sam_users | Parser for Security Accounts Manager (SAM) users Registry data.
+windows_services | Parser for Windows drivers and services Registry data.
+windows_shutdown | Parser for Windows last shutdown Registry data.
+windows_task_cache | Parser for Windows Task Scheduler cache Registry data.
+windows_timezone | Parser for Windows time zone Registry data.
+windows_typed_urls | Parser for Windows Explorer typed URLs Registry data.
+windows_usb_devices | Parser for Windows USB device Registry data.
+windows_usbstor_devices | Parser for Windows USB Plug And Play Manager USBStor Registry data.
+windows_version | Parser for Windows version (product) Registry data.
+winlogon | Parser for Windows log-on Registry data.
 winrar_mru | Parser for WinRAR History Registry data.
-winreg_default | Parser for Registry data.
+winreg_default | Parser for Windows Registry data.
 
 ### Parser presets (data/presets.yaml)
 
@@ -214,7 +215,7 @@ Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
 linux | apt_history, bash_history, bencode, czip/oxml, dockerjson, dpkg, filestat, gdrive_synclog, googlelog, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, vsftpd, webhist, xchatlog, xchatscrollback, zsh_extended_history
-macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
+macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | amcache, custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
 win7_slow | mft, win7

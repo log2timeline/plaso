@@ -125,7 +125,7 @@ Test data:
 * the contents of the *.exe and *.exe.mui files on bdetogo.raw has been
   filled with 0-byte values.
 
-Copied with permission from the GRR project: https://github.com/google/grr
+Copied with permission from [the GRR project](https://github.com/google/grr).
 * History
 * index.dat
 * places.sqlite
@@ -144,10 +144,17 @@ Copyright SANS Institute - Digital Forensics and Incident Response.
 * example.lnk
 * MFT
 * nfury_index.dat
+* nromanoff@stark-research-labs.com.pst
 * Ntuser.dat (multiple instances)
+* Outlook.NK2
 * SysEvent.Evt
 * System.evtx
 * Windows.edb
 
 Copied with permission granted by Ange Albertini.
 * test_driver.sys
+
+Copied with permission from [the Greendale data set](https://github.com/dfirlabs/greendale-specimens).
+* agdb/student-pc1/AgGlGlobalHistory.db
+* mdmp/student-pc1/WER1090.tmp.mdmp
+

@@ -89,7 +89,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat log files."""
 
   NAME = 'xchatlog'
-  DESCRIPTION = 'Parser for XChat log files.'
+  DATA_FORMAT = 'XChat log file'
 
   _ENCODING = 'utf-8'
 
@@ -142,11 +142,10 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   LINE_STRUCTURES = [
       ('logline', _LOG_LINE),
       ('header', _HEADER),
-      ('header_signature', _HEADER_SIGNATURE),
-  ]
+      ('header_signature', _HEADER_SIGNATURE)]
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(XChatLogParser, self).__init__()
     self._last_month = 0
     self._xchat_year = None

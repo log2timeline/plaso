@@ -28,7 +28,6 @@ plaso.parsers.cookie\_plugins.manager module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

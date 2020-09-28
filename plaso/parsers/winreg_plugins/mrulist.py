@@ -175,7 +175,7 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
   """Windows Registry plugin to parse a string MRUList."""
 
   NAME = 'mrulist_string'
-  DESCRIPTION = 'Parser for Most Recently Used (MRU) Registry data.'
+  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
 
   FILTERS = frozenset([MRUListStringRegistryKeyFilter()])
 
@@ -243,7 +243,7 @@ class MRUListShellItemListWindowsRegistryPlugin(
   """Windows Registry plugin to parse a shell item list MRUList."""
 
   NAME = 'mrulist_shell_item_list'
-  DESCRIPTION = 'Parser for Most Recently Used (MRU) Registry data.'
+  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

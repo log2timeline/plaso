@@ -44,7 +44,6 @@ plaso.parsers.olecf\_plugins.summary module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

@@ -75,6 +75,50 @@ class EnumerationEventFormatterHelper(object):
         input_value, self.default)
 
 
+class FlagsEventFormatterHelper(object):
+  """Helper for formatting flags event data.
+
+  Attributes:
+    input_attribute (str): name of the attribute that contains the flags
+        input value.
+    output_attribute (str): name of the attribute where the flags output
+        value should be stored.
+    values (dict[str, str]): mapping of flags input and output values.
+  """
+
+  def __init__(
+      self, input_attribute=None, output_attribute=None, values=None):
+    """Initialized a helper for formatting flags event data.
+
+    Args:
+      input_attribute (Optional[str]): name of the attribute that contains
+          the flags input value.
+      output_attribute (Optional[str]): name of the attribute where the
+          flags output value should be stored.
+      values (Optional[dict[str, str]]): mapping of flags input and output
+          values.
+    """
+    super(FlagsEventFormatterHelper, self).__init__()
+    self.input_attribute = input_attribute
+    self.output_attribute = output_attribute
+    self.values = values or {}
+
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
+
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+    input_value = event_values.get(self.input_attribute, None)
+
+    output_values = []
+    for flag, mapped_value in self.values.items():
+      if flag & input_value:
+        output_values.append(mapped_value)
+
+    event_values[self.output_attribute] = ', '.join(output_values)
+
+
 class EventFormatter(object):
   """Base class to format event data using a format string.
 
@@ -214,6 +258,14 @@ class EventFormatter(object):
 
     return set(self._format_string_attribute_names)
 
+  def AddHelper(self, helper):
+    """Adds an event formatter helper.
+
+    Args:
+      helper (EventFormatterHelper): event formatter helper to add.
+    """
+    self.helpers.append(helper)
+
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.
@@ -238,27 +290,6 @@ class EventFormatter(object):
     event_values = event_data.CopyToDict()
     return self._FormatMessages(
         self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
-
-  # pylint: disable=unused-argument
-  def GetSources(self, event, event_data):
-    """Determines the the short and long source for an event.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): short and long source string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter(
-          'Unsupported data type: {0:s} expected {1:s}.'.format(
-              event_data.data_type, self.DATA_TYPE))
-
-    return self.SOURCE_SHORT, self.SOURCE_LONG
 
 
 class ConditionalEventFormatter(EventFormatter):

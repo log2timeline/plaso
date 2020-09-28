@@ -230,14 +230,15 @@ class ParsersManager(object):
         parser_filter_expression=parser_filter_expression):
       if parser_class.SupportsPlugins():
         for plugin_name, plugin_class in parser_class.GetPlugins():
+          description = ''
+
           data_format = getattr(plugin_class, 'DATA_FORMAT', '')
           if data_format:
             if data_format.endswith(' file'):
               description = 'Parser for {0:s}s.'.format(data_format)
             else:
               description = 'Parser for {0:s}.'.format(data_format)
-          else:
-            description = getattr(plugin_class, 'DESCRIPTION', '')
+
           parser_plugins_information.append((plugin_name, description))
 
     return parser_plugins_information
@@ -345,7 +346,15 @@ class ParsersManager(object):
     """
     parsers_information = []
     for _, parser_class in cls._GetParsers():
-      description = getattr(parser_class, 'DESCRIPTION', '')
+      description = ''
+
+      data_format = getattr(parser_class, 'DATA_FORMAT', '')
+      if data_format:
+        if data_format.endswith(' file'):
+          description = 'Parser for {0:s}s.'.format(data_format)
+        else:
+          description = 'Parser for {0:s}.'.format(data_format)
+
       parsers_information.append((parser_class.NAME, description))
 
     return parsers_information

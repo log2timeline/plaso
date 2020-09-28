@@ -8,57 +8,6 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class OLECFDestListEntryFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an OLECF DestList stream event."""
-
-  DATA_TYPE = 'olecf:dest_list:entry'
-
-  FORMAT_STRING_PIECES = [
-      'Entry: {entry_number}',
-      'Pin status: {pin_status}',
-      'Hostname: {hostname}',
-      'Path: {path}',
-      'Droid volume identifier: {droid_volume_identifier}',
-      'Droid file identifier: {droid_file_identifier}',
-      'Birth droid volume identifier: {birth_droid_volume_identifier}',
-      'Birth droid file identifier: {birth_droid_file_identifier}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Entry: {entry_number}',
-      'Pin status: {pin_status}',
-      'Path: {path}']
-
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
-
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
-    pin_status = event_values.get('pin_status', 0)
-    if pin_status == -1:
-      event_values['pin_status'] = 'Unpinned'
-    else:
-      event_values['pin_status'] = 'Pinned'
-
-    return self._ConditionalFormatMessages(event_values)
-
-
 class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF Summary Info property set stream event."""
 
@@ -86,15 +35,11 @@ class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
       'Author: {author}',
       'Revision number: {revision_number}']
 
-  SOURCE_LONG = 'OLECF Summary Info'
-  SOURCE_SHORT = 'OLECF'
-
   _SECURITY_VALUES = {
       0x00000001: 'Password protected',
       0x00000002: 'Read-only recommended',
       0x00000004: 'Read-only enforced',
-      0x00000008: 'Locked for annotations',
-  }
+      0x00000008: 'Locked for annotations'}
 
   def GetMessages(self, formatter_mediator, event_data):
     """Determines the formatted message strings for the event data.
@@ -136,5 +81,4 @@ class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatters([
-    OLECFDestListEntryFormatter, OLECFSummaryInfoFormatter])
+manager.FormattersManager.RegisterFormatters([OLECFSummaryInfoFormatter])

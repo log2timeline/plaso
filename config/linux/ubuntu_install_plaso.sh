@@ -21,6 +21,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libevtx-python3
                      libewf-python3
                      libfsapfs-python3
+                     libfsext-python3
                      libfsntfs-python3
                      libfvde-python3
                      libfwnt-python3
@@ -41,7 +42,6 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libvslvm-python3
                      python3-artifacts
                      python3-bencode
-                     python3-biplist
                      python3-certifi
                      python3-cffi-backend
                      python3-chardet
@@ -95,6 +95,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libewf-python3-dbg
                     libfsapfs-dbg
                     libfsapfs-python3-dbg
+                    libfsext-dbg
+                    libfsext-python3-dbg
                     libfsntfs-dbg
                     libfsntfs-python3-dbg
                     libfvde-dbg

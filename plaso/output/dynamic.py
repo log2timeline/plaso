@@ -95,34 +95,6 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
       return '0000-00-00T00:00:00'
 
-  def _FormatDisplayName(self, event, event_data, event_data_stream):
-    """Formats the display name.
-
-    The display_name field can be set as an attribute to event_data otherwise
-    it is derived from the path specificiation.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: date field.
-    """
-    display_name = getattr(event_data, 'display_name', None)
-    if not display_name:
-      path_spec = getattr(event_data_stream, 'path_spec', None)
-      if not path_spec:
-        path_spec = getattr(event_data, 'pathspec', None)
-
-      if path_spec:
-        display_name = self._output_mediator.GetDisplayNameForPathSpec(
-            path_spec)
-      else:
-        display_name = '-'
-
-    return display_name
-
   def _FormatFilename(self, event, event_data, event_data_stream):
     """Formats the filename.
 
@@ -150,31 +122,6 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     return filename
 
-  def _FormatTime(self, event, event_data, event_data_stream):
-    """Formats a time field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: time field.
-    """
-    try:
-      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
-          event.timestamp, timezone=self._output_mediator.timezone,
-          raise_error=True)
-
-      return iso_date_time[11:19]
-
-    except (OverflowError, ValueError):
-      self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable time. '
-          'Defaulting to: "--:--:--"').format(event.timestamp))
-
-      return '--:--:--'
-
   def _FormatTimestampDescription(self, event, event_data, event_data_stream):
     """Formats a timestamp description field.
 
@@ -199,8 +146,8 @@ class DynamicOutputModule(shared_dsv.DSVOutputModule):
       'Dynamic selection of fields for a separated value output format.')
 
   _DEFAULT_NAMES = [
-      'datetime', 'timestamp_desc', 'source', 'source_long',
-      'message', 'parser', 'display_name', 'tag']
+      'datetime', 'timestamp_desc', 'source', 'source_long', 'message',
+      'parser', 'display_name', 'tag']
 
   def __init__(self, output_mediator):
     """Initializes a dynamic delimiter separated values output module object.

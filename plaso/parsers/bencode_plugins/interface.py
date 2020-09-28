@@ -27,6 +27,7 @@ class BencodePlugin(plugins.BasePlugin):
   URLS = []
 
   NAME = 'bencode_plugin'
+  DATA_FORMAT = 'Bencoded file'
 
   def _GetDecodedValue(self, decoded_values, name):
     """Retrieves a decoded value.

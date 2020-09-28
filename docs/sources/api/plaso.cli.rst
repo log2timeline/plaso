@@ -116,7 +116,6 @@ plaso.cli.views module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

@@ -23,9 +23,6 @@ class SafariCookieFormatter(interface.ConditionalEventFormatter):
       '{url}',
       '({cookie_name})']
 
-  SOURCE_LONG = 'Safari Cookies'
-  SOURCE_SHORT = 'WEBHIST'
-
   _COOKIE_FLAGS = {
       1: 'Secure',
       2: 'Unknown',

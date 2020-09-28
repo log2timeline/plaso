@@ -44,7 +44,7 @@ class FileStatParser(interface.FileEntryParser):
   """Parses file system stat object."""
 
   NAME = 'filestat'
-  DESCRIPTION = 'Parser for file system stat information.'
+  DATA_FORMAT = 'file system stat information'
 
   _TIMESTAMP_DESCRIPTIONS = {
       'bkup_time': definitions.TIME_DESCRIPTION_BACKUP,

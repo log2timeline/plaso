@@ -17,7 +17,7 @@ class TestParser(interface.BaseParser):
   """Test parser."""
 
   NAME = 'test_parser'
-  DESCRIPTION = 'Test parser.'
+  DATA_FORMAT = 'Test parser'
 
   # pylint: disable=unused-argument
   def Parse(self, parser_mediator, **kwargs):
@@ -33,7 +33,7 @@ class TestParserWithPlugins(interface.BaseParser):
   """Test parser with plugins."""
 
   NAME = 'test_parser_with_plugins'
-  DESCRIPTION = 'Test parser with plugins.'
+  DATA_FORMAT = 'Test parser with plugins'
 
   _plugin_classes = {}
 
@@ -51,7 +51,7 @@ class TestPlugin(plugins.BasePlugin):
   """Test plugin."""
 
   NAME = 'test_plugin'
-  DESCRIPTION = 'Test plugin.'
+  DATA_FORMAT = 'Test plugin'
 
   # pylint: disable=unused-argument
   def Process(self, parser_mediator, **kwargs):

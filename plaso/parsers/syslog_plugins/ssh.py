@@ -58,7 +58,8 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
   """A plugin for creating events from syslog message produced by SSH."""
 
   NAME = 'ssh'
-  DESCRIPTION = 'Parser for SSH syslog entries.'
+  DATA_FORMAT = 'SSH syslog line'
+
   REPORTER = 'sshd'
 
   _AUTHENTICATION_METHOD = (

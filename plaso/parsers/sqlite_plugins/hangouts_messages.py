@@ -16,10 +16,10 @@ class HangoutsMessageData(events.EventData):
   """GoogleHangouts Message event data.
 
   Attributes:
-    sender (str): Name with the sender.
     body (str): content of the SMS text message.
     message_status (int): message status.
     message_type (int): message type.
+    sender (str): Name with the sender.
   """
 
   DATA_TYPE = 'android:messaging:hangouts'

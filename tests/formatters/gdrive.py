@@ -32,25 +32,5 @@ class GDriveCloudEntryFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetMessages.
 
 
-class GDriveLocalEntryFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Google Drive snapshot local event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = gdrive.GDriveLocalEntryFormatter()
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = gdrive.GDriveLocalEntryFormatter()
-
-    expected_attribute_names = ['path', 'size']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
-
-
 if __name__ == '__main__':
   unittest.main()

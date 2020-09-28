@@ -38,7 +38,7 @@ class TaskCacheWindowsRegistryPlugin(
   """Plugin that parses a Task Cache key."""
 
   NAME = 'windows_task_cache'
-  DESCRIPTION = 'Parser for Task Scheduler cache Registry data.'
+  DATA_FORMAT = 'Windows Task Scheduler cache Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

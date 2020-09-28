@@ -315,7 +315,7 @@ class SQLiteParser(interface.FileEntryParser):
   """Parses SQLite database files."""
 
   NAME = 'sqlite'
-  DESCRIPTION = 'Parser for SQLite database files.'
+  DATA_FORMAT = 'SQLite database file'
 
   _plugin_classes = {}
 

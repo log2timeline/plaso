@@ -31,9 +31,6 @@ class ASLFormatter(interface.ConditionalEventFormatter):
       'Sender: {sender}',
       'Facility: {facility}']
 
-  SOURCE_LONG = 'ASL entry'
-  SOURCE_SHORT = 'LOG'
-
   # Priority levels (criticality)
   _PRIORITY_LEVELS = {
       0 : 'EMERGENCY',

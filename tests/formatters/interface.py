@@ -49,6 +49,38 @@ class WrongEventFormatter(interface.EventFormatter):
   SOURCE_LONG = 'Weird Log File'
 
 
+class EnumerationEventFormatterHelperTEst(test_lib.EventFormatterTestCase):
+  """Tests for the enumeration event formatter helper."""
+
+  def testInitialization(self):
+    """Tests the initialization."""
+    event_formatter_helper = interface.EnumerationEventFormatterHelper()
+    self.assertIsNotNone(event_formatter_helper)
+
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    event_formatter_helper = interface.EnumerationEventFormatterHelper()
+
+    event_values = {}
+    event_formatter_helper.FormatEventValues(event_values)
+
+
+class FlagsEventFormatterHelperTEst(test_lib.EventFormatterTestCase):
+  """Tests for the flags event formatter helper."""
+
+  def testInitialization(self):
+    """Tests the initialization."""
+    event_formatter_helper = interface.FlagsEventFormatterHelper()
+    self.assertIsNotNone(event_formatter_helper)
+
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    event_formatter_helper = interface.FlagsEventFormatterHelper()
+
+    event_values = {}
+    event_formatter_helper.FormatEventValues(event_values)
+
+
 class EventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the event formatter."""
 
@@ -89,8 +121,6 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
     self.assertEqual(
         message, 'but we\'re still trying to say something about the event')
-
-  # TODO: add tests for GetSources
 
 
 class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
@@ -139,8 +169,6 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
         'Description: this is beyond words Comment Value: 0x0c '
         'Text: but we\'re still trying to say something about the event')
     self.assertEqual(message, expected_message)
-
-  # TODO: add test for GetSources.
 
 
 if __name__ == '__main__':

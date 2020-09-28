@@ -10,7 +10,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.formatters import fseventsd as _  # pylint: disable=unused-import
 from plaso.parsers import fseventsd
 
 from tests.parsers import test_lib

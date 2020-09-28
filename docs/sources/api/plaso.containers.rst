@@ -124,7 +124,6 @@ plaso.containers.windows\_events module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

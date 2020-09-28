@@ -14,20 +14,18 @@ class OutputMediator(object):
   """Output mediator.
 
   Attributes:
-    fields_filter (FilterObject): filter object that indicates
-        which fields to output.
+    data_location (Optional[str]): path of the formatter data files.
   """
 
   def __init__(
-      self, knowledge_base, formatter_mediator, fields_filter=None,
+      self, knowledge_base, formatter_mediator, data_location=None,
       preferred_encoding='utf-8'):
     """Initializes an output mediator.
 
     Args:
       knowledge_base (KnowledgeBase): knowledge base.
       formatter_mediator (FormatterMediator): formatter mediator.
-      fields_filter (Optional[FilterObject]): filter object that indicates
-          which fields to output.
+      data_location (Optional[str]): path of the formatter data files.
       preferred_encoding (Optional[str]): preferred encoding to output.
     """
     super(OutputMediator, self).__init__()
@@ -36,7 +34,7 @@ class OutputMediator(object):
     self._preferred_encoding = preferred_encoding
     self._timezone = pytz.UTC
 
-    self.fields_filter = fields_filter
+    self.data_location = data_location
 
   @property
   def encoding(self):
@@ -44,19 +42,11 @@ class OutputMediator(object):
     return self._preferred_encoding
 
   @property
-  def filter_expression(self):
-    """str: filter expression if a filter is set, None otherwise."""
-    if not self.fields_filter:
-      return None
-
-    return self.fields_filter.filter_expression
-
-  @property
   def timezone(self):
     """The timezone."""
     return self._timezone
 
-  def _GetEventFormatter(self, event_data):
+  def GetEventFormatter(self, event_data):
     """Retrieves the event formatter for a specific event data type.
 
     Args:
@@ -97,28 +87,9 @@ class OutputMediator(object):
         str: full message string or None if no event formatter was found.
         str: short message string or None if no event formatter was found.
     """
-    event_formatter = self._GetEventFormatter(event_data)
+    event_formatter = self.GetEventFormatter(event_data)
     if event_formatter:
       return event_formatter.GetMessages(self._formatter_mediator, event_data)
-
-    return None, None
-
-  def GetFormattedSources(self, event, event_data):
-    """Retrieves the formatted sources related to the event.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple: containing:
-
-        str: full source string or None if no event formatter was found.
-        str: short source string or None if no event formatter was found.
-    """
-    event_formatter = self._GetEventFormatter(event_data)
-    if event_formatter:
-      return event_formatter.GetSources(event, event_data)
 
     return None, None
 

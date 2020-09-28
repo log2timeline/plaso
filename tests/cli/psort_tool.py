@@ -72,10 +72,6 @@ class TestOutputModuleMissingParameters(dynamic.DynamicOutputModule):
 
   NAME = 'test_missing'
 
-  _HEADER = (
-      'date,time,timezone,MACB,source,sourcetype,type,user,host,'
-      'short,desc,version,filename,inode,notes,format,extra\n')
-
   # For test purpose assign these as class attributes.
   missing = None
   parameters = None
@@ -95,22 +91,6 @@ class TestOutputModuleMissingParameters(dynamic.DynamicOutputModule):
   def SetMissingValue(cls, attribute, value):
     """Set missing value."""
     setattr(cls, attribute, value)
-
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
-    """Writes the body of an event object to the output.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
-    message, _ = self._output_mediator.GetFormattedMessages(event_data)
-    source_short, source_long = self._output_mediator.GetFormattedSources(
-        event, event_data)
-    output_text = '{0:s}/{1:s} {2:s}\n'.format(
-        source_short, source_long, message)
-    self._output_writer.Write(output_text)
 
 
 class PsortToolTest(test_lib.CLIToolTestCase):
@@ -313,6 +293,7 @@ optional arguments:
         input_reader=input_reader, output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.data_location = shared_test_lib.DATA_PATH
     options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
     options.output_format = 'test_missing'
 
@@ -330,16 +311,16 @@ optional arguments:
       test_tool.ProcessStorage()
 
       with io.open(temp_file_name, 'rt', encoding=encoding) as file_object:
-        for line in file_object.readlines():
-          lines.append(line.strip())
+        lines = [line.strip() for line in file_object]
 
     self.assertTrue(input_reader.read_called)
     self.assertEqual(TestOutputModuleMissingParameters.missing, 'foobar')
     self.assertEqual(TestOutputModuleMissingParameters.parameters, 'foobar')
 
     expected_line = (
-        'FILE/OS Metadata Modification Time '
-        'OS:/tmp/test/test_data/syslog Type: file')
+        '2020-04-04T06:39:41+00:00,Last Access Time,FILE,File stat,'
+        'OS:/tmp/test/test_data/syslog Type: file,filestat,'
+        'OS:/tmp/test/test_data/syslog,-')
     self.assertIn(expected_line, lines)
 
     output_manager.OutputManager.DeregisterOutput(

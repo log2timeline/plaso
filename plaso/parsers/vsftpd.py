@@ -35,7 +35,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses a vsftpd log."""
 
   NAME = 'vsftpd'
-  DESCRIPTION = 'Parser for vsftpd log files.'
+  DATA_FORMAT = 'vsftpd log file'
 
   _DATETIME_ELEMENTS = (
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('day') +

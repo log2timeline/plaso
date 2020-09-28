@@ -8,8 +8,6 @@ message:
 short_message:
 - 'Package: {package}'
 - 'Component: {component}'
-short_source: 'LOG'
-source: 'Android App Usage'
 ---
 type: 'conditional'
 data_type: 'android:event:call'
@@ -20,8 +18,29 @@ message:
 - 'Duration: {duration} seconds'
 short_message:
 - '{call_type} Call'
-short_source: 'LOG'
-source: 'Android Call History'
+---
+type: 'conditional'
+data_type: 'android:messaging:hangouts'
+enumeration_helpers:
+- input_attribute: 'message_status'
+  output_attribute: 'message_status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'UNREAD'
+    4: 'READ'
+- input_attribute: 'message_type'
+  output_attribute: 'message_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'SENT'
+    2: 'RECEIVED'
+message:
+- 'Sender: {sender}'
+- 'Body: {body}'
+- 'Status: {message_status}'
+- 'Type: {message_type}'
+short_message:
+- '{body}'
 ---
 type: 'conditional'
 data_type: 'android:messaging:sms'
@@ -32,8 +51,22 @@ message:
 - 'Message: {body}'
 short_message:
 - '{body}'
-short_source: 'LOG'
-source: 'Android SMS messages'
+---
+type: 'conditional'
+data_type: 'tango:android:message'
+enumeration_helpers:
+- input_attribute: 'direction'
+  output_attribute: 'direction'
+  default_value: 'Unknown'
+  values:
+    1: 'Incoming'
+    2: 'Outgoing'
+message:
+- '{direction}'
+- 'Message ({message_identifier})'
+short_message:
+- '{direction}'
+- 'Message ({message_identifier})'
 ---
 type: 'conditional'
 data_type: 'webview:cookie'
@@ -47,8 +80,6 @@ short_message:
 - '{domain}'
 - '{name}'
 - '{value}'
-short_source: 'WebView'
-source: 'Android WebView'
 ---
 type: 'conditional'
 data_type: 'android:webviewcache'
@@ -57,8 +88,6 @@ message:
 - 'Content Length: {content_length}'
 short_message:
 - '{url}'
-short_source: 'WebViewCache'
-source: 'Android WebViewCache'
 ---
 type: 'conditional'
 data_type: 'tango:android:conversation'
@@ -66,8 +95,6 @@ message:
 - 'Conversation ({conversation_identifier})'
 short_message:
 - 'Conversation ({conversation_identifier})'
-short_source: 'Tango Android'
-source: 'Tango Android Conversation'
 ---
 type: 'conditional'
 data_type: 'twitter:android:contact'
@@ -85,8 +112,6 @@ short_message:
 - 'Screen name: {username}'
 - 'Description: {description}'
 - 'URL: {web_url}'
-short_source: 'Twitter Android'
-source: 'Twitter Android Contacts'
 ---
 type: 'conditional'
 data_type: 'twitter:android:search'
@@ -95,5 +120,27 @@ message:
 - 'Query: {search_query}'
 short_message:
 - 'Query: {search_query}'
-short_source: 'Twitter Android'
-source: 'Twitter Android Search'
+---
+type: 'conditional'
+data_type: 'twitter:android:status'
+enumeration_helpers:
+- input_attribute: 'favorited'
+  output_attribute: 'favorited'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+- input_attribute: 'retweeted'
+  output_attribute: 'retweeted'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'User: {username}'
+- 'Status: {content}'
+- 'Favorited: {favorited}'
+- 'Retweeted: {retweeted}'
+short_message:
+- 'User: {username}'
+- 'Status: {content}'

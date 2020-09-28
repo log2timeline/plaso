@@ -12,7 +12,7 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class TestSQLitePlugin(interface.SQLitePlugin):
-  """Convenience class for a test SQLite plugin."""
+  """SQLite plugin for testing purposes."""
 
   NAME = 'test'
 

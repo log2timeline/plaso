@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Apple System Log Parser."""
+"""The Apple System Log (ASL) file parser."""
 
 from __future__ import unicode_literals
 
@@ -15,7 +15,7 @@ from plaso.parsers import manager
 
 
 class ASLEventData(events.EventData):
-  """Convenience class for an ASL event.
+  """Apple System Log (ASL) event data.
 
   Attributes:
     computer_name (str): name of the host.
@@ -56,10 +56,10 @@ class ASLEventData(events.EventData):
 
 
 class ASLParser(dtfabric_parser.DtFabricBaseParser):
-  """Parser for ASL log files."""
+  """Parser for Apple System Log (ASL) files."""
 
   NAME = 'asl_log'
-  DESCRIPTION = 'Parser for ASL log files.'
+  DATA_FORMAT = 'Apple System Log (ASL) file'
 
   _DEFINITION_FILE = 'asl.yaml'
 

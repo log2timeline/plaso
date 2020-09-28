@@ -238,14 +238,15 @@ optional arguments:
     expected_line = 'filestat : Parser for file system stat information.'
     self.assertIn(expected_line, lines)
 
-    expected_line = 'bencode_utorrent : Parser for uTorrent bencoded files.'
+    expected_line = (
+        'bencode_utorrent : Parser for uTorrent active torrent files.')
     self.assertIn(expected_line, lines)
 
     expected_line = (
-        'msie_webcache : Parser for MSIE WebCache ESE database files.')
+        'msie_webcache : Parser for Internet Explorer WebCache ESE database')
     self.assertIn(expected_line, lines)
 
-    expected_line = 'olecf_default : Parser for a generic OLECF item.'
+    expected_line = 'olecf_default : Parser for Generic OLE compound item.'
     self.assertIn(expected_line, lines)
 
     expected_line = 'plist_default : Parser for plist files.'
@@ -257,10 +258,10 @@ optional arguments:
         'chrome_27_history : Parser for Google Chrome 27 and later history')
     self.assertIn(expected_line, lines)
 
-    expected_line = 'ssh : Parser for SSH syslog entries.'
+    expected_line = 'ssh : Parser for SSH syslog line.'
     self.assertIn(expected_line, lines)
 
-    expected_line = 'winreg_default : Parser for Registry data.'
+    expected_line = 'winreg_default : Parser for Windows Registry data.'
     self.assertIn(expected_line, lines)
 
 

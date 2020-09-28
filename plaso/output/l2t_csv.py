@@ -109,19 +109,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
       return '00/00/0000'
 
-  def _FormatDisplayName(self, event, event_data, event_data_stream):
-    """Formats a display name field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: display name field.
-    """
-    return getattr(event_data, 'display_name', '-')
-
   def _FormatExtraAttributes(self, event, event_data, event_data_stream):
     """Formats an extra attributes field.
 
@@ -137,10 +124,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    event_attributes = list(event_data.GetAttributes())
-    if event_data_stream:
-      event_attributes.extend(event_data_stream.GetAttributes())
-
     # TODO: reverse logic and get formatted attributes instead.
     unformatted_attributes = (
         formatters_manager.FormattersManager.GetUnformattedAttributes(
@@ -151,12 +134,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
           'Unable to find event formatter for: {0:s}.'.format(
               event_data.data_type))
 
-    event_attributes = list(event_data.GetAttributes())
-    if event_data_stream:
-      event_attributes.extend(event_data_stream.GetAttributes())
-
     extra_attributes = []
-    for attribute_name, attribute_value in sorted(event_attributes):
+    for attribute_name, attribute_value in event_data.GetAttributes():
       if attribute_name in unformatted_attributes:
         # Some parsers have written bytes values to storage.
         if isinstance(attribute_value, bytes):
@@ -172,7 +151,13 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         extra_attributes.append('{0:s}: {1!s}'.format(
             attribute_name, attribute_value))
 
-    extra_attributes = '; '.join(extra_attributes)
+    if event_data_stream:
+      for attribute_name, attribute_value in event_data_stream.GetAttributes():
+        if attribute_name != 'path_spec':
+          extra_attributes.append('{0:s}: {1!s}'.format(
+              attribute_name, attribute_value))
+
+    extra_attributes = '; '.join(sorted(extra_attributes))
 
     return extra_attributes.replace('\n', '-').replace('\r', '')
 
@@ -188,31 +173,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       str: parser field.
     """
     return getattr(event_data, 'parser', '-')
-
-  def _FormatTime(self, event, event_data, event_data_stream):
-    """Formats a time field.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: time field.
-    """
-    try:
-      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
-          event.timestamp, timezone=self._output_mediator.timezone,
-          raise_error=True)
-
-      return iso_date_time[11:19]
-
-    except (OverflowError, ValueError):
-      self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable time. '
-          'Defaulting to: "--:--:--"').format(event.timestamp))
-
-      return '--:--:--'
 
   def _FormatType(self, event, event_data, event_data_stream):
     """Formats a type field.

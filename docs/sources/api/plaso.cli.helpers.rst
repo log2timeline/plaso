@@ -292,7 +292,6 @@ plaso.cli.helpers.yara\_rules module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

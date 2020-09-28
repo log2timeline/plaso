@@ -13,8 +13,9 @@ from plaso.parsers import plugins
 
 class SyslogPlugin(plugins.BasePlugin):
   """The interface for syslog plugins."""
+
   NAME = 'syslog_plugin'
-  DESCRIPTION = ''
+  DATA_FORMAT = 'Syslog file'
 
   # The syslog 'reporter' value for syslog messages that the plugin is able to
   # parse.

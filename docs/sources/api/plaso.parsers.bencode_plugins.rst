@@ -28,7 +28,6 @@ plaso.parsers.bencode\_plugins.utorrent module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

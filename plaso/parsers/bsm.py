@@ -11,7 +11,6 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
-from plaso.unix import bsmtoken
 
 
 class BSMEventData(events.EventData):
@@ -37,10 +36,10 @@ class BSMEventData(events.EventData):
 
 
 class BSMParser(dtfabric_parser.DtFabricBaseParser):
-  """Parser for BSM files."""
+  """Parser for Basic Security Module (BSM) event auditing files."""
 
   NAME = 'bsm_log'
-  DESCRIPTION = 'Parser for BSM log files.'
+  DATA_FORMAT = 'Basic Security Module (BSM) event auditing file'
 
   _DEFINITION_FILE = 'bsm.yaml'
 
@@ -172,8 +171,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       0x7f: 'bsm_token_data_socket_ex',
       0x80: 'bsm_token_data_sockinet32',
       0x81: 'bsm_token_data_sockinet64',
-      0x82: 'bsm_token_data_sockunix',
-  }
+      0x82: 'bsm_token_data_sockunix'}
 
   _TOKEN_DATA_FORMAT_FUNCTIONS = {
       0x11: '_FormatOtherFileToken',
@@ -212,6 +210,163 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       0x80: '_FormatSocketInet32Token',
       0x81: '_FormatSocketInet128Token',
       0x82: '_FormatSocketUnixToken'}
+
+  _DATA_TOKEN_FORMAT = {
+      0: 'Binary',
+      1: 'Octal',
+      2: 'Decimal',
+      3: 'Hexadecimal',
+      4: 'String'}
+
+  # BSM identification errors.
+  _ERRORS = {
+      0: 'Success',
+      1: 'Operation not permitted',
+      2: 'No such file or directory',
+      3: 'No such process',
+      4: 'Interrupted system call',
+      5: 'Input/output error',
+      6: 'Device not configured',
+      7: 'Argument list too long',
+      8: 'Exec format error',
+      9: 'Bad file descriptor',
+      10: 'No child processes',
+      11: 'Resource temporarily unavailable',
+      12: 'Cannot allocate memory',
+      13: 'Permission denied',
+      14: 'Bad address',
+      15: 'Block device required',
+      16: 'Device busy',
+      17: 'File exists',
+      18: 'ross-device link',
+      19: 'Operation not supported by device',
+      20: 'Not a directory',
+      21: 'Is a directory',
+      22: 'Invalid argument',
+      23: 'Too many open files in system',
+      24: 'Too many open files',
+      25: 'Inappropriate ioctl for device',
+      26: 'Text file busy',
+      27: 'File too large',
+      28: 'No space left on device',
+      29: 'Illegal seek',
+      30: 'Read-only file system',
+      31: 'Too many links',
+      32: 'Broken pipe',
+      33: 'Numerical argument out of domain',
+      34: 'Result too large',
+      35: 'No message of desired type',
+      36: 'Identifier removed',
+      45: 'Resource deadlock avoided',
+      46: 'No locks available',
+      47: 'Operation canceled',
+      48: 'Operation not supported',
+      49: 'Disc quota exceeded',
+      66: 'Too many levels of remote in path',
+      67: 'Link has been severed',
+      71: 'Protocol error',
+      74: 'Multihop attempted',
+      77: 'Bad message',
+      78: 'File name too long',
+      79: 'Value too large to be stored in data type',
+      88: 'Illegal byte sequence',
+      89: 'Function not implemented',
+      90: 'Too many levels of symbolic links',
+      91: 'Restart syscall',
+      93: 'Directory not empty',
+      94: 'Too many users',
+      95: 'Socket operation on non-socket',
+      96: 'Destination address required',
+      97: 'Message too long',
+      98: 'Protocol wrong type for socket',
+      99: 'Protocol not available',
+      120: 'Protocol not supported',
+      121: 'Socket type not supported',
+      122: 'Operation not supported',
+      123: 'Protocol family not supported',
+      124: 'Address family not supported by protocol family',
+      125: 'Address already in use',
+      126: 'Can\'t assign requested address',
+      127: 'Network is down',
+      128: 'Network unreachable',
+      129: 'Network dropped connection on reset',
+      130: 'Software caused connection abort',
+      131: 'Connection reset by peer',
+      132: 'No buffer space available',
+      133: 'Socket is already connected',
+      134: 'Socket is not connected',
+      143: 'Can\'t send after socket shutdown',
+      144: 'Too many references: can\'t splice',
+      145: 'Operation timed out',
+      146: 'Connection refused',
+      147: 'Host is down',
+      148: 'No route to host',
+      149: 'Operation already in progress',
+      150: 'Operation now in progress',
+      151: 'Stale NFS file handle',
+      190: 'PROCLIM',
+      191: 'BADRPC',
+      192: 'RPCMISMATCH',
+      193: 'PROGUNAVAIL',
+      194: 'PROGMISMATCH',
+      195: 'PROCUNAVAIL',
+      196: 'FTYPE',
+      197: 'AUTH',
+      198: 'NEEDAUTH',
+      199: 'NOATTR',
+      200: 'DOOFUS',
+      201: 'USTRETURN',
+      202: 'NOIOCTL',
+      203: 'DIRIOCTL',
+      204: 'PWROFF',
+      205: 'DEVERR',
+      206: 'BADEXEC',
+      207: 'BADARCH',
+      208: 'SHLIBVERS',
+      209: 'BADMACHO',
+      210: 'POLICY'}
+
+  # BSM network protocolsb based on information from OpenBSD.
+  _NETWORK_PROTOCOLS = {
+      0: 'UNSPEC',
+      1: 'LOCAL',
+      2: 'INET',
+      3: 'IMPLINK',
+      4: 'PUP',
+      5: 'CHAOS',
+      6: 'NS',
+      8: 'ECMA',
+      9: 'DATAKIT',
+      10: 'CCITT',
+      11: 'SNA',
+      12: 'DECnet',
+      13: 'DLI',
+      14: 'LAT',
+      15: 'HYLINK',
+      16: 'APPLETALK',
+      19: 'OSI',
+      23: 'IPX',
+      24: 'ROUTE',
+      25: 'LINK',
+      26: 'INET6',
+      27: 'KEY',
+      500: 'NETBIOS',
+      501: 'ISO',
+      502: 'XTP',
+      503: 'COIP',
+      504: 'CNT',
+      505: 'RTIP',
+      506: 'SIP',
+      507: 'PIP',
+      508: 'ISDN',
+      509: 'E164',
+      510: 'NATM',
+      511: 'ATM',
+      512: 'NETGRAPH',
+      513: 'SLOW',
+      514: 'CLUSTER',
+      515: 'ARP',
+      516: 'BLUETOOTH'}
 
   def _FormatArgToken(self, token_data):
     """Formats an argument token as a dictionary of values.
@@ -255,7 +410,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     Returns:
       dict[str, str]: token values.
     """
-    format_string = bsmtoken.BSM_TOKEN_DATA_PRINT.get(
+    format_string = self._DATA_TOKEN_FORMAT.get(
         token_data.data_format, 'UNKNOWN')
 
     if token_data.data_format == 4:
@@ -276,7 +431,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     Returns:
       dict[str, str]: token values.
     """
-    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.net_type, 'UNKNOWN')
+    protocol = self._NETWORK_PROTOCOLS.get(token_data.net_type, 'UNKNOWN')
     if token_data.net_type == 4:
       ip_address = self._FormatPackedIPv6Address(token_data.ip_address[:4])
     elif token_data.net_type == 16:
@@ -433,7 +588,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     Returns:
       dict[str, str]: token values.
     """
-    error_string = bsmtoken.BSM_ERRORS.get(token_data.status, 'UNKNOWN')
+    error_string = self._ERRORS.get(token_data.status, 'UNKNOWN')
     return {
         'error': error_string,
         'token_status': token_data.status,
@@ -485,7 +640,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     Returns:
       dict[str, str]: token values.
     """
-    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    protocol = self._NETWORK_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
     ip_address = self._FormatPackedIPv4Address(token_data.ip_addresss)
     return {
         'protocols': protocol,
@@ -502,7 +657,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     Returns:
       dict[str, str]: token values.
     """
-    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    protocol = self._NETWORK_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
     ip_address = self._FormatPackedIPv6Address(token_data.ip_addresss)
     return {
         'protocols': protocol,
@@ -519,7 +674,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     Returns:
       dict[str, str]: token values.
     """
-    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    protocol = self._NETWORK_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
     return {
         'protocols': protocol,
         'family': token_data.socket_family,

@@ -36,7 +36,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   """Parses a Microsoft IIS log file."""
 
   NAME = 'winiis'
-  DESCRIPTION = 'Parser for Microsoft IIS log files.'
+  DATA_FORMAT = 'Microsoft IIS log file'
 
   # Common Fields (6.0: date time s-sitename s-ip cs-method cs-uri-stem
   # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
@@ -152,7 +152,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   _ENCODING = 'utf-8'
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(WinIISParser, self).__init__()
     self._day_of_month = None
     self._month = None

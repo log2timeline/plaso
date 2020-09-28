@@ -81,7 +81,7 @@ class WinLnkParser(interface.FileObjectParser):
   _INITIAL_FILE_OFFSET = None
 
   NAME = 'lnk'
-  DESCRIPTION = 'Parser for Windows Shortcut (LNK) files.'
+  DATA_FORMAT = 'Windows Shortcut (LNK) file'
 
   @classmethod
   def GetFormatSpecification(cls):

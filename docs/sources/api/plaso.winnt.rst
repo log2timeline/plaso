@@ -4,14 +4,6 @@ plaso.winnt package
 Submodules
 ----------
 
-plaso.winnt.human\_readable\_service\_enums module
---------------------------------------------------
-
-.. automodule:: plaso.winnt.human_readable_service_enums
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.winnt.known\_folder\_ids module
 -------------------------------------
 
@@ -43,7 +35,6 @@ plaso.winnt.time\_zones module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

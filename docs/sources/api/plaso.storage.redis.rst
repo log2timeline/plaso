@@ -36,7 +36,6 @@ plaso.storage.redis.writer module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

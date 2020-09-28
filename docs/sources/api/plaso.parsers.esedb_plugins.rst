@@ -36,7 +36,6 @@ plaso.parsers.esedb\_plugins.srum module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

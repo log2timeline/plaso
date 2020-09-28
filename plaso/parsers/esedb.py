@@ -30,7 +30,7 @@ class ESEDBParser(interface.FileObjectParser):
   _INITIAL_FILE_OFFSET = None
 
   NAME = 'esedb'
-  DESCRIPTION = 'Parser for Extensible Storage Engine (ESE) database files.'
+  DATA_FORMAT = 'Extensible Storage Engine (ESE) Database File (EDB) format'
 
   _plugin_classes = {}
 

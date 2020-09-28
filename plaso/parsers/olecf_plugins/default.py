@@ -34,7 +34,7 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
   """Class to define the default OLECF file plugin."""
 
   NAME = 'olecf_default'
-  DESCRIPTION = 'Parser for a generic OLECF item.'
+  DATA_FORMAT = 'Generic OLE compound item'
 
   def _ParseItem(self, parser_mediator, olecf_item):
     """Parses an OLECF item.

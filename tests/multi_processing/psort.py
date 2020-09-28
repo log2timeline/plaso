@@ -381,7 +381,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     formatter_mediator = formatters_mediator.FormatterMediator()
 
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator)
+        knowledge_base_object, formatter_mediator,
+        data_location=shared_test_lib.TEST_DATA_PATH)
 
     output_module = TestOutputModule(output_mediator_object)
 
@@ -418,7 +419,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     formatter_mediator = formatters_mediator.FormatterMediator()
 
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator)
+        knowledge_base_object, formatter_mediator,
+        data_location=shared_test_lib.TEST_DATA_PATH)
 
     output_module = TestOutputModule(output_mediator_object)
 
@@ -465,7 +467,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     formatter_mediator.SetPreferredLanguageIdentifier('en-US')
 
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator)
+        knowledge_base_object, formatter_mediator,
+        data_location=shared_test_lib.TEST_DATA_PATH)
 
     output_module = null.NullOutputModule(output_mediator_object)
 
@@ -527,7 +530,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     formatter_mediator.SetPreferredLanguageIdentifier('en-US')
 
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator)
+        knowledge_base_object, formatter_mediator,
+        data_location=shared_test_lib.TEST_DATA_PATH)
 
     output_module = dynamic.DynamicOutputModule(output_mediator_object)
     output_module.SetOutputWriter(output_writer)

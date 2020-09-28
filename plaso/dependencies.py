@@ -21,20 +21,19 @@ import re
 PYTHON_DEPENDENCIES = {
     'artifacts': ('__version__', '20190305', None, True),
     'bencode': ('', '', None, True),
-    'biplist': ('', '1.0.3', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'chardet': ('__version__', '2.0.1', None, True),
     'cryptography': ('__version__', '2.0.2', None, True),
     'dateutil': ('__version__', '1.5', None, True),
     'defusedxml': ('__version__', '0.5.0', None, True),
     'dfdatetime': ('__version__', '20200613', None, True),
-    'dfvfs': ('__version__', '20200625', None, True),
+    'dfvfs': ('__version__', '20200920', None, True),
     'dfwinreg': ('__version__', '20180712', None, True),
     'dtfabric': ('__version__', '20200621', None, True),
     'elasticsearch': ('__versionstr__', '6.0', None, False),
     'future': ('__version__', '0.16.0', None, True),
     'idna': ('__version__', '2.5', None, True),
-    'lz4': ('', '0.10.0', None, True),
+    'lz4': ('__version__', '0.10.0', None, True),
     'pefile': ('__version__', '2018.8.8', None, True),
     'psutil': ('__version__', '5.4.3', None, True),
     'pybde': ('get_version()', '20140531', None, True),
@@ -43,7 +42,8 @@ PYTHON_DEPENDENCIES = {
     'pyevtx': ('get_version()', '20141112', None, True),
     'pyewf': ('get_version()', '20131210', None, True),
     'pyfsapfs': ('get_version()', '20181205', None, True),
-    'pyfsntfs': ('get_version()', '20200414', None, True),
+    'pyfsext': ('get_version()', '20200819', None, True),
+    'pyfsntfs': ('get_version()', '20200805', None, True),
     'pyfvde': ('get_version()', '20160719', None, True),
     'pyfwnt': ('get_version()', '20180117', None, True),
     'pyfwsi': ('get_version()', '20150606', None, True),
@@ -133,10 +133,17 @@ def _CheckPythonModule(
   # Make sure the module version is a string.
   module_version = '{0!s}'.format(module_version)
 
+  # Remove a version suffix, such as: 0.7.0~rc1
+  module_version_list = _VERSION_SPLIT_REGEX.split(module_version)
+
+  try:
+    int(module_version_list[-1], 10)
+  except (TypeError, ValueError):
+    module_version_list.pop()
+
   # Split the version string and convert every digit into an integer.
   # A string compare of both version strings will yield an incorrect result.
-  module_version_map = list(
-      map(int, _VERSION_SPLIT_REGEX.split(module_version)))
+  module_version_map = list(map(int, module_version_list))
   minimum_version_map = list(
       map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
 

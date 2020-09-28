@@ -15,6 +15,7 @@ except ImportError:
   elasticsearch = None
 
 from plaso.lib import errors
+from plaso.output import formatting_helper
 from plaso.output import interface
 from plaso.output import logger
 
@@ -23,6 +24,113 @@ from plaso.output import logger
 if elasticsearch:
   elastic_logger = logging.getLogger('elasticsearch.trace')
   elastic_logger.setLevel(logging.WARNING)
+
+
+class SharedElasticsearchFieldFormattingHelper(
+    formatting_helper.FieldFormattingHelper):
+  """Shared Elasticsearch output module field formatting helper."""
+
+  # Maps the name of a fields to a a callback function that formats
+  # the field value.
+  _FIELD_FORMAT_CALLBACKS = {
+      'datetime': '_FormatDateTime',
+      'display_name': '_FormatDisplayName',
+      'message': '_FormatMessage',
+      'source_long': '_FormatSource',
+      'source_short': '_FormatSourceShort',
+      'tag': '_FormatTag',
+      'timestamp': '_FormatTimestamp',
+      'timestamp_desc': '_FormatTimestampDescription',
+  }
+
+  # The field format callback methods require specific arguments hence
+  # the check for unused arguments is disabled here.
+  # pylint: disable=unused-argument
+
+  def _FormatDateTime(self, event, event_data, event_data_stream):
+    """Formats a date and time field in ISO 8601 format.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: date and time field.
+    """
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
+    return date_time.CopyToDateTimeStringISO8601()
+
+  def _FormatTag(self, event_tag):
+    """Formats an event tag field.
+
+    Args:
+      event_tag (EventTag): event tag or None if not set.
+
+    Returns:
+      list[str]: event tag labels.
+    """
+    return getattr(event_tag, 'labels', None) or []
+
+  def _FormatTimestamp(self, event, event_data, event_data_stream):
+    """Formats a timestamp field.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      int: timestamp field.
+    """
+    return event.timestamp
+
+  def _FormatTimestampDescription(self, event, event_data, event_data_stream):
+    """Formats a timestamp description field.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: timestamp description field.
+    """
+    return event.timestamp_desc
+
+  # pylint: enable=unused-argument
+
+  def GetFormattedField(
+      self, field_name, event, event_data, event_data_stream, event_tag):
+    """Formats the specified field.
+
+    Args:
+      field_name (str): name of the field.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      object: value of the field or None if not set.
+    """
+    callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
+    if callback_name == '_FormatTag':
+      return self._FormatTag(event_tag)
+
+    callback_function = None
+    if callback_name:
+      callback_function = getattr(self, callback_name, None)
+
+    if callback_function:
+      output_value = callback_function(event, event_data, event_data_stream)
+    elif hasattr(event_data_stream, field_name):
+      output_value = getattr(event_data_stream, field_name, None)
+    else:
+      output_value = getattr(event_data, field_name, None)
+
+    return output_value
 
 
 class SharedElasticsearchOutputModule(interface.OutputModule):
@@ -39,6 +147,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
   # Number of seconds to wait before a request to Elasticsearch is timed out.
   _DEFAULT_REQUEST_TIMEOUT = 300
 
+  _DEFAULT_FIELD_NAMES = [
+      'datetime',
+      'display_name',
+      'message',
+      'source_long',
+      'source_short',
+      'tag',
+      'timestamp',
+      'timestamp_desc']
+
   def __init__(self, output_mediator):
     """Initializes an Elasticsearch output module.
 
@@ -51,6 +169,8 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._document_type = self._DEFAULT_DOCUMENT_TYPE
     self._event_documents = []
     self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
+    self._field_formatting_helper = SharedElasticsearchFieldFormattingHelper(
+        output_mediator)
     self._host = None
     self._index_name = None
     self._number_of_buffered_events = 0
@@ -76,12 +196,11 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
         [elastic_host],
         http_auth=elastic_http_auth,
         use_ssl=self._use_ssl,
-        ca_certs=self._ca_certs
-    )
+        ca_certs=self._ca_certs)
 
-    logger.debug(
-        ('Connected to Elasticsearch server: {0:s} port: {1:d}'
-         'URL prefix {2!s}.').format(self._host, self._port, self._url_prefix))
+    logger.debug((
+        'Connected to Elasticsearch server: {0:s} port: {1:d} URL prefix: '
+        '{2!s}.').format(self._host, self._port, self._url_prefix))
 
   def _CreateIndexIfNotExists(self, index_name, mappings):
     """Creates an Elasticsearch index if it does not exist.
@@ -131,6 +250,14 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._event_documents = []
     self._number_of_buffered_events = 0
 
+  def _GetClientMajorVersion(self):
+    """Get the major version of the Elasticsearch client library.
+
+    Returns:
+      int: Major version number.
+    """
+    return elasticsearch.__version__[0]
+
   def _GetSanitizedEventValues(
       self, event, event_data, event_data_stream, event_tag):
     """Sanitizes the event for use in Elasticsearch.
@@ -153,68 +280,38 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    event_attributes = list(event_data.GetAttributes())
-    if event_data_stream:
-      event_attributes.extend(event_data_stream.GetAttributes())
-
     event_values = {}
-    for attribute_name, attribute_value in sorted(event_attributes):
+
+    if event_data:
+      for attribute_name, attribute_value in event_data.GetAttributes():
+        event_values[attribute_name] = attribute_value
+
+    if event_data_stream:
+      for attribute_name, attribute_value in event_data_stream.GetAttributes():
+        event_values[attribute_name] = attribute_value
+
+    for attribute_name in self._DEFAULT_FIELD_NAMES:
+      if attribute_name not in event_values:
+        event_values[attribute_name] = None
+
+    field_values = {}
+    for attribute_name, attribute_value in event_values.items():
       # Note that support for event_data.pathspec is kept for backwards
       # compatibility. The current value is event_data_stream.path_spec.
       if attribute_name in ('path_spec', 'pathspec'):
         try:
-          attribute_value = JsonPathSpecSerializer.WriteSerialized(
-              attribute_value)
+          field_value = JsonPathSpecSerializer.WriteSerialized(attribute_value)
         except TypeError:
           continue
-      event_values[attribute_name] = attribute_value
 
-      if isinstance(attribute_value, bytes):
-        # Some parsers have written bytes values to storage.
-        attribute_value = attribute_value.decode('utf-8', 'replace')
-        logger.warning(
-            'Found bytes value for attribute "{0:s}" for data type: '
-            '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
-                attribute_name, event_data.data_type, attribute_value))
-        event_values[attribute_name] = attribute_value
+      else:
+        field_value = self._field_formatting_helper.GetFormattedField(
+            attribute_name, event, event_data, event_data_stream, event_tag)
 
-    event_values['timestamp'] = event.timestamp
-    event_values['timestamp_desc'] = event.timestamp_desc
+      field_values[attribute_name] = self._SanitizeField(
+          event_data.data_type, attribute_name, field_value)
 
-    # Add a date and time string representation of the timestamp.
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=event.timestamp)
-    event_values['datetime'] = date_time.CopyToDateTimeStringISO8601()
-
-    message, _ = self._output_mediator.GetFormattedMessages(event_data)
-    if message is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(data_type))
-
-    event_values['message'] = message
-
-    # Tags needs to be a list for Elasticsearch to index correctly.
-    labels = []
-    if event_tag:
-      try:
-        labels = list(event_tag.labels)
-      except (AttributeError, KeyError):
-        pass
-
-    event_values['tag'] = labels
-
-    source_short, source = self._output_mediator.GetFormattedSources(
-        event, event_data)
-    if source is None or source_short is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(data_type))
-
-    event_values['source_short'] = source_short
-    event_values['source_long'] = source
-
-    return event_values
+    return field_values
 
   def _InsertEvent(self, event, event_data, event_data_stream, event_tag):
     """Inserts an event.
@@ -244,6 +341,27 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     if self._number_of_buffered_events > self._flush_interval:
       self._FlushEvents()
 
+  def _SanitizeField(self, data_type, attribute_name, field):
+    """Sanitizes a field for output.
+
+    Args:
+      data_type (str): event data type.
+      attribute_name (str): name of the event attribute.
+      field (object): value of the field to sanitize.
+
+    Returns:
+      object: sanitized value of the field.
+    """
+    # Some parsers have written bytes values to storage.
+    if isinstance(field, bytes):
+      field = field.decode('utf-8', 'replace')
+      logger.warning(
+          'Found bytes value for attribute: {0:s} of data type: '
+          '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
+              attribute_name, data_type, field))
+
+    return field
+
   def Close(self):
     """Closes connection to Elasticsearch.
 
@@ -252,14 +370,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._FlushEvents()
 
     self._client = None
-
-  def _GetClientMajorVersion(self):
-    """Get the major version of the Elasticsearch client library.
-
-    Returns:
-      int: Major version number.
-    """
-    return elasticsearch.__version__[0]
 
   def SetDocumentType(self, document_type):
     """Sets the document type.

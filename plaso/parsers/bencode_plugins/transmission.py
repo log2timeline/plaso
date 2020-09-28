@@ -37,7 +37,7 @@ class TransmissionPlugin(interface.BencodePlugin):
   """
 
   NAME = 'bencode_transmission'
-  DESCRIPTION = 'Parser for Transmission bencoded files.'
+  DATA_FORMAT = 'Transmission BitTorrent activity file'
 
   BENCODE_KEYS = frozenset([
       'activity-date', 'added-date', 'destination', 'done-date',

@@ -1,6 +1,7 @@
 # How to write a parser
 
 ## Introduction
+
 This page is intended to give you an introduction into developing a parser for
 Plaso.
 
@@ -67,13 +68,16 @@ data related to the event.
 #### Registering the parser
 
 Add an import for the parser to:
+
 ```
 plaso/parsers/__init__.py
 ```
+
 It should look like this:
-```
+
+~~~~python
 from plaso.parsers import safari_cookies
-```
+~~~~
 
 When plaso.parsers is imported this will load the safari_cookies module
 `safari_cookies.py`.
@@ -97,7 +101,7 @@ class BinaryCookieParser(interface.FileObjectParser):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
-  DESCRIPTION = 'Parser for Safari Binary Cookie files.'
+  DATA_FORMAT = 'Safari Binary Cookie file'
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Safari binary cookie file-like object.
@@ -116,8 +120,10 @@ class BinaryCookieParser(interface.FileObjectParser):
 manager.ParsersManager.RegisterParser(BinaryCookieParser)
 ~~~~
 
-### Writing the event formatter
+### Writing the message formatter
 
-```
-plaso/formatters/safari_cookies.py
-```
+The event message format is defined in `data/formatters/*.yaml`.
+
+For more information about the configuration file format see:
+[message formatting](../user/Output-and-formatting.html#message-formatting)
+

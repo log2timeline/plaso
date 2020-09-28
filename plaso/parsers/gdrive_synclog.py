@@ -27,7 +27,6 @@ class GoogleDriveSyncLogEventData(events.EventData):
     source_code (str): filename:line_number of source file which logged event.
     thread (str): colon-separated thread identifier in the form "ID:name"
         which logged event.
-    time (str): date and time of the log entry event with timezone offset.
   """
 
   DATA_TYPE = 'gdrive_sync:log:line'
@@ -35,20 +34,18 @@ class GoogleDriveSyncLogEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(GoogleDriveSyncLogEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.time = None
     self.log_level = None
-    self.pid = None
-    self.thread = None
-    self.source_code = None
     self.message = None
+    self.pid = None
+    self.source_code = None
+    self.thread = None
 
 
 class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from Google Drive Sync log files."""
 
   NAME = 'gdrive_synclog'
-
-  DESCRIPTION = 'Parser for Google Drive Sync log files.'
+  DATA_FORMAT = 'Google Drive Sync log file'
 
   _ENCODING = 'utf-8'
 

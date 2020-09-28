@@ -51,7 +51,7 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_services'
-  DESCRIPTION = 'Parser for services and drivers Registry data.'
+  DATA_FORMAT = 'Windows drivers and services Registry data'
 
   # TODO: use a key path prefix match here. Might be more efficient.
   # HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services

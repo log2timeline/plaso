@@ -1,20 +1,16 @@
-Welcome to the Plaso documentation!
+Welcome to the Plaso documentation
 =======================================
-Plaso (Plaso Langar Að Safna Öllu) is a computer forensic tool for timeline generation and analysis.
 
+Plaso (Plaso Langar Að Safna Öllu), or *super timeline all the things*, is a
+Python-based engine used by several tools for automatic creation of timelines.
+Plaso default behavior is to create super timelines but it also supports
+creating more `targeted timelines <http://blog.kiddaland.net/2013/02/targeted-timelines-part-i.html>`__.
 
-The documentation is split into several parts:
+These timelines support digital forensic investigators/analysts, to correlate
+the large amount of information found in logs and other files found on an
+average computer.
 
-
--  `User documentation <sources/user/Users-Guide.html>`__
--  `Developer documentation <sources/developer/Developers-Guide.html>`__
--  `API documentation <sources/api/plaso.html>`__
-
-
-The source code is available from https://github.com/log2timeline/plaso and
-provided under the Apache license version 2.
-
-Contents:
+The source code is available from the `project page <https://github.com/log2timeline/plaso>`__.
 
 .. toctree::
    :maxdepth: 3
@@ -22,12 +18,22 @@ Contents:
    sources/user/index
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    sources/developer/index
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
+
+   Troubleshooting <sources/Troubleshooting>
+
+.. toctree::
+   :maxdepth: 2
+
+   Supported formats <sources/Supported-formats>
+
+.. toctree::
+   :maxdepth: 2
 
    API documentation <sources/api/plaso>
 

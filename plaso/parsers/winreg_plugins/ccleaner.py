@@ -75,7 +75,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'ccleaner'
-  DESCRIPTION = 'Parser for CCleaner Registry data.'
+  DATA_FORMAT = 'CCleaner Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(

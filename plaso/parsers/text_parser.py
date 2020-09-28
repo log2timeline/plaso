@@ -534,7 +534,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
   BUFFER_SIZE = 2048
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
 

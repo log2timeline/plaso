@@ -19,6 +19,7 @@ class ESEDBPlugin(plugins.BasePlugin):
   """The ESE database plugin interface."""
 
   NAME = 'esedb_plugin'
+  DATA_FORMAT = 'ESE database file'
 
   BINARY_DATA_COLUMN_TYPES = frozenset([
       pyesedb.column_types.BINARY_DATA,

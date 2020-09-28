@@ -45,7 +45,7 @@ class WinRegistryParser(interface.FileObjectParser):
   """Parses Windows NT Registry (REGF) files."""
 
   NAME = 'winreg'
-  DESCRIPTION = 'Parser for Windows NT Registry (REGF) files.'
+  DATA_FORMAT = 'Windows NT Registry (REGF) file'
 
   _plugin_classes = {}
 
@@ -56,7 +56,7 @@ class WinRegistryParser(interface.FileObjectParser):
       'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet').lower()
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(WinRegistryParser, self).__init__()
     self._plugin_per_key_path = {}
     self._plugins_without_key_paths = []

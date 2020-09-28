@@ -38,11 +38,11 @@ class APTHistoryLogEventData(events.EventData):
 
 
 class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses events from APT History log files."""
+  """Parses for Advanced Packaging Tool (APT) History log files."""
 
   NAME = 'apt_history'
 
-  DESCRIPTION = 'Parser for APT History log files.'
+  DATA_FORMAT = 'Advanced Packaging Tool (APT) History log file'
 
   # APT History log lines can be very long.
   MAX_LINE_LENGTH = 65536
