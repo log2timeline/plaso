@@ -102,7 +102,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
-    self.assertNotEqual(registry_key, None)
+    self.assertIsNotNone(registry_key)
 
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)

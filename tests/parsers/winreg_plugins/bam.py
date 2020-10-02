@@ -66,25 +66,22 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromDateTimeString('2019-03-19 20:55:19.975237')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'UserSettings',
-        key_path=key_path,
+        'UserSettings', key_path=key_path,
         last_written_time=filetime.timestamp)
 
     filetime.CopyFromDateTimeString('2019-03-19 13:29:56.008214')
 
+    sid_key_name = 'S-1-5-21-321011808-3761883066-353627080-1000'
     sid_key = dfwinreg_fake.FakeWinRegistryKey(
-        'S-1-5-21-321011808-3761883066-353627080-1000',
-        last_written_time=filetime.timestamp)
+        sid_key_name, last_written_time=filetime.timestamp)
 
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        (
-            '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell'
-            '\\v1.0\\powershell.exe'),
-        data=binary_data,
-        data_type=dfwinreg_definitions.REG_BINARY)
+        ('\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell'
+         '\\v1.0\\powershell.exe'),
+        data=binary_data, data_type=dfwinreg_definitions.REG_BINARY)
     sid_key.AddValue(registry_value)
 
-    registry_key.AddSubkey(sid_key)
+    registry_key.AddSubkey(sid_key_name, sid_key)
 
     return registry_key
 

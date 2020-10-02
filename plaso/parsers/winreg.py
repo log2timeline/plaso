@@ -32,7 +32,7 @@ class FileObjectWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       WinRegistryFile: Windows Registry file or None.
     """
     registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage=ascii_codepage)
+        ascii_codepage=ascii_codepage, emulate_virtual_keys=False)
 
     # We don't catch any IOErrors here since we want to produce a parse error
     # from the parser if this happens.

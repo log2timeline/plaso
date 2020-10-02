@@ -163,106 +163,109 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     registry_key.AddValue(registry_value)
 
     # Setup registered event handlers.
-    notify = dfwinreg_fake.FakeWinRegistryKey('Notify')
-    registry_key.AddSubkey(notify)
+    notify_key_name = 'Notify'
+    notify_key = dfwinreg_fake.FakeWinRegistryKey(notify_key_name)
+    registry_key.AddSubkey(notify_key_name, notify_key)
 
-    navlogon = dfwinreg_fake.FakeWinRegistryKey(
-        'NavLogon', last_written_time=filetime.timestamp)
-    notify.AddSubkey(navlogon)
+    navlogon_key_name = 'NavLogon'
+    navlogon_key = dfwinreg_fake.FakeWinRegistryKey(
+        navlogon_key_name, last_written_time=filetime.timestamp)
+    notify_key.AddSubkey(navlogon_key_name, navlogon_key)
 
     value_data = 'NavLogon.dll'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'DllName', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    navlogon.AddValue(registry_value)
+    navlogon_key.AddValue(registry_value)
 
     value_data = 'NavLogoffEvent'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Logoff', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    navlogon.AddValue(registry_value)
+    navlogon_key.AddValue(registry_value)
 
     value_data = 'NavStartShellEvent'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'StartShell', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    navlogon.AddValue(registry_value)
+    navlogon_key.AddValue(registry_value)
 
-    secret_malware = dfwinreg_fake.FakeWinRegistryKey(
-        'SecretMalware', last_written_time=filetime.timestamp)
-    notify.AddSubkey(secret_malware)
+    secret_malware_key_name = 'SecretMalware'
+    secret_malware_key = dfwinreg_fake.FakeWinRegistryKey(
+        secret_malware_key_name, last_written_time=filetime.timestamp)
+    notify_key.AddSubkey(secret_malware_key_name, secret_malware_key)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Asynchronous', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secret_malware.dll'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'DllName', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Impersonate', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventLock'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Lock', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventLogoff'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Logoff', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventLogon'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Logon', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventShutdown'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Shutdown', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventSmartCardLogonNotify'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'SmartCardLogonNotify', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventStartShell'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'StartShell', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventStartup'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Startup', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventStopScreenSaver'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'StopScreenSaver', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventUnlock'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Unlock', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     return registry_key
 

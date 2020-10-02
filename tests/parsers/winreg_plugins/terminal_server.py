@@ -34,16 +34,17 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
         'Servers', key_path=key_path, last_written_time=filetime.timestamp,
         offset=865)
 
+    server_subkey_name = 'myserver.com'
     server_subkey = dfwinreg_fake.FakeWinRegistryKey(
-        'myserver.com', last_written_time=filetime.timestamp, offset=1456)
+        server_subkey_name, last_written_time=filetime.timestamp, offset=1456)
+
+    registry_key.AddSubkey(server_subkey_name, server_subkey)
 
     value_data = 'DOMAIN\\username'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'UsernameHint', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=1892)
     server_subkey.AddValue(registry_value)
-
-    registry_key.AddSubkey(server_subkey)
 
     return registry_key
 

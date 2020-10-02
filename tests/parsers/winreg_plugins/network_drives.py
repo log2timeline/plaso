@@ -35,9 +35,10 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
         last_written_time=filetime.timestamp, offset=153)
 
     # Setup H drive.
+    h_key_name = 'H'
     h_key = dfwinreg_fake.FakeWinRegistryKey(
-        'H', last_written_time=filetime.timestamp)
-    registry_key.AddSubkey(h_key)
+        h_key_name, last_written_time=filetime.timestamp)
+    registry_key.AddSubkey(h_key_name, h_key)
 
     value_data = b'\x00\x00\x00\x01'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -83,9 +84,10 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     h_key.AddValue(registry_value)
 
     # Setup Z drive.
+    z_key_name = 'Z'
     z_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Z', last_written_time=filetime.timestamp)
-    registry_key.AddSubkey(z_key)
+        z_key_name, last_written_time=filetime.timestamp)
+    registry_key.AddSubkey(z_key_name, z_key)
 
     value_data = b'\x00\x00\x00\x01'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
