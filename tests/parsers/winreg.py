@@ -145,7 +145,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
     # Check that the number of events produced by each plugin are correct.
 
-    # There will be 10 usbstor chains for currentcontrolset:
+    # There will be 10 usbstor chains for ControlSet001 and ControlSet002:
     # 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
     parser_chain = self._PluginNameToParserChain('windows_usbstor_devices')
     number_of_parser_chains = parser_chains.get(parser_chain, 0)
