@@ -145,10 +145,11 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
     # Check that the number of events produced by each plugin are correct.
 
-    # There will be 5 usbstor chains for currentcontrolset:
+    # There will be 10 usbstor chains for ControlSet001 and ControlSet002:
     # 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
     parser_chain = self._PluginNameToParserChain('windows_usbstor_devices')
-    self.assertEqual(parser_chains.get(parser_chain, 0), 5)
+    number_of_parser_chains = parser_chains.get(parser_chain, 0)
+    self.assertEqual(number_of_parser_chains, 10)
 
     # There will be 4 Windows boot execute chains for key_value pairs:
     # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager',
@@ -156,13 +157,15 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet002\Control\Session Manager',
     #     value: 'BootExecute'}
     parser_chain = self._PluginNameToParserChain('windows_boot_execute')
-    self.assertEqual(parser_chains.get(parser_chain, 0), 4)
+    number_of_parser_chains = parser_chains.get(parser_chain, 0)
+    self.assertEqual(number_of_parser_chains, 4)
 
     # There will be 831 windows services chains for keys:
     # 'HKEY_LOCAL_MACHINE\System\ControlSet001\services\**'
     # 'HKEY_LOCAL_MACHINE\System\ControlSet002\services\**'
     parser_chain = self._PluginNameToParserChain('windows_services')
-    self.assertEqual(parser_chains.get(parser_chain, 0), 831)
+    number_of_parser_chains = parser_chains.get(parser_chain, 0)
+    self.assertEqual(number_of_parser_chains, 831)
 
 
 if __name__ == '__main__':

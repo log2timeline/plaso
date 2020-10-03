@@ -210,8 +210,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         find_specs=test_filters_helper.registry_find_specs))
 
     self.assertIsNotNone(key_paths)
-
-    self.assertEqual(len(key_paths), 5)
+    self.assertEqual(len(key_paths), 8)
 
   def testCheckKeyCompatibility(self):
     """Tests the CheckKeyCompatibility function"""

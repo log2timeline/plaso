@@ -89,8 +89,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
         # https://github.com/log2timeline/dfwinreg/issues/98
 
         # Use set-comprehension to create a set of the source key paths.
-        key_paths = {
-            key_value['key'] for key_value in source.key_value_pairs}
+        key_paths = {key_value['key'] for key_value in source.key_value_pairs}
         key_paths_string = ', '.join(key_paths)
 
         logger.warning((
@@ -147,13 +146,18 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
           source type.
     """
     find_specs = []
-    for key_path_glob in path_helper.PathHelper.ExpandGlobStars(
-        key_path, '\\'):
+    for key_path_glob in path_helper.PathHelper.ExpandGlobStars(key_path, '\\'):
       logger.debug('building find spec from key path glob: {0:s}'.format(
           key_path_glob))
 
       key_path_glob_upper = key_path_glob.upper()
-      if key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
+      if key_path_glob_upper.startswith(
+          'HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTCONTROLSET'):
+        # Rewrite CurrentControlSet to ControlSet* for Windows NT.
+        key_path_glob = 'HKEY_LOCAL_MACHINE\\System\\ControlSet*{0:s}'.format(
+            key_path_glob[43:])
+
+      elif key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
         key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
 
       find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
