@@ -14,6 +14,79 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
   NAME = 'elastic'
   DESCRIPTION = 'Saves the events into an Elasticsearch database.'
 
+  _DEFAULT_MAPPING = {
+      'properties': {
+          'application': {
+              'type': 'text',
+              'fields': {
+                  'keyword': {
+                      'type': 'keyword',
+                  }
+              },
+          },
+          'data': {'type': 'text', 'fields': {'keyword': {'type': 'keyword'}}},
+          'doc_type': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'event_type': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'exit_status': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'facility': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'file_reference': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'file_size': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'flags': {'type': 'text', 'fields': {'keyword': {'type': 'keyword'}}},
+          'identifier': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'message_status': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'message_type': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'offset': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}}},
+          'sequence_number': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'severity': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'source_port': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'user_identifier': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          },
+          'version': {
+              'type': 'text',
+              'fields': {'keyword': {'type': 'keyword'}},
+          }
+      }
+  }
   # Strings longer than this will not be analyzed by elasticsearch.
   _ELASTIC_ANALYZER_STRING_LIMIT = 10922
 
@@ -46,7 +119,7 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
 
   def WriteHeader(self):
     """Connects to the Elasticsearch server and creates the index."""
-    mappings = {}
+    mappings = self._DEFAULT_MAPPING
 
     if self._raw_fields:
       # This cannot be static because we use the value of self._document_type
