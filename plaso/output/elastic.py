@@ -14,7 +14,7 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
   NAME = 'elastic'
   DESCRIPTION = 'Saves the events into an Elasticsearch database.'
 
-  DEFAULT_MAPPING = {
+  _DEFAULT_MAPPING = {
       'properties': {
           'application': {
               'type': 'text',
@@ -119,7 +119,7 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
 
   def WriteHeader(self):
     """Connects to the Elasticsearch server and creates the index."""
-    mappings = self.DEFAULT_MAPPING
+    mappings = self._DEFAULT_MAPPING
 
     if self._raw_fields:
       # This cannot be static because we use the value of self._document_type
