@@ -239,7 +239,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
     try:
       xml_data = zip_file.read('_rels/.rels')
       property_files = self._ParseRelationshipsXMLFile(xml_data)
-    except (IndexError, IOError, KeyError, OverflowError, ValueError,
+    except (IndexError, IOError, KeyError, LookupError, OverflowError,
+            ValueError, ElementTree.ParseError,
             zipfile.BadZipfile) as exception:
       parser_mediator.ProduceExtractionWarning((
           'Unable to parse relationships XML file: _rels/.rels with error: '
@@ -252,7 +253,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       try:
         xml_data = zip_file.read(path)
         properties = self._ParsePropertiesXMLFile(xml_data)
-      except (IndexError, IOError, KeyError, OverflowError, ValueError,
+      except (IndexError, IOError, KeyError, LookupError, OverflowError,
+              ValueError, ElementTree.ParseError,
               zipfile.BadZipfile) as exception:
         parser_mediator.ProduceExtractionWarning((
             'Unable to parse properties XML file: {0:s} with error: '

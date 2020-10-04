@@ -73,7 +73,13 @@ class WinEvtxParser(interface.FileObjectParser):
       str: creation date and time formatted as ISO 8601 or None if not
           available.
     """
-    xml_root = ElementTree.fromstring(xml_string)
+    try:
+      xml_root = ElementTree.fromstring(xml_string)
+    except (LookupError, ElementTree.ParseError) as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'unable to parse XML string of event record: {0:d} with error: '
+          '{1!s}').format(record_index, exception))
+      return None
 
     system_xml_element = xml_root.find(
         '{http://schemas.microsoft.com/win/2004/08/events/event}System')

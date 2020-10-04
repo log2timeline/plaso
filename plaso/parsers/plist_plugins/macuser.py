@@ -71,7 +71,7 @@ class MacUserPlugin(interface.PlistPlugin):
     for policy in match.get('passwordpolicyoptions', []):
       try:
         xml_policy = ElementTree.fromstring(policy)
-      except (ElementTree.ParseError, LookupError) as exception:
+      except (LookupError, ElementTree.ParseError) as exception:
         logger.error((
             'Unable to parse XML structure for an user policy, account: '
             '{0:s} and uid: {1!s}, with error: {2!s}').format(
