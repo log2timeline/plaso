@@ -9,6 +9,8 @@ from __future__ import unicode_literals
 import codecs
 import plistlib
 
+from xml.parsers import expat
+
 from defusedxml import ElementTree
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -71,7 +73,8 @@ class MacUserPlugin(interface.PlistPlugin):
     for policy in match.get('passwordpolicyoptions', []):
       try:
         xml_policy = ElementTree.fromstring(policy)
-      except (LookupError, ElementTree.ParseError) as exception:
+      except (LookupError, ElementTree.ParseError,
+              expat.ExpatError) as exception:
         logger.error((
             'Unable to parse XML structure for an user policy, account: '
             '{0:s} and uid: {1!s}, with error: {2!s}').format(

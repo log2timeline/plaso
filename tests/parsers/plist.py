@@ -79,7 +79,14 @@ class PlistParserTest(test_lib.ParserTestCase):
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['truncated.plist'], parser)
 
-  def testParseWithXMLFile(self):
+  def testParseWithXMLFileExpatError(self):
+    """Tests the Parse function on an XML file that causes an ExpatError."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['WMSDKNS.DTD'], parser)
+
+  def testParseWithXMLFileLookupError(self):
     """Tests the Parse function on an XML file that causes a LookupError."""
     parser = plist.PlistParser()
 
