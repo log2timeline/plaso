@@ -28,8 +28,10 @@ class VFSBackEndArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         '--vfs_back_end', '--vfs-back-end', dest='vfs_back_end',
-        choices=['auto', 'tsk'], action='store', metavar='TYPE', default='auto',
-        help='The preferred dfVFS back-end: "auto" or "tsk".')
+        choices=['auto', 'fsext', 'fsntfs', 'tsk'], action='store',
+        metavar='TYPE', default='auto', help=(
+            'The preferred dfVFS back-end: "auto", "fsext", "fsntfs" or '
+            '"tsk".'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
