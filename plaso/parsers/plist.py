@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 
 import plistlib
 
+from xml.parsers import expat
+
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -56,7 +58,8 @@ class PlistParser(interface.FileObjectParser):
     """
     try:
       top_level_object = plistlib.load(file_object)
-    except (LookupError, plistlib.InvalidFileException) as exception:
+    except (LookupError, expat.ExpatError,
+            plistlib.InvalidFileException) as exception:
       # LookupError will be raised in cases where the plist is an XML file
       # that contains an unsupported encoding.
       raise errors.UnableToParseFile(

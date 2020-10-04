@@ -1,0 +1,12 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE document [
+<!ELEMENT document (node*)>
+    <!ATTLIST document WMSNameSpaceVersion CDATA "2.0">
+
+<!ELEMENT node (node*)>
+    <!ATTLIST node name CDATA #REQUIRED>
+    <!ATTLIST node opcode ( create | remove | setval | clearval | rename | movebefore ) #REQUIRED>
+    <!ATTLIST node secure ( true | false ) #IMPLIED>
+    <!ATTLIST node type ( string | boolean | int32 | binary | int64 ) #IMPLIED>
+    <!ATTLIST node value CDATA #IMPLIED>
+]>

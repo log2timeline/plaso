@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+from xml.parsers import expat
+
 import pyevtx
 
 from defusedxml import ElementTree
@@ -75,7 +77,7 @@ class WinEvtxParser(interface.FileObjectParser):
     """
     try:
       xml_root = ElementTree.fromstring(xml_string)
-    except (LookupError, ElementTree.ParseError) as exception:
+    except (LookupError, ElementTree.ParseError, expat.ExpatError) as exception:
       parser_mediator.ProduceExtractionWarning((
           'unable to parse XML string of event record: {0:d} with error: '
           '{1!s}').format(record_index, exception))
