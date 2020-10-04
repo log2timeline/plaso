@@ -39,10 +39,10 @@ then
 			curl -o rds_modernm.zip https://s3.amazonaws.com/rds.nsrl.nist.gov/RDS/current/rds_modernm.zip
 		fi
 		# Note that NSRLFile.txt is approximate 4 GiB in size.
-		unzip -x rds_modernm.zip NSRLFile.txt
+		unzip -x rds_modernm.zip rds_modernm/NSRLFile.txt
 	fi
 	# Build the nsrlsvr hashes.txt file
-	sudo /usr/bin/nsrlupdate NSRLFile.txt
+	sudo /usr/bin/nsrlupdate rds_modernm/NSRLFile.txt
 fi
 
 # For the sake of verbosity have nsrlsvr test its set up first
