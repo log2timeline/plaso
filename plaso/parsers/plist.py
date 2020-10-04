@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import binascii
 import plistlib
 
 from xml.parsers import expat
@@ -59,7 +60,7 @@ class PlistParser(interface.FileObjectParser):
     try:
       return plistlib.load(file_object)
 
-    except (AttributeError, LookupError, expat.ExpatError,
+    except (AttributeError, LookupError, binascii.Error, expat.ExpatError,
             plistlib.InvalidFileException) as exception:
       # LookupError will be raised in cases where the plist is an XML file
       # that contains an unsupported encoding.
