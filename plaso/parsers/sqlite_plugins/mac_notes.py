@@ -80,12 +80,19 @@ class MacNotesPlugin(interface.SQLitePlugin):
   DATA_FORMAT = 'MacOS Notes SQLite database (NotesV7.storedata) file'
 
   QUERIES = [(
-      ('SELECT nb.ZHTMLSTRING AS zhtmlstring, n.ZDATECREATED AS timestamp, '
-       'n.ZDATEEDITED AS last_modified_time, n.ZTITLE as title '
-       'FROM ZNOTEBODY nb, ZNOTE n WHERE nb.Z_PK = n.Z_PK'),
+      ('SELECT ZNOTEBODY.ZHTMLSTRING AS zhtmlstring, '
+       'ZNOTE.ZDATECREATED AS timestamp, '
+       'ZNOTE.ZDATEEDITED AS last_modified_time, '
+       'ZNOTE.ZTITLE as title '
+       'FROM ZNOTEBODY, ZNOTE WHERE ZNOTEBODY.Z_PK = ZNOTE.Z_PK'),
       'ParseZHTMLSTRINGRow')]
 
-  REQUIRED_TABLES = frozenset(['ZNOTEBODY', 'ZNOTE'])
+  REQUIRED_STRUCTURE = {
+      'ZNOTEBODY': frozenset([
+          'ZHTMLSTRING']),
+      'ZNOTE': frozenset([
+          'ZDATECREATED', 'ZDATEEDITED', 'ZTITLE']),
+  }
 
   SCHEMAS = [{
       'ZACCOUNT': (
