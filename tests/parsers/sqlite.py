@@ -11,31 +11,34 @@ from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
 from tests.parsers import test_lib
 
 
-class SQLiteParserTest(test_lib.ParserTestCase):
-  """Tests for the SQLite database parser."""
+class SQLiteDatabaseTest(test_lib.ParserTestCase):
+  """Tests for the SQLite database."""
 
-  # pylint: disable=protected-access
+  # TODO: add tests for tables property
+  # TODO: add tests for _CopyFileObjectToTemporaryFile
+  # TODO: add tests for Open and Close
 
-  def testEnablePlugins(self):
-    """Tests the EnablePlugins function."""
-    parser = sqlite.SQLiteParser()
-    parser.EnablePlugins(['chrome_27_history'])
+  def testOpenClose(self):
+    """Tests the Open and Close functions."""
+    database_file_path = self._GetTestFilePath(['contacts2.db'])
+    self._SkipIfPathNotExists(database_file_path)
 
-    self.assertIsNotNone(parser)
-    self.assertIsNone(parser._default_plugin)
-    self.assertNotEqual(parser._plugins, [])
-    self.assertEqual(len(parser._plugins), 1)
+    database = sqlite.SQLiteDatabase('contacts2.db')
+    with open(database_file_path, 'rb') as database_file_object:
+      database.Open(database_file_object)
+      database.Close()
 
-  def testFileParserChainMaintenance(self):
-    """Tests that the parser chain is correctly maintained by the parser."""
-    parser = sqlite.SQLiteParser()
-    storage_writer = self._ParseFile(['contacts2.db'], parser)
+  def testOpenCloseOnDatabaseWithDotInTableName(self):
+    """Tests Open and Close on a database with a dot in a table name."""
+    database_file_path = self._GetTestFilePath(['data.db'])
+    self._SkipIfPathNotExists(database_file_path)
 
-    for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(1, event_data.parser.count('/'))
+    database = sqlite.SQLiteDatabase('data.db')
+    with open(database_file_path, 'rb') as database_file_object:
+      database.Open(database_file_object)
+      database.Close()
 
-  def testQueryDatabaseWithWAL(self):
+  def testQueryOnDatabaseWithWAL(self):
     """Tests the Query function on a database with a WAL file."""
     database_file_path = self._GetTestFilePath(['wal_database.db'])
     self._SkipIfPathNotExists(database_file_path)
@@ -67,7 +70,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(expected_results, row_results)
 
-  def testQueryDatabaseWithoutWAL(self):
+  def testQueryOnDatabaseWithoutWAL(self):
     """Tests the Query function on a database without a WAL file."""
     database_file_path = self._GetTestFilePath(['wal_database.db'])
     self._SkipIfPathNotExists(database_file_path)
@@ -93,6 +96,50 @@ class SQLiteParserTest(test_lib.ParserTestCase):
         ('Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03')]
 
     self.assertEqual(expected_results, row_results)
+
+
+class SQLiteParserTest(test_lib.ParserTestCase):
+  """Tests for the SQLite database parser."""
+
+  # pylint: disable=protected-access
+
+  # TODO: add tests for _CheckRequiredTablesAndColumns
+  # TODO: add tests for _OpenDatabaseWithWAL
+
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser = sqlite.SQLiteParser()
+    parser.EnablePlugins(['chrome_27_history'])
+
+    self.assertIsNotNone(parser)
+    self.assertIsNone(parser._default_plugin)
+    self.assertNotEqual(parser._plugins, [])
+    self.assertEqual(len(parser._plugins), 1)
+
+  def testGetFormatSpecification(self):
+    """Tests the GetFormatSpecification function."""
+    format_specification = sqlite.SQLiteParser.GetFormatSpecification()
+    self.assertIsNotNone(format_specification)
+
+  def testParseFileEntry(self):
+    """Tests the ParseFileEntry function."""
+    parser = sqlite.SQLiteParser()
+    storage_writer = self._ParseFile(['contacts2.db'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 5)
+
+    for event in storage_writer.GetEvents():
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(1, event_data.parser.count('/'))
+
+  def testParseFileEntryOnDatabaseWithDotInTableName(self):
+    """Tests ParseFileEntry on a database with a dot in a table name."""
+    parser = sqlite.SQLiteParser()
+    storage_writer = self._ParseFile(['data.db'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 0)
 
 
 if __name__ == '__main__':

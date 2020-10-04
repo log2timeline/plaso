@@ -157,12 +157,11 @@ class SQLitePlugin(plugins.BasePlugin):
       self, parser_mediator, cache=None, database=None, **unused_kwargs):
     """Determine if this is the right plugin for this database.
 
-    This function takes a SQLiteDatabase object and compares the list
-    of required tables against the available tables in the database.
-    If all the tables defined in REQUIRED_TABLES are present in the
-    database then this plugin is considered to be the correct plugin
-    and the function will return back a generator that yields event
-    objects.
+    This function takes a SQLiteDatabase object and compares the list of
+    required table and column names against thos in the database. If all
+    the table and column names defined in REQUIRED_STRUCTURES are present
+    in the database then this plugin is considered to be the correct plugin
+    to produce events.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.

@@ -80,8 +80,13 @@ class MacKnowledgeCPlugin(interface.SQLitePlugin):
         """),
        'KnowledgeCRow')]
 
-  # The required tables for the query.
-  REQUIRED_TABLES = frozenset(['ZOBJECT', 'ZSTRUCTUREDMETADATA'])
+  REQUIRED_STRUCTURE = {
+      'ZOBJECT': frozenset([
+          'ZCREATIONDATE', 'ZENDDATE', 'ZSTARTDATE', 'ZSTREAMNAME',
+          'ZVALUESTRING']),
+      'ZSTRUCTUREDMETADATA': frozenset([
+          'Z_DKSAFARIHISTORYMETADATAKEY__TITLE']),
+  }
 
   _SCHEMA_10_13 = {
       'ACHANGE': (

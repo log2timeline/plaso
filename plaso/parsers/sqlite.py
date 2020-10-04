@@ -271,8 +271,11 @@ class SQLiteDatabase(object):
 
       for table_name in self.schema.keys():
         self.columns_per_table.setdefault(table_name, [])
-        pragma_results = cursor.execute('PRAGMA table_info({0:s})'
-                                        .format(table_name))
+
+        # The table name needs to be enclosed in quotes in case it contains
+        # special characters like a dot.
+        pragma_results = cursor.execute(
+            'PRAGMA table_info("{0:s}")'.format(table_name))
 
         for pragma_result in pragma_results:
           self.columns_per_table[table_name].append(pragma_result['name'])
@@ -331,7 +334,6 @@ class SQLiteParser(interface.FileEntryParser):
           the plugin, or False if it does not. The database can have more tables
           and/or columns than specified by the plugin and still return True.
     """
-
     has_required_structure = True
     for required_table, required_columns in plugin.REQUIRED_STRUCTURE.items():
       if required_table not in database.tables:
