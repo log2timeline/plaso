@@ -56,7 +56,9 @@ class PlistParser(interface.FileObjectParser):
     """
     try:
       top_level_object = plistlib.load(file_object)
-    except plistlib.InvalidFileException as exception:
+    except (LookupError, plistlib.InvalidFileException) as exception:
+      # LookupError will be raised in cases where the plist is an XML file
+      # that contains an unsupported encoding.
       raise errors.UnableToParseFile(
           'Unable to parse plist with error: {0!s}'.format(exception))
 

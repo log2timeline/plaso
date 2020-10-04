@@ -79,6 +79,13 @@ class PlistParserTest(test_lib.ParserTestCase):
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['truncated.plist'], parser)
 
+  def testParseWithXMLFile(self):
+    """Tests the Parse function on an XML file that causes a LookupError."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['SAFStore.xml'], parser)
+
 
 if __name__ == '__main__':
   unittest.main()
