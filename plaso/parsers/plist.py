@@ -57,15 +57,14 @@ class PlistParser(interface.FileObjectParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     try:
-      top_level_object = plistlib.load(file_object)
-    except (LookupError, expat.ExpatError,
+      return plistlib.load(file_object)
+
+    except (AttributeError, LookupError, expat.ExpatError,
             plistlib.InvalidFileException) as exception:
       # LookupError will be raised in cases where the plist is an XML file
       # that contains an unsupported encoding.
       raise errors.UnableToParseFile(
           'Unable to parse plist with error: {0!s}'.format(exception))
-
-    return top_level_object
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a plist file-like object.
@@ -96,7 +95,13 @@ class PlistParser(interface.FileObjectParser):
           'Unable to parse: {0:s} skipping.'.format(filename))
 
     filename_lower_case = filename.lower()
-    top_level_keys = set(top_level_object.keys())
+
+    try:
+      top_level_keys = set(top_level_object.keys())
+    except AttributeError as exception:
+      raise errors.UnableToParseFile(
+          'Unable to parse top level keys of: {0:s} with error: {1!s}.'.format(
+              filename, exception))
 
     found_matching_plugin = False
     for plugin in self._plugins:
