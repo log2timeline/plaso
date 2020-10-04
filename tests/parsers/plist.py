@@ -93,6 +93,13 @@ class PlistParserTest(test_lib.ParserTestCase):
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['SAFStore.xml'], parser)
 
+  def testParseWithXMLFileBinASCIIError(self):
+    """Tests the Parse function on an XML file that causes a binascii.Error."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['manageconsolidatedProviders.aspx.resx'], parser)
+
 
 if __name__ == '__main__':
   unittest.main()
