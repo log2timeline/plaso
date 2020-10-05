@@ -14,7 +14,7 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
   NAME = 'elastic'
   DESCRIPTION = 'Saves the events into an Elasticsearch database.'
 
-  _DEFAULT_MAPPING = {
+  _DEFAULT_MAPPINGS = {
       'properties': {
           'application': {
               'type': 'text',
@@ -119,7 +119,7 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
 
   def WriteHeader(self):
     """Connects to the Elasticsearch server and creates the index."""
-    mappings = self._DEFAULT_MAPPING
+    mappings = self._DEFAULT_MAPPINGS
 
     if self._raw_fields:
       # This cannot be static because we use the value of self._document_type
@@ -142,9 +142,10 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
           }],
       }
 
-      # TODO: Remove once Elasticsearch v6.x is deprecated.
-      if self._GetClientMajorVersion() < 7:
-        mappings = {self._document_type: mappings}
+    # TODO: Remove once Elasticsearch v6.x is deprecated.
+    client_major_version = self._GetClientMajorVersion()
+    if client_major_version < 7:
+      mappings = {self._document_type: mappings}
 
     self._Connect()
 
