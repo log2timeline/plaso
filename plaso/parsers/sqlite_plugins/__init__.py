@@ -10,8 +10,9 @@ from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import chrome_autofill
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
-from plaso.parsers.sqlite_plugins import firefox
 from plaso.parsers.sqlite_plugins import firefox_cookies
+from plaso.parsers.sqlite_plugins import firefox_downloads
+from plaso.parsers.sqlite_plugins import firefox_history
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import hangouts_messages
 from plaso.parsers.sqlite_plugins import imessage
