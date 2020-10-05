@@ -1011,8 +1011,7 @@ class StorageMediaTool(tools.CLITool):
         # TODO: look into building VSS store on demand.
 
         # We "optimize" here for user experience, alternatively we could scan
-        # for a file system instead of hard coding a TSK child path
-        # specification.
+        # for a file system instead of hard coding a child path specification.
         if dfvfs_definitions.PREFERRED_NTFS_BACK_END == (
             dfvfs_definitions.TYPE_INDICATOR_TSK):
           location = '/'

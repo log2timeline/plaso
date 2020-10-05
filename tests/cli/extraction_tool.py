@@ -55,7 +55,8 @@ optional arguments:
                         Path to the directory that should be used to store
                         temporary files created during processing.
   --vfs_back_end TYPE, --vfs-back-end TYPE
-                        The preferred dfVFS back-end: "auto" or "tsk".
+                        The preferred dfVFS back-end: "auto", "fsext",
+                        "fsntfs" or "tsk".
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
@@ -98,7 +99,8 @@ optional arguments:
                         Path to the directory that should be used to store
                         temporary files created during processing.
   --vfs_back_end TYPE, --vfs-back-end TYPE
-                        The preferred dfVFS back-end: "auto" or "tsk".
+                        The preferred dfVFS back-end: "auto", "fsext",
+                        "fsntfs" or "tsk".
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
