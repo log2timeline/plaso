@@ -333,6 +333,14 @@ class EventExtractionWorker(object):
         'hiberfil.sys', 'pagefile.sys', 'swapfile.sys'):
       return True
 
+    elif (len(path_segments) == 4 and
+          path_segments[0].lower() == 'private' and
+          path_segments[1].lower() == 'var' and
+          path_segments[2].lower() == 'vm' and
+          path_segments[3].lower() in (
+              'sleepimage', 'swapfile0', 'swapfile1')):
+      return True
+
     return False
 
   def _ExtractContentFromDataStream(
