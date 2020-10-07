@@ -129,7 +129,7 @@ class WinRegistryParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      registry_key (dfwinreg.WinRegistryKey): Windwos Registry key.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       plugin (WindowsRegistryPlugin): Windows Registry plugin.
     """
     try:
@@ -165,9 +165,12 @@ class WinRegistryParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      registry_key (dfwinreg.WinRegistryKey): Windwos Registry key.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     matching_plugin = None
+
+    logger.debug('Parsing Windows Registry key: {0:s}'.format(
+        registry_key.path))
 
     normalized_key_path = self._NormalizeKeyPath(registry_key.path)
     if self._path_filter.CheckPath(normalized_key_path):
