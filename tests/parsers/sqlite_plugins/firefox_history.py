@@ -8,7 +8,7 @@ import collections
 import unittest
 
 from plaso.lib import definitions
-from plaso.parsers.sqlite_plugins import firefox
+from plaso.parsers.sqlite_plugins import firefox_history
 
 from tests.parsers.sqlite_plugins import test_lib
 
@@ -19,7 +19,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessPriorTo24(self):
     """Tests the Process function on a Firefox History database file."""
     # This is probably version 23 but potentially an older version.
-    plugin = firefox.FirefoxHistoryPlugin()
+    plugin = firefox_history.FirefoxHistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['places.sqlite'], plugin)
 
@@ -169,7 +169,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
-    plugin = firefox.FirefoxHistoryPlugin()
+    plugin = firefox_history.FirefoxHistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['places_new.sqlite'], plugin)
 
@@ -207,42 +207,6 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
-
-
-class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the Mozilla Firefox downloads database plugin."""
-
-  def testProcessVersion25(self):
-    """Tests the Process function on a Firefox Downloads database file."""
-    plugin = firefox.FirefoxDownloadsPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['downloads.sqlite'], plugin)
-
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 2)
-
-    events = list(storage_writer.GetEvents())
-
-    # Check the first page visited event.
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2013-07-18 18:59:59.312000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_START)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'firefox:downloads:download')
-
-    expected_url = (
-        'https://plaso.googlecode.com/files/'
-        'plaso-static-1.0.1-win32-vs2008.zip')
-    self.assertEqual(event_data.url, expected_url)
-
-    expected_full_path = 'file:///D:/plaso-static-1.0.1-win32-vs2008.zip'
-    self.assertEqual(event_data.full_path, expected_full_path)
-
-    self.assertEqual(event_data.received_bytes, 15974599)
-    self.assertEqual(event_data.total_bytes, 15974599)
 
 
 if __name__ == '__main__':
