@@ -8,8 +8,15 @@ import codecs
 import collections
 import json
 
+from dfdatetime import factory as dfdatetime_factory
+from dfdatetime import interface as dfdatetime_interface
+
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
+
+# The following import is needed to make sure TSKTime is registered with
+# the dfDateTime factory.
+from dfvfs.vfs import tsk_file_entry  # pylint: disable=unused-import
 
 from plaso.containers import interface as containers_interface
 from plaso.containers import manager as containers_manager
@@ -117,6 +124,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     elif isinstance(attribute_value, collections.Counter):
       attribute_value = cls._ConvertCollectionsCounterToDict(attribute_value)
 
+    elif isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+      attribute_value = cls._ConvertDateTimeValuesToDict(attribute_value)
+
     elif isinstance(attribute_value, dfvfs_path_spec.PathSpec):
       attribute_value = cls._ConvertPathSpecToDict(attribute_value)
 
@@ -214,6 +224,11 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if class_type == 'AttributeContainer':
       # Use __container_type__ to indicate the attribute container type.
       container_type = json_dict.get('__container_type__', None)
+
+    # Since we would like the JSON as flat as possible we handle decoding
+    # date time values.
+    elif class_type == 'DateTimeValues':
+      return cls._ConvertDictToDateTimeValues(json_dict)
 
     # Since we would like the JSON as flat as possible we handle decoding
     # a path specification.
@@ -331,6 +346,45 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     return list_value
 
   @classmethod
+  def _ConvertDictToDateTimeValues(cls, json_dict):
+    """Converts a JSON dict into a date time values object.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'DateTimeValues'
+        '__class_name__': 'RFC2579DateTime'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case this should
+    be 'DateTimeValues'. The rest of the elements of the dictionary make up the
+    date time values object properties.
+
+    Args:
+      json_dict (dict[str, object]): JSON serialized objects.
+
+    Returns:
+      dfdatetime.DateTimeValues: date and time values.
+    """
+    class_name = json_dict.get('__class_name__', None)
+    if class_name:
+      del json_dict['__class_name__']
+
+    # Remove the class type from the JSON dict since we cannot pass it.
+    del json_dict['__type__']
+
+    is_local_time = json_dict.get('is_local_time', None)
+    if is_local_time is not None:
+      del json_dict['is_local_time']
+
+    date_time = dfdatetime_factory.Factory.NewDateTimeValues(
+        class_name, **json_dict)
+    if is_local_time:
+      date_time.is_local_time = is_local_time
+
+    return date_time
+
+  @classmethod
   def _ConvertDictToPathSpec(cls, json_dict):
     """Converts a JSON dict into a path specification object.
 
@@ -350,7 +404,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
-      path.PathSpec: path specification.
+      dfvfs.PathSpec: path specification.
     """
     type_indicator = json_dict.get('type_indicator', None)
     if type_indicator:
@@ -364,6 +418,81 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     return dfvfs_path_spec_factory.Factory.NewPathSpec(
         type_indicator, **json_dict)
+
+  @classmethod
+  def _ConvertDateTimeValuesToDict(cls, date_time_values):
+    """Converts a date and time values object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'DateTimeValues'
+        '__class_name__': 'RFC2579DateTime'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case
+    'DateTimeValues'. The rest of the elements of the dictionary make up the
+    date and time value object properties.
+
+    Args:
+      date_time_values (dfdatetime.DateTimeValues): date and time values.
+
+    Returns:
+      dict[str, object]: JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of dfvfs.PathSpec.
+    """
+    if not isinstance(date_time_values, dfdatetime_interface.DateTimeValues):
+      raise TypeError
+
+    class_name = type(date_time_values).__name__
+
+    json_dict = {
+        '__class_name__': class_name,
+        '__type__': 'DateTimeValues'}
+
+    if hasattr(date_time_values, 'timestamp'):
+      json_dict['timestamp'] = date_time_values.timestamp
+
+    elif hasattr(date_time_values, 'string'):
+      json_dict['string'] = date_time_values.string
+
+    elif class_name == 'FATDateTime':
+      # TODO: set fat_date_time value
+      pass
+
+    elif class_name == 'RFC2579DateTime':
+      json_dict['rfc2579_date_time_tuple'] = (
+          date_time_values.year, date_time_values.month,
+          date_time_values.day_of_month, date_time_values.hours,
+          date_time_values.minutes, date_time_values.seconds,
+          date_time_values.deciseconds)
+
+    elif class_name == 'TimeElements':
+      json_dict['time_elements_tuple'] = (
+          date_time_values.year, date_time_values.month,
+          date_time_values.day_of_month, date_time_values.hours,
+          date_time_values.minutes, date_time_values.seconds)
+
+    elif class_name == 'TimeElementsInMilliseconds':
+      json_dict['time_elements_tuple'] = (
+          date_time_values.year, date_time_values.month,
+          date_time_values.day_of_month, date_time_values.hours,
+          date_time_values.minutes, date_time_values.seconds,
+          date_time_values.milliseconds)
+
+    elif class_name == 'TimeElementsInMicroseconds':
+      json_dict['time_elements_tuple'] = (
+          date_time_values.year, date_time_values.month,
+          date_time_values.day_of_month, date_time_values.hours,
+          date_time_values.minutes, date_time_values.seconds,
+          date_time_values.microseconds)
+
+    if date_time_values.is_local_time:
+      json_dict['is_local_time'] = True
+
+    return json_dict
 
   @classmethod
   def _ConvertPathSpecToDict(cls, path_spec_object):
