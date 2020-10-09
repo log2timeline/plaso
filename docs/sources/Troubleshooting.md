@@ -43,7 +43,7 @@ Also see the sections below on how to troubleshoot issues of a specific nature.
   * Both removable media and network storage can add additional latency to reads and writes making overall processing slow. It is recommended to at least write to local low-latency media.
 * Are you seeing workers being killed?
   * Respawning of workers creates more overhead and slower processing times.
-  * Workers being typically indicates one of the parser misbehaving and consumie of the parser misbehaving and consuming a high amount of memory. See section "High memory usage" below.
+  * Workers being killed typically indicates one of the parser misbehaving. If the worker is consuming a high amount of memory, also see section "High memory usage" below.
 * Are you running Plaso in a VM or Docker container?
 
 ## Isolating errors
@@ -186,7 +186,7 @@ Use:
 Note that typically the top-level (oldest) frame will contain the exception:
 
 ```python
-p execption
+p exception
 ```
 
 Note that inside pdb you can run any Python commands including loading new
