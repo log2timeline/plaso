@@ -2,7 +2,7 @@ version: ~> 1.0
 language: generic
 arch: amd64
 os: linux
-dist: bionic
+dist: focal
 jobs:
   include:
   - name: "Fedora 31 (Docker) with Python 3.7"
