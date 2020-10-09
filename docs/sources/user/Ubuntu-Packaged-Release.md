@@ -19,4 +19,9 @@ sudo apt-get install plaso-tools
 
 ### SANS Investigative Forensic Toolkit (SIFT) Workstation
 
-SIFT workstation version 3 is currently using Ubuntu 16.04 and therefore currently not supported by the GIFT PPA.
+SIFT workstation is an independent project that provides Plaso releases. We
+strongly encourage to ensure you are running the latest version of Plaso when
+using SIFT.
+
+If you are using SIFT and you have a deployment problem please report that
+directory to the [SIFT project](https://github.com/teamdfir/sift).
