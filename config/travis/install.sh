@@ -69,7 +69,7 @@ then
 	# Install packages.
 	if test -n "${TOXENV}";
 	then
-		DPKG_PACKAGES="build-essential curl python${TRAVIS_PYTHON_VERSION} python${TRAVIS_PYTHON_VERSION}-dev tox";
+		DPKG_PACKAGES="build-essential curl git python${TRAVIS_PYTHON_VERSION} python${TRAVIS_PYTHON_VERSION}-dev tox";
 
 	elif test "${TARGET}" = "jenkins3";
 	then
