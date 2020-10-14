@@ -16,7 +16,7 @@ from plaso.parsers import winjob
 from plaso.parsers import winprefetch
 from plaso.parsers.bencode_plugins import utorrent
 from plaso.parsers.olecf_plugins import summary
-from plaso.parsers.sqlite_plugins import chrome
+from plaso.parsers.sqlite_plugins import chrome_history
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import bagmru
 from plaso.parsers.winreg_plugins import lfu
@@ -568,8 +568,8 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     # Test: data_type is 'chrome:history:file_downloaded'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
-        chrome.ChromeHistoryFileDownloadedEventData, attribute_values_per_name,
-        ['file_download'])
+        chrome_history.ChromeHistoryFileDownloadedEventData,
+        attribute_values_per_name, ['file_download'])
 
     # Test: timestamp_desc is 'File Downloaded'
     event = events.EventObject()

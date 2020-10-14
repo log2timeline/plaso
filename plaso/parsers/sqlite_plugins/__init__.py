@@ -6,10 +6,10 @@ from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import android_webview
 from plaso.parsers.sqlite_plugins import android_webviewcache
 from plaso.parsers.sqlite_plugins import appusage
-from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import chrome_autofill
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
+from plaso.parsers.sqlite_plugins import chrome_history
 from plaso.parsers.sqlite_plugins import firefox_cookies
 from plaso.parsers.sqlite_plugins import firefox_downloads
 from plaso.parsers.sqlite_plugins import firefox_history

@@ -14,7 +14,7 @@ from plaso.parsers import syslog
 from plaso.parsers.olecf_plugins import summary
 from plaso.parsers.plist_plugins import ipod
 from plaso.parsers.sqlite_plugins import appusage
-from plaso.parsers.sqlite_plugins import chrome
+from plaso.parsers.sqlite_plugins import chrome_history
 from plaso.parsers.sqlite_plugins import ls_quarantine
 
 from tests.data import test_lib
@@ -86,8 +86,8 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
     # Test: data_type is 'chrome:history:file_downloaded'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
-        chrome.ChromeHistoryFileDownloadedEventData, attribute_values_per_name,
-        ['file_download'])
+        chrome_history.ChromeHistoryFileDownloadedEventData,
+        attribute_values_per_name, ['file_download'])
 
     # Test: data_type is 'macosx:lsquarantine'
     attribute_values_per_name = {}

@@ -8,7 +8,7 @@ import unittest
 
 from plaso.formatters import chrome as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.parsers.sqlite_plugins import chrome
+from plaso.parsers.sqlite_plugins import chrome_history
 
 from tests.parsers.sqlite_plugins import test_lib
 
@@ -18,7 +18,7 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
-    plugin = chrome.GoogleChrome8HistoryPlugin()
+    plugin = chrome_history.GoogleChrome8HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History'], plugin)
 
@@ -82,7 +82,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess57(self):
     """Tests the Process function on a Google Chrome 57 History database."""
-    plugin = chrome.GoogleChrome27HistoryPlugin()
+    plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-57.0.2987.133'], plugin)
 
@@ -143,7 +143,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess58(self):
     """Tests the Process function on a Google Chrome 58 History database."""
-    plugin = chrome.GoogleChrome27HistoryPlugin()
+    plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-58.0.3029.96'], plugin)
 
@@ -204,7 +204,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess59(self):
     """Tests the Process function on a Google Chrome 59 History database."""
-    plugin = chrome.GoogleChrome27HistoryPlugin()
+    plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59.0.3071.86'], plugin)
 
@@ -267,7 +267,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Google Chrome 59 History database,
     manually modified to have an unexpected column.
     """
-    plugin = chrome.GoogleChrome27HistoryPlugin()
+    plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59_added-fake-column'], plugin)
 
