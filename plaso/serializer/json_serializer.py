@@ -377,6 +377,11 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if is_local_time is not None:
       del json_dict['is_local_time']
 
+    if class_name in ('InvalidTime', 'Never', 'NotSet'):
+      string = json_dict.get('string', None)
+      if string is not None:
+        del json_dict['string']
+
     date_time = dfdatetime_factory.Factory.NewDateTimeValues(
         class_name, **json_dict)
     if is_local_time:
