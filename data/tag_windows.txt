@@ -370,6 +370,10 @@ wmi
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 19 OR event_identifier is 20 OR event_identifier is 21)
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WMI-Activity' AND (event_identifier is 5861 OR event_identifier is 5860 OR event_identifier is 5858 OR event_identifier is 5859 OR event_identifier is 5857)
 
+# Wmi Event Subscription https://attack.mitre.org/techniques/T1546/003/ , https://cyberforensicator.com/2019/07/13/using-mitre-attck-for-forensics-wmi-event-subscription-t1084/
+wmi_evt_sub
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains 'OBJECTS.DATA' AND filename contains 'system32'
+
 # user added
 user_added
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4720
