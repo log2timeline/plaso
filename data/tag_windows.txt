@@ -339,8 +339,16 @@ event_clear
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 1102 OR event_identifier is 517)
 
 # winrm https://attack.mitre.org/techniques/T1028/
+winrm_start
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-WinRM' and (event_identifier is 208 or event_identifier is 209)
+
+# winrm https://attack.mitre.org/techniques/T1028/
 winrm
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WinRM' AND (event_identifier is 169 OR event_identifier is 81 OR event_identifier is 82 OR event_identifier is 134 OR event_identifier is 10148)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WinRM' AND (event_identifier is 169 OR event_identifier is 81 OR event_identifier is 82 OR event_identifier is 134 OR event_identifier is 10148 OR event_identifier is 91)
+  
+# https://docs.microsoft.com/en-us/windows/win32/winrm/remote-shell-infrastructure-improvements
+winrm_shell
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WinRM' AND event_identifier is 91 AND (strings contains 'shellId' or strings contains '7300680065006C006C002F0063006D0064' or strings contains '50006F007700650072005300680065006C006C')
 
 # Credential dump, Authentication Package https://attack.mitre.org/techniques/T1131/, Lsass driver https://attack.mitre.org/techniques/T1177/, Security Support Provider https://attack.mitre.org/techniques/T1101/
 lsa_sam
