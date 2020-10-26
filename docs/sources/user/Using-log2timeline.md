@@ -229,7 +229,6 @@ Options:
 
 
 --single_process
---show_memory_usage
 
 --workers
 ```
