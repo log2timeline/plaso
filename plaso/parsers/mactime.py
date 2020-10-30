@@ -31,6 +31,7 @@ class MactimeEventData(events.EventData):
     mode_as_string (str): protection mode.
     offset (int): number of the corresponding line.
     size (int): size of the file content.
+    symbolic_link_target (str): path of the symbolic link target.
     user_gid (int): user group identifier (GID).
     user_sid (str): user security identifier (SID).
   """
@@ -46,6 +47,7 @@ class MactimeEventData(events.EventData):
     self.mode_as_string = None
     self.offset = None
     self.size = None
+    self.symbolic_link_target = None
     self.user_gid = None
     self.user_sid = None
 
@@ -133,6 +135,10 @@ class MactimeParser(dsv_parser.DSVParser):
     user_uid = self._GetIntegerValue(row, 'uid')
     user_gid = self._GetIntegerValue(row, 'gid')
 
+    symbolic_link_target = ''
+    if mode and mode[0] == 'l' and ' -> ' in filename:
+      filename, _, symbolic_link_target = filename.rpartition(' -> ')
+
     event_data = MactimeEventData()
     event_data.filename = filename
     event_data.inode = inode_number
@@ -140,6 +146,7 @@ class MactimeParser(dsv_parser.DSVParser):
     event_data.mode_as_string = mode
     event_data.offset = row_offset
     event_data.size = data_size
+    event_data.symbolic_link_target = symbolic_link_target
     event_data.user_gid = user_gid
 
     if user_uid is None:

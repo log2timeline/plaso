@@ -26,7 +26,7 @@ class MactimeTest(test_lib.ParserTestCase):
     # Total entries: ( 11 * 3 ) + ( 6 * 4 ) = 41
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 57)
+    self.assertEqual(storage_writer.number_of_events, 60)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
@@ -76,6 +76,18 @@ class MactimeTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(
         event_data, expected_filename, expected_filename)
+
+    event = events[57]
+
+    self.CheckTimestamp(event.timestamp, '2020-08-19 18:48:01.000000')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.filename, '/file_symboliclink1')
+    self.assertEqual(event_data.mode_as_string, 'l/lrwxrwxrwx')
+    self.assertEqual(
+        event_data.symbolic_link_target, '/mnt/ext/testdir1/testfile1')
 
 
 if __name__ == '__main__':
