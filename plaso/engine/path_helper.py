@@ -11,7 +11,7 @@ from plaso.engine import logger
 class PathHelper(object):
   """Class that implements the path helper."""
 
-  _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + [0x7f]
+  _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + list(range(0x7f, 0xa0))
   _ESCAPE_CHARACTERS = str.maketrans({
       value: '\\x{0:02x}'.format(value)
       for value in _NON_PRINTABLE_CHARACTERS})
