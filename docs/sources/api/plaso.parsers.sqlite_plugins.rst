@@ -44,14 +44,6 @@ plaso.parsers.sqlite\_plugins.appusage module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.sqlite\_plugins.chrome module
--------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.chrome
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.sqlite\_plugins.chrome\_autofill module
 -----------------------------------------------------
 
@@ -76,10 +68,10 @@ plaso.parsers.sqlite\_plugins.chrome\_extension\_activity module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.sqlite\_plugins.firefox module
---------------------------------------------
+plaso.parsers.sqlite\_plugins.chrome\_history module
+----------------------------------------------------
 
-.. automodule:: plaso.parsers.sqlite_plugins.firefox
+.. automodule:: plaso.parsers.sqlite_plugins.chrome_history
    :members:
    :undoc-members:
    :show-inheritance:
@@ -88,6 +80,22 @@ plaso.parsers.sqlite\_plugins.firefox\_cookies module
 -----------------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.firefox_cookies
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.firefox\_downloads module
+-------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.firefox_downloads
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.firefox\_history module
+-----------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.firefox_history
    :members:
    :undoc-members:
    :show-inheritance:
