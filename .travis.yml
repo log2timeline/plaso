@@ -19,6 +19,13 @@ jobs:
     python: 3.8
     services:
     - docker
+  - name: "Fedora 33 (Docker) with Python 3.9"
+    env: FEDORA_VERSION="33"
+    group: edge
+    language: python
+    python: 3.9
+    services:
+    - docker
   - name: "Ubuntu Bionic (18.04) (Docker) with Python 3.6 (amd64)"
     env: UBUNTU_VERSION="18.04"
     group: edge
