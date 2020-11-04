@@ -383,7 +383,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
     if not plugin:
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN,
+          time_zone=parser_mediator.timezone)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
