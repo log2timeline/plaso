@@ -214,12 +214,18 @@ class ExtractionTool(
       dfvfs_definitions.PREFERRED_EXT_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_EXT)
 
+    elif self._vfs_back_end == 'fshfs':
+      dfvfs_definitions.PREFERRED_HFS_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_HFS)
+
     elif self._vfs_back_end == 'fsntfs':
       dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_NTFS)
 
     elif self._vfs_back_end == 'tsk':
       dfvfs_definitions.PREFERRED_EXT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK)
+      dfvfs_definitions.PREFERRED_HFS_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK)
       dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK)
