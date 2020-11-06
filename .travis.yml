@@ -83,10 +83,10 @@ jobs:
     python: 3.8
     services:
     - docker
-  - name: "Ubuntu Focal (20.04) (Docker) with Python 3.9 (tox)"
+  - name: "Ubuntu Groovy (20.10) (Docker) with Python 3.9 (tox)"
     env:
     - TOXENV="py39"
-    - UBUNTU_VERSION="20.04"
+    - UBUNTU_VERSION="20.10"
     group: edge
     language: python
     python: 3.9
