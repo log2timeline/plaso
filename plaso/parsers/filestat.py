@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import events
@@ -45,11 +44,6 @@ class FileStatParser(interface.FileEntryParser):
 
   NAME = 'filestat'
   DATA_FORMAT = 'file system stat information'
-
-  _TIMESTAMP_DESCRIPTIONS = {
-      'bkup_time': definitions.TIME_DESCRIPTION_BACKUP,
-      'dtime': definitions.TIME_DESCRIPTION_DELETED,
-  }
 
   def _GetFileSystemTypeFromFileEntry(self, file_entry):
     """Retrieves the file system type indicator of a file entry.
@@ -106,6 +100,16 @@ class FileStatParser(interface.FileEntryParser):
           file_entry.access_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+    if file_entry.added_time:
+      event = time_events.DateTimeValuesEvent(
+          file_entry.added_time, definitions.TIME_DESCRIPTION_ADDED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    if file_entry.backup_time:
+      event = time_events.DateTimeValuesEvent(
+          file_entry.backup_time, definitions.TIME_DESCRIPTION_BACKUP)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
     if file_entry.creation_time:
       event = time_events.DateTimeValuesEvent(
           file_entry.creation_time, definitions.TIME_DESCRIPTION_CREATION)
@@ -116,34 +120,15 @@ class FileStatParser(interface.FileEntryParser):
           file_entry.change_time, definitions.TIME_DESCRIPTION_CHANGE)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+    if file_entry.deletion_time:
+      event = time_events.DateTimeValuesEvent(
+          file_entry.deletion_time, definitions.TIME_DESCRIPTION_DELETED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
     if file_entry.modification_time:
       event = time_events.DateTimeValuesEvent(
           file_entry.modification_time,
           definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    for time_attribute, usage in self._TIMESTAMP_DESCRIPTIONS.items():
-      posix_time = getattr(stat_object, time_attribute, None)
-      if posix_time is None:
-        continue
-
-      nano_time_attribute = '{0:s}_nano'.format(time_attribute)
-      nano_time_attribute = getattr(stat_object, nano_time_attribute, None)
-
-      timestamp = posix_time * 1000000
-      if nano_time_attribute is not None:
-        # Note that the _nano values are in intervals of 100th nano seconds.
-        micro_time_attribute, _ = divmod(nano_time_attribute, 10)
-        timestamp += micro_time_attribute
-
-      # TSK will return 0 if the timestamp is not set.
-      if (file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK and
-          not timestamp):
-        continue
-
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, usage)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
