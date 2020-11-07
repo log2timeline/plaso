@@ -120,8 +120,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.CheckTimestamp(event.timestamp, '2015-10-12 17:27:03.079273')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
 

@@ -105,8 +105,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     event = events[183]
 
     self.CheckTimestamp(event.timestamp, '2011-07-01 11:13:59.267146')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(
@@ -116,8 +115,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     event = events[184]
 
     self.CheckTimestamp(event.timestamp, '2011-07-01 11:13:59.267605')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(
