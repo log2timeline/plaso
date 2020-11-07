@@ -23,21 +23,28 @@ class HelperManagerTest(unittest.TestCase):
     """Tests the _ParseNumericOption function."""
     test_helper = test_lib.TestHelper()
 
-    expected_integer = 123
+    expected_option_value = 123
     options = cli_test_lib.TestOptions()
-    options.test = expected_integer
+    options.test = expected_option_value
 
-    integer = test_helper._ParseNumericOption(options, 'test')
-    self.assertEqual(integer, expected_integer)
+    option_value = test_helper._ParseNumericOption(options, 'test')
+    self.assertEqual(option_value, expected_option_value)
 
     options = cli_test_lib.TestOptions()
 
-    integer = test_helper._ParseNumericOption(options, 'test')
-    self.assertIsNone(integer)
+    option_value = test_helper._ParseNumericOption(options, 'test')
+    self.assertIsNone(option_value)
 
-    integer = test_helper._ParseNumericOption(
-        options, 'test', default_value=expected_integer)
-    self.assertEqual(integer, expected_integer)
+    option_value = test_helper._ParseNumericOption(
+        options, 'test', default_value=expected_option_value)
+    self.assertEqual(option_value, expected_option_value)
+
+    expected_option_value = 123.456
+    options = cli_test_lib.TestOptions()
+    options.test = expected_option_value
+
+    option_value = test_helper._ParseNumericOption(options, 'test')
+    self.assertEqual(option_value, expected_option_value)
 
     options = cli_test_lib.TestOptions()
     options.test = b'abc'
@@ -55,27 +62,27 @@ class HelperManagerTest(unittest.TestCase):
 
     test_helper = test_lib.TestHelper()
 
-    expected_string = 'Test Unicode string'
+    expected_option_value = 'Test Unicode string'
     options = cli_test_lib.TestOptions()
-    options.test = expected_string
+    options.test = expected_option_value
 
-    string = test_helper._ParseStringOption(options, 'test')
-    self.assertEqual(string, expected_string)
-
-    options = cli_test_lib.TestOptions()
-
-    string = test_helper._ParseStringOption(options, 'test')
-    self.assertIsNone(string)
-
-    string = test_helper._ParseStringOption(
-        options, 'test', default_value=expected_string)
-    self.assertEqual(string, expected_string)
+    option_value = test_helper._ParseStringOption(options, 'test')
+    self.assertEqual(option_value, expected_option_value)
 
     options = cli_test_lib.TestOptions()
-    options.test = expected_string.encode(encoding)
 
-    string = test_helper._ParseStringOption(options, 'test')
-    self.assertEqual(string, expected_string)
+    option_value = test_helper._ParseStringOption(options, 'test')
+    self.assertIsNone(option_value)
+
+    option_value = test_helper._ParseStringOption(
+        options, 'test', default_value=expected_option_value)
+    self.assertEqual(option_value, expected_option_value)
+
+    options = cli_test_lib.TestOptions()
+    options.test = expected_option_value.encode(encoding)
+
+    option_value = test_helper._ParseStringOption(options, 'test')
+    self.assertEqual(option_value, expected_option_value)
 
     if encoding and encoding == 'UTF-8':
       options = cli_test_lib.TestOptions()

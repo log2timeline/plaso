@@ -20,6 +20,9 @@ class ArgumentsHelper(object):
 
   _PREFERRED_ENCODING = 'UTF-8'
 
+  # pylint gets confused by the multi type return value.
+  # pylint: disable=missing-return-type-doc
+
   @classmethod
   def _ParseNumericOption(cls, options, argument_name, default_value=None):
     """Parses a numeric command line argument.
@@ -27,26 +30,29 @@ class ArgumentsHelper(object):
     Args:
       options (argparse.Namespace): parser options.
       argument_name (str): name of the command line argument.
-      default_value (Optional[int]): default value of the command line argument.
+      default_value (Optional[float}int]): default value of the command line
+          argument.
 
     Returns:
-      int: command line argument value or the default value if the command line
-          argument is not set
+      float|int: command line argument value or the default value if the command
+          line argument is not set
 
     Raises:
-      BadConfigOption: if the command line argument value cannot be converted
-          to a Unicode string.
+      BadConfigOption: if the command line argument value is not a
+          floating-point or integer.
     """
     argument_value = getattr(options, argument_name, None)
     if argument_value is None:
       return default_value
 
-    if not isinstance(argument_value, int):
-      raise errors.BadConfigOption(
-          'Unsupported option: {0:s} integer type required.'.format(
-              argument_name))
+    if not isinstance(argument_value, (float, int)):
+      raise errors.BadConfigOption((
+          'Unsupported option: {0:s} floating-point or integer type '
+          'required.').format(argument_name))
 
     return argument_value
+
+  # pylint: enable=missing-return-type-doc
 
   @classmethod
   def _ParseStringOption(cls, options, argument_name, default_value=None):
