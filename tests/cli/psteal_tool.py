@@ -129,7 +129,7 @@ optional arguments:
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
-    test_file_path = self._GetTestFilePath(['psteal_test.plaso'])
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
     self._SkipIfPathNotExists(test_file_path)
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
