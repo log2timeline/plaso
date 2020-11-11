@@ -46,7 +46,7 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
-      BadConfigOption: when the Yara rules files cannot be read or parsed.
+      BadConfigOption: when the Yara rules file cannot be read or parsed.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
