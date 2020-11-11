@@ -44,6 +44,8 @@ optional arguments:
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     test_file_path = self._GetTestFilePath(['yara.rules'])
+    invalid_rules_path = self._GetTestFilePath(['another_file'])
+    non_existent_rules_path = '/tmp/non_existant'
     self._SkipIfPathNotExists(test_file_path)
 
     options = cli_test_lib.TestOptions()
@@ -57,6 +59,13 @@ optional arguments:
     with self.assertRaises(errors.BadConfigObject):
       yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, None)
 
+    options.yara_rules_path = non_existent_rules_path
+    with self.assertRaises(errors.BadConfigOption):
+      yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
+
+    options.yara_rules_path = invalid_rules_path
+    with self.assertRaises(errors.BadConfigOption):
+      yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
 
 if __name__ == '__main__':
   unittest.main()
