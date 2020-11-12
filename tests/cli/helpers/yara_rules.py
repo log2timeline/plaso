@@ -67,5 +67,6 @@ optional arguments:
     with self.assertRaises(errors.BadConfigOption):
       yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
 
+
 if __name__ == '__main__':
   unittest.main()
