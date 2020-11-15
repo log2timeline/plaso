@@ -14,8 +14,6 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
 
   NAME = 'sessionize'
 
-  ENABLE_IN_EXTRACTION = False
-
   _DEFAULT_MAXIMUM_PAUSE = 10 * definitions.MICROSECONDS_PER_MINUTE
 
   def __init__(self):

@@ -13,9 +13,6 @@ class FileHashesPlugin(interface.AnalysisPlugin):
 
   NAME = 'file_hashes'
 
-  # Indicate that we can run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = True
-
   def __init__(self):
     """Initializes the unique hashes plugin."""
     super(FileHashesPlugin, self).__init__()

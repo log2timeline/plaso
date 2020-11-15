@@ -31,9 +31,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
   NAME = 'browser_search'
 
-  # Indicate that we do not want to run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = False
-
   _EVENT_TAG_LABELS = ['browser_search']
 
   _SUPPORTED_EVENT_DATA_TYPES = frozenset([

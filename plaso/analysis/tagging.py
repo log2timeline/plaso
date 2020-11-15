@@ -17,8 +17,6 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
 
   NAME = 'tagging'
 
-  ENABLE_IN_EXTRACTION = True
-
   _OS_TAG_FILES = {
       'linux': 'tag_linux.txt',
       'macos': 'tag_macos.txt',

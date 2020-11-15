@@ -45,12 +45,8 @@ class AnalysisPluginManager(object):
 
   # TODO: refactor to match parsers manager.
   @classmethod
-  def GetAllPluginInformation(cls, show_all=True):
+  def GetAllPluginInformation(cls):
     """Retrieves a list of the registered analysis plugins.
-
-    Args:
-      show_all (Optional[bool]): True if all analysis plugin names should
-          be listed.
 
     Returns:
       list[tuple[str, str, str]]: the name, docstring and type string of each
@@ -59,9 +55,6 @@ class AnalysisPluginManager(object):
     results = []
     for plugin_class in cls._plugin_classes.values():
       plugin_object = plugin_class()
-      if not show_all and not plugin_class.ENABLE_IN_EXTRACTION:
-        continue
-
       # TODO: Use a specific description variable, not the docstring.
       doc_string, _, _ = plugin_class.__doc__.partition('\n')
       type_string = cls._PLUGIN_TYPE_STRINGS.get(plugin_object.plugin_type)
