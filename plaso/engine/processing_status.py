@@ -397,7 +397,9 @@ class ProcessingStatus(object):
     process_status.identifier = identifier
     process_status.pid = pid
     process_status.status = status
-    process_status.used_memory = used_memory
+
+    if used_memory > 0:
+      process_status.used_memory = used_memory
 
     if (new_sources or new_events or new_event_tags or new_warnings or
         new_reports):
