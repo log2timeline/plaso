@@ -52,12 +52,13 @@ class AnalysisPluginManager(object):
     """
     results = []
     for plugin_class in cls._plugin_classes.values():
-      plugin_object = plugin_class()
-      # TODO: Use a specific description variable, not the docstring.
-      doc_string, _, _ = plugin_class.__doc__.partition('\n')
-      type_string = cls._PLUGIN_TYPE_STRINGS.get(plugin_object.plugin_type)
-      information_tuple = (plugin_object.NAME, doc_string, type_string)
-      results.append(information_tuple)
+      if not plugin_class.TEST_PLUGIN:
+        plugin_object = plugin_class()
+        # TODO: Use a specific description variable, not the docstring.
+        doc_string, _, _ = plugin_class.__doc__.partition('\n')
+        type_string = cls._PLUGIN_TYPE_STRINGS.get(plugin_object.plugin_type)
+        information_tuple = (plugin_object.NAME, doc_string, type_string)
+        results.append(information_tuple)
 
     return sorted(results)
 

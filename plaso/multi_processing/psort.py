@@ -12,6 +12,7 @@ from plaso.engine import processing_status
 from plaso.engine import zeromq_queue
 from plaso.lib import bufferlib
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import logger
@@ -913,7 +914,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     if not analysis_plugins:
       return
 
+    abort_kill = False
     keyboard_interrupt = False
+    queue_full = False
 
     self._analysis_plugins = {}
     self._data_location = data_location
@@ -949,15 +952,20 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
         self._status = definitions.STATUS_INDICATOR_FINALIZING
 
+      except errors.QueueFull:
+        queue_full = True
+        self._abort = True
+
       except KeyboardInterrupt:
         keyboard_interrupt = True
         self._abort = True
 
-        self._processing_status.aborted = True
-        if self._status_update_callback:
-          self._status_update_callback(self._processing_status)
-
       finally:
+        if self._abort:
+          self._processing_status.aborted = True
+          if self._status_update_callback:
+            self._status_update_callback(self._processing_status)
+
         storage_writer.WriteSessionCompletion(aborted=self._abort)
 
         storage_writer.Close()
@@ -967,12 +975,18 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       # so we include the storage sync to disk in the status updates.
       self._StopStatusUpdateThread()
 
-    try:
-      self._StopAnalysisProcesses(abort=self._abort)
+    if queue_full:
+      # TODO: handle abort on queue full more elegant.
+      abort_kill = True
+    else:
+      try:
+        self._StopAnalysisProcesses(abort=self._abort)
 
-    except KeyboardInterrupt:
-      keyboard_interrupt = True
+      except KeyboardInterrupt:
+        keyboard_interrupt = True
+        abort_kill = True
 
+    if abort_kill:
       self._AbortKill()
 
       # The abort can leave the main process unresponsive
