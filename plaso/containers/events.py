@@ -244,9 +244,9 @@ class EventTag(interface.AttributeContainer):
       ValueError: if a label is malformed.
     """
     for label in labels:
-      if not self._VALID_LABEL_REGEX.match(label):
+      if not label or not self._VALID_LABEL_REGEX.match(label):
         raise ValueError((
-            'Unsupported label: "{0:s}". A label must only consist of '
+            'Unsupported label: "{0!s}". A label must only consist of '
             'alphanumeric characters or underscores.').format(label))
 
     for label in labels:

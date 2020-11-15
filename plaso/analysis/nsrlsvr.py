@@ -53,8 +53,8 @@ class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
           (self._host, self._port), self._SOCKET_TIMEOUT)
 
     except socket.error as exception:
-      logger.error(
-          'Unable to connect to nsrlsvr with error: {0!s}.'.format(exception))
+      logger.error('Unable to connect to nsrlsvr with error: {0!s}.'.format(
+          exception))
 
   def _QueryHash(self, nsrl_socket, digest):
     """Queries nsrlsvr for a specific hash.
@@ -188,6 +188,7 @@ class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     """
     if hash_information:
       return [self._label]
+
     # TODO: Renable when tagging is removed from the analysis report.
     # return ['nsrl_not_present']
     return []
