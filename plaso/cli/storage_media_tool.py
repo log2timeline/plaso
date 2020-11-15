@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import codecs
 import getpass
 import os
-import sys
 import textwrap
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -745,13 +744,7 @@ class StorageMediaTool(tools.CLITool):
       if credential_type == 'skip':
         break
 
-      getpass_string = 'Enter credential data: '
-      if sys.platform.startswith('win') and sys.version_info[0] < 3:
-        # For Python 2 on Windows getpass (win_getpass) requires an encoded
-        # byte string. For Python 3 we need it to be a Unicode string.
-        getpass_string = self._EncodeString(getpass_string)
-
-      credential_data = getpass.getpass(getpass_string)
+      credential_data = getpass.getpass('Enter credential data: ')
       self._output_writer.Write('\n')
 
       if credential_type == 'key':

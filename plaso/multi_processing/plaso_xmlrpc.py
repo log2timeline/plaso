@@ -3,20 +3,11 @@
 
 from __future__ import unicode_literals
 
-import sys
+import socketserver as SocketServer
 import threading
 
-# pylint: disable=import-error,wrong-import-order
-if sys.version_info[0] < 3:
-  import xmlrpclib
-  import SimpleXMLRPCServer
-  import SocketServer
-else:
-  from xmlrpc import server as SimpleXMLRPCServer
-  from xmlrpc import client as xmlrpclib
-  import socketserver as SocketServer
-
-# pylint: disable=wrong-import-position
+from xmlrpc import server as SimpleXMLRPCServer
+from xmlrpc import client as xmlrpclib
 from xml.parsers import expat
 
 from plaso.multi_processing import logger
