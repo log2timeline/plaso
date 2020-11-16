@@ -5,14 +5,9 @@ from __future__ import unicode_literals
 
 import collections
 import re
-import sys
 
-if sys.version_info[0] < 3:
-  import urllib as urlparse
-else:
-  from urllib import parse as urlparse # pylint: disable=no-name-in-module
+from urllib import parse as urlparse
 
-# pylint: disable=wrong-import-position
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager

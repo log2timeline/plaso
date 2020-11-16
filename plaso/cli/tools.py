@@ -560,9 +560,4 @@ class StdoutOutputWriter(FileObjectOutputWriter):
     Args:
       string (str): output.
     """
-    if sys.version_info[0] < 3:
-      super(StdoutOutputWriter, self).Write(string)
-    else:
-      # sys.stdout.write() on Python 3 by default will error if string is
-      # of type bytes.
-      sys.stdout.write(string)
+    sys.stdout.write(string)

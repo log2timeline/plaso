@@ -3,12 +3,8 @@
 
 from __future__ import unicode_literals
 
-try:
-  import urlparse
-except ImportError:
-  from urllib import parse as urlparse
+from urllib import parse as urlparse
 
-# pylint: disable=wrong-import-position
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
