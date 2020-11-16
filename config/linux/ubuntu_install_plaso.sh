@@ -25,6 +25,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libfsext-python3
                      libfshfs-python3
                      libfsntfs-python3
+                     libfsxfs-python3
                      libfvde-python3
                      libfwnt-python3
                      libfwsi-python3
@@ -105,6 +106,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libfshfs-python3-dbg
                     libfsntfs-dbg
                     libfsntfs-python3-dbg
+                    libfsxfs-dbg
+                    libfsxfs-python3-dbg
                     libfvde-dbg
                     libfvde-python3-dbg
                     libfwnt-dbg

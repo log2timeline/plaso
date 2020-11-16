@@ -30,7 +30,7 @@ class ArgumentsHelper(object):
     Args:
       options (argparse.Namespace): parser options.
       argument_name (str): name of the command line argument.
-      default_value (Optional[float}int]): default value of the command line
+      default_value (Optional[float|int]): default value of the command line
           argument.
 
     Returns:
