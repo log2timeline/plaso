@@ -88,11 +88,14 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
         continue
 
       for event_identifier in event_identifiers:
-        event_tag = events.EventTag()
-        event_tag.SetEventIdentifier(event_identifier)
-        event_tag.AddLabels(labels)
-
-        tags.append(event_tag)
+        try:
+          event_tag = events.EventTag()
+          event_tag.SetEventIdentifier(event_identifier)
+          event_tag.AddLabels(labels)
+          tags.append(event_tag)
+        except (TypeError, ValueError) as exception:
+          logger.error('unable to add labels to event with error: {0!s}'.format(
+              exception))
 
     return path_specifications, labels, tags
 
