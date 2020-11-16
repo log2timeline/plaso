@@ -20,9 +20,6 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
 
   NAME = 'unique_domains_visited'
 
-  # Indicate that we can run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = True
-
   _SUPPORTED_EVENT_DATA_TYPES = frozenset([
       'chrome:history:file_downloaded',
       'chrome:history:page_visited',

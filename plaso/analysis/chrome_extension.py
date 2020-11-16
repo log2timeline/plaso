@@ -18,9 +18,6 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
   NAME = 'chrome_extension'
 
-  # Indicate that we can run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = True
-
   _SUPPORTED_EVENT_DATA_TYPES = frozenset([
       'fs:stat'])
 

@@ -211,10 +211,6 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
 
   NAME = 'windows_services'
 
-  # Indicate that we can run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = True
-
-
   def __init__(self):
     """Initializes the Windows Services plugin."""
     super(WindowsServicesAnalysisPlugin, self).__init__()

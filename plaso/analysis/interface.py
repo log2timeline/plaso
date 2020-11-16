@@ -22,16 +22,6 @@ class AnalysisPlugin(object):
   # explains the nature of the plugin easily. It also needs to be unique.
   NAME = 'analysis_plugin'
 
-  # A flag indicating whether or not this plugin should be run during extraction
-  # phase or reserved entirely for post processing stage.
-  # Typically this would mean that the plugin is perhaps too computationally
-  # heavy to be run during event extraction and should rather be run during
-  # post-processing.
-  # Since most plugins should perhaps rather be run during post-processing
-  # this is set to False by default and needs to be overwritten if the plugin
-  # should be able to run during the extraction phase.
-  ENABLE_IN_EXTRACTION = False
-
   def __init__(self):
     """Initializes an analysis plugin."""
     super(AnalysisPlugin, self).__init__()
