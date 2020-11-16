@@ -39,6 +39,20 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    parser = vsftpd.VsftpdLogParser()
+    storage_writer = self._ParseFile(['vsftpd.log'], parser, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 25)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[12]
+
+    self.CheckTimestamp(event.timestamp, '2016-06-10 12:24:19.000000')
+
 
 if __name__ == '__main__':
   unittest.main()
