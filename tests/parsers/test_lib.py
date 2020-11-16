@@ -57,7 +57,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
       knowledge_base_values (Optional[dict]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
-      timezone (str): timezone.
+      timezone (Optional[str]): timezone.
 
     Returns:
       ParserMediator: parser mediator.
@@ -134,7 +134,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      timezone (str): timezone.
+      timezone (Optional[str]): timezone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -163,7 +163,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      timezone (str): timezone.
+      timezone (Optional[str]): timezone.
 
     Returns:
       FakeStorageWriter: storage writer.

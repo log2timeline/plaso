@@ -65,6 +65,21 @@ class WinJobTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    parser = winjob.WinJobParser()
+    storage_writer = self._ParseFile(['wintask.job'], parser, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 2)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[1]
+
+    self.CheckTimestamp(event.timestamp, '2013-07-12 13:42:00.000000')
+    self.assertEqual(event.timestamp_desc, 'Scheduled to start')
+
 
 if __name__ == '__main__':
   unittest.main()

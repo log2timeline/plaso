@@ -88,6 +88,26 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
+  def testProcessWithTimeZone(self):
+    """Tests the Process function with a time zone."""
+    plugin = ccleaner.CCleanerPlugin()
+    test_file_entry = self._GetTestFileEntry(['NTUSER-CCLEANER.DAT'])
+    key_path = 'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner'
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin, file_entry=test_file_entry, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 2)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2013-07-13 08:03:14.000000')
+
 
 if __name__ == '__main__':
   unittest.main()
