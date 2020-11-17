@@ -37,6 +37,20 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    parser = sophos_av.SophosAVLogParser()
+    storage_writer = self._ParseFile(['sav.txt'], parser, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 9)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2010-07-20 16:38:14.000000')
+
 
 if __name__ == '__main__':
   unittest.main()

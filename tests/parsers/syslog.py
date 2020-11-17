@@ -36,6 +36,18 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
+    events = list(storage_writer.GetSortedEvents())
+
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2016-01-22 07:54:32.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'syslog:line')
+    self.assertEqual(event_data.hostname, 'myhostname.myhost.com')
+    self.assertEqual(event_data.reporter, 'Job')
+    self.assertIsNone(event_data.severity)
+
   def testParseDarwin(self):
     """Tests the Parse function on an Darwin-style syslog file."""
     parser = syslog.SyslogParser()
@@ -202,6 +214,29 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(storage_writer.number_of_warnings, 2)
     self.assertEqual(storage_writer.number_of_events, 15)
+
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    parser = syslog.SyslogParser()
+    knowledge_base_values = {'year': 2016}
+    storage_writer = self._ParseFile(
+        ['syslog_rsyslog_traditional'], parser,
+        knowledge_base_values=knowledge_base_values, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 8)
+
+    events = list(storage_writer.GetSortedEvents())
+
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2016-01-22 06:54:32.000000')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'syslog:line')
+    self.assertEqual(event_data.hostname, 'myhostname.myhost.com')
+    self.assertEqual(event_data.reporter, 'Job')
+    self.assertIsNone(event_data.severity)
 
 
 if __name__ == '__main__':

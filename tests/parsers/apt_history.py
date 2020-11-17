@@ -217,6 +217,21 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
+  def testParseLogWithTimeZone(self):
+    """Tests the Parse function on apt_history.log with a time zone."""
+    parser = apt_history.APTHistoryLogParser()
+    storage_writer = self._ParseFile(
+        ['apt_history.log'], parser, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 10)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2019-07-10 14:38:08.000000')
+
   def testParseInvalidLog(self):
     """Tests the Parse function on a non APT History log."""
     parser = apt_history.APTHistoryLogParser()

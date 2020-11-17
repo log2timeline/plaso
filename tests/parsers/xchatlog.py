@@ -17,6 +17,22 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser = xchatlog.XChatLogParser()
+    storage_writer = self._ParseFile(['xchat.log'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_events, 9)
+
+    events = list(storage_writer.GetEvents())
+
+    expected_event_values = {
+        'text': 'XChat start logging',
+        'timestamp': '2011-12-31 21:11:55.000000'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    parser = xchatlog.XChatLogParser()
     storage_writer = self._ParseFile(
         ['xchat.log'], parser, timezone='Europe/Rome')
 

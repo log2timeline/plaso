@@ -132,6 +132,21 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
+  def testParseSetupLogWithTimeZone(self):
+    """Tests the Parse function on setupapi.setup.log with a time zone."""
+    parser = setupapi.SetupapiLogParser()
+    storage_writer = self._ParseFile(
+        ['setupapi.setup.log'], parser, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 32)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2015-11-22 16:53:16.599000')
+
 
 if __name__ == '__main__':
   unittest.main()

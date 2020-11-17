@@ -61,6 +61,20 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.icmp_type, 8)
     self.assertEqual(event_data.icmp_code, 0)
 
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    parser = winfirewall.WinFirewallParser()
+    storage_writer = self._ParseFile(['firewall.log'], parser, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 15)
+
+    events = list(storage_writer.GetSortedEvents())
+
+    event = events[4]
+
+    self.CheckTimestamp(event.timestamp, '2005-04-11 06:06:02.000000')
+
 
 if __name__ == '__main__':
   unittest.main()
