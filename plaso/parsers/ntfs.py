@@ -38,6 +38,7 @@ class NTFSFileStatEventData(events.EventData):
         a $FILE_NAME attribute or None if not available.
     parent_file_reference (int): NTFS file reference of the parent.
     path_hints (list[str]): hints about the full path of the file.
+    symbolic_link_target (str): path of the symbolic link target.
   """
 
   DATA_TYPE = 'fs:stat:ntfs'
@@ -55,6 +56,7 @@ class NTFSFileStatEventData(events.EventData):
     self.name = None
     self.parent_file_reference = None
     self.path_hints = None
+    self.symbolic_link_target = None
 
 
 class NTFSUSNChangeEventData(events.EventData):
@@ -163,6 +165,7 @@ class NTFSMFTParser(interface.FileObjectParser):
     event_data.filename = parser_mediator.GetRelativePath()
     event_data.is_allocated = mft_entry.is_allocated()
     event_data.path_hints = path_hints
+    event_data.symbolic_link_target = mft_entry.get_symbolic_link_target()
 
     if mft_attribute.attribute_type == self._MFT_ATTRIBUTE_FILE_NAME:
       event_data.file_attribute_flags = mft_attribute.file_attribute_flags
