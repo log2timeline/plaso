@@ -105,10 +105,6 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
         }
     }
 
-    # TODO: Remove once Elasticsearch v6.x is deprecated.
-    if self._GetClientMajorVersion() < 7:
-      mappings = {self._document_type: mappings}
-
     # Get Elasticsearch host and port from Timesketch configuration.
     with self._timesketch.app_context():
       self._host = current_app.config['ELASTIC_HOST']

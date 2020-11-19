@@ -182,7 +182,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._url_prefix = None
 
   def _Connect(self):
-    """Connects to an Elasticsearch server."""
+    """Connects to an Elasticsearch server.
+
+    Raises:
+      RuntimeError: if the Elasticsearch version is not supported or the server
+          cannot be reached.
+    """
+    if elasticsearch.__version__[0] <= 6 or elasticsearch.__version__[0] >= 8:
+      raise RuntimeError('Unsupported elasticsearch-py version: {0:s}'.format(
+          '.'.join([str(digit) for digit in elasticsearch.__version__])))
+
     elastic_host = {'host': self._host, 'port': self._port}
 
     if self._url_prefix:
@@ -231,10 +240,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           'index': self._index_name,
           'request_timeout': self._DEFAULT_REQUEST_TIMEOUT}
 
-      # TODO: Remove once Elasticsearch v6.x is deprecated.
-      if self._GetClientMajorVersion() < 7:
-        bulk_arguments['doc_type'] = self._document_type
-
       self._client.bulk(**bulk_arguments)
 
     except (
@@ -249,14 +254,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     self._event_documents = []
     self._number_of_buffered_events = 0
-
-  def _GetClientMajorVersion(self):
-    """Get the major version of the Elasticsearch client library.
-
-    Returns:
-      int: Major version number.
-    """
-    return elasticsearch.__version__[0]
 
   def _GetSanitizedEventValues(
       self, event, event_data, event_data_stream, event_tag):
@@ -326,10 +323,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       event_tag (EventTag): event tag.
     """
     event_document = {'index': {'_index': self._index_name}}
-
-    # TODO: Remove once Elasticsearch v6.x is deprecated.
-    if self._GetClientMajorVersion() < 7:
-      event_document['index']['_type'] = self._document_type
 
     event_values = self._GetSanitizedEventValues(
         event, event_data, event_data_stream, event_tag)
