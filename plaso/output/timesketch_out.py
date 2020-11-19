@@ -26,6 +26,8 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
   NAME = 'timesketch'
   DESCRIPTION = 'Create a Timesketch timeline.'
 
+  MAPPINGS_FILENAME = 'timesketch.mappings'
+
   def __init__(self, output_mediator):
     """Initializes a Timesketch output module.
 
@@ -90,19 +92,6 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     Creates the Elasticsearch index with Timesketch specific settings and the
     Timesketch SearchIndex database object.
     """
-    # This cannot be static because we use the value of self._document_type
-    # from arguments.
-    mappings = {
-        'properties': {
-            'timesketch_label': {
-                'type': 'nested'
-            },
-            'datetime': {
-                'type': 'date'
-            }
-        }
-    }
-
     # Get Elasticsearch host and port from Timesketch configuration.
     with self._timesketch.app_context():
       self._host = current_app.config['ELASTIC_HOST']
@@ -110,7 +99,7 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
 
     self._Connect()
 
-    self._CreateIndexIfNotExists(self._index_name, mappings)
+    self._CreateIndexIfNotExists(self._index_name, self._mappings)
 
     user = None
     if self._timeline_owner:

@@ -2,6 +2,7 @@
 """The Elastic Search output module CLI arguments helper."""
 
 import getpass
+import json
 import os
 
 from uuid import uuid4
@@ -12,6 +13,7 @@ from plaso.cli.helpers import server_config
 from plaso.cli import logger
 from plaso.lib import errors
 from plaso.output import elastic
+from plaso.output import shared_elastic
 
 
 class ElasticSearchServerArgumentsHelper(server_config.ServerArgumentsHelper):
@@ -44,44 +46,52 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        '--index_name', dest='index_name', type=str, action='store',
-        default=cls._DEFAULT_INDEX_NAME, help=(
-            'Name of the index in ElasticSearch.'))
+        '--index_name', '--index-name', dest='index_name', type=str,
+        action='store', default=cls._DEFAULT_INDEX_NAME, metavar='NAME',
+        help='Name of the index in ElasticSearch.')
 
     argument_group.add_argument(
-        '--flush_interval', dest='flush_interval', type=int,
-        action='store', default=cls._DEFAULT_FLUSH_INTERVAL, help=(
-            'Events to queue up before bulk insert to ElasticSearch.'))
+        '--flush_interval', '--flush-interval', dest='flush_interval', type=int,
+        action='store', default=cls._DEFAULT_FLUSH_INTERVAL, metavar='INTERVAL',
+        help='Events to queue up before bulk insert to ElasticSearch.')
 
     argument_group.add_argument(
-        '--raw_fields', dest='raw_fields', action='store_true',
+        '--raw_fields', '--raw-fields', dest='raw_fields', action='store_true',
         default=cls._DEFAULT_RAW_FIELDS, help=(
             'Export string fields that will not be analyzed by Lucene.'))
 
     argument_group.add_argument(
-        '--elastic_user', dest='elastic_user', action='store',
-        default=None, help='Username to use for Elasticsearch authentication.')
+        '--elastic_mappings', '--elastic-mappings', dest='elastic_mappings',
+        action='store', default=None, metavar='PATH', help=(
+            'Username to use for Elasticsearch authentication.'))
 
     argument_group.add_argument(
-        '--elastic_password', dest='elastic_password', action='store',
-        default=None, help=(
+        '--elastic_user', '--elastic-user', dest='elastic_user', action='store',
+        default=None, metavar='USERNAME', help=(
+            'Username to use for Elasticsearch authentication.'))
+
+    argument_group.add_argument(
+        '--elastic_password', '--elastic-password', dest='elastic_password',
+        action='store', default=None, metavar='PASSWORD', help=(
             'Password to use for Elasticsearch authentication. WARNING: use '
             'with caution since this can expose the password to other users '
             'on the system. The password can also be set with the environment '
             'variable PLASO_ELASTIC_PASSWORD. '))
 
     argument_group.add_argument(
-        '--use_ssl', dest='use_ssl', action='store_true',
-        help='Enforces use of ssl.')
+        '--use_ssl', '--use-ssl', dest='use_ssl', action='store_true',
+        help='Enforces use of SSL/TLS.')
 
     argument_group.add_argument(
-        '--ca_certificates_file_path', dest='ca_certificates_file_path',
-        action='store', type=str, default=None, help=(
+        '--ca_certificates_file_path', '--ca-certificates-file-path',
+        dest='ca_certificates_file_path', action='store', type=str,
+        default=None, metavar='PATH', help=(
             'Path to a file containing a list of root certificates to trust.'))
 
     argument_group.add_argument(
-        '--elastic_url_prefix', dest='elastic_url_prefix', type=str,
-        action='store', default=None, help='URL prefix for elastic search.')
+        '--elastic_url_prefix', '--elastic-url-prefix',
+        dest='elastic_url_prefix', type=str, action='store', default=None,
+        metavar='URL_PREFIX', help='URL prefix for elastic search.')
 
     ElasticSearchServerArgumentsHelper.AddArguments(argument_group)
 
@@ -98,9 +108,8 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
       BadConfigObject: when the output module object is of the wrong type.
       BadConfigOption: when a configuration parameter fails validation.
     """
-    elastic_output_modules = (
-        elastic.ElasticsearchOutputModule, elastic.ElasticsearchOutputModule)
-    if not isinstance(output_module, elastic_output_modules):
+    if not isinstance(
+        output_module, shared_elastic.SharedElasticsearchOutputModule):
       raise errors.BadConfigObject(
           'Output module is not an instance of ElasticsearchOutputModule')
 
@@ -108,7 +117,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'index_name', default_value=cls._DEFAULT_INDEX_NAME)
     flush_interval = cls._ParseNumericOption(
         options, 'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
-    raw_fields = getattr(options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
+    mappings_file_path = cls._ParseStringOption(options, 'elastic_mappings')
     elastic_user = cls._ParseStringOption(options, 'elastic_user')
     elastic_password = cls._ParseStringOption(options, 'elastic_password')
     use_ssl = getattr(options, 'use_ssl', False)
@@ -132,12 +141,37 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
     output_module.SetFlushInterval(flush_interval)
-    output_module.SetRawFields(raw_fields)
     output_module.SetUsername(elastic_user)
     output_module.SetPassword(elastic_password)
     output_module.SetUseSSL(use_ssl)
     output_module.SetCACertificatesPath(ca_certificates_path)
     output_module.SetURLPrefix(elastic_url_prefix)
+
+    # TODO: remove --raw-field option.
+    raw_fields = getattr(options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
+    if raw_fields:
+      logger.warning(
+          '--raw_fields option is deprecated instead use: '
+          '--elastic_mappings=raw_fields.mappings')
+
+    if not mappings_file_path or not os.path.isfile(mappings_file_path):
+      mappings_filename = output_module.MAPPINGS_FILENAME
+      if raw_fields and isinstance(
+          output_module, elastic.ElasticsearchOutputModule):
+        mappings_filename = 'raw_fields.mappings'
+
+      data_location = getattr(options, '_data_location', None) or ''
+      mappings_file_path = os.path.join(data_location, mappings_filename)
+
+    if not mappings_file_path or not os.path.isfile(mappings_file_path):
+      raise errors.BadConfigOption(
+          'No such Elasticsearch mappings file: {0!s}.'.format(
+              mappings_file_path))
+
+    with open(mappings_file_path, 'r') as file_object:
+      mappings_json = json.load(file_object)
+
+    output_module.SetMappings(mappings_json)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ElasticSearchOutputArgumentsHelper)

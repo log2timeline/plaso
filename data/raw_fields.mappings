@@ -1,0 +1,16 @@
+{
+  "dynamic_templates": [{
+    "strings": {
+      "mapping": {
+        "fields": {
+          "raw": {
+            "ignore_above": 10922,
+            "index": "false",
+            "type": "keyword"
+          }
+        }
+      },
+      "match_mapping_type": "string"
+    }
+  }]
+}
