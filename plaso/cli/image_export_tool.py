@@ -672,8 +672,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             'include duplicate files in the export.'))
 
     argument_parser.add_argument(
-        '--no-hashes', dest='no_hashes', action='store_true', default=False,
-        help=('Do not generate the {0:s} file'.format(self._HASHES_FILENAME)))
+        '--no-hashes', '--no_hashes', dest='no_hashes', action='store_true',
+        default=False, help=(
+            'Do not generate the {0:s} file'.format(self._HASHES_FILENAME)))
 
     argument_parser.add_argument(
         self._SOURCE_OPTION, nargs='?', action='store', metavar='IMAGE',
