@@ -91,6 +91,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._digests = {}
     self._filter_collection = file_entry_filters.FileEntryFilterCollection()
     self._filter_file = None
+    self._no_hashes = False
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_memory_limit = None
     self._paths_by_hash = collections.defaultdict(list)
@@ -671,6 +672,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             'include duplicate files in the export.'))
 
     argument_parser.add_argument(
+        '--no-hashes', dest='no_hashes', action='store_true', default=False,
+        help=('Do not generate the {0:s} file'.format(self._HASHES_FILENAME)))
+
+    argument_parser.add_argument(
         self._SOURCE_OPTION, nargs='?', action='store', metavar='IMAGE',
         default=None, type=str, help=(
             'The full path to the image file that we are about to extract '
@@ -765,6 +770,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     include_duplicates = getattr(options, 'include_duplicates', False)
     self._skip_duplicates = not include_duplicates
 
+    self._no_hashes = getattr(options, 'no_hashes', False)
+
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
   def PrintFilterCollection(self):
@@ -795,11 +802,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     json_data = []
 
-    with open(os.path.join(
-        self._destination_path, self._HASHES_FILENAME), 'w') as write_file:
-      for sha256, paths in self._paths_by_hash.items():
-        json_data.append({"sha256": sha256, "paths": paths})
-      json.dump(json_data, write_file)
+    if not self._no_hashes:
+      with open(os.path.join(
+          self._destination_path, self._HASHES_FILENAME), 'w') as write_file:
+        for sha256, paths in self._paths_by_hash.items():
+          json_data.append({'sha256': sha256, 'paths': paths})
+        json.dump(json_data, write_file)
 
     self._output_writer.Write('Export completed.\n')
     self._output_writer.Write('\n')
