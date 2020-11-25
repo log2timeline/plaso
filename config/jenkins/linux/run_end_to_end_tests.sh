@@ -16,8 +16,8 @@ REFERENCES_DIRECTORY="/media/greendale_images";
 
 RESULTS_DIRECTORY="plaso-out";
 
-# Change path to test this script on Travis-CI.
-if test ${CONFIGURATION_NAME} = 'travis';
+# Change path to test this script on CI system.
+if test ${CONFIGURATION_NAME} = 'ci';
 then
 	SOURCES_DIRECTORY="test_data";
 	REFERENCES_DIRECTORY="test_data/end_to_end";
@@ -53,8 +53,8 @@ wait ${PID_COMMAND};
 
 RESULT=$?;
 
-# On Travis-CI print the stdout and stderr output to troubleshoot potential issues.
-if test ${CONFIGURATION_NAME} = 'travis';
+# On CI system print the stdout and stderr output to troubleshoot potential issues.
+if test ${CONFIGURATION_NAME} = 'ci';
 then
 	for FILE in $(find ${RESULTS_DIRECTORY} -name \*.out -type f);
 	do
