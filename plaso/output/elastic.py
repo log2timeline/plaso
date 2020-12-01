@@ -142,11 +142,6 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
           }],
       }
 
-    # TODO: Remove once Elasticsearch v6.x is deprecated.
-    client_major_version = self._GetClientMajorVersion()
-    if client_major_version < 7:
-      mappings = {self._document_type: mappings}
-
     self._Connect()
 
     self._CreateIndexIfNotExists(self._index_name, mappings)
