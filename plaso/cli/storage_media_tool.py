@@ -17,6 +17,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.volume import apfs_volume_system
+from dfvfs.volume import lvm_volume_system
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
@@ -51,6 +52,14 @@ class StorageMediaTool(tools.CLITool):
 
   _USER_PROMPT_APFS = (
       'Please specify the identifier(s) of the APFS volume that should be '
+      'processed: Note that a range of volumes can be defined as: 3..5. '
+      'Multiple volumes can be defined as: 1,3,5 (a list of comma separated '
+      'values). Ranges and lists can also be combined as: 1,3..5. The first '
+      'volume is 1. All volumes can be defined as "all". If no volumes are '
+      'specified none will be processed. You can abort with Ctrl^C.')
+
+  _USER_PROMPT_LVM = (
+      'Please specify the identifier(s) of the LVM volume that should be '
       'processed: Note that a range of volumes can be defined as: 3..5. '
       'Multiple volumes can be defined as: 1,3,5 (a list of comma separated '
       'values). Ranges and lists can also be combined as: 1,3..5. The first '
@@ -160,8 +169,8 @@ class StorageMediaTool(tools.CLITool):
       list[str]: APFS volume identifiers.
 
     Raises:
-      SourceScannerError: if the format of or within the source is not
-          supported or the the scan node is invalid.
+      SourceScannerError: if the scan node is invalid or more than 1 volume
+          was found but no volumes were specified.
       UserAbort: if the user requested to abort.
     """
     if not scan_node or not scan_node.path_spec:
@@ -203,6 +212,59 @@ class StorageMediaTool(tools.CLITool):
     return self._NormalizedVolumeIdentifiers(
         volume_system, volume_identifiers, prefix='apfs')
 
+  def _GetLVMVolumeIdentifiers(self, scan_node):
+    """Determines the LVM volume identifiers.
+
+    Args:
+      scan_node (dfvfs.SourceScanNode): scan node.
+
+    Returns:
+      list[str]: LVM volume identifiers.
+
+    Raises:
+      SourceScannerError: if the scan node is invalid or more than 1 volume
+          was found but no volumes were specified.
+      UserAbort: if the user requested to abort.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise errors.SourceScannerError('Invalid scan node.')
+
+    volume_system = lvm_volume_system.LVMVolumeSystem()
+    volume_system.Open(scan_node.path_spec)
+
+    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
+        volume_system)
+    if not volume_identifiers:
+      return []
+
+    # TODO: refactor self._volumes to use scan options.
+    if self._volumes:
+      if self._volumes == 'all':
+        volumes = range(1, volume_system.number_of_volumes + 1)
+      else:
+        volumes = self._ParseVolumeIdentifiersString(
+            self._volumes, prefix='lvm')
+
+      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
+          volume_system, volumes, prefix='lvm')
+
+      if not set(selected_volume_identifiers).difference(volume_identifiers):
+        return selected_volume_identifiers
+
+    if len(volume_identifiers) > 1:
+      if self._unattended_mode:
+        raise errors.SourceScannerError(
+            'More than 1 volume found but no volumes specified.')
+
+      try:
+        volume_identifiers = self._PromptUserForLVMVolumeIdentifiers(
+            volume_system, volume_identifiers)
+      except KeyboardInterrupt:
+        raise errors.UserAbort('File system scan aborted.')
+
+    return self._NormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='lvm')
+
   def _GetTSKPartitionIdentifiers(self, scan_node):
     """Determines the TSK partition identifiers.
 
@@ -218,8 +280,8 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       RuntimeError: if the volume for a specific identifier cannot be
           retrieved.
-      SourceScannerError: if the format of or within the source
-          is not supported or the the scan node is invalid.
+      SourceScannerError: if the scan node is invalid or more than 1 volume
+          was found but no volumes were specified.
       UserAbort: if the user requested to abort.
     """
     if not scan_node or not scan_node.path_spec:
@@ -271,8 +333,7 @@ class StorageMediaTool(tools.CLITool):
       list[str]: VSS store identifiers.
 
     Raises:
-      SourceScannerError: if the format of or within the source is not
-          supported or the scan node is invalid.
+      SourceScannerError: if the scan node is invalid.
       UserAbort: if the user requested to abort.
     """
     if not scan_node or not scan_node.path_spec:
@@ -568,6 +629,37 @@ class StorageMediaTool(tools.CLITool):
     table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
 
+  def _PrintLVMVolumeIdentifiersOverview(
+      self, volume_system, volume_identifiers):
+    """Prints an overview of LVM volume identifiers.
+
+    Args:
+      volume_system (dfvfs.LVMVolumeSystem): volume system.
+      volume_identifiers (list[str]): allowed volume identifiers.
+
+    Raises:
+      SourceScannerError: if a volume cannot be resolved from the volume
+          identifier.
+    """
+    header = 'The following Logical Volume Manager (LVM) volumes were found:\n'
+    self._output_writer.Write(header)
+
+    column_names = ['Identifier']
+    table_view = views.CLITabularTableView(column_names=column_names)
+
+    for volume_identifier in volume_identifiers:
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      if not volume:
+        raise errors.SourceScannerError(
+            'Volume missing for identifier: {0:s}.'.format(
+                volume_identifier))
+
+      table_view.AddRow([volume.identifier])
+
+    self._output_writer.Write('\n')
+    table_view.Write(self._output_writer)
+    self._output_writer.Write('\n')
+
   def _PrintTSKPartitionIdentifiersOverview(
       self, volume_system, volume_identifiers):
     """Prints an overview of TSK partition identifiers.
@@ -653,14 +745,9 @@ class StorageMediaTool(tools.CLITool):
     Returns:
       list[str]: selected volume identifiers including prefix or None.
     """
-    print_header = True
+    self._PrintAPFSVolumeIdentifiersOverview(volume_system, volume_identifiers)
+
     while True:
-      if print_header:
-        self._PrintAPFSVolumeIdentifiersOverview(
-            volume_system, volume_identifiers)
-
-        print_header = False
-
       lines = self._textwrapper.wrap(self._USER_PROMPT_APFS)
       self._output_writer.Write('\n'.join(lines))
       self._output_writer.Write('\n\nVolume identifiers: ')
@@ -668,6 +755,43 @@ class StorageMediaTool(tools.CLITool):
       try:
         selected_volumes = self._ReadSelectedVolumes(
             volume_system, prefix='apfs')
+        if (not selected_volumes or
+            not set(selected_volumes).difference(volume_identifiers)):
+          break
+      except ValueError:
+        pass
+
+      self._output_writer.Write('\n')
+
+      lines = self._textwrapper.wrap(
+          'Unsupported volume identifier(s), please try again or abort with '
+          'Ctrl^C.')
+      self._output_writer.Write('\n'.join(lines))
+      self._output_writer.Write('\n\n')
+
+    return selected_volumes
+
+  def _PromptUserForLVMVolumeIdentifiers(
+      self, volume_system, volume_identifiers):
+    """Prompts the user to provide LVM volume identifiers.
+
+    Args:
+      volume_system (dfvfs.LVMVolumeSystem): volume system.
+      volume_identifiers (list[str]): volume identifiers including prefix.
+
+    Returns:
+      list[str]: selected volume identifiers including prefix or None.
+    """
+    self._PrintLVMVolumeIdentifiersOverview(volume_system, volume_identifiers)
+
+    while True:
+      lines = self._textwrapper.wrap(self._USER_PROMPT_LVM)
+      self._output_writer.Write('\n'.join(lines))
+      self._output_writer.Write('\n\nVolume identifiers: ')
+
+      try:
+        selected_volumes = self._ReadSelectedVolumes(
+            volume_system, prefix='lvm')
         if (not selected_volumes or
             not set(selected_volumes).difference(volume_identifiers)):
           break
@@ -779,14 +903,10 @@ class StorageMediaTool(tools.CLITool):
     Returns:
       list[str]: selected volume identifiers including prefix or None.
     """
-    print_header = True
+    self._PrintTSKPartitionIdentifiersOverview(
+        volume_system, volume_identifiers)
+
     while True:
-      if print_header:
-        self._PrintTSKPartitionIdentifiersOverview(
-            volume_system, volume_identifiers)
-
-        print_header = False
-
       lines = self._textwrapper.wrap(self._USER_PROMPT_TSK)
       self._output_writer.Write('\n'.join(lines))
       self._output_writer.Write('\n\nPartition identifiers: ')
@@ -850,14 +970,9 @@ class StorageMediaTool(tools.CLITool):
     Returns:
       list[str]: selected volume identifiers including prefix or None.
     """
-    print_header = True
+    self._PrintVSSStoreIdentifiersOverview(volume_system, volume_identifiers)
+
     while True:
-      if print_header:
-        self._PrintVSSStoreIdentifiersOverview(
-            volume_system, volume_identifiers)
-
-        print_header = False
-
       lines = self._textwrapper.wrap(self._USER_PROMPT_VSS)
       self._output_writer.Write('\n'.join(lines))
       self._output_writer.Write('\n\nVSS identifiers: ')
@@ -885,7 +1000,7 @@ class StorageMediaTool(tools.CLITool):
     """Reads the selected volumes provided by the user.
 
     Args:
-      volume_system (APFSVolumeSystem): volume system.
+      volume_system (VolumeSystem): volume system.
       prefix (Optional[str]): volume identifier prefix.
 
     Returns:
@@ -1039,6 +1154,9 @@ class StorageMediaTool(tools.CLITool):
     if scan_node.type_indicator == (
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER):
       volume_identifiers = self._GetAPFSVolumeIdentifiers(scan_node)
+
+    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_LVM:
+      volume_identifiers = self._GetLVMVolumeIdentifiers(scan_node)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
       if self._process_vss:
