@@ -664,8 +664,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             'The directory in which extracted files should be stored.'))
 
     argument_parser.add_argument(
-        '--include_duplicates', '--include-duplicates', dest='include_duplicates',
-        action='store_true', default=False, help=(
+        '--include_duplicates', '--include-duplicates',
+        dest='include_duplicates', action='store_true', default=False, help=(
             'By default a digest hash (SHA-256) is calculated for each file '
             '(data stream). These hashes are compared to the previously '
             'exported files and duplicates are skipped. Use this option to '
