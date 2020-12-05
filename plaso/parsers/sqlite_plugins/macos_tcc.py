@@ -50,36 +50,49 @@ class MacOSTCCPlugin(interface.SQLitePlugin):
 
   REQUIRED_STRUCTURE = {
       'access': frozenset([
-          'access', 'access_overrides', 'admin', 'active_policy', 'expired',
-          'policies'])}
+          'allowed', 'client', 'last_modified', 'prompt_count', 'service']),
+      'access_overrides': frozenset([]),
+      'active_policy': frozenset([]),
+      'admin': frozenset([]),
+      'expired': frozenset([]),
+      'policies': frozenset([])}
 
   QUERIES = [(
-      ("SELECT service, client, allowed, prompt_count, last_modified, "
-       "DATETIME(last_modified, 'UNIXEPOCH', 'LOCALTIME') AS timestamp "
-       "FROM access;"),
-      'ParseTCCEntry'
-  )]
+      ('SELECT service, client, allowed, prompt_count, last_modified '
+       'FROM access;'), 'ParseTCCEntry')]
 
   SCHEMAS = [{
       'access': (
-          """CREATE TABLE IF NOT EXISTS "access" (
-              service TEXT NOT NULL,
-              client TEXT NOT NULL,
-              client_type INTEGER NOT NULL,
-              allowed INTEGER  NOT NULL,
-              prompt_count INTEGER NOT NULL,
-              csreq BLOB,
-              policy_id INTEGER,
-              indirect_object_identifier_type INTEGER,
-              indirect_object_identifier TEXT DEFAULT 'UNUSED',
-              indirect_object_code_identity BLOB,
-              flags INTEGER,
-              last_modified  INTEGER NOT NULL
-                  DEFAULT (CAST(strftime('%s','now') AS INTEGER)),
-            PRIMARY KEY
-                (service, client, client_type, indirect_object_identifier),
-            FOREIGN KEY (policy_id)
-            REFERENCES policies(id) ON DELETE CASCADE ON UPDATE CASCADE);""")}]
+          'CREATE TABLE access ( service TEXT NOT NULL, client TEXT NOT NULL, '
+          'client_type INTEGER NOT NULL, allowed INTEGER NOT NULL, '
+          'prompt_count INTEGER NOT NULL, csreq BLOB, policy_id INTEGER, '
+          'indirect_object_identifier_type INTEGER, '
+          'indirect_object_identifier TEXT, indirect_object_code_identity '
+          'BLOB, flags INTEGER, last_modified INTEGER NOT NULL DEFAULT '
+          '(CAST(strftime(\'%s\',\'now\') AS INTEGER)), PRIMARY KEY (service, '
+          'client, client_type, indirect_object_identifier), FOREIGN KEY '
+          '(policy_id) REFERENCES policies(id) ON DELETE CASCADE ON UPDATE '
+          'CASCADE)'),
+      'access_overrides': (
+          'CREATE TABLE access_overrides ( service TEXT NOT NULL PRIMARY KEY)'),
+      'active_policy': (
+          'CREATE TABLE active_policy ( client TEXT NOT NULL, client_type '
+          'INTEGER NOT NULL, policy_id INTEGER NOT NULL, PRIMARY KEY (client, '
+          'client_type), FOREIGN KEY (policy_id) REFERENCES policies(id) ON '
+          'DELETE CASCADE ON UPDATE CASCADE)'),
+      'admin': (
+          'CREATE TABLE admin (key TEXT PRIMARY KEY NOT NULL, value INTEGER '
+          'NOT NULL)'),
+      'expired': (
+          'CREATE TABLE expired ( service TEXT NOT NULL, client TEXT NOT '
+          'NULL, client_type INTEGER NOT NULL, csreq BLOB, last_modified '
+          'INTEGER NOT NULL , expired_at INTEGER NOT NULL DEFAULT '
+          '(CAST(strftime(\'%s\',\'now\') AS INTEGER)), PRIMARY KEY (service, '
+          'client, client_type))'),
+      'policies': (
+          'CREATE TABLE policies ( id INTEGER NOT NULL PRIMARY KEY, bundle_id '
+          'TEXT NOT NULL, uuid TEXT NOT NULL, display TEXT NOT NULL, UNIQUE '
+          '(bundle_id, uuid))')}]
 
   def ParseTCCEntry(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an application usage row.

@@ -56,8 +56,8 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
 
   REQUIRED_STRUCTURE = {
       'activitylog_compressed': frozenset([
-          'time', 'extension_id', 'action_type', 'api_name', 'args', 'page_url',
-          'page_title', 'arg_url', 'other', 'activity_id'])}
+          'time', 'extension_id_x', 'action_type', 'api_name_x', 'args_x',
+          'page_url_x', 'page_title_x', 'arg_url_x', 'other_x'])}
 
   QUERIES = [
       (('SELECT time, extension_id, action_type, api_name, args, page_url, '

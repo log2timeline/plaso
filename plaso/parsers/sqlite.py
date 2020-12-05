@@ -322,31 +322,6 @@ class SQLiteParser(interface.FileEntryParser):
 
   _plugin_classes = {}
 
-  def _CheckRequiredTablesAndColumns(self, database, plugin):
-    """Check if the database has the minimal structure required by the plugin.
-
-    Args:
-      database (SQLiteDatabase): the database who's structure is being checked.
-      plugin (SQLitePlugin): the plugin providing the structure requirements.
-
-    Returns:
-      bool: True if the database has the minimum tables and columns defined by
-          the plugin, or False if it does not. The database can have more tables
-          and/or columns than specified by the plugin and still return True.
-    """
-    has_required_structure = True
-    for required_table, required_columns in plugin.REQUIRED_STRUCTURE.items():
-      if required_table not in database.tables:
-        has_required_structure = False
-        break
-
-      if not frozenset(required_columns).issubset(
-          database.columns_per_table.get(required_table)):
-        has_required_structure = False
-        break
-
-    return has_required_structure
-
   def _OpenDatabaseWithWAL(
       self, parser_mediator, database_file_entry, database_file_object,
       filename):
@@ -445,8 +420,8 @@ class SQLiteParser(interface.FileEntryParser):
     cache = SQLiteCache()
     try:
       for plugin in self._plugins:
-        required_tables_and_column_exist = self._CheckRequiredTablesAndColumns(
-            database, plugin)
+        required_tables_and_column_exist = plugin.CheckRequiredTablesAndColumns(
+            database)
 
         if not required_tables_and_column_exist:
           continue

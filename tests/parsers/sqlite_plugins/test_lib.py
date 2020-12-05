@@ -63,6 +63,10 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       wal_path_segments=None):
     """Parses a file as a SQLite database with a specific plugin.
 
+    This method will first test if a SQLite database contains the required
+    tables and columns using plugin.CheckRequiredTablesAndColumns() and then
+    extracts events using plugin.Process().
+
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       plugin (SQLitePlugin): SQLite database plugin.
@@ -84,6 +88,10 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
 
     file_entry, database = self._OpenDatabaseFile(
         path_segments, wal_path_segments=wal_path_segments)
+
+    required_tables_and_column_exist = plugin.CheckRequiredTablesAndColumns(
+        database)
+    self.assertTrue(required_tables_and_column_exist)
 
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,

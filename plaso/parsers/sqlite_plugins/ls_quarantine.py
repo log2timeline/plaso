@@ -46,14 +46,13 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
 
   REQUIRED_STRUCTURE = {
       'LSQuarantineEvent': frozenset([
-          'LSQuarantineTimestamp', 'LSQuarantineAgentName',
+          'LSQuarantineTimeStamp', 'LSQuarantineAgentName',
           'LSQuarantineOriginURLString', 'LSQuarantineDataURLString'])}
 
   QUERIES = [
-      (('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
-        'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
-        'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
-        'ORDER BY Time'), 'ParseLSQuarantineRow')]
+      (('SELECT LSQuarantineTimeStamp AS Time, LSQuarantineAgentName AS Agent, '
+        'LSQuarantineOriginURLString AS URL, LSQuarantineDataURLString AS Data '
+        'FROM LSQuarantineEvent ORDER BY Time'), 'ParseLSQuarantineRow')]
 
   SCHEMAS = [{
       'LSQuarantineEvent': (

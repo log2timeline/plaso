@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the macOS TCC plugin."""
+"""Tests for the MacOS TCC plugin."""
 
 from __future__ import unicode_literals
 
@@ -16,7 +16,7 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacOS TCC plugin."""
 
   def testProcess(self):
-    """Tests the Process function on a macOS TCC file."""
+    """Tests the Process function on a MacOS TCC file."""
     plugin = macos_tcc.MacOSTCCPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['TCC-test.db'], plugin)

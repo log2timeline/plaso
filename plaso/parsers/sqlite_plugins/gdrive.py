@@ -69,7 +69,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
           'resource_id', 'filename', 'modified', 'created', 'size', 'doc_type',
           'shared', 'checksum', 'url']),
       'cloud_relations': frozenset([
-          'parent_resource_id', 'parent', 'child_resource_id']),
+          'parent_resource_id', 'child_resource_id']),
       'local_entry': frozenset([
           'inode_number', 'filename', 'modified', 'checksum', 'size']),
       'local_relations': frozenset([
