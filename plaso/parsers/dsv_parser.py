@@ -47,15 +47,12 @@ class DSVParser(interface.FileObjectParser):
   # file to see if it confirms to standards.
   _MAGIC_TEST_STRING = 'RegnThvotturMeistarans'
 
-  def __init__(self, encoding=None):
-    """Initializes a delimiter separated values (DSV) parser.
+  _ENCODING = None
 
-    Args:
-      encoding (Optional[str]): encoding used in the DSV file, where None
-          indicates the codepage of the parser mediator should be used.
-    """
+  def __init__(self):
+    """Initializes a delimiter separated values (DSV) parser."""
     super(DSVParser, self).__init__()
-    self._encoding = encoding
+    self._encoding = self._ENCODING
     self._end_of_line = '\n'
     self._maximum_line_length = (
         len(self._end_of_line) +

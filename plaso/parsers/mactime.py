@@ -66,6 +66,8 @@ class MactimeParser(dsv_parser.DSVParser):
 
   ESCAPE_CHARACTER = '\\'
 
+  _ENCODING = 'utf-8'
+
   _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
 
   # Mapping according to:

@@ -23,9 +23,11 @@ class TestDSVParser(dsv_parser.DSVParser):
   COLUMNS = ['place', 'user', 'password']
   NUMBER_OF_HEADER_LINES = 1
 
+  _ENCODING = 'utf-8'
+
   def __init__(self):
     """Initializes a DSV parser."""
-    super(TestDSVParser, self).__init__(encoding='utf-8')
+    super(TestDSVParser, self).__init__()
     self.row_offsets = []
     self.rows = []
 
