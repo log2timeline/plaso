@@ -90,7 +90,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
 
     Raises:
@@ -104,7 +104,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
 
     strings = cache.GetResults('strings')
     if not strings:
-      esedb_table = database.get_table_by_name('string')
+      esedb_table = database.GetTableByName('string')
       strings = self._GetDictFromStringsTable(parser_mediator, esedb_table)
       cache.StoreDictInCache('strings', strings)
 

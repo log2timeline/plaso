@@ -161,7 +161,7 @@ class SQLitePlugin(plugins.BasePlugin):
     """Checks the schema of a database with that defined in the plugin.
 
     Args:
-      database (SQLiteDatabase): database.
+      database (SQLiteDatabase): SQLite database to check.
 
     Returns:
       bool: True if the schema of the database matches that defined by

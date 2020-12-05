@@ -289,7 +289,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
 
     Raises:
@@ -341,7 +341,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       table_name = 'Container_{0:d}'.format(container_identifier)
-      esedb_table = database.get_table_by_name(table_name)
+      esedb_table = database.GetTableByName(table_name)
       if not esedb_table:
         parser_mediator.ProduceExtractionWarning(
             'Missing table: {0:s}'.format(table_name))
@@ -356,7 +356,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
 
     Raises:
@@ -393,7 +393,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
 
     Raises:
