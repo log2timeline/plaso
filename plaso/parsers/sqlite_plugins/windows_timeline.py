@@ -80,9 +80,9 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
 
   REQUIRED_STRUCTURE = {
       'Activity': frozenset([
-          'StartTime', 'Payload', 'PackageName', 'Id', 'AppId']),
+          'StartTime', 'Payload', 'Id', 'AppId']),
       'Activity_PackageId': frozenset([
-          'ActivityId'])}
+          'ActivityId', 'PackageName'])}
 
   QUERIES = [
       (('SELECT StartTime, Payload, PackageName FROM Activity '
@@ -131,6 +131,58 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
       'AppSettings': (
           'CREATE TABLE [AppSettings]([AppId] TEXT PRIMARY KEY NOT NULL, '
           '[SettingsPropertyBag] BLOB, [AppTitle] TEXT, [Logo4141] TEXT)'),
+      'ManualSequence': (
+          'CREATE TABLE [ManualSequence]([Key] TEXT PRIMARY KEY NOT NULL, '
+          '[Value] INT NOT NULL)'),
+      'Metadata': (
+          'CREATE TABLE [Metadata]([Key] TEXT PRIMARY KEY NOT NULL, [Value] '
+          'TEXT)')},{
+      'Activity': (
+          'CREATE TABLE [Activity]([Id] GUID PRIMARY KEY NOT NULL, [AppId] '
+          'TEXT NOT NULL, [PackageIdHash] TEXT, [AppActivityId] TEXT, '
+          '[ActivityType] INT NOT NULL, [ActivityStatus] INT NOT NULL, '
+          '[ParentActivityId] GUID, [Tag] TEXT, [Group] TEXT, [MatchId] TEXT, '
+          '[LastModifiedTime] DATETIME NOT NULL, [ExpirationTime] DATETIME, '
+          '[Payload] BLOB, [Priority] INT, [IsLocalOnly] INT, '
+          '[PlatformDeviceId] TEXT, [CreatedInCloud] DATETIME, [StartTime] '
+          'DATETIME, [EndTime] DATETIME, [LastModifiedOnClient] DATETIME, '
+          '[GroupAppActivityId] TEXT, [ClipboardPayload] BLOB, [EnterpriseId] '
+          'TEXT, [OriginalPayload] BLOB, [UserActionState] INT,[IsRead] '
+          'INT,[OriginalLastModifiedOnClient] DATETIME, [GroupItems] TEXT, '
+          '[ETag] INT NOT NULL)'),
+      'ActivityAssetCache': (
+          'CREATE TABLE [ActivityAssetCache]([ResourceId] INTEGER PRIMARY KEY '
+          'AUTOINCREMENT NOT NULL, [AppId] TEXT NOT NULL, [AssetHash] TEXT '
+          'NOT NULL, [TimeToLive] DATETIME NOT NULL, [AssetUri] TEXT, '
+          '[AssetId] TEXT, [AssetKey] TEXT, [Contents] BLOB)'),
+      'ActivityOperation': (
+          'CREATE TABLE [ActivityOperation]([OperationOrder] INTEGER PRIMARY '
+          'KEY ASC NOT NULL, [Id] GUID NOT NULL, [OperationType] INT NOT '
+          'NULL, [AppId] TEXT NOT NULL, [PackageIdHash] TEXT, [AppActivityId] '
+          'TEXT, [ActivityType] INT NOT NULL, [ParentActivityId] GUID, [Tag] '
+          'TEXT, [Group] TEXT, [MatchId] TEXT, [LastModifiedTime] DATETIME '
+          'NOT NULL, [ExpirationTime] DATETIME, [Payload] BLOB, [Priority] '
+          'INT, [CreatedTime] DATETIME, [OperationExpirationTime] '
+          'DATETIME,[Attachments] TEXT, [PlatformDeviceId] TEXT, '
+          '[CreatedInCloud] DATETIME, [StartTime] DATETIME NOT NULL, '
+          '[EndTime] DATETIME, [LastModifiedOnClient] DATETIME NOT NULL, '
+          '[CorrelationVector] TEXT, [GroupAppActivityId] TEXT, '
+          '[ClipboardPayload] BLOB, [EnterpriseId] TEXT, [UserActionState] '
+          'INT,[IsRead] INT,[OriginalPayload] BLOB, '
+          '[OriginalLastModifiedOnClient] DATETIME, [UploadAllowedByPolicy] '
+          'INT NOT NULL DEFAULT 1, [PatchFields] BLOB, [GroupItems] TEXT, '
+          '[ETag] INT NOT NULL)'),
+      'Activity_PackageId': (
+          'CREATE TABLE [Activity_PackageId]([ActivityId] GUID NOT NULL, '
+          '[Platform] TEXT NOT NULL COLLATE NOCASE, [PackageName] TEXT NOT '
+          'NULL COLLATE NOCASE, [ExpirationTime] DATETIME NOT NULL)'),
+      'AppSettings': (
+          'CREATE TABLE [AppSettings]([AppId] TEXT PRIMARY KEY NOT NULL, '
+          '[SettingsPropertyBag] BLOB, [AppTitle] TEXT, [Logo4141] TEXT)'),
+      'DataEncryptionKeys': (
+          'CREATE TABLE [DataEncryptionKeys]([KeyVersion] INTEGER PRIMARY KEY '
+          'NOT NULL, [KeyValue] TEXT NOT NULL COLLATE NOCASE, '
+          '[CreatedInCloudTime] DATETIME NOT NULL)'),
       'ManualSequence': (
           'CREATE TABLE [ManualSequence]([Key] TEXT PRIMARY KEY NOT NULL, '
           '[Value] INT NOT NULL)'),
