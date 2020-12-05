@@ -441,6 +441,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logger.debug('Starting extraction in multi process mode.')
 
+      # The following overrides are neede because pylint 2.6.0 gets confused
+      # about which ProcessSources to check against.
+      # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
       processing_status = extraction_engine.ProcessSources(
           session, self._source_path_specs, storage_writer,
           configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,

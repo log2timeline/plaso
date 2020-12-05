@@ -292,10 +292,7 @@ class ParsersManager(object):
 
       parser_object = parser_class()
       if parser_class.SupportsPlugins():
-        plugin_includes = None
-        if parser_name in includes:
-          plugin_includes = includes[parser_name]
-
+        plugin_includes = includes.get(parser_name, None)
         parser_object.EnablePlugins(plugin_includes)
 
       parser_objects[parser_name] = parser_object

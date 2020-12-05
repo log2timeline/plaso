@@ -346,8 +346,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._number_of_produced_sources = storage_writer.number_of_event_sources
       self._number_of_produced_warnings = storage_writer.number_of_warnings
 
-  def _ProcessSources(
-      self, source_path_specs, storage_writer):
+  def _ProcessSources(self, source_path_specs, storage_writer):
     """Processes the sources.
 
     Args:
