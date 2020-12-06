@@ -42,7 +42,8 @@ extensions = [
 pip_installed_modules = set(['pyparsing', 'six'])
 
 dependency_helper = utils.dependencies.DependencyHelper(
-    configuration_file=os.path.join('..', 'dependencies.ini'))
+    dependencies_file=os.path.join('..', 'dependencies.ini'),
+    test_dependencies_file=os.path.join('..', 'test_dependencies.ini'))
 modules_to_mock = set(dependency_helper.dependencies.keys())
 modules_to_mock = modules_to_mock.difference(pip_installed_modules)
 

@@ -118,11 +118,15 @@ class DependencyHelper(object):
   _VERSION_NUMBERS_REGEX = re.compile(r'[0-9.]+')
   _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
-  def __init__(self, configuration_file='dependencies.ini'):
+  def __init__(
+      self, dependencies_file='dependencies.ini',
+      test_dependencies_file='test_dependencies.ini'):
     """Initializes a dependency helper.
 
     Args:
-      configuration_file (Optional[str]): path to the dependencies
+      dependencies_file (Optional[str]): path to the dependencies configuration
+          file.
+      test_dependencies_file (Optional[str]): path to the test dependencies
           configuration file.
     """
     super(DependencyHelper, self).__init__()
@@ -131,14 +135,13 @@ class DependencyHelper(object):
 
     dependency_reader = DependencyDefinitionReader()
 
-    with open(configuration_file, 'r') as file_object:
+    with open(dependencies_file, 'r') as file_object:
       for dependency in dependency_reader.Read(file_object):
         self.dependencies[dependency.name] = dependency
 
-    dependency = DependencyDefinition('mock')
-    dependency.minimum_version = '0.7.1'
-    dependency.version_property = '__version__'
-    self._test_dependencies['mock'] = dependency
+    with open(test_dependencies_file, 'r') as file_object:
+      for dependency in dependency_reader.Read(file_object):
+        self._test_dependencies[dependency.name] = dependency
 
   def _CheckPythonModule(self, dependency):
     """Checks the availability of a Python module.
