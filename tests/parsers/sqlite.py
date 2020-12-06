@@ -103,7 +103,6 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  # TODO: add tests for _CheckRequiredTablesAndColumns
   # TODO: add tests for _OpenDatabaseWithWAL
 
   def testEnablePlugins(self):

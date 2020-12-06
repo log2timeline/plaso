@@ -387,7 +387,7 @@ class ESEDBPlugin(plugins.BasePlugin):
 
   # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cache=None, database=None, **kwargs):
-    """Determines if this is the appropriate plugin for the database.
+    """Extracts events from an ESE database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

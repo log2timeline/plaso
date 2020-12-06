@@ -17,7 +17,6 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Windows Timeline SQLite database."""
-
     plugin = windows_timeline.WindowsTimelinePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['windows_timeline_ActivitiesCache.db'], plugin)

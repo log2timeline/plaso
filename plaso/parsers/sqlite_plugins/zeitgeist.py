@@ -40,11 +40,10 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
   # TODO: Explore the database more and make this parser cover new findings.
 
   REQUIRED_STRUCTURE = {
-      'event_view': frozenset([
-          'id', 'timestamp', 'subj_uri']),
+      'actor': frozenset([]),
       'event': frozenset([
-          'id', 'timestamp']),
-      'actor': frozenset([])}
+          'id', 'subj_id', 'timestamp']),
+      'uri': frozenset(['id'])}
 
   QUERIES = [
       ('SELECT id, timestamp, subj_uri FROM event_view',

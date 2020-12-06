@@ -133,6 +133,30 @@ class SQLitePlugin(plugins.BasePlugin):
 
       row_cache.add(row_hash)
 
+  def CheckRequiredTablesAndColumns(self, database):
+    """Check if the database has the minimal structure required by the plugin.
+
+    Args:
+      database (SQLiteDatabase): the database who's structure is being checked.
+
+    Returns:
+      bool: True if the database has the minimum tables and columns defined by
+          the plugin, or False if it does not. The database can have more tables
+          and/or columns than specified by the plugin and still return True.
+    """
+    has_required_structure = True
+    for required_table, required_columns in self.REQUIRED_STRUCTURE.items():
+      if required_table not in database.tables:
+        has_required_structure = False
+        break
+
+      if not frozenset(required_columns).issubset(
+          database.columns_per_table.get(required_table)):
+        has_required_structure = False
+        break
+
+    return has_required_structure
+
   def CheckSchema(self, database):
     """Checks the schema of a database with that defined in the plugin.
 
@@ -155,13 +179,7 @@ class SQLitePlugin(plugins.BasePlugin):
   # pylint: disable=arguments-differ
   def Process(
       self, parser_mediator, cache=None, database=None, **unused_kwargs):
-    """Determine if this is the right plugin for this database.
-
-    This function takes a SQLiteDatabase object and compares the list of
-    required table and column names against thos in the database. If all
-    the table and column names defined in REQUIRED_STRUCTURES are present
-    in the database then this plugin is considered to be the correct plugin
-    to produce events.
+    """Extracts events from a SQLite database.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
