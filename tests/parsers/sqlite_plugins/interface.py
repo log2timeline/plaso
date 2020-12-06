@@ -19,7 +19,8 @@ class TestSQLitePlugin(interface.SQLitePlugin):
   QUERIES = [(
       'SELECT Field1, Field2, Field3 FROM MyTable', 'ParseMyTableRow')]
 
-  REQUIRED_TABLES = frozenset(['MyTable'])
+  REQUIRED_STRUCTURE = {
+      'MyTable': frozenset(['Field1'])}
 
   SCHEMAS = [
       {'MyTable': (
