@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import pyesedb
-
 from plaso.containers import sessions
 from plaso.parsers import esedb
 from plaso.storage.fake import writer as fake_writer
@@ -18,6 +16,10 @@ class ESEDBPluginTestCase(test_lib.ParserTestCase):
   def _ParseESEDBFileWithPlugin(
       self, path_segments, plugin, knowledge_base_values=None):
     """Parses a file as an ESE database file and returns an event generator.
+
+    This method will first test if an ESE database contains the required tables
+    using plugin.CheckRequiredTables() and then extracts events using
+    plugin.Process().
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
@@ -40,11 +42,16 @@ class ESEDBPluginTestCase(test_lib.ParserTestCase):
     file_object = file_entry.GetFileObject()
 
     try:
-      esedb_file = pyesedb.file()
-      esedb_file.open_file_object(file_object)
+      database = esedb.ESEDatabase()
+      database.Open(file_object)
+
+      required_tables_exist = plugin.CheckRequiredTables(database)
+      self.assertTrue(required_tables_exist)
+
       cache = esedb.ESEDBCache()
-      plugin.Process(parser_mediator, cache=cache, database=esedb_file)
-      esedb_file.close()
+      plugin.Process(parser_mediator, cache=cache, database=database)
+
+      database.Close()
 
     finally:
       file_object.close()

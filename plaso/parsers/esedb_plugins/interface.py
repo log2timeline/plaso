@@ -340,6 +340,19 @@ class ESEDBPlugin(plugins.BasePlugin):
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
           '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
+  def CheckRequiredTables(self, database):
+    """Check if the database has the minimal structure required by the plugin.
+
+    Args:
+      database (ESEDatabase): ESE database to check.
+
+    Returns:
+      bool: True if the database has the minimum tables defined by the plugin,
+          or False if it does not. The database can have more tables than
+          specified by the plugin and still return True.
+    """
+    return self.required_tables.issubset(database.tables)
+
   def GetEntries(self, parser_mediator, cache=None, database=None, **kwargs):
     """Extracts event objects from the database.
 
@@ -347,7 +360,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
 
     Raises:
       ValueError: If the database attribute is not valid.
@@ -371,7 +384,7 @@ class ESEDBPlugin(plugins.BasePlugin):
                 self.NAME, callback_method, table_name))
         continue
 
-      esedb_table = database.get_table_by_name(table_name)
+      esedb_table = database.GetTableByName(table_name)
       if not esedb_table:
         if table_name not in self.OPTIONAL_TABLES:
           logger.warning('[{0:s}] missing table: {1:s}'.format(
@@ -393,7 +406,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
 
     Raises:
       ValueError: If the database attribute is not valid.

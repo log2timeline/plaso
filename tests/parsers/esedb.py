@@ -42,8 +42,8 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     warning = warnings[0]
     self.assertIsNotNone(warning)
 
-    self.assertTrue(warning.message.startswith(
-        'unable to open file with error: pyesedb_file_open_file_object: '))
+    self.assertEqual(
+        warning.message, 'unable to open file with error: Missing file object.')
 
 
 if __name__ == '__main__':

@@ -123,13 +123,14 @@ class SQLiteDatabase(object):
       'AND tbl_name != "sqlite_sequence"')
 
   def __init__(self, filename, temporary_directory=None):
-    """Initializes the database object.
+    """Initializes a SQLite database.
 
     Args:
       filename (str): name of the file entry.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
     """
+    super(SQLiteDatabase, self).__init__()
     self._database = None
     self._filename = filename
     self._is_open = False
