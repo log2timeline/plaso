@@ -64,11 +64,6 @@ class ESEDBPlugin(plugins.BasePlugin):
     self._tables.update(self.REQUIRED_TABLES)
     self._tables.update(self.OPTIONAL_TABLES)
 
-  @property
-  def required_tables(self):
-    """set[str]: required table names."""
-    return frozenset(self.REQUIRED_TABLES.keys())
-
   def _ConvertValueBinaryDataToStringAscii(self, value):
     """Converts a binary data value into a string.
 
@@ -348,10 +343,14 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     Returns:
       bool: True if the database has the minimum tables defined by the plugin,
-          or False if it does not. The database can have more tables than
-          specified by the plugin and still return True.
+          or False if it does not or no required tables are defined. The
+          database can have more tables than specified by the plugin and still
+          return True.
     """
-    return self.required_tables.issubset(database.tables)
+    if not self.REQUIRED_TABLES:
+      return False
+
+    return set(self.REQUIRED_TABLES.keys()).issubset(database.tables)
 
   def GetEntries(self, parser_mediator, cache=None, database=None, **kwargs):
     """Extracts event objects from the database.
