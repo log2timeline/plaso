@@ -207,7 +207,7 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())
 

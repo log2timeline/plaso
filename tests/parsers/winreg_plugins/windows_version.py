@@ -110,7 +110,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.123521')
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -134,7 +134,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[1]
+    event = events[0]
 
     self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.000000')
     self.assertEqual(
@@ -178,7 +178,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2012-03-15 07:09:20.671875')
 

@@ -53,8 +53,8 @@ class ShutdownWindowsRegistryPlugin(
       byte_stream (bytes): byte stream.
 
     Returns:
-      dfdatetime.Filetime: FILETIME date and time value or None if no
-          value is set.
+      dfdatetime.DateTimeValues: a FILETIME date and time values or a semantic
+        date and time values if the FILETIME date and time value is not set.
 
     Raises:
       ParseError: if the FILETIME could not be parsed.
@@ -70,13 +70,13 @@ class ShutdownWindowsRegistryPlugin(
               exception))
 
     if filetime == 0:
-      return None
+      return dfdatetime_semantic_time.NotSet()
 
     try:
       return dfdatetime_filetime.Filetime(timestamp=filetime)
     except ValueError:
-      raise errors.ParseError(
-          'Invalid FILETIME value: 0x{0:08x}'.format(filetime))
+      raise errors.ParseError('Invalid FILETIME value: 0x{0:08x}'.format(
+          filetime))
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a ShutdownTime Windows Registry value.
@@ -87,28 +87,27 @@ class ShutdownWindowsRegistryPlugin(
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     shutdown_value = registry_key.GetValueByName('ShutdownTime')
-    if not shutdown_value:
-      return
+    if shutdown_value:
+      try:
+        date_time = self._ParseFiletime(shutdown_value.data)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to determine shutdown timestamp with error: {0!s}'.format(
+                exception))
+        date_time = None
 
-    try:
-      date_time = self._ParseFiletime(shutdown_value.data)
-    except errors.ParseError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to determine shutdown timestamp with error: {0!s}'.format(
-              exception))
-      return
+      if date_time:
+        event_data = ShutdownWindowsRegistryEventData()
+        event_data.key_path = registry_key.path
+        event_data.offset = shutdown_value.offset
+        event_data.value_name = shutdown_value.name
 
-    if not date_time:
-      date_time = dfdatetime_semantic_time.NotSet()
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_LAST_SHUTDOWN)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    event_data = ShutdownWindowsRegistryEventData()
-    event_data.key_path = registry_key.path
-    event_data.offset = shutdown_value.offset
-    event_data.value_name = shutdown_value.name
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_LAST_SHUTDOWN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    self._ProduceDefaultWindowsRegistryEvent(
+        parser_mediator, registry_key, names_to_skip=['ShutdownTime'])
 
 
 winreg.WinRegistryParser.RegisterPlugin(ShutdownWindowsRegistryPlugin)
