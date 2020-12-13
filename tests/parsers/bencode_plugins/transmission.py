@@ -12,7 +12,7 @@ from plaso.parsers import bencode_parser
 from tests.parsers.bencode_plugins import test_lib
 
 
-class BencodeTest(test_lib.BencodePluginTestCase):
+class TransmissionPluginTest(test_lib.BencodePluginTestCase):
   """Tests for bencode parser plugin for Transmission BitTorrent files."""
 
   def testProcess(self):

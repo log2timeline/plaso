@@ -7,4 +7,4 @@ from tests.parsers import test_lib
 
 
 class BencodePluginTestCase(test_lib.ParserTestCase):
-  """The unit test case for a bencode plugin."""
+  """Bencode parser plugin test case."""

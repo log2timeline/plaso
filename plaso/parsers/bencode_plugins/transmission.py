@@ -29,7 +29,7 @@ class TransmissionEventData(events.EventData):
     self.seedtime = None
 
 
-class TransmissionPlugin(interface.BencodePlugin):
+class TransmissionBencodePlugin(interface.BencodePlugin):
   """Parse Transmission BitTorrent activity file for current torrents.
 
   Transmission stores an individual Bencoded file for each active download
@@ -39,45 +39,44 @@ class TransmissionPlugin(interface.BencodePlugin):
   NAME = 'bencode_transmission'
   DATA_FORMAT = 'Transmission BitTorrent activity file'
 
-  BENCODE_KEYS = frozenset([
+  _BENCODE_KEYS = frozenset([
       'activity-date', 'added-date', 'destination', 'done-date',
       'seeding-time-seconds'])
 
-  def Process(self, parser_mediator, decoded_values=None, **kwargs):
+  def Process(self, parser_mediator, bencode_file=None, **kwargs):
     """Extracts events from Transmission's resume folder files.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      decoded_values (Optional[collections.OrderedDict[bytes|str, object]]):
-          decoded values.
+      bencode_file (Optional[BencodeFile]): bencode file.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(TransmissionPlugin, self).Process(parser_mediator, **kwargs)
+    super(TransmissionBencodePlugin, self).Process(parser_mediator, **kwargs)
 
-    destination = self._GetDecodedValue(decoded_values, 'destination')
-    seeding_time = self._GetDecodedValue(decoded_values, 'seeding-time-seconds')
+    destination = bencode_file.GetDecodedValue('destination')
+    seeding_time = bencode_file.GetDecodedValue('seeding-time-seconds')
 
     event_data = TransmissionEventData()
     event_data.destination = destination
     # Convert seconds to minutes.
     event_data.seedtime, _ = divmod(seeding_time, 60)
 
-    timestamp = self._GetDecodedValue(decoded_values, 'added-date')
+    timestamp = bencode_file.GetDecodedValue('added-date')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = self._GetDecodedValue(decoded_values, 'done-date')
+    timestamp = bencode_file.GetDecodedValue('done-date')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = self._GetDecodedValue(decoded_values, 'activity-date')
+    timestamp = bencode_file.GetDecodedValue('activity-date')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
@@ -85,4 +84,4 @@ class TransmissionPlugin(interface.BencodePlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-bencode_parser.BencodeParser.RegisterPlugin(TransmissionPlugin)
+bencode_parser.BencodeParser.RegisterPlugin(TransmissionBencodePlugin)

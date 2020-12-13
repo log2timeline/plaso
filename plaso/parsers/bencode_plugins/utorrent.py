@@ -31,7 +31,7 @@ class UTorrentEventData(events.EventData):
     self.seedtime = None
 
 
-class UTorrentPlugin(interface.BencodePlugin):
+class UTorrentBencodePlugin(interface.BencodePlugin):
   """Plugin to extract parse uTorrent active torrent files.
 
   uTorrent creates a file, resume.dat, and a backup, resume.dat.old, to
@@ -49,31 +49,27 @@ class UTorrentPlugin(interface.BencodePlugin):
   # The following set is used to determine if the bencoded data is appropriate
   # for this plugin. If there's a match, the entire bencoded data block is
   # returned for analysis.
-  BENCODE_KEYS = frozenset(['.fileguard'])
+  _BENCODE_KEYS = frozenset(['.fileguard'])
 
-  def Process(self, parser_mediator, decoded_values=None, **kwargs):
+  def Process(self, parser_mediator, bencode_file=None, **kwargs):
     """Extracts events from uTorrent active torrent files.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      decoded_values (Optional[collections.OrderedDict[bytes|str, object]]):
-          decoded values.
+      bencode_file (Optional[BencodeFile]): bencode file.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(UTorrentPlugin, self).Process(parser_mediator, **kwargs)
+    super(UTorrentBencodePlugin, self).Process(parser_mediator, **kwargs)
 
-    for key, value in decoded_values.items():
-      if isinstance(key, bytes):
-        # Work-around for issue in bencode 3.0.1 where keys are bytes.
-        key = key.decode('utf-8')
-
+    for key, value in bencode_file.GetDecodedValues():
       if not '.torrent' in key:
         continue
 
-      caption = self._GetDecodedValue(value, 'caption')
-      path = self._GetDecodedValue(value, 'path')
-      seedtime = self._GetDecodedValue(value, 'seedtime')
+      bencoded_values = bencode_parser.BencodeValues(value)
+      caption = bencoded_values.GetDecodedValue('caption')
+      path = bencoded_values.GetDecodedValue('path')
+      seedtime = bencoded_values.GetDecodedValue('seedtime')
       if not caption or not path or seedtime < 0:
         parser_mediator.ProduceExtractionWarning(
             'key: {0:s} is missing valid caption, path and seedtime'.format(
@@ -116,4 +112,4 @@ class UTorrentPlugin(interface.BencodePlugin):
             parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-bencode_parser.BencodeParser.RegisterPlugin(UTorrentPlugin)
+bencode_parser.BencodeParser.RegisterPlugin(UTorrentBencodePlugin)

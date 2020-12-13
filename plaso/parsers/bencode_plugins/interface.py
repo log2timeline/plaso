@@ -15,10 +15,8 @@ from plaso.parsers import plugins
 class BencodePlugin(plugins.BasePlugin):
   """Bencode parser plugin interface."""
 
-  # BENCODE_KEYS is a list of keys required by a plugin.
-  # This is expected to be overridden by the processing plugin.
-  # Ex. frozenset(['activity-date', 'done-date'])
-  BENCODE_KEYS = frozenset(['any'])
+  NAME = 'bencode_plugin'
+  DATA_FORMAT = 'Bencoded file'
 
   # This is expected to be overridden by the processing plugin.
   # URLS should contain a list of URLs with additional information about
@@ -26,40 +24,36 @@ class BencodePlugin(plugins.BasePlugin):
   # Ex. ['https://wiki.theory.org/BitTorrentSpecification#Bencoding']
   URLS = []
 
-  NAME = 'bencode_plugin'
-  DATA_FORMAT = 'Bencoded file'
+  # _BENCODE_KEYS is a list of keys required by a plugin.
+  # This is expected to be overridden by the processing plugin.
+  # Ex. frozenset(['activity-date', 'done-date'])
+  _BENCODE_KEYS = frozenset(['any'])
 
-  def _GetDecodedValue(self, decoded_values, name):
-    """Retrieves a decoded value.
+  def CheckRequiredKeys(self, bencode_file):
+    """Check if the bencode file has the minimal keys required by the plugin.
 
     Args:
-      decoded_values (collections.OrderedDict[bytes|str, object]): decoded
-          values.
-      name (str): name of the value.
+      bencode_file (BencodeFile): bencode file.
 
     Returns:
-      object: decoded value or None if not available.
+      bool: True if the bencode file has the minimum keys defined by the plugin,
+          or False if it does not or no required keys are defined. The bencode
+          file can have more keys than specified by the plugin and still return
+          True.
     """
-    value = decoded_values.get(name, None)
-    if value is None:
-      # Work-around for issue in bencode 3.0.1 where keys are bytes.
-      name_as_byte_stream = name.encode('utf-8')
-      value = decoded_values.get(name_as_byte_stream, None)
+    if not self._BENCODE_KEYS:
+      return False
 
-    if isinstance(value, bytes):
-      # Work-around for issue in bencode 3.0.1 where string valuse are bytes.
-      value = value.decode('utf-8')
-
-    return value
+    return bencode_file.keys.issuperset(self._BENCODE_KEYS)
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod
-  def Process(self, parser_mediator, decoded_values=None, **kwargs):
-    """Extracts events from the values of entries within a bencoded file.
+  def Process(self, parser_mediator, bencode_file=None, **kwargs):
+    """Extracts events from the values of entries within a bencode file.
 
     This is the main method that a Bencode plugin needs to implement.
 
-    The contents of the bencode keys defined in BENCODE_KEYS can be made
+    The contents of the bencode keys defined in _BENCODE_KEYS can be made
     available to the plugin as both a matched{'KEY': 'value'} and as the
     entire bencoded data dictionary. The plugin should implement logic to parse
     the most relevant data set into a useful event for incorporation into the
@@ -75,6 +69,5 @@ class BencodePlugin(plugins.BasePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      decoded_values (Optional[collections.OrderedDict[bytes|str, object]]):
-          decoded values.
+      bencode_file (Optional[BencodeFile]): bencode file.
     """
