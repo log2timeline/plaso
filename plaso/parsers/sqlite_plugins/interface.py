@@ -140,10 +140,14 @@ class SQLitePlugin(plugins.BasePlugin):
       database (SQLiteDatabase): the database who's structure is being checked.
 
     Returns:
-      bool: True if the database has the minimum tables and columns defined by
-          the plugin, or False if it does not. The database can have more tables
-          and/or columns than specified by the plugin and still return True.
+      bool: True if the database has the required tables and columns defined by
+          the plugin, or False if it does not or if the plugin does not define
+          required tables and columns. The database can have more tables and/or
+          columns than specified by the plugin and still return True.
     """
+    if not self.REQUIRED_STRUCTURE:
+      return False
+
     has_required_structure = True
     for required_table, required_columns in self.REQUIRED_STRUCTURE.items():
       if required_table not in database.tables:
