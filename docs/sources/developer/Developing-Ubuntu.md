@@ -56,58 +56,7 @@ development tools:
 * Python Mock
 
 ### PyLint
-Currently plaso development uses PyLint version 1.9.x.
-
-Remove any older version of PyLint.
-```bash
-sudo apt-get remove pylint
-```
-
-For pylint 1.9.x the following additional dependencies are required:
-* [astroid](https://pypi.python.org/pypi/astroid)
-* [lazy-object-proxy](https://pypi.python.org/pypi/lazy-object-proxy)
-* [logilab-common](https://pypi.python.org/pypi/logilab-common)
-* [wrapt](https://pypi.python.org/pypi/wrapt)
-
-Download and build the python-wrapt Debian package:
-**TODO describe**
-
-Download and build the python-lazy-object-proxy Debian package:
-**TODO describe**
-
-Download and build the python-logilab-common Debian package:
-```bash
-hg clone http://hg.logilab.org/logilab/common
-cd common
-dpkg-buildpackage -rfakeroot
-cd ..
-```
-
-Since you're building from development branch it can be possible that you need
-to disable any failing tests.
-Either report these as bugs to the PyLint project or fix them yourself.
-
-Download and build the python-astroid Debian package:
-```bash
-hg clone https://bitbucket.org/logilab/astroid
-cd astroid
-dpkg-buildpackage -rfakeroot
-cd ..
-```
-
-Download and build the pylint Debian package:
-```bash
-hg clone https://bitbucket.org/logilab/pylint
-cd pylint
-dpkg-buildpackage -rfakeroot
-cd ..
-```
-
-Install the python-wrapt, python-lazy-object-proxy, python-logilab-common,
-python-astroid and pylint Debian packages:
-```bash
-sudo dpkg -i python-wrapt python-lazy-object-proxy python-logilab-common_0.60.0-1_all.deb python-astroid_1.0.1-1_all.deb pylint_1.6.5-1_all.deb
-```
+Currently plaso development uses PyLint version 2.6.x.
 
 ### Python Mock
 To install Python Mock run:

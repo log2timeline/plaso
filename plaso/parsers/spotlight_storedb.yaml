@@ -1,7 +1,7 @@
 name: spotlight_store_db
 type: format
 description: Apple Spotlight store database file format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Apple%20Spotlight%20store%20database%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Spotlight%20store%20database%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer

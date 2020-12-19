@@ -138,7 +138,7 @@ sources:
 - type: REGISTRY_KEY
   attributes: {keys: ['HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Time Zones\*']}
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/blob/master/documentation/Time%20zone%20keys.asciidoc']
+urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/Time%20zone%20keys.asciidoc']
 ---
 name: WindowsCodePage
 doc: The code page of the system.
@@ -149,7 +149,7 @@ sources:
     - {key: '%%current_control_set%%\Control\Nls\CodePage', value: 'ACP'}
 provides: [code_page]
 supported_os: [Windows]
-urls: ['http://en.wikipedia.org/wiki/Windows_code_page']
+urls: ['https://en.wikipedia.org/wiki/Windows_code_page']
 ---
 name: WindowsComputerName
 doc: The name of the system.
@@ -167,7 +167,7 @@ sources:
 - type: REGISTRY_VALUE
   attributes: {key_value_pairs: [{key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion', value: 'CurrentVersion'}]}
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/blob/master/documentation/System%20keys.asciidoc']
+urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/System%20keys.asciidoc']
 ---
 name: WindowsEnvironmentVariableAllUsersProfile
 doc: |
@@ -271,7 +271,7 @@ sources:
 - type: REGISTRY_VALUE
   attributes: {key_value_pairs: [{key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion', value: 'ProductName'}]}
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/blob/master/documentation/System%20keys.asciidoc']
+urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/System%20keys.asciidoc']
 ---
 name: WindowsRegistryProfiles
 doc: |
@@ -294,4 +294,4 @@ sources:
   attributes: {key_value_pairs: [{key: '%%current_control_set%%\Control\TimeZoneInformation', value: 'StandardName'}]}
 provides: [time_zone]
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/blob/master/documentation/Time%20zone%20keys.asciidoc']
+urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/Time%20zone%20keys.asciidoc']

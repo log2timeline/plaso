@@ -7,7 +7,7 @@ This page contains some scribbles about events. It contains information about:
 * How are events defined in plaso?
 
 ## What is an event?
-From [Wikipedia - Event (computing)](http://en.wikipedia.org/wiki/Event_%28computing%29)
+From [Wikipedia - Event (computing)](https://en.wikipedia.org/wiki/Event_%28computing%29)
 
 > In computing, an event is an action or occurrence detected by the program that may be handled by the program. Typically events are handled synchronously with the program flow, that is, the program has one or more dedicated places where events are handled, frequently an event loop. Typical sources of events include the user (who presses a key on the keyboard, in other words, through a keystroke). Another source is a hardware device such as a timer. Any program can trigger its own custom set of events as well, e.g. to communicate the completion of a task.
 
@@ -50,12 +50,12 @@ Based on our definition an event technically should have a date or time (or dura
 **TODO: add description**
 
 ### Event time
-A plaso timestamp is a 64-bit signed integer that contains the number of micro seconds since January 1, 1970 00:00:00 UTC. A negative time means that the event happened before its reference date (or [epoch](http://en.wikipedia.org/wiki/Epoch_(reference_date))).
+A plaso timestamp is a 64-bit signed integer that contains the number of micro seconds since January 1, 1970 00:00:00 UTC. A negative time means that the event happened before its reference date (or [epoch](https://en.wikipedia.org/wiki/Epoch_(reference_date))).
 
 * An event spanning a duration is currently not supported
 * Time-less events currently overload timestamp 0
 
-However plaso is moving to [dfdatetime](https://github.com/log2timeline/dfdatetime) to represent event time with preservation of [accuracy and precision](https://github.com/log2timeline/dfdatetime/wiki/Accuracy-and-precision).
+However plaso is moving to [dfdatetime](https://github.com/log2timeline/dfdatetime) to represent event time with preservation of [accuracy and precision](https://dfdatetime.readthedocs.io/en/latest/sources/Date-and-time-values.html#accuracy-and-precision).
 
 ### Event formatting
 **TODO: add description**

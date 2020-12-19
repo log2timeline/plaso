@@ -1,7 +1,7 @@
 name: task_cache
 type: format
 description: Task Scheduler Cache format
-urls: ["https://github.com/libyal/winreg-kb/blob/master/documentation/Task%20Scheduler%20Keys.asciidoc"]
+urls: ["https://github.com/libyal/winreg-kb/blob/main/documentation/Task%20Scheduler%20Keys.asciidoc"]
 ---
 name: uint32
 type: integer

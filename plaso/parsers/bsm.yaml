@@ -1,7 +1,7 @@
 name: bsm
 type: format
 description: Basic Security Module (BSM) event auditing file format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Basic%20Security%20Module%20(BSM)%20event%20auditing%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Basic%20Security%20Module%20(BSM)%20event%20auditing%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer

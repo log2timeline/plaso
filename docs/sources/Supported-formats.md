@@ -28,7 +28,7 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 * [Java WebStart IDX](https://forensicswiki.xyz/wiki/index.php?title=Java)
 * [Jump Lists](https://forensicswiki.xyz/wiki/index.php?title=Jump_Lists) .customDestinations-ms files
 * MacOS Application firewall
-* [MacOS Keychain](https://github.com/libyal/dtformats/blob/master/documentation/MacOS%20keychain%20database%20file%20format.asciidoc)
+* [MacOS Keychain](https://github.com/libyal/dtformats/blob/main/documentation/MacOS%20keychain%20database%20file%20format.asciidoc)
 * MacOS Securityd
 * MacOS Wifi
 * [mactime logs](https://forensicswiki.xyz/wiki/index.php?title=Mactime)
@@ -44,15 +44,15 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 * PL SQL cache file (PL-SQL developer recall files)
 * Popularity Contest log
 * [Property list (plist) format](https://forensicswiki.xyz/wiki/index.php?title=Property_list_(plist)) using plistlib
-* [Restore Point logs (rp.log)](https://github.com/libyal/dtformats/blob/master/documentation/Restore%20point%20formats.asciidoc)
-* [Safari Binary Cookies](https://github.com/libyal/dtformats/blob/master/documentation/Safari%20Cookies.asciidoc)
+* [Restore Point logs (rp.log)](https://github.com/libyal/dtformats/blob/main/documentation/Restore%20point%20formats.asciidoc)
+* [Safari Binary Cookies](https://github.com/libyal/dtformats/blob/main/documentation/Safari%20Cookies.asciidoc)
 * SCCM client logs
 * SELinux audit logs
 * SkyDrive log and error log files
 * [SQLite database format](https://forensicswiki.xyz/wiki/index.php?title=SQLite_database_format) using [SQLite](https://forensicswiki.xyz/wiki/index.php?title=SQLite)
 * Symantec AV Corporate Edition and Endpoint Protection log
 * Syslog
-* [utmp, utmpx](https://github.com/libyal/dtformats/blob/master/documentation/Utmp%20login%20records%20format.asciidoc)
+* [utmp, utmpx](https://github.com/libyal/dtformats/blob/main/documentation/Utmp%20login%20records%20format.asciidoc)
 * [Windows Event Log (EVT)](https://forensicswiki.xyz/wiki/index.php?title=Windows_Event_Log_(EVT)) using [libevt](https://github.com/libyal/libevt)
 * Windows Firewall
 * [Windows Job files](https://forensicswiki.xyz/wiki/index.php?title=Windows_Job_File_Format) (also known as "at jobs")
@@ -118,7 +118,7 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 * AppCompatCache
 * BagMRU (or ShellBags)
 * CCleaner
-* [Explorer ProgramsCache](https://github.com/libyal/winreg-kb/blob/master/documentation/Programs%20Cache%20values.asciidoc)
+* [Explorer ProgramsCache](https://github.com/libyal/winreg-kb/blob/main/documentation/Programs%20Cache%20values.asciidoc)
 * Less Frequently Used (LFU)
 * MountPoints2
 * Most Recently Used (MRU) MRUList and MRUListEx (including shell item support)

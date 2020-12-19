@@ -46,7 +46,7 @@ class StorageMediaTool(tools.CLITool):
   _SUPPORTED_CREDENTIAL_TYPES = [
       'key_data', 'password', 'recovery_password', 'startup_key']
 
-  # For context see: http://en.wikipedia.org/wiki/Byte
+  # For context see: https://en.wikipedia.org/wiki/Byte
   _UNITS_1000 = ['B', 'kB', 'MB', 'GB', 'TB', 'EB', 'ZB', 'YB']
   _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
 

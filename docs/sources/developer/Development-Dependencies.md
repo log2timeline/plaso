@@ -126,7 +126,7 @@ The l2tdevtools project provides
  to ease the process of keeping the dependencies up to date.
 
 The script requires [pywin32](https://github.com/mhammond/pywin32/releases) and
-[Python WMI](https://pypi.python.org/pypi/WMI/).
+[Python WMI](https://pypi.org/project/WMI/).
 
 To install the development versions of the dependencies run:
 

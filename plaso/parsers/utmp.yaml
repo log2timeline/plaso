@@ -1,7 +1,7 @@
 name: utmp
 type: format
 description: Utmp login records format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Utmp%20login%20records%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Utmp%20login%20records%20format.asciidoc"]
 ---
 name: byte
 type: integer

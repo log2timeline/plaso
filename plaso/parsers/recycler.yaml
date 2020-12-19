@@ -2,8 +2,8 @@ name: recycler
 type: format
 description: Windows Recycler and Recycle.Bin formats
 urls:
-- "https://github.com/libyal/dtformats/blob/master/documentation/Windows%20Recycler%20file%20formats.asciidoc"
-- "https://github.com/libyal/dtformats/blob/master/documentation/Windows%20Recycle.Bin%20file%20formats.asciidoc"
+- "https://github.com/libyal/dtformats/blob/main/documentation/Windows%20Recycler%20file%20formats.asciidoc"
+- "https://github.com/libyal/dtformats/blob/main/documentation/Windows%20Recycle.Bin%20file%20formats.asciidoc"
 ---
 name: byte
 type: integer

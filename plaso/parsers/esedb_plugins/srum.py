@@ -2,7 +2,7 @@
 """Parser for the System Resource Usage Monitor (SRUM) ESE database.
 
 For more information about the database format see:
-https://github.com/libyal/esedb-kb/blob/master/documentation/
+https://github.com/libyal/esedb-kb/blob/main/documentation/
     System%20Resource%20Usage%20Monitor%20(SRUM).asciidoc
 """
 
