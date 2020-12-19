@@ -5,6 +5,9 @@ from __future__ import unicode_literals
 
 import abc
 
+from plaso.containers import time_events
+from plaso.containers import windows_events
+from plaso.lib import definitions
 from plaso.parsers import plugins
 
 
@@ -266,6 +269,30 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
       values_dict[value_name] = value_string
 
     return values_dict
+
+  def _ProduceDefaultWindowsRegistryEvent(
+      self, parser_mediator, registry_key, names_to_skip=None):
+    """Produces a default Windows Registry event.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      names_to_skip (Optional[list[str]]): names of values that should
+          be skipped.
+    """
+    values_dict = self._GetValuesFromKey(
+        registry_key, names_to_skip=names_to_skip)
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.values = ' '.join([
+        '{0:s}: {1!s}'.format(name, value)
+        for name, value in sorted(values_dict.items())]) or None
+
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod

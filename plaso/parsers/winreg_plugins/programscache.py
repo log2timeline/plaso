@@ -7,7 +7,6 @@ import uuid
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import winreg
@@ -198,21 +197,9 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
     if registry_value:
       self._ParseValueData(parser_mediator, registry_key, registry_value)
 
-    values_dict = self._GetValuesFromKey(registry_key)
-    for name in list(values_dict.keys()):
-      if name.lower() in (
-          'programscache', 'programscachesmp', 'programscachetbp'):
-        del values_dict[name]
-
-    event_data = windows_events.WindowsRegistryEventData()
-    event_data.key_path = registry_key.path
-    event_data.values = ' '.join([
-        '{0:s}: {1!s}'.format(name, value)
-        for name, value in sorted(values_dict.items())]) or None
-
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    self._ProduceDefaultWindowsRegistryEvent(
+        parser_mediator, registry_key, names_to_skip=[
+            'programscache', 'programscachesmp', 'programscachetbp'])
 
 
 winreg.WinRegistryParser.RegisterPlugin(

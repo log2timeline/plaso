@@ -7,7 +7,6 @@ import re
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
@@ -89,17 +88,7 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
           subkey.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    values_dict = self._GetValuesFromKey(registry_key)
-
-    event_data = windows_events.WindowsRegistryEventData()
-    event_data.key_path = registry_key.path
-    event_data.values = ' '.join([
-        '{0:s}: {1!s}'.format(name, value)
-        for name, value in sorted(values_dict.items())]) or None
-
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    self._ProduceDefaultWindowsRegistryEvent(parser_mediator, registry_key)
 
 
 class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
