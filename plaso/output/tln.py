@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import formatting_helper
 from plaso.output import manager
@@ -55,15 +54,11 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         event.timestamp, timezone=self._output_mediator.timezone)
     timestamp_description = event.timestamp_desc or 'UNKNOWN'
 
-    message = self._output_mediator.GetFormattedMessage(event_data)
-    if message is None:
-      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
-      raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(data_type))
+    message = self._FormatMessage(event, event_data, event_data_stream)
+    message = message.replace(self._DESCRIPTION_FIELD_DELIMITER, ' ')
 
     return '{0:s}; {1:s}; {2:s}'.format(
-        date_time_string, timestamp_description,
-        message.replace(self._DESCRIPTION_FIELD_DELIMITER, ' '))
+        date_time_string, timestamp_description, message)
 
   def _FormatNotes(self, event, event_data, event_data_stream):
     """Formats a notes field.

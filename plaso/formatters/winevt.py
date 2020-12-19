@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class WinEVTFormatter(interface.ConditionalEventFormatter):
@@ -71,27 +70,12 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
       return self._SEVERITY[severity]
     return 'Unknown {0:d}'.format(severity)
 
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      event_values (dict[str, object]): event values.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
     event_type = event_values.get('event_type', None)
     if event_type is not None:
       event_values['event_type'] = self.GetEventTypeString(event_type)
@@ -102,26 +86,11 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
     if severity is not None:
       event_values['severity'] = self.GetSeverityString(severity)
 
-    source_name = event_values.get('source_name', None)
-    message_identifier = event_values.get('message_identifier', None)
-    strings = event_values.get('strings', [])
-    if source_name and message_identifier:
-      message_string = formatter_mediator.GetWindowsEventMessage(
-          source_name, message_identifier)
-      if message_string:
-        try:
-          event_values['message_string'] = message_string.format(*strings)
-        except IndexError:
-          # Unable to create the message string.
-          pass
-
     message_strings = []
-    for string in strings:
+    for string in event_values.get('strings', []):
       message_strings.append('\'{0:s}\''.format(string))
     message_string = ', '.join(message_strings)
     event_values['strings'] = '[{0:s}]'.format(message_string)
-
-    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(WinEVTFormatter)

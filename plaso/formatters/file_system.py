@@ -7,7 +7,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class FileStatEventFormatter(interface.ConditionalEventFormatter):
@@ -39,28 +38,12 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
       dfvfs_definitions.FILE_ENTRY_TYPE_SOCKET: 'socket',
       dfvfs_definitions.FILE_ENTRY_TYPE_PIPE: 'pipe'}
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      event_values (dict[str, object]): event values.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
     file_entry_type = event_values.get('file_entry_type', None)
     if file_entry_type is not None:
       event_values['file_entry_type'] = self._FILE_ENTRY_TYPES.get(
@@ -71,8 +54,6 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
     if (not event_values.get('allocated', False) and
         not event_values.get('is_allocated', False)):
       event_values['unallocated'] = 'unallocated'
-
-    return self._ConditionalFormatMessages(event_values)
 
 
 class NTFSFileStatEventFormatter(FileStatEventFormatter):
@@ -98,27 +79,12 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
       0x00000010: '$STANDARD_INFORMATION',
       0x00000030: '$FILE_NAME'}
 
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      event_values (dict[str, object]): event values.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
     attribute_type = event_values.get('attribute_type', 0)
     event_values['attribute_name'] = self._ATTRIBUTE_NAMES.get(
         attribute_type, 'UNKNOWN')
@@ -139,8 +105,6 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
     path_hints = event_values.get('path_hints', [])
     if path_hints:
       event_values['path_hints'] = ';'.join(path_hints)
-
-    return self._ConditionalFormatMessages(event_values)
 
 
 class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
@@ -189,27 +153,12 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
       0x00000002: 'USN_SOURCE_AUXILIARY_DATA',
       0x00000004: 'USN_SOURCE_REPLICATION_MANAGEMENT'}
 
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      event_values (dict[str, object]): event values.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
     file_reference = event_values.get('file_reference', None)
     if file_reference:
       event_values['file_reference'] = '{0:d}-{1:d}'.format(
@@ -235,8 +184,6 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
         update_sources.append(description)
 
     event_values['update_source'] = ', '.join(update_sources)
-
-    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatters([

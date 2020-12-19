@@ -8,12 +8,10 @@ import unittest
 
 from plaso.containers import artifacts
 from plaso.engine import knowledge_base
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import mediator
 
 from tests.containers import test_lib as containers_test_lib
-from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
@@ -42,64 +40,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
     self._output_mediator = mediator.OutputMediator(knowledge_base_object, None)
 
-  def testGetEventFormatter(self):
-    """Tests the GetEventFormatter function."""
-    _, event_data, _ = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      event_formatter = self._output_mediator.GetEventFormatter(event_data)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
-
-    self.assertIsInstance(
-        event_formatter, formatters_test_lib.TestEventFormatter)
-
   # TODO: add tests for GetDisplayNameForPathSpec
-
-  def testGetFormattedMessage(self):
-    """Tests the GetFormattedMessage function."""
-    _, event_data, _ = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      message = self._output_mediator.GetFormattedMessage(event_data)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
-
-    expected_message = (
-        'Reporter <CRON> PID: 8442'
-        ' (pam_unix(cron:session): session closed for user root)')
-
-    self.assertEqual(message, expected_message)
-
-  def testGetFormattedMessageShort(self):
-    """Tests the GetFormattedMessageShort function."""
-    _, event_data, _ = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      message_short = self._output_mediator.GetFormattedMessageShort(event_data)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
-
-    expected_message_short = (
-        'Reporter <CRON> PID: 8442'
-        ' (pam_unix(cron:session): session closed for user root)')
-
-    self.assertEqual(message_short, expected_message_short)
 
   def testGetHostname(self):
     """Tests the GetHostname function."""

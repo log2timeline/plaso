@@ -12,7 +12,6 @@ from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.cli.helpers import profiling
 from plaso.formatters import manager as formatters_manager
-from plaso.formatters import mediator as formatters_mediator
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
 from plaso.output import manager as output_manager
@@ -161,19 +160,15 @@ class OutputModuleOptions(object):
       RuntimeError: if the output module cannot be created or parameters are
           missing while running in unattended mode.
     """
-    formatter_mediator = formatters_mediator.FormatterMediator(
-        data_location=self._data_location)
+    mediator = output_mediator.OutputMediator(
+        self._knowledge_base, data_location=self._data_location,
+        preferred_encoding=self.preferred_encoding)
 
     try:
-      formatter_mediator.SetPreferredLanguageIdentifier(
-          self._preferred_language)
+      mediator.SetPreferredLanguageIdentifier(self._preferred_language)
     except (KeyError, TypeError) as exception:
       raise RuntimeError(exception)
 
-    mediator = output_mediator.OutputMediator(
-        self._knowledge_base, formatter_mediator,
-        data_location=self._data_location,
-        preferred_encoding=self.preferred_encoding)
     mediator.SetTimezone(self._output_time_zone)
 
     try:

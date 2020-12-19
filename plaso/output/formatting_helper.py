@@ -10,6 +10,7 @@ import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import logger
@@ -171,16 +172,26 @@ class FieldFormattingHelper(object):
       str: message field.
 
     Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
+      NoFormatterFound: if no message formatter can be found to match the data
           type in the event data.
+      WrongFormatter: if the event data cannot be formatted by the message
+          formatter.
     """
-    message = self._output_mediator.GetFormattedMessage(event_data)
-    if message is None:
-      raise errors.NoFormatterFound(
-          'Unable to create message for event with data type: {0:s}.'.format(
-              event_data.data_type))
+    message_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_data.data_type)
+    if not message_formatter:
+      raise errors.NoFormatterFound((
+          'Unable to find message formatter event with data type: '
+          '{0:s}.').format(event_data.data_type))
 
-    return message
+    event_values = event_data.CopyToDict()
+    message_formatter.FormatEventValues(event_values)
+
+    if event_data.data_type in ('windows:evt:record', 'windows:evtx:record'):
+      event_values['message_string'] = self._FormatWindowsEventLogMessage(
+          event, event_data, event_data_stream)
+
+    return message_formatter.GetMessage(event_values)
 
   def _FormatMessageShort(self, event, event_data, event_data_stream):
     """Formats a short message field.
@@ -194,16 +205,21 @@ class FieldFormattingHelper(object):
       str: short message field.
 
     Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
+      NoFormatterFound: if no message formatter can be found to match the data
           type in the event data.
+      WrongFormatter: if the event data cannot be formatted by the message
+          formatter.
     """
-    message_short = self._output_mediator.GetFormattedMessageShort(event_data)
-    if message_short is None:
-      raise errors.NoFormatterFound(
-          'Unable to create message for event with data type: {0:s}.'.format(
-              event_data.data_type))
+    message_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_data.data_type)
+    if not message_formatter:
+      raise errors.NoFormatterFound((
+          'Unable to find message formatter event with data type: '
+          '{0:s}.').format(event_data.data_type))
 
-    return message_short
+    event_values = event_data.CopyToDict()
+    message_formatter.FormatEventValues(event_values)
+    return message_formatter.GetMessageShort(event_values)
 
   def _FormatSource(self, event, event_data, event_data_stream):
     """Formats a source field.
@@ -331,6 +347,33 @@ class FieldFormattingHelper(object):
       str: username field.
     """
     return self._output_mediator.GetUsername(event_data)
+
+  def _FormatWindowsEventLogMessage(self, event, event_data, event_data_stream):
+    """Formats a Windows Event Log message field.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: Windows Event Log message field or None if not available.
+    """
+    message_string = None
+    source_name = getattr(event_data, 'source_name', None)
+    message_identifier = getattr(event_data, 'message_identifier', None)
+    if source_name and message_identifier:
+      windows_event_message = self._output_mediator.GetWindowsEventMessage(
+          source_name, message_identifier)
+      if windows_event_message:
+        try:
+          message_string = windows_event_message.format(*event_data.strings)
+        except IndexError:
+          # Unable to create the message string.
+          # TODO: consider returning the unformatted message string.
+          pass
+
+    return message_string
 
   # pylint: enable=unused-argument
 

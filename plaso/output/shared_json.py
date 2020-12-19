@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import json
 
 from plaso.lib import errors
+from plaso.output import dynamic
 from plaso.output import formatting_helper
 from plaso.serializer import json_serializer
 
@@ -14,6 +15,16 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
   """JSON output module event formatting helper."""
 
   _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
+
+  def __init__(self, output_mediator):
+    """Initializes a JSON output module event formatting helper.
+
+    Args:
+      output_mediator (OutputMediator): output mediator.
+    """
+    super(JSONEventFormattingHelper, self).__init__(output_mediator)
+    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper(
+        output_mediator)
 
   def _WriteSerializedDict(
       self, event, event_data, event_data_stream, event_tag):
@@ -37,9 +48,10 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
       event_data_json_dict['inode'] = 0
 
     try:
-      message = self._output_mediator.GetFormattedMessage(event_data)
+      message = self._field_formatting_helper.GetFormattedField(
+          'message', event, event_data, event_data_stream, event_tag)
       event_data_json_dict['message'] = message
-    except errors.WrongFormatter:
+    except (errors.NoFormatterFound, errors.WrongFormatter):
       pass
 
     event_json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event)
