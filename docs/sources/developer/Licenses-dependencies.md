@@ -39,7 +39,7 @@ Dependency | License
 
 Dependency | License
 --- | ---
-[bencode](https://pypi.python.org/pypi/bencode) | [BitTorrent Open Source License](http://web.archive.org/web/20080213154112/http://www.bittorrent.com/bittorrent-open-source-license)
+[bencode](https://pypi.org/project/bencode) | [BitTorrent Open Source License](http://web.archive.org/web/20080213154112/http://www.bittorrent.com/bittorrent-open-source-license)
 [Libesedb and Python-bindings](https://github.com/libyal/libesedb/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libevt and Python-bindings](https://github.com/libyal/libevt/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libevtx and Python-bindings](https://github.com/libyal/libevtx/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
@@ -48,11 +48,9 @@ Dependency | License
 [Libmsiecf and Python-bindings](https://github.com/libyal/libmsiecf/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libolecf and Python-bindings](https://github.com/libyal/libolecf/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libregf and Python-bindings](https://github.com/libyal/libregf/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
-[Six](https://pypi.python.org/pypi/six/) | [MIT license](http://opensource.org/licenses/MIT)
-[Sqlite](http://www.sqlite.org/index.html) | [Public domain](http://www.sqlite.org/copyright.html)
+[Six](https://pypi.org/project/six/) | [MIT license](http://opensource.org/licenses/MIT)
 [pefile](https://github.com/erocarrera/pefile) | [BSD 3-clause license](http://opensource.org/licenses/BSD-3-Clause)
 [Pyparsing](http://pyparsing.wikispaces.com/) | [MIT license](http://opensource.org/licenses/MIT)
-[Pysqlite](https://pypi.python.org/pypi/pysqlite) | [zlib/libpng license](https://github.com/ghaering/pysqlite/blob/master/LICENSE)
 
 ### Output/Storage dependencies
 

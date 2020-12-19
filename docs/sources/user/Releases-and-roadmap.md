@@ -28,7 +28,7 @@ roadmap. For more detailed information see:
   * output modules
   * text parser rewrite/optimization
 * Extend and improve file system support
-  * [dfVFS](https://github.com/log2timeline/dfvfs/wiki/Roadmap)
+  * [dfVFS](https://github.com/log2timeline/dfvfs/projects)
 * Multi volume support
 * Parsers
   * [Add more parsers](https://github.com/log2timeline/plaso/issues/518)
