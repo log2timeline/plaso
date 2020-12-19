@@ -37,7 +37,7 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
       event_data_json_dict['inode'] = 0
 
     try:
-      message, _ = self._output_mediator.GetFormattedMessages(event_data)
+      message = self._output_mediator.GetFormattedMessage(event_data)
       event_data_json_dict['message'] = message
     except errors.WrongFormatter:
       pass

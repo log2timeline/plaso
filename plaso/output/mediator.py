@@ -75,23 +75,41 @@ class OutputMediator(object):
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
         path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
-  def GetFormattedMessages(self, event_data):
-    """Retrieves the formatted messages related to the event data.
+  def GetFormattedMessage(self, event_data):
+    """Retrieves the formatted message related to the event data.
 
     Args:
       event_data (EventData): event data.
 
     Returns:
-      tuple: containing:
-
-        str: full message string or None if no event formatter was found.
-        str: short message string or None if no event formatter was found.
+      str: message string or None if no event formatter was found.
     """
+    message = None
+
     event_formatter = self.GetEventFormatter(event_data)
     if event_formatter:
-      return event_formatter.GetMessages(self._formatter_mediator, event_data)
+      message, _ = event_formatter.GetMessages(
+          self._formatter_mediator, event_data)
 
-    return None, None
+    return message
+
+  def GetFormattedMessageShort(self, event_data):
+    """Retrieves the short formatted messages related to the event data.
+
+    Args:
+      event_data (EventData): event data.
+
+    Returns:
+      str: short message string or None if no event formatter was found.
+    """
+    message_short = None
+
+    event_formatter = self.GetEventFormatter(event_data)
+    if event_formatter:
+      _, message_short = event_formatter.GetMessages(
+          self._formatter_mediator, event_data)
+
+    return message_short
 
   def GetHostname(self, event_data, default_hostname='-'):
     """Retrieves the hostname related to the event.
