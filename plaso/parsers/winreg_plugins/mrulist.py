@@ -2,7 +2,7 @@
 """This file contains a MRUList Registry plugin.
 
 Also see:
-https://github.com/libyal/winreg-kb/blob/master/documentation/MRU%20keys.asciidoc
+https://github.com/libyal/winreg-kb/blob/main/documentation/MRU%20keys.asciidoc
 """
 
 from __future__ import unicode_literals

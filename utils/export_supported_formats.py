@@ -85,7 +85,7 @@ class DataFormatInformationExractor(object):
       'plaso/parsers/winreg_plugins': 'Windows Registry formats'}
 
   _DTFORMATS_URL_PREFIX = (
-      'https://github.com/libyal/dtformats/blob/master/documentation')
+      'https://github.com/libyal/dtformats/blob/main/documentation')
 
   # Names of parsers and parser plugins to ignore.
   _PARSER_NAME_IGNORE_LIST = frozenset([
@@ -168,7 +168,7 @@ class DataFormatInformationExractor(object):
           library_name, url = url.split(':')[1:3]
           library_url = 'https://github.com/libyal/{0:s}'.format(library_name)
           url = urllib_parse.quote(url)
-          url = '{0:s}/blob/master/documentation/{1:s}.asciidoc'.format(
+          url = '{0:s}/blob/main/documentation/{1:s}.asciidoc'.format(
               library_url, url)
           line = '* [{0:s}]({1:s}) using [{2:s}]({3:s})'.format(
               data_format_descriptor.name, url, library_name, library_url)

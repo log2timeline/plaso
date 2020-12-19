@@ -1,7 +1,7 @@
 name: appcompatcache
 type: format
 description: Application Compatibility Cache format
-urls: ["https://github.com/libyal/winreg-kb/blob/master/documentation/Application%20Compatibility%20Cache%20key.asciidoc"]
+urls: ["https://github.com/libyal/winreg-kb/blob/main/documentation/Application%20Compatibility%20Cache%20key.asciidoc"]
 ---
 name: byte
 type: integer

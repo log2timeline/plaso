@@ -142,8 +142,9 @@ class MarkdownLinkFixer(transforms.Transform):
     if isinstance(node, nodes.reference) and 'refuri' in node:
       reference_uri = node['refuri']
       for uri_prefix in self._URI_PREFIXES:
-        if (reference_uri.startswith(uri_prefix) and
-            not reference_uri.endswith('.asciidoc')):
+        if (reference_uri.startswith(uri_prefix) and not (
+            reference_uri.endswith('.asciidoc') or
+            reference_uri.endswith('.md'))):
           node['refuri'] = reference_uri + '.md'
           break
 

@@ -1,7 +1,7 @@
 name: fseventsd
 type: format
 description: MacOS file system events disk log stream format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/MacOS%20File%20System%20Events%20Disk%20Log%20Stream%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/MacOS%20File%20System%20Events%20Disk%20Log%20Stream%20format.asciidoc"]
 ---
 name: byte
 type: integer

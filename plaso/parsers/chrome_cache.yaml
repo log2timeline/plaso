@@ -1,7 +1,7 @@
 name: chrome_cache
 type: format
 description: Google Chrome/Chromium cache file format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Chrome%20Cache%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Chrome%20Cache%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer

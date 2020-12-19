@@ -1,7 +1,7 @@
 name: binarycookies
 type: format
 description: Safari cookies file format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Safari%20Cookies.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Safari%20Cookies.asciidoc"]
 ---
 name: byte
 type: integer

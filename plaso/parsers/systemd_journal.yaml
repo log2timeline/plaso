@@ -1,7 +1,7 @@
 name: systemd_journal
 type: format
 description: Systemd journal file format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Systemd%20journal%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Systemd%20journal%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer

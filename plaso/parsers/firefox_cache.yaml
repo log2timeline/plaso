@@ -1,7 +1,7 @@
 name: firefox_cache
 type: format
 description: Mozilla Firefox cache version 1 and 2 file formats
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Firefox%20cache%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Firefox%20cache%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer

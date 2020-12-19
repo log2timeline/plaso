@@ -1,7 +1,7 @@
 name: programcache
 type: format
 description: Programs Cache format
-urls: ["https://github.com/libyal/winreg-kb/blob/master/documentation/Programs%20Cache%20values.asciidoc"]
+urls: ["https://github.com/libyal/winreg-kb/blob/main/documentation/Programs%20Cache%20values.asciidoc"]
 ---
 name: uint8
 type: integer

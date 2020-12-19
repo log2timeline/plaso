@@ -1,7 +1,7 @@
 name: keychain
 type: format
 description: MacOS keychain database file format.
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/MacOS%20keychain%20database%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/MacOS%20keychain%20database%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer
