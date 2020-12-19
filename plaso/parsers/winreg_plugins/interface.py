@@ -261,10 +261,6 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
       data_type_string = registry_value.data_type_string
 
-      # Correct typo in dfWinReg < 20190620
-      if data_type_string == 'REG_RESOURCE_REQUIREMENT_LIST':
-        data_type_string = 'REG_RESOURCE_REQUIREMENTS_LIST'
-
       value_string = '[{0:s}] {1:s}'.format(data_type_string, value_string)
       values_dict[value_name] = value_string
 

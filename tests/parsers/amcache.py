@@ -20,8 +20,10 @@ class AMCacheParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFile(['Amcache.hve'], parser)
 
+    # 1178 windows:registry:amcache events
+    # 2105 last written time events
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 1179)
+    self.assertEqual(storage_writer.number_of_events, 3283)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -38,7 +40,7 @@ class AMCacheParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_data.sha1, '82274eef0911a948f91425f5e5b0e730517fe75e')
 
-    event = events[1148]
+    event = events[1285]
 
     event_data = self._GetEventDataOfEvent(storage_writer, event)
     self.assertEqual(event_data.name, 'FileInsight - File analysis tool')
@@ -63,7 +65,7 @@ class AMCacheParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFile(['SYSTEM'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
 
 

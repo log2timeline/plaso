@@ -7,9 +7,12 @@ import pyregf
 
 from dfdatetime import filetime
 from dfdatetime import posix_time
+
 from dfwinreg import definitions as dfwinreg_definitions
+
 from plaso.containers import events
 from plaso.containers import time_events
+from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -49,6 +52,7 @@ class AMCacheFileEventData(events.EventData):
     self.program_identifier = None
     self.sha1 = None
 
+
 class AMCacheProgramEventData(events.EventData):
   """AMCache programs event data.
 
@@ -84,6 +88,7 @@ class AMCacheProgramEventData(events.EventData):
     self.publisher = None
     self.uninstall_key = None
     self.version = None
+
 
 class AMCacheParser(interface.FileObjectParser):
   """AMCache Registry plugin for recently run programs."""
@@ -126,48 +131,98 @@ class AMCacheParser(interface.FileObjectParser):
       '12': 'msi_package_code',
   }
 
-  #TODO Add GetFormatSpecification when issues are fixed with adding
-  #     multiple parsers for the same file format (in this case regf files)
-  #     AddNewSignature ->
-  #     b'\x41\x00\x6d\x00\x63\x00\x61\x00\x63\x00\x68\x00\x65', offset=88
-
-  def _GetValueDataAsObject(self, parser_mediator, value):
+  def _GetValueDataAsObject(self, parser_mediator, regf_value):
     """Retrieves the value data as an object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      value (pyregf_value): value.
+      regf_value (pyregf_value): value.
 
     Returns:
       object: data as a Python type or None if the value cannot be read.
     """
     try:
-      if value.type in (
+      if regf_value.type in (
           dfwinreg_definitions.REG_SZ,
           dfwinreg_definitions.REG_EXPAND_SZ,
           dfwinreg_definitions.REG_LINK):
-        value_data = value.get_data_as_string()
+        value_data = regf_value.get_data_as_string()
 
-      elif value.type in (
+      elif regf_value.type in (
           dfwinreg_definitions.REG_DWORD,
           dfwinreg_definitions.REG_DWORD_BIG_ENDIAN,
           dfwinreg_definitions.REG_QWORD):
-        value_data = value.get_data_as_integer()
+        value_data = regf_value.get_data_as_integer()
 
-      elif value.type == dfwinreg_definitions.REG_MULTI_SZ:
-        value_data = list(value.get_data_as_multi_string())
+      elif regf_value.type == dfwinreg_definitions.REG_MULTI_SZ:
+        value_data = list(regf_value.get_data_as_multi_string())
 
       else:
-        value_data = value.data
+        value_data = regf_value.data
 
     except (IOError, OverflowError) as exception:
       parser_mediator.ProduceExtractionWarning(
           'Unable to read data from value: {0:s} with error: {1!s}'.format(
-              value.name, exception))
+              regf_value.name, exception))
       return None
 
     return value_data
+
+  def _GetValuesFromKey(
+      self, parser_mediator, regf_key, names_to_skip=None):
+    """Retrieves the values from a Windows Registry key.
+
+    Where:
+    * the default value is represented as "(default)";
+    * binary data values are represented as "(# bytes)", where # contains
+          the number of bytes of the data;
+    * empty values are represented as "(empty)".
+    * empty multi value string values are represented as "[]".
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      regf_key (pyregf_key): key.
+      names_to_skip (Optional[list[str]]): names of values that should
+          be skipped.
+
+    Returns:
+      dict[str, object]: names and data of the values in the key.
+    """
+    names_to_skip = [name.lower() for name in names_to_skip or []]
+
+    values_dict = {}
+    for regf_value in regf_key.values:
+      value_name = regf_value.name or '(default)'
+      if value_name.lower() in names_to_skip:
+        continue
+
+      if regf_value.data is None:
+        value_string = '(empty)'
+      else:
+        value_object = self._GetValueDataAsObject(parser_mediator, regf_value)
+
+        if regf_value.type == dfwinreg_definitions.REG_MULTI_SZ:
+          value_string = '[{0:s}]'.format(', '.join(value_object or []))
+
+        elif regf_value.type in (
+            dfwinreg_definitions.REG_DWORD,
+            dfwinreg_definitions.REG_DWORD_BIG_ENDIAN,
+            dfwinreg_definitions.REG_EXPAND_SZ,
+            dfwinreg_definitions.REG_LINK,
+            dfwinreg_definitions.REG_QWORD,
+            dfwinreg_definitions.REG_SZ):
+          value_string = '{0!s}'.format(value_object)
+
+        else:
+          # Represent remaining types like REG_BINARY and
+          # REG_RESOURCE_REQUIREMENT_LIST.
+          value_string = '({0:d} bytes)'.format(len(value_object))
+
+      values_dict[value_name] = value_string
+
+    return values_dict
 
   def _ParseFileKey(self, parser_mediator, file_key):
     """Parses a Root\\File key.
@@ -292,6 +347,74 @@ class AMCacheParser(interface.FileObjectParser):
     for program_key in programs_key.sub_keys:
       self._ParseProgramKey(parser_mediator, program_key)
 
+  def _ParseRootKey(self, parser_mediator, root_key):
+    """Parses a Root key.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      root_key (pyregf.key): the Root key.
+    """
+    self._ProduceDefaultWindowsRegistryEvent(
+        parser_mediator, root_key, '\\Root')
+
+    key_path_segments = ['', 'Root']
+    for sub_key in root_key.sub_keys:
+      key_path_segments.append(sub_key.name)
+      self._ParseSubKey(parser_mediator, sub_key, key_path_segments)
+      key_path_segments.pop()
+
+      if sub_key.name == 'File':
+        self._ParseFileKey(parser_mediator, sub_key)
+
+      elif sub_key.name == 'Programs':
+        self._ParseProgramsKey(parser_mediator, sub_key)
+
+  def _ParseSubKey(self, parser_mediator, regf_key, key_path_segments):
+    """Parses a sub key.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      regf_key (pyregf.key): the key.
+      key_path_segments (list[str]): key path segments.
+    """
+    key_path = '\\'.join(key_path_segments)
+    self._ProduceDefaultWindowsRegistryEvent(
+        parser_mediator, regf_key, key_path)
+
+    for sub_key in regf_key.sub_keys:
+      key_path_segments.append(sub_key.name)
+      self._ParseSubKey(parser_mediator, sub_key, key_path_segments)
+      key_path_segments.pop()
+
+  def _ProduceDefaultWindowsRegistryEvent(
+      self, parser_mediator, regf_key, key_path, names_to_skip=None):
+    """Produces a default Windows Registry event.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      regf_key (pyregf_key): key.
+      key_path (str): key path.
+      names_to_skip (Optional[list[str]]): names of values that should
+          be skipped.
+    """
+    values_dict = self._GetValuesFromKey(
+        parser_mediator, regf_key, names_to_skip=names_to_skip)
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = key_path
+    event_data.values = ' '.join([
+        '{0:s}: {1!s}'.format(name, value)
+        for name, value in sorted(values_dict.items())]) or None
+
+    last_written_time = filetime.Filetime(
+        regf_key.get_last_written_time_as_integer())
+    event = time_events.DateTimeValuesEvent(
+        last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an AMCache.hve file-like object for events.
 
@@ -310,13 +433,10 @@ class AMCacheParser(interface.FileObjectParser):
 
     root_key = regf_file.get_key_by_path('Root')
     if root_key:
-      file_key = root_key.get_sub_key_by_path('File')
-      if file_key:
-        self._ParseFileKey(parser_mediator, file_key)
-
-      programs_key = root_key.get_sub_key_by_path('Programs')
-      if programs_key:
-        self._ParseProgramsKey(parser_mediator, programs_key)
+      self._ParseRootKey(parser_mediator, root_key)
+    else:
+      parser_mediator.ProduceExtractionWarning(
+          'Root key missing from AMCache.hve file.')
 
     regf_file.close()
 
