@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import safari_cookies as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import safari_cookies
 

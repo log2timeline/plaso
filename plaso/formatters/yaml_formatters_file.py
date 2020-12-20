@@ -34,12 +34,50 @@ class YAMLFormattersFile(object):
 
   _SUPPORTED_KEYS = frozenset([
       'data_type',
+      'boolean_helpers',
       'enumeration_helpers',
       'flags_helpers',
       'message',
       'separator',
       'short_message',
       'type'])
+
+  def _ReadBooleanHelpers(self, formatter, boolean_helpers_definition_values):
+    """Reads boolean helper definitions from a list.
+
+    Args:
+      formatter (EventFormatter): an event formatter.
+      boolean_helpers_definition_values (list[dict[str, object]]):
+           boolean helpers definition values.
+
+    Raises:
+      ParseError: if the format of the boolean helper definitions are incorrect.
+    """
+    for boolean_helper in boolean_helpers_definition_values:
+      input_attribute = boolean_helper.get('input_attribute', None)
+      if not input_attribute:
+        raise errors.ParseError(
+            'Invalid boolean helper missing input attribute.')
+
+      output_attribute = boolean_helper.get('output_attribute', None)
+      if not output_attribute:
+        raise errors.ParseError(
+            'Invalid boolean helper missing output attribute.')
+
+      value_if_false = boolean_helper.get('value_if_false', None)
+      if not value_if_false:
+        raise errors.ParseError(
+            'Invalid boolean helper missing value if false.')
+
+      value_if_true = boolean_helper.get('value_if_true', None)
+      if not value_if_true:
+        raise errors.ParseError('Invalid boolean helper missing value if true.')
+
+      helper = interface.BooleanEventFormatterHelper(
+          input_attribute=input_attribute, output_attribute=output_attribute,
+          value_if_false=value_if_false, value_if_true=value_if_true)
+
+      formatter.AddHelper(helper)
 
   def _ReadEnumerationHelpers(
       self, formatter, enumeration_helpers_definition_values):
@@ -176,6 +214,9 @@ class YAMLFormattersFile(object):
       setattr(formatter, 'FORMAT_STRING_SEPARATOR', separator)
 
     setattr(formatter, 'DATA_TYPE', data_type)
+
+    boolean_helpers = formatter_definition_values.get('boolean_helpers', [])
+    self._ReadBooleanHelpers(formatter, boolean_helpers)
 
     enumeration_helpers = formatter_definition_values.get(
         'enumeration_helpers', [])

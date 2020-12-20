@@ -53,6 +53,37 @@ short_message:
 - '{body}'
 ---
 type: 'conditional'
+data_type: 'android:webviewcache'
+message:
+- 'URL: {url}'
+- 'Content Length: {content_length}'
+short_message:
+- '{url}'
+---
+type: 'conditional'
+data_type: 'tango:android:contact'
+message:
+- '{first_name}'
+- '{last_name}'
+- '{gender}'
+- 'birthday: {birthday}'
+- 'Status: {status}'
+- 'Friend: {is_friend}'
+- 'Request type: {friend_request_type}'
+- 'Request message: {friend_request_message}'
+short_message:
+- '{first_name}'
+- '{last_name}'
+- 'Status: {status}'
+---
+type: 'conditional'
+data_type: 'tango:android:conversation'
+message:
+- 'Conversation ({conversation_identifier})'
+short_message:
+- 'Conversation ({conversation_identifier})'
+---
+type: 'conditional'
 data_type: 'tango:android:message'
 enumeration_helpers:
 - input_attribute: 'direction'
@@ -67,34 +98,6 @@ message:
 short_message:
 - '{direction}'
 - 'Message ({message_identifier})'
----
-type: 'conditional'
-data_type: 'webview:cookie'
-message:
-- 'Host: {host}'
-- 'Path: {path}'
-- 'Cookie name: {name}'
-- 'Value: {value}'
-- 'Secure: {secure}'
-short_message:
-- '{host}'
-- '{name}'
-- '{value}'
----
-type: 'conditional'
-data_type: 'android:webviewcache'
-message:
-- 'URL: {url}'
-- 'Content Length: {content_length}'
-short_message:
-- '{url}'
----
-type: 'conditional'
-data_type: 'tango:android:conversation'
-message:
-- 'Conversation ({conversation_identifier})'
-short_message:
-- 'Conversation ({conversation_identifier})'
 ---
 type: 'conditional'
 data_type: 'twitter:android:contact'
@@ -144,3 +147,16 @@ message:
 short_message:
 - 'User: {username}'
 - 'Status: {content}'
+---
+type: 'conditional'
+data_type: 'webview:cookie'
+message:
+- 'Host: {host}'
+- 'Path: {path}'
+- 'Cookie name: {name}'
+- 'Value: {value}'
+- 'Secure: {secure}'
+short_message:
+- '{host}'
+- '{name}'
+- '{value}'

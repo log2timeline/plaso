@@ -50,7 +50,7 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
         'Number of words: 3 '
         'Number of characters: 18 '
         'Application: Microsoft Office Word '
-        'Security: 0')
+        'Security flags: 0x00000000')
 
     expected_short_message = (
         'Title: Table of Context '

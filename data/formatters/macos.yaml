@@ -55,6 +55,47 @@ short_message:
 - 'Process name: {process_name}'
 - 'Status: {status}'
 ---
+type: 'conditional'
+data_type: 'mac:asl:event'
+enumeration_helpers:
+- input_attribute: 'level'
+  output_attribute: 'level_enumeration'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'EMERGENCY'
+    1: 'ALERT'
+    2: 'CRITICAL'
+    3: 'ERROR'
+    4: 'WARNING'
+    5: 'NOTICE'
+    6: 'INFO'
+    7: 'DEBUG'
+- input_attribute: 'read_gid'
+  output_attribute: 'read_gid'
+  values:
+    -1: 'ALL'
+- input_attribute: 'read_uid'
+  output_attribute: 'read_uid'
+  values:
+    -1: 'ALL'
+message:
+- 'MessageID: {message_id}'
+- 'Level: {level_enumeration}'
+- '({level})'
+- 'User ID: {user_sid}'
+- 'Group ID: {group_id}'
+- 'Read User: {read_uid}'
+- 'Read Group: {read_gid}'
+- 'Host: {computer_name}'
+- 'Sender: {sender}'
+- 'Facility: {facility}'
+- 'Message: {message}'
+- '{extra_information}'
+short_message:
+- 'Host: {host}'
+- 'Sender: {sender}'
+- 'Facility: {facility}'
+---
 type: 'basic'
 data_type: 'macosx:application_usage'
 message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
