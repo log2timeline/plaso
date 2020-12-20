@@ -20,7 +20,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import artifacts
 from plaso.engine import artifact_filters
 from plaso.engine import knowledge_base as knowledge_base_engine
-from plaso.parsers import winreg as windows_registry_parser
+from plaso.parsers import winreg_parser
 
 from tests import test_lib as shared_test_lib
 
@@ -192,8 +192,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         len(test_filters_helper.included_file_system_find_specs), 0)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 3)
 
-    win_registry_reader = (
-        windows_registry_parser.FileObjectWinRegistryFileReader())
+    win_registry_reader = winreg_parser.FileObjectWinRegistryFileReader()
 
     file_entry = self._GetTestFileEntry(['SYSTEM'])
     file_object = file_entry.GetFileObject()

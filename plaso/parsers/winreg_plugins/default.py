@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -30,4 +30,4 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
     self._ProduceDefaultWindowsRegistryEvent(parser_mediator, registry_key)
 
 
-winreg.WinRegistryParser.RegisterPlugin(DefaultPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(DefaultPlugin)

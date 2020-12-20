@@ -16,7 +16,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import logger
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
@@ -511,7 +511,7 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
     self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
 
 
-winreg.WinRegistryParser.RegisterPlugins([
+winreg_parser.WinRegistryParser.RegisterPlugins([
     MRUListExStringWindowsRegistryPlugin,
     MRUListExShellItemListWindowsRegistryPlugin,
     MRUListExStringAndShellItemWindowsRegistryPlugin,

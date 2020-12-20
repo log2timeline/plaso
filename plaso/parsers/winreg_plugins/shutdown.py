@@ -10,7 +10,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
@@ -110,4 +110,4 @@ class ShutdownWindowsRegistryPlugin(
         parser_mediator, registry_key, names_to_skip=['ShutdownTime'])
 
 
-winreg.WinRegistryParser.RegisterPlugin(ShutdownWindowsRegistryPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(ShutdownWindowsRegistryPlugin)

@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -143,5 +143,5 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         parser_mediator, registry_key, names_to_skip=['BootExecute'])
 
 
-winreg.WinRegistryParser.RegisterPlugins([
+winreg_parser.WinRegistryParser.RegisterPlugins([
     BootVerificationPlugin, BootExecutePlugin])

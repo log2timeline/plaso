@@ -9,7 +9,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
@@ -172,4 +172,4 @@ class TaskCacheWindowsRegistryPlugin(
     # TODO: Add support for the Triggers value.
 
 
-winreg.WinRegistryParser.RegisterPlugin(TaskCacheWindowsRegistryPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(TaskCacheWindowsRegistryPlugin)
