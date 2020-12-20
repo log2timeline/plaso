@@ -3,60 +3,11 @@
 
 from __future__ import unicode_literals
 
-from dfvfs.lib import definitions as dfvfs_definitions
-
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class FileStatEventFormatter(interface.ConditionalEventFormatter):
-  """The file system stat event formatter."""
-
-  DATA_TYPE = 'fs:stat'
-
-  FORMAT_STRING_PIECES = [
-      '{display_name}',
-      'Type: {file_entry_type}',
-      '({unallocated})']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      '{filename}']
-
-  # The numeric values are for backwards compatibility with plaso files
-  # generated with older versions of dfvfs.
-  _FILE_ENTRY_TYPES = {
-      1: 'device',
-      2: 'directory',
-      3: 'file',
-      4: 'link',
-      5: 'socket',
-      6: 'pipe',
-      dfvfs_definitions.FILE_ENTRY_TYPE_DEVICE: 'device',
-      dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY: 'directory',
-      dfvfs_definitions.FILE_ENTRY_TYPE_FILE: 'file',
-      dfvfs_definitions.FILE_ENTRY_TYPE_LINK: 'link',
-      dfvfs_definitions.FILE_ENTRY_TYPE_SOCKET: 'socket',
-      dfvfs_definitions.FILE_ENTRY_TYPE_PIPE: 'pipe'}
-
-  def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
-
-    Args:
-      event_values (dict[str, object]): event values.
-    """
-    file_entry_type = event_values.get('file_entry_type', None)
-    if file_entry_type is not None:
-      event_values['file_entry_type'] = self._FILE_ENTRY_TYPES.get(
-          file_entry_type, 'UNKNOWN')
-
-    # The usage of allocated is deprecated in favor of is_allocated but
-    # is kept here to be backwards compatible.
-    if (not event_values.get('allocated', False) and
-        not event_values.get('is_allocated', False)):
-      event_values['unallocated'] = 'unallocated'
-
-
-class NTFSFileStatEventFormatter(FileStatEventFormatter):
+class NTFSFileStatEventFormatter(interface.ConditionalEventFormatter):
   """The NTFS file system stat event formatter."""
 
   DATA_TYPE = 'fs:stat:ntfs'
@@ -187,5 +138,4 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
 
 
 manager.FormattersManager.RegisterFormatters([
-    FileStatEventFormatter, NTFSFileStatEventFormatter,
-    NTFSUSNChangeEventFormatter])
+    NTFSFileStatEventFormatter, NTFSUSNChangeEventFormatter])

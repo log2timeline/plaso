@@ -65,13 +65,7 @@ class YAMLFormattersFile(object):
             'Invalid boolean helper missing output attribute.')
 
       value_if_false = boolean_helper.get('value_if_false', None)
-      if not value_if_false:
-        raise errors.ParseError(
-            'Invalid boolean helper missing value if false.')
-
       value_if_true = boolean_helper.get('value_if_true', None)
-      if not value_if_true:
-        raise errors.ParseError('Invalid boolean helper missing value if true.')
 
       helper = interface.BooleanEventFormatterHelper(
           input_attribute=input_attribute, output_attribute=output_attribute,

@@ -24,7 +24,8 @@ class FirefoxPageVisitFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = firefox.FirefoxPageVisitFormatter()
 
     expected_attribute_names = [
-        'url', 'title', 'visit_count', 'host', 'extra_string']
+        'from_visit', 'host', 'title', 'transition_string', 'url',
+        'url_hidden_string', 'url_typed_string', 'visit_count']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -390,7 +390,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     query_hash = hash(query)
 
     from_visit = self._GetRowValue(query_hash, row, 'from_visit')
-    if from_visit:
+    if from_visit is not None:
       from_visit = self._GetUrl(from_visit, cache, database)
 
     rev_host = self._GetRowValue(query_hash, row, 'rev_host')

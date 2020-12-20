@@ -7,31 +7,7 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class MsiecfItemFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a MSIECF item event."""
-
-  def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
-
-    Args:
-      event_values (dict[str, object]): event values.
-    """
-    http_headers = event_values.get('http_headers', None)
-    if http_headers:
-      event_values['http_headers'] = http_headers.replace('\r\n', ' - ')
-
-    if event_values.get('recovered', None):
-      event_values['recovered_string'] = '[Recovered Entry]'
-
-    cached_file_path = event_values.get('cached_filename', None)
-    if cached_file_path:
-      cache_directory_name = event_values.get('cache_directory_name', None)
-      if cache_directory_name:
-        cached_file_path = '\\'.join([cache_directory_name, cached_file_path])
-      event_values['cached_file_path'] = cached_file_path
-
-
-class MsiecfLeakFormatter(MsiecfItemFormatter):
+class MsiecfLeakFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIECF leak item event."""
 
   DATA_TYPE = 'msiecf:leak'
@@ -44,21 +20,24 @@ class MsiecfLeakFormatter(MsiecfItemFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       'Cached file: {cached_file_path}']
 
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
-class MsiecfRedirectedFormatter(MsiecfItemFormatter):
-  """Formatter for a MSIECF leak redirected event."""
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+    cached_file_path = event_values.get('cached_filename', None)
+    if cached_file_path:
+      cache_directory_name = event_values.get('cache_directory_name', None)
+      if cache_directory_name:
+        cached_file_path = '\\'.join([cache_directory_name, cached_file_path])
+      event_values['cached_file_path'] = cached_file_path
 
-  DATA_TYPE = 'msiecf:redirected'
-
-  FORMAT_STRING_PIECES = [
-      'Location: {url}',
-      '{recovered_string}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Location: {url}']
+    if event_values.get('recovered', None):
+      event_values['recovered_string'] = '[Recovered Entry]'
 
 
-class MsiecfUrlFormatter(MsiecfItemFormatter):
+class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIECF URL item event."""
 
   DATA_TYPE = 'msiecf:url'
@@ -75,6 +54,26 @@ class MsiecfUrlFormatter(MsiecfItemFormatter):
       'Location: {url}',
       'Cached file: {cached_file_path}']
 
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
+
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+    cached_file_path = event_values.get('cached_filename', None)
+    if cached_file_path:
+      cache_directory_name = event_values.get('cache_directory_name', None)
+      if cache_directory_name:
+        cached_file_path = '\\'.join([cache_directory_name, cached_file_path])
+      event_values['cached_file_path'] = cached_file_path
+
+    http_headers = event_values.get('http_headers', None)
+    if http_headers:
+      event_values['http_headers'] = http_headers.replace('\r\n', ' - ')
+
+    if event_values.get('recovered', None):
+      event_values['recovered_string'] = '[Recovered Entry]'
+
 
 manager.FormattersManager.RegisterFormatters([
-    MsiecfLeakFormatter, MsiecfRedirectedFormatter, MsiecfUrlFormatter])
+    MsiecfLeakFormatter, MsiecfUrlFormatter])

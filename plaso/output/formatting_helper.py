@@ -219,6 +219,11 @@ class FieldFormattingHelper(object):
 
     event_values = event_data.CopyToDict()
     message_formatter.FormatEventValues(event_values)
+
+    if event_data.data_type in ('windows:evt:record', 'windows:evtx:record'):
+      event_values['message_string'] = self._FormatWindowsEventLogMessage(
+          event, event_data, event_data_stream)
+
     return message_formatter.GetMessageShort(event_values)
 
   def _FormatSource(self, event, event_data, event_data_stream):

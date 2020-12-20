@@ -15,11 +15,13 @@ class ChromeContentSettingsExceptionsFormatter(
 
   FORMAT_STRING_PIECES = [
       'Permission {permission}',
-      'used by {subject}']
+      'used by {primary_url}',
+      'embedded in {secondary_url}']
 
   FORMAT_STRING_SHORT_PIECES = [
       'Permission {permission}',
-      'used by {subject}']
+      'used by {primary_url}',
+      'embedded in {secondary_url}']
 
   def FormatEventValues(self, event_values):
     """Formats event values using the helpers.
@@ -27,9 +29,6 @@ class ChromeContentSettingsExceptionsFormatter(
     Args:
       event_values (dict[str, object]): event values.
     """
-    primary_url = event_values['primary_url']
-    secondary_url = event_values['secondary_url']
-
     # There is apparently a bug, either in GURL.cc or
     # content_settings_pattern.cc where URLs with file:// scheme are stored in
     # the URL as an empty string, which is later detected as being Invalid, and
@@ -39,19 +38,19 @@ class ChromeContentSettingsExceptionsFormatter(
     # content_settings_pref.cc(295)] Invalid pattern strings: ,*
     # More research needed, could be related to https://crbug.com/132659
 
+    primary_url = event_values.get('primary_url', None)
     if primary_url == '':
-      subject = 'local file'
+      primary_url = 'local file'
 
-    elif secondary_url in (primary_url, '*'):
-      subject = primary_url
+    secondary_url = event_values.get('secondary_url', None)
+    if secondary_url == '':
+      secondary_url = 'local file'
 
-    elif secondary_url == '':
-      subject = '{0:s} embedded in local file'.format(primary_url)
+    if secondary_url in (primary_url, '*'):
+      secondary_url = None
 
-    else:
-      subject = '{0:s} embedded in {1:s}'.format(primary_url, secondary_url)
-
-    event_values['subject'] = subject
+    event_values['primary_url'] = primary_url
+    event_values['secondary_url'] = secondary_url
 
 
 manager.FormattersManager.RegisterFormatter(

@@ -78,6 +78,54 @@ short_message:
 - '{uuid}'
 - 'Origin: {origin}'
 ---
+type: 'conditional'
+data_type: 'windows:evt:record'
+enumeration_helpers:
+- input_attribute: 'event_type'
+  output_attribute: 'event_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Error event'
+    1: 'Warning event'
+    2: 'Information event'
+    3: 'Success Audit event'
+    4: 'Failure Audit event'
+- input_attribute: 'severity'
+  output_attribute: 'severity'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Success'
+    1: 'Informational'
+    2: 'Warning'
+    3: 'Error'
+message:
+- '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Source Name: {source_name}'
+- 'Message string: {message_string}'
+- 'Strings: {strings}'
+- 'Computer Name: {computer_name}'
+- 'Severity: {severity}'
+- 'Record Number: {record_number}'
+- 'Event Type: {event_type}'
+- 'Event Category: {event_category}'
+short_message:
+- '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Strings: {strings}'
+---
+type: 'conditional'
+data_type: 'windows:evtx:record'
+message:
+- '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Source Name: {source_name}'
+- 'Message string: {message_string}'
+- 'Strings: {strings}'
+- 'Computer Name: {computer_name}'
+- 'Record Number: {record_number}'
+- 'Event Level: {event_level}'
+short_message:
+- '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Strings: {strings}'
+---
 # TODO: Add more "elegant" formatting, as in transform ICMP code/type into
 # a more human readable format as well as translating the additional info
 # column (meaning may depend on action field).
