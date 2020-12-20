@@ -23,7 +23,7 @@ class WebViewCookieEventData(events.EventData):
   Attributes:
     cookie_name (str): name of the cookie.
     data (str): data stored in the cookie.
-    domain (str): host that set the cookie.
+    host (str): host that set the cookie.
     path (str): path for which the cookie was set.
     secure (bool): True if the cookie should only be transmitted over
         a secure channel.
