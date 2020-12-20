@@ -74,14 +74,15 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
     self.visit_count = None
 
 
-# TODO: refactor extra attribute.
 class FirefoxPlacesPageVisitedEventData(events.EventData):
   """Firefox page visited event data.
 
   Attributes:
-    extra (list[object]): extra event data.
+    from_visit (str): URL that referred to the visited page.
+    hidden (str): value to indicated if the URL was hidden.
     host (str): visited hostname.
     title (str): title of the visited page.
+    typed (str): value to indicated if the URL was typed.
     url (str): URL of the visited page.
     visit_count (int): visit count.
     visit_type (str): transition type for the event.
@@ -93,9 +94,11 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
     """Initializes event data."""
     super(FirefoxPlacesPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.extra = None
+    self.from_visit = None
+    self.hidden = None
     self.host = None
     self.title = None
+    self.typed = None
     self.url = None
     self.visit_count = None
     self.visit_type = None
@@ -387,35 +390,22 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     query_hash = hash(query)
 
     from_visit = self._GetRowValue(query_hash, row, 'from_visit')
-    hidden = self._GetRowValue(query_hash, row, 'hidden')
-    rev_host = self._GetRowValue(query_hash, row, 'rev_host')
-    typed = self._GetRowValue(query_hash, row, 'typed')
-
-    # TODO: make extra conditional formatting.
-    extras = []
     if from_visit:
-      extras.append('visited from: {0:s}'.format(
-          self._GetUrl(from_visit, cache, database)))
+      from_visit = self._GetUrl(from_visit, cache, database)
 
-    if hidden == '1':
-      extras.append('(url hidden)')
-
-    if typed == '1':
-      extras.append('(directly typed)')
-    else:
-      extras.append('(URL not typed directly)')
+    rev_host = self._GetRowValue(query_hash, row, 'rev_host')
 
     event_data = FirefoxPlacesPageVisitedEventData()
+    event_data.from_visit = from_visit
+    event_data.hidden = self._GetRowValue(query_hash, row, 'hidden')
     event_data.host = self._ReverseHostname(rev_host)
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
     event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.typed = self._GetRowValue(query_hash, row, 'typed')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
     event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
     event_data.visit_type = self._GetRowValue(query_hash, row, 'visit_type')
-
-    if extras:
-      event_data.extra = extras
 
     timestamp = self._GetRowValue(query_hash, row, 'visit_date')
     if timestamp:

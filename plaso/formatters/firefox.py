@@ -61,18 +61,28 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
     event_values = event_data.CopyToDict()
 
     visit_type = event_values.get('visit_type', 0)
+
+    extras = []
+    from_visit = event_values.get('from_visit', '')
+    if from_visit:
+      extras.append('visited from: {0:s}'.format(from_visit))
+
+    hidden = event_values.get('hidden', '')
+    if hidden == '1':
+      extras.append('(url hidden)')
+
+    typed = event_values.get('typed', '')
+    if typed == '1':
+      extras.append('(directly typed)')
+    else:
+      extras.append('(URL not typed directly)')
+
     transition = self._URL_TRANSITIONS.get(visit_type, None)
     if transition:
       transition_str = 'Transition: {0!s}'.format(transition)
+      extras.append(transition_str)
 
-    extra = event_values.get('extra', None)
-    if extra:
-      if transition:
-        extra.append(transition_str)
-      event_values['extra_string'] = ' '.join(extra)
-
-    elif transition:
-      event_values['extra_string'] = transition_str
+    event_values['extra_string'] = ' '.join(extras)
 
     return self._ConditionalFormatMessages(event_values)
 
