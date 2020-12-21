@@ -215,27 +215,35 @@ logon_suspect
 
 # logon type 3(network),10(remote interactive) & rdp
 logon_remote
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND (event_identifier is 540 or event_identifier is 682)
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 528 AND (strings contains '\"10\"' or strings contains '\"8\"' or strings contains '\"3\"')
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-RemoteDesktopServices-RdpCoreTS' AND event_identifier is 131
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4624 AND (xml_string contains 'LogonType\">10' OR xml_string contains 'LogonType\">3')
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4634 AND (xml_string contains 'LogonType\">10' OR xml_string contains 'LogonType\">3')
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 13 AND xml_string contains 'Terminal Server\\WinStations\\RDP-Tcp\\InitialProgram'
   data_type is 'windows:registry:key_value' AND key_path contains 'Terminal Server\\WinStations\\RDP-Tcp' AND values contains 'InitialProgram'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4779 AND xml_string contains 'RDP-Tcp'
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' AND (event_identifier is 1147 OR event_identifier is 1149)
 
 # Tags Windows failed log-in events.
 # Failed log-ins can indicate brute force attack.
 login_failed
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4625
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4771
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' AND event_identifier is 1148
+
+# Tags Windows log-in attempt events.
+logon
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4624 AND (xml_string not contains 'LogonType\">10' AND xml_string not contains 'LogonType\">3')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 21 OR event_identifier is 1101)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 2
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7001
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 528 AND (strings not contains '\"10\"' and strings not contains '\"8\"' and strings not contains '\"3\"')
 
 # Tags Windows log-in attempt events.
 login_attempt
-  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 540
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4624 OR event_identifier is 4648)
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 21 OR event_identifier is 1101)
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' AND (event_identifier is 1147 OR event_identifier is 1149)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4648
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 2
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7001
 
 # change password
 change_pw_attempt
