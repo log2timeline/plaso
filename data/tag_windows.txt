@@ -54,6 +54,7 @@ rat_tool
 # Tags potential credential dumping
 # For more information see: https://attack.mitre.org/techniques/T1003/
 mimikatz_tool
+  data_type is 'windows:registry:key_value' AND (values contains 'mimikatz' OR values contains 'mimilib' OR values contains '<3 eo.oe' OR values contains 'eo.oe.kiwi' OR values contains 'privilege::debug' OR values contains 'sekurlsa::logonpasswords' OR values contains 'lsadump::sam' OR values contains 'mimidrv.sys')
   data_type is 'windows:evtx:record' AND (xml_string contains 'mimikatz' OR xml_string contains 'mimilib' OR xml_string contains '<3 eo.oe' OR xml_string contains 'eo.oe.kiwi' OR xml_string contains 'privilege::debug' OR xml_string contains 'sekurlsa::logonpasswords' OR xml_string contains 'lsadump::sam' OR xml_string contains 'mimidrv.sys')
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4662 AND (xml_string contains 'Replicating Directory Changes All' OR xml_string contains '1131f6ad-9c07-11d1-f79f-00c04fc2dcd2')
 
