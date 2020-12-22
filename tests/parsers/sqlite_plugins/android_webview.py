@@ -37,9 +37,12 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_data.data, expected_data)
 
     expected_message = (
+        'Host: skype.com '
         'Path: / '
         'Secure: False')
-    self._TestGetMessageStrings(event_data, expected_message, expected_message)
+    expected_message_short = 'skype.com'
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

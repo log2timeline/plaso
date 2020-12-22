@@ -71,13 +71,13 @@ short_message:
 type: 'conditional'
 data_type: 'webview:cookie'
 message:
-- 'Domain: {domain}'
+- 'Host: {host}'
 - 'Path: {path}'
 - 'Cookie name: {name}'
 - 'Value: {value}'
 - 'Secure: {secure}'
 short_message:
-- '{domain}'
+- '{host}'
 - '{name}'
 - '{value}'
 ---
