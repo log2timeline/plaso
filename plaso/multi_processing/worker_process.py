@@ -17,7 +17,11 @@ from plaso.parsers import mediator as parsers_mediator
 
 
 class WorkerProcess(base_process.MultiProcessBaseProcess):
-  """Class that defines a multi-processing worker process."""
+  """Multi-processing worker process."""
+
+  # Maximum number of dfVFS file system objects to cache in the worker
+  # process.
+  _FILE_SYSTEM_CACHE_SIZE = 3
 
   def __init__(
       self, task_queue, storage_writer, collection_filters_helper,
@@ -45,15 +49,42 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._buffer_size = 0
     self._current_display_name = ''
     self._extraction_worker = None
+    self._file_system_cache = []
     self._knowledge_base = knowledge_base
     self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
+    self._resolver_context = None
     self._session_identifier = session_identifier
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
     self._task_queue = task_queue
+
+  def _CacheFileSystem(self, path_spec):
+    """Caches a dfVFS file system object.
+
+    Keeping and additional reference to a dfVFS file system object causes the
+    object to remain cached in the resolver context. This minimizes the number
+    times the file system is re-opened.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+    """
+    if path_spec and not path_spec.IsSystemLevel():
+      file_system = resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=self._resolver_context)
+
+      if file_system not in self._file_system_cache:
+        if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+          self._file_system_cache.pop(0)
+        self._file_system_cache.append(file_system)
+
+      elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+        # Move the file system to the end of the list to preserve the most
+        # recently file sytem object.
+        self._file_system_cache.remove(file_system)
+        self._file_system_cache.append(file_system)
 
   def _GetStatus(self):
     """Retrieves status information.
@@ -118,7 +149,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     """The main loop."""
     # We need a resolver context per process to prevent multi processing
     # issues with file objects stored in images.
-    resolver_context = context.Context()
+    self._resolver_context = context.Context()
 
     for credential_configuration in self._processing_configuration.credentials:
       resolver.Resolver.key_chain.SetCredential(
@@ -130,7 +161,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         None, self._knowledge_base,
         collection_filters_helper=self._collection_filters_helper,
         preferred_year=self._processing_configuration.preferred_year,
-        resolver_context=resolver_context,
+        resolver_context=self._resolver_context,
         temporary_directory=self._processing_configuration.temporary_directory)
 
     # We need to initialize the parser and hasher objects after the process
@@ -212,7 +243,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._parser_mediator.StopProfiling()
 
     self._extraction_worker = None
+    self._file_system_cache = []
     self._parser_mediator = None
+    self._resolver_context = None
     self._storage_writer = None
 
     if self._abort:
@@ -238,6 +271,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     """
     self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
+
+    self._CacheFileSystem(path_spec)
 
     excluded_find_specs = None
     if self._collection_filters_helper:
