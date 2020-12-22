@@ -25,11 +25,10 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[41]
+    expected_event_values = {
+        'timestamp': '2013-07-12 19:30:31.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-07-12 19:30:31.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[41], expected_event_values)
 
     expected_message = (
         'Chat Outgoing Message : I have received your system scan report and '
@@ -38,11 +37,11 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
         'a1a24468673655&callback=jQuery183013571173651143909_1373657420912&_='
         '1373657423647 Event ID: 16059074 Room: '
         '12828340738351e0593f987450z40787 ]')
-
     expected_short_message = (
         'I have received your system scan report and I will start analyzing '
         'it right now.')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[41])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
