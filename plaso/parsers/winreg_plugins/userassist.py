@@ -65,13 +65,7 @@ class UserAssistWindowsRegistryKeyPathFilter(
 
 
 class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
-  """Plugin that parses an UserAssist key.
-
-  Also see:
-    http://blog.didierstevens.com/programs/userassist/
-    https://code.google.com/p/winreg-kb/wiki/UserAssistKeys
-    http://intotheboxes.files.wordpress.com/2010/04/intotheboxes_2010_q1.pdf
-  """
+  """Plugin that parses an UserAssist key."""
 
   NAME = 'userassist'
   DATA_FORMAT = 'User Assist Registry data'

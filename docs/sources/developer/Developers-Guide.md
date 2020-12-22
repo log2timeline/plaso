@@ -99,10 +99,6 @@ The preferred way of creating these design docs is to use Google Docs and send
 the link to the development mailing list so that it can be discussed further
 **before** starting to implement the code.
 
-The current design docs are
-[stored here](https://drive.google.com/folderview?id=0B3fBvzttpiiSQW16cFhNTUtXVGM&usp=sharing).
-You may not have access to that folder, so you may need to request access to it.
-
 ### Tests
 
 Tests are part of a maintainable code base. Code without sufficient test is very
