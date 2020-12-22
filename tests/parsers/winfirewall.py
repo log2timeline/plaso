@@ -24,22 +24,20 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[4]
+    expected_event_values = {
+        'dest_ip': '123.156.78.90',
+        'source_ip': '123.45.78.90',
+        'timestamp': '2005-04-11 08:06:02.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2005-04-11 08:06:02.000000')
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.source_ip, '123.45.78.90')
-    self.assertEqual(event_data.dest_ip, '123.156.78.90')
+    expected_event_values = {
+        'flags': 'A',
+        'size': 576,
+        'tcp_ack': 987654321,
+        'timestamp': '2005-04-11 08:06:26.000000'}
 
-    event = events[7]
-
-    self.CheckTimestamp(event.timestamp, '2005-04-11 08:06:26.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.size, 576)
-    self.assertEqual(event_data.flags, 'A')
-    self.assertEqual(event_data.tcp_ack, 987654321)
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_message = (
         'DROP [ TCP RECEIVE ] '
@@ -52,14 +50,15 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         'DROP [TCP] 123.45.78.90 : 80 > 123.156.78.90 : 1774')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[7])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[9]
+    expected_event_values = {
+        'icmp_code': 0,
+        'icmp_type': 8}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.icmp_type, 8)
-    self.assertEqual(event_data.icmp_code, 0)
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
   def testParseWithTimeZone(self):
     """Tests the Parse function with a time zone."""
@@ -71,9 +70,10 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[4]
+    expected_event_values = {
+        'timestamp': '2005-04-11 06:06:02.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2005-04-11 06:06:02.000000')
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
 
 if __name__ == '__main__':

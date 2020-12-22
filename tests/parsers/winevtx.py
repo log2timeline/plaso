@@ -45,31 +45,19 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # String: 2           : C:\Windows\System32\Winevt\Logs\
     #                     : Archive-System-2012-03-14-04-17-39-932.evtx
 
-    event = events[0]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.record_number, 12049)
-    self.assertEqual(
-        event_data.computer_name, 'WKS-WIN764BITB.shieldbase.local')
-    self.assertEqual(event_data.source_name, 'Microsoft-Windows-Eventlog')
-    self.assertEqual(event_data.event_level, 4)
-    self.assertEqual(event_data.event_identifier, 105)
-
-    self.assertEqual(event_data.strings[0], 'System')
-
-    expected_string = (
+    expected_string2 = (
         'C:\\Windows\\System32\\Winevt\\Logs\\'
         'Archive-System-2012-03-14-04-17-39-932.evtx')
 
-    self.assertEqual(event_data.strings[1], expected_string)
+    expected_event_values = {
+        'computer_name': 'WKS-WIN764BITB.shieldbase.local',
+        'event_identifier': 105,
+        'event_level': 4,
+        'record_number': 12049,
+        'source_name': 'Microsoft-Windows-Eventlog',
+        'strings': ['System', expected_string2]}
 
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2012-03-14 04:17:38.276340')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_xml_string = (
         '<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/'
@@ -100,7 +88,12 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         '  </EventData>\n'
         '</Event>\n')
 
-    self.assertEqual(event_data.xml_string, expected_xml_string)
+    expected_event_values = {
+        'timestamp': '2012-03-14 04:17:38.276340',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+        'xml_string': expected_xml_string}
+
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         '[7036 / 0x1b7c] '
@@ -112,14 +105,13 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         '7300740061006C006C00650072002F0031000000\'] '
         'Computer Name: WKS-WIN764BITB.shieldbase.local '
         'Record Number: 12050 '
-        'Event Level: 4'
-    )
-
+        'Event Level: 4')
     expected_short_message = (
         '[7036 / 0x1b7c] '
         'Strings: [\'Windows Modules Installer\', \'stopped\', '
         '\'5400720075...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -135,17 +127,15 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[356]
+    expected_event_values = {
+        'event_identifier': 4624}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[356], expected_event_values)
 
-    self.assertEqual(event_data.event_identifier, 4624)
+    expected_event_values = {
+        'event_identifier': 4648}
 
-    event = events[360]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.event_identifier, 4648)
+    self.CheckEventValues(storage_writer, events[360], expected_event_values)
 
 
 if __name__ == '__main__':
