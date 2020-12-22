@@ -41,33 +41,38 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(len(cloud_entries), 20)
 
     # Test one local and one cloud entry.
-    event = local_entries[5]
-
-    self.CheckTimestamp(event.timestamp, '2014-01-28 00:11:25.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     file_path = (
         '%local_sync_root%/Top Secret/Enn meiri '
         'leyndarmál/Sýnileiki - Örverpi.gdoc')
-    self.assertEqual(event_data.path, file_path)
 
-    expected_message = 'File Path: {0:s} Size: 184'.format(file_path)
+    expected_event_values = {
+        'path': file_path,
+        'timestamp': '2014-01-28 00:11:25.000000'}
 
+    self.CheckEventValues(
+        storage_writer, local_entries[5], expected_event_values)
+
+    expected_message = (
+        'File Path: {0:s} '
+        'Size: 184').format(file_path)
+    expected_short_message = file_path
+
+    event_data = self._GetEventDataOfEvent(storage_writer, local_entries[5])
     self._TestGetMessageStrings(
-        event_data, expected_message, file_path)
+        event_data, expected_message, expected_short_message)
 
-    event = cloud_entries[16]
-
-    self.CheckTimestamp(event.timestamp, '2014-01-28 00:12:27.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.document_type, 6)
     expected_url = (
         'https://docs.google.com/document/d/'
         '1ypXwXhQWliiMSQN9S5M0K6Wh39XF4Uz4GmY-njMf-Z0/edit?usp=docslist_api')
-    self.assertEqual(event_data.url, expected_url)
+
+    expected_event_values = {
+        'document_type': 6,
+        'timestamp': '2014-01-28 00:12:27.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
+        'url': expected_url}
+
+    self.CheckEventValues(
+        storage_writer, cloud_entries[16], expected_event_values)
 
     expected_message = (
         'File Path: /Almenningur/Saklausa hliðin '
@@ -77,6 +82,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
         'Type: DOCUMENT').format(expected_url)
     expected_short_message = '/Almenningur/Saklausa hliðin'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, cloud_entries[16])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

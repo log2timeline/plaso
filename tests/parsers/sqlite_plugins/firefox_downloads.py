@@ -27,25 +27,32 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the first page visited event.
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2013-07-18 18:59:59.312000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_START)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'firefox:downloads:download')
-
+    expected_full_path = 'file:///D:/plaso-static-1.0.1-win32-vs2008.zip'
     expected_url = (
         'https://plaso.googlecode.com/files/'
         'plaso-static-1.0.1-win32-vs2008.zip')
-    self.assertEqual(event_data.url, expected_url)
 
-    expected_full_path = 'file:///D:/plaso-static-1.0.1-win32-vs2008.zip'
-    self.assertEqual(event_data.full_path, expected_full_path)
+    expected_event_values = {
+        'data_type': 'firefox:downloads:download',
+        'full_path': expected_full_path,
+        'received_bytes': 15974599,
+        'timestamp': '2013-07-18 18:59:59.312000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
+        'total_bytes': 15974599,
+        'url': expected_url}
 
-    self.assertEqual(event_data.received_bytes, 15974599)
-    self.assertEqual(event_data.total_bytes, 15974599)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
+    expected_message = (
+        '{0:s} ({1:s}). '
+        'Received: 15974599 bytes out of: 15974599 bytes.').format(
+            expected_url, expected_full_path)
+    expected_short_message = (
+        '{0:s} downloaded (15974599 bytes)').format(expected_full_path)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
+    self._TestGetMessageStrings(
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
