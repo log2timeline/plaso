@@ -27,15 +27,13 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the first SMS sent.
-    event = events[0]
+    expected_event_values = {
+        'address': '1 555-521-5554',
+        'body': 'Yo Fred this is my new number.',
+        'timestamp': '2013-10-29 16:56:28.038000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-10-29 16:56:28.038000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.address, '1 555-521-5554')
-    self.assertEqual(event_data.body, 'Yo Fred this is my new number.')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'Type: SENT '
@@ -43,6 +41,8 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
         'Status: READ '
         'Message: Yo Fred this is my new number.')
     expected_short_message = 'Yo Fred this is my new number.'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

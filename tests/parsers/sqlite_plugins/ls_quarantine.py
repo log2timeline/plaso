@@ -26,30 +26,26 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Examine a VLC event.
-    event = events[3]
+    expected_event_values = {
+        'agent': 'Google Chrome',
+        'timestamp': '2013-07-08 21:12:03.000000',
+        'url': (
+            'http://download.cnet.com/VLC-Media-Player/'
+            '3001-2139_4-10210434.html?spi=40ab24d3c71594a5017d74be3b0c946c')}
 
-    self.CheckTimestamp(event.timestamp, '2013-07-08 21:12:03.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.agent, 'Google Chrome')
-    expected_url = (
-        'http://download.cnet.com/VLC-Media-Player/3001-2139_4-10210434.html'
-        '?spi=40ab24d3c71594a5017d74be3b0c946c')
-    self.assertEqual(event_data.url, expected_url)
-
-    self.assertTrue('vlc-2.0.7-intel64.dmg' in event_data.data)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     # Examine a MacKeeper event.
-    event = events[9]
+    expected_event_values = {
+        'timestamp': '2013-07-12 19:28:58.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-07-12 19:28:58.000000')
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     # Examine a SpeedTest event.
-    event = events[10]
+    expected_event_values = {
+        'timestamp': '2013-07-12 19:30:16.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-07-12 19:30:16.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     expected_message = (
         '[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'
@@ -61,6 +57,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
         'http://mackeeperapp.zeobit.com/aff/speedtest.net.6/download.php?'
         'affid=4602452...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[10])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

@@ -26,23 +26,22 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the first event.
-    event = events[0]
+    expected_event_values = {
+        'application': '/Applications/Safari.app',
+        'app_version': '9537.75.14',
+        'bundle_id': 'com.apple.Safari',
+        'count': 1,
+        'timestamp': '2014-05-07 18:52:02.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2014-05-07 18:52:02.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.application, '/Applications/Safari.app')
-    self.assertEqual(event_data.app_version, '9537.75.14')
-    self.assertEqual(event_data.bundle_id, 'com.apple.Safari')
-    self.assertEqual(event_data.count, 1)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '/Applications/Safari.app v.9537.75.14 '
         '(bundle: com.apple.Safari). '
         'Launched: 1 time(s)')
-
     expected_short_message = '/Applications/Safari.app (1 time(s))'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

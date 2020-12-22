@@ -26,22 +26,21 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the first page visited entry
-    event = events[1]
+    expected_event_values = {
+        'timestamp': '2017-11-09 21:24:28.829571',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'title': '',
+        'url': 'http://facebook.com/',
+        'was_http_non_get': False}
 
-    self.CheckTimestamp(event.timestamp, '2017-11-09 21:24:28.829571')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.url, 'http://facebook.com/')
-    self.assertEqual(event_data.title, '')
-    self.assertFalse(event_data.was_http_non_get)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         'URL: http://facebook.com/ '
         '[count: 2] '
         'http_non_get: False')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
