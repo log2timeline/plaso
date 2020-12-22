@@ -4,7 +4,7 @@
 To download the latest version of Plaso you'll need to install the
 [git tools](http://git-scm.com/downloads).
 
-Checkout the plaso source from the git repo:
+Checkout the Plaso source from the git repo:
 ```
 git clone https://github.com/log2timeline/plaso.git
 ```
@@ -43,35 +43,27 @@ set PYTHONPATH=C:\plaso-build\plaso
 
 To run a tool, for example `pinfo`:
 ```
-C:\Python37\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py test.plaso
+C:\Python39\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py test.plaso
 ```
 
 ## Development tools
-If you intend to do development on plaso you'll also need to install some
+If you intend to do development on Plaso you'll also need to install some
 development tools:
 
 * PyLint
 * Python Mock
 
 ### PyLint
-At the moment Plaso development requires PyLint 1.9.x.
-
-**TODO: describe building pylint 1.9.x**
-
-For pylint 1.9.x the following additional dependencies are required:
-* [astroid](https://pypi.python.org/pypi/astroid)
-* [lazy-object-proxy](https://pypi.python.org/pypi/lazy-object-proxy)
-* [logilab-common](https://pypi.python.org/pypi/logilab-common)
-* [wrapt](https://pypi.python.org/pypi/wrapt)
+At the moment Plaso development requires PyLint 2.6.x.
 
 ### Python Mock
-Download the latest source package from: https://pypi.python.org/pypi/mock
+Download the latest source package from: https://pypi.org/project/mock
 
 To build the MSI file run the following commands from the build root directory:
 ```
 tar xvf mock-1.0.1.tar.gz
 cd mock-1.0.1\
-C:\Python37\python.exe setup.py bdist_msi
+C:\Python39\python.exe setup.py bdist_msi
 cd ..
 ```
 

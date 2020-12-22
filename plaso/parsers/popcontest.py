@@ -28,7 +28,7 @@ From  'http://www.unix.com/man-page/Linux/8/popularity-contest/':
     contest/default.conf.
 
 
-From 'http://popcon.ubuntu.com/README':
+From 'https://popcon.ubuntu.com/README':
 
 The popularity-contest output looks like this:
 
