@@ -35,20 +35,17 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the first page visited event.
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2011-07-01 11:16:21.371935')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'firefox:places:page_visited')
-
-    expected_url = 'http://news.google.com/'
-    self.assertEqual(event_data.url, expected_url)
-
     expected_title = 'Google News'
-    self.assertEqual(event_data.title, expected_title)
+    expected_url = 'http://news.google.com/'
+
+    expected_event_values = {
+        'data_type': 'firefox:places:page_visited',
+        'timestamp': '2011-07-01 11:16:21.371935',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'title': expected_title,
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '{0:s} ({1:s}) [count: 1] Host: news.google.com '
@@ -56,37 +53,33 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
             expected_url, expected_title)
     expected_short_message = 'URL: {0:s}'.format(expected_url)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the first bookmark event.
-    event = events[1]
+    expected_event_values = {
+        'data_type': 'firefox:places:bookmark',
+        'timestamp': '2011-07-01 11:13:59.266344',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
-    self.CheckTimestamp(event.timestamp, '2011-07-01 11:13:59.266344')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'firefox:places:bookmark')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # Check the second bookmark event.
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2011-07-01 11:13:59.267198')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'firefox:places:bookmark')
-
+    expected_title = 'Recently Bookmarked'
     expected_url = (
         'place:folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder=TOOLBAR&'
         'sort=12&excludeQueries=1&excludeItemIfParentHasAnnotation=livemark%2F'
         'feedURI&maxResults=10&queryType=1')
-    self.assertEqual(event_data.url, expected_url)
 
-    expected_title = 'Recently Bookmarked'
-    self.assertEqual(event_data.title, expected_title)
+    expected_event_values = {
+        'data_type': 'firefox:places:bookmark',
+        'timestamp': '2011-07-01 11:13:59.267198',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
+        'title': expected_title,
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         'Bookmark URL {0:s} ({1:s}) [folder=BOOKMARKS_MENU&'
@@ -98,70 +91,63 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'Bookmarked Recently Bookmarked '
         '(place:folder=BOOKMARKS_MENU&folder=UNFILED_BO...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the first bookmark annotation event.
-    event = events[183]
+    expected_event_values = {
+        'data_type': 'firefox:places:bookmark_annotation',
+        'timestamp': '2011-07-01 11:13:59.267146',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
-    self.CheckTimestamp(event.timestamp, '2011-07-01 11:13:59.267146')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.data_type, 'firefox:places:bookmark_annotation')
+    self.CheckEventValues(storage_writer, events[183], expected_event_values)
 
     # Check another bookmark annotation event.
-    event = events[184]
-
-    self.CheckTimestamp(event.timestamp, '2011-07-01 11:13:59.267605')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.data_type, 'firefox:places:bookmark_annotation')
-
-    expected_url = 'place:sort=14&type=6&maxResults=10&queryType=1'
-    self.assertEqual(event_data.url, expected_url)
-
     expected_title = 'Recent Tags'
-    self.assertEqual(event_data.title, expected_title)
+    expected_url = 'place:sort=14&type=6&maxResults=10&queryType=1'
+
+    expected_event_values = {
+        'data_type': 'firefox:places:bookmark_annotation',
+        'timestamp': '2011-07-01 11:13:59.267605',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED,
+        'title': expected_title,
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[184], expected_event_values)
 
     expected_message = (
         'Bookmark Annotation: [RecentTags] to bookmark '
-        '[{0:s}] ({1:s})').format(
-            expected_title, expected_url)
+        '[{0:s}] ({1:s})').format(expected_title, expected_url)
     expected_short_message = 'Bookmark Annotation: Recent Tags'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[184])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the second last bookmark folder event.
-    event = events[200]
+    expected_event_values = {
+        'data_type': 'firefox:places:bookmark_folder',
+        'timestamp': '2011-03-21 10:05:01.553774',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
-    self.CheckTimestamp(event.timestamp, '2011-03-21 10:05:01.553774')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'firefox:places:bookmark_folder')
+    self.CheckEventValues(storage_writer, events[200], expected_event_values)
 
     # Check the last bookmark folder event.
-    event = events[201]
-
-    self.CheckTimestamp(event.timestamp, '2011-07-01 11:14:11.766851')
-    self.assertEqual(
-        event.timestamp_desc,
-        definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.data_type, 'firefox:places:bookmark_folder')
-
     expected_title = 'Latest Headlines'
-    self.assertEqual(event_data.title, expected_title)
+
+    expected_event_values = {
+        'data_type': 'firefox:places:bookmark_folder',
+        'timestamp': '2011-07-01 11:14:11.766851',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
+        'title': expected_title}
+
+    self.CheckEventValues(storage_writer, events[201], expected_event_values)
 
     expected_message = expected_title
     expected_short_message = expected_title
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[201])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -192,17 +178,17 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(counter['firefox:places:bookmark_folder'], 14)
     self.assertEqual(counter['firefox:places:bookmark_annotation'], 8)
 
-    event = events[10]
+    expected_event_values = {
+        'timestamp': '2013-10-30 21:57:11.281942'}
 
-    self.CheckTimestamp(event.timestamp, '2013-10-30 21:57:11.281942')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     expected_message = (
         'http://code.google.com/p/plaso [count: 1] Host: code.google.com '
         '(URL not typed directly) Transition: TYPED')
     expected_short_message = 'URL: http://code.google.com/p/plaso'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[10])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
