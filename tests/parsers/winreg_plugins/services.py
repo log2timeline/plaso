@@ -105,16 +105,14 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:service',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-08-28 09:23:49.002031'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
-    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
-    self.assertEqual(event_data.data_type, 'windows:registry:service')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -127,6 +125,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'Group: [REG_SZ] Pnp Filter').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -158,19 +157,18 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(len(bits_events), 1)
 
-    event = bits_events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:service',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'service_dll': '%SystemRoot%\\System32\\qmgr.dll',
+        'service_type': 0x20,
+        'start_type': 3,
+        'timestamp': '2012-04-06 20:43:27.639075'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-06 20:43:27.639075')
-
-    event_data = self._GetEventDataOfEvent(bits_storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:service')
-    self.assertEqual(event_data.service_type, 0x20)
-    self.assertEqual(event_data.start_type, 3)
-    self.assertEqual(event_data.service_dll, '%SystemRoot%\\System32\\qmgr.dll')
+    self.CheckEventValues(
+        bits_storage_writer, bits_events[0], expected_event_values)
 
     # Test the McTaskManager subkey events.
     winreg_subkey = registry_key.GetSubkeyByName('McTaskManager')
@@ -180,16 +178,17 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(len(mc_task_manager_events), 1)
 
-    event = mc_task_manager_events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:service',
+        'service_type': 0x10,
+        'timestamp': '2011-09-16 20:49:16.877416'}
 
-    self.CheckTimestamp(event.timestamp, '2011-09-16 20:49:16.877416')
+    self.CheckEventValues(
+        mc_task_manager_storage_writer, mc_task_manager_events[0],
+        expected_event_values)
 
     event_data = self._GetEventDataOfEvent(
-        mc_task_manager_storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:service')
-
-    self.assertEqual(event_data.service_type, 0x10)
+        mc_task_manager_storage_writer, mc_task_manager_events[0])
     self.assertTrue(
         'DisplayName: [REG_SZ] McAfee Task Manager' in event_data.values)
 
@@ -202,18 +201,15 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(len(rdp_video_miniport_events), 1)
 
-    event = rdp_video_miniport_events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:service',
+        'image_path': 'System32\\drivers\\rdpvideominiport.sys',
+        'start_type': 3,
+        'timestamp': '2011-09-17 13:37:59.347158'}
 
-    self.CheckTimestamp(event.timestamp, '2011-09-17 13:37:59.347158')
-
-    event_data = self._GetEventDataOfEvent(
-        rdp_video_miniport_storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:service')
-
-    self.assertEqual(event_data.start_type, 3)
-    self.assertEqual(
-        event_data.image_path, 'System32\\drivers\\rdpvideominiport.sys')
+    self.CheckEventValues(
+        rdp_video_miniport_storage_writer, rdp_video_miniport_events[0],
+        expected_event_values)
 
 
 if __name__ == '__main__':
