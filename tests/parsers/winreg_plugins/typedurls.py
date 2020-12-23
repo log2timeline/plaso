@@ -49,16 +49,14 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:typedurls',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-03-12 21:23:53.307750'}
 
-    self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307750')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:typedurls')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -77,6 +75,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         'url13: http://go.microsoft.com/fwlink/?LinkId=69157').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -103,21 +102,21 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:typedurls',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2010-11-10 07:58:15.811625'}
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 07:58:15.811625')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:typedurls')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
         'url1: \\\\controller').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
