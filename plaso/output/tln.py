@@ -55,7 +55,7 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         event.timestamp, timezone=self._output_mediator.timezone)
     timestamp_description = event.timestamp_desc or 'UNKNOWN'
 
-    message, _ = self._output_mediator.GetFormattedMessages(event_data)
+    message = self._output_mediator.GetFormattedMessage(event_data)
     if message is None:
       data_type = getattr(event_data, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(

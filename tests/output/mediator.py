@@ -61,8 +61,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   # TODO: add tests for GetDisplayNameForPathSpec
 
-  def testGetFormattedMessages(self):
-    """Tests the GetFormattedMessages function."""
+  def testGetFormattedMessage(self):
+    """Tests the GetFormattedMessage function."""
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
@@ -70,8 +70,7 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         formatters_test_lib.TestEventFormatter)
 
     try:
-      message, message_short = self._output_mediator.GetFormattedMessages(
-          event_data)
+      message = self._output_mediator.GetFormattedMessage(event_data)
     finally:
       formatters_manager.FormattersManager.DeregisterFormatter(
           formatters_test_lib.TestEventFormatter)
@@ -81,7 +80,26 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         ' (pam_unix(cron:session): session closed for user root)')
 
     self.assertEqual(message, expected_message)
-    self.assertEqual(message_short, expected_message)
+
+  def testGetFormattedMessageShort(self):
+    """Tests the GetFormattedMessageShort function."""
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+
+    formatters_manager.FormattersManager.RegisterFormatter(
+        formatters_test_lib.TestEventFormatter)
+
+    try:
+      message_short = self._output_mediator.GetFormattedMessageShort(event_data)
+    finally:
+      formatters_manager.FormattersManager.DeregisterFormatter(
+          formatters_test_lib.TestEventFormatter)
+
+    expected_message_short = (
+        'Reporter <CRON> PID: 8442'
+        ' (pam_unix(cron:session): session closed for user root)')
+
+    self.assertEqual(message_short, expected_message_short)
 
   def testGetHostname(self):
     """Tests the GetHostname function."""

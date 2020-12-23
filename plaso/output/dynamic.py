@@ -150,7 +150,7 @@ class DynamicOutputModule(shared_dsv.DSVOutputModule):
       'parser', 'display_name', 'tag']
 
   def __init__(self, output_mediator):
-    """Initializes a dynamic delimiter separated values output module object.
+    """Initializes a dynamic selected delimiter separated values output module.
 
     Args:
       output_mediator (OutputMediator): an output mediator.

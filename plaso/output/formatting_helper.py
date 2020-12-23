@@ -174,8 +174,7 @@ class FieldFormattingHelper(object):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    # TODO: refactor GetFormattedMessages by GetFormattedMessage.
-    message, _ = self._output_mediator.GetFormattedMessages(event_data)
+    message = self._output_mediator.GetFormattedMessage(event_data)
     if message is None:
       raise errors.NoFormatterFound(
           'Unable to create message for event with data type: {0:s}.'.format(
@@ -198,8 +197,7 @@ class FieldFormattingHelper(object):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    # TODO: refactor GetFormattedMessages by GetFormattedMessageShort.
-    _, message_short = self._output_mediator.GetFormattedMessages(event_data)
+    message_short = self._output_mediator.GetFormattedMessageShort(event_data)
     if message_short is None:
       raise errors.NoFormatterFound(
           'Unable to create message for event with data type: {0:s}.'.format(
