@@ -4,10 +4,9 @@
 from __future__ import unicode_literals
 
 from plaso.filters import expression_parser
-from plaso.filters import interface
 
 
-class EventObjectFilter(interface.FilterObject):
+class EventObjectFilter(object):
   """Event filter."""
 
   def __init__(self):

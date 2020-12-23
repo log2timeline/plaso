@@ -3,12 +3,12 @@
 
 from __future__ import unicode_literals
 
-from plaso.filters import interface
+from plaso.filters import event_filter
 
 from tests import test_lib as shared_test_lib
 
 
-class TestEventFilter(interface.FilterObject):
+class TestEventFilter(event_filter.EventObjectFilter):
   """Test event filter."""
 
   def CompileFilter(self, filter_expression):
@@ -24,4 +24,4 @@ class TestEventFilter(interface.FilterObject):
 
 
 class FilterTestCase(shared_test_lib.BaseTestCase):
-  """The unit test case for an event filter."""
+  """Event filter test case."""

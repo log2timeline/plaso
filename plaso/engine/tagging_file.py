@@ -36,7 +36,7 @@ class TaggingFile(object):
     """Retrieves the event tagging rules from the tagging file.
 
     Returns:
-      dict[str, FilterObject]: tagging rules, that consists of one or more
+      dict[str, EventObjectFilter]: tagging rules, that consists of one or more
           filter objects per label.
 
     Raises:
