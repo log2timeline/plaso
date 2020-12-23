@@ -7,7 +7,9 @@ import os
 import pdb
 import time
 
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
+from dfvfs.resolver import resolver
 
 from plaso.containers import event_sources
 from plaso.engine import engine
@@ -22,16 +24,47 @@ from plaso.parsers import mediator as parsers_mediator
 class SingleProcessEngine(engine.BaseEngine):
   """Class that defines the single process engine."""
 
+  # Maximum number of dfVFS file system objects to cache.
+  _FILE_SYSTEM_CACHE_SIZE = 3
+
   def __init__(self):
     """Initializes a single process engine."""
     super(SingleProcessEngine, self).__init__()
     self._current_display_name = ''
+    self._file_system_cache = []
     self._last_status_update_timestamp = 0.0
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
     self._processing_configuration = None
+    self._resolver_context = None
     self._status_update_callback = None
+
+  def _CacheFileSystem(self, path_spec):
+    """Caches a dfVFS file system object.
+
+    Keeping and additional reference to a dfVFS file system object causes the
+    object to remain cached in the resolver context. This minimizes the number
+    times the file system is re-opened.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+    """
+    if (path_spec and not path_spec.IsSystemLevel() and
+        path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
+      file_system = resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=self._resolver_context)
+
+      if file_system not in self._file_system_cache:
+        if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+          self._file_system_cache.pop(0)
+        self._file_system_cache.append(file_system)
+
+      elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+        # Move the file system to the end of the list to preserve the most
+        # recently file sytem object.
+        self._file_system_cache.remove(file_system)
+        self._file_system_cache.append(file_system)
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
@@ -43,6 +76,8 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
+
+    self._CacheFileSystem(path_spec)
 
     excluded_find_specs = None
     if self.collection_filters_helper:
@@ -231,6 +266,8 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       ProcessingStatus: processing status.
     """
+    self._resolver_context = resolver_context
+
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, self.knowledge_base,
         collection_filters_helper=self.collection_filters_helper,
@@ -306,7 +343,9 @@ class SingleProcessEngine(engine.BaseEngine):
     else:
       logger.debug('Processing completed.')
 
+    self._file_system_cache = []
     self._processing_configuration = None
+    self._resolver_context = None
     self._status_update_callback = None
 
     return self._processing_status
