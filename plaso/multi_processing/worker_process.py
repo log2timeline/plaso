@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver
@@ -71,7 +72,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     Args:
       path_spec (dfvfs.PathSpec): path specification.
     """
-    if path_spec and not path_spec.IsSystemLevel():
+    if (path_spec and not path_spec.IsSystemLevel() and
+        path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
       file_system = resolver.Resolver.OpenFileEntry(
           path_spec, resolver_context=self._resolver_context)
 
