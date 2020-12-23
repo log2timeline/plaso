@@ -612,11 +612,14 @@ cert_change
 registry_modified
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4657
 
+# Microsoft-Windows-Iphlpsvc 4200 - Unable to read or write the NTE Context list for network adapter %2. IP interfaces on this network adapter may not be initialized completely.
 ip_change
   data_type is 'windows:evtx:record' AND (source_name is 'Microsoft-Windows-Iphlpsvc' OR source_name is 'Microsoft-Windows-Operating-System') AND event_identifier is 4200
 
-rdp_history
-  data_type is 'windows:registry:key_value' AND (key_path contains 'Software\\Microsoft\\Terminal Server Client\\Default' OR key_path contains 'Software\\Microsoft\\Terminal Server Client\\Servers')
-
+# Microsoft-Windows-SMBClient 30803 - Failed to establish a network connection
 smb_trace
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-SMBClient' AND (event_identifier is 30803 OR event_identifier is 30904)
+
+# Service Control Manager - Event ID 7045: A new service was installed in the system
+new_service
+  data_type is 'windows:evtx:record' AND source_name is 'Service Control Manager' AND event_identifier is 7045
