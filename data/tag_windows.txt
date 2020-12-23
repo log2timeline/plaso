@@ -118,9 +118,13 @@ app_potential_exploit
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 12 OR event_identifier is 13) AND xml_string contains '\\CurrentVersion\\AeDebug'
 
 # malware detected by windows defender
-windows_defender
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Defender' AND (event_identifier is 1005 OR event_identifier is 1006 OR event_identifier is 1007 OR event_identifier is 1008 OR event_identifier is 1009 OR event_identifier is 1010 OR event_identifier is 1016 OR event_identifier is 1017 OR event_identifier is 1018 OR event_identifier is 1019 OR event_identifier is 1021 OR event_identifier is 2001 OR event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 3002 OR event_identifier is 5008)
-
+malware_detected
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Defender' AND (event_identifier is 1005 OR event_identifier is 1006 OR event_identifier is 1007 OR event_identifier is 1008 OR event_identifier is 1009 OR event_identifier is 1010 OR event_identifier is 1016 OR event_identifier is 1017 OR event_identifier is 1018 OR event_identifier is 1019 OR event_identifier is 1021 OR event_identifier is 1116 OR event_identifier is 1117 OR event_identifier is 1120)
+  
+# error update windows defender
+windows_defender_fail
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Defender' AND (event_identifier is 2001 OR event_identifier is 2003 OR event_identifier is 2005 OR event_identifier is 2006 OR event_identifier is 2012 OR event_identifier is 2013 OR event_identifier is 3002 OR event_identifier is 5008)
+  
 # malware can be use sidbar gadget
 sidbar_gadget
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line' OR data_type is 'windows:lnk:link') AND (filename contains 'AppData/Local/Microsoft/Windows Sidebar/Gadgets' OR filename contains '/Program Files/Windows Sidebar/Shared Gadgets/')
