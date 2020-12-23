@@ -29,16 +29,15 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the first page visited entry.
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2011-04-07 12:03:11.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = 'http://start.ubuntu.com/10.04/Google/'
-    self.assertEqual(event_data.url, expected_url)
-    self.assertEqual(event_data.title, 'Ubuntu Start Page')
+
+    expected_event_values = {
+        'timestamp': '2011-04-07 12:03:11.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'title': 'Ubuntu Start Page',
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '{0:s} '
@@ -48,24 +47,23 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
             expected_url)
     expected_short_message = '{0:s} (Ubuntu Start Page)'.format(expected_url)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the first file downloaded entry.
-    event = events[69]
-
-    self.CheckTimestamp(event.timestamp, '2011-05-23 08:35:30.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_full_path = '/home/john/Downloads/funcats_scr.exe'
     expected_url = (
         'http://fatloss4idiotsx.com/download/funcats/'
         'funcats_scr.exe')
-    self.assertEqual(event_data.url, expected_url)
 
-    expected_full_path = '/home/john/Downloads/funcats_scr.exe'
-    self.assertEqual(event_data.full_path, expected_full_path)
+    expected_event_values = {
+        'full_path': expected_full_path,
+        'timestamp': '2011-05-23 08:35:30.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[69], expected_event_values)
 
     expected_message = (
         '{0:s} ({1:s}). '
@@ -73,6 +71,8 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '1132155 bytes.').format(expected_url, expected_full_path)
     expected_short_message = '{0:s} downloaded (1132155 bytes)'.format(
         expected_full_path)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[69])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -93,18 +93,17 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the page visit event.
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2018-01-21 14:09:53.885478')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
-    self.assertEqual(event_data.url, expected_url)
-    self.assertEqual(event_data.title, '')
+
+    expected_event_values = {
+        'timestamp': '2018-01-21 14:09:53.885478',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'title': '',
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '{0:s} '
@@ -113,24 +112,23 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '(URL not typed directly - no typed count)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the file downloaded event.
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2018-01-21 14:09:53.900399')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
         'win32/plaso-20171231.1.win32.msi')
-    self.assertEqual(event_data.url, expected_url)
 
-    expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
-    self.assertEqual(event_data.full_path, expected_full_path)
+    expected_event_values = {
+        'full_path': expected_full_path,
+        'timestamp': '2018-01-21 14:09:53.900399',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         '{0:s} ({1:s}). '
@@ -138,6 +136,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
             expected_url, expected_full_path)
     expected_short_message = '{0:s} downloaded (3080192 bytes)'.format(
         expected_full_path)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -154,18 +154,17 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the page visit event.
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2018-01-21 14:09:27.315765')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
-    self.assertEqual(event_data.url, expected_url)
-    self.assertEqual(event_data.title, '')
+
+    expected_event_values = {
+        'timestamp': '2018-01-21 14:09:27.315765',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'title': '',
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '{0:s} '
@@ -174,24 +173,23 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '(URL not typed directly - no typed count)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the file downloaded event.
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2018-01-21 14:09:27.200398')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
         'win32/plaso-20171231.1.win32.msi')
-    self.assertEqual(event_data.url, expected_url)
 
-    expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
-    self.assertEqual(event_data.full_path, expected_full_path)
+    expected_event_values = {
+        'full_path': expected_full_path,
+        'timestamp': '2018-01-21 14:09:27.200398',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         '{0:s} ({1:s}). '
@@ -199,6 +197,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
             expected_url, expected_full_path)
     expected_short_message = '{0:s} downloaded (3080192 bytes)'.format(
         expected_full_path)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -215,18 +215,17 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the page visit event.
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2018-01-21 14:08:52.037692')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
-    self.assertEqual(event_data.url, expected_url)
-    self.assertEqual(event_data.title, '')
+
+    expected_event_values = {
+        'timestamp': '2018-01-21 14:08:52.037692',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'title': '',
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '{0:s} '
@@ -235,24 +234,23 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '(URL not typed directly - no typed count)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the file downloaded event.
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2018-01-21 14:08:51.811123')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
         'win32/plaso-20171231.1.win32.msi')
-    self.assertEqual(event_data.url, expected_url)
 
-    expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
-    self.assertEqual(event_data.full_path, expected_full_path)
+    expected_event_values = {
+        'full_path': expected_full_path,
+        'timestamp': '2018-01-21 14:08:51.811123',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         '{0:s} ({1:s}). '
@@ -260,6 +258,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
             expected_url, expected_full_path)
     expected_short_message = '{0:s} downloaded (3080192 bytes)'.format(
         expected_full_path)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -278,18 +278,17 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the page visit event.
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2018-01-21 14:08:52.037692')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
-    self.assertEqual(event_data.url, expected_url)
-    self.assertEqual(event_data.title, '')
+
+    expected_event_values = {
+        'timestamp': '2018-01-21 14:08:52.037692',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'title': '',
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '{0:s} '
@@ -298,24 +297,23 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '(URL not typed directly - no typed count)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the file downloaded event.
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2018-01-21 14:08:51.811123')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
         'win32/plaso-20171231.1.win32.msi')
-    self.assertEqual(event_data.url, expected_url)
 
-    expected_full_path = '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi'
-    self.assertEqual(event_data.full_path, expected_full_path)
+    expected_event_values = {
+        'full_path': expected_full_path,
+        'timestamp': '2018-01-21 14:08:51.811123',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         '{0:s} ({1:s}). '
@@ -323,6 +321,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
             expected_url, expected_full_path)
     expected_short_message = '{0:s} downloaded (3080192 bytes)'.format(
         expected_full_path)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

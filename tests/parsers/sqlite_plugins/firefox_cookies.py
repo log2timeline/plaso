@@ -21,7 +21,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['firefox_cookies.sqlite'], plugin)
 
-    test_events = []
+    events = []
     extra_objects = []
 
     # sqlite> SELECT COUNT(id) FROM moz_cookies;
@@ -42,47 +42,47 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     for event in storage_writer.GetEvents():
       event_data = self._GetEventDataOfEvent(storage_writer, event)
       if event_data.data_type == 'firefox:cookie:entry':
-        test_events.append(event)
+        events.append(event)
       else:
         extra_objects.append(event)
 
-    self.assertEqual(len(test_events), 90 * 3)
+    self.assertEqual(len(events), 90 * 3)
     self.assertGreaterEqual(len(extra_objects), 25)
 
     # Check one greenqloud.com event
-    event = test_events[32]
+    expected_event_values = {
+        'cookie_name': '__utma',
+        'host': 's.greenqloud.com',
+        'httponly': False,
+        'timestamp': '2015-10-30 21:56:03.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION,
+        'url': 'http://s.greenqloud.com/'}
 
-    self.CheckTimestamp(event.timestamp, '2015-10-30 21:56:03.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_EXPIRATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.host, 's.greenqloud.com')
-    self.assertEqual(event_data.cookie_name, '__utma')
-    self.assertFalse(event_data.httponly)
-    self.assertEqual(event_data.url, 'http://s.greenqloud.com/')
+    self.CheckEventValues(storage_writer, events[32], expected_event_values)
 
     expected_message = (
         'http://s.greenqloud.com/ (__utma) Flags: [HTTP only]: False')
     expected_short_message = 's.greenqloud.com (__utma)'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[32])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check one of the visits to pubmatic.com.
-    event = test_events[62]
+    expected_event_values = {
+        'path': '/',
+        'secure': False,
+        'timestamp': '2013-11-29 21:56:04.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION,
+        'url': 'http://pubmatic.com/'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-29 21:56:04.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_EXPIRATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.url, 'http://pubmatic.com/')
-    self.assertEqual(event_data.path, '/')
-    self.assertFalse(event_data.secure)
+    self.CheckEventValues(storage_writer, events[62], expected_event_values)
 
     expected_message = (
         'http://pubmatic.com/ (KRTBCOOKIE_391) Flags: [HTTP only]: False')
     expected_short_message = 'pubmatic.com (KRTBCOOKIE_391)'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[62])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

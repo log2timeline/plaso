@@ -24,18 +24,19 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(0, storage_writer.number_of_warnings)
     self.assertEqual(51, storage_writer.number_of_events)
     events = list(storage_writer.GetEvents())
-    event = events[0]
-    self.CheckTimestamp(event.timestamp, '2019-02-10 16:59:58.860665')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.bundle_identifier, 'com.apple.Installer-Progress')
+    expected_event_values = {
+        'bundle_identifier': 'com.apple.Installer-Progress',
+        'timestamp': '2019-02-10 16:59:58.860665',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'Application com.apple.Installer-Progress executed for 1 seconds')
     expected_short_message = 'Application com.apple.Installer-Progress'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -49,32 +50,34 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(231, storage_writer.number_of_events)
     events = list(storage_writer.GetEvents())
 
-    event = events[225]
-    self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:30.668998')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    expected_event_values = {
+        'bundle_identifier': 'com.apple.Terminal',
+        'timestamp': '2019-05-08 13:57:30.668998',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.bundle_identifier, 'com.apple.Terminal')
+    self.CheckEventValues(storage_writer, events[225], expected_event_values)
 
     expected_message = (
         'Application com.apple.Terminal executed for 1041 seconds')
     expected_short_message = 'Application com.apple.Terminal'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[225])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[212]
-    self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:20.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_END)
+    expected_event_values = {
+        'timestamp': '2019-05-08 13:57:20.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_END,
+        'title': 'Instagram',
+        'url': 'https://www.instagram.com/'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.url, 'https://www.instagram.com/')
-    self.assertEqual(event_data.title, 'Instagram')
+    self.CheckEventValues(storage_writer, events[212], expected_event_values)
 
     expected_message = (
         'Visited: https://www.instagram.com/ (Instagram) Duration: 0')
     expected_short_message = 'Safari: https://www.instagram.com/'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[212])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
