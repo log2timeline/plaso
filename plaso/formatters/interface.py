@@ -32,7 +32,53 @@ class EventFormatterHelper(object):
     """
 
 
-class EnumerationEventFormatterHelper(object):
+class BooleanEventFormatterHelper(EventFormatterHelper):
+  """Helper for formatting boolean event data.
+
+  Attributes:
+    input_attribute (str): name of the attribute that contains the boolean
+        input value.
+    output_attribute (str): name of the attribute where the boolean output
+        value should be stored.
+    value_if_false (str): output value if the boolean input value is False.
+    value_if_true (str): output value if the boolean input value is True.
+  """
+
+  def __init__(
+      self, input_attribute=None, output_attribute=None, value_if_false=None,
+      value_if_true=None):
+    """Initialized a helper for formatting boolean event data.
+
+    Args:
+      input_attribute (Optional[str]): name of the attribute that contains
+          the boolean input value.
+      output_attribute (Optional[str]): name of the attribute where the
+          boolean output value should be stored.
+      value_if_false (str): output value if the boolean input value is False.
+      value_if_true (str): output value if the boolean input value is True.
+    """
+    super(BooleanEventFormatterHelper, self).__init__()
+    self.input_attribute = input_attribute
+    self.output_attribute = output_attribute
+    self.value_if_false = value_if_false
+    self.value_if_true = value_if_true
+
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
+
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+    input_value = event_values.get(self.input_attribute, None)
+    if input_value:
+      output_value = self.value_if_true
+    else:
+      output_value = self.value_if_false
+
+    event_values[self.output_attribute] = output_value
+
+
+class EnumerationEventFormatterHelper(EventFormatterHelper):
   """Helper for formatting enumeration event data.
 
   Attributes:
@@ -67,15 +113,23 @@ class EnumerationEventFormatterHelper(object):
   def FormatEventValues(self, event_values):
     """Formats event values using the helper.
 
+    If default value is None and there is no corresponding enumeration value
+    then the original value is used.
+
     Args:
       event_values (dict[str, object]): event values.
     """
     input_value = event_values.get(self.input_attribute, None)
+
+    default_value = self.default
+    if default_value is None:
+      default_value = input_value
+
     event_values[self.output_attribute] = self.values.get(
-        input_value, self.default)
+        input_value, default_value)
 
 
-class FlagsEventFormatterHelper(object):
+class FlagsEventFormatterHelper(EventFormatterHelper):
   """Helper for formatting flags event data.
 
   Attributes:

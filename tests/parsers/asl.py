@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.lib import errors
-from plaso.formatters import asl as _  # pylint: disable=unused-import
 from plaso.parsers import asl
 
 from tests.parsers import test_lib

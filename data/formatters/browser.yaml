@@ -266,6 +266,24 @@ short_message:
 - '({entry_selection})'
 ---
 type: 'conditional'
+data_type: 'safari:cookie:entry'
+flags_helpers:
+- input_attribute: 'flags'
+  output_attribute: 'flag_values'
+  values:
+    1: 'Secure'
+    2: 'Unknown'
+    4: 'HttpOnly'
+message:
+- '{url}'
+- '<{path}>'
+- '({cookie_name})'
+- 'Flags: {flag_values}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+---
+type: 'conditional'
 data_type: 'safari:history:visit'
 message:
 - 'Visited: {url}'

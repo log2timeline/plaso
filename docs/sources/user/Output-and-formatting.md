@@ -95,6 +95,7 @@ As of version 20200227 Plaso supports formatter configuration files.
 An event formatter is defined as a set of attributes:
 
 * "data_type"; required event data type.
+* "boolean_helpers"; optional boolean helpers.
 * "enumeration_helpers"; optional enumeration helpers.
 * "message"; required formatter message string, for a basic type, or list of messages string pieces, for a conditional type.
 * "separator"; optional conditional message string piece separator, the default is a single space.
@@ -120,6 +121,35 @@ separator: ', '
 short_message:
 - '{body}'
 ```
+
+#### Boolean helpers
+
+Boolean helpers can be defined to map a boolean value of an event attribute to
+a more descriptive value, for example mapping True to Shared in the example
+below.
+
+```
+type: 'conditional'
+data_type: 'gdrive:snapshot:cloud_entry'
+boolean_helpers:
+- input_attribute: 'shared'
+  output_attribute: 'shared'
+  value_if_false: 'Private'
+  value_if_true: 'Shared'
+message:
+- 'File Path: {path}'
+- '[{shared}]'
+short_message:
+- '{path}'
+```
+
+boolean helpers are defined as a set of attributes:
+
+* "input_attribute"; required name of the attribute which the value that needs to be mapped is read from.
+* "output_attribute"; required name of the attribute which the mapped value is written to.
+* "default_value"; optional default value if there is no corresponding mapping in "values".
+* "value_if_false"; required output value if the boolean input value is False.
+* "value_if_true"; required output value if the boolean input value is True.
 
 #### Enumeration helpers
 
@@ -217,3 +247,4 @@ short_message:
 * 20200822 Added support for enumeration helpers.
 * 20200904 Added support for flags helpers.
 * 20200916 Removed source types from formatters.
+* 20201220 Added support for boolean helpers.
