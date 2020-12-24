@@ -264,7 +264,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       storage_writer (StorageWriter): storage writer.
       analysis_plugins (dict[str, AnalysisPlugin]): analysis plugins that
           should be run and their names.
-      event_filter (Optional[FilterObject]): event filter.
+      event_filter (Optional[EventObjectFilter]): event filter.
 
     Returns:
       collections.Counter: counter containing information about the events
@@ -495,7 +495,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       output_module (OutputModule): output module.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
-      event_filter (Optional[FilterObject]): event filter.
+      event_filter (Optional[EventObjectFilter]): event filter.
       time_slice (Optional[TimeRange]): time range that defines a time slice
           to filter events.
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
@@ -904,7 +904,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           should be run and their names.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
-      event_filter (Optional[FilterObject]): event filter.
+      event_filter (Optional[EventObjectFilter]): event filter.
       event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
           updates.
@@ -1012,7 +1012,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           configuration.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
-      event_filter (Optional[FilterObject]): event filter.
+      event_filter (Optional[EventObjectFilter]): event filter.
       status_update_callback (Optional[function]): callback function for status
           updates.
       time_slice (Optional[TimeSlice]): slice of time to output.
