@@ -17,7 +17,6 @@ import abc
 import re
 
 from plaso.formatters import logger
-from plaso.lib import errors
 
 
 class EventFormatterHelper(object):
@@ -211,14 +210,14 @@ class EventFormatter(object):
     self.helpers = []
 
   def _FormatMessage(self, format_string, event_values):
-    """Determines the formatted message string.
+    """Determines the formatted message.
 
     Args:
       format_string (str): message format string.
       event_values (dict[str, object]): event values.
 
     Returns:
-      str: formatted message string.
+      str: formatted message.
     """
     if not isinstance(format_string, str):
       logger.warning('Format string: {0:s} is non-Unicode.'.format(
@@ -274,30 +273,14 @@ class EventFormatter(object):
     # string.strip().
     return message_string.replace('\r', '').replace('\n', '')
 
-  def _FormatMessages(self, format_string, short_format_string, event_values):
-    """Determines the formatted message strings.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
     Args:
-      format_string (str): message format string.
-      short_format_string (str): short message format string.
       event_values (dict[str, object]): event values.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
     """
-    message_string = self._FormatMessage(format_string, event_values)
-
-    if short_format_string:
-      short_message_string = self._FormatMessage(
-          short_format_string, event_values)
-    else:
-      short_message_string = message_string
-
-    # Truncate the short message string if necessary.
-    if len(short_message_string) > 80:
-      short_message_string = '{0:s}...'.format(short_message_string[:77])
-
-    return message_string, short_message_string
+    for helper in self.helpers:
+      helper.FormatEventValues(event_values)
 
   def GetFormatStringAttributeNames(self):
     """Retrieves the attribute names in the format string.
@@ -320,30 +303,38 @@ class EventFormatter(object):
     """
     self.helpers.append(helper)
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def GetMessage(self, event_values):
+    """Determines the message.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
+      event_values (dict[str, object]): event values.
 
     Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      str: message.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter(
-          'Unsupported data type: {0:s} expected {1:s}.'.format(
-              event_data.data_type, self.DATA_TYPE))
+    return self._FormatMessage(self.FORMAT_STRING, event_values)
 
-    event_values = event_data.CopyToDict()
-    return self._FormatMessages(
-        self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
+  def GetMessageShort(self, event_values):
+    """Determines the short message.
+
+    Args:
+      event_values (dict[str, object]): event values.
+
+    Returns:
+      str: short message.
+    """
+    if self.FORMAT_STRING_SHORT:
+      format_string = self.FORMAT_STRING_SHORT
+    else:
+      format_string = self.FORMAT_STRING
+
+    short_message_string = self._FormatMessage(format_string, event_values)
+
+    # Truncate the short message string if necessary.
+    if len(short_message_string) > 80:
+      short_message_string = '{0:s}...'.format(short_message_string[:77])
+
+    return short_message_string
 
 
 class ConditionalEventFormatter(EventFormatter):
@@ -421,25 +412,25 @@ class ConditionalEventFormatter(EventFormatter):
             'Invalid short format string piece: [{0:s}] contains more '
             'than 1 attribute name.').format(format_string_piece))
 
-  def _ConditionalFormatMessages(self, event_values):
-    """Determines the conditional formatted message strings.
+  def _ConditionalFormatMessage(
+      self, format_string_pieces, format_string_pieces_map, event_values):
+    """Determines the conditional formatted message.
 
     Args:
+      format_string_pieces (dict[str, str]): format string pieces.
+      format_string_pieces_map (list[int, str]): format string pieces map.
       event_values (dict[str, object]): event values.
 
     Returns:
-      tuple(str, str): formatted message string and short message string.
+      str: conditional formatted message.
 
     Raises:
       RuntimeError: when an invalid format string piece is encountered.
     """
-    if not self._format_string_pieces_map:
-      self._CreateFormatStringMaps()
-
     # Using getattr here to make sure the attribute is not set to None.
     # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
     string_pieces = []
-    for map_index, attribute_name in enumerate(self._format_string_pieces_map):
+    for map_index, attribute_name in enumerate(format_string_pieces_map):
       if not attribute_name or attribute_name in event_values:
         if attribute_name:
           attribute = event_values.get(attribute_name, None)
@@ -449,21 +440,11 @@ class ConditionalEventFormatter(EventFormatter):
           if not isinstance(attribute, (bool, float, int)) and not attribute:
             continue
 
-        string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
+        string_pieces.append(format_string_pieces[map_index])
 
     format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
-    string_pieces = []
-    for map_index, attribute_name in enumerate(
-        self._format_string_short_pieces_map):
-
-      if not attribute_name or event_values.get(
-          attribute_name, None) not in (None, '', b''):
-        string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
-    short_format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
-
-    return self._FormatMessages(
-        format_string, short_format_string, event_values)
+    return self._FormatMessage(format_string, event_values)
 
   def GetFormatStringAttributeNames(self):
     """Retrieves the attribute names in the format string.
@@ -482,30 +463,46 @@ class ConditionalEventFormatter(EventFormatter):
 
     return set(self._format_string_attribute_names)
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def GetMessage(self, event_values):
+    """Determines the message.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
+      event_values (dict[str, object]): event values.
 
     Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      RuntimeError: when an invalid format string piece is encountered.
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      str: message.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
+    if not self._format_string_pieces_map:
+      self._CreateFormatStringMaps()
 
-    event_values = event_data.CopyToDict()
+    return self._ConditionalFormatMessage(
+        self.FORMAT_STRING_PIECES, self._format_string_pieces_map, event_values)
 
-    for helper in self.helpers:
-      helper.FormatEventValues(event_values)
+  def GetMessageShort(self, event_values):
+    """Determines the short message.
 
-    return self._ConditionalFormatMessages(event_values)
+    Args:
+      event_values (dict[str, object]): event values.
+
+    Returns:
+      str: short message.
+    """
+    if not self._format_string_pieces_map:
+      self._CreateFormatStringMaps()
+
+    if (self.FORMAT_STRING_SHORT_PIECES and
+        self.FORMAT_STRING_SHORT_PIECES != ['']):
+      format_string_pieces = self.FORMAT_STRING_SHORT_PIECES
+      format_string_pieces_map = self._format_string_short_pieces_map
+    else:
+      format_string_pieces = self.FORMAT_STRING_PIECES
+      format_string_pieces_map = self._format_string_pieces_map
+
+    short_message_string = self._ConditionalFormatMessage(
+        format_string_pieces, format_string_pieces_map, event_values)
+
+    # Truncate the short message string if necessary.
+    if len(short_message_string) > 80:
+      short_message_string = '{0:s}...'.format(short_message_string[:77])
+
+    return short_message_string

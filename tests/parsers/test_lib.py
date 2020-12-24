@@ -15,9 +15,10 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.formatters import manager as formatters_manager
-from plaso.formatters import mediator as formatters_mediator
+from plaso.output import dynamic
+from plaso.output import mediator as output_mediator
 from plaso.parsers import interface
-from plaso.parsers import mediator
+from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
@@ -72,7 +73,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     knowledge_base_object.SetTimeZone(timezone)
 
-    parser_mediator = mediator.ParserMediator(
+    parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
 
@@ -203,16 +204,22 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       expected_message (str): expected message string.
       expected_short_message (str): expected short message string.
     """
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    output_mediator_object = output_mediator.OutputMediator(
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
+    fields_formatting_helper = dynamic.DynamicFieldFormattingHelper(
+        output_mediator_object)
+
     formatters_directory_path = self._GetDataFilePath(['formatters'])
     formatters_manager.FormattersManager.ReadFormattersFromDirectory(
         formatters_directory_path)
 
-    formatter_mediator = formatters_mediator.FormatterMediator(
-        data_location=shared_test_lib.DATA_PATH)
-    message, message_short = (
-        formatters_manager.FormattersManager.GetMessageStrings(
-            formatter_mediator, event_data))
+    message = fields_formatting_helper.GetFormattedField(
+        'message', None, event_data, None, None)
     self.assertEqual(message, expected_message)
+
+    message_short = fields_formatting_helper.GetFormattedField(
+        'message_short', None, event_data, None, None)
     self.assertEqual(message_short, expected_short_message)
 
   def CheckEventValues(self, storage_writer, event, expected_event_values):

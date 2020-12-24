@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
@@ -64,28 +63,12 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       4: 'SOURCE_IE_IMPORTED',
       5: 'SOURCE_SAFARI_IMPORTED'}
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      event_values (dict[str, object]): event values.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
     page_transition_type = event_values.get('page_transition_type', None)
     if page_transition_type is not None:
       page_transition, page_transition_long = self._PAGE_TRANSITIONS.get(
@@ -117,8 +100,6 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       extras.append('(type count {0:d} times)'.format(typed_count))
 
     event_values['extra'] = ' '.join(extras)
-
-    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(ChromePageVisitedFormatter)

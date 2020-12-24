@@ -15,7 +15,6 @@ from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.formatters import manager as formatters_manager
-from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import definitions
 from plaso.multi_processing import psort
 from plaso.output import dynamic
@@ -378,11 +377,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     """Tests the _ExportEvents function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    formatter_mediator = formatters_mediator.FormatterMediator()
-
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator,
-        data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     output_module = TestOutputModule(output_mediator_object)
 
@@ -416,11 +412,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     """Tests the _ExportEvents function with deduplication."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    formatter_mediator = formatters_mediator.FormatterMediator()
-
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator,
-        data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     output_module = TestOutputModule(output_mediator_object)
 
@@ -463,12 +456,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    formatter_mediator = formatters_mediator.FormatterMediator()
-    formatter_mediator.SetPreferredLanguageIdentifier('en-US')
-
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator,
-        data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
+
+    output_mediator_object.SetPreferredLanguageIdentifier('en-US')
 
     output_module = null.NullOutputModule(output_mediator_object)
 
@@ -526,12 +517,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     formatters_manager.FormattersManager.ReadFormattersFromDirectory(
         formatters_directory_path)
 
-    formatter_mediator = formatters_mediator.FormatterMediator()
-    formatter_mediator.SetPreferredLanguageIdentifier('en-US')
-
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator,
-        data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
+
+    output_mediator_object.SetPreferredLanguageIdentifier('en-US')
 
     output_module = dynamic.DynamicOutputModule(output_mediator_object)
     output_module.SetOutputWriter(output_writer)

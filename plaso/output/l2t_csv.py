@@ -8,6 +8,7 @@ https://forensicswiki.xyz/wiki/index.php?title=L2T_CSV
 from __future__ import unicode_literals
 
 from plaso.formatters import manager as formatters_manager
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import formatting_helper
@@ -124,19 +125,20 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    # TODO: reverse logic and get formatted attributes instead.
-    unformatted_attributes = (
-        formatters_manager.FormattersManager.GetUnformattedAttributes(
-            event_data))
+    message_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_data.data_type)
+    if not message_formatter:
+      raise errors.NoFormatterFound((
+          'Unable to find message formatter event with data type: '
+          '{0:s}.').format(event_data.data_type))
 
-    if unformatted_attributes is None:
-      raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(
-              event_data.data_type))
+    formatted_attribute_names = (
+        message_formatter.GetFormatStringAttributeNames())
+    formatted_attribute_names.update(definitions.RESERVED_VARIABLE_NAMES)
 
     extra_attributes = []
     for attribute_name, attribute_value in event_data.GetAttributes():
-      if attribute_name in unformatted_attributes:
+      if attribute_name not in formatted_attribute_names:
         # Some parsers have written bytes values to storage.
         if isinstance(attribute_value, bytes):
           attribute_value = attribute_value.decode('utf-8', 'replace')

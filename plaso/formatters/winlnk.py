@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
@@ -34,55 +33,38 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
       '{linked_path}',
       '{command_line_arguments}']
 
-  def _GetLinkedPath(self, event_data):
+  def _GetLinkedPath(self, event_values):
     """Determines the linked path.
 
     Args:
-      event_data (EventData): event_data data.
+      event_values (dict[str, object]): event values.
 
     Returns:
       str: linked path or "Unknown" if not set.
     """
-    linked_path = getattr(event_data, 'local_path', None)
+    linked_path = event_values.get('local_path', None)
     if not linked_path:
-      linked_path = getattr(event_data, 'network_path', None)
+      linked_path = event_values.get('network_path', None)
 
     if not linked_path:
-      linked_path = getattr(event_data, 'relative_path', None)
+      linked_path = event_values.get('relative_path', None)
       if linked_path:
-        working_directory = getattr(event_data, 'working_directory', None)
+        working_directory = event_values.get('working_directory', None)
         if working_directory:
           linked_path = '\\'.join([working_directory, linked_path])
 
     return linked_path or 'Unknown'
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      event_values (dict[str, object]): event values.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
     if 'description' not in event_values:
       event_values['description'] = 'Empty description'
 
-    event_values['linked_path'] = self._GetLinkedPath(event_data)
-
-    return self._ConditionalFormatMessages(event_values)
+    event_values['linked_path'] = self._GetLinkedPath(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(WinLnkLinkFormatter)

@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 from plaso.engine import knowledge_base
-from plaso.formatters import mediator as formatters_mediator
 from plaso.output import mediator
 
 from tests import test_lib as shared_test_lib
@@ -39,9 +38,7 @@ class OutputModuleTestCase(shared_test_lib.BaseTestCase):
                 source_configuration.system_configuration,
                 session_identifier=session.identifier)
 
-    formatter_mediator = formatters_mediator.FormatterMediator()
     output_mediator = mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator,
-        data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     return output_mediator

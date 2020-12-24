@@ -8,7 +8,6 @@ import os
 
 from plaso.formatters import default
 from plaso.formatters import logger
-from plaso.lib import definitions
 from plaso.formatters import yaml_formatters_file
 
 
@@ -17,7 +16,6 @@ class FormattersManager(object):
 
   _formatter_classes = {}
   _formatter_objects = {}
-  _unformatted_attributes = {}
 
   # Keep track of the data types of the formatters that were read from
   # file to prevent re-reading the formatter files during unit tests and
@@ -67,9 +65,6 @@ class FormattersManager(object):
     if formatter_data_type in cls._formatter_objects:
       del cls._formatter_objects[formatter_data_type]
 
-    if formatter_data_type in cls._unformatted_attributes:
-      del cls._unformatted_attributes[formatter_data_type]
-
   @classmethod
   def GetFormatterObject(cls, data_type):
     """Retrieves the formatter object for a specific data type.
@@ -99,49 +94,6 @@ class FormattersManager(object):
       cls._formatter_objects[data_type] = formatter_object
 
     return cls._formatter_objects[data_type]
-
-  @classmethod
-  def GetMessageStrings(cls, formatter_mediator, event_data):
-    """Retrieves the formatted message strings for a specific event.
-
-    Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
-      event_data (EventData): event data.
-
-    Returns:
-      list[str, str]: long and short version of the message string.
-    """
-    formatter_object = cls.GetFormatterObject(event_data.data_type)
-    return formatter_object.GetMessages(formatter_mediator, event_data)
-
-  @classmethod
-  def GetUnformattedAttributes(cls, event_data):
-    """Retrieves names of the event data attributes that are not formatted.
-
-    Args:
-      event_data (EventData): event data.
-
-    Returns:
-      list[str]: names of the event data attributes that are not formatted.
-    """
-    unformatted_attributes = cls._unformatted_attributes.get(
-        event_data.data_type, None)
-    if not unformatted_attributes:
-      formatter_object = cls.GetFormatterObject(event_data.data_type)
-
-      event_data_attribute_names = set(event_data.GetAttributeNames())
-
-      formatter_attribute_names = (
-          formatter_object.GetFormatStringAttributeNames())
-      formatter_attribute_names.update(definitions.RESERVED_VARIABLE_NAMES)
-
-      unformatted_attributes = sorted(event_data_attribute_names.difference(
-          formatter_attribute_names))
-      cls._unformatted_attributes[event_data.data_type] = unformatted_attributes
-
-    return unformatted_attributes
 
   @classmethod
   def ReadFormattersFromDirectory(cls, path):

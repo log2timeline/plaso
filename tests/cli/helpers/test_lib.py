@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 from plaso.cli.helpers import interface
 from plaso.engine import knowledge_base
-from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.output import mediator as output_mediator
 
@@ -64,6 +63,4 @@ class OutputModuleArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
       OutputMediator: output mediator.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    formatter_mediator = formatters_mediator.FormatterMediator()
-    return output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator)
+    return output_mediator.OutputMediator(knowledge_base_object)

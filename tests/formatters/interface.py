@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import interface
-from plaso.formatters import mediator
 from plaso.lib import definitions
 
 from tests.containers import test_lib as containers_test_lib
@@ -125,18 +124,31 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
     attribute_names = event_formatter.GetFormatStringAttributeNames()
     self.assertEqual(sorted(attribute_names), expected_attribute_names)
 
-  def testGetMessages(self):
-    """Tests the GetMessages function."""
-    formatter_mediator = mediator.FormatterMediator()
+  def testGetMessage(self):
+    """Tests the GetMessage function."""
     event_formatter = test_lib.TestEventFormatter()
 
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
+    event_values = event_data.CopyToDict()
 
-    message, _ = event_formatter.GetMessages(formatter_mediator, event_data)
+    message = event_formatter.GetMessage(event_values)
 
-    self.assertEqual(
-        message, 'but we\'re still trying to say something about the event')
+    self.assertEqual(message, (
+         'but we\'re still trying to say something about the event'))
+
+  def testGetMessageShort(self):
+    """Tests the GetMessageShort function."""
+    event_formatter = test_lib.TestEventFormatter()
+
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+    event_values = event_data.CopyToDict()
+
+    message_short = event_formatter.GetMessageShort(event_values)
+
+    self.assertEqual(message_short, (
+        'but we\'re still trying to say something about the event'))
 
 
 class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
@@ -171,20 +183,35 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
     attribute_names = event_formatter.GetFormatStringAttributeNames()
     self.assertEqual(sorted(attribute_names), expected_attribute_names)
 
-  def testGetMessages(self):
-    """Tests the GetMessages function."""
-    formatter_mediator = mediator.FormatterMediator()
+  def testGetMessage(self):
+    """Tests the GetMessage function."""
     event_formatter = ConditionalTestEventFormatter()
 
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
+    event_values = event_data.CopyToDict()
 
-    message, _ = event_formatter.GetMessages(formatter_mediator, event_data)
+    message = event_formatter.GetMessage(event_values)
 
     expected_message = (
         'Description: this is beyond words Comment Value: 0x0c '
         'Text: but we\'re still trying to say something about the event')
     self.assertEqual(message, expected_message)
+
+  def testGetMessageShort(self):
+    """Tests the GetMessageShort function."""
+    event_formatter = ConditionalTestEventFormatter()
+
+    _, event_data, _ = containers_test_lib.CreateEventFromValues(
+        self._TEST_EVENTS[0])
+    event_values = event_data.CopyToDict()
+
+    message_short = event_formatter.GetMessage(event_values)
+
+    expected_message_short = (
+        'Description: this is beyond words Comment Value: 0x0c '
+        'Text: but we\'re still trying to say something about the event')
+    self.assertEqual(message_short, expected_message_short)
 
 
 if __name__ == '__main__':

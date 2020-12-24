@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
 class WinRegistryGenericFormatter(interface.EventFormatter):
@@ -16,39 +15,55 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
   FORMAT_STRING = '[{key_path}] {values}'
   FORMAT_STRING_ALTERNATIVE = '{values}'
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helpers.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      event_values (dict[str, object]): event values.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
-
-    event_values = event_data.CopyToDict()
-
     values = event_values.get('values', None)
     if not values:
       event_values['values'] = '(empty)'
 
+  def GetMessage(self, event_values):
+    """Determines the message.
+
+    Args:
+      event_values (dict[str, object]): event values.
+
+    Returns:
+      str: message.
+    """
     if 'key_path' in event_values:
       format_string = self.FORMAT_STRING
     else:
       format_string = self.FORMAT_STRING_ALTERNATIVE
 
-    return self._FormatMessages(
-        format_string, self.FORMAT_STRING_SHORT, event_values)
+    return self._FormatMessage(format_string, event_values)
+
+  def GetMessageShort(self, event_values):
+    """Determines the short message.
+
+    Args:
+      event_values (dict[str, object]): event values.
+
+    Returns:
+      str: short message.
+    """
+    if self.FORMAT_STRING_SHORT:
+      format_string = self.FORMAT_STRING_SHORT
+    elif 'key_path' in event_values:
+      format_string = self.FORMAT_STRING
+    else:
+      format_string = self.FORMAT_STRING_ALTERNATIVE
+
+    short_message_string = self._FormatMessage(format_string, event_values)
+
+    # Truncate the short message string if necessary.
+    if len(short_message_string) > 80:
+      short_message_string = '{0:s}...'.format(short_message_string[:77])
+
+    return short_message_string
 
 
 manager.FormattersManager.RegisterFormatter(WinRegistryGenericFormatter)
