@@ -219,6 +219,176 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
     return False
 
 
+class PathArtifact(ArtifactAttributeContainer):
+  """Path artifact attribute container.
+
+  Attributes:
+    data_stream (str): name of a data stream.
+    path_segment_separator (str): path segment separator.
+    path_segments (list[str]): path segments.
+  """
+  CONTAINER_TYPE = 'path'
+
+  def __init__(self, data_stream=None, path=None, path_segment_separator='/'):
+    """Initializes a path artifact.
+
+    Args:
+      data_stream (Optional[str]): name of a data stream.
+      path (Optional[str]): a path.
+      path_segment_separator (Optional[str]): path segment separator.
+    """
+    super(PathArtifact, self).__init__()
+    self.data_stream = data_stream
+    self.path_segment_separator = path_segment_separator
+    self.path_segments = self._SplitPath(path, path_segment_separator)
+
+  def __eq__(self, other):
+    """Determines if the path is equal to other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are equal to other.
+    """
+    if not isinstance(other, str):
+      return False
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments == other_path_segments
+
+  def __ge__(self, other):
+    """Determines if the path are greater than or equal to other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are greater than or equal to other.
+
+    Raises:
+      ValueError: if other is not an instance of string.
+    """
+    if not isinstance(other, str):
+      raise ValueError('Other not an instance of string.')
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments >= other_path_segments
+
+  def __gt__(self, other):
+    """Determines if the path are greater than other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are greater than other.
+
+    Raises:
+      ValueError: if other is not an instance of string.
+    """
+    if not isinstance(other, str):
+      raise ValueError('Other not an instance of string.')
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments > other_path_segments
+
+  def __le__(self, other):
+    """Determines if the path are greater than or equal to other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are greater than or equal to other.
+
+    Raises:
+      ValueError: if other is not an instance of string.
+    """
+    if not isinstance(other, str):
+      raise ValueError('Other not an instance of string.')
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments <= other_path_segments
+
+  def __lt__(self, other):
+    """Determines if the path are less than other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are less than other.
+
+    Raises:
+      ValueError: if other is not an instance of string.
+    """
+    if not isinstance(other, str):
+      raise ValueError('Other not an instance of string.')
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments < other_path_segments
+
+  def __ne__(self, other):
+    """Determines if the path are not equal to other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are not equal to other.
+    """
+    if not isinstance(other, str):
+      return False
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments != other_path_segments
+
+  def _SplitPath(self, path, path_segment_separator):
+    """Splits a path.
+
+    Args:
+      path (str): a path.
+      path_segment_separator (str): path segment separator.
+
+    Returns:
+      list[str]: path segments.
+    """
+    path = path or ''
+    split_path = path.split(path_segment_separator)
+
+    path_segments = [split_path[0]]
+    path_segments.extend(list(filter(None, split_path[1:])))
+
+    return path_segments
+
+  def ContainedIn(self, other):
+    """Determines if the path are contained in other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path is contained in other.
+    """
+    if isinstance(other, str):
+      number_of_path_segments = len(self.path_segments)
+      other_path_segments = self._SplitPath(other, self.path_segment_separator)
+      number_of_other_path_segments = len(other_path_segments)
+      if number_of_path_segments < number_of_other_path_segments:
+        maximum_compare_length = (
+            number_of_other_path_segments - number_of_path_segments + 1)
+
+        for compare_start_index in range(0, maximum_compare_length):
+          compare_end_index = compare_start_index + number_of_path_segments
+          compare_path_segments = other_path_segments[
+              compare_start_index:compare_end_index]
+          if self.path_segments == compare_path_segments:
+            return True
+
+    return False
+
+
 class SourceConfigurationArtifact(ArtifactAttributeContainer):
   """Source configuration artifact attribute container.
 
@@ -361,5 +531,6 @@ class UserAccountArtifact(ArtifactAttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EnvironmentVariableArtifact, HostnameArtifact, SourceConfigurationArtifact,
-    SystemConfigurationArtifact, TimeZoneArtifact, UserAccountArtifact])
+    EnvironmentVariableArtifact, HostnameArtifact, OperatingSystemArtifact,
+    PathArtifact, SourceConfigurationArtifact, SystemConfigurationArtifact,
+    TimeZoneArtifact, UserAccountArtifact])

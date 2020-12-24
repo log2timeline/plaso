@@ -446,7 +446,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       dict[str, object]: JSON serialized objects.
 
     Raises:
-      TypeError: if not an instance of dfvfs.PathSpec.
+      TypeError: if not an instance of dfdatetime.DateTimeValues.
     """
     if not isinstance(date_time_values, dfdatetime_interface.DateTimeValues):
       raise TypeError

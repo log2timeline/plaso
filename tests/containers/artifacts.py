@@ -110,6 +110,43 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
     self.assertEqual(attribute_names, expected_attribute_names)
 
 
+class PathArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the path artifact."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = artifacts.PathArtifact()
+
+    expected_attribute_names = [
+        'data_stream', 'path_segment_separator', 'path_segments']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+    self.assertEqual(attribute_names, expected_attribute_names)
+
+  def testComparison(self):
+    """Tests the comparison functions."""
+    attribute_container = artifacts.PathArtifact(path='etc/issue')
+
+    self.assertTrue(attribute_container == 'etc/issue')
+    self.assertTrue(attribute_container >= 'etc/issue')
+    self.assertFalse(attribute_container > 'etc/issue')
+    self.assertTrue(attribute_container <= 'etc/issue')
+    self.assertFalse(attribute_container < 'etc/issue')
+    self.assertFalse(attribute_container != 'etc/issue')
+
+    self.assertFalse(attribute_container == '/etc/issue')
+
+  # TODO: add tests for _SplitPath.
+
+  def testContainedIn(self):
+    """Tests the ContainedIn function."""
+    attribute_container = artifacts.PathArtifact(path='etc/issue')
+
+    self.assertTrue(attribute_container.ContainedIn('/etc/issue'))
+    self.assertTrue(attribute_container.ContainedIn('/usr/local/etc/issue'))
+    self.assertFalse(attribute_container.ContainedIn('/etc/issue.net'))
+
+
 class SourceConfigurationArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the source configuration artifact."""
 
