@@ -11,7 +11,7 @@ set -e
 # Install and configure PostgreSQL
 sudo apt-get install -y postgresql python3-psycopg2
 
-sudo sed '$a local   all             timesketch                              md5' -i /etc/postgresql/10/main/pg_hba.conf
+sudo sed '$a local   all             timesketch                              md5' -i /etc/postgresql/*/main/pg_hba.conf
 
 sudo /etc/init.d/postgresql restart
 
