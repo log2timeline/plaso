@@ -85,6 +85,32 @@ parser contains 'firefox' AND pathspec.vss_store_number > 0
 * The parser name contains the word "firefox";
 * The event was extracted from a Volume Shadow Snapshot (VSS).
 
+## Value type helpers
+
+As of 20201123 value type helpers were introduced to ensure certain types are
+handled consistently. The following value type helpers are currently supported:
+
+* Date and time value helper
+
+### Date and time value helper
+
+The date and time value helper is:
+```
+DATETIME(int|str)
+```
+
+It supports 2 different types of arguments, either:
+
+* an integer containing a POSIX timestamp in microseconds
+* an ISO 8601 date and time string. Note that more common forms of ISO 8601 string are supported but all. The maximum supported granularity is microseconds.
+
+For exeample:
+
+```
+DATETIME(0)
+DATETIME("2020-12-23T12:34:56.789")
+```
+
 ## References
 
 * [log2timeline filtering 101](http://blog.kiddaland.net/2012/12/log2timeline-filtering-101.html)

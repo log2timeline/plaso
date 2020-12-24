@@ -9,8 +9,8 @@ import logging
 import re
 
 from dfdatetime import interface as dfdatetime_interface
-from dfdatetime import posix_time as dfdatetime_posix_time
 
+from plaso.filters import value_types
 from plaso.lib import errors
 
 
@@ -258,9 +258,8 @@ class GenericBinaryOperator(BinaryOperator):
       # TODO: remove when timestamp values are (de)serialized as dfdatetime
       # objects.
       if attribute_name == 'timestamp' and not isinstance(attribute_value, (
-          dfdatetime_interface.DateTimeValues)):
-        attribute_value = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=attribute_value)
+          dfdatetime_interface.DateTimeValues, value_types.DateTimeValueType)):
+        attribute_value = value_types.DateTimeValueType(attribute_value)
 
     elif (event_data_stream and
           attribute_name in event_data_stream.GetAttributeNames()):

@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.containers import events
 from plaso.filters import event_filter
 from plaso.lib import errors
 
@@ -24,6 +25,8 @@ class EventObjectFilterTest(test_lib.FilterTestCase):
 
     test_filter.CompileFilter('timestamp is "2020-12-23 15:00:00"')
 
+    test_filter.CompileFilter('timestamp is DATETIME("2020-12-23T15:00:00")')
+
     with self.assertRaises(errors.ParseError):
       test_filter.CompileFilter(
           'SELECT stuff FROM machine WHERE conditions are met')
@@ -39,6 +42,17 @@ class EventObjectFilterTest(test_lib.FilterTestCase):
     with self.assertRaises(errors.ParseError):
       test_filter.CompileFilter(
           'some_stuff is "random" and other_stuff ')
+
+  def testMatch(self):
+    """Tests the Match function."""
+    test_filter = event_filter.EventObjectFilter()
+    test_filter.CompileFilter('timestamp is DATETIME("2020-12-23T15:00:00")')
+
+    event = events.EventObject()
+    event.timestamp = 1608735600000000
+
+    result = test_filter.Match(event, None, None, None)
+    self.assertTrue(result)
 
 
 if __name__ == '__main__':

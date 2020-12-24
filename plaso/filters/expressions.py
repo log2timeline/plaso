@@ -6,10 +6,11 @@ from __future__ import unicode_literals
 import abc
 import logging
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import interface as dfdatetime_interface
 
 from plaso.lib import errors
 from plaso.filters import filters
+from plaso.filters import value_types
 
 
 class Expression(object):
@@ -189,41 +190,6 @@ class EventExpression(Expression):
     """Retrieves a string representation of the object for debugging."""
     return '{0:s} {1:s} {2!s}'.format(self.attribute, self.operator, self.args)
 
-  def _CopyValueToDateTime(self, value):
-    """Copies an event filter value to a date and time object.
-
-    Args:
-      value (str): event filter value.
-
-    Returns:
-      dfdatetime.PosixTimeInMicroseconds: date and time object.
-
-    Raises:
-      ValueError: if the value cannot be copied to a date and time object.
-    """
-    if not isinstance(value, int):
-      try:
-        value = int(value, 10)
-      except (TypeError, ValueError):
-        pass
-
-    if isinstance(value, int):
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=value)
-    else:
-      try:
-        # Adjust the ISO 8601 string so is rembles a Python date and time
-        # string.
-        if value and len(value) > 10 and value[10] == 'T':
-          value = ' '.join(value.split('T'))
-
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds()
-        date_time.CopyFromDateTimeString(value)
-      except (TypeError, ValueError):
-        raise ValueError('Unsupported timestamp value: {0!s}'.format(value))
-
-    return date_time
-
   def Compile(self):
     """Compiles the expression into a filter.
 
@@ -253,10 +219,18 @@ class EventExpression(Expression):
     if self.attribute == 'timestamp':
       date_time_arguments = []
       for argument in self.args:
-        try:
-          date_time = self._CopyValueToDateTime(argument)
-        except ValueError as exception:
-          raise errors.ParseError(exception)
+        if isinstance(argument, dfdatetime_interface.DateTimeValues):
+          date_time = argument
+
+        else:
+          logging.warning(
+              'Implicit event filter date and time conversion is deprecated '
+              'use the DATETIME() value type indicator instead')
+
+          try:
+            date_time = value_types.DateTimeValueType(argument)
+          except ValueError as exception:
+            raise errors.ParseError(exception)
 
         date_time_arguments.append(date_time)
 

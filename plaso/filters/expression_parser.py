@@ -8,6 +8,9 @@ import codecs
 import logging
 import re
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.filters import expressions
 from plaso.lib import errors
 
@@ -71,6 +74,7 @@ class EventFilterExpressionParser(object):
   _STATE_ARGUMENT = 'ARGUMENT'
   _STATE_ATTRIBUTE = 'ATTRIBUTE'
   _STATE_BINARY_OPERATOR = 'BINARY'
+  _STATE_DATETIME = 'DATETIME'
   _STATE_NEGATION_OPERATOR = 'CHECKNOT'
   _STATE_CONTINUE = 'CONTINUE'
   _STATE_INITIAL = 'INITIAL'
@@ -97,6 +101,15 @@ class EventFilterExpressionParser(object):
       Token(_STATE_STRING_SINGLE_QUOTE, r'\\(.)', '_StringEscape', None),
       Token(_STATE_STRING_SINGLE_QUOTE, r'[^\\\']+', '_StringExpand', None),
 
+      # Date and time definition
+      Token(_STATE_DATETIME, r'\)', '_PopState,_AddArgumentDateTime', None),
+      Token(_STATE_DATETIME, r'(\d+)', '_SetDateTimeDecimalInteger',
+            _STATE_DATETIME),
+      Token(_STATE_DATETIME, '"', '_PushState,_StringStart',
+            _STATE_STRING_DOUBLE_QUOTE),
+      Token(_STATE_DATETIME, '\'', '_PushState,_StringStart',
+            _STATE_STRING_SINGLE_QUOTE),
+
       # Basic expression
       Token(_STATE_ATTRIBUTE, r'[\w._0-9]+', '_SetAttribute', _STATE_OPERATOR),
       Token(_STATE_OPERATOR, 'not ', '_NegateExpression', None),
@@ -117,6 +130,7 @@ class EventFilterExpressionParser(object):
             _STATE_STRING_DOUBLE_QUOTE),
       Token(_STATE_ARGUMENT, '\'', '_PushState,_StringStart',
             _STATE_STRING_SINGLE_QUOTE),
+      Token(_STATE_ARGUMENT, r'DATETIME\(', '_PushState', _STATE_DATETIME),
       # When the last parameter from arg_list has been pushed
 
       # State where binary operators are supported (AND, OR)
@@ -134,6 +148,7 @@ class EventFilterExpressionParser(object):
     """Initializes an event filter expression parser."""
     super(EventFilterExpressionParser, self).__init__()
     self._buffer = ''
+    self._datetime_value = None
     self._current_expression = None
     self._error = 0
     self._flags = 0
@@ -176,6 +191,38 @@ class EventFilterExpressionParser(object):
       return self._STATE_BINARY_OPERATOR
 
     return None
+
+  def _AddArgumentDateTime(self, **unused_kwargs):
+    """Adds a date and time argument to the current expression.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+
+    Raises:
+      ParseError: if datetime value does not contain a valid POSIX timestamp
+          in microseconds or ISO 8601 date and time string.
+    """
+    if isinstance(self._datetime_value, int):
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=self._datetime_value)
+
+    elif isinstance(self._datetime_value, str):
+      try:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromStringISO8601(self._datetime_value)
+      except ValueError:
+        raise errors.ParseError('unsupported ISO 8601 string: {0:s}.'.format(
+            self._datetime_value))
+
+    else:
+      raise errors.ParseError('unsupported datetime value: {0!s}.'.format(
+          self._datetime_value))
+
+    self._datetime_value = None
+    return self._AddArgument(date_time)
 
   def _AddArgumentDecimalInteger(self, string='', **unused_kwargs):
     """Adds a decimal integer argument to the current expression.
@@ -543,6 +590,28 @@ class EventFilterExpressionParser(object):
 
     return self._STATE_OPERATOR
 
+  def _SetDateTimeDecimalInteger(self, string='', **unused_kwargs):
+    """Sets a decimal integer argument to the datetime value.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Args:
+      string (Optional[str]): argument string that contains an integer value
+          formatted in decimal.
+
+    Returns:
+      str: state.
+
+    Raises:
+      ParseError: if string does not contain a valid integer.
+    """
+    try:
+      self._datetime_value = int(string)
+    except (TypeError, ValueError):
+      raise errors.ParseError('{0:s} is not a valid integer.'.format(string))
+
+    return self._STATE_DATETIME
+
   def _SetOperator(self, string='', **unused_kwargs):
     """Sets the operator in the current expression.
 
@@ -613,6 +682,10 @@ class EventFilterExpressionParser(object):
 
     if self._state == self._STATE_ARGUMENT:
       return self._AddArgument(self._string)
+
+    if self._state == self._STATE_DATETIME:
+      self._datetime_value = self._string
+      return self._STATE_DATETIME
 
     return None
 
