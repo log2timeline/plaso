@@ -17,7 +17,7 @@ class Expression(object):
 
   Attributes:
     attribute (str): attribute or None if not set.
-    args (list[str]): arguments.
+    args (list[object]): arguments.
     number_of_args (int): expected number of arguments.
     operator (str): operator or None if not set.
   """
@@ -34,11 +34,11 @@ class Expression(object):
     self.number_of_args = 1
     self.operator = None
 
-  def AddArg(self, argument):
+  def AddArgument(self, argument):
     """Adds a new argument to this expression.
 
     Args:
-       argument (str): argument to add.
+      argument (object): argument to add.
 
     Returns:
       bool: True if the argument is the last argument, False otherwise.

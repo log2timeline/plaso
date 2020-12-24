@@ -22,6 +22,8 @@ class EventObjectFilterTest(test_lib.FilterTestCase):
     test_filter.CompileFilter(
         'some_stuff is "random" and other_stuff is not "random"')
 
+    test_filter.CompileFilter('timestamp is "2020-12-23 15:00:00"')
+
     with self.assertRaises(errors.ParseError):
       test_filter.CompileFilter(
           'SELECT stuff FROM machine WHERE conditions are met')

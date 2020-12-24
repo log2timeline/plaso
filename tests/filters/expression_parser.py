@@ -110,6 +110,12 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         event, event_data, event_data_stream, event_tag)
     self.assertEqual(expected_result, result)
 
+  # TODO: add tests for _AddArgument
+  # TODO: add tests for _AddArgumentDateTime
+  # TODO: add tests for _AddArgumentDecimalInteger
+  # TODO: add tests for _AddArgumentFloatingPoint
+  # TODO: add tests for _AddArgumentHexadecimalInteger
+
   def testAddBinaryOperator(self):
     """Tests the _AddBinaryOperator function."""
     parser = expression_parser.EventFilterExpressionParser()
@@ -263,6 +269,18 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
       match = re.compile(r'\\(.)').match('\\q')
       parser._StringEscape(string='\\q', match=match)
 
+  def testStringExpand(self):
+    """Tests the _StringExpand function."""
+    parser = expression_parser.EventFilterExpressionParser()
+    parser._Reset()
+
+    parser._StringStart()
+    self.assertEqual(parser._string, '')
+
+    next_state = parser._StringExpand(string='string')
+    self.assertIsNone(next_state)
+    self.assertEqual(parser._string, 'string')
+
   def testStringFinish(self):
     """Tests the _StringFinish function."""
     parser = expression_parser.EventFilterExpressionParser()
@@ -270,18 +288,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
     next_state = parser._StringFinish()
     self.assertIsNone(next_state)
-
-  def testStringInsert(self):
-    """Tests the _StringInsert function."""
-    parser = expression_parser.EventFilterExpressionParser()
-    parser._Reset()
-
-    parser._StringStart()
-    self.assertEqual(parser._string, '')
-
-    next_state = parser._StringInsert(string='string')
-    self.assertIsNone(next_state)
-    self.assertEqual(parser._string, 'string')
 
   def testStringStart(self):
     """Tests the _StringStart function."""
@@ -293,10 +299,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     self.assertEqual(parser._string, '')
 
   # TODO: add tests for HexEscape
-  # TODO: add tests for InsertArg
-  # TODO: add tests for InsertFloatArg
-  # TODO: add tests for InsertIntArg
-  # TODO: add tests for InsertInt16Arg
 
   def testParse(self):
     """Tests the Parse function."""
