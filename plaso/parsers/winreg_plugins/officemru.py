@@ -11,7 +11,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -151,4 +151,4 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)

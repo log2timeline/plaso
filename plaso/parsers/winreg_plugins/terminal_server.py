@@ -8,7 +8,7 @@ import re
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -137,5 +137,5 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugins([
+winreg_parser.WinRegistryParser.RegisterPlugins([
     TerminalServerClientPlugin, TerminalServerClientMRUPlugin])

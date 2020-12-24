@@ -9,7 +9,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
@@ -202,5 +202,5 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
             'programscache', 'programscachesmp', 'programscachetbp'])
 
 
-winreg.WinRegistryParser.RegisterPlugin(
+winreg_parser.WinRegistryParser.RegisterPlugin(
     ExplorerProgramsCacheWindowsRegistryPlugin)

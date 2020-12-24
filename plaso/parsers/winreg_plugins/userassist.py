@@ -14,7 +14,7 @@ from plaso.engine import path_helper
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import logger
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import known_folder_ids
@@ -234,4 +234,4 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(UserAssistPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

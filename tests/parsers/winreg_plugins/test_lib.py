@@ -7,7 +7,7 @@ from dfwinreg import fake as dfwinreg_fake
 from dfwinreg import registry as dfwinreg_registry
 
 from plaso.containers import sessions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.storage.fake import writer as fake_writer
 
 from tests.parsers import test_lib
@@ -75,7 +75,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     if not file_object:
       return None
 
-    win_registry_reader = winreg.FileObjectWinRegistryFileReader()
+    win_registry_reader = winreg_parser.FileObjectWinRegistryFileReader()
     registry_file = win_registry_reader.Open(file_object)
     if not registry_file:
       file_object.close()

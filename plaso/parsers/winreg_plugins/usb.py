@@ -7,7 +7,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import logger
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -89,4 +89,4 @@ class USBPlugin(interface.WindowsRegistryPlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(USBPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(USBPlugin)

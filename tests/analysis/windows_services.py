@@ -10,7 +10,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 
 from tests.analysis import test_lib
 
@@ -77,7 +77,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     plugin = windows_services.WindowsServicesAnalysisPlugin()
 
     storage_writer = self._ParseAndAnalyzeFile(['SYSTEM'], parser, plugin)
@@ -106,7 +106,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     plugin = windows_services.WindowsServicesAnalysisPlugin()
     plugin.SetOutputFormat('yaml')
 

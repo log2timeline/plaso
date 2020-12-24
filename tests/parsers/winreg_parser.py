@@ -11,7 +11,7 @@ from artifacts import registry as artifacts_registry
 
 from plaso.engine import artifact_filters
 from plaso.engine import knowledge_base as knowledge_base_engine
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 # Register all plugins.
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 
@@ -44,7 +44,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     parser.EnablePlugins(['appcompatcache'])
 
     self.assertIsNotNone(parser)
@@ -54,7 +54,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     storage_writer = self._ParseFile(['NTUSER.DAT'], parser)
 
     events = list(storage_writer.GetEvents())
@@ -68,7 +68,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
   def testParseNoRootKey(self):
     """Test the parse function on a Registry file with no root key."""
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     storage_writer = self._ParseFile(['ntuser.dat.LOG'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
@@ -76,7 +76,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     storage_writer = self._ParseFile(['SYSTEM'], parser)
 
     events = list(storage_writer.GetEvents())
@@ -109,7 +109,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(artifacts_path)
 
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     knowledge_base = knowledge_base_engine.KnowledgeBase()
 
     artifact_filter_names = ['TestRegistryKey', 'TestRegistryValue']
