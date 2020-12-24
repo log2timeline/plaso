@@ -11,6 +11,7 @@ import re
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
+from plaso.containers import artifacts
 from plaso.filters import expressions
 from plaso.lib import errors
 
@@ -79,6 +80,7 @@ class EventFilterExpressionParser(object):
   _STATE_CONTINUE = 'CONTINUE'
   _STATE_INITIAL = 'INITIAL'
   _STATE_OPERATOR = 'OPERATOR'
+  _STATE_PATH = 'PATH'
   _STATE_STRING_DOUBLE_QUOTE = 'STRING_DOUBLE_QUOTE'
   _STATE_STRING_SINGLE_QUOTE = 'STRING_SINGLE_QUOTE'
 
@@ -110,6 +112,13 @@ class EventFilterExpressionParser(object):
       Token(_STATE_DATETIME, '\'', '_PushState,_StringStart',
             _STATE_STRING_SINGLE_QUOTE),
 
+      # Path definition
+      Token(_STATE_PATH, r'\)', '_PopState,_AddArgumentPath', None),
+      Token(_STATE_PATH, '"', '_PushState,_StringStart',
+            _STATE_STRING_DOUBLE_QUOTE),
+      Token(_STATE_PATH, '\'', '_PushState,_StringStart',
+            _STATE_STRING_SINGLE_QUOTE),
+
       # Basic expression
       Token(_STATE_ATTRIBUTE, r'[\w._0-9]+', '_SetAttribute', _STATE_OPERATOR),
       Token(_STATE_OPERATOR, 'not ', '_NegateExpression', None),
@@ -131,6 +140,7 @@ class EventFilterExpressionParser(object):
       Token(_STATE_ARGUMENT, '\'', '_PushState,_StringStart',
             _STATE_STRING_SINGLE_QUOTE),
       Token(_STATE_ARGUMENT, r'DATETIME\(', '_PushState', _STATE_DATETIME),
+      Token(_STATE_ARGUMENT, r'PATH\(', '_PushState', _STATE_PATH),
       # When the last parameter from arg_list has been pushed
 
       # State where binary operators are supported (AND, OR)
@@ -290,6 +300,18 @@ class EventFilterExpressionParser(object):
       raise errors.ParseError(
           '{0:s} is not a valid base16 integer.'.format(string))
     return self._AddArgument(int_value)
+
+  def _AddArgumentPath(self, **unused_kwargs):
+    """Adds a path argument to the current expression.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+    """
+    value = artifacts.PathArtifact(path=self._string)
+    return self._AddArgument(value)
 
   def _AddBinaryOperator(self, string=None, **unused_kwargs):
     """Adds a binary operator to the stack.
@@ -686,6 +708,9 @@ class EventFilterExpressionParser(object):
     if self._state == self._STATE_DATETIME:
       self._datetime_value = self._string
       return self._STATE_DATETIME
+
+    if self._state == self._STATE_PATH:
+      return self._STATE_PATH
 
     return None
 

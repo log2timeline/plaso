@@ -40,7 +40,8 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testApplicationExecution(self):
     """Tests the application_execution tagging rule."""
-    # Test: data_type is 'fs:stat' AND filename contains 'Windows/Tasks/At'
+    # Test: data_type is 'fs:stat' AND
+    #       filename contains PATH('Windows/Tasks/At')
     attribute_values_per_name = {
         'filename': ['C:/Windows/Tasks/At/bogus.job']}
     self._CheckTaggingRule(
@@ -215,7 +216,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         bagmru.BagMRUEventData, attribute_values_per_name, ['document_open'])
 
     # Test: data_type is 'windows:registry:mrulist' AND
-    #       entries not contains '.exe' AND timestamp > 0
+    #       entries not contains '.exe' AND timestamp > DATETIME(0)
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
@@ -238,7 +239,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckLabels(storage_writer, ['document_open'])
 
     # Test: data_type is 'windows:registry:mrulistex' AND
-    #       entries not contains '.exe' AND timestamp > 0
+    #       entries not contains '.exe' AND timestamp > DATETIME(0)
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
@@ -593,7 +594,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
   def testDocumentPrint(self):
     """Tests the document_print tagging rule."""
     # Test: data_type is 'olecf:summary_info' AND
-    #       timestamp_desc contains 'Printed'
+    #       timestamp_desc is 'Last Printed Time'
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN

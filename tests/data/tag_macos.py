@@ -58,12 +58,12 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
   def testRuleAutorun(self):
     """Tests the autorun tagging rule."""
     # Test: data_type is 'fs:stat' AND
-    #       timestamp_desc is 'HFS_DETECT crtime' AND
-    #       filename contains 'LaunchAgents/' AND
+    #       timestamp_desc is 'Creation Time' AND
+    #       filename contains PATH('LaunchAgents') AND
     #       filename contains '.plist'
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
-    event.timestamp_desc = 'HFS_DETECT crtime'
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_CREATION
 
     event_data = filestat.FileStatEventData()
     event_data.filename = '/LaunchDaemons/test.plist'
@@ -133,7 +133,7 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
   def testRuleDocumentPrint(self):
     """Tests the document_print tagging rule."""
     # Test: data_type is 'olecf:summary_info' AND
-    #       timestamp_desc contains 'Printed'
+    #       timestamp_desc is 'Last Printed Time'
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
