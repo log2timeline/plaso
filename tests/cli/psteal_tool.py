@@ -215,7 +215,7 @@ optional arguments:
     result = test_tool.ParseArguments([])
     self.assertFalse(result)
     output = output_writer.ReadOutput()
-    expected_error = 'ERROR: Output format: dynamic requires an output file'
+    expected_error = 'ERROR: Missing source path.'
     self.assertIn(expected_error, output)
 
   def testExtractEventsFromSourceDirectory(self):

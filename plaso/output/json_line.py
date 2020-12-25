@@ -42,8 +42,7 @@ class JSONLineOutputModule(interface.TextFileOutputModule):
     output_text = self._event_formatting_helper.GetFormattedEvent(
         event, event_data, event_data_stream, event_tag)
 
-    output_text = '{0:s}\n'.format(output_text)
-    self._output_writer.Write(output_text)
+    self.WriteLine(output_text)
 
 
 manager.OutputManager.RegisterOutput(JSONLineOutputModule)

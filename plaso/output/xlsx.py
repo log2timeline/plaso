@@ -21,6 +21,8 @@ class XLSXOutputModule(interface.OutputModule):
   NAME = 'xlsx'
   DESCRIPTION = 'Excel Spreadsheet (XLSX) output'
 
+  WRITES_OUTPUT_FILE = True
+
   _DEFAULT_FIELDS = [
       'datetime', 'timestamp_desc', 'source', 'source_long',
       'message', 'parser', 'display_name', 'tag']
@@ -48,7 +50,6 @@ class XLSXOutputModule(interface.OutputModule):
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper(
         output_mediator)
     self._fields = self._DEFAULT_FIELDS
-    self._filename = None
     self._sheet = None
     self._timestamp_format = self._DEFAULT_TIMESTAMP_FORMAT
     self._workbook = None
@@ -104,28 +105,31 @@ class XLSXOutputModule(interface.OutputModule):
     self._workbook.close()
     self._workbook = None
 
-  def Open(self):
+  def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
     """Creates a new workbook.
+
+    Args:
+      path (Optional[str]): path of the output file.
 
     Raises:
       IOError: if the specified output file already exists.
       OSError: if the specified output file already exists.
-      ValueError: if the filename is not set.
+      ValueError: if path is not set.
     """
-    if not self._filename:
+    if not path:
       raise ValueError('Missing filename.')
 
-    if os.path.isfile(self._filename):
+    if os.path.isfile(path):
       raise IOError((
           'Unable to use an already existing file for output '
-          '[{0:s}]').format(self._filename))
+          '[{0:s}]').format(path))
 
     options = {
         'constant_memory': True,
         'strings_to_urls': False,
         'strings_to_formulas': False,
         'default_date_format': self._timestamp_format}
-    self._workbook = xlsxwriter.Workbook(self._filename, options)
+    self._workbook = xlsxwriter.Workbook(path, options)
     self._sheet = self._workbook.add_worksheet('Sheet')
     self._current_row = 0
 
@@ -136,14 +140,6 @@ class XLSXOutputModule(interface.OutputModule):
       fields (list[str]): names of the fields to output.
     """
     self._fields = fields
-
-  def SetFilename(self, filename):
-    """Sets the filename.
-
-    Args:
-      filename (str): filename.
-    """
-    self._filename = filename
 
   def SetTimestampFormat(self, timestamp_format):
     """Set the timestamp format to use for the datetime column.

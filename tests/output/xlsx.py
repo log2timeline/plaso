@@ -106,9 +106,8 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       output_module = xlsx.XLSXOutputModule(output_mediator)
 
       xslx_file = os.path.join(temp_directory, 'xlsx.out')
-      output_module.SetFilename(xslx_file)
 
-      output_module.Open()
+      output_module.Open(path=xslx_file)
       output_module.WriteHeader()
 
       event, event_data, event_data_stream = (
@@ -157,9 +156,8 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       output_module = xlsx.XLSXOutputModule(output_mediator)
 
       xlsx_file = os.path.join(temp_directory, 'xlsx.out')
-      output_module.SetFilename(xlsx_file)
 
-      output_module.Open()
+      output_module.Open(path=xlsx_file)
       output_module.WriteHeader()
       output_module.WriteFooter()
       output_module.Close()

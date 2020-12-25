@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import unittest
 
 from plaso.lib import definitions
@@ -12,7 +13,6 @@ from plaso.output import formatting_helper
 from plaso.output import interface
 from plaso.output import manager
 
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
@@ -51,15 +51,17 @@ class TestXMLOutputModule(interface.TextFileOutputModule):
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    self._output_writer.Write('</EventFile>\n')
+    self.WriteLine('</EventFile>')
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._output_writer.Write('<EventFile>\n')
+    self.WriteLine('<EventFile>')
 
 
 class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
-  """Tests the linear output module."""
+  """Tests the output module that writes to a text file."""
+
+  # pylint: disable=protected-access
 
   _TEST_EVENTS = [
       {'data_type': 'test:event',
@@ -81,13 +83,14 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testOutput(self):
     """Tests an implementation of output module."""
+    test_file_object = io.StringIO()
+
     output_mediator = self._CreateOutputMediator()
     event_formatting_helper = TestXMLEventFormattingHelper(output_mediator)
     output_module = TestXMLOutputModule(
         output_mediator, event_formatting_helper)
+    output_module._file_object = test_file_object
 
-    output_writer = cli_test_lib.TestOutputWriter()
-    output_module.SetOutputWriter(output_writer)
     output_module.WriteHeader()
 
     for event_values in self._TEST_EVENTS:
@@ -117,7 +120,7 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
         '</Event>\n'
         '</EventFile>\n')
 
-    output = output_writer.ReadOutput()
+    output = test_file_object.getvalue()
     self.assertEqual(output, expected_output)
 
   def testOutputList(self):

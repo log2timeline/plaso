@@ -239,14 +239,12 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
     output_text = self._event_formatting_helper.GetFormattedEventMACBGroup(
         event_macb_group)
 
-    output_text = '{0:s}\n'.format(output_text)
-    self._output_writer.Write(output_text)
+    self.WriteLine(output_text)
 
   def WriteHeader(self):
     """Writes the header to the output."""
     output_text = self._event_formatting_helper.GetFormattedFieldNames()
-    output_text = '{0:s}\n'.format(output_text)
-    self._output_writer.Write(output_text)
+    self.WriteLine(output_text)
 
 
 manager.OutputManager.RegisterOutput(L2TCSVOutputModule)

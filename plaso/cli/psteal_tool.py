@@ -265,6 +265,9 @@ class PstealTool(
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
+      self._output_module.Close()
+      self._output_module = None
+
     for item, value in session.analysis_reports_counter.items():
       counter[item] = value
 

@@ -7,7 +7,6 @@ import os
 
 from plaso.analysis import manager as analysis_manager
 from plaso.cli import logger
-from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.cli.helpers import profiling
@@ -180,10 +179,19 @@ class OutputModuleOptions(object):
           'Unable to create output module with error: {0!s}'.format(
               exception))
 
-    if output_manager.OutputManager.IsTextFileOutputModule(self._output_format):
-      output_file_object = open(self._output_filename, 'wb')
-      output_writer = tools.FileObjectOutputWriter(output_file_object)
-      output_module.SetOutputWriter(output_writer)
+    if output_module.WRITES_OUTPUT_FILE:
+      if not self._output_filename:
+        raise RuntimeError(
+            'Output format: {0:s} requires an output file'.format(
+                self._output_format))
+
+      if os.path.exists(self._output_filename):
+        raise RuntimeError('Output file already exists: {0:s}.'.format(
+            self._output_filename))
+
+      output_module.Open(path=self._output_filename)
+    else:
+      output_module.Open()
 
     helpers_manager.ArgumentHelperManager.ParseOptions(options, output_module)
 

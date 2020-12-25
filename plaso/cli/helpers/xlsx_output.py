@@ -85,7 +85,6 @@ class XLSXOutputArgumentsHelper(interface.ArgumentsHelper):
 
     output_module.SetFields([
         field_name.strip() for field_name in fields.split(',')])
-    output_module.SetFilename(filename)
     output_module.SetTimestampFormat(timestamp_format)
 
 

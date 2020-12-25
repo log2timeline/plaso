@@ -40,21 +40,21 @@ class JSONOutputModule(interface.TextFileOutputModule):
         event, event_data, event_data_stream, event_tag)
 
     if self._event_counter != 0:
-      self._output_writer.Write(', ')
+      self.WriteText(', ')
 
     output_text = '"event_{0:d}": {1:s}\n'.format(
         self._event_counter, output_text)
-    self._output_writer.Write(output_text)
+    self.WriteText(output_text)
 
     self._event_counter += 1
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    self._output_writer.Write('}')
+    self.WriteText('}')
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._output_writer.Write('{')
+    self.WriteText('{')
     self._event_counter = 0
 
 

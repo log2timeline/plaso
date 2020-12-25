@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import os
 import unittest
 
@@ -14,7 +15,6 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import tln
 
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
@@ -119,24 +119,27 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._output_writer = cli_test_lib.TestOutputWriter()
-    output_mediator = self._CreateOutputMediator()
-    self._output_module = tln.TLNOutputModule(output_mediator)
-    self._output_module.SetOutputWriter(self._output_writer)
-
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    expected_header = 'Time|Source|Host|User|Description\n'
+    test_file_object = io.StringIO()
 
-    self._output_module.WriteHeader()
+    output_mediator = self._CreateOutputMediator()
+    output_module = tln.TLNOutputModule(output_mediator)
+    output_module._file_object = test_file_object
 
-    header = self._output_writer.ReadOutput()
-    self.assertEqual(header, expected_header)
+    output_module.WriteHeader()
+
+    header = test_file_object.getvalue()
+    self.assertEqual(header, 'Time|Source|Host|User|Description\n')
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = tln.TLNOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
@@ -146,7 +149,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
         formatters_directory_path)
 
     try:
-      self._output_module.WriteEventBody(
+      output_module.WriteEventBody(
           event, event_data, event_data_stream, event_data_stream)
     finally:
       formatters_manager.FormattersManager._formatters = {}
@@ -156,7 +159,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
         'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
         'session closed for user root)\n')
 
-    event_body = self._output_writer.ReadOutput()
+    event_body = test_file_object.getvalue()
     self.assertEqual(event_body, expected_event_body)
     self.assertEqual(event_body.count('|'), 4)
 
@@ -185,24 +188,26 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    output_mediator = self._CreateOutputMediator()
-    self._output_writer = cli_test_lib.TestOutputWriter()
-    self._output_module = tln.L2TTLNOutputModule(output_mediator)
-    self._output_module.SetOutputWriter(self._output_writer)
-
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    expected_header = 'Time|Source|Host|User|Description|TZ|Notes\n'
+    test_file_object = io.StringIO()
 
-    self._output_module.WriteHeader()
+    output_mediator = self._CreateOutputMediator()
+    output_module = tln.L2TTLNOutputModule(output_mediator)
+    output_module._file_object = test_file_object
 
-    header = self._output_writer.ReadOutput()
-    self.assertEqual(header, expected_header)
+    output_module.WriteHeader()
+
+    header = test_file_object.getvalue()
+    self.assertEqual(header, 'Time|Source|Host|User|Description|TZ|Notes\n')
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = tln.L2TTLNOutputModule(output_mediator)
+    output_module._file_object = test_file_object
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
@@ -212,7 +217,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
         formatters_directory_path)
 
     try:
-      self._output_module.WriteEventBody(
+      output_module.WriteEventBody(
           event, event_data, event_data_stream, event_data_stream)
     finally:
       formatters_manager.FormattersManager._formatters = {}
@@ -223,7 +228,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
         'session closed for user root)'
         '|UTC|File: OS: /var/log/syslog.1 inode: 12345678\n')
 
-    event_body = self._output_writer.ReadOutput()
+    event_body = test_file_object.getvalue()
     self.assertEqual(event_body, expected_event_body)
 
     self.assertEqual(event_body.count('|'), 6)

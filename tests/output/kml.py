@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import os
 import sys
 import unittest
@@ -14,13 +15,14 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.lib import definitions
 from plaso.output import kml
 
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
 class KMLOutputTest(test_lib.OutputModuleTestCase):
   """Tests for the KML output module."""
+
+  # pylint: disable=protected-access
 
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
       dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
@@ -56,51 +58,64 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    output_mediator = self._CreateOutputMediator()
-    self._output_writer = cli_test_lib.TestOutputWriter()
-    self._output_module = kml.KMLOutputModule(output_mediator)
-    self._output_module.SetOutputWriter(self._output_writer)
-
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = kml.KMLOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
+    output_module.WriteHeader()
+
     expected_header = (
         '<?xml version="1.0" encoding="utf-8"?>'
         '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>')
 
-    self._output_module.WriteHeader()
-
-    header = self._output_writer.ReadOutput()
+    header = test_file_object.getvalue()
     self.assertEqual(header, expected_header)
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
-    expected_footer = '</Document></kml>'
+    test_file_object = io.StringIO()
 
-    self._output_module.WriteFooter()
+    output_mediator = self._CreateOutputMediator()
+    output_module = kml.KMLOutputModule(output_mediator)
+    output_module._file_object = test_file_object
 
-    footer = self._output_writer.ReadOutput()
-    self.assertEqual(footer, expected_footer)
+    output_module.WriteFooter()
+
+    footer = test_file_object.getvalue()
+    self.assertEqual(footer, '</Document></kml>')
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
     # Test event without geo-location.
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = kml.KMLOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    self._output_module.WriteEventBody(
-        event, event_data, event_data_stream, None)
+    output_module.WriteEventBody(event, event_data, event_data_stream, None)
 
-    event_body = self._output_writer.ReadOutput()
+    event_body = test_file_object.getvalue()
     self.assertEqual(event_body, '')
 
     # Test event with geo-location.
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = kml.KMLOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1]))
-    self._output_module.WriteEventBody(
-        event, event_data, event_data_stream, None)
+    output_module.WriteEventBody(event, event_data, event_data_stream, None)
 
-    event_body = self._output_writer.ReadOutput()
+    event_body = test_file_object.getvalue()
 
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()

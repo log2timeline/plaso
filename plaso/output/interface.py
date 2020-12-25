@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import abc
+import os
 
 from plaso.lib import errors
 from plaso.output import logger
@@ -14,6 +15,9 @@ class OutputModule(object):
 
   NAME = ''
   DESCRIPTION = ''
+
+  # Value to indicate the output module writes to an output file.
+  WRITES_OUTPUT_FILE = False
 
   def __init__(self, output_mediator):
     """Initializes an output module.
@@ -57,7 +61,7 @@ class OutputModule(object):
     """
     return []
 
-  def Open(self):
+  def Open(self, **kwargs):  # pylint: disable=unused-argument
     """Opens the output."""
     return
 
@@ -132,8 +136,12 @@ class OutputModule(object):
 class TextFileOutputModule(OutputModule):
   """Shared functionality of an output module that writes to a text file."""
 
+  WRITES_OUTPUT_FILE = True
+
+  _ENCODING = 'utf-8'
+
   def __init__(self, output_mediator, event_formatting_helper):
-    """Initializes a linear output module.
+    """Initializes an output module that writes to a text file.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -142,19 +150,34 @@ class TextFileOutputModule(OutputModule):
     """
     super(TextFileOutputModule, self).__init__(output_mediator)
     self._event_formatting_helper = event_formatting_helper
-    self._output_writer = None
+    self._file_object = None
 
   def Close(self):
-    """Closes the output."""
-    self._output_writer = None
+    """Closes the output file."""
+    if self._file_object:
+      self._file_object.close()
+      self._file_object = None
 
-  def SetOutputWriter(self, output_writer):
-    """Set the output writer.
+  def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
+    """Opens the output file.
 
     Args:
-      output_writer (CLIOutputWriter): output writer.
+      path (Optional[str]): path of the output file.
+
+    Raises:
+      IOError: if the specified output file already exists.
+      OSError: if the specified output file already exists.
+      ValueError: if path is not set.
     """
-    self._output_writer = output_writer
+    if not path:
+      raise ValueError('Missing path.')
+
+    if os.path.isfile(path):
+      raise IOError((
+          'Unable to use an already existing file for output '
+          '[{0:s}]').format(path))
+
+    self._file_object = open(path, 'wt', encoding=self._ENCODING)
 
   def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
@@ -168,5 +191,20 @@ class TextFileOutputModule(OutputModule):
     output_text = self._event_formatting_helper.GetFormattedEvent(
         event, event_data, event_data_stream, event_tag)
 
-    output_text = '{0:s}\n'.format(output_text)
-    self._output_writer.Write(output_text)
+    self.WriteLine(output_text)
+
+  def WriteLine(self, text):
+    """Writes a line of text to the output file.
+
+    Args:
+      text (str): text to output.
+    """
+    self._file_object.write('{0:s}\n'.format(text))
+
+  def WriteText(self, text):
+    """Writes text to the output file.
+
+    Args:
+      text (str): text to output.
+    """
+    self._file_object.write(text)
