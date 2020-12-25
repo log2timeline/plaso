@@ -129,8 +129,8 @@ class OutputModule(object):
     return
 
 
-class LinearOutputModule(OutputModule):
-  """Linear output module."""
+class TextFileOutputModule(OutputModule):
+  """Shared functionality of an output module that writes to a text file."""
 
   def __init__(self, output_mediator, event_formatting_helper):
     """Initializes a linear output module.
@@ -140,9 +140,21 @@ class LinearOutputModule(OutputModule):
           modules and other components, such as storage and dfvfs.
       event_formatting_helper (EevntFormattingHelper): event formatting helper.
     """
-    super(LinearOutputModule, self).__init__(output_mediator)
+    super(TextFileOutputModule, self).__init__(output_mediator)
     self._event_formatting_helper = event_formatting_helper
     self._output_writer = None
+
+  def Close(self):
+    """Closes the output."""
+    self._output_writer = None
+
+  def SetOutputWriter(self, output_writer):
+    """Set the output writer.
+
+    Args:
+      output_writer (CLIOutputWriter): output writer.
+    """
+    self._output_writer = output_writer
 
   def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
@@ -158,15 +170,3 @@ class LinearOutputModule(OutputModule):
 
     output_text = '{0:s}\n'.format(output_text)
     self._output_writer.Write(output_text)
-
-  def SetOutputWriter(self, output_writer):
-    """Set the output writer.
-
-    Args:
-      output_writer (CLIOutputWriter): output writer.
-    """
-    self._output_writer = output_writer
-
-  def Close(self):
-    """Closes the output."""
-    self._output_writer = None

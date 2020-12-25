@@ -17,7 +17,7 @@ from plaso.output import manager
 from plaso.output import rawpy
 
 
-class KMLOutputModule(interface.LinearOutputModule):
+class KMLOutputModule(interface.TextFileOutputModule):
   """Output module for a Keyhole Markup Language (KML) XML file."""
 
   NAME = 'kml'

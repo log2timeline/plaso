@@ -88,7 +88,7 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     self._field_names = field_names
 
 
-class DSVOutputModule(interface.LinearOutputModule):
+class DSVOutputModule(interface.TextFileOutputModule):
   """Shared functionality for delimiter separated values output modules."""
 
   def __init__(

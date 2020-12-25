@@ -12,7 +12,7 @@ from plaso.output import manager
 from plaso.output import shared_json
 
 
-class JSONLineOutputModule(interface.LinearOutputModule):
+class JSONLineOutputModule(interface.TextFileOutputModule):
   """Output module for the JSON line format."""
 
   NAME = 'json_line'

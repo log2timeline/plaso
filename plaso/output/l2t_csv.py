@@ -205,7 +205,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
   # pylint: enable=unused-argument
 
 
-class L2TCSVOutputModule(interface.LinearOutputModule):
+class L2TCSVOutputModule(interface.TextFileOutputModule):
   """CSV format used by log2timeline, with 17 fixed fields."""
 
   NAME = 'l2tcsv'

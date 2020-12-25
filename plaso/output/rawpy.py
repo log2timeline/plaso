@@ -103,7 +103,7 @@ class NativePythonEventFormattingHelper(
     return '\n'.join(lines_of_text)
 
 
-class NativePythonOutputModule(interface.LinearOutputModule):
+class NativePythonOutputModule(interface.TextFileOutputModule):
   """Output module for native (or "raw") Python output format."""
 
   NAME = 'rawpy'
