@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The shell item event formatter."""
+"""Windows shell item custom event formatter helpers."""
 
 from __future__ import unicode_literals
 
@@ -7,26 +7,13 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a shell item file entry event."""
+class ShellItemFileEntryEventFormatter(interface.CustomEventFormatterHelper):
+  """Custom formatter for Windows shell item file entry event values."""
 
   DATA_TYPE = 'windows:shell_item:file_entry'
 
-  FORMAT_STRING_PIECES = [
-      'Name: {name}',
-      'Long name: {long_name}',
-      'Localized name: {localized_name}',
-      'NTFS file reference: {file_reference}',
-      'Shell item path: {shell_item_path}',
-      'Origin: {origin}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Name: {file_entry_name}',
-      'NTFS file reference: {file_reference}',
-      'Origin: {origin}']
-
   def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
+    """Formats event values using the helper.
 
     Args:
       event_values (dict[str, object]): event values.
@@ -36,4 +23,5 @@ class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
       event_values['file_entry_name'] = event_values.get('name', None)
 
 
-manager.FormattersManager.RegisterFormatter(ShellItemFileEntryEventFormatter)
+manager.FormattersManager.RegisterEventFormatterHelper(
+    ShellItemFileEntryEventFormatter)

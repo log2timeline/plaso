@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the file system stat event formatter."""
+"""Tests for the file system event formatters."""
 
 from __future__ import unicode_literals
 
@@ -19,18 +19,18 @@ class NTFSFileStatEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = file_system.NTFSFileStatEventFormatter()
     self.assertIsNotNone(event_formatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = file_system.NTFSFileStatEventFormatter()
+  # TODO: add test for FormatEventValues.
 
-    expected_attribute_names = [
-        'attribute_name', 'display_name', 'file_reference', 'name',
-        'parent_file_reference', 'path_hints', 'unallocated']
 
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
+class NTFSUSNChangeEventFormatter(test_lib.EventFormatterTestCase):
+  """Tests for the NTFS USN change event formatter."""
 
-  # TODO: add test for GetMessages.
+  def testInitialization(self):
+    """Tests the initialization."""
+    event_formatter = file_system.NTFSUSNChangeEventFormatter()
+    self.assertIsNotNone(event_formatter)
+
+  # TODO: add test for FormatEventValues.
 
 
 if __name__ == '__main__':

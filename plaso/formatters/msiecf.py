@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Microsoft Internet Explorer (MSIE) Cache Files (CF) event formatters."""
+"""Microsoft Internet Explorer (MSIE) custom event formatter helpers."""
 
 from __future__ import unicode_literals
 
@@ -7,21 +7,13 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class MsiecfLeakFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a MSIECF leak item event."""
+class MsiecfLeakFormatter(interface.CustomEventFormatterHelper):
+  """Custom formatter for MSIE cache file leak item event values."""
 
   DATA_TYPE = 'msiecf:leak'
 
-  FORMAT_STRING_PIECES = [
-      'Cached file: {cached_file_path}',
-      'Cached file size: {cached_file_size}',
-      '{recovered_string}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Cached file: {cached_file_path}']
-
   def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
+    """Formats event values using the helper.
 
     Args:
       event_values (dict[str, object]): event values.
@@ -33,29 +25,14 @@ class MsiecfLeakFormatter(interface.ConditionalEventFormatter):
         cached_file_path = '\\'.join([cache_directory_name, cached_file_path])
       event_values['cached_file_path'] = cached_file_path
 
-    if event_values.get('recovered', None):
-      event_values['recovered_string'] = '[Recovered Entry]'
 
-
-class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a MSIECF URL item event."""
+class MsiecfUrlFormatter(interface.CustomEventFormatterHelper):
+  """Custom formatter for MSIE cache file URL item event values."""
 
   DATA_TYPE = 'msiecf:url'
 
-  FORMAT_STRING_PIECES = [
-      'Location: {url}',
-      'Number of hits: {number_of_hits}',
-      'Cached file: {cached_file_path}',
-      'Cached file size: {cached_file_size}',
-      'HTTP headers: {http_headers}',
-      '{recovered_string}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Location: {url}',
-      'Cached file: {cached_file_path}']
-
   def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
+    """Formats event values using the helper.
 
     Args:
       event_values (dict[str, object]): event values.
@@ -71,9 +48,6 @@ class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
     if http_headers:
       event_values['http_headers'] = http_headers.replace('\r\n', ' - ')
 
-    if event_values.get('recovered', None):
-      event_values['recovered_string'] = '[Recovered Entry]'
 
-
-manager.FormattersManager.RegisterFormatters([
+manager.FormattersManager.RegisterEventFormatterHelpers([
     MsiecfLeakFormatter, MsiecfUrlFormatter])

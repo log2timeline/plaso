@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import chrome_preferences as _  # pylint: disable=unused-import
 from plaso.parsers import chrome_preferences
 
 from tests.parsers import test_lib

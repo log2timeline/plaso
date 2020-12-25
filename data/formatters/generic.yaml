@@ -182,10 +182,55 @@ message: '{filename}'
 short_message: '{filename}'
 ---
 type: 'conditional'
+data_type: 'fs:ntfs:usn_change'
+flags_helpers:
+- input_attribute: 'update_reason_flags'
+  output_attribute: 'update_reason'
+  values:
+    0x00000001: 'USN_REASON_DATA_OVERWRITE'
+    0x00000002: 'USN_REASON_DATA_EXTEND'
+    0x00000004: 'USN_REASON_DATA_TRUNCATION'
+    0x00000010: 'USN_REASON_NAMED_DATA_OVERWRITE'
+    0x00000020: 'USN_REASON_NAMED_DATA_EXTEND'
+    0x00000040: 'USN_REASON_NAMED_DATA_TRUNCATION'
+    0x00000100: 'USN_REASON_FILE_CREATE'
+    0x00000200: 'USN_REASON_FILE_DELETE'
+    0x00000400: 'USN_REASON_EA_CHANGE'
+    0x00000800: 'USN_REASON_SECURITY_CHANGE'
+    0x00001000: 'USN_REASON_RENAME_OLD_NAME'
+    0x00002000: 'USN_REASON_RENAME_NEW_NAME'
+    0x00004000: 'USN_REASON_INDEXABLE_CHANGE'
+    0x00008000: 'USN_REASON_BASIC_INFO_CHANGE'
+    0x00010000: 'USN_REASON_HARD_LINK_CHANGE'
+    0x00020000: 'USN_REASON_COMPRESSION_CHANGE'
+    0x00040000: 'USN_REASON_ENCRYPTION_CHANGE'
+    0x00080000: 'USN_REASON_OBJECT_ID_CHANGE'
+    0x00100000: 'USN_REASON_REPARSE_POINT_CHANGE'
+    0x00200000: 'USN_REASON_STREAM_CHANGE'
+    0x00400000: 'USN_REASON_TRANSACTED_CHANGE'
+    0x80000000: 'USN_REASON_CLOSE'
+- input_attribute: 'update_source_flags'
+  output_attribute: 'update_source'
+  values:
+    0x00000001: 'USN_SOURCE_DATA_MANAGEMENT'
+    0x00000002: 'USN_SOURCE_AUXILIARY_DATA'
+    0x00000004: 'USN_SOURCE_REPLICATION_MANAGEMENT'
+message:
+- '{filename}'
+- 'File reference: {file_reference}'
+- 'Parent file reference: {parent_file_reference}'
+- 'Update source: {update_source}'
+- 'Update reason: {update_reason}'
+short_message:
+- '{filename}'
+- '{file_reference}'
+- '{update_reason}'
+---
+type: 'conditional'
 data_type: 'fs:stat'
 boolean_helpers:
 - input_attribute: 'is_allocated'
-  output_attribute: 'is_allocated'
+  output_attribute: 'unallocated'
   value_if_false: 'unallocated'
 message:
 - '{display_name}'
@@ -193,6 +238,32 @@ message:
 - '({unallocated})'
 short_message:
 - '{filename}'
+---
+type: 'conditional'
+data_type: 'fs:stat:ntfs'
+boolean_helpers:
+- input_attribute: 'is_allocated'
+  output_attribute: 'unallocated'
+  value_if_false: 'unallocated'
+enumeration_helpers:
+- input_attribute: 'attribute_type'
+  output_attribute: 'attribute_name'
+  default_value: 'UNKNOWN'
+  values:
+    0x00000010: '$STANDARD_INFORMATION'
+    0x00000030: '$FILE_NAME'
+message:
+- '{display_name}'
+- 'File reference: {file_reference}'
+- 'Attribute name: {attribute_name}'
+- 'Name: {name}'
+- 'Parent file reference: {parent_file_reference}'
+- '({unallocated})'
+- 'Path hints: {path_hints}'
+short_message:
+- '{filename}'
+- '{file_reference}'
+- '{attribute_name}'
 ---
 type: 'conditional'
 data_type: 'gdrive:snapshot:cloud_entry'

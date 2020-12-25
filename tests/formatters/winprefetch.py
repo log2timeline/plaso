@@ -19,21 +19,7 @@ class WinPrefetchExecutionFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winprefetch.WinPrefetchExecutionFormatter()
     self.assertIsNotNone(event_formatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = winprefetch.WinPrefetchExecutionFormatter()
-
-    expected_attribute_names = [
-        'executable',
-        'run_count',
-        'path_hints',
-        'prefetch_hash',
-        'volumes_string']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+  # TODO: add test for FormatEventValues.
 
 
 if __name__ == '__main__':

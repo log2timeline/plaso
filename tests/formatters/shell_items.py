@@ -19,22 +19,7 @@ class ShellItemFileEntryEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = shell_items.ShellItemFileEntryEventFormatter()
     self.assertIsNotNone(event_formatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = shell_items.ShellItemFileEntryEventFormatter()
-
-    expected_attribute_names = [
-        'name',
-        'long_name',
-        'localized_name',
-        'file_reference',
-        'shell_item_path',
-        'origin']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+  # TODO: add test for FormatEventValues.
 
 
 if __name__ == '__main__':

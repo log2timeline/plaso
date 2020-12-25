@@ -21,17 +21,7 @@ class ChromeContentSettingsExceptionsFormatter(
         chrome_preferences.ChromeContentSettingsExceptionsFormatter())
     self.assertIsNotNone(event_formatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = (
-        chrome_preferences.ChromeContentSettingsExceptionsFormatter())
-
-    expected_attribute_names = ['permission', 'primary_url', 'secondary_url']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+  # TODO: add test for FormatEventValues.
 
 
 if __name__ == '__main__':

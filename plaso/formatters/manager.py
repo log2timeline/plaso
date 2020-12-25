@@ -14,6 +14,8 @@ from plaso.formatters import yaml_formatters_file
 class FormattersManager(object):
   """Class that implements the formatters manager."""
 
+  _custom_formatter_helpers = {}
+
   _formatter_classes = {}
   _formatter_objects = {}
 
@@ -35,10 +37,16 @@ class FormattersManager(object):
     """
     formatters_file = yaml_formatters_file.YAMLFormattersFile()
     for formatter in formatters_file.ReadFromFile(path):
+      data_type = formatter.DATA_TYPE.lower()
+
+      custom_formatter_helper = cls._custom_formatter_helpers.get(
+          data_type, None)
+      if custom_formatter_helper:
+        formatter.AddHelper(custom_formatter_helper)
+
       # TODO: refactor RegisterFormatter to only use formatter objects.
       cls.RegisterFormatter(formatter)
 
-      data_type = formatter.DATA_TYPE.lower()
       cls._formatter_objects[data_type] = formatter
 
       cls._formatters_from_file.append(data_type)
@@ -55,15 +63,15 @@ class FormattersManager(object):
     Raises:
       KeyError: if formatter class is not set for the corresponding data type.
     """
-    formatter_data_type = formatter_class.DATA_TYPE.lower()
-    if formatter_data_type not in cls._formatter_classes:
+    data_type = formatter_class.DATA_TYPE.lower()
+    if data_type not in cls._formatter_classes:
       raise KeyError('Formatter class not set for data type: {0:s}.'.format(
           formatter_class.DATA_TYPE))
 
-    del cls._formatter_classes[formatter_data_type]
+    del cls._formatter_classes[data_type]
 
-    if formatter_data_type in cls._formatter_objects:
-      del cls._formatter_objects[formatter_data_type]
+    if data_type in cls._formatter_objects:
+      del cls._formatter_objects[data_type]
 
   @classmethod
   def GetFormatterObject(cls, data_type):
@@ -126,6 +134,45 @@ class FormattersManager(object):
       cls._ReadFormattersFile(path)
 
   @classmethod
+  def RegisterEventFormatterHelper(cls, formatter_helper_class):
+    """Registers a custom event formatter helper.
+
+    The custom event formatter helpers are identified based on their lower
+    case data type.
+
+    Args:
+      formatter_helper_class (type): class of the custom event formatter helper.
+
+    Raises:
+      KeyError: if a custom formatter helper is already set for the
+          corresponding data type.
+    """
+    data_type = formatter_helper_class.DATA_TYPE.lower()
+    if data_type in cls._custom_formatter_helpers:
+      raise KeyError((
+          'Custom event formatter helper already set for data type: '
+          '{0:s}.').format(formatter_helper_class.DATA_TYPE))
+
+    cls._custom_formatter_helpers[data_type] = formatter_helper_class()
+
+  @classmethod
+  def RegisterEventFormatterHelpers(cls, formatter_helper_classes):
+    """Registers custom event formatter helpers.
+
+    The formatter classes are identified based on their lower case data type.
+
+    Args:
+      formatter_helper_classes (list[type]): classes of the custom event
+          formatter helpers.
+
+    Raises:
+      KeyError: if a custom formatter helper is already set for the
+          corresponding data type.
+    """
+    for formatter_helper_class in formatter_helper_classes:
+      cls.RegisterEventFormatterHelper(formatter_helper_class)
+
+  @classmethod
   def RegisterFormatter(cls, formatter_class):
     """Registers a formatter class.
 
@@ -138,28 +185,12 @@ class FormattersManager(object):
       KeyError: if formatter class is already set for the corresponding
           data type.
     """
-    formatter_data_type = formatter_class.DATA_TYPE.lower()
-    if formatter_data_type in cls._formatter_classes:
+    data_type = formatter_class.DATA_TYPE.lower()
+    if data_type in cls._formatter_classes:
       raise KeyError('Formatter class already set for data type: {0:s}.'.format(
           formatter_class.DATA_TYPE))
 
-    cls._formatter_classes[formatter_data_type] = formatter_class
-
-  @classmethod
-  def RegisterFormatters(cls, formatter_classes):
-    """Registers formatter classes.
-
-    The formatter classes are identified based on their lower case data type.
-
-    Args:
-      formatter_classes (list[type]): classes of the formatters.
-
-    Raises:
-      KeyError: if formatter class is already set for the corresponding
-          data type.
-    """
-    for formatter_class in formatter_classes:
-      cls.RegisterFormatter(formatter_class)
+    cls._formatter_classes[data_type] = formatter_class
 
   @classmethod
   def Reset(cls):
