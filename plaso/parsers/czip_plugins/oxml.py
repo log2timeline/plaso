@@ -76,8 +76,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
   NAME = 'oxml'
   DATA_FORMAT = 'OpenXML (OXML) file'
 
-  REQUIRED_PATHS = frozenset(
-      ['[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
+  REQUIRED_PATHS = frozenset([
+      '[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
 
   _PROPERTY_NAMES = {
       'creator': 'author',
@@ -91,8 +91,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       'revision': 'revision_number',
       'Words': 'number_of_words',
       'Application': 'creating_app',
-      'Shared_Doc': 'shared',
-  }
+      'Shared_Doc': 'shared'}
 
   def _GetPropertyValue(self, parser_mediator, properties, property_name):
     """Retrieves a property value.

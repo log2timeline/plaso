@@ -408,7 +408,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       database (Optional[ESEDatabase]): ESE database.
 
     Raises:
-      ValueError: If the database attribute is not valid.
+      ValueError: If the database argument is not valid.
     """
     if database is None:
       raise ValueError('Invalid database.')

@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.lib import definitions
-from plaso.parsers import czip
 from plaso.parsers.czip_plugins import oxml
 
 from tests.parsers.czip_plugins import test_lib
@@ -105,8 +104,8 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
 
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
-    parser = czip.CompoundZIPParser()
-    storage_writer = self._ParseFile(['Document.docx'], parser)
+    plugin = oxml.OpenXMLPlugin()
+    storage_writer = self._ParseZIPFileWithPlugin(['Document.docx'], plugin)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)

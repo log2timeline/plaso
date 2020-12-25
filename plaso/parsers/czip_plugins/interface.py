@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Interface for compound ZIP file plugins.
-"""
+"""Interface for compound ZIP file plugins."""
 
 from __future__ import unicode_literals
 
 import abc
 
-from plaso.lib import errors
-from plaso.parsers import logger
 from plaso.parsers import plugins
+
 
 class CompoundZIPPlugin(plugins.BasePlugin):
   """Compound ZIP parser plugin."""
@@ -21,6 +19,25 @@ class CompoundZIPPlugin(plugins.BasePlugin):
 
   NAME = 'czip_plugin'
   DATA_FORMAT = 'Compound ZIP file'
+
+  def CheckRequiredPaths(self, zip_file):
+    """Check if the ZIP file has the minimal structure required by the plugin.
+
+    Args:
+      zip_file (zipfile.ZipFile): the ZIP file. It should not be closed in
+          this method, but will be closed by the parser logic in czip.py.
+
+    Returns:
+      bool: True if the ZIP file has the minimum paths defined by the plugin,
+          or False if it does not or no required paths are defined. The
+          ZIP file can have more paths than specified by the plugin and still
+          return True.
+    """
+    if not self.REQUIRED_PATHS:
+      return False
+
+    archive_members = zip_file.namelist()
+    return set(self.REQUIRED_PATHS).issubset(archive_members)
 
   @abc.abstractmethod
   def InspectZipFile(self, parser_mediator, zip_file):
@@ -36,7 +53,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
     """
 
   # pylint: disable=arguments-differ
-  def Process(self, parser_mediator, zip_file, archive_members):
+  def Process(self, parser_mediator, zip_file=None, **kwargs):
     """Determines if this is the correct plugin; if so proceed with processing.
 
     This method checks if the ZIP file being contains the paths specified in
@@ -46,22 +63,17 @@ class CompoundZIPPlugin(plugins.BasePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      zip_file (zipfile.ZipFile): the ZIP file. It should not be closed in
-          this method, but will be closed by the parser logic in czip.py.
-      archive_members (list[str]): file paths in the archive.
+      zip_file (Optional[zipfile.ZipFile]): the ZIP file. It should not be
+          closed in this method, but will be closed by the parser logic in
+          czip.py.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
-      ValueError: if a subclass has not specified REQUIRED_PATHS.
-      WrongCompoundZIPPlugin: If this plugin is not able to process the given
-          file.
+      ValueError: If the ZIP file argument is not valid.
     """
-    if not self.REQUIRED_PATHS:
-      raise ValueError('REQUIRED_PATHS not specified')
+    if zip_file is None:
+      raise ValueError('Invalid ZIP file.')
 
-    if not set(archive_members).issuperset(self.REQUIRED_PATHS):
-      raise errors.WrongCompoundZIPPlugin(self.NAME)
-
-    logger.debug('Compound ZIP Plugin used: {0:s}'.format(self.NAME))
+    # This will raise if unhandled keyword arguments are passed.
+    super(CompoundZIPPlugin, self).Process(parser_mediator)
 
     self.InspectZipFile(parser_mediator, zip_file)
