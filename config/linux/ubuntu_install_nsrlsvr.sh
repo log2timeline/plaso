@@ -8,7 +8,7 @@ AUXILIARY_DATA_PATH="/media/auxiliary";
 set -e
 
 # Install and configure nsrlsvr
-sudo apt-get install -y curl nsrlsvr-server unzip
+sudo apt-get install -y curl net-tools nsrlsvr-server unzip
 
 sudo mkdir -p /var/share/nsrlsvr
 
@@ -42,7 +42,9 @@ then
 		unzip -x rds_modernm.zip rds_modernm/NSRLFile.txt
 	fi
 	# Build the nsrlsvr hashes.txt file
-	sudo /usr/bin/nsrlupdate rds_modernm/NSRLFile.txt
+	sudo mkdir -p /usr/share/nsrlsvr
+	sudo touch /usr/share/nsrlsvr/hashes.txt
+	sudo /usr/bin/python3 /usr/bin/nsrlupdate rds_modernm/NSRLFile.txt
 fi
 
 # For the sake of verbosity have nsrlsvr test its set up first
