@@ -16,12 +16,13 @@ from plaso.output import xlsx
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
-from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
 class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
   """Test the XLSX output module."""
+
+  # pylint: disable=protected-access
 
   _SHARED_STRINGS = 'xl/sharedStrings.xml'
   _SHEET1 = 'xl/worksheets/sheet1.xml'
@@ -113,14 +114,15 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       event, event_data, event_data_stream = (
           containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-      formatters_manager.FormattersManager.RegisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_directory_path = self._GetTestFilePath(['formatters'])
+      formatters_manager.FormattersManager._formatters = {}
+      formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+          formatters_directory_path)
 
       try:
         output_module.WriteEvent(event, event_data, event_data_stream, None)
       finally:
-        formatters_manager.FormattersManager.DeregisterFormatter(
-            formatters_test_lib.TestEventFormatter)
+        formatters_manager.FormattersManager._formatters = {}
 
       output_module.WriteFooter()
       output_module.Close()

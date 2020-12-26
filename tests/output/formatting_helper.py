@@ -14,7 +14,6 @@ from plaso.lib import definitions
 from plaso.output import formatting_helper
 
 from tests.containers import test_lib as containers_test_lib
-from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
@@ -86,15 +85,16 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       message_string = test_helper._FormatMessage(
           event, event_data, event_data_stream)
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     expected_message_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
@@ -109,15 +109,16 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       message_short_string = test_helper._FormatMessageShort(
           event, event_data, event_data_stream)
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     expected_message_short_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
@@ -132,15 +133,8 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      source_string = test_helper._FormatSource(
-          event, event_data, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+    source_string = test_helper._FormatSource(
+        event, event_data, event_data_stream)
 
     self.assertEqual(source_string, 'Test log file')
 
@@ -152,15 +146,8 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
-
-    try:
-      source_short_string = test_helper._FormatSourceShort(
-          event, event_data, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+    source_short_string = test_helper._FormatSourceShort(
+        event, event_data, event_data_stream)
 
     self.assertEqual(source_short_string, 'FILE')
 

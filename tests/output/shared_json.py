@@ -17,7 +17,6 @@ from plaso.output import shared_json
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
-from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
@@ -93,15 +92,16 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
         'username': 'root',
     }
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       json_dict = formatting_helper._WriteSerializedDict(
           event, event_data, event_data_stream, None)
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     self.assertEqual(json_dict, expected_json_dict)
 
@@ -136,15 +136,16 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         '"timestamp_desc": "Unknown Time", "username": "root"}}').format(
             expected_os_location)
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       json_string = formatting_helper.GetFormattedEvent(
           event, event_data, event_data_stream, None)
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     self.assertEqual(json_string, expected_json_string)
 

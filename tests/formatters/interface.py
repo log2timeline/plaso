@@ -18,9 +18,6 @@ class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'test:broken_conditional'
   FORMAT_STRING_PIECES = ['{too} {many} formatting placeholders']
 
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Some Text File.'
-
 
 class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
   """A test conditional event formatter."""
@@ -34,8 +31,12 @@ class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
       'Optional: {optional}',
       'Text: {text}']
 
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Some Text File.'
+
+class TestEventFormatter(interface.EventFormatter):
+  """Test event formatter."""
+
+  DATA_TYPE = 'test:event'
+  FORMAT_STRING = '{text}'
 
 
 class WrongEventFormatter(interface.EventFormatter):
@@ -43,9 +44,6 @@ class WrongEventFormatter(interface.EventFormatter):
   DATA_TYPE = 'test:wrong'
 
   FORMAT_STRING = 'This format string does not match {body}.'
-
-  SOURCE_SHORT = 'FILE'
-  SOURCE_LONG = 'Weird Log File'
 
 
 class BooleanEventFormatterHelperTest(test_lib.EventFormatterTestCase):
@@ -109,7 +107,7 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = test_lib.TestEventFormatter()
+    event_formatter = TestEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   # TODO: add tests for _FormatMessage
@@ -117,7 +115,7 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = test_lib.TestEventFormatter()
+    event_formatter = TestEventFormatter()
 
     expected_attribute_names = ['text']
 
@@ -126,7 +124,7 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessage(self):
     """Tests the GetMessage function."""
-    event_formatter = test_lib.TestEventFormatter()
+    event_formatter = TestEventFormatter()
 
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
@@ -139,7 +137,7 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessageShort(self):
     """Tests the GetMessageShort function."""
-    event_formatter = test_lib.TestEventFormatter()
+    event_formatter = TestEventFormatter()
 
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])

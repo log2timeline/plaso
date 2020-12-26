@@ -83,7 +83,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
     with io.open(test_file_path, 'r', encoding='utf-8') as file_object:
       formatters = list(test_formatters_file._ReadFromFileObject(file_object))
 
-    self.assertEqual(len(formatters), 1)
+    self.assertEqual(len(formatters), 2)
 
   def testReadFromFile(self):
     """Tests the ReadFromFile function."""
@@ -94,9 +94,10 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
 
     formatters = test_formatters_file.ReadFromFile(test_file_path)
 
-    self.assertEqual(len(formatters), 1)
+    self.assertEqual(len(formatters), 2)
 
-    self.assertEqual(formatters[0].DATA_TYPE, 'test:fs:stat')
+    self.assertEqual(formatters[0].DATA_TYPE, 'test:event')
+    self.assertEqual(formatters[1].DATA_TYPE, 'test:fs:stat')
 
 
 if __name__ == '__main__':
