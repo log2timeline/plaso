@@ -9,6 +9,8 @@ import datetime
 import locale
 import sys
 
+import pytz
+
 try:
   import resource
 except ImportError:
@@ -19,8 +21,6 @@ import plaso
 from plaso.cli import logger
 from plaso.cli import views
 from plaso.lib import errors
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class CLITool(object):

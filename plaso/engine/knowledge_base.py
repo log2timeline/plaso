@@ -11,11 +11,10 @@ from __future__ import unicode_literals
 
 import codecs
 import os
+import pytz
 
 from plaso.containers import artifacts
 from plaso.engine import logger
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class KnowledgeBase(object):

@@ -9,6 +9,8 @@ import datetime
 import os
 import textwrap
 
+import pytz
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
 # The following import makes sure the output modules are registered.
@@ -29,8 +31,6 @@ from plaso.multi_processing import psort
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import factory as storage_factory
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class PstealTool(

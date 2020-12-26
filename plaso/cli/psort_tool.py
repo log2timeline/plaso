@@ -8,6 +8,8 @@ import collections
 import os
 import time
 
+import pytz
+
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
 
@@ -31,8 +33,6 @@ from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import psort
 from plaso.storage import factory as storage_factory
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class PsortTool(

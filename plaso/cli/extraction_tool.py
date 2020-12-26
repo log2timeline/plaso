@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import os
+import pytz
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context as dfvfs_context
@@ -27,8 +28,6 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class ExtractionTool(

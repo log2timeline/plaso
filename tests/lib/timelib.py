@@ -6,9 +6,9 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.lib import timelib
+import pytz
 
-import pytz  # pylint: disable=wrong-import-order
+from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
 
