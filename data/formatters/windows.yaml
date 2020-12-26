@@ -329,6 +329,15 @@ short_message:
 - 'Origin: {key_path}'
 ---
 type: 'conditional'
+data_type: 'windows:registry:key_value'
+message:
+- '[{key_path}]'
+- '{values}'
+short_message:
+- '[{key_path}]'
+- '{values}'
+---
+type: 'conditional'
 data_type: 'windows:registry:mount_points2'
 message:
 - '[{key_path}]'

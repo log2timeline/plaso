@@ -10,7 +10,6 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.formatters import file_system  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import filestat
 
