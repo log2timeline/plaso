@@ -69,23 +69,17 @@ class WinPrefetchParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'MAM\x04', offset=0)
     return format_specification
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a Windows Prefetch file-like object.
+  def _ParseSCCAFile(self, parser_mediator, scca_file):
+    """Parses a Windows Prefetch (SCCA) file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): file-like object.
+      scca_file (pyscca.file): Windows Prefetch (SCCA) file
+
+    Raises:
+      IOError: if the Windows Prefetch (SCCA) file cannot be parsed.
     """
-    scca_file = pyscca.file()
-
-    try:
-      scca_file.open_file_object(file_object)
-    except IOError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
-      return
-
     format_version = scca_file.format_version
     executable_filename = scca_file.executable_filename
     prefetch_hash = scca_file.prefetch_hash
@@ -179,7 +173,30 @@ class WinPrefetchParser(interface.FileObjectParser):
             date_time, date_time_description)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    scca_file.close()
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Windows Prefetch file-like object.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+    """
+    scca_file = pyscca.file()
+
+    try:
+      scca_file.open_file_object(file_object)
+    except IOError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'unable to open file with error: {0!s}'.format(exception))
+      return
+
+    try:
+      self._ParseSCCAFile(parser_mediator, scca_file)
+    except IOError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'unable to parse file with error: {0!s}'.format(exception))
+    finally:
+      scca_file.close()
 
 
 manager.ParsersManager.RegisterParser(WinPrefetchParser)
