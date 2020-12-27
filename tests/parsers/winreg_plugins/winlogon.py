@@ -295,8 +295,10 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    test_event_data1 = None
-    test_event_data2 = None
+    # The order of the events is non-deterministic since they are sorted on
+    # timestamp and description only.
+    test_event1 = None
+    test_event2 = None
     for event in events:
       self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
@@ -304,10 +306,17 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
       self.assertEqual(event_data.data_type, 'windows:registry:winlogon')
 
       if event_data.application == 'VmApplet':
-        test_event_data1 = event_data
+        test_event1 = event
       elif (event_data.application == 'NavLogon' and
             event_data.trigger == 'Logoff'):
-        test_event_data2 = event_data
+        test_event2 = event
+
+    expected_event_values = {
+        'application': 'VmApplet',
+        'data_type': 'windows:registry:winlogon',
+        'timestamp': '2013-01-30 10:47:57.000000'}
+
+    self.CheckEventValues(storage_writer, test_event1, expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -316,8 +325,17 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         'Trigger: Logon').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, test_event1)
     self._TestGetMessageStrings(
-        test_event_data1, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
+
+    expected_event_values = {
+        'application': 'NavLogon',
+        'data_type': 'windows:registry:winlogon',
+        'timestamp': '2013-01-30 10:47:57.000000',
+        'trigger': 'Logoff'}
+
+    self.CheckEventValues(storage_writer, test_event2, expected_event_values)
 
     expected_message = (
         '[{0:s}\\Notify\\NavLogon] '
@@ -327,8 +345,9 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         'Trigger: Logoff').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, test_event2)
     self._TestGetMessageStrings(
-        test_event_data2, expected_message, expected_short_message)
+        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

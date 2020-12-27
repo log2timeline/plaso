@@ -60,21 +60,18 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:11:22.811068')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
     expected_value_name = 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
-    self.assertEqual(event_data.value_name, expected_value_name)
-    self.assertEqual(event_data.number_of_executions, 14)
+
+    expected_event_values = {
+        'number_of_executions': 14,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2009-08-04 15:11:22.811068',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'value_name': expected_value_name}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}\\Count] '
@@ -82,6 +79,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         'Count: 14').format(key_path, expected_value_name)
     expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -104,23 +102,20 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2010-11-10 07:49:37.078068')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
     expected_value_name = 'Microsoft.Windows.GettingStarted'
-    self.assertEqual(event_data.value_name, expected_value_name)
-    self.assertEqual(event_data.number_of_executions, 14)
-    self.assertEqual(event_data.application_focus_count, 21)
-    self.assertEqual(event_data.application_focus_duration, 420000)
+
+    expected_event_values = {
+        'application_focus_count': 21,
+        'application_focus_duration': 420000,
+        'number_of_executions': 14,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2010-11-10 07:49:37.078068',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'value_name': expected_value_name}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}\\Count] '
@@ -132,6 +127,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
             key_path, expected_value_name)
     expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
