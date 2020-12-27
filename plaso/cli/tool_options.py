@@ -8,7 +8,6 @@ from plaso.cli import logger
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.cli.helpers import profiling
-from plaso.formatters import manager as formatters_manager
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
 from plaso.output import manager as output_manager
@@ -67,47 +66,6 @@ class AnalysisPluginOptions(object):
     table_view.Write(self._output_writer)
 
 
-class FormattersOptions(object):
-  """Formatters options mix-in."""
-
-  _FORMATTERS_DIRECTORY_NAME = 'formatters'
-  _FORMATTERS_FILE_NAME = 'formatters.yaml'
-
-  # pylint: disable=no-member
-
-  def _ReadEventFormatters(self):
-    """Reads the event formatters from a formatters file or directory.
-
-    Raises:
-      BadConfigOption: if the event formatters file or directory cannot be read.
-    """
-    formatters_directory = os.path.join(
-        self._data_location, self._FORMATTERS_DIRECTORY_NAME)
-    formatters_file = os.path.join(
-        self._data_location, self._FORMATTERS_FILE_NAME)
-
-    if os.path.isdir(formatters_directory):
-      try:
-        formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-            formatters_directory)
-      except KeyError as exception:
-        raise errors.BadConfigOption((
-            'Unable to read event formatters from directory: {0:s} with error: '
-            '{1!s}').format(formatters_directory, exception))
-
-    elif os.path.isfile(formatters_file):
-      try:
-        formatters_manager.FormattersManager.ReadFormattersFromFile(
-            formatters_file)
-      except KeyError as exception:
-        raise errors.BadConfigOption((
-            'Unable to read event formatters from file: {0:s} with error: '
-            '{1!s}').format(formatters_file, exception))
-
-    else:
-      raise errors.BadConfigOption('Missing formatters file and directory.')
-
-
 class HashersOptions(object):
   """Hashers options mix-in."""
 
@@ -137,6 +95,9 @@ class OutputModuleOptions(object):
 
   # pylint: disable=no-member
 
+  _MESSAGE_FORMATTERS_DIRECTORY_NAME = 'formatters'
+  _MESSAGE_FORMATTERS_FILE_NAME = 'formatters.yaml'
+
   def __init__(self):
     """Initializes output module options."""
     super(OutputModuleOptions, self).__init__()
@@ -144,18 +105,14 @@ class OutputModuleOptions(object):
     self._output_format = None
     self._output_module = None
 
-  def _CreateOutputModule(self, options):
-    """Creates the output module.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
+  def _CreateOutputMediator(self):
+    """Creates an output mediator.
 
     Returns:
-      OutputModule: output module.
+      OutputMediator: output mediator.
 
     Raises:
-      RuntimeError: if the output module cannot be created or parameters are
-          missing while running in unattended mode.
+      RuntimeError: if the preferred language identitifier is not supported.
     """
     mediator = output_mediator.OutputMediator(
         self._knowledge_base, data_location=self._data_location,
@@ -168,6 +125,22 @@ class OutputModuleOptions(object):
 
     mediator.SetTimezone(self._output_time_zone)
 
+    return mediator
+
+  def _CreateOutputModule(self, mediator, options):
+    """Creates an output module.
+
+    Args:
+      mediator (OutputMediator): output mediator.
+      options (argparse.Namespace): command line arguments.
+
+    Returns:
+      OutputModule: output module.
+
+    Raises:
+      RuntimeError: if the output module cannot be created or parameters are
+          missing while running in unattended mode.
+    """
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
           self._output_format, mediator)
@@ -226,6 +199,40 @@ class OutputModuleOptions(object):
             'Please specific a value for {0:s}'.format(parameter))
 
       setattr(options, parameter, value)
+
+  def _ReadMessageFormatters(self, mediator):
+    """Reads the message formatters from a formatters file or directory.
+
+    Args:
+      mediator (OutputMediator): output mediator.
+
+    Raises:
+      BadConfigOption: if the message formatters file or directory cannot be
+          read.
+    """
+    formatters_directory = os.path.join(
+        self._data_location, self._MESSAGE_FORMATTERS_DIRECTORY_NAME)
+    formatters_file = os.path.join(
+        self._data_location, self._MESSAGE_FORMATTERS_FILE_NAME)
+
+    if os.path.isdir(formatters_directory):
+      try:
+        mediator.ReadMessageFormattersFromDirectory(formatters_directory)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read message formatters from directory: {0:s} with '
+            'error: {1!s}').format(formatters_directory, exception))
+
+    elif os.path.isfile(formatters_file):
+      try:
+        mediator.ReadMessageFormattersFromFile(formatters_file)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read message formatters from file: {0:s} with error: '
+            '{1!s}').format(formatters_file, exception))
+
+    else:
+      raise errors.BadConfigOption('Missing formatters file and directory.')
 
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""

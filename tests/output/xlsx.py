@@ -8,7 +8,6 @@ import zipfile
 
 from defusedxml import ElementTree
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import xlsx
 
@@ -99,10 +98,15 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteHeader function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      output_mediator = self._CreateOutputMediator()
-      output_module = xlsx.XLSXOutputModule(output_mediator)
+    output_mediator = self._CreateOutputMediator()
 
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
+    output_module = xlsx.XLSXOutputModule(output_mediator)
+
+    with shared_test_lib.TempDirectory() as temp_directory:
       xslx_file = os.path.join(temp_directory, 'xlsx.out')
 
       output_module.Open(path=xslx_file)
@@ -111,15 +115,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       event, event_data, event_data_stream = (
           containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-      formatters_directory_path = self._GetTestFilePath(['formatters'])
-      formatters_manager.FormattersManager._formatters = {}
-      formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-          formatters_directory_path)
-
-      try:
-        output_module.WriteEvent(event, event_data, event_data_stream, None)
-      finally:
-        formatters_manager.FormattersManager._formatters = {}
+      output_module.WriteEvent(event, event_data, event_data_stream, None)
 
       output_module.WriteFooter()
       output_module.Close()

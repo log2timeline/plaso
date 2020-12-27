@@ -8,7 +8,6 @@ import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import logger
@@ -175,7 +174,7 @@ class FieldFormattingHelper(object):
       WrongFormatter: if the event data cannot be formatted by the message
           formatter.
     """
-    message_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+    message_formatter = self._output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
       raise errors.NoFormatterFound((
@@ -208,7 +207,7 @@ class FieldFormattingHelper(object):
       WrongFormatter: if the event data cannot be formatted by the message
           formatter.
     """
-    message_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+    message_formatter = self._output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
       raise errors.NoFormatterFound((

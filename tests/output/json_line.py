@@ -11,7 +11,6 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import json_line
 
@@ -75,21 +74,18 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = json_line.JSONLineOutputModule(output_mediator)
     output_module._file_object = test_file_object
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      output_module.WriteEventBody(event, event_data, event_data_stream, None)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    output_module.WriteEventBody(event, event_data, event_data_stream, None)
 
     expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2012-06-27 18:17:01')
