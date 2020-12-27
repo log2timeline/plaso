@@ -26,19 +26,15 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'action_type': 1,
+        'activity_id': 48,
+        'api_name': 'browserAction.onClicked',
+        'extension_id': 'ognampngfcbddbfemdapefohjiobgbdl',
+        'timestamp': '2014-11-25 21:08:23.698737',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
 
-    self.CheckTimestamp(event.timestamp, '2014-11-25 21:08:23.698737')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_UNKNOWN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    expected_extension_id = 'ognampngfcbddbfemdapefohjiobgbdl'
-    self.assertEqual(event_data.extension_id, expected_extension_id)
-
-    self.assertEqual(event_data.action_type, 1)
-    self.assertEqual(event_data.activity_id, 48)
-    self.assertEqual(event_data.api_name, 'browserAction.onClicked')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'Chrome extension: ognampngfcbddbfemdapefohjiobgbdl '
@@ -48,6 +44,7 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
     expected_short_message = (
         'ognampngfcbddbfemdapefohjiobgbdl browserAction.onClicked')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
