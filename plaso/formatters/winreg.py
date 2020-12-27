@@ -7,10 +7,11 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class WinRegistryGenericFormatter(interface.CustomEventFormatterHelper):
-  """Custom formatter for Windows Registry key or value event values."""
+class WindowsRegistryValuesFormatterHelper(
+    interface.CustomEventFormatterHelper):
+  """Windows Registry values formatter helper."""
 
-  DATA_TYPE = 'windows:registry:key_value'
+  IDENTIFIER = 'windows_registry_values'
 
   def FormatEventValues(self, event_values):
     """Formats event values using the helper.
@@ -24,4 +25,4 @@ class WinRegistryGenericFormatter(interface.CustomEventFormatterHelper):
 
 
 manager.FormattersManager.RegisterEventFormatterHelper(
-    WinRegistryGenericFormatter)
+    WindowsRegistryValuesFormatterHelper)

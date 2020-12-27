@@ -11,26 +11,53 @@ from plaso.formatters import file_system
 from tests.formatters import test_lib
 
 
-class NTFSFileStatEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the NFTS file system stat event formatter."""
+class NTFSFileReferenceFormatterHelperTest(test_lib.EventFormatterTestCase):
+  """Tests for the NTFS file reference formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = file_system.NTFSFileStatEventFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = file_system.NTFSFileReferenceFormatterHelper()
 
-  # TODO: add test for FormatEventValues.
+    event_values = {'file_reference': 0x2000000000011 }
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['file_reference'], '17-2')
+
+    event_values = {'file_reference': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['file_reference'])
 
 
-class NTFSUSNChangeEventFormatter(test_lib.EventFormatterTestCase):
-  """Tests for the NTFS USN change event formatter."""
+class NTFSParentFileReferenceFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the NTFS parent file reference formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = file_system.NTFSUSNChangeEventFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = file_system.NTFSParentFileReferenceFormatterHelper()
 
-  # TODO: add test for FormatEventValues.
+    event_values = {'parent_file_reference': 0x2000000000011 }
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['parent_file_reference'], '17-2')
+
+    event_values = {'parent_file_reference': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['parent_file_reference'])
+
+
+class NTFSPathHintsFormatterHelper(test_lib.EventFormatterTestCase):
+  """Tests for the NTFS path hints formatter helper."""
+
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = file_system.NTFSPathHintsFormatterHelper()
+
+    event_values = {'path_hints': ['path1', 'path2']}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['path_hints'], 'path1;path2')
+
+    event_values = {'path_hints': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['path_hints'])
 
 
 if __name__ == '__main__':

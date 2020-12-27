@@ -7,10 +7,11 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class ChromePageVisitedFormatter(interface.CustomEventFormatterHelper):
-  """Custom formatter for Chrome page visited event values."""
+class ChromeHistoryTypedCountFormatterHelper(
+    interface.CustomEventFormatterHelper):
+  """Google Chrome history typed count formatter helper."""
 
-  DATA_TYPE = 'chrome:history:page_visited'
+  IDENTIFIER = 'chrome_history_typed_count'
 
   def FormatEventValues(self, event_values):
     """Formats event values using the helper.
@@ -18,16 +19,19 @@ class ChromePageVisitedFormatter(interface.CustomEventFormatterHelper):
     Args:
       event_values (dict[str, object]): event values.
     """
-    typed_count = event_values.get('typed_count', 0)
-    if typed_count == 0:
-      url_typed_string = '(URL not typed directly)'
-    elif typed_count == 1:
-      url_typed_string = '(URL typed {0:d} time)'
-    else:
-      url_typed_string = '(URL typed {0:d} times)'
+    typed_count = event_values.get('typed_count', None)
+    if typed_count is not None:
+      if typed_count == 0:
+        url_typed_string = '(URL not typed directly)'
+      elif typed_count == 1:
+        url_typed_string = '(URL typed 1 time)'
+      elif typed_count > 1:
+        url_typed_string = '(URL typed {0:d} times)'.format(typed_count)
+      else:
+        url_typed_string = typed_count
 
-    event_values['url_typed_string'] = url_typed_string
+      event_values['url_typed_string'] = url_typed_string
 
 
 manager.FormattersManager.RegisterEventFormatterHelper(
-    ChromePageVisitedFormatter)
+    ChromeHistoryTypedCountFormatterHelper)

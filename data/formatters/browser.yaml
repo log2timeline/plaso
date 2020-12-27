@@ -76,6 +76,9 @@ boolean_helpers:
 - input_attribute: 'url_hidden'
   output_attribute: 'url_hidden_string'
   value_if_true: '(URL hidden)'
+custom_helpers:
+- identifier: 'chrome_history_typed_count'
+  output_attribute: 'url_typed_string'
 enumeration_helpers:
 - input_attribute: 'page_transition_type'
   output_attribute: 'page_transition'
@@ -126,6 +129,11 @@ short_message:
 ---
 type: 'conditional'
 data_type: 'chrome:preferences:content_settings:exceptions'
+custom_helpers:
+- identifier: 'chrome_preferences_primary_url'
+  output_attribute: 'primary_url'
+- identifier: 'chrome_preferences_secondary_url'
+  output_attribute: 'secondary_url'
 message:
 - 'Permission {permission}'
 - 'used by {primary_url}'
@@ -253,6 +261,11 @@ short_message: '{title}'
 ---
 type: 'conditional'
 data_type: 'firefox:places:page_visited'
+custom_helpers:
+- identifier: 'firefox_history_typed_count'
+  output_attribute: 'url_typed_string'
+- identifier: 'firefox_history_url_hidden'
+  output_attribute: 'url_hidden_string'
 enumeration_helpers:
 - input_attribute: 'visit_type'
   output_attribute: 'transition_string'
@@ -290,6 +303,9 @@ boolean_helpers:
 - input_attribute: 'recovered'
   output_attribute: 'recovered_string'
   value_if_true: '[Recovered Entry]'
+custom_helpers:
+- identifier: 'msiecf_cached_path'
+  output_attribute: 'cached_file_path'
 message:
 - 'Cached file: {cached_file_path}'
 - 'Cached file size: {cached_file_size}'
@@ -315,6 +331,11 @@ boolean_helpers:
 - input_attribute: 'recovered'
   output_attribute: 'recovered_string'
   value_if_true: '[Recovered Entry]'
+custom_helpers:
+- identifier: 'msiecf_cached_path'
+  output_attribute: 'cached_file_path'
+- identifier: 'msiecf_http_headers'
+  output_attribute: 'http_headers'
 message:
 - 'Location: {url}'
 - 'Number of hits: {number_of_hits}'

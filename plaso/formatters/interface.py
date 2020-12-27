@@ -81,6 +81,7 @@ class CustomEventFormatterHelper(EventFormatterHelper):
   """Base class for a helper for custom formatting of event data."""
 
   DATA_TYPE = ''
+  IDENTIFIER = ''
 
   @abc.abstractmethod
   def FormatEventValues(self, event_values):
@@ -195,6 +196,7 @@ class EventFormatter(object):
   event object attribute is defined as {attribute_name}.
 
   Attributes:
+    custom_helpers (list[str]): identifiers of custom event formatter helpers.
     helpers (list[EventFormatterHelper]): event formatter helpers.
   """
 
@@ -208,10 +210,6 @@ class EventFormatter(object):
   FORMAT_STRING = ''
   FORMAT_STRING_SHORT = ''
 
-  # The source short and long strings.
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = ''
-
   # The format string can be defined as:
   # {name}, {name:format}, {name!conversion}, {name!conversion:format}
   _FORMAT_STRING_ATTRIBUTE_NAME_RE = re.compile(
@@ -221,6 +219,7 @@ class EventFormatter(object):
     """Initializes an event formatter object."""
     super(EventFormatter, self).__init__()
     self._format_string_attribute_names = None
+    self.custom_helpers = []
     self.helpers = []
 
   def _FormatMessage(self, format_string, event_values):
@@ -308,6 +307,20 @@ class EventFormatter(object):
               self.FORMAT_STRING))
 
     return set(self._format_string_attribute_names)
+
+  # pylint: disable=unused-argument
+  def AddCustomHelper(
+      self, identifier, input_attribute=None, output_attribute=None):
+    """Adds a custom event formatter helper.
+
+    Args:
+      identifier (str): identifier.
+      input_attribute (Optional[str]): name of the attribute that contains
+          the input value.
+      output_attribute (Optional[str]): name of the attribute where the
+          output value should be stored.
+    """
+    self.custom_helpers.append(identifier)
 
   def AddHelper(self, helper):
     """Adds an event formatter helper.

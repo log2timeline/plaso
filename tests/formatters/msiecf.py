@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the MSIECF event formatters."""
+"""Tests for the MSIE cache file custom event formatter helpers."""
 
 from __future__ import unicode_literals
 
@@ -11,26 +11,46 @@ from plaso.formatters import msiecf
 from tests.formatters import test_lib
 
 
-class MsiecfLeakFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the MSIECF leak item event formatter."""
+class MSIECFCachedPathFormatterHelperTest(test_lib.EventFormatterTestCase):
+  """Tests for the MSIE cache file cached path formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = msiecf.MsiecfLeakFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = msiecf.MSIECFCachedPathFormatterHelper()
 
-  # TODO: add test for FormatEventValues.
+    event_values = {
+        'cached_filename': 'file',
+        'cache_directory_name': 'directory'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['cached_file_path'], 'directory\\file')
+
+    event_values = {
+        'cached_filename': 'file',
+        'cache_directory_name': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['cached_file_path'], 'file')
+
+    event_values = {
+        'cached_filename': None,
+        'cache_directory_name': 'directory'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertNotIn('cached_file_path', event_values)
 
 
-class MsiecfUrlFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the MSIECF URL item event formatter."""
+class MSIECFHTTPHeadersventFormatterHelperTest(test_lib.EventFormatterTestCase):
+  """Tests for the MSIE cache file HTTP headers formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = msiecf.MsiecfUrlFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = msiecf.MSIECFHTTPHeadersventFormatterHelper()
 
-  # TODO: add test for FormatEventValues.
+    event_values = {'http_headers': 'header1\r\nheader2'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['http_headers'], 'header1 - header2')
+
+    event_values = {'http_headers': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['http_headers'])
 
 
 if __name__ == '__main__':

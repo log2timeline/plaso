@@ -11,17 +11,61 @@ from plaso.formatters import chrome_preferences
 from tests.formatters import test_lib
 
 
-class ChromeContentSettingsExceptionsFormatter(
+class ChromePreferencesPrimaryURLFormatterHelperTest(
     test_lib.EventFormatterTestCase):
-  """Tests for the Chrome extension installation event formatter."""
+  """Tests for the Google Chrome preferences primary URL formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = (
-        chrome_preferences.ChromeContentSettingsExceptionsFormatter())
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = (
+        chrome_preferences.ChromePreferencesPrimaryURLFormatterHelper())
 
-  # TODO: add test for FormatEventValues.
+    event_values = {'primary_url': 'https://example.com'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['primary_url'], 'https://example.com')
+
+    event_values = {'primary_url': ''}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['primary_url'], 'local file')
+
+    event_values = {'primary_url': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['primary_url'])
+
+
+class ChromePreferencesSecondaryURLFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Google Chrome preferences secondary URL formatter helper."""
+
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = (
+        chrome_preferences.ChromePreferencesSecondaryURLFormatterHelper())
+
+    event_values = {
+        'primary_url': 'https://example.com',
+        'secondary_url': 'https://anotherexample.com'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(
+        event_values['secondary_url'], 'https://anotherexample.com')
+
+    event_values = {
+        'primary_url': 'https://example.com',
+        'secondary_url': 'https://example.com'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['secondary_url'])
+
+    event_values = {
+        'primary_url': 'https://example.com',
+        'secondary_url': ''}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['secondary_url'], 'local file')
+
+    event_values = {
+        'primary_url': 'https://example.com',
+        'secondary_url': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['secondary_url'])
 
 
 if __name__ == '__main__':

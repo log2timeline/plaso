@@ -11,15 +11,67 @@ from plaso.formatters import winprefetch
 from tests.formatters import test_lib
 
 
-class WinPrefetchExecutionFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Windows Prefetch execution event formatter."""
+class WindowsPrefetchPathHintsFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Windows Prefetch path hints formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = winprefetch.WinPrefetchExecutionFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = winprefetch.WindowsPrefetchPathHintsFormatterHelper()
 
-  # TODO: add test for FormatEventValues.
+    event_values = {'path_hints': ['path1', 'path2']}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['path_hints'], 'path1; path2')
+
+    event_values = {'path_hints': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['path_hints'])
+
+
+class WindowsPrefetchVolumesStringFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Windows Prefetch volumes string formatter helper."""
+
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = winprefetch.WindowsPrefetchVolumesStringFormatterHelper()
+
+    expected_volumes_string = (
+        'volume: 1 [serial number: 0x12345678, device path: device1]')
+
+    event_values = {
+        'number_of_volumes': 1,
+        'volume_device_paths': ['device1'],
+        'volume_serial_numbers': [0x12345678]}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['volumes_string'], expected_volumes_string)
+
+    expected_volumes_string = (
+        'volume: 1 [serial number: UNKNOWN, device path: device1]')
+
+    event_values = {
+        'number_of_volumes': 1,
+        'volume_device_paths': ['device1'],
+        'volume_serial_numbers': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['volumes_string'], expected_volumes_string)
+
+    expected_volumes_string = (
+        'volume: 1 [serial number: 0x12345678, device path: UNKNOWN]')
+
+    event_values = {
+        'number_of_volumes': 1,
+        'volume_device_paths': None,
+        'volume_serial_numbers': [0x12345678]}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['volumes_string'], expected_volumes_string)
+
+    event_values = {
+        'number_of_volumes': 0,
+        'volume_device_paths': None,
+        'volume_serial_numbers': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertNotIn('volumes_string', event_values)
 
 
 if __name__ == '__main__':

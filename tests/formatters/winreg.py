@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Registry key or value event formatter."""
+"""Tests for the Windows Registry custom event formatter helpers."""
 
 from __future__ import unicode_literals
 
@@ -11,15 +11,21 @@ from plaso.formatters import winreg
 from tests.formatters import test_lib
 
 
-class WinRegistryGenericFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Windows Registry key or value event formatter."""
+class WindowsRegistryValuesFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Windows Registry values formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = winreg.WinRegistryGenericFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = winreg.WindowsRegistryValuesFormatterHelper()
 
-  # TODO: add test for FormatEventValues.
+    event_values = {'values': 'value1, value2'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['values'], 'value1, value2')
+
+    event_values = {'values': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['values'], '(empty)')
 
 
 if __name__ == '__main__':

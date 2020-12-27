@@ -7,10 +7,11 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class ShellItemFileEntryEventFormatter(interface.CustomEventFormatterHelper):
-  """Custom formatter for Windows shell item file entry event values."""
+class ShellItemFileEntryNameFormatterHelper(
+    interface.CustomEventFormatterHelper):
+  """Windows shell item file entry formatter helper."""
 
-  DATA_TYPE = 'windows:shell_item:file_entry'
+  IDENTIFIER = 'shell_item_file_entry_name'
 
   def FormatEventValues(self, event_values):
     """Formats event values using the helper.
@@ -24,4 +25,4 @@ class ShellItemFileEntryEventFormatter(interface.CustomEventFormatterHelper):
 
 
 manager.FormattersManager.RegisterEventFormatterHelper(
-    ShellItemFileEntryEventFormatter)
+    ShellItemFileEntryNameFormatterHelper)

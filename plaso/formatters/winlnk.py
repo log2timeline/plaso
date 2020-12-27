@@ -7,10 +7,11 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class WinLnkLinkFormatter(interface.CustomEventFormatterHelper):
-  """Custom formatter for Windows Shortcut (LNK) link event values."""
+class WindowsShortcutLinkedPathFormatterHelper(
+    interface.CustomEventFormatterHelper):
+  """Windows Shortcut (LNK) linked path formatter helper."""
 
-  DATA_TYPE = 'windows:lnk:link'
+  IDENTIFIER = 'windows_shortcut_linked_path'
 
   def FormatEventValues(self, event_values):
     """Formats event values using the helper.
@@ -18,9 +19,6 @@ class WinLnkLinkFormatter(interface.CustomEventFormatterHelper):
     Args:
       event_values (dict[str, object]): event values.
     """
-    if 'description' not in event_values:
-      event_values['description'] = 'Empty description'
-
     linked_path = event_values.get('local_path', None)
     if not linked_path:
       linked_path = event_values.get('network_path', None)
@@ -35,4 +33,5 @@ class WinLnkLinkFormatter(interface.CustomEventFormatterHelper):
     event_values['linked_path'] = linked_path or 'Unknown'
 
 
-manager.FormattersManager.RegisterEventFormatterHelper(WinLnkLinkFormatter)
+manager.FormattersManager.RegisterEventFormatterHelper(
+    WindowsShortcutLinkedPathFormatterHelper)
