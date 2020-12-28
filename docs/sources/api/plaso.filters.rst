@@ -44,14 +44,6 @@ plaso.filters.filters module
    :undoc-members:
    :show-inheritance:
 
-plaso.filters.interface module
-------------------------------
-
-.. automodule:: plaso.filters.interface
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.filters.parser\_filter module
 -----------------------------------
 

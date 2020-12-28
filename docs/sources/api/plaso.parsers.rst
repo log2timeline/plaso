@@ -581,10 +581,10 @@ plaso.parsers.winprefetch module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.winreg module
----------------------------
+plaso.parsers.winreg\_parser module
+-----------------------------------
 
-.. automodule:: plaso.parsers.winreg
+.. automodule:: plaso.parsers.winreg_parser
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,21 +1,22 @@
 environment:
   matrix:
-  - DESCRIPTION: "Windows with 32-bit Python 3.8"
+  - DESCRIPTION: "Windows with 32-bit Python 3.9"
     MACHINE_TYPE: "x86"
-    PYTHON: "C:\\Python38"
-    PYTHON_VERSION: "3.8"
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    PYTHON: "C:\\Python39"
+    PYTHON_VERSION: "3.9"
     L2TBINARIES_TRACK: "dev"
-  - DESCRIPTION: "Windows with 64-bit Python 3.8"
+  - DESCRIPTION: "Windows with 64-bit Python 3.9"
     MACHINE_TYPE: "amd64"
-    PYTHON: "C:\\Python38-x64"
-    PYTHON_VERSION: "3.8"
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    PYTHON: "C:\\Python39-x64"
+    PYTHON_VERSION: "3.9"
     L2TBINARIES_TRACK: "dev"
-  - DESCRIPTION: "Mac OS with Python 3.8"
+  - DESCRIPTION: "Mac OS with Python 3.9"
     APPVEYOR_BUILD_WORKER_IMAGE: macos
     HOMEBREW_NO_INSTALL_CLEANUP: 1
 
 install:
-- cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
 - cmd: "%PYTHON%\\python.exe -m pip install -U pip setuptools wheel"
 - cmd: "%PYTHON%\\python.exe -m pip install pywin32 WMI"
 - cmd: "%PYTHON%\\python.exe %PYTHON%\\Scripts\\pywin32_postinstall.py -install"
