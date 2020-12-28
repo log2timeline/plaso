@@ -4,14 +4,6 @@ plaso.formatters package
 Submodules
 ----------
 
-plaso.formatters.asl module
----------------------------
-
-.. automodule:: plaso.formatters.asl
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.formatters.chrome module
 ------------------------------
 
@@ -52,14 +44,6 @@ plaso.formatters.firefox module
    :undoc-members:
    :show-inheritance:
 
-plaso.formatters.gdrive module
-------------------------------
-
-.. automodule:: plaso.formatters.gdrive
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.formatters.interface module
 ---------------------------------
 
@@ -84,14 +68,6 @@ plaso.formatters.manager module
    :undoc-members:
    :show-inheritance:
 
-plaso.formatters.mediator module
---------------------------------
-
-.. automodule:: plaso.formatters.mediator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.formatters.msiecf module
 ------------------------------
 
@@ -100,34 +76,10 @@ plaso.formatters.msiecf module
    :undoc-members:
    :show-inheritance:
 
-plaso.formatters.olecf module
------------------------------
-
-.. automodule:: plaso.formatters.olecf
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.formatters.safari\_cookies module
----------------------------------------
-
-.. automodule:: plaso.formatters.safari_cookies
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.formatters.shell\_items module
 ------------------------------------
 
 .. automodule:: plaso.formatters.shell_items
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.formatters.tango\_android module
---------------------------------------
-
-.. automodule:: plaso.formatters.tango_android
    :members:
    :undoc-members:
    :show-inheritance:
