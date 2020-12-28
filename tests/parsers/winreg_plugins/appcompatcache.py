@@ -397,22 +397,23 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 9
-    event = events[event_index]
-
-    self.CheckTimestamp(event.timestamp, '2012-04-04 01:46:37.932964')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
     expected_path = '\\??\\C:\\Windows\\PSEXESVC.EXE'
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
+
+    expected_event_values = {
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-04-04 01:46:37.932964'}
+
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
+
+    expected_message = (
+        '[{0:s}] '
+        'Cached entry: 10 '
+        'Path: {1:s}').format(key_path, expected_path)
     expected_short_message = 'Path: {0:s}'.format(expected_path)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[9])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

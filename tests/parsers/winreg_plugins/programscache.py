@@ -52,16 +52,13 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     events = list(storage_writer.GetEvents())
 
     # The ProgramsCache entry shell item event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:shell_item:file_entry',
+        'parser': 'explorer_programscache/shell_items',
+        'timestamp': '2009-08-04 15:12:24.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:12:24.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.parser, 'explorer_programscache/shell_items')
-    self.assertEqual(event_data.data_type, 'windows:shell_item:file_entry')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'Name: Programs '
@@ -74,21 +71,18 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
         'CurrentVe...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # The ProgramsCache list event.
-    event = events[75]
+    expected_event_values = {
+        'data_type': 'windows:registry:explorer:programcache',
+        'parser': 'explorer_programscache',
+        'timestamp': '2009-08-04 15:22:18.419625',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:22:18.419625')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.parser, 'explorer_programscache')
-    self.assertEqual(
-        event_data.data_type, 'windows:registry:explorer:programcache')
+    self.CheckEventValues(storage_writer, events[75], expected_event_values)
 
     expected_message = (
         'Key: {0:s} '
@@ -116,20 +110,18 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         '19: Internet Explorer (No Add-ons).lnk]').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[75])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # The Windows Registry key event.
-    event = events[76]
+    expected_event_values = {
+        'data_type': 'windows:registry:key_value',
+        'parser': 'explorer_programscache',
+        'timestamp': '2009-08-04 15:22:18.419625',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:22:18.419625')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.parser, 'explorer_programscache')
-    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
+    self.CheckEventValues(storage_writer, events[76], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -140,6 +132,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'StartMenu_Start_Time: [REG_BINARY] (8 bytes)').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[76])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -162,16 +155,13 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:shell_item:file_entry',
+        'parser': 'explorer_programscache/shell_items',
+        'timestamp': '2010-11-10 07:50:38.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 07:50:38.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.parser, 'explorer_programscache/shell_items')
-    self.assertEqual(event_data.data_type, 'windows:shell_item:file_entry')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':
