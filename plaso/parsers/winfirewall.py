@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import pytz
+
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -13,8 +15,6 @@ from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import text_parser
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class WinFirewallEventData(events.EventData):
