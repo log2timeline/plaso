@@ -24,9 +24,10 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[12]
+    expected_event_values = {
+        'timestamp': '2016-06-10 14:24:19.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2016-06-10 14:24:19.000000')
+    self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
     expected_message = (
         '[pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", '
@@ -34,8 +35,7 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
         '49283 bytes, 931.38Kbyte/sec')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
+    event_data = self._GetEventDataOfEvent(storage_writer, events[12])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -49,9 +49,10 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[12]
+    expected_event_values = {
+        'timestamp': '2016-06-10 12:24:19.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2016-06-10 12:24:19.000000')
+    self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
 
 if __name__ == '__main__':

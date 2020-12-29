@@ -32,13 +32,11 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2011-07-27 06:41:47.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2011-07-27 06:41:47.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event = events[1]
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Event number      : 1392
     # Creation time     : Jul 27, 2011 06:41:47 UTC
@@ -54,25 +52,23 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #                     security. Please ensure that you can contact the
     #                     server that authenticated you.\r\n (0xc0000388)"
 
-    self.CheckTimestamp(event.timestamp, '2011-07-27 06:41:47.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.record_number, 1392)
-    self.assertEqual(event_data.event_type, 2)
-    self.assertEqual(event_data.computer_name, 'WKS-WINXP32BIT')
-    self.assertEqual(event_data.source_name, 'LSASRV')
-    self.assertEqual(event_data.event_category, 3)
-    self.assertEqual(event_data.event_identifier, 40961)
-    self.assertEqual(event_data.strings[0], 'cifs/CONTROLLER')
-
-    expected_string = (
+    expected_string2 = (
         '"The system detected a possible attempt to compromise security. '
         'Please ensure that you can contact the server that authenticated you.'
         '\r\n (0xc0000388)"')
 
-    self.assertEqual(event_data.strings[1], expected_string)
+    expected_event_values = {
+        'computer_name': 'WKS-WINXP32BIT',
+        'event_category': 3,
+        'event_identifier': 40961,
+        'event_type': 2,
+        'record_number': 1392,
+        'source_name': 'LSASRV',
+        'strings': ['cifs/CONTROLLER', expected_string2],
+        'timestamp': '2011-07-27 06:41:47.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         '[40961 / 0xa001] '
@@ -86,12 +82,12 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         'Record Number: 1392 '
         'Event Type: Information event '
         'Event Category: 3')
-
     expected_short_message = (
         '[40961 / 0xa001] '
         'Strings: [\'cifs/CONTROLLER\', '
         '\'"The system detected a possibl...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

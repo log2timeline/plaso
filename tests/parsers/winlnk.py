@@ -36,41 +36,33 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # A shortcut event.
-    event = events[0]
+    # A last accessed shortcut event.
+    expected_event_values = {
+        'data_type': 'windows:lnk:link',
+        'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
+        'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
+        'icon_location': '%windir%\\system32\\migwiz\\migwiz.exe',
+        'relative_path': '.\\migwiz\\migwiz.exe',
+        'timestamp': '2009-07-13 23:29:02.849131',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+        'working_directory': '%windir%\\system32\\migwiz'}
 
-    # The last accessed timestamp.
-    self.CheckTimestamp(event.timestamp, '2009-07-13 23:29:02.849131')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:lnk:link')
-    self.assertEqual(
-        event_data.description, '@%windir%\\system32\\migwiz\\wet.dll,-590')
-    self.assertEqual(event_data.relative_path, '.\\migwiz\\migwiz.exe')
-    self.assertEqual(event_data.working_directory, '%windir%\\system32\\migwiz')
-    self.assertEqual(
-        event_data.icon_location, '%windir%\\system32\\migwiz\\migwiz.exe')
-    self.assertEqual(
-        event_data.env_var_location, '%windir%\\system32\\migwiz\\migwiz.exe')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # The creation timestamp.
-    event = events[1]
+    expected_event_values = {
+        'timestamp': '2009-07-13 23:29:02.849131',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2009-07-13 23:29:02.849131')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    # The last modification timestamp.
-    event = events[2]
+    # A last modification shortcut event.
+    expected_event_values = {
+        'data_type': 'windows:lnk:link',
+        'timestamp': '2009-07-14 01:39:18.220000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2009-07-14 01:39:18.220000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:lnk:link')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         '[@%windir%\\system32\\migwiz\\wet.dll,-590] '
@@ -80,26 +72,22 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'Relative path: .\\migwiz\\migwiz.exe '
         'Working dir: %windir%\\system32\\migwiz '
         'Icon location: %windir%\\system32\\migwiz\\migwiz.exe')
-
     expected_short_message = (
         '[@%windir%\\system32\\migwiz\\wet.dll,-590] '
         '%windir%\\system32\\migwiz\\.\\migwiz\\mi...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # A distributed link tracking event.
-    event = events[4]
+    expected_event_values = {
+        'mac_address': '00:1d:09:fa:5a:1c',
+        'timestamp': '2009-07-14 05:45:20.500012',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'uuid': '846ee3bb-7039-11de-9d20-001d09fa5a1c'}
 
-    self.CheckTimestamp(event.timestamp, '2009-07-14 05:45:20.500012')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_uuid = '846ee3bb-7039-11de-9d20-001d09fa5a1c'
-    self.assertEqual(event_data.uuid, expected_uuid)
-    self.assertEqual(event_data.mac_address, '00:1d:09:fa:5a:1c')
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
@@ -112,10 +100,6 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # A shortcut event.
-    event = events[16]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
     expected_message = (
         '[Nero InfoTool provides you with information about the most '
         'important features of installed drives, inserted discs, installed '
@@ -136,20 +120,19 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'InfoTool.exe '
         'Link target: <My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
         'Nero InfoTool\\InfoTool.exe')
-
     expected_short_message = (
         '[Nero InfoTool provides you with information about the most '
         'important feature...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[16])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # A shell item event.
-    event = events[12]
+    expected_event_values = {
+        'timestamp': '2009-06-05 20:13:20.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2009-06-05 20:13:20.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
     expected_message = (
         'Name: InfoTool.exe '
@@ -158,12 +141,12 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'Shell item path: <My Computer> C:\\Program Files (x86)\\Nero\\'
         'Nero 9\\Nero InfoTool\\InfoTool.exe '
         'Origin: NeroInfoTool.lnk')
-
     expected_short_message = (
         'Name: InfoTool.exe '
         'NTFS file reference: 81349-1 '
         'Origin: NeroInfoTool.lnk')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[12])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
