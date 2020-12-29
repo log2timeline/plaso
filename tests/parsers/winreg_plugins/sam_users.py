@@ -41,18 +41,15 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'account_rid': 500,
+        'data_type': 'windows:registry:sam_users',
+        'login_count': 6,
+        'timestamp': '2014-09-24 03:36:06.358837',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+        'username': 'Administrator'}
 
-    self.CheckTimestamp(event.timestamp, '2014-09-24 03:36:06.358837')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:sam_users')
-    self.assertEqual(event_data.account_rid, 500)
-    self.assertEqual(event_data.login_count, 6)
-    self.assertEqual(event_data.username, 'Administrator')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -65,19 +62,17 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'RID: 500 '
         'Login count: 6')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Test SAMUsersWindowsRegistryEvent.
-    event = events[1]
+    expected_event_values = {
+        'data_type': 'windows:registry:sam_users',
+        'timestamp': '2010-11-20 21:48:12.569244',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_LOGIN}
 
-    self.CheckTimestamp(event.timestamp, '2010-11-20 21:48:12.569244')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_LOGIN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:sam_users')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -90,6 +85,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'RID: 500 '
         'Login count: 6')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

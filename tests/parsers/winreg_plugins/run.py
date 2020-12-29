@@ -74,26 +74,23 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:run',
+        'entries': (
+            'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun'),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-04-05 17:03:53.992062'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:run')
-
-    expected_entries = (
-        'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun')
-    self.assertEqual(event_data.entries, expected_entries)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
         '/autoRun').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -116,26 +113,23 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:run',
+        'entries': (
+            'mctadmin: C:\\Windows\\System32\\mctadmin.exe'),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-04-05 17:03:53.992062'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:run')
-
-    expected_entries = (
-        'mctadmin: C:\\Windows\\System32\\mctadmin.exe')
-    self.assertEqual(event_data.entries, expected_entries)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
             key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -157,23 +151,20 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:run',
+        'entries': (
+            'McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\'
+            'McAfee\\Host Intrusion Prevention\\FireTray.exe" VMware Tools: '
+            '"C:\\Program Files\\VMware\\VMware Tools\\VMwareTray.exe" VMware '
+            'User Process: "C:\\Program Files\\VMware\\VMware Tools\\'
+            'VMwareUser.exe"'),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2011-09-16 20:57:09.067576'}
 
-    self.CheckTimestamp(event.timestamp, '2011-09-16 20:57:09.067576')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:run')
-
-    expected_entries = (
-        'McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\McAfee\\'
-        'Host Intrusion Prevention\\FireTray.exe" VMware Tools: "C:\\Program '
-        'Files\\VMware\\VMware Tools\\VMwareTray.exe" VMware User Process: '
-        '"C:\\Program Files\\VMware\\VMware Tools\\VMwareUser.exe"')
-    self.assertEqual(event_data.entries, expected_entries)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -185,6 +176,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         'VMwareUser.exe"').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -207,26 +199,23 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:run',
+        'entries': (
+            '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq'),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-04-06 14:07:27.750000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-06 14:07:27.750000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:run')
-
-    expected_entries = (
-        '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq')
-    self.assertEqual(event_data.entries, expected_entries)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
         '-k -rq').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

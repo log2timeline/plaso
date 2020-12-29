@@ -131,12 +131,11 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:timezone',
+        'timestamp': '2013-01-30 10:47:57.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:registry:timezone')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -150,6 +149,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'TimeZoneKeyName: W. Europe Standard Time').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -172,12 +172,11 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:timezone',
+        'timestamp': '2012-03-11 07:00:00.000642'}
 
-    self.CheckTimestamp(event.timestamp, '2012-03-11 07:00:00.000642')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:registry:timezone')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -191,6 +190,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'TimeZoneKeyName: Eastern Standard Time').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

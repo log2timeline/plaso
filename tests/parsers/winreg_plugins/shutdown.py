@@ -41,25 +41,22 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-04-04 01:58:40.839250',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_SHUTDOWN,
+        'value_name': 'ShutdownTime'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-04 01:58:40.839250')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_SHUTDOWN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
-    self.assertEqual(event_data.value_name, 'ShutdownTime')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
         'Description: ShutdownTime').format(key_path)
     expected_short_message = 'ShutdownTime'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
