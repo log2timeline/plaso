@@ -66,50 +66,63 @@ class EventFilterExpressionParser(object):
     (name contains "Program Files" AND hash.md5 is "123abc")
     @imported_modules (num_symbols = 14 AND symbol.name is "FindWindow")
   """
-  _CONTINUE_STATE = 'CONTINUE'
-  _INITIAL_STATE = 'INITIAL'
-
   _OPERATORS_WITH_NEGATION = frozenset(['contains', 'equals', 'inset', 'is'])
+
+  _STATE_ARGUMENT = 'ARGUMENT'
+  _STATE_ATTRIBUTE = 'ATTRIBUTE'
+  _STATE_BINARY_OPERATOR = 'BINARY'
+  _STATE_NEGATION_OPERATOR = 'CHECKNOT'
+  _STATE_CONTINUE = 'CONTINUE'
+  _STATE_INITIAL = 'INITIAL'
+  _STATE_OPERATOR = 'OPERATOR'
+  _STATE_STRING_DOUBLE_QUOTE = 'STRING_DOUBLE_QUOTE'
+  _STATE_STRING_SINGLE_QUOTE = 'STRING_SINGLE_QUOTE'
 
   _TOKENS = [
       # Operators and related tokens
-      Token('INITIAL', r'[^\s\(\)]', '_PushState,_PushBack', 'ATTRIBUTE'),
-      Token('INITIAL', r'\(', '_PushState,_AddBracketOpen', None),
-      Token('INITIAL', r'\)', '_AddBracketClose', 'BINARY'),
+      Token(_STATE_INITIAL, r'[^\s\(\)]', '_PushState,_PushBack',
+            _STATE_ATTRIBUTE),
+      Token(_STATE_INITIAL, r'\(', '_PushState,_AddBracketOpen', None),
+      Token(_STATE_INITIAL, r'\)', '_AddBracketClose', _STATE_BINARY_OPERATOR),
 
       # Double quoted string
-      Token('STRING', '"', '_PopState,_StringFinish', None),
-      Token('STRING', r'\\x(..)', 'HexEscape', None),
-      Token('STRING', r'\\(.)', '_StringEscape', None),
-      Token('STRING', r'[^\\"]+', '_StringInsert', None),
+      Token(_STATE_STRING_DOUBLE_QUOTE, '"', '_PopState,_StringFinish', None),
+      Token(_STATE_STRING_DOUBLE_QUOTE, r'\\x(..)', 'HexEscape', None),
+      Token(_STATE_STRING_DOUBLE_QUOTE, r'\\(.)', '_StringEscape', None),
+      Token(_STATE_STRING_DOUBLE_QUOTE, r'[^\\"]+', '_StringInsert', None),
 
       # Single quoted string
-      Token('SQ_STRING', '\'', '_PopState,_StringFinish', None),
-      Token('SQ_STRING', r'\\x(..)', 'HexEscape', None),
-      Token('SQ_STRING', r'\\(.)', '_StringEscape', None),
-      Token('SQ_STRING', r'[^\\\']+', '_StringInsert', None),
+      Token(_STATE_STRING_SINGLE_QUOTE, '\'', '_PopState,_StringFinish', None),
+      Token(_STATE_STRING_SINGLE_QUOTE, r'\\x(..)', 'HexEscape', None),
+      Token(_STATE_STRING_SINGLE_QUOTE, r'\\(.)', '_StringEscape', None),
+      Token(_STATE_STRING_SINGLE_QUOTE, r'[^\\\']+', '_StringInsert', None),
 
       # Basic expression
-      Token('ATTRIBUTE', r'[\w._0-9]+', '_SetAttribute', 'OPERATOR'),
-      Token('OPERATOR', r'not ', '_NegateExpression', None),
-      Token('OPERATOR', r'(\w+|[<>!=]=?)', '_SetOperator', 'CHECKNOT'),
-      Token('CHECKNOT', r'not', '_NegateExpression', 'ARG'),
-      Token('CHECKNOT', r'\s+', None, None),
-      Token('CHECKNOT', r'([^not])', '_PushBack', 'ARG'),
-      Token('ARG', r'(\d+\.\d+)', 'InsertFloatArg', 'ARG'),
-      Token('ARG', r'(0x\d+)', 'InsertInt16Arg', 'ARG'),
-      Token('ARG', r'(\d+)', 'InsertIntArg', 'ARG'),
-      Token('ARG', '"', '_PushState,_StringStart', 'STRING'),
-      Token('ARG', '\'', '_PushState,_StringStart', 'SQ_STRING'),
+      Token(_STATE_ATTRIBUTE, r'[\w._0-9]+', '_SetAttribute', _STATE_OPERATOR),
+      Token(_STATE_OPERATOR, r'not ', '_NegateExpression', None),
+      Token(_STATE_OPERATOR, r'(\w+|[<>!=]=?)', '_SetOperator',
+            _STATE_NEGATION_OPERATOR),
+      Token(_STATE_NEGATION_OPERATOR, r'not', '_NegateExpression',
+            _STATE_ARGUMENT),
+      Token(_STATE_NEGATION_OPERATOR, r'\s+', None, None),
+      Token(_STATE_NEGATION_OPERATOR, r'([^not])', '_PushBack',
+            _STATE_ARGUMENT),
+      Token(_STATE_ARGUMENT, r'(\d+\.\d+)', 'InsertFloatArg', _STATE_ARGUMENT),
+      Token(_STATE_ARGUMENT, r'(0x\d+)', 'InsertInt16Arg', _STATE_ARGUMENT),
+      Token(_STATE_ARGUMENT, r'(\d+)', 'InsertIntArg', _STATE_ARGUMENT),
+      Token(_STATE_ARGUMENT, '"', '_PushState,_StringStart',
+            _STATE_STRING_DOUBLE_QUOTE),
+      Token(_STATE_ARGUMENT, '\'', '_PushState,_StringStart',
+            _STATE_STRING_SINGLE_QUOTE),
       # When the last parameter from arg_list has been pushed
 
       # State where binary operators are supported (AND, OR)
-      Token('BINARY', r'(?i)(and|or|\&\&|\|\|)', '_AddBinaryOperator',
-            'INITIAL'),
+      Token(_STATE_BINARY_OPERATOR, r'(?i)(and|or|\&\&|\|\|)',
+            '_AddBinaryOperator', _STATE_INITIAL),
       # - We can also skip spaces
-      Token('BINARY', r'\s+', None, None),
+      Token(_STATE_BINARY_OPERATOR, r'\s+', None, None),
       # - But if it's not "and" or just spaces we have to go back
-      Token('BINARY', '.', '_PushBack,_PopState', None),
+      Token(_STATE_BINARY_OPERATOR, '.', '_PushBack,_PopState', None),
 
       # Skip whitespace.
       Token(None, r'\s+', None, None)]
@@ -124,7 +137,7 @@ class EventFilterExpressionParser(object):
     self._have_negate_keyword = False
     self._processed_buffer = ''
     self._stack = []
-    self._state = self._INITIAL_STATE
+    self._state = self._STATE_INITIAL
     self._state_stack = []
     self._string = None
 
@@ -257,7 +270,7 @@ class EventFilterExpressionParser(object):
 
         # Allow a callback to skip other callbacks.
         possible_next_state = callback(string=match.group(0), match=match)
-        if possible_next_state == self._CONTINUE_STATE:
+        if possible_next_state == self._STATE_CONTINUE:
           continue
 
         # Override the state from the Token
@@ -369,7 +382,7 @@ class EventFilterExpressionParser(object):
       ParseError: if the current state is unsupported or the remaining number
           of items on the stack is not 1.
     """
-    if self._state not in ('BINARY', 'INITIAL'):
+    if self._state not in (self._STATE_BINARY_OPERATOR, self._STATE_INITIAL):
       raise errors.ParseError((
           'Unsupported intial state: {0:s} - premature end of expression '
           'at position {1!s}: {2!s} <---> {3!s} )').format(
@@ -407,7 +420,7 @@ class EventFilterExpressionParser(object):
     self._have_negate_keyword = False
     self._processed_buffer = ''
     self._stack = []
-    self._state = self._INITIAL_STATE
+    self._state = self._STATE_INITIAL
     self._state_stack = []
     self._string = None
 
@@ -420,7 +433,7 @@ class EventFilterExpressionParser(object):
       string (Optional[str]): attribute.
 
     Returns:
-      str: next state, which is 'OPERATOR'.
+      str: next state, which is the operator state.
     """
     logging.debug('Storing attribute {0:s}'.format(repr(string)))
 
@@ -428,7 +441,7 @@ class EventFilterExpressionParser(object):
 
     self._have_negate_keyword = False
 
-    return 'OPERATOR'
+    return self._STATE_OPERATOR
 
   def _SetOperator(self, string='', **unused_kwargs):
     """Sets the operator in the current expression.
@@ -472,18 +485,18 @@ class EventFilterExpressionParser(object):
     return self._StringInsert(string=decoded_string)
 
   def _StringFinish(self, **unused_kwargs):
-    """Finishes a string operation.
+    """Finishes parsing a string.
 
     Note that this function is used as a callback by _GetNextToken.
 
     Returns:
-      str: next state, or None when the internal state is not "ATTRIBUTE"
-          or "ARG".
+      str: next state, or None when the state is not the attribute or argument
+          state.
     """
-    if self._state == 'ATTRIBUTE':
+    if self._state == self._STATE_ATTRIBUTE:
       return self._SetAttribute(string=self._string)
 
-    if self._state == 'ARG':
+    if self._state == self._STATE_ARGUMENT:
       return self.InsertArg(string=self._string)
 
     return None
@@ -504,7 +517,7 @@ class EventFilterExpressionParser(object):
     return None
 
   def _StringStart(self, **unused_kwargs):
-    """Initializes the internal string.
+    """Initializes parsing a string.
 
     Note that this function is used as a callback by _GetNextToken.
 
@@ -564,7 +577,7 @@ class EventFilterExpressionParser(object):
       self._stack.append(self._current_expression)
       self._current_expression = expressions.EventExpression()
       # We go to the BINARY state, to find if there's an AND or OR operator
-      return 'BINARY'
+      return self._STATE_BINARY_OPERATOR
 
     return None
 
@@ -580,7 +593,7 @@ class EventFilterExpressionParser(object):
           expression.
 
     Raises:
-      ParseError: TBD.
+      ParseError: if string does not contain a valid floating-point number.
     """
     try:
       float_value = float(string)
