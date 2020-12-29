@@ -337,8 +337,9 @@ class PstealTool(
 
     single_process_mode = self._single_process_mode
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      # No need to multi process a single file source.
-      single_process_mode = True
+      if not self._process_archives or not self._IsArchiveFile(
+          self._source_path_specs[0]):
+        single_process_mode = True
 
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()

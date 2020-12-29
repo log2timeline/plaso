@@ -8,7 +8,7 @@ import os
 import re
 import time
 
-from dfvfs.analyzer import analyzer
+from dfvfs.analyzer import analyzer as dfvfs_analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
@@ -419,7 +419,7 @@ class EventExtractionWorker(object):
       list[str]: dfVFS archive type indicators found in the data stream.
     """
     try:
-      type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
+      type_indicators = dfvfs_analyzer.Analyzer.GetArchiveTypeIndicators(
           path_spec, resolver_context=mediator.resolver_context)
     except IOError as exception:
       type_indicators = []
@@ -444,8 +444,9 @@ class EventExtractionWorker(object):
           the data stream.
     """
     try:
-      type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
-          path_spec, resolver_context=mediator.resolver_context)
+      type_indicators = (
+          dfvfs_analyzer.Analyzer.GetCompressedStreamTypeIndicators(
+              path_spec, resolver_context=mediator.resolver_context))
     except IOError as exception:
       type_indicators = []
 
