@@ -98,14 +98,14 @@ class OutputManager(object):
     return name.lower() in cls._output_classes
 
   @classmethod
-  def IsLinearOutputModule(cls, name):
-    """Determines if a specific output class is a linear output module.
+  def IsTextFileOutputModule(cls, name):
+    """Determines if a specific output writes to a a text file.
 
     Args:
       name (str): name of the output module.
 
     Returns:
-      True: if the output module is linear.
+      True: if the output module writes to a text file.
     """
     name = name.lower()
 
@@ -114,7 +114,7 @@ class OutputManager(object):
       output_class = cls._disabled_output_classes.get(name, None)
 
     if output_class:
-      return issubclass(output_class, interface.LinearOutputModule)
+      return issubclass(output_class, interface.TextFileOutputModule)
 
     return False
 

@@ -180,7 +180,7 @@ class OutputModuleOptions(object):
           'Unable to create output module with error: {0!s}'.format(
               exception))
 
-    if output_manager.OutputManager.IsLinearOutputModule(self._output_format):
+    if output_manager.OutputManager.IsTextFileOutputModule(self._output_format):
       output_file_object = open(self._output_filename, 'wb')
       output_writer = tools.FileObjectOutputWriter(output_file_object)
       output_module.SetOutputWriter(output_writer)

@@ -43,7 +43,7 @@ class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
         '</Event>').format(date_time, event_data.entry)
 
 
-class TestXMLOutputModule(interface.LinearOutputModule):
+class TestXMLOutputModule(interface.TextFileOutputModule):
   """XML output module for testing."""
 
   NAME = 'test_xml'
@@ -58,7 +58,7 @@ class TestXMLOutputModule(interface.LinearOutputModule):
     self._output_writer.Write('<EventFile>\n')
 
 
-class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
+class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests the linear output module."""
 
   _TEST_EVENTS = [

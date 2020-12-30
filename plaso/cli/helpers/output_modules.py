@@ -87,7 +87,7 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
         raise errors.BadConfigOption(
             'Unsupported output format: {0:s}.'.format(output_format))
 
-    if output_manager.OutputManager.IsLinearOutputModule(output_format):
+    if output_manager.OutputManager.IsTextFileOutputModule(output_format):
       if not output_filename:
         raise errors.BadConfigOption((
             'Output format: {0:s} requires an output file').format(

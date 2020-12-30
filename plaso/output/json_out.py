@@ -8,7 +8,7 @@ from plaso.output import manager
 from plaso.output import shared_json
 
 
-class JSONOutputModule(interface.LinearOutputModule):
+class JSONOutputModule(interface.TextFileOutputModule):
   """Output module for the JSON format."""
 
   NAME = 'json'
