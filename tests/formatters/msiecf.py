@@ -34,28 +34,6 @@ class MsiecfLeakFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetMessages.
 
 
-class MsiecfRedirectedFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the MSIECF redirected item event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = msiecf.MsiecfRedirectedFormatter()
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = msiecf.MsiecfRedirectedFormatter()
-
-    expected_attribute_names = [
-        'url',
-        'recovered_string']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
-
-
 class MsiecfUrlFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the MSIECF URL item event formatter."""
 

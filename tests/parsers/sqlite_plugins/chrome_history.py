@@ -43,7 +43,7 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '{0:s} '
         '(Ubuntu Start Page) [count: 0] '
         'Visit Source: [SOURCE_FIREFOX_IMPORTED] Type: [LINK - User clicked '
-        'a link] (URL not typed directly - no typed count)').format(
+        'a link] (URL not typed directly)').format(
             expected_url)
     expected_short_message = '{0:s} (Ubuntu Start Page)'.format(expected_url)
 
@@ -109,7 +109,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '{0:s} '
         '[count: 0] '
         'Type: [START_PAGE - The start page of the browser] '
-        '(URL not typed directly - no typed count)').format(expected_url)
+        '(URL not typed directly)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
     event_data = self._GetEventDataOfEvent(storage_writer, events[0])
@@ -170,7 +170,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '{0:s} '
         '[count: 0] '
         'Type: [START_PAGE - The start page of the browser] '
-        '(URL not typed directly - no typed count)').format(expected_url)
+        '(URL not typed directly)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
     event_data = self._GetEventDataOfEvent(storage_writer, events[0])
@@ -231,7 +231,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '{0:s} '
         '[count: 0] '
         'Type: [START_PAGE - The start page of the browser] '
-        '(URL not typed directly - no typed count)').format(expected_url)
+        '(URL not typed directly)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
     event_data = self._GetEventDataOfEvent(storage_writer, events[0])
@@ -294,7 +294,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         '{0:s} '
         '[count: 0] '
         'Type: [START_PAGE - The start page of the browser] '
-        '(URL not typed directly - no typed count)').format(expected_url)
+        '(URL not typed directly)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
 
     event_data = self._GetEventDataOfEvent(storage_writer, events[0])

@@ -182,6 +182,19 @@ message: '{filename}'
 short_message: '{filename}'
 ---
 type: 'conditional'
+data_type: 'fs:stat'
+boolean_helpers:
+- input_attribute: 'is_allocated'
+  output_attribute: 'is_allocated'
+  value_if_false: 'unallocated'
+message:
+- '{display_name}'
+- 'Type: {file_entry_type}'
+- '({unallocated})'
+short_message:
+- '{filename}'
+---
+type: 'conditional'
 data_type: 'gdrive:snapshot:cloud_entry'
 boolean_helpers:
 - input_attribute: 'shared'

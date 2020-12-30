@@ -148,8 +148,8 @@ boolean helpers are defined as a set of attributes:
 * "input_attribute"; required name of the attribute which the value that needs to be mapped is read from.
 * "output_attribute"; required name of the attribute which the mapped value is written to.
 * "default_value"; optional default value if there is no corresponding mapping in "values".
-* "value_if_false"; required output value if the boolean input value is False.
-* "value_if_true"; required output value if the boolean input value is True.
+* "value_if_false"; optional output value if the boolean input value is False.
+* "value_if_true"; optional output value if the boolean input value is True.
 
 #### Enumeration helpers
 

@@ -25,17 +25,19 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
       7: 'DOWNLOAD',
       8: 'FRAMED_LINK',
   }
-  _URL_TRANSITIONS.setdefault('UNKOWN')
 
-  # TODO: Make extra conditional formatting.
   FORMAT_STRING_PIECES = [
       '{url}',
       '({title})',
       '[count: {visit_count}]',
       'Host: {host}',
-      '{extra_string}']
+      'visited from: {from_visit}',
+      '{url_hidden_string}',
+      '{url_typed_string}',
+      'Transition: {transition_string}']
 
-  FORMAT_STRING_SHORT_PIECES = ['URL: {url}']
+  FORMAT_STRING_SHORT_PIECES = [
+      'URL: {url}']
 
   def FormatEventValues(self, event_values):
     """Formats event values using the helpers.
@@ -43,29 +45,21 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
     Args:
       event_values (dict[str, object]): event values.
     """
-    visit_type = event_values.get('visit_type', 0)
-
-    extras = []
-    from_visit = event_values.get('from_visit', '')
-    if from_visit:
-      extras.append('visited from: {0:s}'.format(from_visit))
-
-    hidden = event_values.get('hidden', '')
+    hidden = event_values.get('hidden', None)
     if hidden == '1':
-      extras.append('(url hidden)')
+      event_values['url_hidden_string'] = '(URL hidden)'
 
-    typed = event_values.get('typed', '')
+    typed = event_values.get('typed', None)
     if typed == '1':
-      extras.append('(directly typed)')
+      url_typed_string = '(URL directly typed)'
     else:
-      extras.append('(URL not typed directly)')
+      url_typed_string = '(URL not typed directly)'
 
-    transition = self._URL_TRANSITIONS.get(visit_type, None)
-    if transition:
-      transition_str = 'Transition: {0!s}'.format(transition)
-      extras.append(transition_str)
+    event_values['url_typed_string'] = url_typed_string
 
-    event_values['extra_string'] = ' '.join(extras)
+    visit_type = event_values.get('visit_type', 0)
+    event_values['transition_string'] = self._URL_TRANSITIONS.get(
+        visit_type, 'UNKOWN')
 
 
 manager.FormattersManager.RegisterFormatter(FirefoxPageVisitFormatter)

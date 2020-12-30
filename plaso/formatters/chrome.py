@@ -19,7 +19,8 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       'Visit from: {from_visit}',
       'Visit Source: [{visit_source}]',
       'Type: [{page_transition}]',
-      '{extra}']
+      '{url_hidden_string}',
+      '{url_typed_string}']
 
   FORMAT_STRING_SHORT_PIECES = [
       '{url}',
@@ -85,21 +86,19 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       event_values['visit_source'] = self._VISIT_SOURCE.get(
           visit_source, 'UNKNOWN')
 
-    extras = []
-
     url_hidden = event_values.get('url_hidden', False)
     if url_hidden:
-      extras.append('(url hidden)')
+      event_values['url_hidden_string'] = '(URL hidden)'
 
     typed_count = event_values.get('typed_count', 0)
     if typed_count == 0:
-      extras.append('(URL not typed directly - no typed count)')
+      url_typed_string = '(URL not typed directly)'
     elif typed_count == 1:
-      extras.append('(type count {0:d} time)'.format(typed_count))
+      url_typed_string = '(URL typed {0:d} time)'
     else:
-      extras.append('(type count {0:d} times)'.format(typed_count))
+      url_typed_string = '(URL typed {0:d} times)'
 
-    event_values['extra'] = ' '.join(extras)
+    event_values['url_typed_string'] = url_typed_string
 
 
 manager.FormattersManager.RegisterFormatter(ChromePageVisitedFormatter)

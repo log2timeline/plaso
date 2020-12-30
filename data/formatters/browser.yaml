@@ -199,6 +199,18 @@ message: '{url} ({full_path}). Received: {received_bytes} bytes out of: {total_b
 short_message: '{full_path} downloaded ({received_bytes} bytes)'
 ---
 type: 'conditional'
+data_type: 'msiecf:redirected'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+message:
+- 'Location: {url}'
+- '{recovered_string}'
+short_message:
+- 'Location: {url}'
+---
+type: 'conditional'
 data_type: 'msie:webcache:container'
 message:
 - 'URL: {url}'

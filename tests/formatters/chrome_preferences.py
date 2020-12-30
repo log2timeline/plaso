@@ -26,8 +26,7 @@ class ChromeContentSettingsExceptionsFormatter(
     event_formatter = (
         chrome_preferences.ChromeContentSettingsExceptionsFormatter())
 
-    expected_attribute_names = [
-        'permission', 'subject']
+    expected_attribute_names = ['permission', 'primary_url', 'secondary_url']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

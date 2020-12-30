@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import winevt as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import winevt
 
@@ -76,7 +75,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         'Strings: [\'cifs/CONTROLLER\', '
         '\'"The system detected a possible attempt to '
         'compromise security. Please ensure that you can '
-        'contact the server that authenticated you. (0xc0000388)"\'] '
+        'contact the server that authenticated you.\\r\\n (0xc0000388)"\'] '
         'Computer Name: WKS-WINXP32BIT '
         'Severity: Warning '
         'Record Number: 1392 '

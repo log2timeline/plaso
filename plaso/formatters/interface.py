@@ -362,6 +362,41 @@ class ConditionalEventFormatter(EventFormatter):
     self._format_string_pieces_map = []
     self._format_string_short_pieces_map = []
 
+  def _CreateFormatStringMap(
+      self, format_string_pieces, format_string_pieces_map):
+    """Creates a format string map.
+
+    The format string pieces map is a list containing the attribute name
+    per format string piece. E.g. ["Description: {description}"] would be
+    mapped to: [0] = "description". If the string piece does not contain
+    an attribute name it is treated as text that does not needs formatting.
+
+    Args:
+      format_string_pieces (list[str]): format string pieces.
+      format_string_pieces_map (list[str]): format string pieces map.
+
+    Raises:
+      RuntimeError: when an invalid format string piece is encountered.
+    """
+    for format_string_piece in format_string_pieces:
+      attribute_names = self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
+          format_string_piece)
+
+      if len(set(attribute_names)) > 1:
+        raise RuntimeError((
+            'Invalid format string piece: [{0:s}] contains more than 1 '
+            'attribute name.').format(format_string_piece))
+
+      if not attribute_names:
+        # The text format string piece is stored as an empty map entry to keep
+        # the index in the map equal to the format string pieces.
+        attribute_name = ''
+
+      else:
+        attribute_name = attribute_names[0]
+
+      format_string_pieces_map.append(attribute_name)
+
   def _CreateFormatStringMaps(self):
     """Creates the format string maps.
 
@@ -371,46 +406,13 @@ class ConditionalEventFormatter(EventFormatter):
     Raises:
       RuntimeError: when an invalid format string piece is encountered.
     """
-    # The format string can be defined as:
-    # {name}, {name:format}, {name!conversion}, {name!conversion:format}
-    regexp = re.compile('{[a-z][a-zA-Z0-9_]*[!]?[^:}]*[:]?[^}]*}')
-    regexp_name = re.compile('[a-z][a-zA-Z0-9_]*')
-
-    # The format string pieces map is a list containing the attribute name
-    # per format string piece. E.g. ["Description: {description}"] would be
-    # mapped to: [0] = "description". If the string piece does not contain
-    # an attribute name it is treated as text that does not needs formatting.
     self._format_string_pieces_map = []
-    for format_string_piece in self.FORMAT_STRING_PIECES:
-      result = regexp.findall(format_string_piece)
-      if not result:
-        # The text format string piece is stored as an empty map entry to
-        # keep the index in the map equal to the format string pieces.
-        self._format_string_pieces_map.append('')
-      elif len(result) == 1:
-        # Extract the attribute name.
-        attribute_name = regexp_name.findall(result[0])[0]
-        self._format_string_pieces_map.append(attribute_name)
-      else:
-        raise RuntimeError((
-            'Invalid format string piece: [{0:s}] contains more than 1 '
-            'attribute name.').format(format_string_piece))
+    self._CreateFormatStringMap(
+        self.FORMAT_STRING_PIECES, self._format_string_pieces_map)
 
     self._format_string_short_pieces_map = []
-    for format_string_piece in self.FORMAT_STRING_SHORT_PIECES:
-      result = regexp.findall(format_string_piece)
-      if not result:
-        # The text format string piece is stored as an empty map entry to
-        # keep the index in the map equal to the format string pieces.
-        self._format_string_short_pieces_map.append('')
-      elif len(result) == 1:
-        # Extract the attribute name.
-        attribute_name = regexp_name.findall(result[0])[0]
-        self._format_string_short_pieces_map.append(attribute_name)
-      else:
-        raise RuntimeError((
-            'Invalid short format string piece: [{0:s}] contains more '
-            'than 1 attribute name.').format(format_string_piece))
+    self._CreateFormatStringMap(
+        self.FORMAT_STRING_SHORT_PIECES, self._format_string_short_pieces_map)
 
   def _ConditionalFormatMessage(
       self, format_string_pieces, format_string_pieces_map, event_values):
