@@ -89,27 +89,30 @@ class EventFilterExpressionParser(object):
       Token(_STATE_STRING_DOUBLE_QUOTE, '"', '_PopState,_StringFinish', None),
       Token(_STATE_STRING_DOUBLE_QUOTE, r'\\x(..)', 'HexEscape', None),
       Token(_STATE_STRING_DOUBLE_QUOTE, r'\\(.)', '_StringEscape', None),
-      Token(_STATE_STRING_DOUBLE_QUOTE, r'[^\\"]+', '_StringInsert', None),
+      Token(_STATE_STRING_DOUBLE_QUOTE, r'[^\\"]+', '_StringExpand', None),
 
       # Single quoted string
       Token(_STATE_STRING_SINGLE_QUOTE, '\'', '_PopState,_StringFinish', None),
       Token(_STATE_STRING_SINGLE_QUOTE, r'\\x(..)', 'HexEscape', None),
       Token(_STATE_STRING_SINGLE_QUOTE, r'\\(.)', '_StringEscape', None),
-      Token(_STATE_STRING_SINGLE_QUOTE, r'[^\\\']+', '_StringInsert', None),
+      Token(_STATE_STRING_SINGLE_QUOTE, r'[^\\\']+', '_StringExpand', None),
 
       # Basic expression
       Token(_STATE_ATTRIBUTE, r'[\w._0-9]+', '_SetAttribute', _STATE_OPERATOR),
-      Token(_STATE_OPERATOR, r'not ', '_NegateExpression', None),
+      Token(_STATE_OPERATOR, 'not ', '_NegateExpression', None),
       Token(_STATE_OPERATOR, r'(\w+|[<>!=]=?)', '_SetOperator',
             _STATE_NEGATION_OPERATOR),
-      Token(_STATE_NEGATION_OPERATOR, r'not', '_NegateExpression',
+      Token(_STATE_NEGATION_OPERATOR, 'not', '_NegateExpression',
             _STATE_ARGUMENT),
       Token(_STATE_NEGATION_OPERATOR, r'\s+', None, None),
       Token(_STATE_NEGATION_OPERATOR, r'([^not])', '_PushBack',
             _STATE_ARGUMENT),
-      Token(_STATE_ARGUMENT, r'(\d+\.\d+)', 'InsertFloatArg', _STATE_ARGUMENT),
-      Token(_STATE_ARGUMENT, r'(0x\d+)', 'InsertInt16Arg', _STATE_ARGUMENT),
-      Token(_STATE_ARGUMENT, r'(\d+)', 'InsertIntArg', _STATE_ARGUMENT),
+      Token(_STATE_ARGUMENT, r'(\d+\.\d+)', '_AddArgumentFloatingPoint',
+            _STATE_ARGUMENT),
+      Token(_STATE_ARGUMENT, r'(0x\d+)', '_AddArgumentHexadecimalInteger',
+            _STATE_ARGUMENT),
+      Token(_STATE_ARGUMENT, r'(\d+)', '_AddArgumentDecimalInteger',
+            _STATE_ARGUMENT),
       Token(_STATE_ARGUMENT, '"', '_PushState,_StringStart',
             _STATE_STRING_DOUBLE_QUOTE),
       Token(_STATE_ARGUMENT, '\'', '_PushState,_StringStart',
@@ -143,6 +146,103 @@ class EventFilterExpressionParser(object):
 
   # The parser token callback methods use a specific function interface.
   # pylint: disable=redundant-returns-doc,useless-return
+
+  def _AddArgument(self, value):
+    """Adds an argument to the current expression.
+
+    Args:
+      value (object): argument value.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+
+    Raises:
+      ParseError: if the operator does not support negation.
+    """
+    logging.debug('Storing argument: {0!s}'.format(value))
+
+    if self._have_negate_keyword:
+      operator = self._current_expression.operator
+      if operator and operator.lower() not in self._OPERATORS_WITH_NEGATION:
+        raise errors.ParseError(
+            'Operator: {0:s} does not support negation (not).'.format(operator))
+
+    # This expression is complete
+    if self._current_expression.AddArgument(value):
+      self._stack.append(self._current_expression)
+      self._current_expression = expressions.EventExpression()
+      # We go to the BINARY state, to find if there's an AND or OR operator
+      return self._STATE_BINARY_OPERATOR
+
+    return None
+
+  def _AddArgumentDecimalInteger(self, string='', **unused_kwargs):
+    """Adds a decimal integer argument to the current expression.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Args:
+      string (Optional[str]): argument string that contains an integer value
+          formatted in decimal.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+
+    Raises:
+      ParseError: if string does not contain a valid integer.
+    """
+    try:
+      int_value = int(string)
+    except (TypeError, ValueError):
+      raise errors.ParseError('{0:s} is not a valid integer.'.format(string))
+    return self._AddArgument(int_value)
+
+  def _AddArgumentFloatingPoint(self, string='', **unused_kwargs):
+    """Adds a floating-point argument to the current expression.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Args:
+      string (Optional[str]): argument string that contains a floating-point
+          value.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+
+    Raises:
+      ParseError: if string does not contain a valid floating-point number.
+    """
+    try:
+      float_value = float(string)
+    except (TypeError, ValueError):
+      raise errors.ParseError('{0:s} is not a valid float.'.format(string))
+    return self._AddArgument(float_value)
+
+  def _AddArgumentHexadecimalInteger(self, string='', **unused_kwargs):
+    """Adds a hexadecimal integer argument to the current expression.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Args:
+      string (Optional[str]): argument string that contains an integer value
+          formatted in hexadecimal.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+
+    Raises:
+      ParseError: if string does not contain a valid base16 formatted integer.
+    """
+    try:
+      int_value = int(string, 16)
+    except (TypeError, ValueError):
+      raise errors.ParseError(
+          '{0:s} is not a valid base16 integer.'.format(string))
+    return self._AddArgument(int_value)
 
   def _AddBinaryOperator(self, string=None, **unused_kwargs):
     """Adds a binary operator to the stack.
@@ -482,7 +582,22 @@ class EventFilterExpressionParser(object):
       raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
 
     decoded_string = codecs.decode(string, 'unicode_escape')
-    return self._StringInsert(string=decoded_string)
+    return self._StringExpand(string=decoded_string)
+
+  def _StringExpand(self, string='', **unused_kwargs):
+    """Expands the internal string with the expression string.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Args:
+      string (Optional[str]): expression string.
+
+    Returns:
+      str: next state, which is None.
+    """
+    self._string = ''.join([self._string, string])
+
+    return None
 
   def _StringFinish(self, **unused_kwargs):
     """Finishes parsing a string.
@@ -497,22 +612,7 @@ class EventFilterExpressionParser(object):
       return self._SetAttribute(string=self._string)
 
     if self._state == self._STATE_ARGUMENT:
-      return self.InsertArg(string=self._string)
-
-    return None
-
-  def _StringInsert(self, string='', **unused_kwargs):
-    """Adds the string to the internal string.
-
-    Note that this function is used as a callback by _GetNextToken.
-
-    Args:
-      string (Optional[str]): expression string.
-
-    Returns:
-      str: next state, which is None.
-    """
-    self._string = ''.join([self._string, string])
+      return self._AddArgument(self._string)
 
     return None
 
@@ -549,98 +649,6 @@ class EventFilterExpressionParser(object):
       raise errors.ParseError('Invalid hex escape {0!s}.'.format(hex_string))
 
     return None
-
-  def InsertArg(self, string='', **unused_kwargs):
-    """Inserts an argument into the current expression.
-
-    Args:
-      string (Optional[str]): argument string.
-
-    Returns:
-      str: state or None if the argument could not be added to the current
-          expression.
-
-    Raises:
-      ParseError: if the operator does not support negation.
-    """
-    # Note that "string" is not necessarily of type string.
-    logging.debug('Storing argument: {0!s}'.format(string))
-
-    if self._have_negate_keyword:
-      operator = self._current_expression.operator
-      if operator and operator.lower() not in self._OPERATORS_WITH_NEGATION:
-        raise errors.ParseError(
-            'Operator: {0:s} does not support negation (not).'.format(operator))
-
-    # This expression is complete
-    if self._current_expression.AddArg(string):
-      self._stack.append(self._current_expression)
-      self._current_expression = expressions.EventExpression()
-      # We go to the BINARY state, to find if there's an AND or OR operator
-      return self._STATE_BINARY_OPERATOR
-
-    return None
-
-  def InsertFloatArg(self, string='', **unused_kwargs):
-    """Inserts a floating-point argument into the current expression.
-
-    Args:
-      string (Optional[str]): argument string that contains a floating-point
-          value.
-
-    Returns:
-      str: state or None if the argument could not be added to the current
-          expression.
-
-    Raises:
-      ParseError: if string does not contain a valid floating-point number.
-    """
-    try:
-      float_value = float(string)
-    except (TypeError, ValueError):
-      raise errors.ParseError('{0:s} is not a valid float.'.format(string))
-    return self.InsertArg(float_value)
-
-  def InsertIntArg(self, string='', **unused_kwargs):
-    """Inserts a decimal integer argument into the current expression.
-
-    Args:
-      string (Optional[str]): argument string that contains an integer value
-          formatted in decimal.
-
-    Returns:
-      str: state or None if the argument could not be added to the current
-          expression.
-
-    Raises:
-      ParseError: if string does not contain a valid integer.
-    """
-    try:
-      int_value = int(string)
-    except (TypeError, ValueError):
-      raise errors.ParseError('{0:s} is not a valid integer.'.format(string))
-    return self.InsertArg(int_value)
-
-  def InsertInt16Arg(self, string='', **unused_kwargs):
-    """Inserts a hexadecimal integer argument into the current expression.
-
-    Args:
-      string (Optional[str]): argument string that contains an integer value
-          formatted in hexadecimal.
-
-    Returns:
-      str: state or None if the argument could not be added to the current
-          expression.
-
-    Raises:
-      ParseError: if string does not contain a valid base16 formatted integer.
-    """
-    try:
-      int_value = int(string, 16)
-    except (TypeError, ValueError):
-      raise errors.ParseError(
-          '{0:s} is not a valid base16 integer.'.format(string))
-    return self.InsertArg(int_value)
 
   def Parse(self, expression):
     """Parses an event filter expression.

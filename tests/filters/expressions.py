@@ -15,14 +15,14 @@ from tests import test_lib as shared_test_lib
 class ExpressionTest(shared_test_lib.BaseTestCase):
   """Tests the expression."""
 
-  def testAddArg(self):
-    """Tests the AddArg function."""
+  def testAddArgument(self):
+    """Tests the AddArgument function."""
     expression = expressions.Expression()
 
-    expression.AddArg('argument1')
+    expression.AddArgument('argument1')
 
     with self.assertRaises(errors.ParseError):
-      expression.AddArg('argument2')
+      expression.AddArgument('argument2')
 
   def testSetAttribute(self):
     """Tests the SetAttribute function."""
@@ -115,19 +115,19 @@ class EventExpressionTest(shared_test_lib.BaseTestCase):
     """Tests the Compile function."""
     expression = expressions.EventExpression()
     expression.SetOperator('==')
-    expression.AddArg('first')
+    expression.AddArgument('first')
     expression.Compile()
 
     # Test missing operator.
     expression = expressions.EventExpression()
-    expression.AddArg('first')
+    expression.AddArgument('first')
     with self.assertRaises(errors.ParseError):
       expression.Compile()
 
     # Test unknown operator.
     expression = expressions.EventExpression()
     expression.SetOperator('bogus')
-    expression.AddArg('first')
+    expression.AddArgument('first')
     with self.assertRaises(errors.ParseError):
       expression.Compile()
 
