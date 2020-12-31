@@ -114,6 +114,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream, event_tag)
 
     expected_event_values = {
+        'a_binary_field': 'binary',
         'data_type': 'syslog:line',
         'datetime': '2012-06-27T18:17:01.000000Z',
         'display_name': 'FAKE:log/syslog.1',
@@ -121,6 +122,9 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
         'hostname': 'ubuntu',
         'message': '[',
         'my_number': 123,
+        'path_spec': (
+            '{"__type__": "PathSpec", "location": "log/syslog.1", '
+            '"type_indicator": "FAKE"}'),
         'some_additional_foo': True,
         'source_long': 'Log File',
         'source_short': 'LOG',
@@ -132,7 +136,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     }
 
     self.assertIsInstance(event_values, dict)
-    self.assertDictContainsSubset(expected_event_values, event_values)
+    self.assertEqual(event_values, expected_event_values)
 
   def testInsertEvent(self):
     """Tests the _InsertEvent function."""
