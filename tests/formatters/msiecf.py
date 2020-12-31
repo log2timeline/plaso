@@ -19,19 +19,7 @@ class MsiecfLeakFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = msiecf.MsiecfLeakFormatter()
     self.assertIsNotNone(event_formatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = msiecf.MsiecfLeakFormatter()
-
-    expected_attribute_names = [
-        'cached_file_path',
-        'cached_file_size',
-        'recovered_string']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+  # TODO: add test for FormatEventValues.
 
 
 class MsiecfUrlFormatterTest(test_lib.EventFormatterTestCase):
@@ -42,22 +30,7 @@ class MsiecfUrlFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = msiecf.MsiecfUrlFormatter()
     self.assertIsNotNone(event_formatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = msiecf.MsiecfUrlFormatter()
-
-    expected_attribute_names = [
-        'url',
-        'number_of_hits',
-        'cached_file_path',
-        'cached_file_size',
-        'http_headers',
-        'recovered_string']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+  # TODO: add test for FormatEventValues.
 
 
 if __name__ == '__main__':

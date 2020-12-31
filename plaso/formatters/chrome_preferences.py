@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Google Chrome Preferences file event formatter."""
+"""Google Chrome preferences custom event formatter helpers."""
 
 from __future__ import unicode_literals
 
@@ -8,23 +8,13 @@ from plaso.formatters import manager
 
 
 class ChromeContentSettingsExceptionsFormatter(
-    interface.ConditionalEventFormatter):
-  """Formatter for a Chrome content_settings exceptions event."""
+    interface.CustomEventFormatterHelper):
+  """Custom formatter for Chrome content settings exceptions event values."""
 
   DATA_TYPE = 'chrome:preferences:content_settings:exceptions'
 
-  FORMAT_STRING_PIECES = [
-      'Permission {permission}',
-      'used by {primary_url}',
-      'embedded in {secondary_url}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Permission {permission}',
-      'used by {primary_url}',
-      'embedded in {secondary_url}']
-
   def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
+    """Formats event values using the helper.
 
     Args:
       event_values (dict[str, object]): event values.
@@ -53,5 +43,5 @@ class ChromeContentSettingsExceptionsFormatter(
     event_values['secondary_url'] = secondary_url
 
 
-manager.FormattersManager.RegisterFormatter(
+manager.FormattersManager.RegisterEventFormatterHelper(
     ChromeContentSettingsExceptionsFormatter)

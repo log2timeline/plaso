@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Windows Prefetch event formatter."""
+"""Windows Prefetch custom event formatter helpers."""
 
 from __future__ import unicode_literals
 
@@ -7,25 +7,13 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Windows Prefetch execution event."""
+class WinPrefetchExecutionFormatter(interface.CustomEventFormatterHelper):
+  """Custom formatter for Windows Prefetch execution event values."""
 
   DATA_TYPE = 'windows:prefetch:execution'
 
-  FORMAT_STRING_PIECES = [
-      'Prefetch',
-      '[{executable}] was executed -',
-      'run count {run_count}',
-      'path hints: {path_hints}',
-      'hash: 0x{prefetch_hash:08X}',
-      '{volumes_string}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      '{executable} was run',
-      '{run_count} time(s)']
-
   def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
+    """Formats event values using the helper.
 
     Args:
       event_values (dict[str, object]): event values.
@@ -58,4 +46,5 @@ class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
       event_values['path_hints'] = '; '.join(path_hints)
 
 
-manager.FormattersManager.RegisterFormatter(WinPrefetchExecutionFormatter)
+manager.FormattersManager.RegisterEventFormatterHelper(
+    WinPrefetchExecutionFormatter)

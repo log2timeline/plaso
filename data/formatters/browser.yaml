@@ -71,11 +71,69 @@ short_message:
 - '({received_bytes} bytes)'
 ---
 type: 'conditional'
+data_type: 'chrome:history:page_visited'
+boolean_helpers:
+- input_attribute: 'url_hidden'
+  output_attribute: 'url_hidden_string'
+  value_if_true: '(URL hidden)'
+enumeration_helpers:
+- input_attribute: 'page_transition_type'
+  output_attribute: 'page_transition'
+  default_value: 'UNKNOWN'
+  # Also see: https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h
+  values:
+    0: 'LINK - User clicked a link'
+    1: 'TYPED - User typed the URL in the URL bar'
+    2: 'AUTO_BOOKMARK - Got through a suggestion in the UI'
+    3: 'AUTO_SUBFRAME - Content automatically loaded in a non-toplevel frame - user may not realize'
+    4: 'MANUAL_SUBFRAME - Subframe explicitly requested by the user'
+    5: 'GENERATED - User typed in the URL bar and selected an entry from the list - such as a search bar'
+    6: 'START_PAGE - The start page of the browser'
+    7: 'FORM_SUBMIT - A form the user has submitted values to'
+    8: 'RELOAD - The user reloaded the page, eg by hitting the reload button or restored a session'
+    9: 'KEYWORD - URL what was generated from a replaceable keyword other than the default search provider'
+    10: 'KEYWORD_GENERATED - Corresponds to a visit generated from a KEYWORD'
+- input_attribute: 'visit_source'
+  output_attribute: 'visit_source'
+  default_value: 'UNKNOWN'
+  # Also see: https://cs.chromium.org/chromium/src/ui/app_list/search/history_types.h
+  values:
+    0: 'SOURCE_SYNCED'
+    1: 'SOURCE_BROWSED'
+    2: 'SOURCE_EXTENSION'
+    3: 'SOURCE_FIREFOX_IMPORTED'
+    4: 'SOURCE_IE_IMPORTED'
+    5: 'SOURCE_SAFARI_IMPORTED'
+message:
+- '{url}'
+- '({title})'
+- '[count: {typed_count}]'
+- 'Visit from: {from_visit}'
+- 'Visit Source: [{visit_source}]'
+- 'Type: [{page_transition}]'
+- '{url_hidden_string}'
+- '{url_typed_string}'
+short_message:
+- '{url}'
+- '({title})'
+---
+type: 'conditional'
 data_type: 'chrome:preferences:clear_history'
 message:
 - '{message}'
 short_message:
 - '{message}'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:content_settings:exceptions'
+message:
+- 'Permission {permission}'
+- 'used by {primary_url}'
+- 'embedded in {secondary_url}'
+short_message:
+- 'Permission {permission}'
+- 'used by {primary_url}'
+- 'embedded in {secondary_url}'
 ---
 type: 'conditional'
 data_type: 'chrome:preferences:extensions_autoupdater'
@@ -193,10 +251,51 @@ data_type: 'firefox:places:bookmark_folder'
 message: '{title}'
 short_message: '{title}'
 ---
+type: 'conditional'
+data_type: 'firefox:places:page_visited'
+enumeration_helpers:
+- input_attribute: 'visit_type'
+  output_attribute: 'transition_string'
+  default_value: 'UNKOWN'
+  # Also see: src/toolkit/components/places/nsINavHistoryService.idl
+  values:
+    1: 'LINK'
+    2: 'TYPED'
+    3: 'BOOKMARK'
+    4: 'EMBED'
+    5: 'REDIRECT_PERMANENT'
+    6: 'REDIRECT_TEMPORARY'
+    7: 'DOWNLOAD'
+    8: 'FRAMED_LINK'
+message:
+- '{url}'
+- '({title})'
+- '[count: {visit_count}]'
+- 'Host: {host}'
+- 'visited from: {from_visit}'
+- '{url_hidden_string}'
+- '{url_typed_string}'
+- 'Transition: {transition_string}'
+short_message:
+- 'URL: {url}'
+---
 type: 'basic'
 data_type: 'firefox:downloads:download'
 message: '{url} ({full_path}). Received: {received_bytes} bytes out of: {total_bytes} bytes.'
 short_message: '{full_path} downloaded ({received_bytes} bytes)'
+---
+type: 'conditional'
+data_type: 'msiecf:leak'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+message:
+- 'Cached file: {cached_file_path}'
+- 'Cached file size: {cached_file_size}'
+- '{recovered_string}'
+short_message:
+- 'Cached file: {cached_file_path}'
 ---
 type: 'conditional'
 data_type: 'msiecf:redirected'
@@ -209,6 +308,23 @@ message:
 - '{recovered_string}'
 short_message:
 - 'Location: {url}'
+---
+type: 'conditional'
+data_type: 'msiecf:url'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+message:
+- 'Location: {url}'
+- 'Number of hits: {number_of_hits}'
+- 'Cached file: {cached_file_path}'
+- 'Cached file size: {cached_file_size}'
+- 'HTTP headers: {http_headers}'
+- '{recovered_string}'
+short_message:
+- 'Location: {url}'
+- 'Cached file: {cached_file_path}'
 ---
 type: 'conditional'
 data_type: 'msie:webcache:container'

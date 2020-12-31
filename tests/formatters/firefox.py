@@ -19,18 +19,7 @@ class FirefoxPageVisitFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = firefox.FirefoxPageVisitFormatter()
     self.assertIsNotNone(event_formatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = firefox.FirefoxPageVisitFormatter()
-
-    expected_attribute_names = [
-        'from_visit', 'host', 'title', 'transition_string', 'url',
-        'url_hidden_string', 'url_typed_string', 'visit_count']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+  # TODO: add test for FormatEventValues.
 
 
 if __name__ == '__main__':

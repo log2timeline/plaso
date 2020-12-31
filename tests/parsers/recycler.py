@@ -35,7 +35,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.original_filename, expected_filename)
     self.assertEqual(event_data.file_size, 724919)
 
-    expected_message = '{0:s} (from drive: UNKNOWN)'.format(expected_filename)
+    expected_message = expected_filename
     expected_short_message = 'Deleted file: {0:s}'.format(expected_filename)
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
@@ -60,7 +60,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_data.original_filename, expected_filename)
     self.assertEqual(event_data.file_size, 222255)
 
-    expected_message = '{0:s} (from drive: UNKNOWN)'.format(expected_filename)
+    expected_message = expected_filename
     expected_short_message = 'Deleted file: {0:s}'.format(expected_filename)
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)

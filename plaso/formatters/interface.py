@@ -77,6 +77,20 @@ class BooleanEventFormatterHelper(EventFormatterHelper):
     event_values[self.output_attribute] = output_value
 
 
+class CustomEventFormatterHelper(EventFormatterHelper):
+  """Base class for a helper for custom formatting of event data."""
+
+  DATA_TYPE = ''
+
+  @abc.abstractmethod
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
+
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+
+
 class EnumerationEventFormatterHelper(EventFormatterHelper):
   """Helper for formatting enumeration event data.
 
@@ -119,13 +133,13 @@ class EnumerationEventFormatterHelper(EventFormatterHelper):
       event_values (dict[str, object]): event values.
     """
     input_value = event_values.get(self.input_attribute, None)
+    if input_value is not None:
+      default_value = self.default
+      if default_value is None:
+        default_value = input_value
 
-    default_value = self.default
-    if default_value is None:
-      default_value = input_value
-
-    event_values[self.output_attribute] = self.values.get(
-        input_value, default_value)
+      event_values[self.output_attribute] = self.values.get(
+          input_value, default_value)
 
 
 class FlagsEventFormatterHelper(EventFormatterHelper):

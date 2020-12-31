@@ -160,6 +160,28 @@ short_message:
 - ': {dest_port}'
 ---
 type: 'conditional'
+data_type: 'windows:lnk:link'
+message:
+- '[{description}]'
+- 'File size: {file_size}'
+- 'File attribute flags: 0x{file_attribute_flags:08x}'
+- 'Drive type: {drive_type}'
+- 'Drive serial number: 0x{drive_serial_number:08x}'
+- 'Volume label: {volume_label}'
+- 'Local path: {local_path}'
+- 'Network path: {network_path}'
+- 'cmd arguments: {command_line_arguments}'
+- 'env location: {env_var_location}'
+- 'Relative path: {relative_path}'
+- 'Working dir: {working_directory}'
+- 'Icon location: {icon_location}'
+- 'Link target: {link_target}'
+short_message:
+- '[{description}]'
+- '{linked_path}'
+- '{command_line_arguments}'
+---
+type: 'conditional'
 data_type: 'windows:metadata:deleted_item'
 enumeration_helpers:
 - input_attribute: 'drive_number'
@@ -201,15 +223,17 @@ short_message:
 - 'Deleted file: {original_filename}'
 ---
 type: 'conditional'
-data_type: 'windows:registry:explorer:programcache'
+data_type: 'windows:prefetch:execution'
 message:
-- 'Key: {key_path}'
-- 'Value: {value_name}'
-- 'Entries: [{entries}]'
+- 'Prefetch'
+- '[{executable}] was executed -'
+- 'run count {run_count}'
+- 'path hints: {path_hints}'
+- 'hash: 0x{prefetch_hash:08X}'
+- '{volumes_string}'
 short_message:
-- 'Key: {key_path}'
-- 'Value: {value_name}'
-- 'Entries: [{entries}]'
+- '{executable} was run'
+- '{run_count} time(s)'
 ---
 type: 'conditional'
 data_type: 'windows:registry:amcache'
@@ -276,6 +300,17 @@ type: 'basic'
 data_type: 'windows:registry:boot_verification'
 message: '[{key_path}] ImagePath: {image_path}'
 short_message: '[{key_path}] ImagePath: {image_path}'
+---
+type: 'conditional'
+data_type: 'windows:registry:explorer:programcache'
+message:
+- 'Key: {key_path}'
+- 'Value: {value_name}'
+- 'Entries: [{entries}]'
+short_message:
+- 'Key: {key_path}'
+- 'Value: {value_name}'
+- 'Entries: [{entries}]'
 ---
 type: 'conditional'
 data_type: 'windows:registry:installation'
@@ -590,6 +625,20 @@ type: 'basic'
 data_type: 'winrar:history'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
+---
+type: 'conditional'
+data_type: 'windows:shell_item:file_entry'
+message:
+- 'Name: {name}'
+- 'Long name: {long_name}'
+- 'Localized name: {localized_name}'
+- 'NTFS file reference: {file_reference}'
+- 'Shell item path: {shell_item_path}'
+- 'Origin: {origin}'
+short_message:
+- 'Name: {file_entry_name}'
+- 'NTFS file reference: {file_reference}'
+- 'Origin: {origin}'
 ---
 type: 'conditional'
 data_type: 'windows:srum:application_usage'
