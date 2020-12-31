@@ -115,32 +115,29 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:boot_execute',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-08-31 20:45:29.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:boot_execute')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
         'BootExecute: autocheck autochk *').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[1]
+    expected_event_values = {
+        'data_type': 'windows:registry:key_value',
+        'timestamp': '2012-08-31 20:45:29.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -154,6 +151,7 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
         'NumberOfInitialSessions: [REG_SZ] 2').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -211,16 +209,14 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:boot_verification',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-08-31 20:45:29.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:boot_verification')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -228,6 +224,7 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
             key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

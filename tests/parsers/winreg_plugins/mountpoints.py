@@ -44,17 +44,15 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:mount_points2',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'share_name': '\\home\\nfury',
+        'timestamp': '2011-08-23 17:10:14.960961'}
 
-    self.CheckTimestamp(event.timestamp, '2011-08-23 17:10:14.960961')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:mount_points2')
-    self.assertEqual(event_data.share_name, '\\home\\nfury')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -65,6 +63,7 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
         'Volume: ##controller#home#nfury').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

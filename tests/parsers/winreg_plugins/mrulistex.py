@@ -112,16 +112,14 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # A MRUListEx event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:mrulistex',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-08-28 09:23:49.002031'}
 
-    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:mrulistex')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -130,6 +128,7 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'Index: 3 [MRU Value 1]: c:\\evil.exe').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -174,16 +173,14 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     events = list(storage_writer.GetEvents())
 
     # A MRUListEx event.
-    event = events[40]
+    expected_event_values = {
+        'data_type': 'windows:registry:mrulistex',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2011-08-28 22:48:28.159309'}
 
-    self.CheckTimestamp(event.timestamp, '2011-08-28 22:48:28.159309')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:mrulistex')
+    self.CheckEventValues(storage_writer, events[40], expected_event_values)
 
     expected_message = (
         '[{0:s}\\exe] '
@@ -194,17 +191,16 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         '').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[40])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # A shell item event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:shell_item:file_entry',
+        'timestamp': '2012-03-08 22:16:02.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-03-08 22:16:02.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:shell_item:file_entry')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'Name: ALLOYR~1 '
@@ -218,6 +214,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'NTFS file reference: 44518-33 '
         'Origin: HKEY_CURRENT_USER\\...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -257,16 +254,14 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     events = list(storage_writer.GetEvents())
 
     # A MRUListEx event.
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:mrulistex',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-04-01 13:52:39.113742'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:39.113742')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:mrulistex')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -312,6 +307,7 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
         'Shell item: [wallpaper_medium.lnk]').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -351,16 +347,14 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     events = list(storage_writer.GetEvents())
 
     # A MRUListEx event.
-    event = events[30]
+    expected_event_values = {
+        'data_type': 'windows:registry:mrulistex',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-04-01 13:52:38.966290'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:38.966290')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:mrulistex')
+    self.CheckEventValues(storage_writer, events[30], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -390,6 +384,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
         'Shell item path: <Users Libraries> <UNKNOWN: 0x00>').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[30])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
