@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the helper for parser and plugin filter expressions."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.filters import parser_filter

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the event formatters interface classes."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.formatters import interface

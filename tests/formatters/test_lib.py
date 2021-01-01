@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Event formatter related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from tests import test_lib as shared_test_lib
 
 

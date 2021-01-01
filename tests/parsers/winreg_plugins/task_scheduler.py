@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Task Scheduler Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers.winreg_plugins import task_scheduler

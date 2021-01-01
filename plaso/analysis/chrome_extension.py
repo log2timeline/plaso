@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """A plugin that gather extension IDs from Chrome history browser."""
 
-from __future__ import unicode_literals
-
 import re
 
 import requests

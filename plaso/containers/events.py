@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Event attribute containers."""
 
-from __future__ import unicode_literals
-
 import re
 
 from plaso.containers import interface

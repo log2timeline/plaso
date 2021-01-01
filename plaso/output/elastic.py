@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """An output module that saves events to Elasticsearch."""
 
-from __future__ import unicode_literals
-
 from plaso.output import logger
 from plaso.output import manager
 from plaso.output import shared_elastic

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows EventLog (EVT) files."""
 
-from __future__ import unicode_literals
-
 import pyevt
 
 from dfdatetime import posix_time as dfdatetime_posix_time

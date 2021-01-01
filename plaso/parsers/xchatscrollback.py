@@ -35,8 +35,6 @@ References
 http://xchat.org
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import posix_time as dfdatetime_posix_time

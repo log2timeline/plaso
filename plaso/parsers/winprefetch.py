@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Prefetch files."""
 
-from __future__ import unicode_literals
-
 import pyscca
 
 from dfdatetime import filetime as dfdatetime_filetime

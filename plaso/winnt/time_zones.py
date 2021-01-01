@@ -6,8 +6,6 @@ Windows Registry key:
 HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones
 """
 
-from __future__ import unicode_literals
-
 
 # Dictionary to map Windows time zone names to Python equivalents.
 # Note that spaces have been stripped from the Windows time zone names.

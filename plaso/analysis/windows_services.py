@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """A plugin to enable quick triage of Windows Services."""
 
-from __future__ import unicode_literals
-
 import yaml
 
 from plaso.analysis import interface

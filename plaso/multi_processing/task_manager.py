@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The task manager."""
 
-from __future__ import unicode_literals
-
 import collections
 import heapq
 import threading

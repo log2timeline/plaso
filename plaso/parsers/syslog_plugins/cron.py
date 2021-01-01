@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a plugin for cron syslog entries."""
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from plaso.containers import time_events

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for Spotlight searched terms plist files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event

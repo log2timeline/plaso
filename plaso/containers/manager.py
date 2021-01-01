@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the attribute container manager class."""
 
-from __future__ import unicode_literals
-
 
 class AttributeContainersManager(object):
   """Class that implements the attribute container manager."""

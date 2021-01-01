@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the fake storage."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.containers import event_sources

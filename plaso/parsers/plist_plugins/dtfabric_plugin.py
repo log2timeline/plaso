@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Shared functionality for dtFabric-based data format plist parser plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 import os
 

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The hasher interface."""
 
-from __future__ import unicode_literals
-
 import abc
 
 

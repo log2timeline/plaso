@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the YAML-based formatters file."""
 
-from __future__ import unicode_literals
-
 import io
 import unittest
 

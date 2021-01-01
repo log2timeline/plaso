@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Function decorators."""
 
-from __future__ import unicode_literals
-
 import warnings
 
 

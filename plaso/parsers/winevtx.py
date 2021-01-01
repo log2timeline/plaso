@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows XML EventLog (EVTX) files."""
 
-from __future__ import unicode_literals
-
 from xml.parsers import expat
 
 import pyevtx

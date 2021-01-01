@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """File system stat object parser."""
 
-from __future__ import unicode_literals
-
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import events

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Logging related classes and functions."""
 
-from __future__ import unicode_literals
-
 import gzip
 import logging
 

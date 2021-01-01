@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Shared functionality for JSON based output modules."""
 
-from __future__ import unicode_literals
-
 import json
 
 from plaso.lib import errors

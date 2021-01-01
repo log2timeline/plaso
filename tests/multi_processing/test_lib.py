@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Multi-processing related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the merge reader for Redis stores."""
-from __future__ import unicode_literals
 
 import os
 import unittest

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains preprocessors for Windows."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.preprocessors import interface

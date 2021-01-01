@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Compound ZIP parser plugin for OpenXML files."""
 
-from __future__ import unicode_literals
-
 import re
 import zipfile
 

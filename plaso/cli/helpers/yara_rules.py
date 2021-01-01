@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The YARA rules CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import io
 
 import yara

@@ -5,8 +5,6 @@ The file format is described here:
 http://zsh.sourceforge.net/Doc/Release/Options.html#index-EXTENDEDHISTORY
 """
 
-from __future__ import unicode_literals
-
 import re
 
 import pyparsing

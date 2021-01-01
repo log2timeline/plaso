@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the default event formatter."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.formatters import default

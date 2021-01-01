@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The definitions."""
 
-from __future__ import unicode_literals
-
 
 MICROSECONDS_PER_SECOND = 1000000
 MICROSECONDS_PER_MINUTE = 60000000

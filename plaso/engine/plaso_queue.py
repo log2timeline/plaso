@@ -9,8 +9,6 @@ implementations of the queueing mechanism, to support multi processing and
 scalability.
 """
 
-from __future__ import unicode_literals
-
 import abc
 
 

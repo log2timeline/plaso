@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Drive database plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions

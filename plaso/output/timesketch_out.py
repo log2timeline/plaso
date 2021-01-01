@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Timesketch output module."""
 
-from __future__ import unicode_literals
-
 try:
   from flask import current_app
   # TODO: Added for backwards compatibility with Timesketch installations.

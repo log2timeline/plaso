@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """YAML-based formatters file."""
 
-from __future__ import unicode_literals
-
 import io
 import yaml
 

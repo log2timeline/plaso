@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """File entry filters."""
 
-from __future__ import unicode_literals
-
 import abc
 import collections
 import logging

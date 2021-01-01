@@ -5,8 +5,6 @@ BencodePlugin defines the attributes necessary for registration, discovery and
 operation of plugins for bencoded files which will be used by BencodeParser.
 """
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.parsers import plugins

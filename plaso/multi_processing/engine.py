@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The multi-process processing engine."""
 
-from __future__ import unicode_literals
-
 import abc
 import ctypes
 import os

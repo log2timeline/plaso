@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Restore Point (rp.log) files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 

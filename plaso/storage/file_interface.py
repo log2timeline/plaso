@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Storage interface classes for file-backed stores."""
 
-from __future__ import unicode_literals
-
 import abc
 import os
 import shutil

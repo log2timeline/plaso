@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The parsers and plugins interface classes."""
 
-from __future__ import unicode_literals
-
 import abc
 import os
 

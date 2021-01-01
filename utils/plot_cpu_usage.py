@@ -5,17 +5,14 @@
 This script requires the matplotlib and numpy Python modules.
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import glob
 import os
 import sys
 
-import numpy  # pylint: disable=import-error
+import numpy
 
-from matplotlib import pyplot  # pylint: disable=import-error
+from matplotlib import pyplot
 
 
 def Main():

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the event formatters manager class."""
 
-from __future__ import unicode_literals
-
 import glob
 import os
 

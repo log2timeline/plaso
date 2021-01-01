@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import artifacts
 from plaso.containers import events

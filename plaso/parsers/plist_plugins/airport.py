@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for Airport plist files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 

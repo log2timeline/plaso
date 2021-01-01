@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for custom destinations jump list (.customDestinations-ms) files."""
 
-from __future__ import unicode_literals
-
 import os
 
 from dfvfs.lib import definitions

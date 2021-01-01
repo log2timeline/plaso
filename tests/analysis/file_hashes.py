@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the unique hashes analysis plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfvfs.path import fake_path_spec

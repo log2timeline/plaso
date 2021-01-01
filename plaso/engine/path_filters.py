@@ -5,8 +5,6 @@ Path filters are specified in filter files and are used during collection
 to include or exclude file system paths.
 """
 
-from __future__ import unicode_literals
-
 from dfvfs.helpers import file_system_searcher
 
 from plaso.engine import filters_helper

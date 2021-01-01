@@ -9,8 +9,6 @@ It also contains various functions to represent timestamps in a more
 human readable form.
 """
 
-from __future__ import unicode_literals
-
 import datetime
 import logging
 

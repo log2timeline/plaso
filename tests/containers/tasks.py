@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the tasks attribute containers."""
 
-from __future__ import unicode_literals
-
 import time
 import unittest
 import uuid

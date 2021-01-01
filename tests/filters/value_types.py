@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the event filter expression parser expression classes."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.filters import value_types

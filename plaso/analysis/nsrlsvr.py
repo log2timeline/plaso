@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin to look up files in nsrlsvr and tag events."""
 
-from __future__ import unicode_literals
-
 import socket
 
 from plaso.analysis import hash_tagging

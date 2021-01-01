@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests that all analyzers and hashers are imported correctly."""
 
-from __future__ import unicode_literals
-
 import glob
 import os
 import unittest

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the analysis mediator."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions

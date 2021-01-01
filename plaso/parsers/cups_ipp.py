@@ -19,8 +19,6 @@ CUPS IPP version 2.0:
 * N/A
 """
 
-from __future__ import unicode_literals
-
 import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time

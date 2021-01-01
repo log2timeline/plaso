@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Redis merge reader."""
-from __future__ import unicode_literals
-
 import codecs
 
 from plaso.containers import event_sources

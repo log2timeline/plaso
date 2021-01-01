@@ -9,8 +9,6 @@ https://github.com/libyal/libsigscan/wiki/Internals#scanning-tree-based-signatur
 The scan tree is used in the filter to filter provided paths.
 """
 
-from __future__ import unicode_literals
-
 
 class _PathFilterTable(object):
   """Path filter table.

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Dynamic selected delimiter separated values output module."""
 
-from __future__ import unicode_literals
-
 from plaso.lib import timelib
 from plaso.output import formatting_helper
 from plaso.output import manager

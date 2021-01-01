@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
-from __future__ import unicode_literals
-
 import os
 import pytz
 

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the report attribute containers."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.containers import reports

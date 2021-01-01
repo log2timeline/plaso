@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite-based storage."""
 
-from __future__ import unicode_literals
-
 import os
 import sqlite3
 import zlib

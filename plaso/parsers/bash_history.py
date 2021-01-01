@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for bash history files."""
 
-from __future__ import unicode_literals
-
 import re
 
 import pyparsing

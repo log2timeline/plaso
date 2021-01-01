@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Data files related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import mediator as analysis_mediator
 from plaso.analysis import tagging
 from plaso.containers import events

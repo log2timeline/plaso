@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for PL/SQL Developer Recall files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import delphi_date_time as dfdatetime_delphi_date_time
 
 from plaso.containers import events

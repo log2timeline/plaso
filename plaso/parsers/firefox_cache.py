@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements a parser for Firefox cache 1 and 2 files."""
 
-from __future__ import unicode_literals
-
 import collections
 import re
 import os

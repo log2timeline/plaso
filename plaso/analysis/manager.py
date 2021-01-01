@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the analysis plugin manager class."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import definitions
 
 

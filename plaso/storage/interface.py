@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The storage interface classes."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.containers import artifacts

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Task related attribute container definitions."""
 
-from __future__ import unicode_literals
-
 import time
 import uuid
 

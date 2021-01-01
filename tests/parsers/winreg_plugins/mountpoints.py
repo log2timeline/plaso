@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the MountPoints2 Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers.winreg_plugins import mountpoints

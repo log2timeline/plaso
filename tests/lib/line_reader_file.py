@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the binary line reader file-like object."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfvfs.file_io import os_file_io

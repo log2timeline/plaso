@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output plugin manager."""
 
-from __future__ import unicode_literals
-
 
 class OutputManager(object):
   """Output module manager."""

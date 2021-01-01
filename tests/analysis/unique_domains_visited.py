@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the unique domains visited analysis plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.analysis import unique_domains_visited

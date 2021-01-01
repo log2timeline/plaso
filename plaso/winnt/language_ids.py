@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the Windows NT Language identifiers."""
 
-from __future__ import unicode_literals
-
 
 LANGUAGE_IDENTIFIERS = {
     'af': [0x0036, 'Afrikaans'],

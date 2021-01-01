@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """"Windows Registry plugin for SAM Users Account information."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events

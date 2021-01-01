@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for delimiter separated values shared output module."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from tests.output import test_lib

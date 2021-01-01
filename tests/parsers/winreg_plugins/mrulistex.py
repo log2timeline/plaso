@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the MRUListEx Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime

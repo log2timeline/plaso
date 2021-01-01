@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains preprocessors for Linux."""
 
-from __future__ import unicode_literals
-
 import csv
 import datetime
 

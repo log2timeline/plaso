@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Test for the null output module."""
 
-from __future__ import unicode_literals
-
 import os
 import unittest
 

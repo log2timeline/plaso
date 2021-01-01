@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the multi-processing analysis process."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.analysis import interface as analysis_interface

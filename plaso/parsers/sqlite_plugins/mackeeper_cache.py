@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for MacOS MacKeeper cache database files."""
 
-from __future__ import unicode_literals
-
 import codecs
 import json
 

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Mozilla Firefox downloads database plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the pinfo CLI tool."""
 
-from __future__ import unicode_literals
-
 import json
 import unittest
 

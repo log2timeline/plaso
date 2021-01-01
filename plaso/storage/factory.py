@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the storage factory class."""
 
-from __future__ import unicode_literals
-
 from plaso.lib import definitions
 from plaso.storage.redis import writer as redis_writer
 from plaso.storage.sqlite import reader as sqlite_reader

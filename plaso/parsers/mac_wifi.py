@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parses for MacOS Wifi log (wifi.log) files."""
 
-from __future__ import unicode_literals
-
 import re
 
 import pyparsing

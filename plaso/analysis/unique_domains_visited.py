@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """A plugin to generate a list of domains visited."""
 
-from __future__ import unicode_literals
-
 from urllib import parse as urlparse
 
 from plaso.analysis import interface

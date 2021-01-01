@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The psort CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import collections
 import os

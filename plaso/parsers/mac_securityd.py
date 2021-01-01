@@ -5,8 +5,6 @@ Also see:
   http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements

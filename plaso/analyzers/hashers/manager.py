@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for managing digest hashers for Plaso."""
 
-from __future__ import unicode_literals
-
 
 class HashersManager(object):
   """Class that implements the hashers manager."""

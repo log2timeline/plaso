@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for the Android usage history (usage-history.xml) files."""
 
-from __future__ import unicode_literals
-
 import os
 
 from defusedxml import ElementTree

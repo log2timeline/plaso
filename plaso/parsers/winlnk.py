@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Shortcut (LNK) files."""
 
-from __future__ import unicode_literals
-
 import uuid
 
 import pylnk

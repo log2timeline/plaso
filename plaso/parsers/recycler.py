@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Recycle files, INFO2 and $I/$R pairs."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 

@@ -7,8 +7,6 @@ analysis phases, with essential information like the timezone and codepage
 of the source data.
 """
 
-from __future__ import unicode_literals
-
 import codecs
 import os
 import pytz

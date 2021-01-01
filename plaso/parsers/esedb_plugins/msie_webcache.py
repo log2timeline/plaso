@@ -5,8 +5,6 @@ The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE
 as of version 10.
 """
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Explorer ProgramsCache key."""
 
-from __future__ import unicode_literals
-
 import uuid
 
 from plaso.containers import events

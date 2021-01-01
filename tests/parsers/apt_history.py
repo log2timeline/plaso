@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Advanced Packaging Tool (APT) History log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import errors

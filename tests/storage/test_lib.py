@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Storage related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.lib import definitions
 

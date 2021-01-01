@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The data location CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import os
 import sys
 

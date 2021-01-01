@@ -8,8 +8,6 @@ This is provided as a separate file to make it easier to inherit in other
 projects that may want to use the Plaso plugin system.
 """
 
-from __future__ import unicode_literals
-
 
 class BasePlugin(object):
   """A plugin is a lightweight parser that makes use of a common data structure.

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The nsrlsvr analysis plugin CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import nsrlsvr
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager

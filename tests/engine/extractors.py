@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the extractor classes."""
 
-from __future__ import unicode_literals
-
 import os
 import shutil
 import unittest

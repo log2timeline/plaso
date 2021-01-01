@@ -23,8 +23,6 @@ References:
     Summit_2010_SELinux.pdf
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import posix_time as dfdatetime_posix_time

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The parser mediator."""
 
-from __future__ import unicode_literals
-
 import copy
 import datetime
 import time

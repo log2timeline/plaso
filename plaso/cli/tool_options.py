@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The CLI tool options mix-ins."""
 
-from __future__ import unicode_literals
-
 import os
 
 from plaso.analysis import manager as analysis_manager

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains BagMRU Windows Registry plugins (shellbags)."""
 
-from __future__ import unicode_literals
-
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a plugin for parsing Google Analytics cookies."""
 
-from __future__ import unicode_literals
-
 from urllib import parse as urlparse
 
 from dfdatetime import posix_time as dfdatetime_posix_time

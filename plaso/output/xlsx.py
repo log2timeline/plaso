@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output module for the Excel Spreadsheet (XLSX) output format."""
 
-from __future__ import unicode_literals
-
 import datetime
 import os
 import re

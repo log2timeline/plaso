@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the output module interface classes."""
 
-from __future__ import unicode_literals
-
 import abc
 import os
 

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Windows Registry plugin interface."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.containers import time_events

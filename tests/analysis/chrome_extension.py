@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the chrome extension analysis plugin."""
 
-from __future__ import unicode_literals
-
 import os
 import unittest
 

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The hashing analyzer implementation."""
 
-from __future__ import unicode_literals
-
 from plaso.analyzers import interface
 from plaso.analyzers import logger
 from plaso.analyzers import manager

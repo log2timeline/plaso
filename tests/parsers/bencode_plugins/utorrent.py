@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the bencode parser plugin for uTorrent files."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions

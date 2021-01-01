@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the image export CLI tool."""
 
-from __future__ import unicode_literals
-
 import io
 import json
 import os

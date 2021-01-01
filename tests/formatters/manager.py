@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the event formatters manager."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.formatters import manager

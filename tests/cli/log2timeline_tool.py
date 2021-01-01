@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline CLI tool."""
 
-from __future__ import unicode_literals
-
 import collections
 import os
 import platform

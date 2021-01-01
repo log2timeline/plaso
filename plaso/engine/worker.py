@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The event extraction worker."""
 
-from __future__ import unicode_literals
-
 import copy
 import os
 import re

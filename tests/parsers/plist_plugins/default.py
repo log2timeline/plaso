@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the default plist plugin."""
 
-from __future__ import unicode_literals
-
 import datetime
 import unittest
 

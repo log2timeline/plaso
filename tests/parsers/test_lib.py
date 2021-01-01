@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from dfvfs.file_io import fake_file_io

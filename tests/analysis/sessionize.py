@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the sessionize analysis plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.analysis import sessionize

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the serializer object implementation using JSON."""
 
-from __future__ import unicode_literals
-
 import collections
 import json
 import time

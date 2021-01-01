@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the compound ZIP archive parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import errors

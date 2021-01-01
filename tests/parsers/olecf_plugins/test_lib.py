@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """OLECF plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import pyolecf
 
 from plaso.containers import sessions

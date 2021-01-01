@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the the zeromq queue."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.engine import zeromq_queue

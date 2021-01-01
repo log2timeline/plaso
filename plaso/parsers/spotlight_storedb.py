@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Apple Spotlight store database files."""
 
-from __future__ import unicode_literals
-
 from collections import abc as collections
 import zlib
 

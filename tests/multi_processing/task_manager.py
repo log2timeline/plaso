@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """This file contains tests for the task manager."""
 
-from __future__ import unicode_literals
-
 import time
 import unittest
 

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for Google Chrome extension activity database files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events

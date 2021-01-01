@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The worker processes CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager

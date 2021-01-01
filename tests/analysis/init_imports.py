@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests that all analysis plugins are imported correctly."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from tests import test_lib

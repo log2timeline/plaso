@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The log2timeline CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import sys
 import time

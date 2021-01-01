@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Fake implementation of MySQLdb module for testing."""
 
-from __future__ import unicode_literals
-
 
 class Error(object):
   """Fake implementation of MySQLdb Error class for testing."""

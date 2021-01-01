@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Apple Spotlight store database parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions

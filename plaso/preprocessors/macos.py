@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains preprocessors for MacOS."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.containers import artifacts

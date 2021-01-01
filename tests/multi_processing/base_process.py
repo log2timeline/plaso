@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the multi-processing base process."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.engine import configurations

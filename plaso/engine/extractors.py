@@ -4,8 +4,6 @@
 An extractor is a class used to extract information from "raw" data.
 """
 
-from __future__ import unicode_literals
-
 import copy
 
 import pysigscan

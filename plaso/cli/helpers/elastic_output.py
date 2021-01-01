@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Elastic Search output module CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import getpass
 import os
 

@@ -24,8 +24,6 @@ YYYY-MM-DD HH:MM:SS conffile filename decision
 Where decision is install or keep.
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements

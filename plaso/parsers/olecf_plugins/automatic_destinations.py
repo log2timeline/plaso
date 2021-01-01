@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plugin to parse .automaticDestinations-ms OLECF files."""
 
-from __future__ import unicode_literals
-
 import os
 import re
 

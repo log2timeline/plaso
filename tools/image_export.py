@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """The image export command line tool."""
 
-from __future__ import unicode_literals
-
 import logging
 import multiprocessing
 import os

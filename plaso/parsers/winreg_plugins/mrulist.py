@@ -5,8 +5,6 @@ Also see:
 https://github.com/libyal/winreg-kb/blob/main/documentation/MRU%20keys.asciidoc
 """
 
-from __future__ import unicode_literals
-
 import abc
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps

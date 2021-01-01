@@ -5,8 +5,6 @@ The format specifications can be read here:
   http://wiki.sleuthkit.org/index.php?title=Body_file
 """
 
-from __future__ import unicode_literals
-
 import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time

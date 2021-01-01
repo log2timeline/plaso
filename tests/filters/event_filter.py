@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the event object filter."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.containers import events

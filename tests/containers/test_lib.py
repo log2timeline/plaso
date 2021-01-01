@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Containers related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import interface
 

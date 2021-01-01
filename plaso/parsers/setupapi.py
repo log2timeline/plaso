@@ -5,8 +5,6 @@ The format is documented at:
 https://docs.microsoft.com/en-us/windows-hardware/drivers/install/setupapi-text-logs
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements

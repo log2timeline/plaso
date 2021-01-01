@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The XLSX output module CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the XLSX output module."""
 
-from __future__ import unicode_literals
-
 import os
 import unittest
 import zipfile

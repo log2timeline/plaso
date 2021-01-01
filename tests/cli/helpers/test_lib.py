@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """CLI arguments helper related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.cli.helpers import interface
 from plaso.engine import knowledge_base
 from plaso.lib import errors

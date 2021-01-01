@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the storage interface classes."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.storage import file_interface

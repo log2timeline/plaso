@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Preprocessing related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 from dfvfs.helpers import fake_file_system_builder

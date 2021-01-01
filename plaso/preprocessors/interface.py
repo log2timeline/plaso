@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains classes used for preprocessing in plaso."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from dfwinreg import registry_searcher

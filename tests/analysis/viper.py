@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Viper analysis plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 try:

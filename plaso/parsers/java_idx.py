@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Java Cache IDX files."""
 
-from __future__ import unicode_literals
-
 # TODO:
 #  * 6.02 files did not retain IP addresses. However, the
 #    deploy_resource_codebase header field may contain the host IP.

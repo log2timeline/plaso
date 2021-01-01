@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Fake storage writer for testing."""
 
-from __future__ import unicode_literals
-
 import copy
 
 from plaso.lib import definitions

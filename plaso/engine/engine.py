@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The processing engine."""
 
-from __future__ import unicode_literals
-
 import os
 
 from artifacts import errors as artifacts_errors

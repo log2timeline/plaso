@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Tests for mac notes plugin."""
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions

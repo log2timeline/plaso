@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows event data attribute containers."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 
 

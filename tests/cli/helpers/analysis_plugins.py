@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the analysis plugins CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 

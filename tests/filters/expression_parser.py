@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the event filter functions."""
 
-from __future__ import unicode_literals
-
 import re
 import unittest
 

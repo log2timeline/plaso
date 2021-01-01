@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plist plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.storage.fake import writer as fake_writer
 
 from plaso.containers import sessions

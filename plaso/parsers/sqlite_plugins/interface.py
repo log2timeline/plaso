@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Interface for SQLite database file parser plugins."""
 
-from __future__ import unicode_literals
-
 import sqlite3
 
 from plaso.parsers import logger

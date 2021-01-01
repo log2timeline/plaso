@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for NTFS metadata files."""
 
-from __future__ import unicode_literals
-
 import uuid
 
 import pyfsntfs  # pylint: disable=wrong-import-order

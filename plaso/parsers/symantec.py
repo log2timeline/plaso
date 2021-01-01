@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a Symantec parser in plaso."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events

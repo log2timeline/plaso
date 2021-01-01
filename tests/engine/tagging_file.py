@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the tagging file."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.engine import tagging_file

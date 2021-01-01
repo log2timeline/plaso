@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the output module interface."""
 
-from __future__ import unicode_literals
-
 import io
 import unittest
 

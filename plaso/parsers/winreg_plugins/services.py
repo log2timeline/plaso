@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows drivers and services Registry key parser plugin."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions

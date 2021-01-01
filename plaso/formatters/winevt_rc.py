@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows Event Log resources database reader."""
 
-from __future__ import unicode_literals
-
 import re
 import sqlite3
 

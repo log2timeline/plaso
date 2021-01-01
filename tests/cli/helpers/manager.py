@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI argument helper manager."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 

@@ -5,8 +5,6 @@ For documentation on the TLN format see:
 https://forensicswiki.xyz/wiki/index.php?title=TLN
 """
 
-from __future__ import unicode_literals
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import timelib

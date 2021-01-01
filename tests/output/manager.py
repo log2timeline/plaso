@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the output manager."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.output import interface
