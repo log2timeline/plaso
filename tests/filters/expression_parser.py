@@ -10,26 +10,10 @@ import unittest
 from plaso.containers import events
 from plaso.filters import expression_parser
 from plaso.filters import filters
-from plaso.formatters import interface as formatters_interface
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
-
-
-class PfilterFakeFormatter(formatters_interface.EventFormatter):
-  """A formatter for this fake class."""
-  DATA_TYPE = 'Weirdo:Made up Source:Last Written'
-
-  FORMAT_STRING = '{text}'
-  FORMAT_STRING_SHORT = '{text_short}'
-
-  SOURCE_LONG = 'Fake Parsing Source'
-  SOURCE_SHORT = 'REG'
-
-
-formatters_manager.FormattersManager.RegisterFormatter(PfilterFakeFormatter)
 
 
 class TestBinaryOperator(filters.GenericBinaryOperator):

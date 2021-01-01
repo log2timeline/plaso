@@ -19,18 +19,7 @@ class WinRegistryGenericFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winreg.WinRegistryGenericFormatter()
     self.assertIsNotNone(event_formatter)
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = winreg.WinRegistryGenericFormatter()
-
-    expected_attribute_names = [
-        'key_path',
-        'values']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+  # TODO: add test for FormatEventValues.
 
 
 if __name__ == '__main__':
