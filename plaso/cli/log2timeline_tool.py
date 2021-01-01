@@ -388,13 +388,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
         self._storage_format, session, self._storage_file_path)
     if not storage_writer:
-      raise errors.BadConfigOption(
-          'Unsupported storage format: {0:s}'.format(self._storage_format))
+      raise errors.BadConfigOption('Unsupported storage format: {0:s}'.format(
+          self._storage_format))
 
     single_process_mode = self._single_process_mode
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      # No need to multi process a single file source.
-      single_process_mode = True
+      if not self._process_archives or not self._IsArchiveFile(
+          self._source_path_specs[0]):
+        single_process_mode = True
 
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()

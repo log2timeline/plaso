@@ -6,7 +6,9 @@ from __future__ import unicode_literals
 import os
 import pytz
 
+from dfvfs.analyzer import analyzer as dfvfs_analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context as dfvfs_context
 
 # The following import makes sure the analyzers are registered.
@@ -165,6 +167,55 @@ class ExtractionTool(
     configuration.temporary_directory = self._temporary_directory
 
     return configuration
+
+  def _IsArchiveFile(self, path_spec):
+    """Determines if a path specification references an archive file.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification of the data stream.
+
+    Returns:
+      bool: True if the path specification references a supported archive file
+          format, False otherwise.
+    """
+    try:
+      type_indicators = (
+          dfvfs_analyzer.Analyzer.GetCompressedStreamTypeIndicators(
+              path_spec, resolver_context=self._resolver_context))
+    except IOError:
+      type_indicators = []
+
+    if len(type_indicators) > 1:
+      return False
+
+    if type_indicators:
+      type_indicator = type_indicators[0]
+    else:
+      type_indicator = None
+
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_BZIP2:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+          compression_method=dfvfs_definitions.COMPRESSION_METHOD_BZIP2,
+          parent=path_spec)
+
+    elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=path_spec)
+
+    elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_XZ:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+          compression_method=dfvfs_definitions.COMPRESSION_METHOD_XZ,
+          parent=path_spec)
+
+    try:
+      type_indicators = dfvfs_analyzer.Analyzer.GetArchiveTypeIndicators(
+          path_spec, resolver_context=self._resolver_context)
+    except IOError:
+      type_indicators = []
+
+    return bool(type_indicators)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
