@@ -27,7 +27,6 @@ from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.filters import test_lib as filters_test_lib
-from tests.formatters import test_lib as formatters_test_lib
 from tests.multi_processing import test_lib
 
 
@@ -384,8 +383,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     test_engine = psort.PsortMultiProcessEngine()
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       with shared_test_lib.TempDirectory() as temp_directory:
@@ -402,8 +403,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
             storage_reader, output_module, deduplicate_events=False)
 
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     self.assertEqual(len(output_module.events), 17)
     self.assertEqual(len(output_module.macb_groups), 3)
@@ -419,8 +419,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     test_engine = psort.PsortMultiProcessEngine()
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       with shared_test_lib.TempDirectory() as temp_directory:
@@ -436,8 +438,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         test_engine._ExportEvents(storage_reader, output_module)
 
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     self.assertEqual(len(output_module.events), 15)
     self.assertEqual(len(output_module.macb_groups), 3)
@@ -512,11 +513,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_writer = cli_test_lib.TestBinaryOutputWriter()
 
-    formatters_manager.FormattersManager.Reset()
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
     output_mediator_object = output_mediator.OutputMediator(
         knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
@@ -531,8 +527,17 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         test_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
-    test_engine.ExportEvents(
-        knowledge_base_object, storage_reader, output_module, configuration)
+
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
+
+    try:
+      test_engine.ExportEvents(
+          knowledge_base_object, storage_reader, output_module, configuration)
+    finally:
+      formatters_manager.FormattersManager._formatters = {}
 
     lines = []
     output = output_writer.ReadOutput()

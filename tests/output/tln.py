@@ -16,7 +16,6 @@ from plaso.output import tln
 
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
-from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
@@ -52,15 +51,16 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       description_string = formatting_helper._FormatDescription(
           event, event_data, event_data_stream)
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     expected_description_string = (
         '2012-06-27T18:17:01+00:00; '
@@ -97,6 +97,8 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
 class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the TLN output module."""
+
+  # pylint: disable=protected-access
 
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
       dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
@@ -138,15 +140,16 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       self._output_module.WriteEventBody(
           event, event_data, event_data_stream, event_data_stream)
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     expected_event_body = (
         '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
@@ -160,6 +163,8 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
 class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the log2timeline TLN output module."""
+
+  # pylint: disable=protected-access
 
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
       dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
@@ -201,15 +206,16 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       self._output_module.WriteEventBody(
           event, event_data, event_data_stream, event_data_stream)
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     expected_event_body = (
         '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '

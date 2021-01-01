@@ -19,12 +19,13 @@ from plaso.output import json_out
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
-from tests.formatters import test_lib as formatters_test_lib
 from tests.output import test_lib
 
 
 class JSONOutputTest(test_lib.OutputModuleTestCase):
   """Tests for the JSON output module."""
+
+  # pylint: disable=protected-access
 
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
       dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
@@ -75,15 +76,16 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_manager.FormattersManager.RegisterFormatter(
-        formatters_test_lib.TestEventFormatter)
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    formatters_manager.FormattersManager._formatters = {}
+    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+        formatters_directory_path)
 
     try:
       self._output_module.WriteEventBody(
           event, event_data, event_data_stream, None)
     finally:
-      formatters_manager.FormattersManager.DeregisterFormatter(
-          formatters_test_lib.TestEventFormatter)
+      formatters_manager.FormattersManager._formatters = {}
 
     expected_timestamp = shared_test_lib.CopyTimestampFromSring(
         '2012-06-27 18:17:01')

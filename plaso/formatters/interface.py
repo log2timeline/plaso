@@ -234,7 +234,7 @@ class EventFormatter(object):
       str: formatted message.
     """
     if not isinstance(format_string, str):
-      logger.warning('Format string: {0:s} is non-Unicode.'.format(
+      logger.warning('Format string: {0!s} is non-Unicode.'.format(
           format_string))
 
       # Plaso code files should be in UTF-8 any thus binary strings are

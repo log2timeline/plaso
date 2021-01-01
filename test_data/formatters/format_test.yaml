@@ -1,5 +1,10 @@
 # YAML-based formatters file for testing format features.
 
+type: 'basic'
+data_type: 'test:event'
+message: '{text}'
+short_message: '{text}'
+---
 type: 'conditional'
 data_type: 'test:fs:stat'
 message:

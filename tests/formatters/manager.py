@@ -10,7 +10,6 @@ from plaso.formatters import manager
 from plaso.lib import definitions
 
 from tests import test_lib as shared_test_lib
-from tests.formatters import test_lib
 
 
 class FormattersManagerTest(shared_test_lib.BaseTestCase):
@@ -80,71 +79,33 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
     self._SkipIfPathNotExists(test_file_path)
 
-    manager.FormattersManager.Reset()
-    number_of_formatters = len(manager.FormattersManager._formatter_classes)
-
+    manager.FormattersManager._formatters = {}
     manager.FormattersManager._ReadFormattersFile(test_file_path)
-    self.assertEqual(
-        len(manager.FormattersManager._formatter_classes),
-        number_of_formatters + 1)
+    self.assertEqual(len(manager.FormattersManager._formatters), 2)
 
-    manager.FormattersManager.Reset()
-    self.assertEqual(
-        len(manager.FormattersManager._formatter_classes),
-        number_of_formatters)
+    manager.FormattersManager._formatters = {}
 
   def testReadFormattersFromDirectory(self):
     """Tests the ReadFormattersFromDirectory function."""
     test_directory_path = self._GetTestFilePath(['formatters'])
     self._SkipIfPathNotExists(test_directory_path)
 
-    manager.FormattersManager.Reset()
-    number_of_formatters = len(manager.FormattersManager._formatter_classes)
-
+    manager.FormattersManager._formatters = {}
     manager.FormattersManager.ReadFormattersFromDirectory(test_directory_path)
-    self.assertEqual(
-        len(manager.FormattersManager._formatter_classes),
-        number_of_formatters + 1)
+    self.assertEqual(len(manager.FormattersManager._formatters), 2)
 
-    manager.FormattersManager.Reset()
-    self.assertEqual(
-        len(manager.FormattersManager._formatter_classes),
-        number_of_formatters)
+    manager.FormattersManager._formatters = {}
 
   def testReadFormattersFromFile(self):
     """Tests the ReadFormattersFromFile function."""
     test_file_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
     self._SkipIfPathNotExists(test_file_path)
 
-    manager.FormattersManager.Reset()
-    number_of_formatters = len(manager.FormattersManager._formatter_classes)
-
+    manager.FormattersManager._formatters = {}
     manager.FormattersManager.ReadFormattersFromFile(test_file_path)
-    self.assertEqual(
-        len(manager.FormattersManager._formatter_classes),
-        number_of_formatters + 1)
+    self.assertEqual(len(manager.FormattersManager._formatters), 2)
 
-    manager.FormattersManager.Reset()
-    self.assertEqual(
-        len(manager.FormattersManager._formatter_classes),
-        number_of_formatters)
-
-  def testFormatterRegistration(self):
-    """Tests the RegisterFormatter and DeregisterFormatter functions."""
-    number_of_formatters = len(manager.FormattersManager._formatter_classes)
-
-    manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
-    self.assertEqual(
-        len(manager.FormattersManager._formatter_classes),
-        number_of_formatters + 1)
-
-    with self.assertRaises(KeyError):
-      manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
-
-    manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
-    self.assertEqual(
-        len(manager.FormattersManager._formatter_classes),
-        number_of_formatters)
+    manager.FormattersManager._formatters = {}
 
 
 if __name__ == '__main__':
