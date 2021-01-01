@@ -27,8 +27,8 @@ application_removal
 # Tags Windows document open events.
 document_open
   data_type is 'windows:registry:bagmru'
-  data_type is 'windows:registry:mrulist' AND entries not contains '.exe' AND timestamp > 0
-  data_type is 'windows:registry:mrulistex' AND entries not contains '.exe' AND timestamp > 0
+  data_type is 'windows:registry:mrulist' AND entries not contains '.exe' AND timestamp > DATETIME(0)
+  data_type is 'windows:registry:mrulistex' AND entries not contains '.exe' AND timestamp > DATETIME(0)
   data_type is 'windows:registry:office_mru'
   data_type is 'windows:registry:office_mru_list'
 
