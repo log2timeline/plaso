@@ -71,7 +71,6 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(event_data.data_type, 'windows:lnk:link')
 
     expected_message = (
-        '[Empty description] '
         'File size: 3545 '
         'File attribute flags: 0x00002020 '
         'Drive type: 3 '
@@ -81,8 +80,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'Link target: <Users Libraries> <UNKNOWN: 0x00>')
 
     expected_short_message = (
-        '[Empty description] '
-        'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\Librarie...')
+        'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\Libraries\\'
+        'Documents.library-ms')
 
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)

@@ -35,6 +35,7 @@ class YAMLFormattersFile(object):
   _SUPPORTED_KEYS = frozenset([
       'data_type',
       'boolean_helpers',
+      'custom_helpers',
       'enumeration_helpers',
       'flags_helpers',
       'message',
@@ -72,6 +73,30 @@ class YAMLFormattersFile(object):
           value_if_false=value_if_false, value_if_true=value_if_true)
 
       formatter.AddHelper(helper)
+
+  def _ReadCustomHelpers(self, formatter, custom_helpers_definition_values):
+    """Reads custom helper definitions from a list.
+
+    Args:
+      formatter (EventFormatter): an event formatter.
+      custom_helpers_definition_values (list[dict[str, object]]):
+           custom helpers definition values.
+
+    Raises:
+      ParseError: if the format of the custom helper definitions are incorrect.
+    """
+    for custom_helper in custom_helpers_definition_values:
+      identifier = custom_helper.get('identifier', None)
+      if not identifier:
+        raise errors.ParseError(
+            'Invalid custom helper missing identifier.')
+
+      input_attribute = custom_helper.get('input_attribute', None)
+      output_attribute = custom_helper.get('output_attribute', None)
+
+      formatter.AddCustomHelper(
+          identifier, input_attribute=input_attribute,
+          output_attribute=output_attribute)
 
   def _ReadEnumerationHelpers(
       self, formatter, enumeration_helpers_definition_values):
@@ -211,6 +236,9 @@ class YAMLFormattersFile(object):
 
     boolean_helpers = formatter_definition_values.get('boolean_helpers', [])
     self._ReadBooleanHelpers(formatter, boolean_helpers)
+
+    custom_helpers = formatter_definition_values.get('custom_helpers', [])
+    self._ReadCustomHelpers(formatter, custom_helpers)
 
     enumeration_helpers = formatter_definition_values.get(
         'enumeration_helpers', [])

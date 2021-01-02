@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the shell item event formatter."""
+"""Tests for the Windows shell item custom event formatter helpers."""
 
 from __future__ import unicode_literals
 
@@ -11,15 +11,31 @@ from plaso.formatters import shell_items
 from tests.formatters import test_lib
 
 
-class ShellItemFileEntryEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the shell item event formatter."""
+class ShellItemFileEntryNameFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Windows shell item file entry name formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = shell_items.ShellItemFileEntryEventFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = shell_items.ShellItemFileEntryNameFormatterHelper()
 
-  # TODO: add test for FormatEventValues.
+    event_values = {
+        'long_name': 'long',
+        'name': 'short'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['file_entry_name'], 'long')
+
+    event_values = {
+        'long_name': None,
+        'name': 'short'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['file_entry_name'], 'short')
+
+    event_values = {
+        'long_name': None,
+        'name': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['file_entry_name'])
 
 
 if __name__ == '__main__':

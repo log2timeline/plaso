@@ -161,6 +161,9 @@ short_message:
 ---
 type: 'conditional'
 data_type: 'windows:lnk:link'
+custom_helpers:
+- identifier: 'windows_shortcut_linked_path'
+  output_attribute: 'linked_path'
 message:
 - '[{description}]'
 - 'File size: {file_size}'
@@ -224,6 +227,11 @@ short_message:
 ---
 type: 'conditional'
 data_type: 'windows:prefetch:execution'
+custom_helpers:
+- identifier: 'windows_prefetch_path_hints'
+  output_attribute: 'path_hints'
+- identifier: 'windows_prefetch_volumes_string'
+  output_attribute: 'volumes_string'
 message:
 - 'Prefetch'
 - '[{executable}] was executed -'
@@ -330,6 +338,9 @@ short_message:
 ---
 type: 'conditional'
 data_type: 'windows:registry:key_value'
+custom_helpers:
+- identifier: 'windows_registry_values'
+  output_attribute: 'values'
 message:
 - '[{key_path}]'
 - '{values}'
@@ -637,6 +648,9 @@ short_message: '[{key_path}] {entries}'
 ---
 type: 'conditional'
 data_type: 'windows:shell_item:file_entry'
+custom_helpers:
+- identifier: 'shell_item_file_entry_name'
+  output_attribute: 'file_entry_name'
 message:
 - 'Name: {name}'
 - 'Long name: {long_name}'

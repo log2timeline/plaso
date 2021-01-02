@@ -7,10 +7,32 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class FirefoxPageVisitFormatter(interface.CustomEventFormatterHelper):
-  """Custom formatter for Firefox page visited event values."""
+class FirefoxHistoryTypedCountFormatterHelper(
+    interface.CustomEventFormatterHelper):
+  """Mozilla Firefox history typed count formatter helper."""
 
-  DATA_TYPE = 'firefox:places:page_visited'
+  IDENTIFIER = 'firefox_history_typed_count'
+
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
+
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+    typed = event_values.get('typed', None)
+    if typed == '1':
+      url_typed_string = '(URL directly typed)'
+    else:
+      url_typed_string = '(URL not typed directly)'
+
+    event_values['url_typed_string'] = url_typed_string
+
+
+class FirefoxHistoryURLHiddenFormatterHelper(
+    interface.CustomEventFormatterHelper):
+  """Mozilla Firefox history URL hidden formatter helper."""
+
+  IDENTIFIER = 'firefox_history_url_hidden'
 
   def FormatEventValues(self, event_values):
     """Formats event values using the helper.
@@ -22,14 +44,7 @@ class FirefoxPageVisitFormatter(interface.CustomEventFormatterHelper):
     if hidden == '1':
       event_values['url_hidden_string'] = '(URL hidden)'
 
-    typed = event_values.get('typed', None)
-    if typed == '1':
-      url_typed_string = '(URL directly typed)'
-    else:
-      url_typed_string = '(URL not typed directly)'
 
-    event_values['url_typed_string'] = url_typed_string
-
-
-manager.FormattersManager.RegisterEventFormatterHelper(
-    FirefoxPageVisitFormatter)
+manager.FormattersManager.RegisterEventFormatterHelpers([
+    FirefoxHistoryTypedCountFormatterHelper,
+    FirefoxHistoryURLHiddenFormatterHelper])

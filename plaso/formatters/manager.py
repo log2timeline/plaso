@@ -33,13 +33,13 @@ class FormattersManager(object):
     """
     formatters_file = yaml_formatters_file.YAMLFormattersFile()
     for formatter in formatters_file.ReadFromFile(path):
+      for identifier in formatter.custom_helpers:
+        custom_formatter_helper = cls._custom_formatter_helpers.get(
+            identifier, None)
+        if custom_formatter_helper:
+          formatter.AddHelper(custom_formatter_helper)
+
       data_type = formatter.DATA_TYPE.lower()
-
-      custom_formatter_helper = cls._custom_formatter_helpers.get(
-          data_type, None)
-      if custom_formatter_helper:
-        formatter.AddHelper(custom_formatter_helper)
-
       cls._formatters[data_type] = formatter
 
   @classmethod
@@ -97,22 +97,22 @@ class FormattersManager(object):
     """Registers a custom event formatter helper.
 
     The custom event formatter helpers are identified based on their lower
-    case data type.
+    case identifier.
 
     Args:
       formatter_helper_class (type): class of the custom event formatter helper.
 
     Raises:
       KeyError: if a custom formatter helper is already set for the
-          corresponding data type.
+          corresponding identifier.
     """
-    data_type = formatter_helper_class.DATA_TYPE.lower()
-    if data_type in cls._custom_formatter_helpers:
+    identifier = formatter_helper_class.IDENTIFIER.lower()
+    if identifier in cls._custom_formatter_helpers:
       raise KeyError((
-          'Custom event formatter helper already set for data type: '
-          '{0:s}.').format(formatter_helper_class.DATA_TYPE))
+          'Custom event formatter helper already set for identifier: '
+          '{0:s}.').format(formatter_helper_class.IDENTIFIER))
 
-    cls._custom_formatter_helpers[data_type] = formatter_helper_class()
+    cls._custom_formatter_helpers[identifier] = formatter_helper_class()
 
   @classmethod
   def RegisterEventFormatterHelpers(cls, formatter_helper_classes):

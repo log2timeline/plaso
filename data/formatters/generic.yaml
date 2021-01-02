@@ -183,6 +183,11 @@ short_message: '{filename}'
 ---
 type: 'conditional'
 data_type: 'fs:ntfs:usn_change'
+custom_helpers:
+- identifier: 'ntfs_file_reference'
+  output_attribute: 'file_reference'
+- identifier: 'ntfs_parent_file_reference'
+  output_attribute: 'parent_file_reference'
 flags_helpers:
 - input_attribute: 'update_reason_flags'
   output_attribute: 'update_reason'
@@ -245,6 +250,13 @@ boolean_helpers:
 - input_attribute: 'is_allocated'
   output_attribute: 'unallocated'
   value_if_false: 'unallocated'
+custom_helpers:
+- identifier: 'ntfs_file_reference'
+  output_attribute: 'file_reference'
+- identifier: 'ntfs_parent_file_reference'
+  output_attribute: 'parent_file_reference'
+- identifier: 'ntfs_path_hints'
+  output_attribute: 'path_hints'
 enumeration_helpers:
 - input_attribute: 'attribute_type'
   output_attribute: 'attribute_name'

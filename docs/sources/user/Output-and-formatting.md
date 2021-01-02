@@ -96,6 +96,7 @@ An event formatter is defined as a set of attributes:
 
 * "data_type"; required event data type.
 * "boolean_helpers"; optional boolean helpers.
+* "custom_helpers"; optional custom helpers.
 * "enumeration_helpers"; optional enumeration helpers.
 * "message"; required formatter message string, for a basic type, or list of messages string pieces, for a conditional type.
 * "separator"; optional conditional message string piece separator, the default is a single space.
@@ -143,13 +144,41 @@ short_message:
 - '{path}'
 ```
 
-boolean helpers are defined as a set of attributes:
+Boolean helpers are defined as a set of attributes:
 
-* "input_attribute"; required name of the attribute which the value that needs to be mapped is read from.
-* "output_attribute"; required name of the attribute which the mapped value is written to.
+* "input_attribute"; required name of the attribute which the value is read from.
+* "output_attribute"; required name of the attribute which the formatted value is written to.
 * "default_value"; optional default value if there is no corresponding mapping in "values".
 * "value_if_false"; optional output value if the boolean input value is False.
 * "value_if_true"; optional output value if the boolean input value is True.
+
+#### Custom helpers
+
+Custom helpers can be defined to map a value of an event attribute to custom
+formatting code.
+
+```
+type: 'conditional'
+data_type: 'fs:stat:ntfs'
+custom_helpers:
+- identifier: 'ntfs_file_reference'
+  output_attribute: 'file_reference'
+message:
+- '{display_name}'
+- 'File reference: {file_reference}'
+short_message:
+- '{filename}'
+- '{file_reference}'
+```
+
+Here `ntfs_file_reference` references the `NTFSFileReferenceFormatterHelper`,
+which is defined in `plaso/formatters/file_system.py`.
+
+Custom helpers are defined as a set of attributes:
+
+* "identifier"; required identifier of the custom format helper.
+* "input_attribute"; optional name of the attribute which the value is read from.
+* "output_attribute"; optional name of the attribute which the formatted value is written to.
 
 #### Enumeration helpers
 
@@ -186,10 +215,10 @@ short_message:
 - '{description}'
 ```
 
-enumeration helpers are defined as a set of attributes:
+Enumeration helpers are defined as a set of attributes:
 
-* "input_attribute"; required name of the attribute which the value that needs to be mapped is read from.
-* "output_attribute"; required name of the attribute which the mapped value is written to.
+* "input_attribute"; required name of the attribute which the value is read from.
+* "output_attribute"; required name of the attribute which the formatted value is written to.
 * "default_value"; optional default value if there is no corresponding mapping in "values".
 * "values"; required value mappings, contains key value pairs.
 
@@ -241,6 +270,12 @@ short_message:
 - '{flag_values}'
 ```
 
+Flags helpers are defined as a set of attributes:
+
+* "input_attribute"; required name of the attribute which the value is read from.
+* "output_attribute"; required name of the attribute which the formatted value is written to.
+* "values"; required value mappings, contains key value pairs.
+
 #### Change log
 
 * 20200227 Added support for formatter configuration files.
@@ -248,3 +283,4 @@ short_message:
 * 20200904 Added support for flags helpers.
 * 20200916 Removed source types from formatters.
 * 20201220 Added support for boolean helpers.
+* 20201227 Added support for custom helpers.
