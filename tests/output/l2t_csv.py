@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import unittest
 
 from dfvfs.path import fake_path_spec
@@ -13,7 +14,6 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import l2t_csv
 
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
@@ -135,15 +135,14 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    output_mediator = self._CreateOutputMediator()
-    self._output_writer = cli_test_lib.TestOutputWriter()
-    self._output_module = l2t_csv.L2TCSVOutputModule(output_mediator)
-    self._output_module.SetOutputWriter(self._output_writer)
-
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = l2t_csv.L2TCSVOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
@@ -156,7 +155,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         formatters_directory_path)
 
     try:
-      self._output_module.WriteEventBody(
+      output_module.WriteEventBody(
           event, event_data, event_data_stream, event_tag)
     finally:
       formatters_manager.FormattersManager._formatters = {}
@@ -169,7 +168,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         '2,FAKE:log/syslog.1,-,Malware Printed,test_parser,a_binary_field: '
         'binary; my_number: 123; some_additional_foo: True\n')
 
-    event_body = self._output_writer.ReadOutput()
+    event_body = test_file_object.getvalue()
     self.assertEqual(event_body, expected_event_body)
 
     # Ensure that the only commas returned are the 16 delimiters.
@@ -179,13 +178,19 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = l2t_csv.L2TCSVOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
+    output_module.WriteHeader()
+
     expected_header = (
         'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         'version,filename,inode,notes,format,extra\n')
 
-    self._output_module.WriteHeader()
-
-    header = self._output_writer.ReadOutput()
+    header = test_file_object.getvalue()
     self.assertEqual(header, expected_header)
 
 

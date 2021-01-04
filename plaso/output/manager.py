@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from plaso.output import interface
-
 
 class OutputManager(object):
   """Output module manager."""
@@ -96,27 +94,6 @@ class OutputManager(object):
       return False
 
     return name.lower() in cls._output_classes
-
-  @classmethod
-  def IsTextFileOutputModule(cls, name):
-    """Determines if a specific output writes to a a text file.
-
-    Args:
-      name (str): name of the output module.
-
-    Returns:
-      True: if the output module writes to a text file.
-    """
-    name = name.lower()
-
-    output_class = cls._output_classes.get(name, None)
-    if not output_class:
-      output_class = cls._disabled_output_classes.get(name, None)
-
-    if output_class:
-      return issubclass(output_class, interface.TextFileOutputModule)
-
-    return False
 
   @classmethod
   def NewOutputModule(cls, name, output_mediator):

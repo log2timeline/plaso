@@ -69,22 +69,6 @@ optional arguments:
     with self.assertRaises(errors.BadConfigObject):
       output_modules.OutputModulesArgumentsHelper.ParseOptions(options, None)
 
-    # Test with output format missing.
-    options = cli_test_lib.TestOptions()
-
-    with self.assertRaises(errors.BadConfigOption):
-      output_modules.OutputModulesArgumentsHelper.ParseOptions(
-          options, test_tool)
-
-    # Test with output file missing.
-    options.output_format = 'dynamic'
-
-    with self.assertRaises(errors.BadConfigOption):
-      output_modules.OutputModulesArgumentsHelper.ParseOptions(
-          options, test_tool)
-
-    # TODO: improve test coverage.
-
 
 if __name__ == '__main__':
   unittest.main()

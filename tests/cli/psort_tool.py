@@ -279,7 +279,7 @@ optional arguments:
     options = test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
 
-    with self.assertRaises(errors.BadConfigOption):
+    with self.assertRaises(RuntimeError):
       test_tool.ParseOptions(options)
 
     # TODO: improve test coverage.

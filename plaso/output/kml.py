@@ -73,7 +73,7 @@ class KMLOutputModule(interface.TextFileOutputModule):
       xml_string = ElementTree.tostring(placemark_xml_element)
 
       output_text = codecs.decode(xml_string, self._output_mediator.encoding)
-      self._output_writer.Write(output_text)
+      self.WriteText(output_text)
 
   def WriteHeader(self):
     """Writes the header to the output."""
@@ -81,12 +81,11 @@ class KMLOutputModule(interface.TextFileOutputModule):
         '<?xml version="1.0" encoding="{0:s}"?>'
         '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'.format(
             self._output_mediator.encoding))
-    self._output_writer.Write(xml_string)
+    self.WriteText(xml_string)
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    xml_string = '</Document></kml>'
-    self._output_writer.Write(xml_string)
+    self.WriteText('</Document></kml>')
 
 
 manager.OutputManager.RegisterOutput(KMLOutputModule)

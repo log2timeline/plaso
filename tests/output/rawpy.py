@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import os
 import sys
 import unittest
@@ -14,7 +15,6 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.lib import definitions
 from plaso.output import rawpy
 
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
@@ -92,6 +92,8 @@ class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
 class NativePythonOutputTest(test_lib.OutputModuleTestCase):
   """Tests for the "raw" (or native) Python output module."""
 
+  # pylint: disable=protected-access
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
       dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
           os.path.sep, os.path.join('cases', 'image.dd')))
@@ -113,10 +115,11 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    test_file_object = io.StringIO()
+
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
     output_module = rawpy.NativePythonOutputModule(output_mediator)
-    output_module.SetOutputWriter(output_writer)
+    output_module._file_object = test_file_object
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -154,7 +157,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         ' closed for user root)\n'
         '\n').format(expected_os_location)
 
-    event_body = output_writer.ReadOutput()
+    event_body = test_file_object.getvalue()
 
     # Compare the output as list of lines which makes it easier to spot
     # differences.

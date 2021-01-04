@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import json
 import os
 import sys
@@ -17,7 +18,6 @@ from plaso.lib import definitions
 from plaso.output import json_line
 
 from tests import test_lib as shared_test_lib
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
@@ -46,27 +46,40 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    output_mediator = self._CreateOutputMediator()
-    self._output_writer = cli_test_lib.TestOutputWriter()
-    self._output_module = json_line.JSONLineOutputModule(output_mediator)
-    self._output_module.SetOutputWriter(self._output_writer)
-
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    self._output_module.WriteHeader()
-    header = self._output_writer.ReadOutput()
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = json_line.JSONLineOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
+    output_module.WriteHeader()
+
+    header = test_file_object.getvalue()
     self.assertEqual(header, '')
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
-    self._output_module.WriteFooter()
-    footer = self._output_writer.ReadOutput()
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = json_line.JSONLineOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
+    output_module.WriteFooter()
+
+    footer = test_file_object.getvalue()
     self.assertEqual(footer, '')
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = json_line.JSONLineOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
@@ -76,8 +89,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
         formatters_directory_path)
 
     try:
-      self._output_module.WriteEventBody(
-          event, event_data, event_data_stream, None)
+      output_module.WriteEventBody(event, event_data, event_data_stream, None)
     finally:
       formatters_manager.FormattersManager._formatters = {}
 
@@ -121,7 +133,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
         'username': 'root',
     }
-    event_body = self._output_writer.ReadOutput()
+    event_body = test_file_object.getvalue()
 
     # We need to compare dicts since we cannot determine the order
     # of values in the string.

@@ -4,13 +4,14 @@
 
 from __future__ import unicode_literals
 
+import io
+import os
 import unittest
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import dynamic
 
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
@@ -94,21 +95,27 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    test_file_object = io.StringIO()
+
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     output_module.SetFields([
         'date', 'time', 'timezone', 'macb', 'source', 'sourcetype',
         'type', 'user', 'host', 'message_short', 'message',
         'filename', 'inode', 'notes', 'format', 'extra'])
-    output_module.SetOutputWriter(output_writer)
 
     output_module.WriteHeader()
+
     expected_header = (
         'date,time,timezone,macb,source,sourcetype,type,user,host,'
         'message_short,message,filename,inode,notes,format,extra\n')
-    header = output_writer.ReadOutput()
+
+    header = test_file_object.getvalue()
     self.assertEqual(header, expected_header)
+
+    test_file_object.seek(0, os.SEEK_SET)
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -129,24 +136,24 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         '(pam_unix(cron:session): session closed for user root),Reporter '
         '<CRON> PID: 8442 (pam_unix(cron:session): session closed for user '
         'root),log/syslog.1,-,-,-,-\n')
-    event_body = output_writer.ReadOutput()
+
+    event_body = test_file_object.getvalue()
     self.assertEqual(event_body, expected_event_body)
 
+    test_file_object = io.StringIO()
+
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
-    output_module.SetFields([
-        'datetime', 'nonsense', 'hostname', 'message'])
-    output_module.SetOutputWriter(output_writer)
+    output_module._file_object = test_file_object
 
-    expected_header = 'datetime,nonsense,hostname,message\n'
+    output_module.SetFields(['datetime', 'nonsense', 'hostname', 'message'])
+
     output_module.WriteHeader()
-    header = output_writer.ReadOutput()
-    self.assertEqual(header, expected_header)
 
-    expected_event_body = (
-        '2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
-        ' (pam_unix(cron:session): session closed for user root)\n')
+    header = test_file_object.getvalue()
+    self.assertEqual(header, 'datetime,nonsense,hostname,message\n')
+
+    test_file_object.seek(0, os.SEEK_SET)
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -161,47 +168,58 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     finally:
       formatters_manager.FormattersManager._formatters = {}
 
-    event_body = output_writer.ReadOutput()
+    expected_event_body = (
+        '2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
+        ' (pam_unix(cron:session): session closed for user root)\n')
+
+    event_body = test_file_object.getvalue()
     self.assertEqual(event_body, expected_event_body)
 
-  def testHeader(self):
+  def testWriteHeader(self):
     """Tests the WriteHeader function."""
+    test_file_object = io.StringIO()
+
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
-    output_module.SetOutputWriter(output_writer)
+    output_module._file_object = test_file_object
+
+    output_module.WriteHeader()
+
     expected_header = (
         'datetime,timestamp_desc,source,source_long,message,parser,'
         'display_name,tag\n')
 
-    output_module.WriteHeader()
-    header = output_writer.ReadOutput()
+    header = test_file_object.getvalue()
     self.assertEqual(header, expected_header)
 
+    test_file_object = io.StringIO()
+
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     output_module.SetFields([
         'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
-    output_module.SetOutputWriter(output_writer)
 
-    expected_header = 'date,time,message,hostname,filename,some_stuff\n'
     output_module.WriteHeader()
-    header = output_writer.ReadOutput()
-    self.assertEqual(header, expected_header)
+
+    header = test_file_object.getvalue()
+    self.assertEqual(header, 'date,time,message,hostname,filename,some_stuff\n')
+
+    test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     output_module.SetFields([
         'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
     output_module.SetFieldDelimiter('@')
-    output_module.SetOutputWriter(output_writer)
 
-    expected_header = 'date@time@message@hostname@filename@some_stuff\n'
     output_module.WriteHeader()
-    header = output_writer.ReadOutput()
-    self.assertEqual(header, expected_header)
+
+    header = test_file_object.getvalue()
+    self.assertEqual(header, 'date@time@message@hostname@filename@some_stuff\n')
 
 
 if __name__ == '__main__':

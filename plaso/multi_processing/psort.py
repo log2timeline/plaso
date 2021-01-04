@@ -1031,7 +1031,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     self._events_status.total_number_of_events = total_number_of_events
 
-    output_module.Open()
     output_module.WriteHeader()
 
     self._StartStatusUpdateThread()
@@ -1050,7 +1049,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._StopStatusUpdateThread()
 
     output_module.WriteFooter()
-    output_module.Close()
 
     self._StopProfiling()
 

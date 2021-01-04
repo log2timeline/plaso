@@ -4,7 +4,7 @@
 
 from __future__ import unicode_literals
 
-import codecs
+import io
 import os
 import shutil
 import unittest
@@ -24,7 +24,6 @@ from plaso.output import null
 from plaso.storage import factory as storage_factory
 
 from tests import test_lib as shared_test_lib
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.filters import test_lib as filters_test_lib
 from tests.multi_processing import test_lib
@@ -511,15 +510,15 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     self._SkipIfPathNotExists(test_file_path)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestBinaryOutputWriter()
+
+    test_file_object = io.StringIO()
 
     output_mediator_object = output_mediator.OutputMediator(
         knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
-
     output_mediator_object.SetPreferredLanguageIdentifier('en-US')
 
     output_module = dynamic.DynamicOutputModule(output_mediator_object)
-    output_module.SetOutputWriter(output_writer)
+    output_module._file_object = test_file_object
 
     configuration = configurations.ProcessingConfiguration()
 
@@ -539,13 +538,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     finally:
       formatters_manager.FormattersManager._formatters = {}
 
-    lines = []
-    output = output_writer.ReadOutput()
-    # TODO: add test output writer that produces strings also see:
-    # https://github.com/log2timeline/plaso/issues/1963
-    output = codecs.decode(output, 'utf-8')
-    for line in output.split('\n'):
-      lines.append(line)
+    output = test_file_object.getvalue()
+    lines = output.split('\n')
 
     self.assertEqual(len(lines), 22)
 

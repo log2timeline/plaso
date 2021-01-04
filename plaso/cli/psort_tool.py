@@ -597,6 +597,9 @@ class PsortTool(
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
+      self._output_module.Close()
+      self._output_module = None
+
     if self._quiet_mode:
       return
 

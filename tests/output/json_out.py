@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import json
+import io
 import os
 import sys
 import unittest
@@ -17,7 +18,6 @@ from plaso.lib import definitions
 from plaso.output import json_out
 
 from tests import test_lib as shared_test_lib
-from tests.cli import test_lib as cli_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
@@ -46,33 +46,40 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    output_mediator = self._CreateOutputMediator()
-    self._output_writer = cli_test_lib.TestOutputWriter()
-    self._output_module = json_out.JSONOutputModule(output_mediator)
-    self._output_module.SetOutputWriter(self._output_writer)
-
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    expected_header = '{'
+    test_file_object = io.StringIO()
 
-    self._output_module.WriteHeader()
+    output_mediator = self._CreateOutputMediator()
+    output_module = json_out.JSONOutputModule(output_mediator)
+    output_module._file_object = test_file_object
 
-    header = self._output_writer.ReadOutput()
-    self.assertEqual(header, expected_header)
+    output_module.WriteHeader()
+
+    header = test_file_object.getvalue()
+    self.assertEqual(header, '{')
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
-    expected_footer = '}'
+    test_file_object = io.StringIO()
 
-    self._output_module.WriteFooter()
+    output_mediator = self._CreateOutputMediator()
+    output_module = json_out.JSONOutputModule(output_mediator)
+    output_module._file_object = test_file_object
 
-    footer = self._output_writer.ReadOutput()
-    self.assertEqual(footer, expected_footer)
+    output_module.WriteFooter()
+
+    footer = test_file_object.getvalue()
+    self.assertEqual(footer, '}')
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    test_file_object = io.StringIO()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = json_out.JSONOutputModule(output_mediator)
+    output_module._file_object = test_file_object
+
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
@@ -82,8 +89,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
         formatters_directory_path)
 
     try:
-      self._output_module.WriteEventBody(
-          event, event_data, event_data_stream, None)
+      output_module.WriteEventBody(event, event_data, event_data_stream, None)
     finally:
       formatters_manager.FormattersManager._formatters = {}
 
@@ -129,7 +135,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
             'username': 'root',
         }
     }
-    event_body = self._output_writer.ReadOutput()
+    event_body = test_file_object.getvalue()
 
     # We need to compare dicts since we cannot determine the order
     # of values in the string.
