@@ -294,7 +294,7 @@ task_schedule
 
 # Tags task sheduler lauched job events.
 job_lauch
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 200
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND (event_identifier is 200 OR event_identifier is 129)
 
 # Tags task sheduler successful completed job events.
 job_success
