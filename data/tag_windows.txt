@@ -575,7 +575,6 @@ application_install
 # Tags Windows application update events.
 application_update
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 905
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 905
 
 # Tags Windows application removal events.
 application_removal
