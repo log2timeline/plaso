@@ -393,32 +393,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testExtractionErrorCompatibility(self):
-    """Tests that extraction errors are converted to warnings."""
-    extraction_error = warnings.ExtractionError(
-        message='Test extraction error')
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      # Directly using the private methods as AddError has been removed.
-      storage_file._AddAttributeContainer(
-          extraction_error.CONTAINER_TYPE, extraction_error)
-      storage_file._WriteSerializedAttributeContainerList(
-          extraction_error.CONTAINER_TYPE)
-
-      storage_file.Close()
-
-      storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file)
-
-      test_warnings = list(storage_file.GetWarnings())
-      self.assertEqual(len(test_warnings), 1)
-
-      storage_file.Close()
-
   # TODO: add tests for GetEventData
   # TODO: add tests for GetEventDataByIdentifier
 

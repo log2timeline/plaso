@@ -38,20 +38,5 @@ class ExtractionWarning(interface.AttributeContainer):
     self.path_spec = path_spec
 
 
-class ExtractionError(ExtractionWarning):
-  """Extraction error attribute container.
-
-  This class is provided for backwards compatiblity only, all new code must use
-  ExtractionWarning.
-
-  Attributes:
-    message (str): warning message.
-    parser_chain (str): parser chain to which the warning applies.
-    path_spec (dfvfs.PathSpec): path specification of the file entry to which
-        the warning applies.
-  """
-  CONTAINER_TYPE = 'extraction_error'
-
-
-manager.AttributeContainersManager.RegisterAttributeContainers(
-    [ExtractionError, ExtractionWarning])
+manager.AttributeContainersManager.RegisterAttributeContainers([
+    ExtractionWarning])
