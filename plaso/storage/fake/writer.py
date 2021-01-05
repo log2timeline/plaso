@@ -94,6 +94,24 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self.analysis_reports.append(analysis_report)
 
+  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+    """Adds an analysis warning.
+
+    Args:
+      analysis_warning (AnalysisWarning): analysis warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    analysis_warning = self._PrepareAttributeContainer(analysis_warning)
+
+    self._analysis_warnings.append(analysis_warning)
+    self.number_of_analysis_warnings += 1
+
   def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 

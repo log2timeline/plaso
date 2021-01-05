@@ -67,8 +67,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testCountStoredAttributeContainers(self):
-    """Tests the _CountStoredAttributeContainers function."""
+  def testGetNumberOfAttributeContainers(self):
+    """Tests the _GetNumberOfAttributeContainers function."""
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -257,6 +257,20 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.AddAnalysisReport(analysis_report)
+
+      storage_file.Close()
+
+  def testAddAnalysisWarning(self):
+    """Tests the AddAnalysisWarning function."""
+    analysis_warning = warnings.AnalysisWarning(
+        message='Test analysis warning')
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file.AddAnalysisWarning(analysis_warning)
 
       storage_file.Close()
 
@@ -518,8 +532,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     # TODO: add test with time range.
 
   # TODO: add tests for HasAnalysisReports
-  # TODO: add tests for HasWarnings
   # TODO: add tests for HasEventTags
+  # TODO: add tests for HasExtactionWarnings
 
   # TODO: add tests for Open and Close
 

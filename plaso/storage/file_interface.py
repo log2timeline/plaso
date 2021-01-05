@@ -586,6 +586,24 @@ class StorageFileWriter(interface.StorageWriter):
     self._session.analysis_reports_counter[report_identifier] += 1
     self.number_of_analysis_reports += 1
 
+  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+    """Adds an analysis warning.
+
+    Args:
+      analysis_warning (AnalysisWarning): an analysis warning.
+      serialized_data (Optional[bytes]): serialized form of the analysis
+          warning.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    self._storage_file.AddAnalysisWarning(
+        analysis_warning, serialized_data=serialized_data)
+    self.number_of_analysis_warnings += 1
+
   def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
