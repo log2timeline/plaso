@@ -362,6 +362,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     scan_context = self.ScanSource(self._source_path)
     self._source_type = scan_context.source_type
 
+    is_archive = False
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+      is_archive = self._IsArchiveFile(self._source_path_specs[0])
+      if is_archive:
+        self._source_type = definitions.SOURCE_TYPE_ARCHIVE
+
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetSourceInformation(
         self._source_path, self._source_type,
@@ -393,8 +399,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     single_process_mode = self._single_process_mode
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      if not self._process_archives or not self._IsArchiveFile(
-          self._source_path_specs[0]):
+      if not self._process_archives or not is_archive:
         single_process_mode = True
 
     if single_process_mode:

@@ -19,6 +19,7 @@ import plaso
 
 from plaso.cli import tools
 from plaso.cli import views
+from plaso.lib import definitions
 
 
 class StatusView(object):
@@ -28,6 +29,7 @@ class StatusView(object):
   MODE_WINDOW = 'window'
 
   _SOURCE_TYPES = {
+      definitions.SOURCE_TYPE_ARCHIVE: 'archive',
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY: 'directory',
       dfvfs_definitions.SOURCE_TYPE_FILE: 'single file',
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE: (

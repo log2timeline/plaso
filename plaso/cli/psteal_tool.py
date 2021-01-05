@@ -25,6 +25,7 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.engine import single_process as single_process_engine
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import psort
@@ -311,6 +312,12 @@ class PstealTool(
     scan_context = self.ScanSource(self._source_path)
     source_type = scan_context.source_type
 
+    is_archive = False
+    if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+      is_archive = self._IsArchiveFile(self._source_path_specs[0])
+      if is_archive:
+        source_type = definitions.SOURCE_TYPE_ARCHIVE
+
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetSourceInformation(
         self._source_path, source_type,
@@ -340,8 +347,7 @@ class PstealTool(
 
     single_process_mode = self._single_process_mode
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      if not self._process_archives or not self._IsArchiveFile(
-          self._source_path_specs[0]):
+      if not self._process_archives or not is_archive:
         single_process_mode = True
 
     if single_process_mode:
