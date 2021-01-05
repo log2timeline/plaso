@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The attribute container interface."""
 
-from __future__ import unicode_literals
-
 
 class AttributeContainerIdentifier(object):
   """The attribute container identifier.

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The single process processing engine."""
 
-from __future__ import unicode_literals
-
 import os
 import pdb
 import time

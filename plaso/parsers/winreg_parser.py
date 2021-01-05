@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows NT Registry (REGF) files."""
 
-from __future__ import unicode_literals
-
 from dfwinreg import errors as dfwinreg_errors
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf

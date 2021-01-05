@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Skype main.db history database plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers.sqlite_plugins import skype

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a WinRAR history Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import re
 
 from plaso.containers import events

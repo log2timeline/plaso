@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the SkyDriveLog log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import skydrivelog

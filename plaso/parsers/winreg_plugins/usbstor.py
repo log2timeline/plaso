@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the USBStor key."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions

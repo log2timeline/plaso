@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a unit test for the timelib in Plaso."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 import pytz

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the view classes."""
 
-from __future__ import unicode_literals
-
 import sys
 import unittest
 

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Background Activity Moderator keys."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events

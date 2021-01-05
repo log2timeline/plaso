@@ -5,8 +5,6 @@ JSON line format is a single JSON entry or event per line instead
 of grouping all the output into a single JSON entity.
 """
 
-from __future__ import unicode_literals
-
 from plaso.output import interface
 from plaso.output import manager
 from plaso.output import shared_json

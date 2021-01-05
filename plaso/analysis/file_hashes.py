@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """A plugin to generate a list of unique hashes and paths."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports

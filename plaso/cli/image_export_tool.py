@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The image export CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import codecs
 import collections

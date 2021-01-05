@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Collection filters helper."""
 
-from __future__ import unicode_literals
-
 
 class CollectionFiltersHelper(object):
   """Helper for collection filters.

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin to look up files in VirusTotal and tag events."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import hash_tagging
 from plaso.analysis import logger
 from plaso.analysis import manager

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Shared functionality for dtFabric-based data format OLE CF plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 import os
 

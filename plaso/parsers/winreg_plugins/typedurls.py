@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the typed URLs key."""
 
-from __future__ import unicode_literals
-
 import re
 
 from plaso.containers import events

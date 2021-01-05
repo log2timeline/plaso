@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for OLE Compound Files (OLECF)."""
 
-from __future__ import unicode_literals
-
 import pyolecf
 
 from plaso.lib import specification

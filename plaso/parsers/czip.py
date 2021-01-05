@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for compound ZIP files."""
 
-from __future__ import unicode_literals
-
 import zipfile
 
 from plaso.lib import errors

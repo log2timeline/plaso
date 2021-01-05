@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for Safari history plist files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events

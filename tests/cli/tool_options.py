@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tool options mix-ins."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.cli import tool_options

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Viper analysis plugin CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import viper
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager

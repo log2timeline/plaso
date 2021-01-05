@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The preprocess plugins manager."""
 
-from __future__ import unicode_literals
-
 from dfvfs.helpers import file_system_searcher
 from dfvfs.helpers import windows_path_resolver
 from dfvfs.lib import errors as dfvfs_errors

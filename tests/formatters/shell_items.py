@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows shell item custom event formatter helpers."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.formatters import shell_items

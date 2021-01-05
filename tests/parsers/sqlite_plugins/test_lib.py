@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite database plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import os
 
 from plaso.containers import sessions

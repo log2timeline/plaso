@@ -80,8 +80,6 @@ The popularity-contest output looks like this:
    reported in the log line.
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import posix_time as dfdatetime_posix_time

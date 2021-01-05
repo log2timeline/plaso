@@ -1,8 +1,6 @@
 # -*- coding:utf-8 -*-
 """SQLite parser plugin for Tango on Android database files."""
 
-from __future__ import unicode_literals
-
 import codecs
 from base64 import b64decode as base64_decode
 

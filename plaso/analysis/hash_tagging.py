@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for analysis plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 import collections
 import queue

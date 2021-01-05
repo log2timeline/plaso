@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the JSON lines output module."""
 
-from __future__ import unicode_literals
-
 import io
 import json
 import os

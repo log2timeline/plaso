@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The psort multi-processing engine."""
 
-from __future__ import unicode_literals
-
 import collections
 import heapq
 import os

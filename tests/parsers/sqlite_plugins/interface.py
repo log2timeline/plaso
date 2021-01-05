@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the SQLite plugin interface."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers.sqlite_plugins import interface

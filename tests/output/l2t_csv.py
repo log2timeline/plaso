@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline (l2t) CSV output module."""
 
-from __future__ import unicode_literals
-
 import io
 import unittest
 

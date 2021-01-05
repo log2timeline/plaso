@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a unit test for MacOS securityd log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import mac_securityd

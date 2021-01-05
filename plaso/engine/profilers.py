@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The profiler classes."""
 
-from __future__ import unicode_literals
-
 import codecs
 import gzip
 import os

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the OLE Compound File summary and document summary plugins."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers.olecf_plugins import summary

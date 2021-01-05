@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper for parser and plugin filter expressions."""
 
-from __future__ import unicode_literals
-
 
 class ParserFilterExpressionHelper(object):
   """Helper for parser and plugin filter expressions.

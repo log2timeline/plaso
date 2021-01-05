@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The default event formatter."""
 
-from __future__ import unicode_literals
-
 from plaso.formatters import interface
 from plaso.lib import definitions
 

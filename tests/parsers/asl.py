@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for Apple System Log file parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import errors

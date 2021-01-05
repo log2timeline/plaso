@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the definitions for analysis plugins."""
 
-from __future__ import unicode_literals
-
 
 # All the possible analysis plugin types.
 

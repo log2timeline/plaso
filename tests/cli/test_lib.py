@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """CLI related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import argparse
 import io
 import operator

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output module for the native (or "raw") Python format."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import definitions

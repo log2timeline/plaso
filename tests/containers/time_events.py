@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the shell item event attribute container."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import posix_time as dfdatetime_posix_time

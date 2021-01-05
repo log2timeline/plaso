@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for vsftpd Logs."""
 
-from __future__ import unicode_literals
-
 import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 

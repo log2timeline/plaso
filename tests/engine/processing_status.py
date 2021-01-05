@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests the processing status."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.engine import processing_status

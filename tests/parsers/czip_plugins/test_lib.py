@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Compound ZIP file plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import zipfile
 
 from plaso.containers import sessions

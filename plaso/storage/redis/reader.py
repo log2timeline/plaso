@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Redis reader."""
-from __future__ import unicode_literals
-
 from plaso.lib import definitions
 from plaso.storage.redis import redis_store
 from plaso.storage import interface

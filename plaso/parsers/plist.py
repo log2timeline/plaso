@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for binary and text Property List (plist) files."""
 
-from __future__ import unicode_literals
-
 import binascii
 import plistlib
 

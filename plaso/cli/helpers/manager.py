@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The CLI arguments helper manager objects."""
 
-from __future__ import unicode_literals
-
 from plaso.lib import errors
 
 

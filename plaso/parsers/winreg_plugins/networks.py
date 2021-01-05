@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the NetworkList Registry plugin."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import systemtime as dfdatetime_systemtime
 
 from plaso.containers import events

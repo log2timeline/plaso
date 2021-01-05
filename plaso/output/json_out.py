@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output module that saves data into a JSON format."""
 
-from __future__ import unicode_literals
-
 from plaso.output import interface
 from plaso.output import manager
 from plaso.output import shared_json

@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper to check for availability and version of dependencies."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import configparser
 import os
 import re

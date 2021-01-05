@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome Preferences file event formatter."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.formatters import chrome_preferences

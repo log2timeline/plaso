@@ -3,8 +3,6 @@
 
 Only supports task storage at the moment.
 """
-from __future__ import unicode_literals
-
 import uuid
 
 import redis

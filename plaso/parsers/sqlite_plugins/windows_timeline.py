@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for Windows 10 Timeline database files."""
 
-from __future__ import unicode_literals
-
 import json
 
 from dfdatetime import posix_time as dfdatetime_posix_time

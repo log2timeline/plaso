@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Safari Binary Cookie files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 

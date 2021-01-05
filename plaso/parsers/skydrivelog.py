@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains SkyDrive log file parser in plaso."""
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements

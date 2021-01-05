@@ -1,8 +1,6 @@
 # -*_ coding: utf-8 -*-
 """Parser for SCCM Logs."""
 
-from __future__ import unicode_literals
-
 import re
 
 from dfdatetime import time_elements as dfdatetime_time_elements

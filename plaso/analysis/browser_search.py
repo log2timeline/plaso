@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """A plugin that extracts browser history from events."""
 
-from __future__ import unicode_literals
-
 import collections
 import re
 

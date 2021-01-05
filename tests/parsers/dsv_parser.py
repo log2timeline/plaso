@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the delimiter separated values (DSV) parser."""
 
-from __future__ import unicode_literals
-
 import io
 import unittest
 

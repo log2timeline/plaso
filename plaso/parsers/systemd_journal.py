@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
-from __future__ import unicode_literals
-
 import lzma
 
 from lz4 import block as lz4_block

@@ -2,8 +2,6 @@
 # -*_ coding: utf-8 -*-
 """Tests for the SCCM Logs Parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import sccm

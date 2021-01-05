@@ -11,8 +11,6 @@ the event object values into a formatted string that is similar
 to the description_long and description_short field.
 """
 
-from __future__ import unicode_literals
-
 import abc
 import re
 

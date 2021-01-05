@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for managing digest analyzers for Plaso."""
 
-from __future__ import unicode_literals
-
 
 class AnalyzersManager(object):
   """Class that implements the analyzers manager."""

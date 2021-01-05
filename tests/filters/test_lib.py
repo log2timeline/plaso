@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The filters shared test library."""
 
-from __future__ import unicode_literals
-
 from plaso.filters import event_filter
 
 from tests import test_lib as shared_test_lib

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The artifacts filter file CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import os
 
 from plaso.cli import tools

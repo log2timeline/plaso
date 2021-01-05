@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The event tag index."""
 
-from __future__ import unicode_literals
-
 
 class EventTagIndex(object):
   """Event tag index.

@@ -2,8 +2,6 @@
 # -*_ coding: utf-8 -*-
 """Tests for the dpkg.Log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import dpkg

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the Windows NT shell folder identifier definitions."""
 
-from __future__ import unicode_literals
-
 
 # For now ignore the line too long errors.
 # pylint: disable=line-too-long

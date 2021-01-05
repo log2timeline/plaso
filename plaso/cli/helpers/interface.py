@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The arguments helper interface."""
 
-from __future__ import unicode_literals
-
 import locale
 import sys
 

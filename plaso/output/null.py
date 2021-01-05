@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Null device output module."""
 
-from __future__ import unicode_literals
-
 from plaso.output import interface
 from plaso.output import manager
 

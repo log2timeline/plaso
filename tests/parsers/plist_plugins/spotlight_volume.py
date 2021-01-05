@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Spotlight Volume configuration plist plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers.plist_plugins import spotlight_volume

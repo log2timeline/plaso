@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plugin to parse the OLECF summary/document summary information items."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 import pyolecf

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the McAfee AV Log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import mcafeeav

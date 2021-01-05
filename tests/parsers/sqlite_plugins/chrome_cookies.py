@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome cookie database plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions

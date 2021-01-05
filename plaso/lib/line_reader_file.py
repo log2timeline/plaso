@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Binary line reader file-like object."""
 
-from __future__ import unicode_literals
-
 import os
 
 

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android Application Usage history parsers."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import android_app_usage

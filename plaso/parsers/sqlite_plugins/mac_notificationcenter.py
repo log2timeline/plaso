@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for MacOS Notification Center database files."""
 
-from __future__ import unicode_literals
-
 import plistlib
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time

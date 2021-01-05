@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests for shared functionality for dtFabric-based data format plugins."""
 
-from __future__ import unicode_literals
-
 import io
 import unittest
 

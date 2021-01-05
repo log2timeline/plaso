@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the necessary interface for OLECF plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.parsers import logger

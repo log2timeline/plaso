@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Storage attribute container identifier objects."""
 
-from __future__ import unicode_literals
-
 import uuid
 
 from plaso.containers import interface as containers_interface

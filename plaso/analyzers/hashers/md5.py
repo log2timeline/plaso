@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The MD5 hasher implementation."""
 
-from __future__ import unicode_literals
-
 import hashlib
 
 from plaso.analyzers.hashers import interface

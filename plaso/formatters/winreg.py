@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows Registry custom event formatter helpers."""
 
-from __future__ import unicode_literals
-
 from plaso.formatters import interface
 from plaso.formatters import manager
 

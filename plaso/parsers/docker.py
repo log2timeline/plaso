@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Docker configuration and log files."""
 
-from __future__ import unicode_literals
-
 import codecs
 import json
 import os

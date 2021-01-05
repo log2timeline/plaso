@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for Google Chrome history database files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 

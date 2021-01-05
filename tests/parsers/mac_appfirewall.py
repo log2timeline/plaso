@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for Mac AppFirewall log file parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import mac_appfirewall

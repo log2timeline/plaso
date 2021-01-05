@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """ESEDB plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import sessions
 from plaso.parsers import esedb
 from plaso.storage.fake import writer as fake_writer

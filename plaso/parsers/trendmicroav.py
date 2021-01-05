@@ -7,8 +7,6 @@ real-time) and the web reputation (network scan/filtering).
 Currently only the first log is supported.
 """
 
-from __future__ import unicode_literals
-
 from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements

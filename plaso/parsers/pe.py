@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """A parser for Portable Executable format files."""
 
-from __future__ import unicode_literals
-
 import pefile
 
 from dfdatetime import posix_time as dfdatetime_posix_time

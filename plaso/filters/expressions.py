@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The event filter expression parser expression classes."""
 
-from __future__ import unicode_literals
-
 import abc
 import logging
 

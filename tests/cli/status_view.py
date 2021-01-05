@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the status view."""
 
-from __future__ import unicode_literals
-
 import unittest
 try:
   import mock  # pylint: disable=import-error

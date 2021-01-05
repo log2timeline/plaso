@@ -5,8 +5,6 @@ References
 https://community.sophos.com/kb/en-us/110923
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements

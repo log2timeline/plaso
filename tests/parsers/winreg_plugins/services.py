@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """This file contains tests for Services Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime

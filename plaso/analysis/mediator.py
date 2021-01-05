@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The analysis plugin mediator object."""
 
-from __future__ import unicode_literals
-
 import calendar
 import time
 

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Parser test for MacOS Cups IPP Log files."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder

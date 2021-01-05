@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The multi-process worker process."""
 
-from __future__ import unicode_literals
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context

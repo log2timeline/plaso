@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parsers for MacOS fseventsd files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from dfvfs.resolver import resolver as path_spec_resolver

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Parser test for utmp files."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import utmp

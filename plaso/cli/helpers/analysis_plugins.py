@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The analysis plugins CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import sys
 
 from plaso.analysis import manager as analysis_manager

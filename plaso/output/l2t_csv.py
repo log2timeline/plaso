@@ -5,8 +5,6 @@ For documentation on the L2T CSV format see:
 https://forensicswiki.xyz/wiki/index.php?title=L2T_CSV
 """
 
-from __future__ import unicode_literals
-
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.lib import errors

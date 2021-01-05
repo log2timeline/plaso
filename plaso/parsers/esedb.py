@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Extensible Storage Engine (ESE) database files (EDB)."""
 
-from __future__ import unicode_literals
-
 import pyesedb
 
 from plaso.lib import specification

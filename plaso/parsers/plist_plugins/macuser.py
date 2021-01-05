@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS user plist files."""
 
-from __future__ import unicode_literals
-
 # TODO: Only plists from MacOS 10.8 and 10.9 were tested. Look at other
 #       versions as well.
 

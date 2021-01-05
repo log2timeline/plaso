@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Scheduled Task job files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import systemtime as dfdatetime_systemtime
 from dfdatetime import time_elements as dfdatetime_time_elements

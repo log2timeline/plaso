@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the AMCache.hve file."""
 
-from __future__ import unicode_literals
-
 import pyregf
 
 from dfdatetime import filetime

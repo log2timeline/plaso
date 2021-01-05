@@ -9,8 +9,6 @@ See additional details here:
   https://plaso.readthedocs.io/en/latest/sources/user/Using-psort.html
 """
 
-from __future__ import unicode_literals
-
 import multiprocessing
 import logging
 import os

@@ -12,8 +12,6 @@ See additional details here:
   https://plaso.readthedocs.io/en/latest/sources/user/Creating-a-timeline.html#using-psteal
 """
 
-from __future__ import unicode_literals
-
 import multiprocessing
 import logging
 import os

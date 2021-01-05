@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The SHA-256 Hasher implementation"""
 
-from __future__ import unicode_literals
-
 import hashlib
 
 from plaso.analyzers.hashers import interface

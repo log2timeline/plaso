@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """"Windows Registry plugin for the Microsoft Office MRU."""
 
-from __future__ import unicode_literals
-
 import re
 
 from dfdatetime import filetime as dfdatetime_filetime

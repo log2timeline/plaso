@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Mozilla Firefox history custom event formatter helpers."""
 
-from __future__ import unicode_literals
-
 from plaso.formatters import interface
 from plaso.formatters import manager
 

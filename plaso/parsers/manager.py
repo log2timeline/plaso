@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The parsers and plugins manager."""
 
-from __future__ import unicode_literals
-
 import pysigscan
 
 from plaso.filters import parser_filter

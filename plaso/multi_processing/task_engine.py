@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The task multi-process processing engine."""
 
-from __future__ import unicode_literals
-
 import heapq
 import logging
 import multiprocessing

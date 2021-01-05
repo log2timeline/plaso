@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Interface for compound ZIP file plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.parsers import plugins

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Processing configuration classes."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import interface
 
 

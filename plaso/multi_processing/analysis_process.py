@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The multi-process analysis process."""
 
-from __future__ import unicode_literals
-
 import threading
 
 from plaso.analysis import mediator as analysis_mediator

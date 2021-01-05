@@ -5,8 +5,6 @@ Also see:
 * https://www.rsyslog.com/doc/v8-stable/configuration/templates.html
 """
 
-from __future__ import unicode_literals
-
 import re
 
 from dfdatetime import time_elements as dfdatetime_time_elements

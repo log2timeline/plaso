@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Analyzer that matches Yara rules."""
 
-from __future__ import unicode_literals
-
 import yara
 
 try:

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output module field formatting helper."""
 
-from __future__ import unicode_literals
-
 import abc
 import csv
 import datetime

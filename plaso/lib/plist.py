@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The plist file object."""
 
-from __future__ import unicode_literals
-
 import plistlib
 
 

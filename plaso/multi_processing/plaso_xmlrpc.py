@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """XML RPC server and client."""
 
-from __future__ import unicode_literals
-
 import socketserver as SocketServer
 import threading
 

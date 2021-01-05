@@ -6,8 +6,6 @@ annotation and visualization within Internet-based, two-dimensional maps and
 three-dimensional Earth browsers.
 """
 
-from __future__ import unicode_literals
-
 import codecs
 
 from xml.etree import ElementTree

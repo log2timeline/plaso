@@ -6,8 +6,6 @@ also some implementations that extend it to provide a more comprehensive
 parser.
 """
 
-from __future__ import unicode_literals
-
 import abc
 
 import pyparsing

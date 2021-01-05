@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for MacOS keychain database files."""
 
-from __future__ import unicode_literals
-
 import codecs
 import collections
 

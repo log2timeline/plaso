@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The default plugin for parsing OLE Compound Files (OLECF)."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 

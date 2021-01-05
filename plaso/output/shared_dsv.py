@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Shared functionality for delimiter separated values output modules."""
 
-from __future__ import unicode_literals
-
 from plaso.output import formatting_helper
 from plaso.output import interface
 

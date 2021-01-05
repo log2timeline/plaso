@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 """The log2timeline command line tool."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import logging
 import multiprocessing
 import os

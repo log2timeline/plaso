@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the selinux log file parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import selinux

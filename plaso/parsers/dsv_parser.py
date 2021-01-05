@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Delimiter separated values (DSV) parser interface."""
 
-from __future__ import unicode_literals
-
 import abc
 import csv
 import os

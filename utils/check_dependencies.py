@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script to check for the availability and version of dependencies."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import sys
 
 # Change PYTHONPATH to include dependencies.

@@ -2,8 +2,6 @@
 # -*_ coding: utf-8 -*-
 """Tests for the Zsh extended_history parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import zsh_extended_history

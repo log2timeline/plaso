@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite parser."""
 
-from __future__ import unicode_literals
-
 import os
 import sqlite3
 import tempfile

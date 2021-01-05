@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The status view."""
 
-from __future__ import unicode_literals
-
 import ctypes
 import sys
 import time

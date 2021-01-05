@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Google Chrome and Chromium Cache files."""
 
-from __future__ import unicode_literals
-
 import os
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the SHA-1 hasher implementation."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.analyzers.hashers import sha1

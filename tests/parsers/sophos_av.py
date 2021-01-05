@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Sophos Anti-Virus log (SAV.txt) parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import sophos_av

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Microsoft Internet Explorer (MSIE) Cache Files (CF)."""
 
-from __future__ import unicode_literals
-
 import pymsiecf
 
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time

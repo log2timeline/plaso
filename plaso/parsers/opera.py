@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parsers for Opera Browser history files."""
 
-from __future__ import unicode_literals
-
 import os
 
 from urllib import parse as urlparse

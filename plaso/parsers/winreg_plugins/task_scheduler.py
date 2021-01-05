@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the Task Scheduler Registry keys plugins."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events

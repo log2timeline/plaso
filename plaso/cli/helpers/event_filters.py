@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The event filters CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.cli import time_slices

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Shared functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import io
 import os
 import shutil

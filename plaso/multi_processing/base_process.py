@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Base class for a process used in multi-processing."""
 
-from __future__ import unicode_literals
-
 import abc
 import logging
 import multiprocessing

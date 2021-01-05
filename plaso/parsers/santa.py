@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Santa log (santa.log) parser."""
 
-from __future__ import unicode_literals
-
 import re
 import pyparsing
 

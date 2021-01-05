@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains an interface for browser cookie plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.lib import errors

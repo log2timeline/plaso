@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The psteal CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import collections
 import datetime

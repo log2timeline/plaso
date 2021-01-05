@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Default plist parser plugin."""
 
-from __future__ import unicode_literals
-
 import datetime
 
 from dfdatetime import time_elements as dfdatetime_time_elements

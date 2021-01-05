@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows XML EventLog (EVTX) parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions

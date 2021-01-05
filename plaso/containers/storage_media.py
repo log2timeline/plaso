@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Storage media related attribute container definitions."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import interface
 from plaso.containers import manager
 

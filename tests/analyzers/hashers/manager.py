@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the hasher manager."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.analyzers.hashers import interface

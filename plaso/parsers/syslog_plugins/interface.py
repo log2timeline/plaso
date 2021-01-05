@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for syslog plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 
 import pyparsing

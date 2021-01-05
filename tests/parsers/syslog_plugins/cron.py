@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the cron syslog plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from tests.parsers.syslog_plugins import test_lib

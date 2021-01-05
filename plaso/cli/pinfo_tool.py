@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The pinfo CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import collections
 import json

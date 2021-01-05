@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """ZeroMQ implementations of the Plaso queue interface."""
 
-from __future__ import unicode_literals
-
 import abc
 import errno
 import threading

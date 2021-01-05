@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper to create filters based on forensic artifact definitions."""
 
-from __future__ import unicode_literals
-
 from artifacts import definitions as artifact_types
 
 from dfwinreg import registry_searcher

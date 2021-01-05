@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Definitions to provide a whole-file processing framework."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.lib import definitions

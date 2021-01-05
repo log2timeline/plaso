@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Extensible Storage Engine (ESE) database files (EDB) parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import esedb

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.engine import knowledge_base
 from plaso.output import mediator
 

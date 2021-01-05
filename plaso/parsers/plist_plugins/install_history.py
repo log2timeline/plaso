@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS install history plist files."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event

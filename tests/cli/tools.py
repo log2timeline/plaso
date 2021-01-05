@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tools classes."""
 
-from __future__ import unicode_literals
-
 import argparse
 import io
 import locale

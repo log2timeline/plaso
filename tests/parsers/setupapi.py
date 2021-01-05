@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Setupapi log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import setupapi

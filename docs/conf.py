@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Sphinx build configuration file."""
 
-from __future__ import unicode_literals
-
 import os
 import sys
 

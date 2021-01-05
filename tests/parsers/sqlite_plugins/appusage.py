@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the MacOS application usage database plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers.sqlite_plugins import appusage

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Redis storage."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 import fakeredis

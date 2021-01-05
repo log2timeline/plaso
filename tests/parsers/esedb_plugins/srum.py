@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the System Resource Usage Monitor (SRUM) ESE database file."""
 
-from __future__ import unicode_literals
-
 import collections
 import unittest
 
