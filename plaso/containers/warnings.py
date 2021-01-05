@@ -11,9 +11,9 @@ from plaso.containers import manager
 class ExtractionWarning(interface.AttributeContainer):
   """Extraction warning attribute container.
 
-  Extraction warnings are produced by parsers/plugins as well the Plaso engine
-  when they encounter situations that should be brought to the users' attention
-  but are not events derived from the data being processed.
+  Extraction warnings are produced by parsers/plugins when they encounter
+  situations that should be brought to the users' attention but are not
+  events derived from the data being processed.
 
   Attributes:
     message (str): warning message.

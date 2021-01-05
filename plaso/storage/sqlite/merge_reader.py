@@ -5,12 +5,7 @@ import os
 import sqlite3
 import zlib
 
-from plaso.containers import event_sources
-from plaso.containers import events
 from plaso.containers import manager as containers_manager
-from plaso.containers import reports
-from plaso.containers import tasks
-from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import interface
 from plaso.storage import identifiers
@@ -22,38 +17,6 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
   _ATTRIBUTE_CONTAINERS_MANAGER = (
       containers_manager.AttributeContainersManager)
-
-  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
-
-  # Some container types reference other container types, such as event
-  # referencing event_data. Container types in this tuple must be ordered after
-  # all the container types they reference.
-  _CONTAINER_TYPES = (
-      _CONTAINER_TYPE_EVENT_SOURCE,
-      _CONTAINER_TYPE_EVENT_DATA_STREAM,
-      _CONTAINER_TYPE_EVENT_DATA,
-      _CONTAINER_TYPE_EVENT,
-      _CONTAINER_TYPE_EVENT_TAG,
-      _CONTAINER_TYPE_EXTRACTION_WARNING,
-      _CONTAINER_TYPE_ANALYSIS_REPORT)
-
-  _ADD_CONTAINER_TYPE_METHODS = {
-      _CONTAINER_TYPE_ANALYSIS_REPORT: '_AddAnalysisReport',
-      _CONTAINER_TYPE_EVENT: '_AddEvent',
-      _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
-      _CONTAINER_TYPE_EVENT_DATA_STREAM: '_AddEventDataStream',
-      _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
-      _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
-      _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddWarning',
-  }
 
   _TABLE_NAMES_QUERY = (
       'SELECT name FROM sqlite_master WHERE type = "table"')
@@ -95,16 +58,6 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
                 container_type))
 
       self._add_container_type_methods[container_type] = method
-
-  def _AddAnalysisReport(self, analysis_report, serialized_data=None):
-    """Adds an analysis report.
-
-    Args:
-      analysis_report (AnalysisReport): analysis report.
-      serialized_data (Optional[bytes]): serialized form of the analysis report.
-    """
-    self._storage_writer.AddAnalysisReport(
-        analysis_report, serialized_data=serialized_data)
 
   # The serialized form of the event is not used, as this method modifies the
   # event.
@@ -205,34 +158,6 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     identifier = event_data_stream.GetIdentifier()
     self._event_data_stream_identifier_mappings[lookup_key] = identifier
-
-  def _AddEventSource(self, event_source, serialized_data=None):
-    """Adds an event source.
-
-    Args:
-      event_source (EventSource): event source.
-      serialized_data (Optional[bytes]): serialized form of the event source.
-    """
-    self._storage_writer.AddEventSource(
-        event_source, serialized_data=serialized_data)
-
-  def _AddEventTag(self, event_tag, serialized_data=None):
-    """Adds an event tag.
-
-    Args:
-      event_tag (EventTag): event tag.
-      serialized_data (Optional[bytes]): serialized form of the event tag.
-    """
-    self._storage_writer.AddEventTag(event_tag, serialized_data=serialized_data)
-
-  def _AddWarning(self, warning, serialized_data=None):
-    """Adds a warning.
-
-    Args:
-      warning (ExtractionWarning): warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
-    """
-    self._storage_writer.AddWarning(warning, serialized_data=serialized_data)
 
   def _Close(self):
     """Closes the task storage after reading."""

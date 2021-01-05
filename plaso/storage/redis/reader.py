@@ -117,6 +117,14 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.GetEventTags()
 
+  def GetExtractionWarnings(self):
+    """Retrieves the extraction warnings.
+
+    Returns:
+      generator(ExtractionWarning): extraction warning generator.
+    """
+    return self._store.GetExtractionWarnings()
+
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.
 
@@ -156,14 +164,6 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.GetSessions()
 
-  def GetWarnings(self):
-    """Retrieves the warnings.
-
-    Returns:
-      generator(ExtractionWarning): extraction warning generator.
-    """
-    return self._store.GetWarnings()
-
   def HasAnalysisReports(self):
     """Determines if a store contains analysis reports.
 
@@ -180,13 +180,13 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.HasEventTags()
 
-  def HasWarnings(self):
+  def HasExtractionWarnings(self):
     """Determines if a store contains extraction warnings.
 
     Returns:
       bool: True if the store contains extraction warnings.
     """
-    return self._store.HasWarnings()
+    return self._store.HasExtractionWarnings()
 
   # pylint: disable=unused-argument
   def ReadSystemConfiguration(self, knowledge_base):

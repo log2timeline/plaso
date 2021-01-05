@@ -342,7 +342,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._status = definitions.STATUS_INDICATOR_RUNNING
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
-      self._number_of_produced_warnings = storage_writer.number_of_warnings
+      self._number_of_produced_warnings = (
+          storage_writer.number_of_extraction_warnings)
 
   def _ProcessSources(self, source_path_specs, storage_writer):
     """Processes the sources.
@@ -402,7 +403,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._number_of_produced_events = storage_writer.number_of_events
     self._number_of_produced_sources = storage_writer.number_of_event_sources
-    self._number_of_produced_warnings = storage_writer.number_of_warnings
+    self._number_of_produced_warnings = (
+        storage_writer.number_of_extraction_warnings)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_sources')
@@ -522,7 +524,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       warning = warnings.ExtractionWarning(
           message='Worker failed to process path specification',
           path_spec=task.path_spec)
-      self._storage_writer.AddWarning(warning)
+      self._storage_writer.AddExtractionWarning(warning)
       self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.STATUS_INDICATOR_IDLE

@@ -279,14 +279,6 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.GetAnalysisReports()
 
-  def GetWarnings(self):
-    """Retrieves the warnings.
-
-    Returns:
-      generator(ExtractionWarning): warning generator.
-    """
-    return self._storage_file.GetWarnings()
-
   def GetEventData(self):
     """Retrieves the event data.
 
@@ -360,6 +352,14 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.GetEventTags()
 
+  def GetExtractionWarnings(self):
+    """Retrieves the extraction warnings.
+
+    Returns:
+      generator(ExtractionWarning): extraction warning generator.
+    """
+    return self._storage_file.GetExtractionWarnings()
+
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.
 
@@ -415,13 +415,13 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.HasEventTags()
 
-  def HasWarnings(self):
+  def HasExtractionWarnings(self):
     """Determines if a store contains extraction warnings.
 
     Returns:
       bool: True if the store contains extraction warnings.
     """
-    return self._storage_file.HasWarnings()
+    return self._storage_file.HasExtractionWarnings()
 
   # TODO: remove, this method is kept for backwards compatibility reasons.
   def ReadSystemConfiguration(self, knowledge_base):
@@ -586,22 +586,6 @@ class StorageFileWriter(interface.StorageWriter):
     self._session.analysis_reports_counter[report_identifier] += 1
     self.number_of_analysis_reports += 1
 
-  def AddWarning(self, warning, serialized_data=None):
-    """Adds an warning.
-
-    Args:
-      warning (ExtractionWarning): an extraction warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self._storage_file.AddWarning(warning, serialized_data=serialized_data)
-    self.number_of_warnings += 1
-
   def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
@@ -688,6 +672,24 @@ class StorageFileWriter(interface.StorageWriter):
     for label in event_tag.labels:
       self._session.event_labels_counter[label] += 1
     self.number_of_event_tags += 1
+
+  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+    """Adds an extraction warning.
+
+    Args:
+      extraction_warning (ExtractionWarning): an extraction warning.
+      serialized_data (Optional[bytes]): serialized form of the extraction
+          warning.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    self._storage_file.AddExtractionWarning(
+        extraction_warning, serialized_data=serialized_data)
+    self.number_of_extraction_warnings += 1
 
   def Close(self):
     """Closes the storage writer.

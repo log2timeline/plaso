@@ -538,7 +538,7 @@ class ParserMediator(object):
     parser_chain = self.GetParserChain()
     warning = warnings.ExtractionWarning(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
-    self._storage_writer.AddWarning(warning)
+    self._storage_writer.AddExtractionWarning(warning)
     self._number_of_warnings += 1
 
     self.last_activity_timestamp = time.time()

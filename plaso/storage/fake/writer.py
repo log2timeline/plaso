@@ -34,12 +34,13 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     super(FakeStorageWriter, self).__init__(
         session, storage_type=storage_type, task=task)
+    self._analysis_warnings = []
     self._event_data = {}
     self._event_data_streams = {}
     self._event_sources = []
     self._event_tags = []
     self._events = []
-    self._warnings = []
+    self._extraction_warnings = []
     self._is_open = False
     self._task_storage_writers = {}
     self.analysis_reports = []
@@ -200,11 +201,11 @@ class FakeStorageWriter(interface.StorageWriter):
     self._event_tags.append(event_tag)
     self.number_of_event_tags += 1
 
-  def AddWarning(self, warning, serialized_data=None):
-    """Adds a warnings.
+  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+    """Adds an extraction warning.
 
     Args:
-      warning (ExtractionWarning): warning.
+      extraction_warning (ExtractionWarning): extraction warning.
       serialized_data (Optional[bytes]): serialized form of the warning.
 
     Raises:
@@ -213,10 +214,10 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    warning = self._PrepareAttributeContainer(warning)
+    extraction_warning = self._PrepareAttributeContainer(extraction_warning)
 
-    self._warnings.append(warning)
-    self.number_of_warnings += 1
+    self._extraction_warnings.append(extraction_warning)
+    self.number_of_extraction_warnings += 1
 
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging into the session store.
@@ -277,14 +278,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
-  def GetWarnings(self):
-    """Retrieves the warnings.
-
-    Returns:
-      generator(ExtractionWarning): warning generator.
-    """
-    return iter(self._warnings)
-
   def GetEvents(self):
     """Retrieves the events.
 
@@ -340,6 +333,14 @@ class FakeStorageWriter(interface.StorageWriter):
       generator(EventTags): event tag generator.
     """
     return iter(self._event_tags)
+
+  def GetExtractionWarnings(self):
+    """Retrieves the extraction warnings.
+
+    Returns:
+      generator(ExtractionWarning): extraction warning generator.
+    """
+    return iter(self._extraction_warnings)
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.

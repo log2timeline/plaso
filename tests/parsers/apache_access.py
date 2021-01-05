@@ -86,7 +86,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         event_data, expected_message, expected_short_message)
 
     # Test the extraction warning.
-    warnings = list(storage_writer.GetWarnings())
+    warnings = list(storage_writer.GetExtractionWarnings())
     warning = warnings[0]
 
     self.assertEqual(warning.message, (
