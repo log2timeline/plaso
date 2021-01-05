@@ -27,6 +27,7 @@ class RedisStore(interface.BaseStore):
   _FINALIZED_BYTES = b'finalized'
   _MERGING_KEY_NAME = 'merging'
   _MERGING_BYTES = b'merging'
+
   # DEFAULT_REDIS_URL is public so that it appears in generated documentation.
   DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
@@ -58,25 +59,6 @@ class RedisStore(interface.BaseStore):
     self._task_identifier = task_identifier
     self._redis_client = None
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
-
-  @classmethod
-  def _SetClientName(cls, redis_client, name):
-    """Attempts to sets a Redis client name.
-
-    This method ignores errors from the Redis server or exceptions
-    indicating the method is missing, as setting the name is not a critical
-    function, and it is not currently supported by the fakeredis test library.
-
-    Args:
-      redis_client (Redis): an open Redis client.
-      name (str): name to set.
-    """
-    try:
-      redis_client.client_setname(name)
-    except redis.ResponseError as exception:
-      logger.debug(
-          'Unable to set redis client name: {0:s} with error: {1!s}'.format(
-              name, exception))
 
   def _AddAttributeContainer(
       self, container_type, container, serialized_data=None):
@@ -112,27 +94,6 @@ class RedisStore(interface.BaseStore):
     return '{0:s}-{1:s}-{2:s}'.format(
         self._session_identifier, self._task_identifier, key_suffix)
 
-  def _GetAttributeContainers(self, container_type):
-    """Retrieves attribute containers
-
-    Args:
-      container_type (str): container type attribute of the container being
-          added.
-
-    Yields:
-      AttributeContainer: attribute container.
-    """
-    container_key = self._GenerateRedisKey(container_type)
-    for identifier, serialized_data in self._redis_client.hscan_iter(
-        container_key):
-      attribute_container = self._DeserializeAttributeContainer(
-          container_type, serialized_data)
-
-      identifier_string = identifier.decode('utf-8')
-      redis_identifier = identifiers.RedisKeyIdentifier(identifier_string)
-      attribute_container.SetIdentifier(redis_identifier)
-      yield attribute_container
-
   def _GetAttributeContainerByIdentifier(self, container_type, identifier):
     """Retrieves the container with a specific identifier.
 
@@ -158,6 +119,36 @@ class RedisStore(interface.BaseStore):
     attribute_container.SetIdentifier(identifier)
     return attribute_container
 
+  def _GetAttributeContainers(self, container_type):
+    """Retrieves attribute containers
+
+    Args:
+      container_type (str): container type attribute of the container being
+          added.
+
+    Yields:
+      AttributeContainer: attribute container.
+    """
+    container_key = self._GenerateRedisKey(container_type)
+    for identifier, serialized_data in self._redis_client.hscan_iter(
+        container_key):
+      attribute_container = self._DeserializeAttributeContainer(
+          container_type, serialized_data)
+
+      identifier_string = identifier.decode('utf-8')
+      redis_identifier = identifiers.RedisKeyIdentifier(identifier_string)
+      attribute_container.SetIdentifier(redis_identifier)
+      yield attribute_container
+
+  def _GetFinalizationKey(self):
+    """Generates the finalized key for the store.
+
+    Returns:
+      str: Redis key for the the finalization flag.
+    """
+    return '{0:s}-{1:s}'.format(
+        self._session_identifier, self._FINALIZED_KEY_NAME)
+
   def _GetNumberOfAttributeContainers(self, container_type):
     """Determines the number of containers of a type in the store.
 
@@ -169,15 +160,6 @@ class RedisStore(interface.BaseStore):
     """
     container_key = self._GenerateRedisKey(container_type)
     return self._redis_client.hlen(container_key)
-
-  def _GetFinalizationKey(self):
-    """Generates the finalized key for the store.
-
-    Returns:
-      str: Redis key for the the finalization flag.
-    """
-    return '{0:s}-{1:s}'.format(
-        self._session_identifier, self._FINALIZED_KEY_NAME)
 
   def _HasAttributeContainers(self, container_type):
     """Determines if the store contains a specific type of attribute container.
@@ -213,6 +195,34 @@ class RedisStore(interface.BaseStore):
     if not self._redis_client:
       raise IOError('Unable to write, client not connected.')
 
+  @classmethod
+  def _SetClientName(cls, redis_client, name):
+    """Attempts to sets a Redis client name.
+
+    This method ignores errors from the Redis server or exceptions
+    indicating the method is missing, as setting the name is not a critical
+    function, and it is not currently supported by the fakeredis test library.
+
+    Args:
+      redis_client (Redis): an open Redis client.
+      name (str): name to set.
+    """
+    try:
+      redis_client.client_setname(name)
+    except redis.ResponseError as exception:
+      logger.debug(
+          'Unable to set redis client name: {0:s} with error: {1!s}'.format(
+              name, exception))
+
+  def _WriteAttributeContainer(self, attribute_container):
+    """Writes an attribute container to the store.
+
+    Args:
+      attribute_container (AttributeContainer): attribute container.
+    """
+    container_type = attribute_container.CONTAINER_TYPE
+    self._AddAttributeContainer(container_type, attribute_container)
+
   def _WriteStorageMetadata(self):
     """Writes the storage metadata."""
     metadata = {
@@ -223,15 +233,6 @@ class RedisStore(interface.BaseStore):
 
     for key, value in metadata.items():
       self._redis_client.hset(metadata_key, key, value)
-
-  def _WriteAttributeContainer(self, attribute_container):
-    """Writes an attribute container to the store.
-
-    Args:
-      attribute_container (AttributeContainer): attribute container.
-    """
-    container_type = attribute_container.CONTAINER_TYPE
-    self._AddAttributeContainer(container_type, attribute_container)
 
   def AddEvent(self, event, serialized_data=None):
     """Adds an event.
@@ -251,59 +252,6 @@ class RedisStore(interface.BaseStore):
     """Closes the store."""
     self._redis_client = None
 
-  def RemoveAttributeContainer(self, container_type, identifier):
-    """Removes an attribute container from the store.
-
-    Args:
-      container_type (str): container type attribute of the container being
-          removed.
-      identifier (AttributeContainerIdentifier): event data identifier.
-    """
-    self._RaiseIfNotWritable()
-    container_key = self._GenerateRedisKey(container_type)
-    string_identifier = identifier.CopyToString()
-
-    self._redis_client.hdel(container_key, string_identifier)
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
-      self._redis_client.zrem(event_index_name, string_identifier)
-
-  def RemoveAttributeContainers(self, container_type, container_identifiers):
-    """Removes multiple attribute containers from the store.
-
-    Args:
-      container_type (str): container type attribute of the container being
-          removed.
-      container_identifiers (list[AttributeContainerIdentifier]):
-          event data identifier.
-    """
-    self._RaiseIfNotWritable()
-    if not container_identifiers:
-      # If there's no list of identifiers, there's no need to delete anything.
-      return
-    container_key = self._GenerateRedisKey(container_type)
-    string_identifiers = [
-        identifier.CopyToString() for identifier in container_identifiers]
-
-    self._redis_client.hdel(container_key, *string_identifiers)
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
-      self._redis_client.zrem(event_index_name, *string_identifiers)
-
-  def IsFinalized(self):
-    """Checks if a store has been finalized.
-
-    Returns:
-      bool: True if the store has been finalized.
-    """
-    self._RaiseIfNotReadable()
-
-    finalized_key = self._GetFinalizationKey()
-    finalized_value = self._redis_client.hget(
-        finalized_key, self._task_identifier)
-
-    return finalized_value == self._FINALIZED_BYTES
-
   def Finalize(self):
     """Marks a store as finalized.
 
@@ -314,6 +262,30 @@ class RedisStore(interface.BaseStore):
     finalized_key = self._GetFinalizationKey()
     self._redis_client.hset(
         finalized_key, self._task_identifier, self._FINALIZED_BYTES)
+
+  def GetSerializedAttributeContainers(
+      self, container_type, cursor, maximum_number_of_items):
+    """Fetches serialized attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+      cursor (int): Redis cursor.
+      maximum_number_of_items (int): maximum number of containers to
+          retrieve, where 0 represent no limit.
+
+    Returns:
+      tuple: containing:
+        int: Redis cursor.
+        list[bytes]: serialized attribute containers.
+    """
+    name = self._GenerateRedisKey(container_type)
+    # Redis treats None as meaning "no limit", not 0.
+    if maximum_number_of_items == 0:
+      maximum_number_of_items = None
+
+    cursor, items = self._redis_client.hscan(
+        name, cursor=cursor, count=maximum_number_of_items)
+    return cursor, items
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
@@ -339,29 +311,56 @@ class RedisStore(interface.BaseStore):
       yield self._GetAttributeContainerByIdentifier(
           self._CONTAINER_TYPE_EVENT, event_identifier)
 
-  def GetSerializedAttributeContainers(
-      self, container_type, cursor, maximum_number_of_items):
-    """Fetches serialized attribute containers.
-
-    Args:
-      container_type (str): attribute container type.
-      cursor (int): Redis cursor.
-      maximum_number_of_items (int): maximum number of containers to
-          retrieve, where 0 represent no limit.
+  def IsFinalized(self):
+    """Checks if a store has been finalized.
 
     Returns:
-      tuple: containing:
-        int: Redis cursor.
-        list[bytes]: serialized attribute containers.
+      bool: True if the store has been finalized.
     """
-    name = self._GenerateRedisKey(container_type)
-    # Redis treats None as meaning "no limit", not 0.
-    if maximum_number_of_items == 0:
-      maximum_number_of_items = None
+    self._RaiseIfNotReadable()
 
-    cursor, items = self._redis_client.hscan(
-        name, cursor=cursor, count=maximum_number_of_items)
-    return cursor, items
+    finalized_key = self._GetFinalizationKey()
+    finalized_value = self._redis_client.hget(
+        finalized_key, self._task_identifier)
+
+    return finalized_value == self._FINALIZED_BYTES
+
+  @classmethod
+  def MarkTaskAsMerging(
+      cls, task_identifier, session_identifier, redis_client=None, url=None):
+    """Marks a finalized task as pending merge.
+
+    Args:
+      task_identifier (str): identifier of the task.
+      session_identifier (str): session identifier, formatted as a UUID.
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
+          new client will be created.
+      url (Optional[str]): URL for a Redis database. If not specified,
+          REDIS_DEFAULT_URL will be used.
+
+    Raises:
+      IOError: if the task being updated is not finalized.
+      OSError: if the task being updated is not finalized.
+    """
+    if not url:
+      url = cls.DEFAULT_REDIS_URL
+
+    if not redis_client:
+      redis_client = redis.from_url(url=url, socket_timeout=60)
+
+    cls._SetClientName(redis_client, 'merge_mark')
+
+    finalization_key = '{0:s}-{1:s}'.format(
+        session_identifier, cls._FINALIZED_KEY_NAME)
+    number_of_deleted_fields = redis_client.hdel(
+        finalization_key, task_identifier)
+    if number_of_deleted_fields == 0:
+      raise IOError('Task identifier {0:s} not finalized'.format(
+          task_identifier))
+
+    merging_key = '{0:s}-{1:s}'.format(
+        session_identifier, cls._MERGING_KEY_NAME)
+    redis_client.hset(merging_key, task_identifier, cls._MERGING_BYTES)
 
   # pylint: disable=arguments-differ
   def Open(self, redis_client=None, url=None, **unused_kwargs):
@@ -412,6 +411,45 @@ class RedisStore(interface.BaseStore):
     metadata_key = self._GenerateRedisKey('metadata')
     self._redis_client.delete(metadata_key)
 
+  def RemoveAttributeContainer(self, container_type, identifier):
+    """Removes an attribute container from the store.
+
+    Args:
+      container_type (str): container type attribute of the container being
+          removed.
+      identifier (AttributeContainerIdentifier): event data identifier.
+    """
+    self._RaiseIfNotWritable()
+    container_key = self._GenerateRedisKey(container_type)
+    string_identifier = identifier.CopyToString()
+
+    self._redis_client.hdel(container_key, string_identifier)
+    if container_type == self._CONTAINER_TYPE_EVENT:
+      event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
+      self._redis_client.zrem(event_index_name, string_identifier)
+
+  def RemoveAttributeContainers(self, container_type, container_identifiers):
+    """Removes multiple attribute containers from the store.
+
+    Args:
+      container_type (str): container type attribute of the container being
+          removed.
+      container_identifiers (list[AttributeContainerIdentifier]):
+          event data identifier.
+    """
+    self._RaiseIfNotWritable()
+    if not container_identifiers:
+      # If there's no list of identifiers, there's no need to delete anything.
+      return
+    container_key = self._GenerateRedisKey(container_type)
+    string_identifiers = [
+        identifier.CopyToString() for identifier in container_identifiers]
+
+    self._redis_client.hdel(container_key, *string_identifiers)
+    if container_type == self._CONTAINER_TYPE_EVENT:
+      event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
+      self._redis_client.zrem(event_index_name, *string_identifiers)
+
   @classmethod
   def ScanForProcessedTasks(
       cls, session_identifier, redis_client=None, url=None):
@@ -448,40 +486,3 @@ class RedisStore(interface.BaseStore):
       return [], redis_client
     task_identifiers = [key.decode('utf-8') for key in task_identifiers]
     return task_identifiers, redis_client
-
-  @classmethod
-  def MarkTaskAsMerging(
-      cls, task_identifier, session_identifier, redis_client=None, url=None):
-    """Marks a finalized task as pending merge.
-
-    Args:
-      task_identifier (str): identifier of the task.
-      session_identifier (str): session identifier, formatted as a UUID.
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
-
-    Raises:
-      IOError: if the task being updated is not finalized.
-      OSError: if the task being updated is not finalized.
-    """
-    if not url:
-      url = cls.DEFAULT_REDIS_URL
-
-    if not redis_client:
-      redis_client = redis.from_url(url=url, socket_timeout=60)
-
-    cls._SetClientName(redis_client, 'merge_mark')
-
-    finalization_key = '{0:s}-{1:s}'.format(
-        session_identifier, cls._FINALIZED_KEY_NAME)
-    number_of_deleted_fields = redis_client.hdel(
-        finalization_key, task_identifier)
-    if number_of_deleted_fields == 0:
-      raise IOError('Task identifier {0:s} not finalized'.format(
-          task_identifier))
-
-    merging_key = '{0:s}-{1:s}'.format(
-        session_identifier, cls._MERGING_KEY_NAME)
-    redis_client.hset(merging_key, task_identifier, cls._MERGING_BYTES)
