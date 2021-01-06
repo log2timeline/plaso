@@ -9,7 +9,6 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import shared_json
 
@@ -45,6 +44,11 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testWriteSerializedDict(self):
     """Tests the _WriteSerializedDict function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     formatting_helper = shared_json.JSONEventFormattingHelper(output_mediator)
 
     event, event_data, event_data_stream = (
@@ -90,22 +94,19 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
         'username': 'root',
     }
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      json_dict = formatting_helper._WriteSerializedDict(
-          event, event_data, event_data_stream, None)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    json_dict = formatting_helper._WriteSerializedDict(
+        event, event_data, event_data_stream, None)
 
     self.assertEqual(json_dict, expected_json_dict)
 
   def testGetFormattedEvent(self):
     """Tests the GetFormattedEvent function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     formatting_helper = shared_json.JSONEventFormattingHelper(output_mediator)
 
     event, event_data, event_data_stream = (
@@ -134,16 +135,8 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         '"timestamp_desc": "Unknown Time", "username": "root"}}').format(
             expected_os_location)
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      json_string = formatting_helper.GetFormattedEvent(
-          event, event_data, event_data_stream, None)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    json_string = formatting_helper.GetFormattedEvent(
+        event, event_data, event_data_stream, None)
 
     self.assertEqual(json_string, expected_json_string)
 

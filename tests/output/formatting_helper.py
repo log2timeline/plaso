@@ -7,7 +7,6 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.containers import events
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import formatting_helper
 
@@ -78,21 +77,18 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatMessage(self):
     """Tests the _FormatMessage function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      message_string = test_helper._FormatMessage(
-          event, event_data, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    message_string = test_helper._FormatMessage(
+        event, event_data, event_data_stream)
 
     expected_message_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
@@ -102,21 +98,18 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatMessageShort(self):
     """Tests the _FormatMessageShort function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      message_short_string = test_helper._FormatMessageShort(
-          event, event_data, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    message_short_string = test_helper._FormatMessageShort(
+        event, event_data, event_data_stream)
 
     expected_message_short_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '

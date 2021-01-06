@@ -6,7 +6,6 @@ import io
 import os
 import unittest
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import dynamic
 
@@ -96,6 +95,11 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module._file_object = test_file_object
 
@@ -118,15 +122,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      output_module.WriteEventBody(event, event_data, event_data_stream, None)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    output_module.WriteEventBody(event, event_data, event_data_stream, None)
 
     expected_event_body = (
         '2012-06-27,18:17:01,UTC,..C.,FILE,Test log file,Metadata '
@@ -141,6 +137,11 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module._file_object = test_file_object
 
@@ -156,15 +157,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      output_module.WriteEventBody(event, event_data, event_data_stream, None)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    output_module.WriteEventBody(event, event_data, event_data_stream, None)
 
     expected_event_body = (
         '2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'

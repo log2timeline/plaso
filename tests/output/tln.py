@@ -9,7 +9,6 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import tln
 
@@ -44,21 +43,18 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatDescription(self):
     """Tests the _FormatDescription function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     formatting_helper = tln.TLNFieldFormattingHelper(output_mediator)
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      description_string = formatting_helper._FormatDescription(
-          event, event_data, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    description_string = formatting_helper._FormatDescription(
+        event, event_data, event_data_stream)
 
     expected_description_string = (
         '2012-06-27T18:17:01+00:00; '
@@ -135,22 +131,19 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = tln.TLNOutputModule(output_mediator)
     output_module._file_object = test_file_object
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      output_module.WriteEventBody(
-          event, event_data, event_data_stream, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    output_module.WriteEventBody(
+        event, event_data, event_data_stream, event_data_stream)
 
     expected_event_body = (
         '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
@@ -204,21 +197,18 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = tln.L2TTLNOutputModule(output_mediator)
     output_module._file_object = test_file_object
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      output_module.WriteEventBody(
-          event, event_data, event_data_stream, event_data_stream)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    output_module.WriteEventBody(
+        event, event_data, event_data_stream, event_data_stream)
 
     expected_event_body = (
         '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '

@@ -34,7 +34,6 @@ from plaso.storage import factory as storage_factory
 
 class PstealTool(
     extraction_tool.ExtractionTool,
-    tool_options.FormattersOptions,
     tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
     tool_options.StorageFileOptions):
@@ -518,7 +517,6 @@ class PstealTool(
         options, self, names=['data_location'])
 
     self._ReadParserPresetsFromFile()
-    self._ReadEventFormatters()
 
     # The output modules options are dependent on the preferred_language
     # and output_time_zone options.
@@ -560,6 +558,9 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
+    output_mediator = self._CreateOutputMediator()
+    self._ReadMessageFormatters(output_mediator)
+
     self._ParseLogFileOptions(options)
 
     self._ParseStorageMediaOptions(options)
@@ -584,4 +585,4 @@ class PstealTool(
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
-    self._output_module = self._CreateOutputModule(options)
+    self._output_module = self._CreateOutputModule(output_mediator, options)

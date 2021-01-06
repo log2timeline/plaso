@@ -5,7 +5,6 @@ For documentation on the L2T CSV format see:
 https://forensicswiki.xyz/wiki/index.php?title=L2T_CSV
 """
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -123,7 +122,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    message_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+    message_formatter = self._output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
       raise errors.NoFormatterFound((

@@ -33,7 +33,6 @@ from plaso.storage import factory as storage_factory
 class PsortTool(
     tools.CLITool,
     tool_options.AnalysisPluginOptions,
-    tool_options.FormattersOptions,
     tool_options.OutputModuleOptions,
     tool_options.ProfilingOptions,
     tool_options.StorageFileOptions):
@@ -464,7 +463,8 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    self._ReadEventFormatters()
+    output_mediator = self._CreateOutputMediator()
+    self._ReadMessageFormatters(output_mediator)
 
     self._ParseLogFileOptions(options)
 
@@ -497,7 +497,7 @@ class PsortTool(
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
     self._analysis_plugins = self._CreateAnalysisPlugins(options)
-    self._output_module = self._CreateOutputModule(options)
+    self._output_module = self._CreateOutputModule(output_mediator, options)
 
   def ProcessStorage(self):
     """Processes a plaso storage file.

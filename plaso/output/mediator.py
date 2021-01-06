@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 """The output mediator object."""
 
+import glob
 import os
 import pytz
 
 from plaso.engine import path_helper
+from plaso.formatters import default
+from plaso.formatters import manager as formatters_manager
 from plaso.formatters import winevt_rc
+from plaso.formatters import yaml_formatters_file
 from plaso.lib import definitions
+from plaso.output import logger
 from plaso.winnt import language_ids
 
 
@@ -24,6 +29,8 @@ class OutputMediator(object):
   # LCID 0x0409 is en-US.
   DEFAULT_LCID = 0x0409
 
+  _DEFAULT_MESSAGE_FORMATTER = default.DefaultFormatter()
+
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
   def __init__(
@@ -39,6 +46,7 @@ class OutputMediator(object):
     self._knowledge_base = knowledge_base
     self._language_identifier = self.DEFAULT_LANGUAGE_IDENTIFIER
     self._lcid = self.DEFAULT_LCID
+    self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
     self._timezone = pytz.UTC
     self._winevt_database_reader = None
@@ -74,6 +82,29 @@ class OutputMediator(object):
         self._winevt_database_reader = None
 
     return self._winevt_database_reader
+
+  def _ReadMessageFormattersFile(self, path):
+    """Reads a message formatters configuration file.
+
+    Args:
+      path (str): path of file that contains the message formatters
+           configuration.
+
+    Raises:
+      KeyError: if the message formatter is already set for the corresponding
+          data type.
+    """
+    message_formatters_file = yaml_formatters_file.YAMLFormattersFile()
+    for message_formatter in message_formatters_file.ReadFromFile(path):
+      for identifier in message_formatter.custom_helpers:
+        custom_formatter_helper = (
+             formatters_manager.FormattersManager.GetEventFormatterHelper(
+                identifier))
+        if custom_formatter_helper:
+          message_formatter.AddHelper(custom_formatter_helper)
+
+      data_type = message_formatter.DATA_TYPE.lower()
+      self._message_formatters[data_type] = message_formatter
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -228,6 +259,26 @@ class OutputMediator(object):
 
     return ''.join(macb_representation)
 
+  def GetMessageFormatter(self, data_type):
+    """Retrieves the message formatter for a specific data type.
+
+    Args:
+      data_type (str): data type.
+
+    Returns:
+      EventFormatter: corresponding message formatter or the default message
+          formatter if not available.
+    """
+    data_type = data_type.lower()
+    message_formatter = self._message_formatters.get(data_type, None)
+    if not message_formatter:
+      logger.warning(
+          'Using default message formatter for data type: {0:s}'.format(
+              data_type))
+      message_formatter = self._DEFAULT_MESSAGE_FORMATTER
+
+    return message_formatter
+
   def GetRelativePathForPathSpec(self, path_spec):
     """Retrieves the relative path for a path specification.
 
@@ -294,6 +345,33 @@ class OutputMediator(object):
 
     return database_reader.GetMessage(
         log_source, self.DEFAULT_LCID, message_identifier)
+
+  def ReadMessageFormattersFromDirectory(self, path):
+    """Reads message formatters from a directory.
+
+    Args:
+      path (str): path of directory that contains the message formatters
+          configuration files.
+
+    Raises:
+      KeyError: if the message formatter is already set for the corresponding
+          data type.
+    """
+    for formatters_file_path in glob.glob(os.path.join(path, '*.yaml')):
+      self._ReadMessageFormattersFile(formatters_file_path)
+
+  def ReadMessageFormattersFromFile(self, path):
+    """Reads message formatters from a file.
+
+    Args:
+      path (str): path of file that contains the message formatters
+          configuration.
+
+    Raises:
+      KeyError: if the message formatter is already set for the corresponding
+          data type.
+    """
+    self._ReadMessageFormattersFile(path)
 
   def SetPreferredLanguageIdentifier(self, language_identifier):
     """Sets the preferred language identifier.

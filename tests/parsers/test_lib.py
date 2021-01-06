@@ -12,7 +12,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
-from plaso.formatters import manager as formatters_manager
 from plaso.output import dynamic
 from plaso.output import mediator as output_mediator
 from plaso.parsers import interface
@@ -205,12 +204,13 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_mediator_object = output_mediator.OutputMediator(
         knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
-    fields_formatting_helper = dynamic.DynamicFieldFormattingHelper(
-        output_mediator_object)
 
     formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+    output_mediator_object.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
+
+    fields_formatting_helper = dynamic.DynamicFieldFormattingHelper(
+        output_mediator_object)
 
     message = fields_formatting_helper.GetFormattedField(
         'message', None, event_data, None, None)

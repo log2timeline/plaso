@@ -12,7 +12,6 @@ except ImportError:
 from dfvfs.path import fake_path_spec
 
 from plaso.containers import events
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.output import shared_elastic
 
@@ -71,11 +70,12 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testFlushEvents(self):
     """Tests the _FlushEvents function."""
+    output_mediator = self._CreateOutputMediator()
+
     formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+    output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
     output_module._Connect()
@@ -95,11 +95,12 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testGetSanitizedEventValues(self):
     """Tests the _GetSanitizedEventValues function."""
+    output_mediator = self._CreateOutputMediator()
+
     formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+    output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
     event, event_data, event_data_stream = (
@@ -138,14 +139,15 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testInsertEvent(self):
     """Tests the _InsertEvent function."""
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = TestElasticsearchOutputModule(output_mediator)
 
     output_module._Connect()
@@ -254,11 +256,12 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    output_mediator = self._CreateOutputMediator()
+
     formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
+    output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
     output_module._Connect()

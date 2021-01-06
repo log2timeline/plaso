@@ -12,7 +12,6 @@ from plaso.analysis import tagging
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import knowledge_base
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.multi_processing import psort
 from plaso.output import dynamic
@@ -376,31 +375,25 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     output_mediator_object = output_mediator.OutputMediator(
         knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    output_mediator_object.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = TestOutputModule(output_mediator_object)
 
     test_engine = psort.PsortMultiProcessEngine()
 
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
+      self._CreateTestStorageFile(temp_file)
+      self._ReadSessionConfiguration(temp_file, knowledge_base_object)
 
-    try:
-      with shared_test_lib.TempDirectory() as temp_directory:
-        temp_file = os.path.join(temp_directory, 'storage.plaso')
-        self._CreateTestStorageFile(temp_file)
-        self._ReadSessionConfiguration(temp_file, knowledge_base_object)
+      storage_reader = (
+          storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
+      storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
-        storage_reader = (
-            storage_factory.StorageFactory.CreateStorageReaderForFile(
-                temp_file))
-        storage_reader.ReadSystemConfiguration(knowledge_base_object)
-
-        test_engine._ExportEvents(
-            storage_reader, output_module, deduplicate_events=False)
-
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+      test_engine._ExportEvents(
+          storage_reader, output_module, deduplicate_events=False)
 
     self.assertEqual(len(output_module.events), 17)
     self.assertEqual(len(output_module.macb_groups), 3)
@@ -412,30 +405,24 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     output_mediator_object = output_mediator.OutputMediator(
         knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    output_mediator_object.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = TestOutputModule(output_mediator_object)
 
     test_engine = psort.PsortMultiProcessEngine()
 
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
+      self._CreateTestStorageFile(temp_file)
+      self._ReadSessionConfiguration(temp_file, knowledge_base_object)
 
-    try:
-      with shared_test_lib.TempDirectory() as temp_directory:
-        temp_file = os.path.join(temp_directory, 'storage.plaso')
-        self._CreateTestStorageFile(temp_file)
-        self._ReadSessionConfiguration(temp_file, knowledge_base_object)
+      storage_reader = (
+          storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
+      storage_reader.ReadSystemConfiguration(knowledge_base_object)
 
-        storage_reader = (
-            storage_factory.StorageFactory.CreateStorageReaderForFile(
-                temp_file))
-        storage_reader.ReadSystemConfiguration(knowledge_base_object)
-
-        test_engine._ExportEvents(storage_reader, output_module)
-
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+      test_engine._ExportEvents(storage_reader, output_module)
 
     self.assertEqual(len(output_module.events), 15)
     self.assertEqual(len(output_module.macb_groups), 3)
@@ -513,6 +500,11 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     output_mediator_object = output_mediator.OutputMediator(
         knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
+
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    output_mediator_object.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_mediator_object.SetPreferredLanguageIdentifier('en-US')
 
     output_module = dynamic.DynamicOutputModule(output_mediator_object)
@@ -525,16 +517,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     test_engine = psort.PsortMultiProcessEngine()
 
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    formatters_manager.FormattersManager._formatters = {}
-    formatters_manager.FormattersManager.ReadFormattersFromDirectory(
-        formatters_directory_path)
-
-    try:
-      test_engine.ExportEvents(
-          knowledge_base_object, storage_reader, output_module, configuration)
-    finally:
-      formatters_manager.FormattersManager._formatters = {}
+    test_engine.ExportEvents(
+        knowledge_base_object, storage_reader, output_module, configuration)
 
     output = test_file_object.getvalue()
     lines = output.split('\n')
