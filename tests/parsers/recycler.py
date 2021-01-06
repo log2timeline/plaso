@@ -23,18 +23,20 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2012-03-12 20:49:58.633000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_filename = (
         'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip')
-    self.assertEqual(event_data.original_filename, expected_filename)
-    self.assertEqual(event_data.file_size, 724919)
+
+    expected_event_values = {
+        'file_size': 724919,
+        'original_filename': expected_filename,
+        'timestamp': '2012-03-12 20:49:58.633000'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = expected_filename
     expected_short_message = 'Deleted file: {0:s}'.format(expected_filename)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -48,18 +50,20 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2016-06-29 21:37:45.618000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_filename = (
         'C:\\Users\\random\\Downloads\\bunnies.jpg')
-    self.assertEqual(event_data.original_filename, expected_filename)
-    self.assertEqual(event_data.file_size, 222255)
+
+    expected_event_values = {
+        'file_size': 222255,
+        'original_filename': expected_filename,
+        'timestamp': '2016-06-29 21:37:45.618000'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = expected_filename
     expected_short_message = 'Deleted file: {0:s}'.format(expected_filename)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -77,20 +81,16 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2004-08-25 16:18:25.237000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_DELETED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_filename = (
         'C:\\Documents and Settings\\Mr. Evil\\Desktop\\lalsetup250.exe')
-    self.assertEqual(event_data.original_filename, expected_filename)
-    self.assertEqual(event_data.record_index, 1)
 
-    event = events[1]
+    expected_event_values = {
+        'original_filename': expected_filename,
+        'record_index': 1,
+        'timestamp': '2004-08-25 16:18:25.237000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_DELETED}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'DC2 -> C:\\Documents and Settings\\Mr. Evil\\Desktop'
@@ -99,6 +99,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
         'Deleted file: C:\\Documents and Settings\\Mr. Evil\\Desktop'
         '\\netstumblerinstaller...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
