@@ -153,12 +153,15 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:network_drive',
+        'drive_letter': 'H',
+        'key_path': key_path,
+        'server_name': 'acme.local',
+        'share_name': '\\Shares\\User_Data\\John.Doe',
+        'timestamp': '2013-01-30 10:47:57.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:registry:network_drive')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -168,6 +171,7 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
         'Type: Mapped Drive').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

@@ -75,17 +75,18 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:outlook_search_mru',
+        'entries': (
+            'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+            'username@example.com.ost: 0x00372bcf'),
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-08-28 09:23:49.002031'}
 
-    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(
-        event_data.data_type, 'windows:registry:outlook_search_mru')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -93,6 +94,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
         'username@example.com.ost: 0x00372bcf').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
