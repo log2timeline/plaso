@@ -24,25 +24,26 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[1]
-    self.CheckTimestamp(event.timestamp, '2018-01-30 14:45:32.000000')
+    expected_event_values = {
+        'timestamp': '2018-01-30 14:45:32.000000'}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # The third and last event has been edited to match the older, documented
     # format for log lines (without a Unix timestamp).
-    event = events[2]
-    self.CheckTimestamp(event.timestamp, '2018-01-30 14:46:00.000000')
+    expected_event_values = {
+        'filename': 'eicar.com_.gstmp',
+        'path': 'C:\\temp\\',
+        'timestamp': '2018-01-30 14:46:00.000000'}
 
-    # Test the third event.
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.path, 'C:\\temp\\')
-    self.assertEqual(event_data.filename, 'eicar.com_.gstmp')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         r'Path: C:\temp\ File name: eicar.com_.gstmp '
         r'Eicar_test_1 : Failure (clean), moved (Real-time scan)')
     expected_short_message = r'C:\temp\ eicar.com_.gstmp Failure (clean), moved'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -58,16 +59,17 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[1]
-    self.CheckTimestamp(event.timestamp, '2018-01-23 13:16:22.000000')
+    expected_event_values = {
+        'timestamp': '2018-01-23 13:16:22.000000'}
 
-    # Test the third event.
-    event = events[2]
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.url, 'http://www.eicar.org/download/eicar.com')
-    self.assertEqual(event_data.group_code, '4E')
-    self.assertEqual(event_data.credibility_score, 49)
+    expected_event_values = {
+        'credibility_score': 49,
+        'group_code': '4E',
+        'url': 'http://www.eicar.org/download/eicar.com'}
+
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         'http://www.eicar.org/download/eicar.com '
@@ -77,6 +79,7 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'http://www.eicar.org/download/eicar.com Malware Accomplice')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
