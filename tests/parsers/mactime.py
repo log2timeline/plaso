@@ -34,58 +34,55 @@ class MactimeTest(test_lib.ParserTestCase):
     # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961583|
     # 1337961584|1337961585|0
 
-    event = events[21]
+    expected_event_values = {
+        'inode': 16,
+        'timestamp': '2012-05-25 15:59:43.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-25 15:59:43.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.CheckEventValues(storage_writer, events[21], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.inode, 16)
+    expected_event_values = {
+        'timestamp': '2012-05-25 15:59:44.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    event = events[22]
+    self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2012-05-25 15:59:44.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event = events[23]
-
-    self.CheckTimestamp(event.timestamp, '2012-05-25 15:59:45.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_CHANGE)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_filename = '/a_directory/another_file'
-    self.assertEqual(event_data.filename, expected_filename)
-    self.assertEqual(event_data.mode_as_string, 'r/rrw-------')
 
+    expected_event_values = {
+        'filename': expected_filename,
+        'mode_as_string': 'r/rrw-------',
+        'timestamp': '2012-05-25 15:59:45.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
+
+    self.CheckEventValues(storage_writer, events[23], expected_event_values)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[23])
     self._TestGetMessageStrings(
         event_data, expected_filename, expected_filename)
 
-    event = events[48]
-
-    self.CheckTimestamp(event.timestamp, '2020-07-30 06:41:05.354067')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_CHANGE)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_filename = '/file|with|pipes'
-    self.assertEqual(event_data.filename, expected_filename)
-    self.assertEqual(event_data.mode_as_string, 'r/rrwxrwxrwx')
 
+    expected_event_values = {
+        'filename': expected_filename,
+        'mode_as_string': 'r/rrwxrwxrwx',
+        'timestamp': '2020-07-30 06:41:05.354067',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
+
+    self.CheckEventValues(storage_writer, events[48], expected_event_values)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[48])
     self._TestGetMessageStrings(
         event_data, expected_filename, expected_filename)
 
-    event = events[57]
+    expected_event_values = {
+        'filename': '/file_symboliclink1',
+        'mode_as_string': 'l/lrwxrwxrwx',
+        'symbolic_link_target': '/mnt/ext/testdir1/testfile1',
+        'timestamp': '2020-08-19 18:48:01.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2020-08-19 18:48:01.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.filename, '/file_symboliclink1')
-    self.assertEqual(event_data.mode_as_string, 'l/lrwxrwxrwx')
-    self.assertEqual(
-        event_data.symbolic_link_target, '/mnt/ext/testdir1/testfile1')
+    self.CheckEventValues(storage_writer, events[57], expected_event_values)
 
 
 if __name__ == '__main__':

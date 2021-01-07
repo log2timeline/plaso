@@ -24,9 +24,10 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[10]
+    expected_event_values = {
+        'timestamp': '2013-09-27 14:42:26.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-09-27 14:42:26.000000')
+    self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     # TODO: Test that the UTF-8 byte order mark gets removed from
     # the first line.
@@ -38,14 +39,12 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Protection:Prevent termination of McAfee processes  Action blocked :
     # Terminate
 
-    event = events[11]
+    expected_event_values = {
+        'filename': 'C:\\Windows\\System32\\procexp64.exe',
+        'timestamp': '2013-09-27 14:42:39.000000',
+        'username': 'SOMEDOMAIN\\someUser'}
 
-    self.CheckTimestamp(event.timestamp, '2013-09-27 14:42:39.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.username, 'SOMEDOMAIN\\someUser')
-    self.assertEqual(
-        event_data.filename, 'C:\\Windows\\System32\\procexp64.exe')
+    self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
     expected_message = (
         'File Name: C:\\Windows\\System32\\procexp64.exe '
@@ -59,6 +58,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
         'C:\\Windows\\System32\\procexp64.exe '
         'Action blocked : Terminate')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[11])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
