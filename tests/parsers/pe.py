@@ -22,27 +22,24 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'pe:compilation:compilation_time',
+        'pe_type': 'Executable (EXE)',
+        'timestamp': '2015-04-21 14:53:56.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:56.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'pe:compilation:compilation_time')
-    self.assertEqual(event_data.pe_type, 'Executable (EXE)')
+    expected_event_values = {
+        'data_type': 'pe:import:import_time',
+        'timestamp': '2015-04-21 14:53:55.000000'}
 
-    event = events[1]
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:55.000000')
+    expected_event_values = {
+        'data_type': 'pe:delay_import:import_time',
+        'timestamp': '2015-04-21 14:53:54.000000'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'pe:import:import_time')
-
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:54.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'pe:delay_import:import_time')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         'DLL name: USER32.dll '
@@ -50,6 +47,7 @@ class PECOFFTest(test_lib.ParserTestCase):
         'Import hash: 8d0739063fc8f9955cc6696b462544ab')
     expected_short_message = 'USER32.dll'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -63,12 +61,11 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'pe_type': 'Driver (SYS)',
+        'timestamp': '2015-04-21 14:53:54.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:54.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.pe_type, 'Driver (SYS)')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

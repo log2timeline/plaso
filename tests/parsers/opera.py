@@ -22,29 +22,27 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'entry_selection': 'Filled from autocomplete.',
+        'timestamp': '2013-11-11 23:45:27.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-11 23:45:27.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.entry_selection, 'Filled from autocomplete.')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_string = 'plaso.kiddaland.net (Filled from autocomplete.)'
 
-    self._TestGetMessageStrings(
-        event_data, expected_string, expected_string)
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
+    self._TestGetMessageStrings(event_data, expected_string, expected_string)
 
-    event = events[3]
+    expected_event_values = {
+        'entry_selection': 'Manually typed.',
+        'timestamp': '2013-11-11 22:46:07.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-11 22:46:07.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.entry_selection, 'Manually typed.')
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_string = 'theonion.com (Manually typed.)'
 
-    self._TestGetMessageStrings(
-        event_data, expected_string, expected_string)
+    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
+    self._TestGetMessageStrings(event_data, expected_string, expected_string)
 
 
 class OperaGlobalParserTest(test_lib.ParserTestCase):
@@ -60,11 +58,10 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[4]
+    expected_event_values = {
+        'timestamp': '2013-11-11 22:45:46.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-11 22:45:46.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_message = (
         'http://www.mbl.is/frettir/erlent/2013/11/11/'
@@ -74,25 +71,22 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
         'http://www.mbl.is/frettir/erlent/2013/11/11/'
         'karl_bretaprins_faer_ellilifeyri/...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[10]
+    expected_event_values = {
+        'timestamp': '2013-11-11 22:45:55.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-11 22:45:55.000000')
+    self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
-    event = events[16]
+    expected_event_values = {
+        'timestamp': '2013-11-11 22:46:16.000000',
+        'title': (
+            '10 Celebrities You Never Knew Were Abducted And Murdered '
+            'By Andie MacDowell | The Onion - America\'s Finest News Source')}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-11 22:46:16.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_title = (
-        '10 Celebrities You Never Knew Were Abducted And Murdered '
-        'By Andie MacDowell | The Onion - America\'s Finest News Source')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.title, expected_title)
+    self.CheckEventValues(storage_writer, events[16], expected_event_values)
 
 
 if __name__ == '__main__':
