@@ -23,53 +23,49 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'syslog:line'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'syslog:line')
-
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2016-03-11 19:26:39.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'syslog:ssh:login')
-    self.assertEqual(event_data.address, '192.168.0.1')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_body = (
         'Accepted publickey for plaso from 192.168.0.1 port 59229 ssh2: '
         'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
-    self.assertEqual(expected_body, event_data.body)
 
     expected_fingerprint = (
         'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
-    self.assertEqual(expected_fingerprint, event_data.fingerprint)
 
-    event = events[3]
+    expected_event_values = {
+        'address': '192.168.0.1',
+        'body': expected_body,
+        'data_type': 'syslog:ssh:login',
+        'fingerprint': expected_fingerprint,
+        'timestamp': '2016-03-11 19:26:39.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2016-03-11 22:55:30.000000')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'syslog:ssh:failed_connection')
-    self.assertEqual(event_data.address, '001:db8:a0b:12f0::1')
-    self.assertEqual(event_data.port, '8759')
+    expected_event_values = {
+        'address': '001:db8:a0b:12f0::1',
+        'data_type': 'syslog:ssh:failed_connection',
+        'port': '8759',
+        'timestamp': '2016-03-11 22:55:30.000000'}
 
-    event = events[4]
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2016-03-11 22:55:31.000000')
+    expected_event_values = {
+        'address': '188.124.3.41',
+        'data_type': 'syslog:ssh:opened_connection',
+        'timestamp': '2016-03-11 22:55:31.000000'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'syslog:ssh:opened_connection')
-    self.assertEqual(event_data.address, '188.124.3.41')
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    event = events[7]
+    expected_event_values = {
+        'address': '192.0.2.60',
+        'port': '20042',
+        'timestamp': '2016-03-11 22:55:34.000000',
+        'username': 'fred'}
 
-    self.CheckTimestamp(event.timestamp, '2016-03-11 22:55:34.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.address, '192.0.2.60')
-    self.assertEqual(event_data.port, '20042')
-    self.assertEqual(event_data.username, 'fred')
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
 
 if __name__ == '__main__':

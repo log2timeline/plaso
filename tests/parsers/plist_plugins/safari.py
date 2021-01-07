@@ -27,21 +27,23 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[7]
+    expected_event_values = {
+        'timestamp': '2013-07-08 17:31:00.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-07-08 17:31:00.000000')
-
-    event = events[9]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_url = 'http://netverslun.sci-mx.is/aminosyrur'
-    self.assertEqual(event_data.url, expected_url)
+
+    expected_event_values = {
+        'url': expected_url}
+
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_message = (
         'Visited: {0:s} (Am\xedn\xf3s\xfdrur ) '
         'Visit Count: 1').format(expected_url)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[9])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 

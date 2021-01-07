@@ -28,25 +28,22 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'device_id': '0000A11300000000',
+        'timestamp': '1995-11-22 18:25:07.000000'}
 
-    self.CheckTimestamp(event.timestamp, '1995-11-22 18:25:07.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.device_id, '0000A11300000000')
+    expected_event_values = {
+        'device_class': 'iPhone',
+        'device_id': '4C6F6F6E65000000',
+        'firmware_version': 256,
+        'imei': '012345678901234',
+        'timestamp': '2013-10-09 19:27:54.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CONNECTED,
+        'use_count': 1}
 
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2013-10-09 19:27:54.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.device_class, 'iPhone')
-    self.assertEqual(event_data.device_id, '4C6F6F6E65000000')
-    self.assertEqual(event_data.firmware_version, 256)
-    self.assertEqual(event_data.imei, '012345678901234')
-    self.assertEqual(event_data.use_count, 1)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         'Device ID: 4C6F6F6E65000000 '
@@ -56,6 +53,7 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
         'IMEI [012345678901234]')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
