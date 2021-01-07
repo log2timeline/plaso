@@ -24,29 +24,28 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the Root Entry event.
-    event = events[0]
+    expected_event_values = {
+        'name': 'Root Entry',
+        'timestamp': '2013-05-16 02:29:49.795000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-05-16 02:29:49.795000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.name, 'Root Entry')
+    expected_string = 'Name: Root Entry'
 
-    expected_string = (
-        'Name: Root Entry')
-
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_string, expected_string)
 
     # Check one other entry.
-    event = events[1]
+    expected_event_values = {
+        'timestamp': '2013-05-16 02:29:49.704000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-05-16 02:29:49.704000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_string = 'Name: MsoDataStore'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_string, expected_string)
 

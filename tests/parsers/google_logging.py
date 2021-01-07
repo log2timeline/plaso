@@ -27,24 +27,23 @@ class GooglelogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     # Test a regular event.
-    event = events[1]
+    expected_event_values = {
+        'timestamp': '2019-12-31 23:59:59.000002'}
 
-    self.CheckTimestamp(event.timestamp, '2019-12-31 23:59:59.000002')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_string = (
         'logging_functional_test_helper.py: 65] This line is log level 0')
     expected_short = 'This line is log level 0'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(event_data, expected_string, expected_short)
 
-   # Test a multiline event.
-    multi_line_event = events[2]
-    multi_line_event_data = self._GetEventDataOfEvent(
-        storage_writer, multi_line_event)
-    multi_line_message = multi_line_event_data.message
+    # Test a multiline event.
+    expected_event_values = {
+        'message': 'Interesting Stuff\n    that spans two lines'}
 
-    self.assertEqual(
-        'Interesting Stuff\n    that spans two lines', multi_line_message)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
   def testRaisesUnableToParseForInvalidFiles(self):
     """Test that attempting to parse an invalid file should raise an error."""
