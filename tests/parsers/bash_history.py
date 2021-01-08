@@ -26,30 +26,28 @@ class BashHistoryTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'command': '/usr/lib/plaso',
+        'timestamp': '2013-10-01 12:36:17.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-10-01 12:36:17.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.command, '/usr/lib/plaso')
+    expected_event_values = {
+        'command': '/bin/bash',
+        'timestamp': '2013-10-01 12:36:18.000000'}
 
-    event = events[1]
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2013-10-01 12:36:18.000000')
+    expected_event_values = {
+        'command': '/usr/local/bin/splunk -p 8080',
+        'timestamp': '2013-10-01 12:36:19.000000'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.command, '/bin/bash')
-
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2013-10-01 12:36:19.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.command, '/usr/local/bin/splunk -p 8080')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = 'Command executed: /usr/local/bin/splunk -p 8080'
     expected_short_message = '/usr/local/bin/splunk -p 8080'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

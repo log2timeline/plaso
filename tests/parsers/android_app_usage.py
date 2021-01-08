@@ -23,14 +23,12 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[22]
+    expected_event_values = {
+        'component': (
+            'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd'),
+        'timestamp': '2013-12-09 19:28:33.047000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-12-09 19:28:33.047000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.component,
-        'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
+    self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
     expected_message = (
         'Package: com.sec.android.widgetapp.ap.hero.accuweather '
@@ -39,15 +37,15 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
         'Package: com.sec.android.widgetapp.ap.hero.accuweather '
         'Component: com.sec.and...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[22])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[17]
+    expected_event_values = {
+        'package': 'com.google.android.gsf.login',
+        'timestamp': '2013-09-27 19:45:55.675000'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.CheckTimestamp(event.timestamp, '2013-09-27 19:45:55.675000')
-
-    self.assertEqual(event_data.package, 'com.google.android.gsf.login')
+    self.CheckEventValues(storage_writer, events[17], expected_event_values)
 
     expected_message = (
         'Package: com.google.android.gsf.login '
@@ -56,6 +54,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
         'Package: com.google.android.gsf.login '
         'Component: com.google.android.gsf.login...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[17])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
