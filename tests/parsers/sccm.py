@@ -22,35 +22,36 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2014-11-29 01:03:19.766000'}
 
-    self.CheckTimestamp(event.timestamp, '2014-11-29 01:03:19.766000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Test timestamps with seven digits after seconds.
-    event = events[3]
+    expected_event_values = {
+        'timestamp': '2015-01-02 10:22:50.873496'}
 
-    self.CheckTimestamp(event.timestamp, '2015-01-02 10:22:50.873496')
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     # Test timestamps with '-' in microseconds.
-    event = events[7]
+    expected_event_values = {
+        'timestamp': '2014-12-28 18:59:43.373000'}
 
-    self.CheckTimestamp(event.timestamp, '2014-12-28 18:59:43.373000')
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     # Test timestamps with '+' in microseconds.
-    event = events[9]
+    expected_event_values = {
+        'timestamp': '2014-11-23 17:52:13.827000'}
 
-    self.CheckTimestamp(event.timestamp, '2014-11-23 17:52:13.827000')
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     # Test timestamps with 2 digit UTC offset
-    event = events[8]
+    expected_event_values = {
+        'timestamp': '2014-11-26 05:20:47.594000'}
 
-    self.CheckTimestamp(event.timestamp, '2014-11-26 05:20:47.594000')
+    self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     # Test full and short message formats.
-    event = events[4]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
     expected_message = (
         'ContentAccess Releasing content request '
         '{4EA97AD6-E7E2-4583-92B9-21F532501337}')
@@ -59,6 +60,7 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
         'Releasing content request '
         '{4EA97AD6-E7E2-4583-92B9-21F532501337}')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

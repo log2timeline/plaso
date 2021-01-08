@@ -34,40 +34,43 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_events, 207)
     self.assertEqual(len(cookie_events), 182)
 
-    event = cookie_events[3]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.flags, 5)
-    self.assertEqual(event_data.url, 'accounts.google.com')
-    self.assertEqual(event_data.cookie_name, 'GAPS')
+    expected_event_values = {
+        'cookie_name': 'GAPS',
+        'flags': 5,
+        'url': 'accounts.google.com'}
 
-    event = cookie_events[48]
+    self.CheckEventValues(
+        storage_writer, cookie_events[3], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2013-07-08 20:54:50.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    expected_event_values = {
+        'cookie_name': 'nonsession',
+        'flags': 0,
+        'path': '/',
+        'timestamp': '2013-07-08 20:54:50.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.flags, 0)
-    self.assertEqual(event_data.cookie_name, 'nonsession')
-    self.assertEqual(event_data.path, '/')
+    self.CheckEventValues(
+        storage_writer, cookie_events[48], expected_event_values)
 
     expected_message = '.ebay.com </> (nonsession)'
     expected_short_message = '.ebay.com (nonsession)'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, cookie_events[48])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = cookie_events[52]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.cookie_name, 'fpc')
-    value = (
-        'd=0dTg3Ou32s3MrAJ2iHjFph100Tw3E1HTfDOTly0GfJ2g4W.mXpy54F9fjBFfXMw4YyW'
-        'AG2cT2FVSqOvGGi_Y1OPrngmNvpKPPyz5gIUP6x_EQeM7bR3jsrg_F1UXVOgu6JgkFwqO'
-        '5uHrv4HiL05qb.85Bl.V__HZI5wpAGOGPz1XHhY5mOMH.g.pkVDLli36W2iuYwA-&v=2')
-    self.assertEqual(event_data.cookie_value, value)
+    expected_event_values = {
+        'cookie_name': 'fpc',
+        'cookie_value': (
+            'd=0dTg3Ou32s3MrAJ2iHjFph100Tw3E1HTfDOTly0GfJ2g4W.mXpy54F9fjBFfXMw'
+            '4YyWAG2cT2FVSqOvGGi_Y1OPrngmNvpKPPyz5gIUP6x_EQeM7bR3jsrg_F1UXVOgu'
+            '6JgkFwqO5uHrv4HiL05qb.85Bl.V__HZI5wpAGOGPz1XHhY5mOMH.g.pkVDLli36W'
+            '2iuYwA-&v=2'),
+        'path': '/',
+        'url': '.www.yahoo.com'}
 
-    self.assertEqual(event_data.path, '/')
-    self.assertEqual(event_data.url, '.www.yahoo.com')
+    self.CheckEventValues(
+        storage_writer, cookie_events[52], expected_event_values)
 
 
 if __name__ == '__main__':

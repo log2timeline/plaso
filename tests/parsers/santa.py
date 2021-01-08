@@ -29,14 +29,15 @@ class SantaUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     # Execution event with quarantine url.
-    event = events[46]
-    self.CheckTimestamp(event.timestamp, '2018-08-19 03:17:55.765000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.quarantine_url,
+    expected_quarantine_url = (
         'https://endpoint920510.azureedge.net/s4l/s4l/download/mac/'
         'Skype-8.28.0.41.dmg')
+
+    expected_event_values = {
+        'quarantine_url': expected_quarantine_url,
+        'timestamp': '2018-08-19 03:17:55.765000'}
+
+    self.CheckEventValues(storage_writer, events[46], expected_event_values)
 
     expected_message = (
         'Santa ALLOW process: /Applications/Skype.app/Contents/MacOS/Skype hash'
@@ -44,65 +45,68 @@ class SantaUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'ALLOW process: /Applications/Skype.app/Contents/MacOS/Skype')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[46])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # File operation event log
-    event = events[159]
-    self.CheckTimestamp(event.timestamp, '2018-08-19 04:02:47.911000')
+    expected_event_values = {
+        'action': 'WRITE',
+        'file_path': '/Users/qwerty/newfile',
+        'gid': '20',
+        'group': 'staff',
+        'pid': '303',
+        'ppid': '1',
+        'process': 'Finder',
+        'process_path': (
+            '/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder'),
+        'timestamp': '2018-08-19 04:02:47.911000',
+        'uid': '501',
+        'user': 'qwerty'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[159], expected_event_values)
+
     # Test common fields in file operation event.
-    self.assertEqual(event_data.action, 'WRITE')
-    self.assertEqual(event_data.file_path, '/Users/qwerty/newfile')
-    self.assertEqual(event_data.pid, '303')
-    self.assertEqual(event_data.ppid, '1')
-    self.assertEqual(event_data.process, 'Finder')
-    self.assertEqual(
-        event_data.process_path,
-        '/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder')
-    self.assertEqual(event_data.uid, '501')
-    self.assertEqual(event_data.user, 'qwerty')
-    self.assertEqual(event_data.gid, '20')
-    self.assertEqual(event_data.group, 'staff')
 
     expected_message = (
         'Santa WRITE event /Users/qwerty/newfile by process: '
         '/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder')
     expected_short_message = 'File WRITE on: /Users/qwerty/newfile'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[159])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    # Disk mounts event log.
-    event = events[38]
-    self.CheckTimestamp(event.timestamp, '2018-08-19 03:17:29.036000')
+    # Test a Disk mounts event.
+    expected_event_values = {
+        'action': 'DISKAPPEAR',
+        'appearance': '2018-08-19T03:17:28.982Z',
+        'bsd_name': 'disk2s1',
+        'bus': 'Virtual Interface',
+        'dmg_path': '/Users/qwerty/Downloads/Skype-8.28.0.41.dmg',
+        'fs': 'hfs',
+        'model': 'Apple Disk Image',
+        'mount': '',
+        'serial': '',
+        'timestamp': '2018-08-19 03:17:29.036000',
+        'volume': 'Skype'}
 
-    # Test common fields in file Disk mounts event.
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.action, 'DISKAPPEAR')
-    self.assertEqual(event_data.mount, '')
-    self.assertEqual(event_data.volume, 'Skype')
-    self.assertEqual(event_data.bsd_name, 'disk2s1')
-    self.assertEqual(event_data.fs, 'hfs')
-    self.assertEqual(event_data.model, 'Apple Disk Image')
-    self.assertEqual(event_data.serial, '')
-    self.assertEqual(event_data.bus, 'Virtual Interface')
-    self.assertEqual(
-        event_data.dmg_path, '/Users/qwerty/Downloads/Skype-8.28.0.41.dmg')
-    self.assertEqual(event_data.appearance, '2018-08-19T03:17:28.982Z')
+    self.CheckEventValues(storage_writer, events[38], expected_event_values)
 
     expected_message = (
         'Santa DISKAPPEAR for (/Users/qwerty/Downloads/Skype-8.28.0.41.dmg)')
     expected_short_message = 'DISKAPPEAR Skype'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[38])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Test Disk event created from appearance timestamp.
-    event = events[35]
-    self.CheckTimestamp(event.timestamp, '2018-08-19 03:17:28.982000')
-    self.assertEqual(event.timestamp_desc, 'First Connection Time')
+    expected_event_values = {
+        'timestamp': '2018-08-19 03:17:28.982000',
+        'timestamp_desc': 'First Connection Time'}
+
+    self.CheckEventValues(storage_writer, events[35], expected_event_values)
 
 
 if __name__ == '__main__':

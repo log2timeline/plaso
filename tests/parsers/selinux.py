@@ -26,11 +26,10 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # Test case: normal entry.
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2012-05-24 07:40:01.174000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:01.174000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
@@ -39,39 +38,39 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
         'auid=4294967295 new auid=...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Test case: short date.
-    event = events[1]
+    expected_event_values = {
+        'timestamp': '2012-05-24 07:40:01.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:01.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_string = '[audit_type: SHORTDATE] check rounding'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_string, expected_string)
 
     # Test case: no msg.
-    event = events[2]
+    expected_event_values = {
+        'timestamp': '2012-05-24 07:40:22.174000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:22.174000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_string = '[audit_type: NOMSG]'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_string, expected_string)
 
     # Test case: under score.
-    event = events[3]
+    expected_event_values = {
+        'timestamp': '2012-05-24 07:47:46.174000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-24 07:47:46.174000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_message = (
         '[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
@@ -80,6 +79,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         '[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
         'auid=4294967295 new...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
