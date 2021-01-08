@@ -26,20 +26,13 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
         'cookie_name': 'SC',
         'data': (
             'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER='),
+        'data_type': 'webview:cookie',
         'host': 'skype.com',
+        'path': '/',
+        'secure': False,
         'timestamp': '2014-03-05 15:04:44.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Host: skype.com '
-        'Path: / '
-        'Secure: False')
-    expected_message_short = 'skype.com'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

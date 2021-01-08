@@ -25,32 +25,18 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # Check the first page visited event.
-    expected_full_path = 'file:///D:/plaso-static-1.0.1-win32-vs2008.zip'
-    expected_url = (
-        'https://plaso.googlecode.com/files/'
-        'plaso-static-1.0.1-win32-vs2008.zip')
-
     expected_event_values = {
         'data_type': 'firefox:downloads:download',
-        'full_path': expected_full_path,
+        'full_path': 'file:///D:/plaso-static-1.0.1-win32-vs2008.zip',
         'received_bytes': 15974599,
         'timestamp': '2013-07-18 18:59:59.312000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 15974599,
-        'url': expected_url}
+        'url': (
+            'https://plaso.googlecode.com/files/'
+            'plaso-static-1.0.1-win32-vs2008.zip')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '{0:s} ({1:s}). '
-        'Received: 15974599 bytes out of: 15974599 bytes.').format(
-            expected_url, expected_full_path)
-    expected_short_message = (
-        '{0:s} downloaded (15974599 bytes)').format(expected_full_path)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

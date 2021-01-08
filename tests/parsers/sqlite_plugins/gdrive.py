@@ -39,50 +39,30 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(len(cloud_entries), 20)
 
     # Test one local and one cloud entry.
-    file_path = (
-        '%local_sync_root%/Top Secret/Enn meiri '
-        'leyndarmál/Sýnileiki - Örverpi.gdoc')
-
     expected_event_values = {
-        'path': file_path,
+        'data_type': 'gdrive:snapshot:local_entry',
+        'path': (
+            '%local_sync_root%/Top Secret/Enn meiri '
+            'leyndarmál/Sýnileiki - Örverpi.gdoc'),
+        'size': 184,
         'timestamp': '2014-01-28 00:11:25.000000'}
 
     self.CheckEventValues(
         storage_writer, local_entries[5], expected_event_values)
 
-    expected_message = (
-        'File Path: {0:s} '
-        'Size: 184').format(file_path)
-    expected_short_message = file_path
-
-    event_data = self._GetEventDataOfEvent(storage_writer, local_entries[5])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    expected_url = (
-        'https://docs.google.com/document/d/'
-        '1ypXwXhQWliiMSQN9S5M0K6Wh39XF4Uz4GmY-njMf-Z0/edit?usp=docslist_api')
-
     expected_event_values = {
+        'data_type': 'gdrive:snapshot:cloud_entry',
         'document_type': 6,
+        'path': '/Almenningur/Saklausa hliðin',
+        'size': 0,
         'timestamp': '2014-01-28 00:12:27.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
-        'url': expected_url}
+        'url': (
+            'https://docs.google.com/document/d/1ypXwXhQWliiMSQN9S5M0K6Wh39XF4U'
+            'z4GmY-njMf-Z0/edit?usp=docslist_api')}
 
     self.CheckEventValues(
         storage_writer, cloud_entries[16], expected_event_values)
-
-    expected_message = (
-        'File Path: /Almenningur/Saklausa hliðin '
-        '[Private] '
-        'Size: 0 '
-        'URL: {0:s} '
-        'Type: DOCUMENT').format(expected_url)
-    expected_short_message = '/Almenningur/Saklausa hliðin'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, cloud_entries[16])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

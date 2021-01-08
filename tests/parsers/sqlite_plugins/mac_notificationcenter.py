@@ -27,66 +27,35 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'body': 'KeePassXC can now be run',
         'bundle_name': 'com.google.santagui',
+        'data_type': 'mac:notificationcenter:db',
+        'presented': 1,
         'timestamp': '2018-05-02 10:59:18.930156',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'title': 'Santa'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'Title: Santa'
-        ' '
-        'registered by: com.google.santagui. '
-        'Presented: Yes, '
-        'Content: KeePassXC can now be run')
-    expected_short_message = (
-        'Title: Santa, '
-        'Content: KeePassXC can now be run')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'body': 'Drive File Stream is loading your files…',
         'bundle_name': 'com.google.drivefs',
+        'data_type': 'mac:notificationcenter:db',
+        'presented': 1,
         'timestamp': '2018-05-02 11:13:21.531085',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'title': 'Drive File Stream'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_message = (
-        'Title: Drive File Stream '
-        'registered by: com.google.drivefs. '
-        'Presented: Yes, '
-        'Content: Drive File Stream is loading your files…')
-    expected_short_message = (
-        'Title: Drive File Stream, '
-        'Content: Drive File Stream is loading your files…')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'body': 'PyCharm can now be run',
         'bundle_name': 'com.google.santagui',
+        'data_type': 'mac:notificationcenter:db',
+        'presented': 1,
         'timestamp': '2018-05-16 16:38:04.686080',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'title': 'Santa'}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
-
-    expected_message = (
-        'Title: Santa '
-        'registered by: com.google.santagui. '
-        'Presented: Yes, '
-        'Content: PyCharm can now be run')
-    expected_short_message = (
-        'Title: Santa, '
-        'Content: PyCharm can now be run')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[5])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

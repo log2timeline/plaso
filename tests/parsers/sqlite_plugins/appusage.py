@@ -29,19 +29,10 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
         'app_version': '9537.75.14',
         'bundle_id': 'com.apple.Safari',
         'count': 1,
+        'data_type': 'macosx:application_usage',
         'timestamp': '2014-05-07 18:52:02.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '/Applications/Safari.app v.9537.75.14 '
-        '(bundle: com.apple.Safari). '
-        'Launched: 1 time(s)')
-    expected_short_message = '/Applications/Safari.app (1 time(s))'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -28,6 +28,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     # Test a contact last active event.
     expected_event_values = {
         'birthday': '1980-10-01',
+        'data_type': 'tango:android:contact',
         'distance': 39.04880905,
         'first_name': 'Rouel',
         'friend_request_message': 'I am following you on Tango',
@@ -41,23 +42,9 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
 
-    expected_message = (
-        'Rouel '
-        'Henry '
-        'male '
-        'birthday: 1980-10-01 '
-        'Status: Praying! '
-        'Friend: False '
-        'Request type: outRequest '
-        'Request message: I am following you on Tango')
-    expected_short_message = 'Rouel Henry Status: Praying!'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[14])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a contact last access event.
     expected_event_values = {
+        'data_type': 'tango:android:contact',
         'timestamp': '2016-01-15 14:35:20.633000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
@@ -65,6 +52,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
 
     # Test a contact request sent event.
     expected_event_values = {
+        'data_type': 'tango:android:contact',
         'timestamp': '2016-01-15 14:35:20.436000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
 
@@ -89,20 +77,15 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     # Test the a conversation event.
     expected_event_values = {
         'conversation_identifier': 'DyGWr_010wQM_ozkIe-9Ww',
+        'data_type': 'tango:android:conversation',
         'timestamp': '1970-01-01 00:00:00.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_message = 'Conversation (DyGWr_010wQM_ozkIe-9Ww)'
-    expected_short_message = 'Conversation (DyGWr_010wQM_ozkIe-9Ww)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a message creation event.
     expected_event_values = {
+        'data_type': 'tango:android:message',
         'direction': 2,
         'message_identifier': 16777224,
         'timestamp': '2016-01-15 14:41:33.027000',
@@ -110,15 +93,11 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[21], expected_event_values)
 
-    expected_message = 'Outgoing Message (16777224)'
-    expected_short_message = 'Outgoing Message (16777224)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[21])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a message sent event.
     expected_event_values = {
+        'data_type': 'tango:android:message',
+        'direction': 2,
+        'message_identifier': 16777224,
         'timestamp': '2016-01-15 14:41:34.238000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
 

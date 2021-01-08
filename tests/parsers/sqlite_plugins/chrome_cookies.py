@@ -43,26 +43,21 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Check one www.linkedin.com cookie.
     expected_event_values = {
         'cookie_name': 'leo_auth_token',
+        'data_type': 'chrome:cookie:entry',
         'host': 'www.linkedin.com',
         'httponly': False,
+        'persistent': True,
         'timestamp': '2011-08-25 21:50:27.292367',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS,
         'url': 'http://www.linkedin.com/'}
 
     self.CheckEventValues(storage_writer, events[124], expected_event_values)
 
-    expected_message = (
-        'http://www.linkedin.com/ (leo_auth_token) '
-        'Flags: [HTTP only] = False '
-        '[Persistent] = True')
-    expected_short_message = 'www.linkedin.com (leo_auth_token)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[124])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Check one of the visits to rubiconproject.com.
     expected_event_values = {
+        'cookie_name': 'put_2249',
+        'data_type': 'chrome:cookie:entry',
+        'httponly': False,
         'path': '/',
         'persistent': True,
         'secure': False,
@@ -72,17 +67,9 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[379], expected_event_values)
 
-    expected_message = (
-        'http://rubiconproject.com/ (put_2249) '
-        'Flags: [HTTP only] = False '
-        '[Persistent] = True')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[379])
-    self._TestGetMessageStrings(
-        event_data, expected_message, 'rubiconproject.com (put_2249)')
-
     # Examine an event for a visit to a political blog site.
     expected_event_values = {
+        'data_type': 'chrome:cookie:entry',
         'host': 'politicalticker.blogs.cnn.com',
         'path': '/2012/03/21/romney-tries-to-clean-up-etch-a-sketch-mess/',
         'timestamp': '2012-03-22 01:47:21.012022'}
@@ -92,6 +79,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Examine a cookie that has an autologin entry.
     expected_event_values = {
         'cookie_name': 'autologin[timeout]',
+        'data_type': 'chrome:cookie:entry',
         # This particular cookie value represents a timeout value that
         # corresponds to the expiration date of the cookie.
         'data': '1364824322',
@@ -103,6 +91,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Examine a cookie expiry event.
     expected_event_values = {
+        'data_type': 'chrome:cookie:entry',
         'timestamp': '2013-08-14 14:19:42.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION}
 
@@ -144,25 +133,21 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Check a GA cookie creation event with a path.
     expected_event_values = {
         'cookie_name': '__utma',
+        'data_type': 'chrome:cookie:entry',
         'host': 'google.com',
         'httponly': False,
+        'persistent': True,
         'timestamp': '2018-08-14 15:03:43.650324',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'url': 'http://google.com/gmail/about/'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'http://google.com/gmail/about/ (__utma) '
-        'Flags: [HTTP only] = False [Persistent] = True')
-    expected_short_message = 'google.com (__utma)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Check one of the visits to fbi.gov for last accessed time.
     expected_event_values = {
+        'cookie_name': '__cfduid',
+        'data_type': 'chrome:cookie:entry',
+        'httponly': True,
         'path': '/',
         'persistent': True,
         'secure': False,
@@ -172,16 +157,9 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
-    expected_message = (
-        'http://fbi.gov/ (__cfduid) '
-        'Flags: [HTTP only] = True [Persistent] = True')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[10])
-    self._TestGetMessageStrings(
-        event_data, expected_message, 'fbi.gov (__cfduid)')
-
     # Examine an event for a cookie with a very large expire time.
     expected_event_values = {
+        'data_type': 'chrome:cookie:entry',
         'host': 'projects.fivethirtyeight.com',
         'timestamp': '9999-08-17 12:26:28.000000'}
 

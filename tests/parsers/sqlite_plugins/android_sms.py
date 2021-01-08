@@ -28,21 +28,13 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'address': '1 555-521-5554',
         'body': 'Yo Fred this is my new number.',
+        'data_type': 'android:messaging:sms',
+        'sms_type': 'SENT',
+        'sms_read': 'READ',
         'timestamp': '2013-10-29 16:56:28.038000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Type: SENT '
-        'Address: 1 555-521-5554 '
-        'Status: READ '
-        'Message: Yo Fred this is my new number.')
-    expected_short_message = 'Yo Fred this is my new number.'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

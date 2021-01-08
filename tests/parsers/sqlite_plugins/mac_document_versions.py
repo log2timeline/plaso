@@ -24,33 +24,18 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # Check the first page visited entry.
-    expected_version_path = (
-        '/.DocumentRevisions-V100/PerUID/501/1/'
-        'com.apple.documentVersions/'
-        '08CFEB5A-5CDA-486F-AED5-EA35BF3EE4C2.rtf')
-
     expected_event_values = {
+        'data_type': 'mac:document_versions:file',
         'name': 'Spain is beautiful.rtf',
         'path': '/Users/moxilo/Documents',
         'timestamp': '2014-01-21 02:03:00.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'user_sid': '501',
-        'version_path': expected_version_path}
+        'version_path': (
+            '/.DocumentRevisions-V100/PerUID/501/1/com.apple.documentVersions/'
+            '08CFEB5A-5CDA-486F-AED5-EA35BF3EE4C2.rtf')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Version of [Spain is beautiful.rtf] '
-        '(/Users/moxilo/Documents) '
-        'stored in {0:s} '
-        'by 501').format(expected_version_path)
-    expected_short_message = (
-        'Stored a document version of [Spain is beautiful.rtf]')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

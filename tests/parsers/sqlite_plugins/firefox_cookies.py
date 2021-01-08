@@ -19,9 +19,6 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['firefox_cookies.sqlite'], plugin)
 
-    events = []
-    extra_objects = []
-
     # sqlite> SELECT COUNT(id) FROM moz_cookies;
     # 90
     # Thus the cookie database contains 93 entries:
@@ -37,6 +34,9 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     #   5 Analytics Creation Time
     #
     # In total: 93 * 3 + 15 + 5 + 5 = 304 events.
+
+    events = []
+    extra_objects = []
     for event in storage_writer.GetEvents():
       event_data = self._GetEventDataOfEvent(storage_writer, event)
       if event_data.data_type == 'firefox:cookie:entry':
@@ -50,24 +50,21 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Check one greenqloud.com event
     expected_event_values = {
         'cookie_name': '__utma',
+        'data_type': 'firefox:cookie:entry',
         'host': 's.greenqloud.com',
         'httponly': False,
+        'secure': False,
         'timestamp': '2015-10-30 21:56:03.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION,
         'url': 'http://s.greenqloud.com/'}
 
     self.CheckEventValues(storage_writer, events[32], expected_event_values)
 
-    expected_message = (
-        'http://s.greenqloud.com/ (__utma) Flags: [HTTP only]: False')
-    expected_short_message = 's.greenqloud.com (__utma)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[32])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Check one of the visits to pubmatic.com.
     expected_event_values = {
+        'cookie_name': 'KRTBCOOKIE_391',
+        'data_type': 'firefox:cookie:entry',
+        'httponly': False,
         'path': '/',
         'secure': False,
         'timestamp': '2013-11-29 21:56:04.000000',
@@ -75,14 +72,6 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
         'url': 'http://pubmatic.com/'}
 
     self.CheckEventValues(storage_writer, events[62], expected_event_values)
-
-    expected_message = (
-        'http://pubmatic.com/ (KRTBCOOKIE_391) Flags: [HTTP only]: False')
-    expected_short_message = 'pubmatic.com (KRTBCOOKIE_391)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[62])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

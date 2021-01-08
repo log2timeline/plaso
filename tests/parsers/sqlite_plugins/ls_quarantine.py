@@ -26,6 +26,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     # Examine a VLC event.
     expected_event_values = {
         'agent': 'Google Chrome',
+        'data_type': 'macosx:lsquarantine',
         'timestamp': '2013-07-08 21:12:03.000000',
         'url': (
             'http://download.cnet.com/VLC-Media-Player/'
@@ -35,29 +36,26 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
 
     # Examine a MacKeeper event.
     expected_event_values = {
+        'agent': 'Google Chrome',
+        'data_type': 'macosx:lsquarantine',
         'timestamp': '2013-07-12 19:28:58.000000'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     # Examine a SpeedTest event.
     expected_event_values = {
-        'timestamp': '2013-07-12 19:30:16.000000'}
+        'agent': 'Google Chrome',
+        'data_type': 'macosx:lsquarantine',
+        'data': (
+            'http://download.mackeeper.zeobit.com/package.php?'
+            'key=460245286&trt=5&landpr=Speedtest'),
+        'timestamp': '2013-07-12 19:30:16.000000',
+        'url': (
+            'http://mackeeperapp.zeobit.com/aff/speedtest.net.6/download.php?'
+            'affid=460245286&trt=5&utm_campaign=3ES&tid_ext=P107fSKcSfqpMbcP3'
+            'sI4fhKmeMchEB3dkAGpX4YIsvM;US;L;1')}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
-
-    expected_message = (
-        '[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'
-        'speedtest.net.6/download.php?affid=460245286&trt=5&utm_campaign='
-        '3ES&tid_ext=P107fSKcSfqpMbcP3sI4fhKmeMchEB3dkAGpX4YIsvM;US;L;1 '
-        '<http://download.mackeeper.zeobit.com/package.php?'
-        'key=460245286&trt=5&landpr=Speedtest>')
-    expected_short_message = (
-        'http://mackeeperapp.zeobit.com/aff/speedtest.net.6/download.php?'
-        'affid=4602452...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[10])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

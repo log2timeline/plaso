@@ -30,6 +30,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
     # Test the first contact creation event.
     expected_event_values = {
+        'data_type': 'twitter:ios:contact',
         'description': (
             'Breaking news alerts and updates from the BBC. For news, '
             'features, analysis follow @BBCWorld (international) or @BBCNews '
@@ -49,25 +50,9 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'Screen name: BBCBreaking Profile picture URL: '
-        'https://pbs.twimg.com/profile_images/460740982498013184/'
-        'wIPwMwru_normal.png Name: BBC Breaking News Location: London, UK '
-        'Description: Breaking news alerts and updates from the BBC. For '
-        'news, features, analysis follow @BBCWorld (international) or '
-        '@BBCNews (UK). Latest sport news @BBCSport. URL: '
-        'http://www.bbc.co.uk/news Following: No Number of followers: '
-        '19466932 Number of following: 3')
-    expected_short_message = (
-        'Screen name: BBCBreaking Description: Breaking news alerts and '
-        'updates from t...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a contact modification event.
     expected_event_values = {
+        'data_type': 'twitter:ios:contact',
         'description': (
             'Breaking news alerts and updates from the BBC. For news, '
             'features, analysis follow @BBCWorld (international) or @BBCNews '
@@ -87,25 +72,9 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_message = (
-        'Screen name: BBCBreaking Profile picture URL: '
-        'https://pbs.twimg.com/profile_images/460740982498013184/'
-        'wIPwMwru_normal.png Name: BBC Breaking News Location: London, UK '
-        'Description: Breaking news alerts and updates from the BBC. For '
-        'news, features, analysis follow @BBCWorld (international) or '
-        '@BBCNews (UK). Latest sport news @BBCSport. URL: '
-        'http://www.bbc.co.uk/news Following: No Number of followers: '
-        '19466932 Number of following: 3')
-    expected_short_message = (
-        'Screen name: BBCBreaking Description: Breaking news alerts and '
-        'updates from t...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a status creation event.
     expected_event_values = {
+        'data_type': 'twitter:ios:status',
         'favorite_count': 3,
         'favorited': 0,
         'name': 'Heather Mahalik',
@@ -117,19 +86,9 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[50], expected_event_values)
 
-    expected_message = (
-        'Name: Heather Mahalik User Id: 475222380 Message: Never forget. '
-        'http://t.co/L7bjWue1A2 Favorite: No Retweet Count: 2 Favorite '
-        'Count: 3')
-    expected_short_message = (
-        'Name: Heather Mahalik Message: Never forget. http://t.co/L7bjWue1A2')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[50])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a status update event.
     expected_event_values = {
+        'data_type': 'twitter:ios:status',
         'favorite_count': 3,
         'favorited': 0,
         'name': 'Heather Mahalik',
@@ -140,17 +99,6 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         'user_id': 475222380}
 
     self.CheckEventValues(storage_writer, events[51], expected_event_values)
-
-    expected_message = (
-        'Name: Heather Mahalik User Id: 475222380 Message: Never forget. '
-        'http://t.co/L7bjWue1A2 Favorite: No Retweet Count: 2 Favorite '
-        'Count: 3')
-    expected_short_message = (
-        'Name: Heather Mahalik Message: Never forget. http://t.co/L7bjWue1A2')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[51])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

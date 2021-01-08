@@ -22,28 +22,18 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # Check the first note.
-    expected_title = 'building 4th brandy gibs'
-    expected_text = (
-        'building 4th brandy gibs microsoft office body soul and peace '
-        'example.com 3015555555: plumbing and heating claim#123456 Small '
-        'business ')
-
     expected_event_values = {
-        'text': expected_text,
+        'data_type': 'mac:notes:note',
+        'text': (
+            'building 4th brandy gibs microsoft office body soul and peace '
+            'example.com 3015555555: plumbing and heating claim#123456 Small '
+            'business '),
         'timestamp': '2014-02-11 02:38:27.097813',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
-        'title': expected_title}
+        'title': 'building 4th brandy gibs'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = 'title:{0:s} note_text:{1:s}'.format(
-        expected_title, expected_text)
-    expected_short_message = 'title:{0:s}'.format(expected_title)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 if __name__ == '__main__':
   unittest.main()

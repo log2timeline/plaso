@@ -24,24 +24,20 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'timestamp': '2013-07-12 19:30:31.000000'}
+        'data_type': 'mackeeper:cache',
+        'description': 'Chat Outgoing Message',
+        'record_id': 16059074,
+        'room': '12828340738351e0593f987450z40787',
+        'text': (
+            'I have received your system scan report and I will start '
+            'analyzing it right now.'),
+        'timestamp': '2013-07-12 19:30:31.000000',
+        'url': (
+            'http://support.kromtech.net/chat/listen/12828340738351e0593f98745'
+            '0z40787/?client-id=51e0593fa1a24468673655&callback=jQuery18301357'
+            '1173651143909_1373657420912&_=1373657423647')}
 
     self.CheckEventValues(storage_writer, events[41], expected_event_values)
-
-    expected_message = (
-        'Chat Outgoing Message : I have received your system scan report and '
-        'I will start analyzing it right now. [ URL: http://support.kromtech.'
-        'net/chat/listen/12828340738351e0593f987450z40787/?client-id=51e0593f'
-        'a1a24468673655&callback=jQuery183013571173651143909_1373657420912&_='
-        '1373657423647 Event ID: 16059074 Room: '
-        '12828340738351e0593f987450z40787 ]')
-    expected_short_message = (
-        'I have received your system scan report and I will start analyzing '
-        'it right now.')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[41])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
