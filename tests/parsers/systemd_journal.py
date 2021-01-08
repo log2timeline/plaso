@@ -4,15 +4,11 @@
 
 import unittest
 
-try:
-  from plaso.parsers import systemd_journal
-except ImportError:
-  systemd_journal = None
+from plaso.parsers import systemd_journal
 
 from tests.parsers import test_lib
 
 
-@unittest.skipIf(systemd_journal is None, 'requires LZMA compression support')
 class SystemdJournalParserTest(test_lib.ParserTestCase):
   """Tests for the Systemd Journal parser."""
 
@@ -27,28 +23,30 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2017-01-27 09:40:55.913258'}
 
-    self.CheckTimestamp(event.timestamp, '2017-01-27 09:40:55.913258')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'test-VirtualBox [systemd, pid: 1] Started User Manager for '
         'UID 1000.')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 
     # This event uses XZ compressed data
-    event = events[2098]
+    expected_event_values = {
+        'timestamp': '2017-02-06 16:24:32.564585'}
 
-    self.CheckTimestamp(event.timestamp, '2017-02-06 16:24:32.564585')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[2098], expected_event_values)
 
     expected_message = 'test-VirtualBox [root, pid: 22921] {0:s}'.format(
         'a' * 692)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2098])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -63,22 +61,23 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2018-07-03 15:00:16.682340'}
 
-    self.CheckTimestamp(event.timestamp, '2018-07-03 15:00:16.682340')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = 'testlol [systemd, pid: 822] Reached target Paths.'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 
     # This event uses LZ4 compressed data
-    event = events[84]
 
-    self.CheckTimestamp(event.timestamp, '2018-07-03 15:19:04.667807')
+    expected_event_values = {
+        'timestamp': '2018-07-03 15:19:04.667807'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[84], expected_event_values)
 
     # source: https://github.com/systemd/systemd/issues/6237
     # The text used in the test message was triplicated to make it long enough
@@ -90,6 +89,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
          'permitting numeric first characters is done on purpose: to avoid '
          'ambiguities between numeric UID and textual user names.'*3))
     expected_short_message = '{0:s}...'.format(expected_message[:77])
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[84])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -98,10 +99,10 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
     parser = systemd_journal.SystemdJournalParser()
+
     path_segments = [
         'systemd', 'journal',
-        'system@00053f9c9a4c1e0e-2e18a70e8b327fed.journalTILDE'
-    ]
+        'system@00053f9c9a4c1e0e-2e18a70e8b327fed.journalTILDE']
     file_entry = self._GetTestFileEntry(path_segments)
     file_object = file_entry.GetFileObject()
 
@@ -112,16 +113,17 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2016-10-24 13:20:01.063423'}
 
-    self.CheckTimestamp(event.timestamp, '2016-10-24 13:20:01.063423')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'test-VirtualBox [systemd-journald, pid: 569] Runtime journal '
         '(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

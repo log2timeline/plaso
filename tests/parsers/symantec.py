@@ -38,16 +38,12 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    # Test the second entry:
-    event = events[1]
+    expected_event_values = {
+        'file': 'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt',
+        'timestamp': '2012-11-30 10:47:29.000000',
+        'user': 'davnads'}
 
-    self.CheckTimestamp(event.timestamp, '2012-11-30 10:47:29.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.user, 'davnads')
-    expected_file = (
-        'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')
-    self.assertEqual(event_data.file, expected_file)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         'Event Name: GL_EVENT_INFECTION; '
@@ -65,6 +61,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
         'W32.Changeup!gen33; '
         'Unknown; ...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

@@ -22,11 +22,10 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2013-11-13 17:52:34.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-13 17:52:34.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'Status: BOOT_TIME '
@@ -37,18 +36,18 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 1 '
         'Status: BOOT_TIME')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[1]
+    expected_event_values = {
+        'hostname': 'localhost',
+        'terminal': 'console',
+        'timestamp': '2013-11-13 17:52:41.736713',
+        'type': 7,
+        'username': 'moxilo'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-13 17:52:41.736713')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.username, 'moxilo')
-    self.assertEqual(event_data.terminal, 'console')
-    self.assertEqual(event_data.type, 7)
-    self.assertEqual(event_data.hostname, 'localhost')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         'User: moxilo '
@@ -62,17 +61,17 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 67 '
         'Status: USER_PROCESS')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[4]
+    expected_event_values = {
+        'terminal': 'ttys002',
+        'timestamp': '2013-11-14 04:32:56.641464',
+        'type': 8,
+        'username': 'moxilo'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-14 04:32:56.641464')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.username, 'moxilo')
-    self.assertEqual(event_data.terminal, 'ttys002')
-    self.assertEqual(event_data.type, 8)
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_message = (
         'User: moxilo '
@@ -86,6 +85,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         'PID: 6899 '
         'Status: DEAD_PROCESS')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

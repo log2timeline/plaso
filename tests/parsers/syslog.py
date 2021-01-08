@@ -17,8 +17,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     parser = syslog.SyslogParser()
     knowledge_base_values = {'year': 2020}
     storage_writer = self._ParseFile(
-        ['syslog_rsyslog'], parser,
-        knowledge_base_values=knowledge_base_values)
+        ['syslog_rsyslog'], parser, knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
@@ -36,15 +35,14 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'syslog:line',
+        'hostname': 'myhostname.myhost.com',
+        'reporter': 'Job',
+        'severity': None,
+        'timestamp': '2016-01-22 07:54:32.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2016-01-22 07:54:32.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'syslog:line')
-    self.assertEqual(event_data.hostname, 'myhostname.myhost.com')
-    self.assertEqual(event_data.reporter, 'Job')
-    self.assertIsNone(event_data.severity)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testParseDarwin(self):
     """Tests the Parse function on an Darwin-style syslog file."""
@@ -70,47 +68,48 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'reporter': 'periodic_scheduler',
+        'severity': 'INFO',
+        'timestamp': '2016-10-25 19:37:23.297265'}
 
-    self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:23.297265')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.reporter, 'periodic_scheduler')
-    self.assertEqual(event_data.severity, 'INFO')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'INFO [periodic_scheduler, pid: 13707] cleanup_logs: job completed')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 
-    event = events[2]
+    expected_event_values = {
+        'reporter': 'kernel',
+        'severity': 'DEBUG',
+        'timestamp': '2016-10-25 19:37:24.987014'}
 
-    self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:24.987014')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.reporter, 'kernel')
-    self.assertEqual(event_data.severity, 'DEBUG')
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
 
     # Testing year increment.
-    event = events[4]
+    expected_event_values = {
+        'reporter': 'kernel',
+        'severity': 'DEBUG',
+        'timestamp': '2016-10-25 19:37:24.993079'}
 
-    self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:24.993079')
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.reporter, 'kernel')
-    self.assertEqual(event_data.severity, 'DEBUG')
+    expected_event_values = {
+        'reporter': 'kernel',
+        'severity': 'ERR'}
 
-    event = events[6]
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.reporter, 'kernel')
-    self.assertEqual(event_data.severity, 'ERR')
+    expected_event_values = {
+        'reporter': 'aprocess',
+        'severity': 'INFO'}
 
-    event = events[7]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.reporter, 'aprocess')
-    self.assertEqual(event_data.severity, 'INFO')
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_message = (
         'INFO [aprocess] [  316.587330] cfg80211: This is a multi-line\t'
@@ -118,6 +117,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         'INFO [aprocess] [  316.587330] cfg80211: This is a multi-line\t'
         'message that sc...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[7])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -133,52 +134,49 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'syslog:line',
+        'hostname': 'myhostname.myhost.com',
+        'reporter': 'client',
+        'severity': None,
+        'timestamp': '2012-01-22 07:52:33.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-01-22 07:52:33.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'syslog:line')
-    self.assertEqual(event_data.hostname, 'myhostname.myhost.com')
-    self.assertEqual(event_data.reporter, 'client')
-    self.assertIsNone(event_data.severity)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[client, pid: 30840] INFO No new content in ímynd.dd.')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 
-    event = events[6]
+    expected_event_values = {
+        'reporter': '---',
+        'severity': None,
+        'timestamp': '2012-02-29 01:15:43.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2012-02-29 01:15:43.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.reporter, '---')
-    self.assertIsNone(event_data.severity)
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     # Testing year increment.
-    event = events[9]
+    expected_event_values = {
+        'body': 'This syslog message has a fractional value for seconds.',
+        'reporter': 'somrandomexe',
+        'severity': None,
+        'timestamp': '2013-03-23 23:01:18.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-03-23 23:01:18.000000')
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.body,
-        'This syslog message has a fractional value for seconds.')
-    self.assertEqual(event_data.reporter, 'somrandomexe')
-    self.assertIsNone(event_data.severity)
+    expected_event_values = {
+        'reporter': '/sbin/anacron',
+        'severity': None}
 
-    event = events[11]
+    self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.reporter, '/sbin/anacron')
-    self.assertIsNone(event_data.severity)
+    expected_event_values = {
+        'reporter': 'aprocess',
+        'severity': None}
 
-    event = events[10]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.reporter, 'aprocess')
-    self.assertIsNone(event_data.severity)
+    self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     expected_message = (
         '[aprocess, pid: 10100] This is a multi-line message that screws up'
@@ -186,20 +184,24 @@ class SyslogParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '[aprocess, pid: 10100] This is a multi-line message that screws up'
         '\tmany syslo...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[10])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[14]
+    expected_event_values = {
+        'hostname': None,
+        'reporter': 'kernel',
+        'severity': None}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertIsNone(event_data.hostname)
-    self.assertEqual(event_data.reporter, 'kernel')
-    self.assertIsNone(event_data.severity)
+    self.CheckEventValues(storage_writer, events[14], expected_event_values)
 
     expected_message = (
         '[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
     expected_short_message = (
         '[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[14])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -226,15 +228,14 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'syslog:line',
+        'hostname': 'myhostname.myhost.com',
+        'reporter': 'Job',
+        'severity': None,
+        'timestamp': '2016-01-22 06:54:32.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2016-01-22 06:54:32.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'syslog:line')
-    self.assertEqual(event_data.hostname, 'myhostname.myhost.com')
-    self.assertEqual(event_data.reporter, 'Job')
-    self.assertIsNone(event_data.severity)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

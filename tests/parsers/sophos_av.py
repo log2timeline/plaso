@@ -22,16 +22,17 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2010-07-20 18:38:14.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2010-07-20 18:38:14.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'File "C:\\Documents and Settings\\Administrator\\Desktop\\'
         'sxl_test_50.com" belongs to virus/spyware \'LiveProtectTest\'.')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -45,9 +46,10 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2010-07-20 16:38:14.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2010-07-20 16:38:14.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':
