@@ -5,7 +5,6 @@ import os
 import sqlite3
 import zlib
 
-from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import event_heaps
 from plaso.storage import file_interface
@@ -22,7 +21,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     storage_type (str): storage type.
   """
 
-  _FORMAT_VERSION = 20200523
+  _FORMAT_VERSION = 20210105
 
   # The earliest format version, stored in-file, that this class
   # is able to append (write).
@@ -30,7 +29,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
-  _READ_COMPATIBLE_FORMAT_VERSION = 20170707
+  _READ_COMPATIBLE_FORMAT_VERSION = 20190309
 
   # Container types that are referenced from other container types.
   _REFERENCED_CONTAINER_TYPES = (
@@ -858,29 +857,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     Returns:
       generator(ExtractionWarning): warning generator.
     """
-    # For backwards compatibility with pre-20190309 stores.
-    # Note that stores cannot contain both ExtractionErrors and
-    # ExtractionWarnings
-    if self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR):
-      return self._GetExtractionErrorsAsWarnings()
-
     return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
-  def _GetExtractionErrorsAsWarnings(self):
-    """Retrieves errors from from the store, and converts them to warnings.
-
-    This method is for backwards compatibility with pre-20190309 storage format
-    stores which used ExtractionError attribute containers.
-
-    Yields:
-      ExtractionWarning: extraction warnings.
-    """
-    for extraction_error in self._GetAttributeContainers(
-        self._CONTAINER_TYPE_EXTRACTION_ERROR):
-      error_attributes = extraction_error.CopyToDict()
-      warning = warnings.ExtractionWarning()
-      warning.CopyFromDict(error_attributes)
-      yield warning
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.

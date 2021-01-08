@@ -29,8 +29,6 @@ class BaseStore(object):
   _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_ERROR = (
-      warnings.ExtractionError.CONTAINER_TYPE)
   _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_CONFIGURATION = (
@@ -43,7 +41,6 @@ class BaseStore(object):
 
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_ANALYSIS_REPORT,
-      _CONTAINER_TYPE_EXTRACTION_ERROR,
       _CONTAINER_TYPE_EXTRACTION_WARNING,
       _CONTAINER_TYPE_EVENT,
       _CONTAINER_TYPE_EVENT_DATA,
@@ -468,13 +465,6 @@ class BaseStore(object):
     Returns:
       bool: True if the store contains extraction warnings.
     """
-    # To support older storage versions, check for the now deprecated
-    # extraction errors.
-    has_errors = self._HasAttributeContainers(
-        self._CONTAINER_TYPE_EXTRACTION_ERROR)
-    if has_errors:
-      return True
-
     return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def HasEventTags(self):

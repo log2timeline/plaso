@@ -23,7 +23,7 @@ class RedisMergeReader(interface.StorageMergeReader):
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_ERROR = warnings.ExtractionError.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
@@ -35,7 +35,7 @@ class RedisMergeReader(interface.StorageMergeReader):
       _CONTAINER_TYPE_EVENT_DATA,
       _CONTAINER_TYPE_EVENT,
       _CONTAINER_TYPE_EVENT_TAG,
-      _CONTAINER_TYPE_EXTRACTION_ERROR,
+      _CONTAINER_TYPE_EXTRACTION_WARNING,
       _CONTAINER_TYPE_ANALYSIS_REPORT)
 
   _ADD_CONTAINER_TYPE_METHODS = {
@@ -44,7 +44,7 @@ class RedisMergeReader(interface.StorageMergeReader):
       _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
       _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
       _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
-      _CONTAINER_TYPE_EXTRACTION_ERROR: '_AddError',
+      _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddWarning',
   }
 
   def __init__(self, storage_writer, task, redis_client=None):
@@ -94,14 +94,6 @@ class RedisMergeReader(interface.StorageMergeReader):
     """
     self._storage_writer.AddAnalysisReport(analysis_report)
 
-  def _AddError(self, error):
-    """Adds an error.
-
-    Args:
-      error (ExtractionError): error.
-    """
-    self._storage_writer.AddError(error)
-
   def _AddEventSource(self, event_source):
     """Adds an event source.
 
@@ -150,6 +142,14 @@ class RedisMergeReader(interface.StorageMergeReader):
 
     post_write_identifier = event_data.GetIdentifier()
     self._event_data_identifier_mappings[lookup_key] = post_write_identifier
+
+  def _AddWarning(self, warning):
+    """Adds a warning.
+
+    Args:
+      warning (ExtractionWarning): warning.
+    """
+    self._storage_writer.AddWarning(warning)
 
   def _PrepareForNextContainerType(self):
     """Prepares for the next container type.
