@@ -81,25 +81,21 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'action': 'Container Started',
+        'container_id': container_identifier,
+        'container_name': 'e7d0b7ea5ccf',
+        'timestamp': '2016-01-07 16:49:08.674873'}
 
-    self.CheckTimestamp(event.timestamp, '2016-01-07 16:49:08.674873')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'action': 'Container Created',
+        'container_id': container_identifier,
+        'container_name': 'e7d0b7ea5ccf',
+        'timestamp': '2016-01-07 16:49:08.507979'}
 
-    self.assertEqual(event_data.action, 'Container Started')
-    self.assertEqual(event_data.container_id, container_identifier)
-    self.assertEqual(event_data.container_name, 'e7d0b7ea5ccf')
-
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2016-01-07 16:49:08.507979')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.action, 'Container Created')
-    self.assertEqual(event_data.container_id, container_identifier)
-    self.assertEqual(event_data.container_name, 'e7d0b7ea5ccf')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
   def testParseLayerConfig(self):
     """Tests the _ParseLayerConfigJSON function."""
@@ -115,18 +111,15 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'command': (
+            '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
+            '/etc/apt/sources.list'),
+        'layer_id': layer_identifier,
+        'timestamp': '2015-10-12 17:27:03.079273',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
-    self.CheckTimestamp(event.timestamp, '2015-10-12 17:27:03.079273')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_command = (
-        '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
-        '/etc/apt/sources.list')
-    self.assertEqual(event_data.command, expected_command)
-    self.assertEqual(event_data.layer_id, layer_identifier)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

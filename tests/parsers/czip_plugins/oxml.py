@@ -110,33 +110,33 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2012-11-07 23:29:00.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2012-11-07 23:29:00.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event = events[1]
+    expected_event_values = {
+        'app_version': '14.0000',
+        'author': 'Nides',
+        'creating_app': 'Microsoft Office Word',
+        'doc_security': '0',
+        'hyperlinks_changed': 'false',
+        'i4': '1',
+        'last_saved_by': 'Nides',
+        'links_up_to_date': 'false',
+        'number_of_characters': '13',
+        'number_of_characters_with_spaces': '14',
+        'number_of_lines': '1',
+        'number_of_pages': '1',
+        'number_of_paragraphs': '1',
+        'number_of_words': '2',
+        'revision_number': '3',
+        'scale_crop': 'false',
+        'template': 'Normal.dotm',
+        'total_time': '1385'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.number_of_characters, '13')
-    self.assertEqual(event_data.total_time, '1385')
-    self.assertEqual(event_data.number_of_characters_with_spaces, '14')
-    self.assertEqual(event_data.i4, '1')
-    self.assertEqual(event_data.app_version, '14.0000')
-    self.assertEqual(event_data.number_of_lines, '1')
-    self.assertEqual(event_data.scale_crop, 'false')
-    self.assertEqual(event_data.number_of_pages, '1')
-    self.assertEqual(event_data.number_of_words, '2')
-    self.assertEqual(event_data.links_up_to_date, 'false')
-    self.assertEqual(event_data.number_of_paragraphs, '1')
-    self.assertEqual(event_data.doc_security, '0')
-    self.assertEqual(event_data.hyperlinks_changed, 'false')
-    self.assertEqual(event_data.revision_number, '3')
-    self.assertEqual(event_data.last_saved_by, 'Nides')
-    self.assertEqual(event_data.author, 'Nides')
-    self.assertEqual(event_data.creating_app, 'Microsoft Office Word')
-    self.assertEqual(event_data.template, 'Normal.dotm')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         'Creating App: Microsoft Office Word '
@@ -156,6 +156,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
     expected_short_message = (
         'Author: Nides')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

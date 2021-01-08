@@ -47,14 +47,12 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     # nondeterministic hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[567]
+    expected_event_values = {
+        'container_identifier': 1,
+        'timestamp': '2014-05-12 07:30:25.486199',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    self.CheckTimestamp(event.timestamp, '2014-05-12 07:30:25.486199')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.container_identifier, 1)
+    self.CheckEventValues(storage_writer, events[567], expected_event_values)
 
     expected_message = (
         'Name: Content '
@@ -67,6 +65,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'Directory: C:\\Users\\test\\AppData\\Local\\Microsoft\\Windows\\'
         'INetCache\\IE\\')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[567])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -83,14 +82,12 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     # nondeterministic hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[100]
+    expected_event_values = {
+        'container_identifier': 14,
+        'timestamp': '2019-03-20 17:22:14.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2019-03-20 17:22:14.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.container_identifier, 14)
+    self.CheckEventValues(storage_writer, events[100], expected_event_values)
 
     expected_message = (
         'URL: https://www.bing.com/rs/3R/kD/ic/878ca0cd/b83d57c0.svg '
@@ -109,6 +106,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     expected_short_message = (
         'URL: https://www.bing.com/rs/3R/kD/ic/878ca0cd/b83d57c0.svg')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[100])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

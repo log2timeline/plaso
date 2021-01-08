@@ -26,27 +26,25 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
 
     # A shortcut event.
     # The last accessed timestamp.
-    event = events[121]
+    expected_event_values = {
+        'timestamp': '2009-07-13 23:55:56.248104',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    self.CheckTimestamp(event.timestamp, '2009-07-13 23:55:56.248104')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.CheckEventValues(storage_writer, events[121], expected_event_values)
 
     # The creation timestamp.
-    event = events[122]
+    expected_event_values = {
+        'timestamp': '2009-07-13 23:55:56.248104',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2009-07-13 23:55:56.248104')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.CheckEventValues(storage_writer, events[122], expected_event_values)
 
     # The last modification timestamp.
-    event = events[123]
+    expected_event_values = {
+        'timestamp': '2009-07-14 01:39:11.388000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2009-07-14 01:39:11.388000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[123], expected_event_values)
 
     expected_message = (
         '[@%systemroot%\\system32\\oobefldr.dll,-1262] '
@@ -65,15 +63,15 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         '[@%systemroot%\\system32\\oobefldr.dll,-1262] '
         'C:\\Windows\\System32\\GettingStarte...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[123])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # A shell item event.
-    event = events[18]
+    expected_event_values = {
+        'timestamp': '2010-11-10 07:41:04.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 07:41:04.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[18], expected_event_values)
 
     expected_message = (
         'Name: System32 '
@@ -87,15 +85,15 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'NTFS file reference: 2331-1 '
         'Origin: 5afe4de1b92fc382.customDes...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[18])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # A distributed link tracking event.
-    event = events[12]
+    expected_event_values = {
+        'timestamp': '2010-11-10 19:08:32.656260'}
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 19:08:32.656260')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
     expected_message = (
         'e9215b24-ecfd-11df-a81c-000c29031e1e '
@@ -106,6 +104,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'e9215b24-ecfd-11df-a81c-000c29031e1e '
         'Origin: 5afe4de1b92fc382.customDestinati...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[12])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

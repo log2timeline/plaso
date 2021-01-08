@@ -22,31 +22,30 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2018-01-25 02:25:08.454000'}
 
-    self.CheckTimestamp(event.timestamp, '2018-01-25 02:25:08.454000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event = events[1]
+    expected_event_values = {
+        'timestamp': '2018-01-25 02:25:08.454000'}
 
-    self.CheckTimestamp(event.timestamp, '2018-01-25 02:25:08.454000')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event = events[2]
+    expected_event_values = {
+        'timestamp': '2018-01-25 02:25:08.456000'}
 
-    self.CheckTimestamp(event.timestamp, '2018-01-25 02:25:08.456000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         '[INFO pid=2376 7780:MainThread logging_config.py:299]  SSL: OpenSSL '
         '1.0.2m  2 Nov 2017')
     expected_short_message = (
         ' SSL: OpenSSL 1.0.2m  2 Nov 2017')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
-
-    event = events[30]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         '[INFO pid=2376 6560:RunAsync-_InitializeSyncAppAsync-1 persistence.'
@@ -57,14 +56,15 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         ' Initialize factory with policy '
         'PlatformPolicy(google_drive_config_directory_...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[30])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[82]
+    expected_event_values = {
+        'timestamp': '2018-01-25 02:25:18.563000'}
 
-    self.CheckTimestamp(event.timestamp, '2018-01-25 02:25:18.563000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[82], expected_event_values)
 
     expected_message = (
         '[INFO pid=2376 5712:ExternalBrowserFlow proxy_manager.py:141]  '
@@ -79,11 +79,13 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         ' Exception while auto resolving proxy. Traceback (most recent call '
         'last):   F...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[82])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-  def testOSXParseLog(self):
-    """Tests the Parse function on OS X log.
+  def testMacOSParseLog(self):
+    """Tests the Parse function on Mac OS log.
 
     Test contains UTC timestamps and Unicode (UTF-8) filenames.
     """
@@ -95,39 +97,37 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2018-03-01 20:48:14.224000'}
 
-    self.CheckTimestamp(event.timestamp, '2018-03-01 20:48:14.224000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[INFO pid=1730 140736280556352:MainThread logging_config.pyo:295]  '
         'OS: Darwin/10.13.3')
     expected_short_message = ' OS: Darwin/10.13.3'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Log file contains a change in local system time from -0800 to UTC, around
     # line 215. Confirm the switch is handled correctly.
-    event = events[169]
+    expected_event_values = {
+        'timestamp': '2018-03-01 20:57:33.499000'}
 
-    self.CheckTimestamp(event.timestamp, '2018-03-01 20:57:33.499000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[169], expected_event_values)
 
     expected_message = (
         '[INFO pid=2590 140736280556352:MainThread logging_config.pyo:299]  SSL'
         ': OpenSSL 1.0.2n  7 Dec 2017')
     expected_short_message = ' SSL: OpenSSL 1.0.2n  7 Dec 2017'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[169])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Ensure Unicode characters in filenames are handled cleanly.
-    event = events[1400]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
     expected_message = (
         '[INFO pid=2608 123145558327296:Worker-1 snapshot_sqlite.pyo:219]  '
         'Updating local entry local_id=LocalID(inode=870321, volume=\'60228'
@@ -137,6 +137,8 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         ' Updating local entry local_id=LocalID(inode=870321, '
         'volume=\'60228B87-A626-4F...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1400])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
