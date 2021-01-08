@@ -217,15 +217,17 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'connection_type': 'Wired',
+        'data_type': 'windows:registry:network',
+        'default_gateway_mac': '00:50:56:ea:6c:ec',
+        'description': 'Network',
+        'dns_suffix': 'localdomain',
+        'ssid': 'Network',
+        'timestamp': '2014-05-06 17:02:19.795000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2014-05-06 17:02:19.795000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:network')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'SSID: Network '
@@ -235,18 +237,19 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'DNS Suffix: localdomain')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[3]
+    expected_event_values = {
+        'connection_type': 'Wireless',
+        'data_type': 'windows:registry:network',
+        'description': 'My Awesome Wifi Hotspot',
+        'ssid': 'My Awesome Wifi Hotspot',
+        'timestamp': '2015-01-27 15:15:27.965000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CONNECTED}
 
-    self.CheckTimestamp(event.timestamp, '2015-01-27 15:15:27.965000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:network')
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_message = (
         'SSID: My Awesome Wifi Hotspot '
@@ -254,6 +257,7 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'Connection Type: Wireless')
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

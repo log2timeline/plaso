@@ -64,16 +64,16 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'windows:registry:bagmru',
+        'entries': (
+            'Index: 1 [MRU Value 0]: Shell item path: <My Computer>'),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2009-08-04 15:19:16.997750'}
 
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:19:16.997750')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:bagmru')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -81,14 +81,16 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'Shell item path: <My Computer>').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[1]
+    expected_event_values = {
+        'entries': (
+            'Index: 1 [MRU Value 0]: Shell item path: <My Computer> C:\\'),
+        'timestamp': '2009-08-04 15:19:10.669625'}
 
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:19:10.669625')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         '[{0:s}\\0] '
@@ -96,19 +98,21 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'Shell item path: <My Computer> C:\\').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[14]
+    expected_event_values = {
+        'key_path': '{0:s}\\0\\0\\0\\0\\0'.format(key_path),
+        'timestamp': '2009-08-04 15:19:16.997750'}
 
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:19:16.997750')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[14], expected_event_values)
 
     # The winreg_formatter will add a space after the key path even when there
     # is not text.
     expected_message = '[{0:s}\\0\\0\\0\\0\\0] '.format(key_path)
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[14])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 

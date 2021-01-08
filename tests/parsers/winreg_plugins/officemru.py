@@ -78,18 +78,28 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[5]
+    expected_event_values = {
+        'data_type': 'windows:registry:office_mru_list',
+        'entries': (
+            'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*'
+            'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
+            'SA-23E Mitchell-Hyundyne Starfury.docx '
+            'Item 2: [F00000000][T01CD00921FC127F0][O00000000]*'
+            'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\Earthforce '
+            'SA-26 Thunderbolt Star Fury.docx '
+            'Item 3: [F00000000][T01CD009208780140][O00000000]*'
+            'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\StarFury.docx '
+            'Item 4: [F00000000][T01CCFE0B22DA9EF0][O00000000]*'
+            'C:\\Users\\nfury\\Documents\\VIBRANIUM.docx '
+            'Item 5: [F00000000][T01CCFCBA595DFC30][O00000000]*'
+            'C:\\Users\\nfury\\Documents\\ADAMANTIUM-Background.docx'),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-03-13 18:27:15.089802',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
-    self.CheckTimestamp(event.timestamp, '2012-03-13 18:27:15.089802')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:office_mru_list')
+    self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -108,19 +118,24 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
             key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[5])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Test OfficeMRUWindowsRegistryEvent.
-    event = events[0]
+    expected_value_string = (
+        '[F00000000][T01CD0146EA1EADB0][O00000000]*'
+        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
+        'SA-23E Mitchell-Hyundyne Starfury.docx')
 
-    self.CheckTimestamp(event.timestamp, '2012-03-13 18:27:15.083000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+    expected_event_values = {
+        'data_type': 'windows:registry:office_mru',
+        'key_path': key_path,
+        'timestamp': '2012-03-13 18:27:15.083000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+        'value_string': expected_value_string}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:office_mru')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         '[{0:s}] '
@@ -131,6 +146,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         '[F00000000][T01CD0146EA1EADB0][O00000000]*'
         'C:\\Users\\nfury\\Documents\\StarFury\\S...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
