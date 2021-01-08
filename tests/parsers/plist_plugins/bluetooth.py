@@ -61,17 +61,13 @@ class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
     self.assertTrue(
         'Paired:True Name:Apple Magic Trackpad 2' in paired_descriptions)
 
-    event = events[10]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
     expected_string = (
         '/DeviceCache/44-00-00-00-00-04 '
         'Paired:True '
         'Name:Apple Magic Trackpad 2')
 
-    self._TestGetMessageStrings(
-        event_data, expected_string, expected_string)
+    event_data = self._GetEventDataOfEvent(storage_writer, events[10])
+    self._TestGetMessageStrings(event_data, expected_string, expected_string)
 
 
 if __name__ == '__main__':

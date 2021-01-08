@@ -74,20 +74,16 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         event_data, expected_message, expected_short_message)
 
     # Check repeated lines.
-    event = events[38]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    event_data = self._GetEventDataOfEvent(storage_writer, events[38])
 
-    repeated_event = events[39]
-    repeated_event_data = self._GetEventDataOfEvent(
-        storage_writer, repeated_event)
+    expected_event_values = {
+        'action': event_data.action,
+        'agent': event_data.agent,
+        'computer_name': event_data.computer_name,
+        'process_name': event_data.process_name,
+        'status': event_data.status}
 
-    self.assertEqual(event_data.agent, repeated_event_data.agent)
-    self.assertEqual(
-        event_data.computer_name, repeated_event_data.computer_name)
-    self.assertEqual(event_data.status, repeated_event_data.status)
-    self.assertEqual(
-        event_data.process_name, repeated_event_data.process_name)
-    self.assertEqual(event_data.action, repeated_event_data.action)
+    self.CheckEventValues(storage_writer, events[39], expected_event_values)
 
     # Year changes.
     expected_event_values = {
