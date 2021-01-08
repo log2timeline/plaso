@@ -34,13 +34,11 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # A distributed link tracking event.
-    event = events[3680]
+    expected_event_values = {
+        'timestamp': '2007-06-30 12:58:40.500004',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2007-06-30 12:58:40.500004')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[3680], expected_event_values)
 
     expected_message = (
         '9fe44b69-2709-11dc-a06b-db3099beae3c '
@@ -51,35 +49,35 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         '9fe44b69-2709-11dc-a06b-db3099beae3c '
         'Origin: $MFT: 462-1')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[3680])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Test path hints of a regular file.
-    event = events[28741]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.name, 'SAM')
+    expected_event_values = {
+        'name': 'SAM',
+        'path_hints': ['\\WINDOWS\\system32\\config\\SAM']}
 
-    expected_path_hints = ['\\WINDOWS\\system32\\config\\SAM']
-    self.assertEqual(event_data.path_hints, expected_path_hints)
+    self.CheckEventValues(storage_writer, events[28741], expected_event_values)
 
     # Test path hints of a deleted file.
-    event = events[120476]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.name, 'CAJA1S19.js')
-    self.assertFalse(event_data.is_allocated)
-
     expected_path_hints = [(
         '\\Documents and Settings\\Donald Blake\\Local Settings\\'
         'Temporary Internet Files\\Content.IE5\\9EUWFPZ1\\CAJA1S19.js')]
-    self.assertEqual(event_data.path_hints, expected_path_hints)
+
+    expected_event_values = {
+        'is_allocated': False,
+        'name': 'CAJA1S19.js',
+        'path_hints': expected_path_hints}
+
+    self.CheckEventValues(storage_writer, events[120476], expected_event_values)
 
     # Testing path hint of orphaned file.
-    event = events[125432]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.name, 'menu.text.css')
+    expected_event_values = {
+        'name': 'menu.text.css',
+        'path_hints': ['$Orphan\\session\\menu.text.css']}
 
-    expected_path_hints = ['$Orphan\\session\\menu.text.css']
-    self.assertEqual(event_data.path_hints, expected_path_hints)
+    self.CheckEventValues(storage_writer, events[125432], expected_event_values)
 
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
@@ -104,52 +102,36 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # The creation timestamp.
-    event = events[0]
+    expected_event_values = {
+        'is_allocated': True,
+        'timestamp': '2013-12-03 06:30:41.807908',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_data.is_allocated, bool)
-    self.assertTrue(event_data.is_allocated)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # The last modification timestamp.
-    event = events[1]
+    expected_event_values = {
+        'is_allocated': True,
+        'timestamp': '2013-12-03 06:30:41.807908',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_data.is_allocated, bool)
-    self.assertTrue(event_data.is_allocated)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # The last accessed timestamp.
-    event = events[2]
+    expected_event_values = {
+        'is_allocated': True,
+        'timestamp': '2013-12-03 06:30:41.807908',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_data.is_allocated, bool)
-    self.assertTrue(event_data.is_allocated)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # The entry modification timestamp.
-    event = events[7]
+    expected_event_values = {
+        'is_allocated': True,
+        'timestamp': '2013-12-03 06:30:41.807908',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_data.is_allocated, bool)
-    self.assertTrue(event_data.is_allocated)
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_message = (
         'TSK:/$MFT '
@@ -160,20 +142,17 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '/$MFT 0-1 $STANDARD_INFORMATION')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[7])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # The creation timestamp.
-    event = events[0]
+    expected_event_values = {
+        'is_allocated': True,
+        'timestamp': '2013-12-03 06:30:41.807908',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_data.is_allocated, bool)
-    self.assertTrue(event_data.is_allocated)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'TSK:/$MFT '
@@ -186,16 +165,17 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '/$MFT 0-1 $FILE_NAME')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
-
-    event = events[251]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_path_hints = [
         '\\System Volume Information\\{3808876b-c176-4e48-b7ae-04046e6cc752}']
 
-    self.assertEqual(event_data.path_hints, expected_path_hints)
+    expected_event_values = {
+        'path_hints': expected_path_hints}
+
+    self.CheckEventValues(storage_writer, events[251], expected_event_values)
 
     expected_message = (
         'TSK:/$MFT '
@@ -207,15 +187,14 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '/$MFT 38-1 $STANDARD_INFORMATION')
 
+    event_data = self._GetEventDataOfEvent(storage_writer,  events[251])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[240]
+    expected_event_values = {
+        'path_hints': ['\\System Volume Information\\{38088~1']}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_path_hints = ['\\System Volume Information\\{38088~1']
-    self.assertEqual(event_data.path_hints, expected_path_hints)
+    self.CheckEventValues(storage_writer, events[240], expected_event_values)
 
     expected_message = (
         'TSK:/$MFT '
@@ -228,16 +207,17 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '/$MFT 38-1 $FILE_NAME')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[240])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[244]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
     expected_path_hints = [
         '\\System Volume Information\\{3808876b-c176-4e48-b7ae-04046e6cc752}']
-    self.assertEqual(event_data.path_hints, expected_path_hints)
+
+    expected_event_values = {
+        'path_hints': expected_path_hints}
+
+    self.CheckEventValues(storage_writer, events[244], expected_event_values)
 
     expected_message = (
         'TSK:/$MFT '
@@ -251,6 +231,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         '/$MFT 38-1 $FILE_NAME')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[244])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -300,13 +281,11 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2015-11-30 21:15:27.203125',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2015-11-30 21:15:27.203125')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'Nieuw - Tekstdocument.txt '
@@ -317,6 +296,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     expected_short_message = (
         'Nieuw - Tekstdocument.txt 30-1 USN_REASON_FILE_CREATE')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
