@@ -27,14 +27,6 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:20.000381')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'bsm:event')
-    self.assertEqual(event_data.event_type, 45029)
-
     expected_extra_tokens = [
         {'AUT_TEXT': {
             'text': 'launchctl::Audit recovery'}},
@@ -45,18 +37,17 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'error': 'Success',
             'token_status': 0}}]
 
-    self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
-
     expected_return_value = (
         '{\'error\': \'Success\', \'token_status\': 0, \'call_status\': 0}')
-    self.assertEqual(event_data.return_value, expected_return_value)
 
-    event = events[15]
+    expected_event_values = {
+        'data_type': 'bsm:event',
+        'event_type': 45029,
+        'extra_tokens': expected_extra_tokens,
+        'return_value': expected_return_value,
+        'timestamp': '2013-11-04 18:36:20.000381'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:26.000171')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.event_type, 45023)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_extra_tokens = [
         {'AUT_SUBJECT32': {
@@ -77,19 +68,18 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'error': 'UNKNOWN',
             'token_status': 255}}]
 
-    self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
-
     expected_return_value = (
         '{\'error\': \'UNKNOWN\', \'token_status\': 255, '
         '\'call_status\': 5000}')
-    self.assertEqual(event_data.return_value, expected_return_value)
 
-    event = events[31]
+    expected_event_values = {
+        'event_type': 45023,
+        'extra_tokens': expected_extra_tokens,
+        'return_value': expected_return_value,
+        'timestamp': '2013-11-04 18:36:26.000171'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:26.000530')
+    self.CheckEventValues(storage_writer, events[15], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.event_type, 45025)
     expected_extra_tokens = [
         {'AUT_SUBJECT32': {
             'aid': -1,
@@ -109,18 +99,17 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'call_status': 0,
             'error': 'Success',
             'token_status': 0}}]
-    self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
     expected_return_value = (
         '{\'error\': \'Success\', \'token_status\': 0, \'call_status\': 0}')
-    self.assertEqual(event_data.return_value, expected_return_value)
 
-    event = events[50]
+    expected_event_values = {
+        'event_type': 45025,
+        'extra_tokens': expected_extra_tokens,
+        'return_value': expected_return_value,
+        'timestamp': '2013-11-04 18:36:26.000530'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-04 18:37:36.000399')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.event_type, 44903)
+    self.CheckEventValues(storage_writer, events[31], expected_event_values)
 
     expected_extra_tokens = [
         {'AUT_ARG64': {
@@ -149,11 +138,17 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'call_status': 0,
             'error': 'Success',
             'token_status': 0}}]
-    self.assertEqual(event_data.extra_tokens, expected_extra_tokens)
 
     expected_return_value = (
         '{\'error\': \'Success\', \'token_status\': 0, \'call_status\': 0}')
-    self.assertEqual(event_data.return_value, expected_return_value)
+
+    expected_event_values = {
+        'event_type': 44903,
+        'extra_tokens': expected_extra_tokens,
+        'return_value': expected_return_value,
+        'timestamp': '2013-11-04 18:37:36.000399'}
+
+    self.CheckEventValues(storage_writer, events[50], expected_event_values)
 
 
 class OpenBSMParserTest(test_lib.ParserTestCase):

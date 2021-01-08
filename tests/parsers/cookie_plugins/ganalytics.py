@@ -38,17 +38,14 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(len(events), 25)
 
-    event = events[14]
+    expected_event_values = {
+        'timestamp': '2013-10-30 21:56:06.000000',
+        'url': 'http://ads.aha.is/',
+        'utmcct': (
+            '/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/'),
+        'utmcsr': 'mbl.is'}
 
-    self.CheckTimestamp(event.timestamp, '2013-10-30 21:56:06.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(
-        event_data.utmcct,
-        '/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/')
-    self.assertEqual(event_data.url, 'http://ads.aha.is/')
-    self.assertEqual(event_data.utmcsr, 'mbl.is')
+    self.CheckEventValues(storage_writer, events[14], expected_event_values)
 
     expected_message = (
         'http://ads.aha.is/ (__utmz) Sessions: 1 Domain Hash: 137167072 '
@@ -58,6 +55,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'maelt_med_kerfisbundnum_hydingum/')
     expected_short_message = 'http://ads.aha.is/ (__utmz)'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[14])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -94,15 +92,14 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         event_data, expected_message, expected_short_message)
 
     # Check the UTMA Google Analytics event.
-    event = events[41]
+    expected_event_values = {
+        'cookie_name': '__utma',
+        'sessions': 2,
+        'timestamp': '2012-03-22 01:55:29.000000',
+        'timestamp_desc': 'Analytics Previous Time',
+        'visitor_id': '1827102436'}
 
-    self.CheckTimestamp(event.timestamp, '2012-03-22 01:55:29.000000')
-    self.assertEqual(event.timestamp_desc, 'Analytics Previous Time')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.cookie_name, '__utma')
-    self.assertEqual(event_data.visitor_id, '1827102436')
-    self.assertEqual(event_data.sessions, 2)
+    self.CheckEventValues(storage_writer, events[41], expected_event_values)
 
     expected_message = (
         'http://assets.tumblr.com/ (__utma) '
@@ -111,26 +108,26 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'Visitor ID: 1827102436')
     expected_short_message = 'http://assets.tumblr.com/ (__utma)'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[41])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Check the UTMB Google Analytics event.
-    event = events[34]
+    expected_event_values = {
+        'cookie_name': '__utmb',
+        'domain_hash': '154523900',
+        'pages_viewed': 1,
+        'timestamp': '2012-03-22 01:48:30.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED}
 
-    self.CheckTimestamp(event.timestamp, '2012-03-22 01:48:30.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.cookie_name, '__utmb')
-    self.assertEqual(event_data.domain_hash, '154523900')
-    self.assertEqual(event_data.pages_viewed, 1)
+    self.CheckEventValues(storage_writer, events[34], expected_event_values)
 
     expected_message = (
         'http://upressonline.com/ (__utmb) Pages Viewed: 1 Domain Hash: '
         '154523900')
     expected_short_message = 'http://upressonline.com/ (__utmb)'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[34])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
