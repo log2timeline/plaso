@@ -80,34 +80,22 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:mstsc:connection',
+        'key_path': '{0:s}\\myserver.com'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2012-08-28 09:23:49.002031'}
+        'timestamp': '2012-08-28 09:23:49.002031',
+        'username': 'DOMAIN\\username'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[{0:s}\\myserver.com] '
-        'Username hint: DOMAIN\\username').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'data_type': 'windows:registry:key_value',
-        'timestamp': '2012-08-28 09:23:49.002031'}
+        'key_path': key_path,
+        'timestamp': '2012-08-28 09:23:49.002031',
+        'values': None}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        '(empty)').format(key_path)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
 class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
@@ -159,24 +147,20 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
+    expected_entries = (
+        'MRU0: 192.168.16.60 '
+        'MRU1: computer.domain.com')
+
     expected_event_values = {
         'data_type': 'windows:registry:mstsc:mru',
+        'entries': expected_entries,
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'timestamp': '2012-08-28 09:23:49.002031'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'MRU0: 192.168.16.60 '
-        'MRU1: computer.domain.com').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

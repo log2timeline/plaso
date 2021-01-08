@@ -40,27 +40,17 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:usb',
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'product': 'PID_0002',
+        'serial': '6&2ab01149&0&2',
         'subkey_name': 'VID_0E0F&PID_0002',
         'timestamp': '2012-04-07 10:31:37.625247',
         'vendor': 'VID_0E0F'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Product: PID_0002 '
-        'Serial: 6&2ab01149&0&2 '
-        'Subkey name: VID_0E0F&PID_0002 '
-        'Vendor: VID_0E0F').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

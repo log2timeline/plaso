@@ -129,14 +129,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_event_values = {
-        'data_type': 'windows:registry:timezone',
-        'timestamp': '2013-01-30 10:47:57.000000'}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
+    expected_configuration = (
         'ActiveTimeBias: -60 '
         'Bias: -60 '
         'DaylightBias: -60 '
@@ -144,12 +137,15 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'DynamicDaylightTimeDisabled: 0 '
         'StandardBias: 0 '
         'StandardName: @tzres.dll,-322 '
-        'TimeZoneKeyName: W. Europe Standard Time').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'TimeZoneKeyName: W. Europe Standard Time')
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'configuration': expected_configuration,
+        'key_path': key_path,
+        'data_type': 'windows:registry:timezone',
+        'timestamp': '2013-01-30 10:47:57.000000'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
@@ -170,14 +166,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_event_values = {
-        'data_type': 'windows:registry:timezone',
-        'timestamp': '2012-03-11 07:00:00.000642'}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
+    expected_configuration = (
         'ActiveTimeBias: 240 '
         'Bias: 300 '
         'DaylightBias: -60 '
@@ -185,12 +174,15 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'DynamicDaylightTimeDisabled: 0 '
         'StandardBias: 0 '
         'StandardName: @tzres.dll,-112 '
-        'TimeZoneKeyName: Eastern Standard Time').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'TimeZoneKeyName: Eastern Standard Time')
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'configuration': expected_configuration,
+        'key_path': key_path,
+        'data_type': 'windows:registry:timezone',
+        'timestamp': '2012-03-11 07:00:00.000642'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

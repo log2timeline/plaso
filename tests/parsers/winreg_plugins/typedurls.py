@@ -47,17 +47,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_event_values = {
-        'data_type': 'windows:registry:typedurls',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-03-12 21:23:53.307750'}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
+    expected_entries = (
         'url1: http://cnn.com/ '
         'url2: http://twitter.com/ '
         'url3: http://linkedin.com/ '
@@ -70,12 +60,18 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         'url10: http://www.adobe.com/ '
         'url11: http://www.google.com/ '
         'url12: http://www.firefox.com/ '
-        'url13: http://go.microsoft.com/fwlink/?LinkId=69157').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'url13: http://go.microsoft.com/fwlink/?LinkId=69157')
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'data_type': 'windows:registry:typedurls',
+        'entries': expected_entries,
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-03-12 21:23:53.307750'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
@@ -100,23 +96,19 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
+    expected_entries = (
+        'url1: \\\\controller')
+
     expected_event_values = {
         'data_type': 'windows:registry:typedurls',
+        'entries': expected_entries,
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'timestamp': '2010-11-10 07:58:15.811625'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'url1: \\\\controller').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

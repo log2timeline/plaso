@@ -101,27 +101,6 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
-        'SA-23E Mitchell-Hyundyne Starfury.docx '
-        'Item 2: [F00000000][T01CD00921FC127F0][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\Earthforce SA-26 '
-        'Thunderbolt Star Fury.docx '
-        'Item 3: [F00000000][T01CD009208780140][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\StarFury.docx '
-        'Item 4: [F00000000][T01CCFE0B22DA9EF0][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\VIBRANIUM.docx '
-        'Item 5: [F00000000][T01CCFCBA595DFC30][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\ADAMANTIUM-Background.docx').format(
-            key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[5])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test OfficeMRUWindowsRegistryEvent.
     expected_value_string = (
         '[F00000000][T01CD0146EA1EADB0][O00000000]*'
@@ -136,19 +115,6 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         'value_string': expected_value_string}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Value: [F00000000][T01CD0146EA1EADB0][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
-        'SA-23E Mitchell-Hyundyne Starfury.docx').format(key_path)
-    expected_short_message = (
-        '[F00000000][T01CD0146EA1EADB0][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\StarFury\\S...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

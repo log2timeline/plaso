@@ -83,15 +83,6 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
-        '/autoRun').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
   def testProcessNtuserRunOnce(self):
     """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntry(['NTUSER-RunTests.DAT'])
@@ -121,15 +112,6 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         'timestamp': '2012-04-05 17:03:53.992062'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
-            key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testProcessSoftwareRun(self):
     """Tests the Process function on a Run key."""
@@ -164,20 +146,6 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\McAfee\\'
-        'Host Intrusion Prevention\\FireTray.exe" '
-        'VMware Tools: "C:\\Program Files\\VMware\\VMware Tools\\'
-        'VMwareTray.exe" '
-        'VMware User Process: "C:\\Program Files\\VMware\\VMware Tools\\'
-        'VMwareUser.exe"').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
   def testProcessSoftwareRunOnce(self):
     """Tests the Process function on a RunOnce key."""
     test_file_entry = self._GetTestFileEntry(['SOFTWARE-RunTests'])
@@ -207,15 +175,6 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         'timestamp': '2012-04-06 14:07:27.750000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
-        '-k -rq').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

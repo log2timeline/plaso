@@ -41,6 +41,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'ccleaner:update',
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
@@ -48,19 +49,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = 'Origin: {0:s}'.format(key_path)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(event_data, expected_message, expected_message)
-
-    expected_event_values = {
-        'data_type': 'ccleaner:configuration',
-        'timestamp': '2013-07-13 14:03:26.861688'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
+    expected_configuration = (
         '(App)Cookies: True '
         '(App)Delete Index.dat files: True '
         '(App)History: True '
@@ -76,13 +65,15 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'WINDOW_LEFT: 146 '
         'WINDOW_MAX: 0 '
         'WINDOW_TOP: 102 '
-        'WINDOW_WIDTH: 733').format(key_path)
+        'WINDOW_WIDTH: 733')
 
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+    expected_event_values = {
+        'configuration': expected_configuration,
+        'data_type': 'ccleaner:configuration',
+        'key_path': key_path,
+        'timestamp': '2013-07-13 14:03:26.861688'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
   def testProcessWithTimeZone(self):
     """Tests the Process function with a time zone."""
@@ -101,6 +92,11 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'ccleaner:update',
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
         'timestamp': '2013-07-13 08:03:14.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

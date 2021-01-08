@@ -245,7 +245,9 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
         value = getattr(event_data, name, None)
 
-      self.assertEqual(value, expected_value)
+      error_message = (
+          'event value: "{0:s}" does not match expected value').format(name)
+      self.assertEqual(value, expected_value, error_message)
 
   def CheckTimestamp(self, timestamp, expected_date_time):
     """Asserts that a timestamp value matches the expected date and time.

@@ -229,18 +229,6 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'SSID: Network '
-        'Description: Network '
-        'Connection Type: Wired '
-        'Default Gateway Mac: 00:50:56:ea:6c:ec '
-        'DNS Suffix: localdomain')
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'connection_type': 'Wireless',
         'data_type': 'windows:registry:network',
@@ -250,16 +238,6 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CONNECTED}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_message = (
-        'SSID: My Awesome Wifi Hotspot '
-        'Description: My Awesome Wifi Hotspot '
-        'Connection Type: Wireless')
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

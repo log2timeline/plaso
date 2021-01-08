@@ -103,29 +103,25 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
+    expected_values = (
+        'DisplayName: [REG_SZ] Test Driver '
+        'DriverPackageId: [REG_SZ] testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
+        'Group: [REG_SZ] Pnp Filter')
+
     expected_event_values = {
         'data_type': 'windows:registry:service',
+        'error_control': 1,
+        'image_path': 'C:\\Dell\\testdriver.sys',
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2012-08-28 09:23:49.002031'}
+        'service_type': 2,
+        'start_type': 2,
+        'timestamp': '2012-08-28 09:23:49.002031',
+        'values': expected_values}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Type: File System Driver (0x2) '
-        'Start: Auto Start (2) '
-        'Image path: C:\\Dell\\testdriver.sys '
-        'Error control: Normal (1) '
-        'DisplayName: [REG_SZ] Test Driver '
-        'DriverPackageId: [REG_SZ] testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
-        'Group: [REG_SZ] Pnp Filter').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""

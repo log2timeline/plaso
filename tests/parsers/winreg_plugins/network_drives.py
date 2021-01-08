@@ -163,18 +163,6 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'DriveLetter: H '
-        'RemoteServer: acme.local '
-        'ShareName: \\Shares\\User_Data\\John.Doe '
-        'Type: Mapped Drive').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
 
 if __name__ == '__main__':
   unittest.main()
