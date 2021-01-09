@@ -27,7 +27,6 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   # TODO: add test for _PrintSessionsDetails.
   # TODO: add test for _PrintSessionsOverview.
   # TODO: add test for _PrintTasksInformation.
-  # TODO: add test for _PrintStorageInformationAsText.
 
   def testCompareStores(self):
     """Tests the CompareStores function."""
@@ -108,8 +107,47 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
+  def testPrintStorageInformationAsJSON(self):
+    """Tests the PrintStorageInformation function with JSON output format."""
+    test_filename = 'pinfo_test.plaso'
+    session_identifier = 'c1ce225e-7eec-49a6-9f5c-35907e518ff8'
+    session_start_time = '2020-04-04 06:40:08.695055'
+
+    test_file_path = self._GetTestFilePath([test_filename])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = test_lib.TestOptions()
+    options.storage_file = test_file_path
+    options.output_format = 'json'
+    options.sections = 'events,reports,sessions,warnings'
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+    test_tool.ParseOptions(options)
+
+    test_tool.PrintStorageInformation()
+    output = output_writer.ReadOutput()
+    json_output = json.loads(output)
+
+    sessions = json_output.get('sessions')
+    self.assertIsNotNone(sessions)
+
+    first_session = sessions.get('session')
+    self.assertIsNotNone(first_session)
+
+    self.assertEqual(
+        first_session['identifier'], session_identifier.replace('-', ''))
+
+    expected_start_time = shared_test_lib.CopyTimestampFromSring(
+        session_start_time)
+    self.assertEqual(first_session['start_time'], expected_start_time)
+
+    parsers_counter = first_session['parsers_counter']
+    self.assertEqual(parsers_counter['total'], 3)
+    self.assertEqual(parsers_counter['filestat'], 3)
+
   def testPrintStorageInformationAsText(self):
-    """Tests the _PrintStorageInformationAsText function."""
+    """Tests the PrintStorageInformation function with text output format."""
     test_filename = 'pinfo_test.plaso'
     format_version = '20190309'
     plaso_version = '20200227'
@@ -248,43 +286,6 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # Compare the output as list of lines which makes it easier to spot
     # differences.
     self.assertEqual(output.split('\n'), expected_output.split('\n'))
-
-  def testPrintStorageInformationAsJSON(self):
-    """Tests the _PrintStorageInformationAsJSON function."""
-    test_filename = 'pinfo_test.plaso'
-    session_identifier = 'c1ce225e-7eec-49a6-9f5c-35907e518ff8'.replace('-', '')
-    session_start_time = '2020-04-04 06:40:08.695055'
-
-    test_file_path = self._GetTestFilePath([test_filename])
-    self._SkipIfPathNotExists(test_file_path)
-
-    options = test_lib.TestOptions()
-    options.storage_file = test_file_path
-    options.output_format = 'json'
-
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool.ParseOptions(options)
-
-    test_tool.PrintStorageInformation()
-    output = output_writer.ReadOutput()
-    json_output = json.loads(output)
-
-    sessions = json_output.get('sessions')
-
-    first_session_identifier = 'session_{0:s}'.format(session_identifier)
-    first_session = sessions.get(first_session_identifier)
-    self.assertIsNotNone(first_session)
-
-    self.assertEqual(first_session['identifier'], session_identifier)
-
-    expected_start_time = shared_test_lib.CopyTimestampFromSring(
-        session_start_time)
-    self.assertEqual(first_session['start_time'], expected_start_time)
-
-    parsers_counter = first_session['parsers_counter']
-    self.assertEqual(parsers_counter['total'], 3)
-    self.assertEqual(parsers_counter['filestat'], 3)
 
 
 if __name__ == '__main__':
