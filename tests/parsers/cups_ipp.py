@@ -310,24 +310,21 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'application': 'LibreOffice',
+        'computer_name': 'localhost',
+        'copies': 1,
+        'doc_type': 'application/pdf',
+        'job_id': 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a',
+        'job_name': 'Assignament 1',
+        'owner': 'Joaquin Moreno Garijo',
+        'printer_id': 'RHULBW',
+        'timestamp': '2013-11-03 18:07:21.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'uri': 'ipp://localhost:631/printers/RHULBW',
+        'user': 'moxilo'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-03 18:07:21.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.application, 'LibreOffice')
-    self.assertEqual(event_data.job_name, 'Assignament 1')
-    self.assertEqual(event_data.computer_name, 'localhost')
-    self.assertEqual(event_data.copies, 1)
-    self.assertEqual(event_data.doc_type, 'application/pdf')
-    self.assertEqual(
-        event_data.job_id, 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a')
-    self.assertEqual(event_data.owner, 'Joaquin Moreno Garijo')
-    self.assertEqual(event_data.user, 'moxilo')
-    self.assertEqual(event_data.printer_id, 'RHULBW')
-    self.assertEqual(event_data.uri, 'ipp://localhost:631/printers/RHULBW')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'User: moxilo '
@@ -336,18 +333,22 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         'Application: LibreOffice '
         'Printer: RHULBW')
     expected_short_message = 'Job Name: Assignament 1'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[1]
+    expected_event_values = {
+        'timestamp': '2013-11-03 18:07:21.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-03 18:07:21.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_START)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event = events[2]
+    expected_event_values = {
+        'timestamp': '2013-11-03 18:07:32.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_END}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-03 18:07:32.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_END)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
 
 if __name__ == '__main__':

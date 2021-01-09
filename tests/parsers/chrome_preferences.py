@@ -22,54 +22,54 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[17]
+    expected_event_values = {
+        'timestamp': '2014-11-12 13:01:43.926143'}
 
-    self.CheckTimestamp(event.timestamp, '2014-11-12 13:01:43.926143')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[17], expected_event_values)
 
     expected_message = 'Chrome extensions autoupdater last run'
     expected_short_message = 'Chrome extensions autoupdater last run'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[17])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[18]
+    expected_event_values = {
+        'timestamp': '2014-11-12 18:20:21.519200'}
 
-    self.CheckTimestamp(event.timestamp, '2014-11-12 18:20:21.519200')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[18], expected_event_values)
 
     expected_message = 'Chrome extensions autoupdater next run'
     expected_short_message = 'Chrome extensions autoupdater next run'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[18])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[22]
+    expected_event_values = {
+        'timestamp': '2016-06-08 16:17:47.453766'}
 
-    self.CheckTimestamp(event.timestamp, '2016-06-08 16:17:47.453766')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
     expected_message = 'Chrome history was cleared by user'
     expected_short_message = 'Chrome history was cleared by user'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[22])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
-
-    event = events[6]
-
-    self.CheckTimestamp(event.timestamp, '2014-11-05 18:31:24.154837')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.data_type, 'chrome:preferences:extension_installation')
-    self.assertEqual(
-        event_data.extension_id, 'mgndgikekgjfcpckkfioiadnlibdjbkf')
-    self.assertEqual(event_data.extension_name, 'Chrome')
 
     expected_path = (
         'C:\\Program Files\\Google\\Chrome\\Application\\38.0.2125.111\\'
         'resources\\chrome_app')
-    self.assertEqual(event_data.path, expected_path)
+
+    expected_event_values = {
+        'data_type': 'chrome:preferences:extension_installation',
+        'extension_id': 'mgndgikekgjfcpckkfioiadnlibdjbkf',
+        'extension_name': 'Chrome',
+        'path': expected_path,
+        'timestamp': '2014-11-05 18:31:24.154837'}
+
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_message = (
         'CRX ID: mgndgikekgjfcpckkfioiadnlibdjbkf '
@@ -78,73 +78,81 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         'mgndgikekgjfcpckkfioiadnlibdjbkf '
         'C:\\Program Files\\Google\\Chrome\\Application\\3...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[6])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[25]
+    expected_event_values = {
+        'timestamp': '2016-11-14 14:12:50.588974'}
 
-    self.CheckTimestamp(event.timestamp, '2016-11-14 14:12:50.588974')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[25], expected_event_values)
 
     expected_message = 'Permission geolocation used by local file'
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[25])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 
-    event = events[23]
+    expected_event_values = {
+        'timestamp': '2016-11-11 16:20:09.866137'}
 
-    self.CheckTimestamp(event.timestamp, '2016-11-11 16:20:09.866137')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[23], expected_event_values)
 
     expected_message = (
         'Permission midi_sysex used by https://rawgit.com:443')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[23])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 
-    event = events[29]
+    expected_event_values = {
+        'timestamp': '2016-11-14 14:13:00.639332'}
 
-    self.CheckTimestamp(event.timestamp, '2016-11-14 14:13:00.639332')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[29], expected_event_values)
 
     expected_message = (
         'Permission notifications used by https://rawgit.com:443')
     expected_short_message = (
         'Permission notifications used by https://rawgit.com:443')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[29])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[28]
+    expected_event_values = {
+        'timestamp': '2016-11-14 14:13:00.627093'}
 
-    self.CheckTimestamp(event.timestamp, '2016-11-14 14:13:00.627093')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[28], expected_event_values)
 
     expected_message = (
         'Permission notifications used by https://rawgit.com:443')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[28])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 
-    event = events[27]
+    expected_event_values = {
+        'timestamp': '2016-11-14 14:12:54.899474'}
 
-    self.CheckTimestamp(event.timestamp, '2016-11-14 14:12:54.899474')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[27], expected_event_values)
 
     expected_message = (
         'Permission media_stream_mic used by local file')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[27])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 
-    event = events[26]
+    expected_event_values = {
+        'timestamp': '2016-11-14 14:12:53.667838'}
 
-    self.CheckTimestamp(event.timestamp, '2016-11-14 14:12:53.667838')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[26], expected_event_values)
 
     expected_message = (
         'Permission media_stream_mic used by https://rawgit.com:443')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[26])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_message)
 

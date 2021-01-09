@@ -26,56 +26,50 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     # First test on when the torrent was added to the client.
-    event = events[0]
+    expected_event_values = {
+        'caption': 'plaso test',
+        'path': 'e:\\torrent\\files\\plaso test',
+        'seedtime': 511,
+        'timestamp': '2013-08-03 14:52:12.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
-    self.CheckTimestamp(event.timestamp, '2013-08-03 14:52:12.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.caption, 'plaso test')
-    self.assertEqual(event_data.path, 'e:\\torrent\\files\\plaso test')
-    self.assertEqual(event_data.seedtime, 511)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Second test on when the torrent file was completely downloaded.
-    event = events[3]
+    expected_event_values = {
+        'caption': 'plaso test',
+        'path': 'e:\\torrent\\files\\plaso test',
+        'seedtime': 511,
+        'timestamp': '2013-08-03 18:11:35.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED}
 
-    self.CheckTimestamp(event.timestamp, '2013-08-03 18:11:35.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.caption, 'plaso test')
-    self.assertEqual(event_data.path, 'e:\\torrent\\files\\plaso test')
-    self.assertEqual(event_data.seedtime, 511)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     # Third test on when the torrent was first modified.
-    event = events[2]
+    expected_event_values = {
+        'caption': 'plaso test',
+        'path': 'e:\\torrent\\files\\plaso test',
+        'seedtime': 511,
+        'timestamp': '2013-08-03 18:11:34.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-08-03 18:11:34.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.caption, 'plaso test')
-    self.assertEqual(event_data.path, 'e:\\torrent\\files\\plaso test')
-    self.assertEqual(event_data.seedtime, 511)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # Fourth test on when the torrent was again modified.
-    event = events[1]
+    expected_event_values = {
+        'caption': 'plaso test',
+        'path': 'e:\\torrent\\files\\plaso test',
+        'seedtime': 511,
+        'timestamp': '2013-08-03 16:27:59.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-08-03 16:27:59.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.caption, 'plaso test')
-    self.assertEqual(event_data.path, 'e:\\torrent\\files\\plaso test')
-    self.assertEqual(event_data.seedtime, 511)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         'Torrent plaso test; Saved to e:\\torrent\\files\\plaso test; '
         'Minutes seeded: 511')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 

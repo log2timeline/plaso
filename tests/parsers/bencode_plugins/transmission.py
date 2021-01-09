@@ -25,32 +25,28 @@ class TransmissionPluginTest(test_lib.BencodePluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'destination': '/Users/brian/Downloads',
+        'seedtime': 4,
+        'timestamp': '2013-11-08 15:31:20.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-08 15:31:20.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.destination, '/Users/brian/Downloads')
-    self.assertEqual(event_data.seedtime, 4)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Test on second event of first torrent.
-    event = events[1]
+    expected_event_values = {
+        'destination': '/Users/brian/Downloads',
+        'seedtime': 4,
+        'timestamp': '2013-11-08 18:24:24.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-08 18:24:24.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.destination, '/Users/brian/Downloads')
-    self.assertEqual(event_data.seedtime, 4)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_message = (
         'Saved to /Users/brian/Downloads; '
         'Minutes seeded: 4')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
     self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
