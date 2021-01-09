@@ -23,25 +23,20 @@ class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[1]
+    expected_event_values = {
+        'command': 'sleep $(( 1 * 60 )); touch /tmp/afile.txt',
+        'data_type': 'syslog:cron:task_run',
+        'timestamp': '2015-03-11 19:26:39.000000',
+        'username': 'root'}
 
-    self.CheckTimestamp(event.timestamp, '2015-03-11 19:26:39.000000')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'syslog:cron:task_run')
+    expected_event_values = {
+        'command': '/sbin/status.mycheck',
+        'pid': 31067,
+        'timestamp': '2016-01-22 07:54:01.000000'}
 
-    expected_command = 'sleep $(( 1 * 60 )); touch /tmp/afile.txt'
-    self.assertEqual(event_data.command, expected_command)
-
-    self.assertEqual(event_data.username, 'root')
-
-    event = events[8]
-
-    self.CheckTimestamp(event.timestamp, '2016-01-22 07:54:01.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.command, '/sbin/status.mycheck')
-    self.assertEqual(event_data.pid, 31067)
+    self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_message = (
         'Cron ran: /sbin/status.mycheck '
@@ -49,6 +44,7 @@ class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
         'pid: 31067')
     expected_short_message = '(root) CMD (/sbin/status.mycheck)'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[8])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

@@ -22,21 +22,20 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'application': 'Microsoft Office Word',
+        'author': 'DAVID NIDES',
+        'last_saved_by': 'Nides',
+        'name': 'Summary Information',
+        'number_of_characters': 18,
+        'revision_number': '4',
+        'security': 0,
+        'template': 'Normal.dotm',
+        'timestamp': '2012-12-10 18:38:00.000000',
+        'timestamp_desc': 'Document Creation Time',
+        'title': 'Table of Context'}
 
-    self.CheckTimestamp(event.timestamp, '2012-12-10 18:38:00.000000')
-    self.assertEqual(event.timestamp_desc, 'Document Creation Time')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.name, 'Summary Information')
-    self.assertEqual(event_data.title, 'Table of Context')
-    self.assertEqual(event_data.author, 'DAVID NIDES')
-    self.assertEqual(event_data.template, 'Normal.dotm')
-    self.assertEqual(event_data.last_saved_by, 'Nides')
-    self.assertEqual(event_data.revision_number, '4')
-    self.assertEqual(event_data.number_of_characters, 18)
-    self.assertEqual(event_data.application, 'Microsoft Office Word')
-    self.assertEqual(event_data.security, 0)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'Title: Table of Context '
@@ -58,6 +57,7 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     # TODO: add support for:
     #    'Total edit time (secs): 0 '
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -75,15 +75,15 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'application_version': '14.0',
+        'company': 'KPMG',
+        'name': 'Document Summary Information',
+        'number_of_lines': 1,
+        'number_of_paragraphs': 1,
+        'shared_document': False}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.name, 'Document Summary Information')
-    self.assertEqual(event_data.number_of_lines, 1)
-    self.assertEqual(event_data.number_of_paragraphs, 1)
-    self.assertEqual(event_data.company, 'KPMG')
-    self.assertFalse(event_data.shared_document)
-    self.assertEqual(event_data.application_version, '14.0')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # TODO: add support for:
     # self.assertFalse(event_data.is_shared)
@@ -98,6 +98,7 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     expected_short_message = (
         'Company: KPMG')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
