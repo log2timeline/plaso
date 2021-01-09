@@ -8,6 +8,7 @@ import re
 
 from dfdatetime import interface as dfdatetime_interface
 
+from plaso.containers import artifacts
 from plaso.filters import value_types
 from plaso.lib import errors
 
@@ -411,6 +412,9 @@ class Contains(GenericBinaryOperator):
       bool: True if the second value is part of the first, False otherwise.
     """
     try:
+      if isinstance(filter_value, artifacts.PathArtifact):
+        return filter_value.ContainedIn(event_value)
+
       if isinstance(event_value, str):
         return filter_value.lower() in event_value.lower()
 

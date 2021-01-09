@@ -1,6 +1,6 @@
 # Tags Windows application execution events.
 application_execution
-  data_type is 'fs:stat' AND filename contains 'Windows/Tasks/At'
+  data_type is 'fs:stat' AND filename contains PATH('Windows/Tasks/At')
   data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 592
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4688
   data_type is 'windows:evtx:record' AND strings contains 'user mode service' AND strings contains 'demand start'
@@ -111,7 +111,7 @@ file_download
 
 # Tags OLE compound document print events.
 document_print
-  data_type is 'olecf:summary_info' AND timestamp_desc contains 'Printed'
+  data_type is 'olecf:summary_info' AND timestamp_desc is 'Last Printed Time'
 
 # Tags Windows Firewall With Advanced Security change events
 firewall_change
