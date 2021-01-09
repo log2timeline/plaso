@@ -24,13 +24,13 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
-    event = events[3]
 
-    self.CheckTimestamp(event.timestamp, '2007-12-17 04:32:30.399052')
+    expected_event_values = {
+        'filename': 'index.html',
+        'source_ip': '111.123.124.11',
+        'timestamp': '2007-12-17 04:32:30.399052'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.source_ip, '111.123.124.11')
-    self.assertEqual(event_data.filename, 'index.html')
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_message = (
         'Source IP: 111.123.124.11 '
@@ -46,6 +46,7 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
         'Destination IP: 192.168.151.130 '
         'index.html D:\\case-...')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
