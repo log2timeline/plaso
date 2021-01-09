@@ -27,18 +27,20 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2019-07-10 16:38:08.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2019-07-10 16:38:08.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event = events[1]
+    expected_event_values = {
+        'timestamp': '2019-07-10 16:38:12.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2019-07-10 16:38:12.000000')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event = events[2]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'timestamp': '2019-07-11 12:20:55.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2019-07-11 12:20:55.000000')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         'Install: libmpc3:amd64 (1.0.3-1+b2, automatic), '
@@ -159,11 +161,10 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Install: libmpc3:amd64 (1.0.3-1+b2, automatic), '
         'manpages:amd64 (4.10-2, autom...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
-
-    event = events[4]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
 
     expected_message = (
         'Install: containerd.io:amd64 (1.2.6-3), '
@@ -184,24 +185,26 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Install: containerd.io:amd64 (1.2.6-3), '
         'linux-headers-4.9.0-9-common:amd64 (4...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[6]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
     expected_message = (
         'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5) '
         '[Commandline: apt-get remove volatility] '
         '[Requested-By: jxs (1005)]')
     expected_short_message = (
         'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5)')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[6])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
-    event = events[9]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'timestamp': '2019-07-12 04:19:26.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2019-07-12 04:19:26.000000')
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_message = (
         'Remove: python-distorm3:amd64 (3.3.4-2), '
@@ -212,6 +215,8 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
     expected_short_message = (
         'Remove: python-distorm3:amd64 (3.3.4-2), '
         'python-imaging:amd64 (4.0.0-4), pyth...')
+
+    event_data = self._GetEventDataOfEvent(storage_writer, events[9])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -226,9 +231,10 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'timestamp': '2019-07-10 14:38:08.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2019-07-10 14:38:08.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testParseInvalidLog(self):
     """Tests the Parse function on a non APT History log."""

@@ -206,22 +206,10 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2013-11-25 09:45:35.705481')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.record_position, 442)
-    self.assertEqual(event_data.message_id, 101406)
-    self.assertEqual(event_data.computer_name, 'DarkTemplar-2.local')
-    self.assertEqual(event_data.sender, 'locationd')
-    self.assertEqual(event_data.facility, 'com.apple.locationd')
-    self.assertEqual(event_data.pid, 69)
-    self.assertEqual(event_data.user_sid, '205')
-    self.assertEqual(event_data.group_id, 205)
-    self.assertEqual(event_data.read_uid, 205)
-    self.assertEqual(event_data.read_gid, -1)
-    self.assertEqual(event_data.level, 4)
+    expected_extra = (
+        'CFLog Local Time: 2013-11-25 09:45:35.701, '
+        'CFLog Thread: 1007, '
+        'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51')
 
     # Note that "compatiblity" is spelt incorrectly in the actual message being
     # tested here.
@@ -230,14 +218,23 @@ class ASLParserTest(test_lib.ParserTestCase):
         'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
         'mapping behavior in the near future.')
 
-    self.assertEqual(event_data.message, expected_message)
+    expected_event_values = {
+        'computer_name': 'DarkTemplar-2.local',
+        'extra_information': expected_extra,
+        'facility': 'com.apple.locationd',
+        'group_id': 205,
+        'level': 4,
+        'message': expected_message,
+        'message_id': 101406,
+        'pid': 69,
+        'read_gid': -1,
+        'read_uid': 205,
+        'record_position': 442,
+        'sender': 'locationd',
+        'timestamp': '2013-11-25 09:45:35.705481',
+        'user_sid': '205'}
 
-    expected_extra = (
-        'CFLog Local Time: 2013-11-25 09:45:35.701, '
-        'CFLog Thread: 1007, '
-        'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51')
-
-    self.assertEqual(event_data.extra_information, expected_extra)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_message = (
         'MessageID: 101406 '
@@ -250,11 +247,11 @@ class ASLParserTest(test_lib.ParserTestCase):
         'Sender: locationd '
         'Facility: com.apple.locationd '
         'Message: {0:s} {1:s}').format(expected_message, expected_extra)
-
     expected_short_message = (
         'Sender: locationd '
         'Facility: com.apple.locationd')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 

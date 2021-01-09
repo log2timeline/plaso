@@ -25,63 +25,56 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     # Test combined log format event.
-    event = events[2]
-    self.CheckTimestamp(event.timestamp, '2016-01-13 17:31:20.000000')
+    expected_event_values = {
+        'http_request': (
+            'GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a HTTP/1.1'),
+        'http_request_referer': 'http://localhost/',
+        'http_request_user_agent': (
+            'Mozilla/5.0 (X11; Linux i686; rv:2.0b12pre) Gecko/20100101 '
+            'Firefox/4'),
+        'http_response_code': 200,
+        'http_response_bytes': 694,
+        'ip_address': '192.168.0.2',
+        'remote_name': '-',
+        'timestamp': '2016-01-13 17:31:20.000000',
+        'user_name': '-'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.ip_address, '192.168.0.2')
-    self.assertEqual(event_data.remote_name, '-')
-    self.assertEqual(event_data.user_name, '-')
-
-    self.assertEqual(
-        event_data.http_request,
-        'GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a HTTP/1.1')
-
-    self.assertEqual(event_data.http_response_code, 200)
-    self.assertEqual(event_data.http_response_bytes, 694)
-    self.assertEqual(event_data.http_request_referer, 'http://localhost/')
-
-    self.assertEqual(
-        event_data.http_request_user_agent,
-        'Mozilla/5.0 (X11; Linux i686; rv:2.0b12pre) Gecko/20100101 Firefox/4')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_message = (
         'http_request: GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a '
         'HTTP/1.1 from: 192.168.0.2 code: 200 referer: http://localhost/ '
         'user_agent: Mozilla/5.0 (X11; Linux i686; rv:2.0b12pre) '
         'Gecko/20100101 Firefox/4')
-
     expected_short_message = (
         'GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a HTTP/1.1 from: '
         '192.168.0.2')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
     # Test common log format parser event.
-    event = events[3]
-    self.CheckTimestamp(event.timestamp, '2016-01-13 19:31:16.000000')
+    expected_event_values = {
+        'http_request': (
+            'GET /wp-content/themes/darkmode/header.php?install2 HTTP/1.1'),
+        'http_response_code': 200,
+        'http_response_bytes': 494,
+        'ip_address': '10.0.0.1',
+        'remote_name': '-',
+        'timestamp': '2016-01-13 19:31:16.000000',
+        'user_name': '-'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.ip_address, '10.0.0.1')
-    self.assertEqual(event_data.remote_name, '-')
-    self.assertEqual(event_data.user_name, '-')
-
-    self.assertEqual(
-        event_data.http_request,
-        'GET /wp-content/themes/darkmode/header.php?install2 HTTP/1.1')
-
-    self.assertEqual(event_data.http_response_code, 200)
-    self.assertEqual(event_data.http_response_bytes, 494)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_message = (
         'http_request: GET /wp-content/themes/darkmode/header.php?install2 '
         'HTTP/1.1 from: 10.0.0.1 code: 200')
-
     expected_short_message = (
         'GET /wp-content/themes/darkmode/header.php?install2 HTTP/1.1 from: '
         '10.0.0.1')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
@@ -96,20 +89,17 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
 
 
     # Test vhost_combined log format event.
-    event = events[9]
-    self.CheckTimestamp(event.timestamp, '2018-01-13 19:31:17.000000')
+    expected_event_values = {
+        'http_request': (
+            'GET /wp-content/themes/darkmode/evil.php HTTP/1.1'),
+        'http_response_code': 200,
+        'http_response_bytes': 1063,
+        'ip_address': '192.168.0.2',
+        'remote_name': '-',
+        'timestamp': '2018-01-13 19:31:17.000000',
+        'user_name': '-'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.ip_address, '192.168.0.2')
-    self.assertEqual(event_data.remote_name, '-')
-    self.assertEqual(event_data.user_name, '-')
-
-    self.assertEqual(
-        event_data.http_request,
-        'GET /wp-content/themes/darkmode/evil.php HTTP/1.1')
-
-    self.assertEqual(event_data.http_response_code, 200)
-    self.assertEqual(event_data.http_response_bytes, 1063)
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_message = (
         'http_request: GET /wp-content/themes/darkmode/evil.php HTTP/1.1 '
@@ -120,10 +110,10 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         '(KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30 '
         'server_name: plaso.log2timeline.net '
         'port: 443')
-
     expected_short_message = (
         'GET /wp-content/themes/darkmode/evil.php HTTP/1.1 from: 192.168.0.2')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[9])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
