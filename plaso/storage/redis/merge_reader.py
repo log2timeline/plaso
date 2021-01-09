@@ -35,6 +35,7 @@ class RedisMergeReader(interface.StorageMergeReader):
         task_identifier=task.identifier)
     self._store.Open(redis_client=redis_client)
     self._event_data_identifier_mappings = {}
+    self._event_data_stream_identifier_mappings = {}
     self._add_container_type_methods = {}
     self._active_extra_containers = []
 
@@ -78,14 +79,27 @@ class RedisMergeReader(interface.StorageMergeReader):
       event_data (EventData): event data.
       serialized_data (bytes): serialized form of the event data.
     """
+    row_identifier = getattr(
+        event_data, '_event_data_stream_row_identifier', None)
+    if row_identifier is not None:
+      event_data_stream_identifier = identifiers.SQLTableIdentifier(
+          self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+      lookup_key = event_data_stream_identifier.CopyToString()
+
+      event_data_stream_identifier = (
+          self._event_data_stream_identifier_mappings.get(lookup_key, None))
+
+      if event_data_stream_identifier:
+        event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
     self._storage_writer.AddEventData(
         event_data, serialized_data=serialized_data)
 
-    post_write_identifier = event_data.GetIdentifier()
-    self._event_data_identifier_mappings[lookup_key] = post_write_identifier
+    last_write_identifier = event_data.GetIdentifier()
+    self._event_data_identifier_mappings[lookup_key] = last_write_identifier
 
   def _AddEventDataStream(self, event_data_stream, serialized_data=None):
     """Adds an event data stream.
@@ -94,7 +108,14 @@ class RedisMergeReader(interface.StorageMergeReader):
       event_data_stream (EventDataStream): event data stream.
       serialized_data (bytes): serialized form of the event data stream.
     """
-    # TODO: implement
+    identifier = event_data_stream.GetIdentifier()
+    lookup_key = identifier.CopyToString()
+
+    self._storage_writer.AddEventDataStream(
+        event_data_stream, serialized_data=serialized_data)
+
+    identifier = event_data_stream.GetIdentifier()
+    self._event_data_stream_identifier_mappings[lookup_key] = identifier
 
   def _PrepareForNextContainerType(self):
     """Prepares for the next container type.
