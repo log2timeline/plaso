@@ -39,31 +39,20 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'action0': '14',
+        'action1': '5',
+        'action2': '3',
+        'cat': '1',
+        'data_type': 'av:symantec:scanlog',
+        'event': '5',
+        'event_data': '201\t4\t6\t1\t65542\t0\t0\t0\t0\t0\t0',
         'file': 'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt',
+        'scanid': '0',
         'timestamp': '2012-11-30 10:47:29.000000',
-        'user': 'davnads'}
+        'user': 'davnads',
+        'virus': 'W32.Changeup!gen33'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        'Event Name: GL_EVENT_INFECTION; '
-        'Category Name: GL_CAT_INFECTION; '
-        'Malware Name: W32.Changeup!gen33; '
-        'Malware Path: '
-        'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt; '
-        'Action0: Unknown; '
-        'Action1: Clean virus from file; '
-        'Action2: Delete infected file; '
-        'Scan ID: 0; '
-        'Event Data: 201\t4\t6\t1\t65542\t0\t0\t0\t0\t0\t0')
-    expected_short_message = (
-        'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt; '
-        'W32.Changeup!gen33; '
-        'Unknown; ...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

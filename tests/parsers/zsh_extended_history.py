@@ -24,6 +24,7 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'command': 'cd plaso',
+        'data_type': 'shell:zsh:history',
         'elapsed_seconds': 0,
         'timestamp': '2016-03-12 08:26:50.000000'}
 
@@ -31,24 +32,17 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'command': 'echo dfgdfg \\\\\n& touch /tmp/afile',
+        'data_type': 'shell:zsh:history',
+        'elapsed_seconds': 0,
         'timestamp': '2016-03-26 11:54:53.000000'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'shell:zsh:history',
         'timestamp': '2016-03-26 11:54:57.000000'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_message = (
-        'echo dfgdfg \\\\& touch /tmp/afile '
-        'Time elapsed: 0 seconds')
-    expected_short_message = (
-        'echo dfgdfg \\\\& touch /tmp/afile')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testVerification(self):
     """Tests for the VerifyStructure method"""

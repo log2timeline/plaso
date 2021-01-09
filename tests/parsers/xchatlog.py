@@ -23,6 +23,7 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'text': 'XChat start logging',
         'timestamp': '2011-12-31 21:11:55.000000'}
 
@@ -40,43 +41,51 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'text': 'XChat start logging',
         'timestamp': '2011-12-31 20:11:55.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'text': '--> You are now talking on #gugle'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'text': '--- Topic for #gugle is plaso, a difficult word'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'text': 'Topic for #gugle set by Kristinn'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'text': '--- Joachim gives voice to fpi'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'text': '* XChat here'}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'nickname': 'fpi',
         'text': 'ola plas-ing guys!'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'nickname': 'STRANGER',
         'text': '\u65e5\u672c',
         'timestamp': '2011-12-31 22:00:00.000000'}
@@ -84,15 +93,11 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'xchat:log:line',
         'text': 'XChat end logging',
         'timestamp': '2011-12-31 22:59:00.000000'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
-
-    expected_message = '[nickname: STRANGER] \u65e5\u672c'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[7])
-    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

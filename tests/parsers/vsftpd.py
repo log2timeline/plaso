@@ -23,19 +23,14 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'vsftpd:log',
+        'text': (
+            '[pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", '
+            '"/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", '
+            '49283 bytes, 931.38Kbyte/sec'),
         'timestamp': '2016-06-10 14:24:19.000000'}
 
     self.CheckEventValues(storage_writer, events[12], expected_event_values)
-
-    expected_message = (
-        '[pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", '
-        '"/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", '
-        '49283 bytes, 931.38Kbyte/sec')
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[12])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParseWithTimeZone(self):
     """Tests the Parse function with a time zone."""
@@ -48,6 +43,11 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'vsftpd:log',
+        'text': (
+            '[pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", '
+            '"/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", '
+            '49283 bytes, 931.38Kbyte/sec'),
         'timestamp': '2016-06-10 12:24:19.000000'}
 
     self.CheckEventValues(storage_writer, events[12], expected_event_values)

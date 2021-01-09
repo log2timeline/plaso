@@ -25,6 +25,7 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'av:trendmicro:scan',
         'timestamp': '2018-01-30 14:45:32.000000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -32,20 +33,15 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     # The third and last event has been edited to match the older, documented
     # format for log lines (without a Unix timestamp).
     expected_event_values = {
+        'action': 10,
+        'data_type': 'av:trendmicro:scan',
         'filename': 'eicar.com_.gstmp',
         'path': 'C:\\temp\\',
+        'scan_type': 1,
+        'threat': 'Eicar_test_1',
         'timestamp': '2018-01-30 14:46:00.000000'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_message = (
-        r'Path: C:\temp\ File name: eicar.com_.gstmp '
-        r'Eicar_test_1 : Failure (clean), moved (Real-time scan)')
-    expected_short_message = r'C:\temp\ eicar.com_.gstmp Failure (clean), moved'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testWebReputationParse(self):
     """Tests the Parse function."""
@@ -60,28 +56,24 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'av:trendmicro:webrep',
         'timestamp': '2018-01-23 13:16:22.000000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
+        'application_name': 'C:\\Users\\user\\Downloads\\wget.exe',
+        'block_mode': 1,
+        'credibility_rating': 1,
         'credibility_score': 49,
+        'data_type': 'av:trendmicro:webrep',
         'group_code': '4E',
+        'group_name': 'Malware Accomplice',
+        'policy_identifier': 1,
+        'threshold': 0,
         'url': 'http://www.eicar.org/download/eicar.com'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_message = (
-        'http://www.eicar.org/download/eicar.com '
-        'Group: Malware Accomplice 4E Mode: Whitelist only Policy ID: 1 '
-        'Credibility rating: 1 Credibility score: 49 Threshold value: 0 '
-        'Accessed by: C:\\Users\\user\\Downloads\\wget.exe')
-    expected_short_message = (
-        'http://www.eicar.org/download/eicar.com Malware Accomplice')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -79,23 +79,13 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # Check the volume creation event.
     expected_event_values = {
         'data_type': 'windows:volume:creation',
+        'device_path': '\\DEVICE\\HARDDISKVOLUME1',
+        'origin': 'CMD.EXE-087B4001.pf',
+        'serial_number': 0x24cb074b,
         'timestamp': '2013-03-10 10:19:46.234375',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '\\DEVICE\\HARDDISKVOLUME1 '
-        'Serial number: 0x24CB074B '
-        'Origin: CMD.EXE-087B4001.pf')
-
-    expected_short_message = (
-        '\\DEVICE\\HARDDISKVOLUME1 '
-        'Origin: CMD.EXE-087B4001.pf')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
@@ -121,19 +111,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         'volume_serial_numbers': [0xac036525]}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        'Prefetch [PING.EXE] was executed - run count 14 '
-        'path hints: \\WINDOWS\\SYSTEM32\\PING.EXE '
-        'hash: 0xB29F6629 '
-        'volume: 1 [serial number: 0xAC036525, '
-        'device path: \\DEVICE\\HARDDISKVOLUME1]')
-
-    expected_short_message = 'PING.EXE was run 14 time(s)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
     # The volume creation event.
     expected_event_values = {
@@ -175,27 +152,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
-    expected_message = (
-        'Prefetch [WUAUCLT.EXE] was executed - run count 25 '
-        'path hints: \\WINDOWS\\SYSTEM32\\WUAUCLT.EXE '
-        'hash: 0x830BCC14 '
-        'volume: 1 [serial number: 0xAC036525, '
-        'device path: \\DEVICE\\HARDDISKVOLUME1], '
-        'volume: 2 [serial number: 0xAC036525, '
-        'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY2], '
-        'volume: 3 [serial number: 0xAC036525, '
-        'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY4], '
-        'volume: 4 [serial number: 0xAC036525, '
-        'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY7], '
-        'volume: 5 [serial number: 0xAC036525, '
-        'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY8]')
-
-    expected_short_message = 'WUAUCLT.EXE was run 25 time(s)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[5])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # The volume creation event.
     expected_event_values = {
         'data_type': 'windows:volume:creation',
@@ -203,19 +159,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '\\DEVICE\\HARDDISKVOLUME1 '
-        'Serial number: 0xAC036525 '
-        'Origin: WUAUCLT.EXE-830BCC14.pf')
-
-    expected_short_message = (
-        '\\DEVICE\\HARDDISKVOLUME1 '
-        'Origin: WUAUCLT.EXE-830BCC14.pf')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""

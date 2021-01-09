@@ -69,30 +69,26 @@ class SyslogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'body': 'cleanup_logs: job completed',
+        'data_type': 'syslog:line',
         'reporter': 'periodic_scheduler',
+        'pid': 13707,
         'severity': 'INFO',
         'timestamp': '2016-10-25 19:37:23.297265'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'INFO [periodic_scheduler, pid: 13707] cleanup_logs: job completed')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
-
     expected_event_values = {
+        'data_type': 'syslog:line',
         'reporter': 'kernel',
         'severity': 'DEBUG',
         'timestamp': '2016-10-25 19:37:24.987014'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-
     # Testing year increment.
     expected_event_values = {
+        'data_type': 'syslog:line',
         'reporter': 'kernel',
         'severity': 'DEBUG',
         'timestamp': '2016-10-25 19:37:24.993079'}
@@ -100,27 +96,21 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'syslog:line',
         'reporter': 'kernel',
         'severity': 'ERR'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
+        'body': (
+            '[  316.587330] cfg80211: This is a multi-line\n\tmessage that '
+            'screws up many syslog parsers.'),
+        'data_type': 'syslog:line',
         'reporter': 'aprocess',
         'severity': 'INFO'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
-
-    expected_message = (
-        'INFO [aprocess] [  316.587330] cfg80211: This is a multi-line\t'
-        'message that screws up many syslog parsers.')
-    expected_short_message = (
-        'INFO [aprocess] [  316.587330] cfg80211: This is a multi-line\t'
-        'message that sc...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[7])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -135,22 +125,18 @@ class SyslogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'body': 'INFO No new content in ímynd.dd.',
         'data_type': 'syslog:line',
         'hostname': 'myhostname.myhost.com',
+        'pid': 30840,
         'reporter': 'client',
         'severity': None,
         'timestamp': '2012-01-22 07:52:33.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[client, pid: 30840] INFO No new content in ímynd.dd.')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
-
     expected_event_values = {
+        'data_type': 'syslog:line',
         'reporter': '---',
         'severity': None,
         'timestamp': '2012-02-29 01:15:43.000000'}
@@ -160,6 +146,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     # Testing year increment.
     expected_event_values = {
         'body': 'This syslog message has a fractional value for seconds.',
+        'data_type': 'syslog:line',
         'reporter': 'somrandomexe',
         'severity': None,
         'timestamp': '2013-03-23 23:01:18.000000'}
@@ -167,43 +154,31 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'syslog:line',
         'reporter': '/sbin/anacron',
         'severity': None}
 
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
     expected_event_values = {
+        'body': (
+            'This is a multi-line message that screws up\n\tmany syslog '
+            'parsers.'),
+        'data_type': 'syslog:line',
+        'pid': 10100,
         'reporter': 'aprocess',
         'severity': None}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
-    expected_message = (
-        '[aprocess, pid: 10100] This is a multi-line message that screws up'
-        '\tmany syslog parsers.')
-    expected_short_message = (
-        '[aprocess, pid: 10100] This is a multi-line message that screws up'
-        '\tmany syslo...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[10])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'body': '[997.390602] sda2: rw=0, want=65, limit=2',
+        'data_type': 'syslog:line',
         'hostname': None,
         'reporter': 'kernel',
         'severity': None}
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
-
-    expected_message = (
-        '[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
-    expected_short_message = (
-        '[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[14])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
     # Testing non-leap year.
     parser = syslog.SyslogParser()

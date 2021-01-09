@@ -38,6 +38,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'data_type': 'windows:lnk:link',
         'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
         'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
+        'file_attribute_flags': 0x00000020,
+        'file_size': 544768,
         'icon_location': '%windir%\\system32\\migwiz\\migwiz.exe',
         'relative_path': '.\\migwiz\\migwiz.exe',
         'timestamp': '2009-07-13 23:29:02.849131',
@@ -48,6 +50,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # The creation timestamp.
     expected_event_values = {
+        'data_type': 'windows:lnk:link',
         'timestamp': '2009-07-13 23:29:02.849131',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
@@ -56,29 +59,21 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # A last modification shortcut event.
     expected_event_values = {
         'data_type': 'windows:lnk:link',
+        'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
+        'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
+        'file_attribute_flags': 0x00000020,
+        'file_size': 544768,
+        'icon_location': '%windir%\\system32\\migwiz\\migwiz.exe',
+        'relative_path': '.\\migwiz\\migwiz.exe',
         'timestamp': '2009-07-14 01:39:18.220000',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
+        'working_directory': '%windir%\\system32\\migwiz'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_message = (
-        '[@%windir%\\system32\\migwiz\\wet.dll,-590] '
-        'File size: 544768 '
-        'File attribute flags: 0x00000020 '
-        'env location: %windir%\\system32\\migwiz\\migwiz.exe '
-        'Relative path: .\\migwiz\\migwiz.exe '
-        'Working dir: %windir%\\system32\\migwiz '
-        'Icon location: %windir%\\system32\\migwiz\\migwiz.exe')
-    expected_short_message = (
-        '[@%windir%\\system32\\migwiz\\wet.dll,-590] '
-        '%windir%\\system32\\migwiz\\.\\migwiz\\mi...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # A distributed link tracking event.
     expected_event_values = {
+        'data_type': 'windows:distributed_link_tracking:creation',
         'mac_address': '00:1d:09:fa:5a:1c',
         'timestamp': '2009-07-14 05:45:20.500012',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
@@ -97,55 +92,46 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     # A shortcut event.
-    expected_message = (
-        '[Nero InfoTool provides you with information about the most '
-        'important features of installed drives, inserted discs, installed '
-        'software and much more. With Nero InfoTool you can find out all '
-        'about your drive and your system configuration.] '
-        'File size: 4635160 '
-        'File attribute flags: 0x00000020 '
-        'Drive type: 3 '
-        'Drive serial number: 0x70ecfa33 '
-        'Volume label: OS '
-        'Local path: C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool\\'
-        'InfoTool.exe '
-        'cmd arguments: -ScParameter=30002   '
-        'Relative path: ..\\..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\'
-        'Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe '
-        'Working dir: C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool '
-        'Icon location: %ProgramFiles%\\Nero\\Nero 9\\Nero InfoTool\\'
-        'InfoTool.exe '
-        'Link target: <My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
-        'Nero InfoTool\\InfoTool.exe')
-    expected_short_message = (
-        '[Nero InfoTool provides you with information about the most '
-        'important feature...')
+    expected_event_values = {
+        'data_type': 'windows:lnk:link',
+        'description': (
+            'Nero InfoTool provides you with information about the most '
+            'important features of installed drives, inserted discs, installed '
+            'software and much more. With Nero InfoTool you can find out all '
+            'about your drive and your system configuration.'),
+        'drive_serial_number': 0x70ecfa33,
+        'drive_type': 3,
+        'file_attribute_flags': 0x00000020,
+        'file_size': 4635160,
+        'icon_location': (
+            '%ProgramFiles%\\Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe'),
+        'local_path': (
+            'C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool\\'
+            'InfoTool.exe'),
+        'relative_path': (
+            '..\\..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\'
+            'Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe'),
+        'timestamp': '2009-06-05 20:13:20.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'volume_label': 'OS',
+        'working_directory': (
+            'C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool')}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[16])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[16], expected_event_values)
 
     # A shell item event.
     expected_event_values = {
+        'data_type': 'windows:shell_item:file_entry',
+        'file_reference': '81349-1',
+        'long_name': 'InfoTool.exe',
+        'name': 'InfoTool.exe',
+        'origin': 'NeroInfoTool.lnk',
+        'shell_item_path': (
+            '<My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
+            'Nero InfoTool\\InfoTool.exe'),
         'timestamp': '2009-06-05 20:13:20.000000'}
 
     self.CheckEventValues(storage_writer, events[12], expected_event_values)
-
-    expected_message = (
-        'Name: InfoTool.exe '
-        'Long name: InfoTool.exe '
-        'NTFS file reference: 81349-1 '
-        'Shell item path: <My Computer> C:\\Program Files (x86)\\Nero\\'
-        'Nero 9\\Nero InfoTool\\InfoTool.exe '
-        'Origin: NeroInfoTool.lnk')
-    expected_short_message = (
-        'Name: InfoTool.exe '
-        'NTFS file reference: 81349-1 '
-        'Origin: NeroInfoTool.lnk')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[12])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
