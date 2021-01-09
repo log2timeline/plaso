@@ -105,21 +105,21 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.AddEventTag(event_tag)
 
-  def testAddWarning(self):
-    """Tests the AddWarning function."""
+  def testAddExtractionWarning(self):
+    """Tests the AddExtractionWarning function."""
     session = sessions.Session()
     warning = warnings.ExtractionWarning(
-        message='Test extraction error')
+        message='Test extraction warning')
 
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    storage_writer.AddWarning(warning)
+    storage_writer.AddExtractionWarning(warning)
 
     storage_writer.Close()
 
     with self.assertRaises(IOError):
-      storage_writer.AddWarning(warning)
+      storage_writer.AddExtractionWarning(warning)
 
   def testOpenClose(self):
     """Tests the Open and Close functions."""

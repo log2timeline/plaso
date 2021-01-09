@@ -238,7 +238,7 @@ class SingleProcessEngine(engine.BaseEngine):
         self._name, status, self._pid, used_memory, display_name,
         number_of_consumed_sources, storage_writer.number_of_event_sources, 0,
         storage_writer.number_of_events, 0, 0, 0, 0, 0,
-        storage_writer.number_of_warnings)
+        storage_writer.number_of_extraction_warnings)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)

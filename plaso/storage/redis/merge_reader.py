@@ -2,11 +2,6 @@
 """Redis merge reader."""
 import codecs
 
-from plaso.containers import event_sources
-from plaso.containers import events
-from plaso.containers import reports
-from plaso.containers import tasks
-from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import identifiers
 from plaso.storage import interface
@@ -16,36 +11,6 @@ from plaso.storage.redis import redis_store
 
 class RedisMergeReader(interface.StorageMergeReader):
   """Redis store reader for merging."""
-
-  # TODO: move definitions into parent class.
-  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
-
-  # Some container types reference other container types, such as event
-  # referencing event_data. Container types in this tuple must be ordered after
-  # all the container types they reference.
-  _CONTAINER_TYPES = (
-      _CONTAINER_TYPE_EVENT_SOURCE,
-      _CONTAINER_TYPE_EVENT_DATA,
-      _CONTAINER_TYPE_EVENT,
-      _CONTAINER_TYPE_EVENT_TAG,
-      _CONTAINER_TYPE_EXTRACTION_WARNING,
-      _CONTAINER_TYPE_ANALYSIS_REPORT)
-
-  _ADD_CONTAINER_TYPE_METHODS = {
-      _CONTAINER_TYPE_ANALYSIS_REPORT: '_AddAnalysisReport',
-      _CONTAINER_TYPE_EVENT: '_AddEvent',
-      _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
-      _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
-      _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
-      _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddWarning',
-  }
 
   def __init__(self, storage_writer, task, redis_client=None):
     """Initializes a Redis storage merge reader.
@@ -86,35 +51,12 @@ class RedisMergeReader(interface.StorageMergeReader):
 
       self._add_container_type_methods[container_type] = method
 
-  def _AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report.
-
-    Args:
-      analysis_report (AnalysisReport): analysis report.
-    """
-    self._storage_writer.AddAnalysisReport(analysis_report)
-
-  def _AddEventSource(self, event_source):
-    """Adds an event source.
-
-    Args:
-      event_source (EventSource): event source.F
-    """
-    self._storage_writer.AddEventSource(event_source)
-
-  def _AddEventTag(self, event_tag):
-    """Adds an event tag.
-
-    Args:
-      event_tag (EventTag): event tag.
-    """
-    self._storage_writer.AddEventTag(event_tag)
-
-  def _AddEvent(self, event):
+  def _AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
     Args:
       event (EventObject): event.
+      serialized_data (Optional[bytes]): serialized form of the event.
     """
     if hasattr(event, 'event_data_row_identifier'):
       event_data_identifier = identifiers.SQLTableIdentifier(
@@ -127,29 +69,32 @@ class RedisMergeReader(interface.StorageMergeReader):
 
     # TODO: add event identifier mappings for event tags.
 
-    self._storage_writer.AddEvent(event)
+    self._storage_writer.AddEvent(event, serialized_data=serialized_data)
 
-  def _AddEventData(self, event_data):
+  def _AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
+      serialized_data (bytes): serialized form of the event data.
     """
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
-    self._storage_writer.AddEventData(event_data)
+    self._storage_writer.AddEventData(
+        event_data, serialized_data=serialized_data)
 
     post_write_identifier = event_data.GetIdentifier()
     self._event_data_identifier_mappings[lookup_key] = post_write_identifier
 
-  def _AddWarning(self, warning):
-    """Adds a warning.
+  def _AddEventDataStream(self, event_data_stream, serialized_data=None):
+    """Adds an event data stream.
 
     Args:
-      warning (ExtractionWarning): warning.
+      event_data_stream (EventDataStream): event data stream.
+      serialized_data (bytes): serialized form of the event data stream.
     """
-    self._storage_writer.AddWarning(warning)
+    # TODO: implement
 
   def _PrepareForNextContainerType(self):
     """Prepares for the next container type.

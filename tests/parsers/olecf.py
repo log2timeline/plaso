@@ -46,7 +46,7 @@ class OLECFParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
 
-    warnings = list(storage_writer.GetWarnings())
+    warnings = list(storage_writer.GetExtractionWarnings())
 
     warning = warnings[0]
     self.assertIsNotNone(warning)

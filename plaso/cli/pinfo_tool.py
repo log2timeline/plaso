@@ -104,7 +104,7 @@ class PinfoTool(
     warnings_by_path_spec = collections.Counter()
     warnings_by_parser_chain = collections.Counter()
 
-    for warning in list(storage_reader.GetWarnings()):
+    for warning in list(storage_reader.GetExtractionWarnings()):
       warnings_by_path_spec[warning.path_spec.comparable] += 1
       warnings_by_parser_chain[warning.parser_chain] += 1
 
@@ -349,13 +349,13 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def _PrintWarningsDetails(self, storage_reader):
+  def _PrintExtractionWarningsDetails(self, storage_reader):
     """Prints the details of the warnings.
 
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    for index, warning in enumerate(storage_reader.GetWarnings()):
+    for index, warning in enumerate(storage_reader.GetExtractionWarnings()):
       title = 'Warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -375,7 +375,7 @@ class PinfoTool(
 
       table_view.Write(self._output_writer)
 
-  def _PrintWarningsSection(
+  def _PrintExtractionWarningsSection(
       self, storage_reader, warnings_by_path_spec, warnings_by_parser_chain):
     """Prints the warnings section.
 
@@ -386,7 +386,7 @@ class PinfoTool(
       warnings_by_parser_chain (collections.Counter): number of warnings per
           parser chain.
     """
-    if not storage_reader.HasWarnings():
+    if not storage_reader.HasExtractionWarnings():
       self._output_writer.Write('\nNo warnings stored.\n')
 
     else:
@@ -394,7 +394,7 @@ class PinfoTool(
           warnings_by_path_spec, warnings_by_parser_chain)
 
       if self._verbose or 'warnings' in self._sections:
-        self._PrintWarningsDetails(storage_reader)
+        self._PrintExtractionWarningsDetails(storage_reader)
 
   def _PrintEventLabelsCounter(
       self, event_labels_counter, session_identifier=None):
@@ -665,7 +665,7 @@ class PinfoTool(
         warnings_by_parser_chain = storage_counters.get(
             'warnings_by_parser_chain', collections.Counter())
 
-        self._PrintWarningsSection(
+        self._PrintExtractionWarningsSection(
             storage_reader, warnings_by_path_spec, warnings_by_parser_chain)
 
       if self._sections == 'all' or 'reports' in self._sections:

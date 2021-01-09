@@ -100,13 +100,16 @@ class RedisStorageWriter(interface.StorageWriter):
     # No preparations are necessary.
     return
 
-  def AddAnalysisReport(self, analysis_report):
+  def AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): a report.
+      serialized_data (Optional[bytes]): serialized form of the analysis
+          report.
     """
-    self._store.AddAnalysisReport(analysis_report)
+    self._store.AddAnalysisReport(
+        analysis_report, serialized_data=serialized_data)
 
   def AddEvent(self, event, serialized_data=None):
     """Adds an event.
@@ -154,14 +157,16 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddEventTag(event_tag, serialized_data=serialized_data)
 
-  def AddWarning(self, warning, serialized_data=None):
-    """Adds a warning.
+  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+    """Adds an extraction warning.
 
     Args:
-      warning (ExtractionWarning): a warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
+      extraction_warning (ExtractionWarning): an extraction warning.
+      serialized_data (Optional[bytes]): serialized form of the extraction
+          warning.
     """
-    self._store.AddWarning(warning, serialized_data=serialized_data)
+    self._store.AddExtractionWarning(
+        extraction_warning, serialized_data=serialized_data)
 
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging into the store.

@@ -242,17 +242,18 @@ class BaseStore(object):
         self._CONTAINER_TYPE_EVENT_TAG, event_tag,
         serialized_data=serialized_data)
 
-  def AddWarning(self, warning, serialized_data=None):
-    """Adds a warning.
+  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+    """Adds an extraction warning.
 
     Args:
-      warning (ExtractionWarning): warning.
-      serialized_data (Optional[bytes]): serialized form of the event tag.
+      extraction_warning (ExtractionWarning): extraction warning.
+      serialized_data (Optional[bytes]): serialized form of the extraction
+          warning.
     """
     self._RaiseIfNotWritable()
 
     self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EXTRACTION_WARNING, warning,
+        self._CONTAINER_TYPE_EXTRACTION_WARNING, extraction_warning,
         serialized_data=serialized_data)
 
   @abc.abstractmethod
@@ -346,6 +347,14 @@ class BaseStore(object):
       generator(EventTag): event tag generator.
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
+
+  def GetExtractionWarnings(self):
+    """Retrieves the extraction warnings.
+
+    Returns:
+      generator(ExtractionWarning): extraction warning generator.
+    """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.
@@ -443,14 +452,6 @@ class BaseStore(object):
       EventObject: event.
     """
 
-  def GetWarnings(self):
-    """Retrieves the warnings.
-
-    Returns:
-      generator(ExtractionWarning): warning generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
   def HasAnalysisReports(self):
     """Determines if a store contains analysis reports.
 
@@ -459,7 +460,7 @@ class BaseStore(object):
     """
     return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-  def HasWarnings(self):
+  def HasExtractionWarnings(self):
     """Determines if a store contains extraction warnings.
 
     Returns:
@@ -679,6 +680,37 @@ class BaseStore(object):
 class StorageMergeReader(object):
   """Storage reader interface for merging."""
 
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
+
+  # Some container types reference other container types, such as event
+  # referencing event_data. Container types in this tuple must be ordered after
+  # all the container types they reference.
+  _CONTAINER_TYPES = (
+      _CONTAINER_TYPE_EVENT_SOURCE,
+      _CONTAINER_TYPE_EVENT_DATA_STREAM,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_TAG,
+      _CONTAINER_TYPE_EXTRACTION_WARNING,
+      _CONTAINER_TYPE_ANALYSIS_REPORT)
+
+  _ADD_CONTAINER_TYPE_METHODS = {
+      _CONTAINER_TYPE_ANALYSIS_REPORT: '_AddAnalysisReport',
+      _CONTAINER_TYPE_EVENT: '_AddEvent',
+      _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
+      _CONTAINER_TYPE_EVENT_DATA_STREAM: '_AddEventDataStream',
+      _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
+      _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
+      _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddExtractionWarning'}
+
   def __init__(self, storage_writer):
     """Initializes a storage merge reader.
 
@@ -690,6 +722,72 @@ class StorageMergeReader(object):
     self._storage_writer = storage_writer
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
+
+  def _AddAnalysisReport(self, analysis_report, serialized_data=None):
+    """Adds an analysis report.
+
+    Args:
+      analysis_report (AnalysisReport): analysis report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
+    """
+    self._storage_writer.AddAnalysisReport(
+        analysis_report, serialized_data=serialized_data)
+
+  @abc.abstractmethod
+  def _AddEvent(self, event, serialized_data=None):
+    """Adds an event.
+
+    Args:
+      event (EventObject): event.
+      serialized_data (Optional[bytes]): serialized form of the event.
+    """
+
+  @abc.abstractmethod
+  def _AddEventData(self, event_data, serialized_data=None):
+    """Adds event data.
+
+    Args:
+      event_data (EventData): event data.
+      serialized_data (bytes): serialized form of the event data.
+    """
+
+  @abc.abstractmethod
+  def _AddEventDataStream(self, event_data_stream, serialized_data=None):
+    """Adds an event data stream.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+      serialized_data (bytes): serialized form of the event data stream.
+    """
+
+  def _AddEventSource(self, event_source, serialized_data=None):
+    """Adds an event source.
+
+    Args:
+      event_source (EventSource): event source.
+      serialized_data (Optional[bytes]): serialized form of the event source.
+    """
+    self._storage_writer.AddEventSource(
+        event_source, serialized_data=serialized_data)
+
+  def _AddEventTag(self, event_tag, serialized_data=None):
+    """Adds an event tag.
+
+    Args:
+      event_tag (EventTag): event tag.
+      serialized_data (Optional[bytes]): serialized form of the event tag.
+    """
+    self._storage_writer.AddEventTag(event_tag, serialized_data=serialized_data)
+
+  def _AddExtractionWarning(self, extraction_warning, serialized_data=None):
+    """Adds an extraction warning.
+
+    Args:
+      extraction_warning (ExtractionWarning): extraction warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
+    """
+    self._storage_writer.AddExtractionWarning(
+        extraction_warning, serialized_data=serialized_data)
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -778,14 +876,6 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def GetWarnings(self):
-    """Retrieves the warnings.
-
-    Yields:
-      ExtractionWarning: warning.
-    """
-
-  @abc.abstractmethod
   def GetEventData(self):
     """Retrieves the event data.
 
@@ -859,6 +949,14 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetExtractionWarnings(self):
+    """Retrieves the extraction warnings.
+
+    Yields:
+      ExtractionWarning: extraction warning.
+    """
+
+  @abc.abstractmethod
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.
 
@@ -914,7 +1012,7 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def HasWarnings(self):
+  def HasExtractionWarnings(self):
     """Determines if a store contains extraction warnings.
 
     Returns:
@@ -956,10 +1054,11 @@ class StorageWriter(object):
 
   Attributes:
     number_of_analysis_reports (int): number of analysis reports written.
+    number_of_analysis_warnings (int): number of analysis warnings written.
     number_of_event_sources (int): number of event sources written.
     number_of_event_tags (int): number of event tags written.
     number_of_events (int): number of events written.
-    number_of_warnings (int): number of warnings written.
+    number_of_extraction_warnings (int): number of extraction warnings written.
   """
 
   def __init__(
@@ -980,10 +1079,16 @@ class StorageWriter(object):
     self._task = task
     self._written_event_source_index = 0
     self.number_of_analysis_reports = 0
+    self.number_of_analysis_warnings = 0
     self.number_of_event_sources = 0
     self.number_of_event_tags = 0
     self.number_of_events = 0
-    self.number_of_warnings = 0
+    self.number_of_extraction_warnings = 0
+
+  @property
+  def number_of_warnings(self):
+    """int: number of extraction warnings written."""
+    return self.number_of_extraction_warnings
 
   @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report, serialized_data=None):
@@ -1041,12 +1146,13 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
-  def AddWarning(self, warning, serialized_data=None):
-    """Adds an warning.
+  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+    """Adds an extraction warning.
 
     Args:
-      warning (ExtractionWarning): a warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
+      extraction_warning (ExtractionWarning): an extraction warning.
+      serialized_data (Optional[bytes]): serialized form of the extraction
+          warning.
     """
 
   @abc.abstractmethod

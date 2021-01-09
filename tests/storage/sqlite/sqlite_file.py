@@ -333,8 +333,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testAddWarning(self):
-    """Tests the AddWarning function."""
+  def testAddExtractionWarning(self):
+    """Tests the AddExtractionWarning function."""
     extraction_warning = warnings.ExtractionWarning(
         message='Test extraction warning')
 
@@ -343,7 +343,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      storage_file.AddWarning(extraction_warning)
+      storage_file.AddExtractionWarning(extraction_warning)
 
       storage_file.Close()
 
@@ -371,8 +371,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testGetWarnings(self):
-    """Tests the GetWarnings function."""
+  def testGetExtractionWarnings(self):
+    """Tests the GetExtractionWarnings function."""
     extraction_warning = warnings.ExtractionWarning(
         message='Test extraction warning')
 
@@ -381,14 +381,14 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      storage_file.AddWarning(extraction_warning)
+      storage_file.AddExtractionWarning(extraction_warning)
 
       storage_file.Close()
 
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file)
 
-      test_warnings = list(storage_file.GetWarnings())
+      test_warnings = list(storage_file.GetExtractionWarnings())
       self.assertEqual(len(test_warnings), 1)
 
       storage_file.Close()

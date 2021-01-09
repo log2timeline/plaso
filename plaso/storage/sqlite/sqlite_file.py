@@ -851,14 +851,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     self._is_open = False
 
-  def GetWarnings(self):
-    """Retrieves the warnings.
-
-    Returns:
-      generator(ExtractionWarning): warning generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
 
@@ -950,6 +942,14 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         self._CONTAINER_TYPE_EVENT_TAG):
       self._UpdateEventIdentifierAfterDeserialize(event_tag)
       yield event_tag
+
+  def GetExtractionWarnings(self):
+    """Retrieves the extraction warnings.
+
+    Returns:
+      generator(ExtractionWarning): extraction warning generator.
+    """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def GetNumberOfEventSources(self):
     """Retrieves the number event sources.

@@ -129,7 +129,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(storage_writer.number_of_warnings, 1)
 
-    warnings = list(storage_writer.GetWarnings())
+    warnings = list(storage_writer.GetExtractionWarnings())
     warning = warnings[0]
     expected_warning_message = (
         'Unable to parse journal entry at offset: 0x0041bfb0 with error: '
