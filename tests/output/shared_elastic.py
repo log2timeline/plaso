@@ -184,18 +184,6 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     self.assertIsNone(output_module._client)
 
-  def testSetDocumentType(self):
-    """Tests the SetDocumentType function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestElasticsearchOutputModule(output_mediator)
-
-    self.assertEqual(
-        output_module._document_type, output_module._DEFAULT_DOCUMENT_TYPE)
-
-    output_module.SetDocumentType('test_document_type')
-
-    self.assertEqual(output_module._document_type, 'test_document_type')
-
   def testSetFlushInterval(self):
     """Tests the SetFlushInterval function."""
     output_mediator = self._CreateOutputMediator()

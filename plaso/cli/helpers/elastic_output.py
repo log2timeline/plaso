@@ -29,7 +29,6 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   DESCRIPTION = 'Argument helper for the Elastic Search output modules.'
 
   _DEFAULT_INDEX_NAME = uuid4().hex
-  _DEFAULT_DOCUMENT_TYPE = 'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
 
@@ -48,21 +47,21 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         '--index_name', dest='index_name', type=str, action='store',
         default=cls._DEFAULT_INDEX_NAME, help=(
             'Name of the index in ElasticSearch.'))
-    argument_group.add_argument(
-        '--doc_type', dest='document_type', type=str,
-        action='store', default=cls._DEFAULT_DOCUMENT_TYPE, help=(
-            'Name of the document type that will be used in ElasticSearch.'))
+
     argument_group.add_argument(
         '--flush_interval', dest='flush_interval', type=int,
         action='store', default=cls._DEFAULT_FLUSH_INTERVAL, help=(
             'Events to queue up before bulk insert to ElasticSearch.'))
+
     argument_group.add_argument(
         '--raw_fields', dest='raw_fields', action='store_true',
         default=cls._DEFAULT_RAW_FIELDS, help=(
             'Export string fields that will not be analyzed by Lucene.'))
+
     argument_group.add_argument(
         '--elastic_user', dest='elastic_user', action='store',
         default=None, help='Username to use for Elasticsearch authentication.')
+
     argument_group.add_argument(
         '--elastic_password', dest='elastic_password', action='store',
         default=None, help=(
@@ -70,13 +69,16 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
             'with caution since this can expose the password to other users '
             'on the system. The password can also be set with the environment '
             'variable PLASO_ELASTIC_PASSWORD. '))
+
     argument_group.add_argument(
         '--use_ssl', dest='use_ssl', action='store_true',
         help='Enforces use of ssl.')
+
     argument_group.add_argument(
         '--ca_certificates_file_path', dest='ca_certificates_file_path',
         action='store', type=str, default=None, help=(
             'Path to a file containing a list of root certificates to trust.'))
+
     argument_group.add_argument(
         '--elastic_url_prefix', dest='elastic_url_prefix', type=str,
         action='store', default=None, help='URL prefix for elastic search.')
@@ -104,8 +106,6 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
 
     index_name = cls._ParseStringOption(
         options, 'index_name', default_value=cls._DEFAULT_INDEX_NAME)
-    document_type = cls._ParseStringOption(
-        options, 'document_type', default_value=cls._DEFAULT_DOCUMENT_TYPE)
     flush_interval = cls._ParseNumericOption(
         options, 'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
     raw_fields = getattr(options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
@@ -131,7 +131,6 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
 
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
-    output_module.SetDocumentType(document_type)
     output_module.SetFlushInterval(flush_interval)
     output_module.SetRawFields(raw_fields)
     output_module.SetUsername(elastic_user)
