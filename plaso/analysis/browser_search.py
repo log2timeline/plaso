@@ -12,13 +12,6 @@ from plaso.analysis import manager
 from plaso.containers import reports
 
 
-# Create a lightweight object that is used to store timeline based information
-# about each search term.
-# pylint: disable=invalid-name
-SEARCH_OBJECT = collections.namedtuple(
-    'SEARCH_OBJECT', 'time source engine search_term')
-
-
 class BrowserSearchPlugin(interface.AnalysisPlugin):
   """Analyze browser search entries from events."""
 
@@ -87,10 +80,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     """Initializes an analysis plugin."""
     super(BrowserSearchPlugin, self).__init__()
     self._counter = collections.Counter()
-
-    # Store a list of search terms in a timeline format.
-    # The format is key = timestamp, value = (source, engine, search term).
-    self._search_term_timeline = []
 
   def _DecodeURL(self, url):
     """Decodes the URL, replaces %XX to their corresponding characters.
@@ -322,7 +311,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     report_text = '\n'.join(lines_of_text)
     analysis_report = reports.AnalysisReport(
         plugin_name=self.NAME, text=report_text)
-    analysis_report.report_array = self._search_term_timeline
     analysis_report.report_dict = results
     return analysis_report
 
@@ -342,8 +330,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     url = getattr(event_data, 'url', None)
     if not url:
       return
-
-    parser_or_plugin_name = getattr(event_data, 'parser', 'N/A')
 
     for engine, url_expression, method_name in self._URL_FILTERS:
       callback_method = getattr(self, method_name, None)
@@ -368,11 +354,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       mediator.ProduceEventTag(event_tag)
 
       self._counter['{0:s}:{1:s}'.format(engine, search_query)] += 1
-
-      # Add the timeline format for each search term.
-      search_object = SEARCH_OBJECT(
-          event.timestamp, parser_or_plugin_name, engine, search_query)
-      self._search_term_timeline.append(search_object)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(BrowserSearchPlugin)

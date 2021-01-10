@@ -13,7 +13,6 @@ class AnalysisReport(interface.AttributeContainer):
   Attributes:
     filter_string (str): event filter expression.
     plugin_name (str): name of the analysis plugin that generated the report.
-    report_array (array[str]): ???
     report_dict (dict[str]): ???
     text (str): report text.
     time_compiled (int): timestamp of the date and time the report was compiled.
@@ -31,7 +30,6 @@ class AnalysisReport(interface.AttributeContainer):
     super(AnalysisReport, self).__init__()
     self.filter_string = None
     self.plugin_name = plugin_name
-    self.report_array = None
     self.report_dict = None
     # TODO: rename text to body?
     self.text = text
