@@ -5,7 +5,30 @@ from plaso.containers import interface
 from plaso.containers import manager
 
 
-# TODO: add AnalysisWarning.
+class AnalysisWarning(interface.AttributeContainer):
+  """Analysis warning attribute container.
+
+  Analysis warnings are produced by analysis plugins when they encounter
+  situations that should be brought to the users' attention but are not
+  analysis results.
+
+  Attributes:
+    message (str): warning message.
+    plugin_name (str): name of the analysis plugin to which the warning applies.
+  """
+  CONTAINER_TYPE = 'analysis_warning'
+
+  def __init__(self, message=None, plugin_name=None):
+    """Initializes an analysis warning.
+
+    Args:
+      message (Optional[str]): warning message.
+      plugin_name (Optional[str]): name of the analysis plugin to which the
+          warning applies.
+    """
+    super(AnalysisWarning, self).__init__()
+    self.message = message
+    self.plugin_name = plugin_name
 
 
 class ExtractionWarning(interface.AttributeContainer):
@@ -39,4 +62,4 @@ class ExtractionWarning(interface.AttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    ExtractionWarning])
+    AnalysisWarning, ExtractionWarning])

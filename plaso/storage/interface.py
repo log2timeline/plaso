@@ -24,6 +24,7 @@ class BaseStore(object):
   """
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
@@ -175,6 +176,20 @@ class BaseStore(object):
 
     self._AddAttributeContainer(
         self._CONTAINER_TYPE_ANALYSIS_REPORT, analysis_report,
+        serialized_data=serialized_data)
+
+  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+    """Adds an analysis warning.
+
+    Args:
+      analysis_warning (AnalysisWarning): analysis warning.
+      serialized_data (Optional[bytes]): serialized form of the analysis
+          warning.
+    """
+    self._RaiseIfNotWritable()
+
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_ANALYSIS_WARNING, analysis_warning,
         serialized_data=serialized_data)
 
   def AddEvent(self, event, serialized_data=None):
@@ -681,6 +696,7 @@ class StorageMergeReader(object):
   """Storage reader interface for merging."""
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
@@ -700,10 +716,12 @@ class StorageMergeReader(object):
       _CONTAINER_TYPE_EVENT,
       _CONTAINER_TYPE_EVENT_TAG,
       _CONTAINER_TYPE_EXTRACTION_WARNING,
-      _CONTAINER_TYPE_ANALYSIS_REPORT)
+      _CONTAINER_TYPE_ANALYSIS_REPORT,
+      _CONTAINER_TYPE_ANALYSIS_WARNING)
 
   _ADD_CONTAINER_TYPE_METHODS = {
       _CONTAINER_TYPE_ANALYSIS_REPORT: '_AddAnalysisReport',
+      _CONTAINER_TYPE_ANALYSIS_WARNING: '_AddAnalysisWarning',
       _CONTAINER_TYPE_EVENT: '_AddEvent',
       _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
       _CONTAINER_TYPE_EVENT_DATA_STREAM: '_AddEventDataStream',
@@ -732,6 +750,16 @@ class StorageMergeReader(object):
     """
     self._storage_writer.AddAnalysisReport(
         analysis_report, serialized_data=serialized_data)
+
+  def _AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+    """Adds an analysis warning.
+
+    Args:
+      analysis_warning (AnalysisWarning): analysis warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
+    """
+    self._storage_writer.AddAnalysisWarning(
+        analysis_warning, serialized_data=serialized_data)
 
   @abc.abstractmethod
   def _AddEvent(self, event, serialized_data=None):
@@ -1097,6 +1125,16 @@ class StorageWriter(object):
     Args:
       analysis_report (AnalysisReport): a report.
       serialized_data (Optional[bytes]): serialized form of the analysis report.
+    """
+
+  @abc.abstractmethod
+  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+    """Adds an analysis warning.
+
+    Args:
+      analysis_warning (AnalysisWarning): an analysis warning.
+      serialized_data (Optional[bytes]): serialized form of the analysis
+          warning.
     """
 
   @abc.abstractmethod

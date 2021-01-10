@@ -35,6 +35,22 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.AddAnalysisReport(analysis_report)
 
+  def testAddAnalysisWarning(self):
+    """Tests the AddAnalysisWarning function."""
+    session = sessions.Session()
+    warning = warnings.AnalysisWarning(
+        message='Test analysis warning')
+
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
+
+    storage_writer.AddAnalysisWarning(warning)
+
+    storage_writer.Close()
+
+    with self.assertRaises(IOError):
+      storage_writer.AddAnalysisWarning(warning)
+
   def testAddEvent(self):
     """Tests the AddEvent function."""
     session = sessions.Session()

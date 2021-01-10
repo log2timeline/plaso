@@ -111,6 +111,17 @@ class RedisStorageWriter(interface.StorageWriter):
     self._store.AddAnalysisReport(
         analysis_report, serialized_data=serialized_data)
 
+  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+    """Adds an analysis warning.
+
+    Args:
+      analysis_warning (AnalysisWarning): an analysis warning.
+      serialized_data (Optional[bytes]): serialized form of the analysis
+          warning.
+    """
+    self._store.AddExtractionWarning(
+        analysis_warning, serialized_data=serialized_data)
+
   def AddEvent(self, event, serialized_data=None):
     """Adds an event.
 
