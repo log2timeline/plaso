@@ -18,7 +18,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
   Builds collection filters from forensic artifact definitions.
 
   For more information about Forensic Artifacts see:
-  https://github.com/ForensicArtifacts/artifacts/blob/master/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
+  https://github.com/ForensicArtifacts/artifacts/blob/main/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
 
   Attributes:
     file_system_artifact_names (set[str]): names of artifacts definitions that

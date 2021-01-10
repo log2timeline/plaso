@@ -60,6 +60,14 @@ plaso.filters.path\_filter module
    :undoc-members:
    :show-inheritance:
 
+plaso.filters.value\_types module
+---------------------------------
+
+.. automodule:: plaso.filters.value_types
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

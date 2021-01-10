@@ -4,6 +4,7 @@
 import calendar
 import time
 
+from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.lib import definitions
 
@@ -39,6 +40,7 @@ class AnalysisMediator(object):
     self._data_location = data_location
     self._event_filter_expression = None
     self._knowledge_base = knowledge_base
+    self._number_of_warnings = 0
     self._storage_writer = storage_writer
 
     self.last_activity_timestamp = 0.0
@@ -117,6 +119,20 @@ class AnalysisMediator(object):
     self.number_of_produced_analysis_reports += 1
     self.number_of_produced_event_tags = (
         self._storage_writer.number_of_event_tags)
+
+    self.last_activity_timestamp = time.time()
+
+  def ProduceAnalysisWarning(self, message, plugin_name):
+    """Produces an analysis warning.
+
+    Args:
+      message (str): message of the warning.
+      plugin_name (str): name of the analysis plugin to which the warning
+          applies.
+    """
+    warning = warnings.AnalysisWarning(message=message, plugin_name=plugin_name)
+    self._storage_writer.AddAnalysisWarning(warning)
+    self._number_of_warnings += 1
 
     self.last_activity_timestamp = time.time()
 
