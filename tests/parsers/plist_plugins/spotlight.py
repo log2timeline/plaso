@@ -35,23 +35,15 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(timestamps, expected_timestamps)
 
-    expected_description = (
-        'Spotlight term searched "gr" associate to Grab '
-        '(/Applications/Utilities/Grab.app)')
-
     expected_event_values = {
-        'desc': expected_description,
+        'data_type': 'plist:key',
+        'desc': (
+            'Spotlight term searched "gr" associate to Grab '
+            '(/Applications/Utilities/Grab.app)'),
         'key': 'gr',
         'root': '/UserShortcuts'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
-
-    expected_message = '/UserShortcuts/gr {0:s}'.format(expected_description)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[6])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

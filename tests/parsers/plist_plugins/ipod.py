@@ -29,33 +29,25 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'ipod:device:entry',
         'device_id': '0000A11300000000',
         'timestamp': '1995-11-22 18:25:07.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'ipod:device:entry',
         'device_class': 'iPhone',
         'device_id': '4C6F6F6E65000000',
+        'family_id': 10016,
         'firmware_version': 256,
         'imei': '012345678901234',
+        'serial_number': '526F676572',
         'timestamp': '2013-10-09 19:27:54.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CONNECTED,
         'use_count': 1}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_message = (
-        'Device ID: 4C6F6F6E65000000 '
-        'Type: iPhone [10016] '
-        'Connected 1 times '
-        'Serial nr: 526F676572 '
-        'IMEI [012345678901234]')
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
