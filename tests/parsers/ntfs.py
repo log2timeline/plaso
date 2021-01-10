@@ -35,26 +35,18 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # A distributed link tracking event.
     expected_event_values = {
+        'data_type': 'windows:distributed_link_tracking:creation',
+        'mac_address': 'db:30:99:be:ae:3c',
+        'origin': '$MFT: 462-1',
         'timestamp': '2007-06-30 12:58:40.500004',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'uuid': '9fe44b69-2709-11dc-a06b-db3099beae3c'}
 
     self.CheckEventValues(storage_writer, events[3680], expected_event_values)
 
-    expected_message = (
-        '9fe44b69-2709-11dc-a06b-db3099beae3c '
-        'MAC address: db:30:99:be:ae:3c '
-        'Origin: $MFT: 462-1')
-
-    expected_short_message = (
-        '9fe44b69-2709-11dc-a06b-db3099beae3c '
-        'Origin: $MFT: 462-1')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[3680])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test path hints of a regular file.
     expected_event_values = {
+        'data_type': 'fs:stat:ntfs',
         'name': 'SAM',
         'path_hints': ['\\WINDOWS\\system32\\config\\SAM']}
 
@@ -66,6 +58,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         'Temporary Internet Files\\Content.IE5\\9EUWFPZ1\\CAJA1S19.js')]
 
     expected_event_values = {
+        'data_type': 'fs:stat:ntfs',
         'is_allocated': False,
         'name': 'CAJA1S19.js',
         'path_hints': expected_path_hints}
@@ -74,6 +67,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # Testing path hint of orphaned file.
     expected_event_values = {
+        'data_type': 'fs:stat:ntfs',
         'name': 'menu.text.css',
         'path_hints': ['$Orphan\\session\\menu.text.css']}
 
@@ -103,6 +97,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # The creation timestamp.
     expected_event_values = {
+        'data_type': 'fs:stat:ntfs',
         'is_allocated': True,
         'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
@@ -111,6 +106,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # The last modification timestamp.
     expected_event_values = {
+        'data_type': 'fs:stat:ntfs',
         'is_allocated': True,
         'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
@@ -119,6 +115,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # The last accessed timestamp.
     expected_event_values = {
+        'data_type': 'fs:stat:ntfs',
         'is_allocated': True,
         'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
@@ -127,113 +124,65 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # The entry modification timestamp.
     expected_event_values = {
+        'attribute_type': 0x00000010,
+        'data_type': 'fs:stat:ntfs',
+        'display_name': 'TSK:/$MFT',
+        'file_reference': 0x1000000000000,
         'is_allocated': True,
+        'path_hints': ['\\$MFT'],
         'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
-    expected_message = (
-        'TSK:/$MFT '
-        'File reference: 0-1 '
-        'Attribute name: $STANDARD_INFORMATION '
-        'Path hints: \\$MFT')
-
-    expected_short_message = (
-        '/$MFT 0-1 $STANDARD_INFORMATION')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[7])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # The creation timestamp.
     expected_event_values = {
+        'attribute_type': 0x00000030,
+        'data_type': 'fs:stat:ntfs',
+        'file_reference': 0x1000000000000,
         'is_allocated': True,
+        'name': '$MFT',
+        'parent_file_reference': 0x5000000000005,
+        'path_hints': ['\\$MFT'],
         'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'TSK:/$MFT '
-        'File reference: 0-1 '
-        'Attribute name: $FILE_NAME '
-        'Name: $MFT '
-        'Parent file reference: 5-5 '
-        'Path hints: \\$MFT')
-
-    expected_short_message = (
-        '/$MFT 0-1 $FILE_NAME')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    expected_path_hints = [
-        '\\System Volume Information\\{3808876b-c176-4e48-b7ae-04046e6cc752}']
-
     expected_event_values = {
-        'path_hints': expected_path_hints}
+        'attribute_type': 0x00000010,
+        'display_name': 'TSK:/$MFT',
+        'file_reference': 0x1000000000026,
+        'data_type': 'fs:stat:ntfs',
+        'path_hints': [
+            '\\System Volume Information\\{3808876b-c176-4e48-b7ae-'
+            '04046e6cc752}']}
 
     self.CheckEventValues(storage_writer, events[251], expected_event_values)
 
-    expected_message = (
-        'TSK:/$MFT '
-        'File reference: 38-1 '
-        'Attribute name: $STANDARD_INFORMATION '
-        'Path hints: \\System Volume Information\\'
-        '{3808876b-c176-4e48-b7ae-04046e6cc752}')
-
-    expected_short_message = (
-        '/$MFT 38-1 $STANDARD_INFORMATION')
-
-    event_data = self._GetEventDataOfEvent(storage_writer,  events[251])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'attribute_type': 0x00000030,
+        'data_type': 'fs:stat:ntfs',
+        'display_name': 'TSK:/$MFT',
+        'file_reference': 0x1000000000026,
+        'name': '{38088~1',
+        'parent_file_reference': 0x1000000000024,
         'path_hints': ['\\System Volume Information\\{38088~1']}
 
     self.CheckEventValues(storage_writer, events[240], expected_event_values)
 
-    expected_message = (
-        'TSK:/$MFT '
-        'File reference: 38-1 '
-        'Attribute name: $FILE_NAME '
-        'Name: {38088~1 '
-        'Parent file reference: 36-1 '
-        'Path hints: \\System Volume Information\\{38088~1')
-
-    expected_short_message = (
-        '/$MFT 38-1 $FILE_NAME')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[240])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    expected_path_hints = [
-        '\\System Volume Information\\{3808876b-c176-4e48-b7ae-04046e6cc752}']
-
     expected_event_values = {
-        'path_hints': expected_path_hints}
+        'attribute_type': 0x00000030,
+        'data_type': 'fs:stat:ntfs',
+        'display_name': 'TSK:/$MFT',
+        'file_reference': 0x1000000000026,
+        'name': '{3808876b-c176-4e48-b7ae-04046e6cc752}',
+        'parent_file_reference': 0x1000000000024,
+        'path_hints': [
+            '\\System Volume Information\\'
+            '{3808876b-c176-4e48-b7ae-04046e6cc752}']}
 
     self.CheckEventValues(storage_writer, events[244], expected_event_values)
-
-    expected_message = (
-        'TSK:/$MFT '
-        'File reference: 38-1 '
-        'Attribute name: $FILE_NAME '
-        'Name: {3808876b-c176-4e48-b7ae-04046e6cc752} '
-        'Parent file reference: 36-1 '
-        'Path hints: \\System Volume Information\\'
-        '{3808876b-c176-4e48-b7ae-04046e6cc752}')
-
-    expected_short_message = (
-        '/$MFT 38-1 $FILE_NAME')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[244])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
     # Note that the source file is a RAW (VMDK flat) image.
     test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
@@ -282,23 +231,15 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'fs:ntfs:usn_change',
+        'filename': 'Nieuw - Tekstdocument.txt',
+        'file_reference': 0x100000000001e,
+        'parent_file_reference': 0x5000000000005,
         'timestamp': '2015-11-30 21:15:27.203125',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION,
+        'update_reason_flags': 0x00000100}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Nieuw - Tekstdocument.txt '
-        'File reference: 30-1 '
-        'Parent file reference: 5-5 '
-        'Update reason: USN_REASON_FILE_CREATE')
-
-    expected_short_message = (
-        'Nieuw - Tekstdocument.txt 30-1 USN_REASON_FILE_CREATE')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

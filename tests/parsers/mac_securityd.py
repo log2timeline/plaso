@@ -25,16 +25,15 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_message = (
-        'securityd_xpc_dictionary_handler EscrowSecurityAl'
-        '[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 virka '
-        'l\xedka, setja \xedslensku inn.')
-
     expected_event_values = {
         'caller': 'unknown',
+        'data_type': 'mac:securityd:line',
         'facility': 'user',
         'level': 'Error',
-        'message': expected_message,
+        'message': (
+            'securityd_xpc_dictionary_handler EscrowSecurityAl'
+            '[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 virka '
+            'l\xedka, setja \xedslensku inn.'),
         'security_api': 'unknown',
         'sender_pid': 1,
         'sender': 'secd',
@@ -42,21 +41,9 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'Sender: secd (1) Level: Error Facility: user '
-        'Text: securityd_xpc_dictionary_handler EscrowSecurityAl'
-        '[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 '
-        'virka l\xedka, setja \xedslensku inn.')
-    expected_short_message = (
-        'Text: securityd_xpc_dictionary_handler '
-        'EscrowSecurityAl[3273] DeviceInCircle ...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'caller': 'unknown',
+        'data_type': 'mac:securityd:line',
         'facility': 'serverxpc',
         'level': 'Notice',
         'security_api': 'SOSCCThisDeviceIsInCircle',
@@ -68,6 +55,7 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'caller': 'unknown',
+        'data_type': 'mac:securityd:line',
         'facility': 'user',
         'level': 'Debug',
         'security_api': 'unknown',
@@ -79,6 +67,7 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'caller': 'C0x7fff872fa482',
+        'data_type': 'mac:securityd:line',
         'facility': 'user',
         'level': 'Error',
         'security_api': 'SOSCCThisDeviceIsInCircle',
@@ -90,6 +79,7 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'caller': 'unknown',
+        'data_type': 'mac:securityd:line',
         'facility': 'user',
         'level': 'Error',
         'message': '',
@@ -102,6 +92,7 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'caller': 'C0x7fff872fa482 F0x106080db0',
+        'data_type': 'mac:securityd:line',
         'facility': 'user',
         'level': 'Error',
         'message': '',
@@ -113,17 +104,20 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'mac:securityd:line',
         'timestamp': '2013-12-31 23:59:59.000000'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'mac:securityd:line',
         'timestamp': '2014-03-01 00:00:01.000000'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     # Repeated line.
     expected_event_values = {
+        'data_type': 'mac:securityd:line',
         'message': 'Repeated 3 times: Happy new year!'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)

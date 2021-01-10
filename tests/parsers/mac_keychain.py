@@ -28,6 +28,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'account_name': 'moxilo',
+        'data_type': 'mac:keychain:application',
         'entry_name': 'Secret Application',
         'ssgp_hash': expected_ssgp,
         'timestamp': '2014-01-26 14:51:48.000000',
@@ -35,14 +36,8 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = 'Name: Secret Application Account: moxilo'
-    expected_short_message = 'Secret Application'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'data_type': 'mac:keychain:application',
         'timestamp': '2014-01-26 14:52:29.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
@@ -78,6 +73,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
         '22e8f256c6094d7f2ed4f7c89c060faf')
 
     expected_event_values = {
+        'data_type': 'mac:keychain:application',
         'entry_name': 'Secret Note',
         'ssgp_hash': expected_ssgp,
         'text_description': 'secure note',
@@ -85,18 +81,12 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_message = 'Name: Secret Note'
-    expected_short_message = 'Secret Note'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_ssgp = (
         '83ccacf55a8cb656d340ec405e9d8b308fac54bb79c5c9b0219bd0d700c3c521')
 
     expected_event_values = {
         'account_name': 'MrMoreno',
+        'data_type': 'mac:keychain:internet',
         'entry_name': 'plaso.kiddaland.net',
         'protocol': 'http',
         'ssgp_hash': expected_ssgp,
@@ -105,17 +95,6 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
         'where': 'plaso.kiddaland.net'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
-
-    expected_message = (
-        'Name: plaso.kiddaland.net '
-        'Account: MrMoreno '
-        'Where: plaso.kiddaland.net '
-        'Protocol: http (dflt)')
-    expected_short_message = 'plaso.kiddaland.net'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

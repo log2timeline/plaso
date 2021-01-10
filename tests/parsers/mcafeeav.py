@@ -25,6 +25,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'av:mcafee:accessprotectionlog',
         'timestamp': '2013-09-27 14:42:26.000000'}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
@@ -40,27 +41,21 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Terminate
 
     expected_event_values = {
+        'action': 'Action blocked : Terminate',
+        'data_type': 'av:mcafee:accessprotectionlog',
         'filename': 'C:\\Windows\\System32\\procexp64.exe',
+        'rule': (
+            'Common Standard Protection:Prevent termination of McAfee '
+            'processes'),
+        # Note that the trailing space is part of the status event value.
+        'status': 'Blocked by Access Protection rule ',
         'timestamp': '2013-09-27 14:42:39.000000',
+        'trigger_location': (
+            'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
+            'workService.exe'),
         'username': 'SOMEDOMAIN\\someUser'}
 
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
-
-    expected_message = (
-        'File Name: C:\\Windows\\System32\\procexp64.exe '
-        'User: SOMEDOMAIN\\someUser '
-        'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
-        'workService.exe '
-        'Blocked by Access Protection rule  '
-        'Common Standard Protection:Prevent termination of McAfee processes '
-        'Action blocked : Terminate')
-    expected_short_message = (
-        'C:\\Windows\\System32\\procexp64.exe '
-        'Action blocked : Terminate')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[11])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

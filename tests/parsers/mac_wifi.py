@@ -26,6 +26,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'mac:wifilog:line',
         'text': 'test-macbookpro newsyslog[50498]: logfile turned over',
         'timestamp': '2017-01-02 00:10:15.000000'}
 
@@ -36,12 +37,14 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         'BONJOUR/MDNS OFFLOADS ARE NOT RUNNING.')
 
     expected_event_values = {
+        'data_type': 'mac:wifilog:line',
         'text': expected_text,
         'timestamp': '2017-01-02 00:11:02.378000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'mac:wifilog:line',
         'text': (
             '<kernel> wl0: leaveModulePoweredForOffloads: Wi-Fi will stay on.'),
         'timestamp': '2017-01-02 07:41:01.371000'}
@@ -49,6 +52,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'mac:wifilog:line',
         'text': (
             '<kernel> Setting BTCoex Config: enable_2G:1, profile_2g:0, '
             'enable_5G:1, profile_5G:0'),
@@ -71,72 +75,59 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     expected_event_values = {
         'action': 'Interface en0 turn up.',
         'agent': 'airportd[88]',
+        'data_type': 'mac:wifilog:line',
         'function': 'airportdProcessDLILEvent',
         'text': 'en0 attached (up)',
         'timestamp': '2013-11-14 20:36:37.222000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_message = (
-        'Action: Interface en0 turn up. '
-        'Agent: airportd[88] '
-        '(airportdProcessDLILEvent) '
-        'Log: en0 attached (up)')
-    expected_short_message = (
-        'Action: Interface en0 turn up.')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    expected_text = (
-        'Already associated to \u201cCampusNet\u201d. Bailing on auto-join.')
-
     expected_event_values = {
         'action': 'Wifi connected to SSID CampusNet',
         'agent': 'airportd[88]',
+        'data_type': 'mac:wifilog:line',
         'function': '_doAutoJoin',
-        'text': expected_text,
+        'text': (
+            'Already associated to \u201cCampusNet\u201d. Bailing on '
+            'auto-join.'),
         'timestamp': '2013-11-14 20:36:43.818000'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_string = (
-        '<airportd[88]> _handleLinkEvent: Unable to process link event, '
-        'op mode request returned -3903 (Operation not supported)')
-
     expected_event_values = {
-        'text': expected_string,
+        'data_type': 'mac:wifilog:line',
+        'text': (
+            '<airportd[88]> _handleLinkEvent: Unable to process link event, '
+            'op mode request returned -3903 (Operation not supported)'),
         'timestamp': '2013-11-14 21:50:52.395000'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    expected_action = (
-        'New wifi configured. BSSID: 88:30:8a:7a:61:88, SSID: AndroidAP, '
-        'Security: WPA2 Personal.')
-
-    expected_text = (
-        'No password for network <CWNetwork: 0x7fdfe970b250> '
-        '[ssid=AndroidAP, bssid=88:30:8a:7a:61:88, security=WPA2 '
-        'Personal, rssi=-21, channel=<CWChannel: 0x7fdfe9712870> '
-        '[channelNumber=11(2GHz), channelWidth={20MHz}], ibss=0] '
-        'in the system keychain')
-
     expected_event_values = {
-        'action': expected_action,
+        'action': (
+            'New wifi configured. BSSID: 88:30:8a:7a:61:88, SSID: AndroidAP, '
+            'Security: WPA2 Personal.'),
         'agent': 'airportd[88]',
+        'data_type': 'mac:wifilog:line',
         'function': '_processSystemPSKAssoc',
-        'text': expected_text,
+        'text': (
+            'No password for network <CWNetwork: 0x7fdfe970b250> '
+            '[ssid=AndroidAP, bssid=88:30:8a:7a:61:88, security=WPA2 '
+            'Personal, rssi=-21, channel=<CWChannel: 0x7fdfe9712870> '
+            '[channelNumber=11(2GHz), channelWidth={20MHz}], ibss=0] '
+            'in the system keychain'),
         'timestamp': '2013-11-14 21:52:09.883000'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'mac:wifilog:line',
         'timestamp': '2013-12-31 23:59:38.165000'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'mac:wifilog:line',
         'timestamp': '2014-01-01 01:12:17.311000'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)

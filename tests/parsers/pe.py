@@ -37,19 +37,12 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'pe:delay_import:import_time',
+        'dll_name': 'USER32.dll',
+        'imphash': '8d0739063fc8f9955cc6696b462544ab',
+        'pe_type': 'Executable (EXE)',
         'timestamp': '2015-04-21 14:53:54.000000'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_message = (
-        'DLL name: USER32.dll '
-        'PE Type: Executable (EXE) '
-        'Import hash: 8d0739063fc8f9955cc6696b462544ab')
-    expected_short_message = 'USER32.dll'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParseFileObjectOnDriver(self):
     """Tests the ParseFileObject on a PE driver (SYS) file."""
@@ -62,6 +55,7 @@ class PECOFFTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'pe:compilation:compilation_time',
         'pe_type': 'Driver (SYS)',
         'timestamp': '2015-04-21 14:53:54.000000'}
 

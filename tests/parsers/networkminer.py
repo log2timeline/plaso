@@ -26,29 +26,19 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'networkminer:fileinfos:file',
+        'destination_ip': '192.168.151.130',
+        'destination_port': 'TCP 48304',
+        'file_details': 'travelocity.com/',
+        'file_md5': 'abdb151dfd5775c05b47c0f4ea1cd3d7',
+        'file_size': '98 500 B',
+        'file_path': 'D:\\case-export\\AssembledFiles\\index.html',
         'filename': 'index.html',
         'source_ip': '111.123.124.11',
+        'source_port': 'TCP 80',
         'timestamp': '2007-12-17 04:32:30.399052'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_message = (
-        'Source IP: 111.123.124.11 '
-        'Source Port: TCP 80 '
-        'Destination IP: 192.168.151.130 '
-        'Destination Port: TCP 48304 '
-        'index.html D:\\case-export\\AssembledFiles\\index.html '
-        '98 500 B '
-        'abdb151dfd5775c05b47c0f4ea1cd3d7 '
-        'travelocity.com/')
-    expected_short_message = (
-        'Source IP: 111.123.124.11 '
-        'Destination IP: 192.168.151.130 '
-        'index.html D:\\case-...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -25,29 +25,20 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
 
     # Check the Root Entry event.
     expected_event_values = {
+        'data_type': 'olecf:item',
         'name': 'Root Entry',
         'timestamp': '2013-05-16 02:29:49.795000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_string = 'Name: Root Entry'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_string, expected_string)
-
     # Check one other entry.
     expected_event_values = {
+        'data_type': 'olecf:item',
+        'name': 'MsoDataStore',
         'timestamp': '2013-05-16 02:29:49.704000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_string = 'Name: MsoDataStore'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_string, expected_string)
 
 
 if __name__ == '__main__':
