@@ -21,9 +21,7 @@ from plaso.serializer import json_serializer
 from plaso.storage import factory as storage_factory
 
 
-class PinfoTool(
-    tools.CLITool,
-    tool_options.StorageFileOptions):
+class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
   """Pinfo CLI tool.
 
   Attributes:
@@ -36,8 +34,6 @@ class PinfoTool(
   DESCRIPTION = (
       'Shows information about a Plaso storage file, for example how it was '
       'collected, what information was extracted from a source, etc.')
-
-  _INDENTATION_LEVEL = 8
 
   _SECTIONS = {
       'events': 'Show information about events.',
@@ -143,31 +139,6 @@ class PinfoTool(
         differences[key] = (value, compare_value)
 
     return differences
-
-  def _PrintCounterDifferences(
-      self, differences, column_names=None, reverse=False, title=None):
-    """Prints the counter differences.
-
-    Args:
-      differences (dict[str, tuple[int, int]]): mismatching results per key.
-      column_names (Optional[list[str]]): column names.
-      reverse (Optional[bool]): True if the key and values of differences
-          should be printed in reverse order.
-      title (Optional[str]): title.
-    """
-    # TODO: add support for 3 column table?
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=column_names, title=title)
-
-    for key, value in sorted(differences.items()):
-      value_string = '{0:d} ({1:d})'.format(value[0], value[1])
-      if reverse:
-        table_view.AddRow([value_string, key])
-      else:
-        table_view.AddRow([key, value_string])
-
-    table_view.Write(self._output_writer)
-    self._output_writer.Write('\n')
 
   def _CompareStores(self, storage_reader, compare_storage_reader):
     """Compares the contents of two stores.
@@ -313,41 +284,30 @@ class PinfoTool(
 
       table_view.Write(self._output_writer)
 
-  def _PrintWarningCounters(
-      self, warnings_by_path_spec, warnings_by_parser_chain):
-    """Prints a summary of the warnings.
+  def _PrintCounterDifferences(
+      self, differences, column_names=None, reverse=False, title=None):
+    """Prints the counter differences.
 
     Args:
-      warnings_by_path_spec (collections.Counter): number of warnings per path
-          specification.
-      warnings_by_parser_chain (collections.Counter): number of warnings per
-          parser chain.
+      differences (dict[str, tuple[int, int]]): mismatching results per key.
+      column_names (Optional[list[str]]): column names.
+      reverse (Optional[bool]): True if the key and values of differences
+          should be printed in reverse order.
+      title (Optional[str]): title.
     """
+    # TODO: add support for 3 column table?
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Parser (plugin) name', 'Number of warnings'],
-        title='Warnings generated per parser')
-    for parser_chain, count in warnings_by_parser_chain.items():
-      parser_chain = parser_chain or '<No parser>'
-      table_view.AddRow([parser_chain, '{0:d}'.format(count)])
-    table_view.Write(self._output_writer)
+        self._views_format_type, column_names=column_names, title=title)
 
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Number of warnings', 'Pathspec'],
-        title='Pathspecs with most warnings')
-
-    for path_spec, count in warnings_by_path_spec.most_common(10):
-      for path_index, line in enumerate(path_spec.split('\n')):
-        if not line:
-          continue
-
-        if path_index == 0:
-          table_view.AddRow(['{0:d}'.format(count), line])
-        else:
-          table_view.AddRow(['', line])
+    for key, value in sorted(differences.items()):
+      value_string = '{0:d} ({1:d})'.format(value[0], value[1])
+      if reverse:
+        table_view.AddRow([value_string, key])
+      else:
+        table_view.AddRow([key, value_string])
 
     table_view.Write(self._output_writer)
+    self._output_writer.Write('\n')
 
   def _PrintExtractionWarningsDetails(self, storage_reader):
     """Prints the details of the warnings.
@@ -461,76 +421,6 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def _PrintSourceConfiguration(
-      self, source_configuration, session_identifier=None):
-    """Prints the details of a source configuration.
-
-    Args:
-      source_configuration (SourceConfiguration): source configuration.
-      session_identifier (Optional[str]): session identifier, formatted as
-          a UUID.
-    """
-    system_configuration = source_configuration.system_configuration
-    if not system_configuration:
-      return
-
-    title = 'System configuration'
-    if session_identifier:
-      title = '{0:s}: {1:s}'.format(title, session_identifier)
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title=title)
-
-    hostname = 'N/A'
-    if system_configuration.hostname:
-      hostname = system_configuration.hostname.name
-
-    operating_system = system_configuration.operating_system or 'N/A'
-    operating_system_product = (
-        system_configuration.operating_system_product or 'N/A')
-    operating_system_version = (
-        system_configuration.operating_system_version or 'N/A')
-    code_page = system_configuration.code_page or 'N/A'
-    keyboard_layout = system_configuration.keyboard_layout or 'N/A'
-    time_zone = system_configuration.time_zone or 'N/A'
-
-    table_view.AddRow(['Hostname', hostname])
-    table_view.AddRow(['Operating system', operating_system])
-    table_view.AddRow(['Operating system product', operating_system_product])
-    table_view.AddRow(['Operating system version', operating_system_version])
-    table_view.AddRow(['Code page', code_page])
-    table_view.AddRow(['Keyboard layout', keyboard_layout])
-    table_view.AddRow(['Time zone', time_zone])
-
-    table_view.Write(self._output_writer)
-
-    title = 'Available time zones'
-    if session_identifier:
-      title = '{0:s}: {1:s}'.format(title, session_identifier)
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Name', ''], title=title)
-
-    for time_zone in system_configuration.available_time_zones:
-      table_view.AddRow([time_zone.name, ''])
-
-    table_view.Write(self._output_writer)
-
-    title = 'User accounts'
-    if session_identifier:
-      title = '{0:s}: {1:s}'.format(title, session_identifier)
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Username', 'User directory'], title=title)
-
-    for user_account in system_configuration.user_accounts:
-      table_view.AddRow([
-          user_account.username, user_account.user_directory])
-
-    table_view.Write(self._output_writer)
-
   def _PrintSessionsDetails(self, storage_reader):
     """Prints the details of the sessions.
 
@@ -634,6 +524,98 @@ class PinfoTool(
     if self._verbose or 'sessions' in self._sections:
       self._PrintSessionsDetails(storage_reader)
 
+  def _PrintSourceConfiguration(
+      self, source_configuration, session_identifier=None):
+    """Prints the details of a source configuration.
+
+    Args:
+      source_configuration (SourceConfiguration): source configuration.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
+    """
+    system_configuration = source_configuration.system_configuration
+    if not system_configuration:
+      return
+
+    title = 'System configuration'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title=title)
+
+    hostname = 'N/A'
+    if system_configuration.hostname:
+      hostname = system_configuration.hostname.name
+
+    operating_system = system_configuration.operating_system or 'N/A'
+    operating_system_product = (
+        system_configuration.operating_system_product or 'N/A')
+    operating_system_version = (
+        system_configuration.operating_system_version or 'N/A')
+    code_page = system_configuration.code_page or 'N/A'
+    keyboard_layout = system_configuration.keyboard_layout or 'N/A'
+    time_zone = system_configuration.time_zone or 'N/A'
+
+    table_view.AddRow(['Hostname', hostname])
+    table_view.AddRow(['Operating system', operating_system])
+    table_view.AddRow(['Operating system product', operating_system_product])
+    table_view.AddRow(['Operating system version', operating_system_version])
+    table_view.AddRow(['Code page', code_page])
+    table_view.AddRow(['Keyboard layout', keyboard_layout])
+    table_view.AddRow(['Time zone', time_zone])
+
+    table_view.Write(self._output_writer)
+
+    title = 'Available time zones'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=['Name', ''], title=title)
+
+    for time_zone in system_configuration.available_time_zones:
+      table_view.AddRow([time_zone.name, ''])
+
+    table_view.Write(self._output_writer)
+
+    title = 'User accounts'
+    if session_identifier:
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=['Username', 'User directory'], title=title)
+
+    for user_account in system_configuration.user_accounts:
+      table_view.AddRow([
+          user_account.username, user_account.user_directory])
+
+    table_view.Write(self._output_writer)
+
+  def _PrintStorageInformationAsJSON(self, storage_reader):
+    """Writes a summary of sessions as machine-readable JSON.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    serializer = json_serializer.JSONAttributeContainerSerializer
+    storage_counters = self._CalculateStorageCounters(storage_reader)
+    storage_counters_json = json.dumps(storage_counters)
+    self._output_writer.Write('{')
+    self._output_writer.Write('"storage_counters": {0:s}'.format(
+        storage_counters_json))
+    self._output_writer.Write(',\n')
+    self._output_writer.Write(' "sessions": {')
+    for index, session in enumerate(storage_reader.GetSessions()):
+      json_string = serializer.WriteSerialized(session)
+      if index != 0:
+        self._output_writer.Write(',\n')
+      self._output_writer.Write('"session_{0:s}": {1:s} '.format(
+          session.identifier, json_string))
+    self._output_writer.Write('}}')
+
   def _PrintStorageInformationAsText(self, storage_reader):
     """Prints information about the store as human-readable text.
 
@@ -680,28 +662,6 @@ class PinfoTool(
 
     self._output_writer.Write('\n')
 
-  def _PrintStorageInformationAsJSON(self, storage_reader):
-    """Writes a summary of sessions as machine-readable JSON.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    serializer = json_serializer.JSONAttributeContainerSerializer
-    storage_counters = self._CalculateStorageCounters(storage_reader)
-    storage_counters_json = json.dumps(storage_counters)
-    self._output_writer.Write('{')
-    self._output_writer.Write('"storage_counters": {0:s}'.format(
-        storage_counters_json))
-    self._output_writer.Write(',\n')
-    self._output_writer.Write(' "sessions": {')
-    for index, session in enumerate(storage_reader.GetSessions()):
-      json_string = serializer.WriteSerialized(session)
-      if index != 0:
-        self._output_writer.Write(',\n')
-      self._output_writer.Write('"session_{0:s}": {1:s} '.format(
-          session.identifier, json_string))
-    self._output_writer.Write('}}')
-
   def _PrintStorageOverview(self, storage_reader):
     """Prints a storage overview.
 
@@ -737,6 +697,42 @@ class PinfoTool(
       task_identifier = uuid.UUID(hex=task_start.identifier)
       task_identifier = '{0!s}'.format(task_identifier)
       table_view.AddRow([task_identifier, start_time])
+
+    table_view.Write(self._output_writer)
+
+  def _PrintWarningCounters(
+      self, warnings_by_path_spec, warnings_by_parser_chain):
+    """Prints a summary of the warnings.
+
+    Args:
+      warnings_by_path_spec (collections.Counter): number of warnings per path
+          specification.
+      warnings_by_parser_chain (collections.Counter): number of warnings per
+          parser chain.
+    """
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=['Parser (plugin) name', 'Number of warnings'],
+        title='Warnings generated per parser')
+    for parser_chain, count in warnings_by_parser_chain.items():
+      parser_chain = parser_chain or '<No parser>'
+      table_view.AddRow([parser_chain, '{0:d}'.format(count)])
+    table_view.Write(self._output_writer)
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=['Number of warnings', 'Pathspec'],
+        title='Pathspecs with most warnings')
+
+    for path_spec, count in warnings_by_path_spec.most_common(10):
+      for path_index, line in enumerate(path_spec.split('\n')):
+        if not line:
+          continue
+
+        if path_index == 0:
+          table_view.AddRow(['{0:d}'.format(count), line])
+        else:
+          table_view.AddRow(['', line])
 
     table_view.Write(self._output_writer)
 
