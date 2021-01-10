@@ -74,12 +74,12 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     # Check few "random" events to verify.
 
     # Check an UTMZ Google Analytics event.
-    event = events[39]
+    expected_event_values = {
+        'domain_hash': '68898382',
+        'sessions': 1,
+        'utmctr': 'enders game'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.utmctr, 'enders game')
-    self.assertEqual(event_data.domain_hash, '68898382')
-    self.assertEqual(event_data.sessions, 1)
+    self.CheckEventValues(storage_writer, events[39], expected_event_values)
 
     expected_message = (
         'http://imdb.com/ (__utmz) Sessions: 1 Domain Hash: 68898382 '
@@ -88,6 +88,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'used to find site: enders game')
     expected_short_message = 'http://imdb.com/ (__utmz)'
 
+    event_data = self._GetEventDataOfEvent(storage_writer, events[39])
     self._TestGetMessageStrings(
         event_data, expected_message, expected_short_message)
 
