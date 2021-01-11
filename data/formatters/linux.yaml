@@ -1,6 +1,23 @@
 # Linux related event formatters.
 
 type: 'conditional'
+data_type: 'apt:history:line'
+message:
+- '{packages}'
+- '[{command}]'
+- '[{error}]'
+- '[{requester}]'
+short_message:
+- '{packages}'
+---
+type: 'conditional'
+data_type: 'dpkg:line'
+message:
+- '{body}'
+short_message:
+- '{body}'
+---
+type: 'conditional'
 data_type: 'linux:utmp:event'
 enumeration_helpers:
 - input_attribute: 'type'

@@ -14,16 +14,6 @@ short_message:
 - '{http_request}'
 - 'from: {ip_address}'
 ---
-type: 'conditional'
-data_type: 'apt:history:line'
-message:
-- '{packages}'
-- '[{command}]'
-- '[{error}]'
-- '[{requester}]'
-short_message:
-- '{packages}'
----
 type: 'basic'
 data_type: 'bash:history:command'
 message: 'Command executed: {command}'
@@ -76,24 +66,6 @@ separator: ', '
 short_message:
 - 'Command: {command}'
 - 'Layer ID: {layer_id}'
----
-type: 'conditional'
-data_type: 'dpkg:line'
-message:
-- '{body}'
-short_message:
-- '{body}'
----
-type: 'conditional'
-data_type: 'file_history:namespace:event'
-message:
-- 'Filename: {original_filename}'
-- 'Identifier: {identifier}'
-- 'Parent Identifier: {parent_identifier}'
-- 'Attributes: {file_attribute}'
-- 'USN number: {usn_number}'
-short_message:
-- 'Filename: {original_filename}'
 ---
 type: 'basic'
 data_type: 'fs:mactime:line'
