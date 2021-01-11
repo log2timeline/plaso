@@ -138,8 +138,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
   NAME = 'elastic_shared'
 
-  _DEFAULT_DOCUMENT_TYPE = 'plaso_event'
-
   _DEFAULT_FLUSH_INTERVAL = 1000
 
   # Number of seconds to wait before a request to Elasticsearch is timed out.
@@ -164,7 +162,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     super(SharedElasticsearchOutputModule, self).__init__(output_mediator)
     self._client = None
-    self._document_type = self._DEFAULT_DOCUMENT_TYPE
     self._event_documents = []
     self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
     self._field_formatting_helper = SharedElasticsearchFieldFormattingHelper(
@@ -361,15 +358,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._FlushEvents()
 
     self._client = None
-
-  def SetDocumentType(self, document_type):
-    """Sets the document type.
-
-    Args:
-      document_type (str): document type.
-    """
-    self._document_type = document_type
-    logger.debug('Elasticsearch document type: {0:s}'.format(document_type))
 
   def SetFlushInterval(self, flush_interval):
     """Set the flush interval.

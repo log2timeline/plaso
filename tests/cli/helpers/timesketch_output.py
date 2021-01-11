@@ -37,15 +37,11 @@ class TimesketchOutputArgumentsHelperTest(
 
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--name TIMELINE_NAME] [--index INDEX]
-                     [--flush_interval FLUSH_INTERVAL]
-                     [--doc_type DOCUMENT_TYPE] [--username USERNAME]
+                     [--flush_interval FLUSH_INTERVAL] [--username USERNAME]
 
 Test argument parser.
 
 optional arguments:
-  --doc_type DOCUMENT_TYPE
-                        Name of the document type that will be used in
-                        ElasticSearch.
   --flush_interval FLUSH_INTERVAL, --flush-interval FLUSH_INTERVAL
                         The number of events to queue up before sent in bulk
                         to Elasticsearch.
