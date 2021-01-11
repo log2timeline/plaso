@@ -40,23 +40,13 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     expected_timestamp = expected_time.GetPlasoTimestamp()
 
     expected_event_values = {
+        'data_type': 'macos:fseventsd:record',
         'event_identifier': 47747061,
         'flags': 0x01000080,
         'path': '.Spotlight-V100/Store-V1',
         'timestamp': expected_timestamp}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_message = (
-        '.Spotlight-V100/Store-V1 '
-        'Flag Values: DirectoryCreated, IsDirectory '
-        'Flags: 0x01000080 Event Identifier: 47747061')
-    expected_short_message = (
-        '.Spotlight-V100/Store-V1 DirectoryCreated, IsDirectory')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParseV2(self):
     """Tests the Parse function on a version 2 file."""
@@ -82,22 +72,13 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     expected_timestamp = expected_time.GetPlasoTimestamp()
 
     expected_event_values = {
+        'data_type': 'macos:fseventsd:record',
         'event_identifier': 1706838,
         'flags': 0x01000008,
         'path': 'Hi, Sierra',
         'timestamp': expected_timestamp}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_message = (
-        'Hi, Sierra Flag Values: Renamed, IsDirectory '
-        'Flags: 0x01000008 '
-        'Event Identifier: 1706838')
-    expected_short_message = 'Hi, Sierra Renamed, IsDirectory'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

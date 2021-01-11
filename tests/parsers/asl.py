@@ -206,25 +206,22 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_extra = (
-        'CFLog Local Time: 2013-11-25 09:45:35.701, '
-        'CFLog Thread: 1007, '
-        'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51')
-
     # Note that "compatiblity" is spelt incorrectly in the actual message being
     # tested here.
-    expected_message = (
-        'Incorrect NSStringEncoding value 0x8000100 detected. '
-        'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
-        'mapping behavior in the near future.')
-
     expected_event_values = {
         'computer_name': 'DarkTemplar-2.local',
-        'extra_information': expected_extra,
+        'data_type': 'mac:asl:event',
+        'extra_information': (
+            'CFLog Local Time: 2013-11-25 09:45:35.701, '
+            'CFLog Thread: 1007, '
+            'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51'),
         'facility': 'com.apple.locationd',
         'group_id': 205,
         'level': 4,
-        'message': expected_message,
+        'message': (
+            'Incorrect NSStringEncoding value 0x8000100 detected. '
+            'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
+            'mapping behavior in the near future.'),
         'message_id': 101406,
         'pid': 69,
         'read_gid': -1,
@@ -235,25 +232,6 @@ class ASLParserTest(test_lib.ParserTestCase):
         'user_sid': '205'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'MessageID: 101406 '
-        'Level: WARNING (4) '
-        'User ID: 205 '
-        'Group ID: 205 '
-        'Read User: 205 '
-        'Read Group: ALL '
-        'Host: DarkTemplar-2.local '
-        'Sender: locationd '
-        'Facility: com.apple.locationd '
-        'Message: {0:s} {1:s}').format(expected_message, expected_extra)
-    expected_short_message = (
-        'Sender: locationd '
-        'Facility: com.apple.locationd')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

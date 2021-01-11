@@ -33,26 +33,15 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
+        'fetch_count': 2,
+        'request_method': 'GET',
+        'response_code': 'HTTP/1.0 200 OK',
         'timestamp': '2014-04-21 14:13:35.000000',
-        'url': 'HTTP:http://start.ubuntu.com/12.04/sprite.png'}
+        'url': 'HTTP:http://start.ubuntu.com/12.04/sprite.png',
+        'version': '1.19'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_message = (
-        'Fetched 2 time(s) '
-        '[HTTP/1.0 200 OK] GET '
-        '"HTTP:http://start.ubuntu.com/12.04/sprite.png"')
-    expected_short_message = (
-        '[HTTP/1.0 200 OK] GET '
-        '"HTTP:http://start.ubuntu.com/12.04/sprite.png"')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    for event in events:
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(event_data.version, '1.19')
 
   def testParseCache_002(self):
     """Test Firefox 28 cache file _CACHE_002_ parsing."""
@@ -76,11 +65,13 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         '%3D(direct)%7Cutmcmd%3D(none)%3B&aip=1&utmu=qBQ~')
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
         'url': expected_url}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
         'timestamp': '2014-04-21 14:10:58.000000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -105,6 +96,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         'jquery.min.js')
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
         'timestamp': '2014-04-21 14:11:07.000000',
         'url': expected_url}
 
@@ -135,21 +127,13 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'timestamp': '2014-05-02 14:15:03.000000'}
+        'data_type': 'firefox:cache:record',
+        'request_method': 'GET',
+        'response_code': 'HTTP/1.1 200 OK',
+        'timestamp': '2014-05-02 14:15:03.000000',
+        'url': 'HTTP:http://start.mozilla.org/en-US/'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Fetched 1 time(s) '
-        '[HTTP/1.1 200 OK] GET '
-        '"HTTP:http://start.mozilla.org/en-US/"')
-    expected_short_message = (
-        '[HTTP/1.1 200 OK] GET '
-        '"HTTP:http://start.mozilla.org/en-US/"')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParseLegacyCache_002(self):
     """Test Firefox 3 cache file _CACHE_002_ parsing."""
@@ -163,6 +147,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
         'timestamp': '2014-05-02 14:25:55.000000'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
@@ -179,6 +164,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
         'timestamp': '2014-05-02 14:15:07.000000'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
@@ -205,6 +191,7 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
         '8acf9436e1b315f5f04b9435a518bcd1aef131f8.5663.png')
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
         'fetch_count': 2,
         'request_method': 'GET',
         'response_code': 'HTTP/1.1 200 OK',
@@ -214,11 +201,13 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
         'timestamp': '2015-05-02 15:35:31.000000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'firefox:cache:record',
         'timestamp': '2016-05-01 15:35:31.000000'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
