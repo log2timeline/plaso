@@ -16,8 +16,7 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a MacOS TCC file."""
     plugin = macos_tcc.MacOSTCCPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['TCC-test.db'], plugin)
+    storage_writer = self._ParseDatabaseFileWithPlugin(['TCC-test.db'], plugin)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 21)
@@ -27,23 +26,13 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'allowed': 1,
         'client': 'com.apple.weather',
+        'data_type': 'macos:tcc_entry',
         'service': 'kTCCServiceUbiquity',
         'prompt_count': 1,
         'timestamp': '2020-05-29 12:09:51.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_PROMPTED_USER}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Service: kTCCServiceUbiquity '
-        'Client: com.apple.weather '
-        'Allowed: True '
-        'Prompt count: 1')
-    expected_short_message = 'kTCCServiceUbiquity: com.apple.weather'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -32,21 +32,13 @@ class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'syslog:cron:task_run',
         'command': '/sbin/status.mycheck',
         'pid': 31067,
-        'timestamp': '2016-01-22 07:54:01.000000'}
+        'timestamp': '2016-01-22 07:54:01.000000',
+        'username': 'root'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
-
-    expected_message = (
-        'Cron ran: /sbin/status.mycheck '
-        'for user: root '
-        'pid: 31067')
-    expected_short_message = '(root) CMD (/sbin/status.mycheck)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[8])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

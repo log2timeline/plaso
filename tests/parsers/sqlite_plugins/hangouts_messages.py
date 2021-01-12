@@ -24,9 +24,9 @@ class HangoutsMessagesTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    # Check the second message.
     expected_event_values = {
         'body': 'How are you?',
+        'data_type': 'android:messaging:hangouts',
         'message_status': 4,
         'message_type': 2,
         'sender': 'John Macron',
@@ -34,17 +34,6 @@ class HangoutsMessagesTest(test_lib.SQLitePluginTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        'Sender: John Macron '
-        'Body: How are you? '
-        'Status: READ '
-        'Type: RECEIVED')
-    expected_short_message = 'How are you?'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

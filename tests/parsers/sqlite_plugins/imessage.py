@@ -24,28 +24,17 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # Check the eight message sent.
     expected_event_values = {
+        'data_type': 'imessage:event:chat',
         'imessage_id': 'xxxxxx2015@icloud.com',
         'message_type': 0,
         'read_receipt': 1,
+        'service': 'iMessage',
         'text': 'Did you try to send me a message?',
         'timestamp': '2015-11-30 10:48:40.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
-
-    expected_message = (
-        'iMessage ID: xxxxxx2015@icloud.com '
-        'Read Receipt: True '
-        'Message Type: Received '
-        'Service: iMessage '
-        'Message Content: Did you try to send me a message?')
-    expected_short_message = 'Did you try to send me a message?'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[7])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

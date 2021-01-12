@@ -30,6 +30,7 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
         'content': (
             '@CarolMovie wins BEST PICTURE at #NYFCC!!! CONGRATS #TeamCarol!!! '
             'Love love! #carolfilm https://t.co/ycy9cHPLZ7'),
+        'data_type': 'twitter:android:status',
         'favorited': 0,
         'identifier': 4,
         'retweeted': 0,
@@ -39,20 +40,9 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[482], expected_event_values)
 
-    expected_message = (
-        'User: CarolMovieFans Status: @CarolMovie wins BEST PICTURE at '
-        '#NYFCC!!! CONGRATS #TeamCarol!!! Love love! #carolfilm '
-        'https://t.co/ycy9cHPLZ7 Favorited: No Retweeted: No')
-    expected_short_message = (
-        'User: CarolMovieFans Status: @CarolMovie wins BEST PICTURE at '
-        '#NYFCC!!! CONGR...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[482])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a search event.
     expected_event_values = {
+        'data_type': 'twitter:android:search',
         'name': 'rosegold',
         'search_query': 'rosegold',
         'timestamp': '2015-12-02 20:49:38.153000',
@@ -60,15 +50,9 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[837], expected_event_values)
 
-    expected_message = 'Name: rosegold Query: rosegold'
-    expected_short_message = 'Query: rosegold'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[837])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a profile creation event.
     expected_event_values = {
+        'data_type': 'twitter:android:contact',
         'description': (
             'Started in a San Francisco by bike messenger Rob Honeycutt, '
             'Timbuk2 has been making tough as hell messenger bags, backpacks '
@@ -90,24 +74,9 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[24], expected_event_values)
 
-    expected_message = (
-        'Screen name: timbuk2 Profile picture URL: https://pbs.twimg.com/'
-        'profile_images/461846147129024512/FOKZJ7hB_normal.jpeg Name: Timbuk2 '
-        'Location: San Francisco, CA Description: Started in a San Francisco '
-        'by bike messenger Rob Honeycutt, Timbuk2 has been making tough as '
-        'hell messenger bags, backpacks and travel bags since 1989. URL: '
-        'http://t.co/Z0MZo7f2ne Number of followers: 23582 Number of tweets: '
-        '18937')
-    expected_short_message = (
-        'Screen name: timbuk2 Description: Started in a San Francisco by bike '
-        'messenge...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[24])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test a friended event.
     expected_event_values = {
+        'data_type': 'twitter:android:contact',
         'timestamp': '2015-12-02 20:48:32.382000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
@@ -115,6 +84,7 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
 
     # Test a profile update event.
     expected_event_values = {
+        'data_type': 'twitter:android:contact',
         'timestamp': '2015-12-02 20:49:33.349000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_UPDATE}
 

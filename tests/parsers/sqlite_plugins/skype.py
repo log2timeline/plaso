@@ -63,22 +63,18 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     # Test transfer file event.
     expected_event_values = {
-        'data_type': 'skype:event:transferfile'}
+        'action_type': 'SENDSOLICITUDE',
+        'data_type': 'skype:event:transferfile',
+        'destination': 'european.bbq.competitor <European BBQ>',
+        'source': 'gen.beringer <Gen Beringer>',
+        'timestamp': '2013-10-24 21:49:32.000000',
+        'transferred_filename': 'secret-project.pdf'}
 
     self.CheckEventValues(storage_writer, events[17], expected_event_values)
 
-    expected_message = (
-        'Source: gen.beringer <Gen Beringer> Destination: '
-        'european.bbq.competitor <European BBQ> File: secret-project.pdf '
-        '[SENDSOLICITUDE]')
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[17])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test SMS event.
     expected_event_values = {
+        'data_type': 'skype:event:sms',
         'number': '+34123456789',
         'text': (
             'If you want I can copy some documents for you, if you can pay '
@@ -90,6 +86,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test file event.
     expected_event_values = {
         'action_type': 'GETSOLICITUDE',
+        'data_type': 'skype:event:transferfile',
         'destination': 'european.bbq.competitor <European BBQ>',
         'source': 'gen.beringer <Gen Beringer>',
         'timestamp': '2013-10-24 21:49:35.000000',
@@ -101,6 +98,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     # Test chat event.
     expected_event_values = {
+        'data_type': 'skype:event:chat',
         'from_account': 'Gen Beringer <gen.beringer>',
         'text': 'need to know if you got it this time.',
         'timestamp': '2013-07-30 21:27:11.000000',
@@ -111,6 +109,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     # Test chat room event.
     expected_event_values = {
+        'data_type': 'skype:event:chat',
         'from_account': 'European Competitor <european.bbq.competitor>',
         'text': 'He is our new employee',
         'timestamp': '2013-10-27 15:29:19.000000',
@@ -121,6 +120,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     # Test call event.
     expected_event_values = {
+        'data_type': 'skype:event:call',
         'dst_call': 'european.bbq.competitor',
         'src_call': 'gen.beringer',
         'timestamp': '2013-07-01 22:12:17.000000',

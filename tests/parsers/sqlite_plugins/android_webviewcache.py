@@ -23,25 +23,15 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_url = (
-        'https://apps.skypeassets.com/static/'
-        'skype.skypeloginstatic/css/print.css?_version=1.15')
-
     expected_event_values = {
+        'data_type': 'android:webviewcache',
         'content_length': 1821,
         'timestamp': '2013-03-28 09:48:18.000000',
-        'url': expected_url}
+        'url': (
+            'https://apps.skypeassets.com/static/skype.skypeloginstatic/css/'
+            'print.css?_version=1.15')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'URL: {0:s} '
-        'Content Length: 1821').format(expected_url)
-    expected_short_message = '{0:s}...'.format(expected_url[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

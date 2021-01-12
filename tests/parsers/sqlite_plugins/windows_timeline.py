@@ -33,15 +33,6 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'Package Identifier: c:\\python34\\python.exe '
-        'Active Duration (seconds): 9 Reporting App: ShellActivityMonitor')
-    expected_short_message = 'c:\\python34\\python.exe'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'active_duration_seconds': 11,
         'data_type': 'windows:timeline:user_engaged',
@@ -54,18 +45,6 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_message = (
-        'Package Identifier: c:\\users\\demouser\\appdata'
-        '\\local\\programs\\python\\python37-32\\python.exe Active Duration ('
-        'seconds): 11 Reporting App: ShellActivityMonitor')
-    expected_short_message = (
-        'c:\\users\\demouser\\appdata\\local\\programs\\'
-        'python\\python37-32\\python.exe')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'application_display_name': 'OneDrive',
         'data_type': 'windows:timeline:generic',
@@ -75,15 +54,6 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[80], expected_event_values)
-
-    expected_message = (
-        'Application Display Name: OneDrive Package '
-        'Identifier: Microsoft.SkyDrive.Desktop')
-    expected_short_message = 'Microsoft.SkyDrive.Desktop'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[80])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
     expected_event_values = {
         'application_display_name': 'Notepad',
@@ -95,17 +65,6 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[96], expected_event_values)
-
-    expected_message = (
-        'Application Display Name: Notepad Package Identifier: '
-        '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe Description:'
-        ' C:\\Users\\demouser\\Desktop\\SCHEMA.txt')
-    expected_short_message = (
-        '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[96])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
