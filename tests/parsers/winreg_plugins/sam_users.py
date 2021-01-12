@@ -41,6 +41,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'account_rid': 500,
+        'comments': 'Built-in account for administering the computer/domain',
         'data_type': 'windows:registry:sam_users',
         'login_count': 6,
         'timestamp': '2014-09-24 03:36:06.358837',
@@ -49,43 +50,17 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'Username: Administrator '
-        'Comments: Built-in account for administering the computer/domain '
-        'RID: 500 '
-        'Login count: 6').format(key_path)
-    expected_short_message = (
-        'Administrator '
-        'RID: 500 '
-        'Login count: 6')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test SAMUsersWindowsRegistryEvent.
     expected_event_values = {
+        'account_rid': 500,
+        'comments': 'Built-in account for administering the computer/domain',
         'data_type': 'windows:registry:sam_users',
+        'login_count': 6,
         'timestamp': '2010-11-20 21:48:12.569244',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_LOGIN}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_LOGIN,
+        'username': 'Administrator'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Username: Administrator '
-        'Comments: Built-in account for administering the computer/domain '
-        'RID: 500 '
-        'Login count: 6').format(key_path)
-    expected_short_message = (
-        'Administrator '
-        'RID: 500 '
-        'Login count: 6')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

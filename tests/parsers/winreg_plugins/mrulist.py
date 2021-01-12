@@ -116,17 +116,6 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'Index: 1 [MRU Value a]: Some random text here '
-        'Index: 2 [MRU Value c]: C:/looks_legit.exe '
-        'Index: 3 [MRU Value b]: c:/evil.exe').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
 
 class TestMRUListShellItemListWindowsRegistryPlugin(
     test_lib.RegistryPluginTestCase):
@@ -216,17 +205,6 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'Index: 1 [MRU Value a]: Shell item path: '
-        '<My Computer> C:\\Winnt\\Profiles\\Administrator\\Desktop').format(
-            key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # A shell item event.
     expected_event_values = {
         'data_type': 'windows:shell_item:file_entry',
@@ -236,19 +214,6 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         'timestamp': '2011-01-14 12:03:52.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Name: Winnt '
-        'Shell item path: <My Computer> C:\\Winnt '
-        'Origin: {0:s}').format(key_path)
-    expected_short_message = (
-        'Name: Winnt '
-        'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
-        'CurrentVersi...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

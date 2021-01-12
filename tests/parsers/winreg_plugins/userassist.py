@@ -58,28 +58,17 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_value_name = 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
-
     expected_event_values = {
+        'key_path': '{0:s}\\Count'.format(key_path),
         'number_of_executions': 14,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'timestamp': '2009-08-04 15:11:22.811068',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
-        'value_name': expected_value_name}
+        'value_name': 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}\\Count] '
-        'Value name: {1:s} '
-        'Count: 14').format(key_path, expected_value_name)
-    expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
@@ -100,34 +89,19 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_value_name = 'Microsoft.Windows.GettingStarted'
-
     expected_event_values = {
         'application_focus_count': 21,
         'application_focus_duration': 420000,
+        'key_path': '{0:s}\\Count'.format(key_path),
         'number_of_executions': 14,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'timestamp': '2010-11-10 07:49:37.078068',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
-        'value_name': expected_value_name}
+        'value_name': 'Microsoft.Windows.GettingStarted'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}\\Count] '
-        'UserAssist entry: 1 '
-        'Value name: {1:s} '
-        'Count: 14 '
-        'Application focus count: 21 '
-        'Application focus duration: 420000').format(
-            key_path, expected_value_name)
-    expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

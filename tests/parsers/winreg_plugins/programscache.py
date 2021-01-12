@@ -52,40 +52,19 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     # The ProgramsCache entry shell item event.
     expected_event_values = {
         'data_type': 'windows:shell_item:file_entry',
+        'localized_name': '@shell32.dll,-21782',
+        'long_name': 'Programs',
+        'name': 'Programs',
+        'origin': '{0:s} ProgramsCache'.format(key_path),
         'parser': 'explorer_programscache/shell_items',
+        'shell_item_path': 'Programs',
         'timestamp': '2009-08-04 15:12:24.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'Name: Programs '
-        'Long name: Programs '
-        'Localized name: @shell32.dll,-21782 '
-        'Shell item path: Programs '
-        'Origin: {0:s} ProgramsCache').format(key_path)
-    expected_short_message = (
-        'Name: Programs '
-        'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
-        'CurrentVe...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # The ProgramsCache list event.
-    expected_event_values = {
-        'data_type': 'windows:registry:explorer:programcache',
-        'parser': 'explorer_programscache',
-        'timestamp': '2009-08-04 15:22:18.419625',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
-
-    self.CheckEventValues(storage_writer, events[75], expected_event_values)
-
-    expected_message = (
-        'Key: {0:s} '
-        'Value: ProgramsCache '
-        'Entries: ['
+    expected_entries = (
         '0: Programs '
         '1: Internet Explorer.lnk '
         '2: Outlook Express.lnk '
@@ -105,34 +84,35 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         '16: On-Screen Keyboard.lnk '
         '17: Utility Manager.lnk '
         '18: Programs Accessories\\System Tools '
-        '19: Internet Explorer (No Add-ons).lnk]').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        '19: Internet Explorer (No Add-ons).lnk')
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[75])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    # The Windows Registry key event.
     expected_event_values = {
-        'data_type': 'windows:registry:key_value',
+        'data_type': 'windows:registry:explorer:programcache',
+        'entries': expected_entries,
+        'key_path': key_path,
         'parser': 'explorer_programscache',
         'timestamp': '2009-08-04 15:22:18.419625',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
-    self.CheckEventValues(storage_writer, events[76], expected_event_values)
+    self.CheckEventValues(storage_writer, events[75], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
+    # The Windows Registry key event.
+    expected_values = (
         'Favorites: [REG_BINARY] (55 bytes) '
         'FavoritesChanges: [REG_DWORD_LE] 1 '
         'FavoritesResolve: [REG_BINARY] (8 bytes) '
         'StartMenu_Balloon_Time: [REG_BINARY] (8 bytes) '
-        'StartMenu_Start_Time: [REG_BINARY] (8 bytes)').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'StartMenu_Start_Time: [REG_BINARY] (8 bytes)')
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[76])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'data_type': 'windows:registry:key_value',
+        'key_path': key_path,
+        'parser': 'explorer_programscache',
+        'timestamp': '2009-08-04 15:22:18.419625',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+        'values': expected_values}
+
+    self.CheckEventValues(storage_writer, events[76], expected_event_values)
 
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""
@@ -155,6 +135,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
 
     expected_event_values = {
         'data_type': 'windows:shell_item:file_entry',
+        'origin': '{0:s} ProgramsCache'.format(key_path),
         'parser': 'explorer_programscache/shell_items',
         'timestamp': '2010-11-10 07:50:38.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}

@@ -72,26 +72,22 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
+    expected_values = (
+        'MRUList: [REG_SZ] acb '
+        'a: [REG_SZ] Some random text here '
+        'b: [REG_BINARY] (22 bytes) '
+        'c: [REG_SZ] C:/looks_legit.exe')
+
     expected_event_values = {
+        'data_type': 'windows:registry:key_value',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2012-08-28 09:23:49.002031'}
+        'timestamp': '2012-08-28 09:23:49.002031',
+        'values': expected_values}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'MRUList: [REG_SZ] acb '
-        'a: [REG_SZ] Some random text here '
-        'b: [REG_BINARY] (22 bytes) '
-        'c: [REG_SZ] C:/looks_legit.exe').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

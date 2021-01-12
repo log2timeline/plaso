@@ -112,16 +112,18 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
 
     events = list(storage_writer.GetEvents())
 
-    expected_message = (
-        '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
-        'v1.0\\powershell.exe [S-1-5-21-321011808-3761883066-353627080-1000]')
-    expected_short_message = (
-        '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\v1.0'
-        '\\powershell.exe')
+    expected_event_values = {
+        'binary_path': (
+            '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
+            'v1.0\\powershell.exe'),
+        'data_type': 'windows:registry:bam',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2019-03-19 13:25:26.149685',
+        'user_sid': 'S-1-5-21-321011808-3761883066-353627080-1000'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

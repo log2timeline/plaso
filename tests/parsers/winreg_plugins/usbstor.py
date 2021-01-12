@@ -42,32 +42,20 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'data_type': 'windows:registry:usbstor',
         'device_type': 'Disk',
+        'display_name': 'HP v100w USB Device',
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'product': 'Prod_v100w',
         'revision': 'Rev_1024',
+        'serial': 'AA951D0000007252&0',
         'subkey_name': 'Disk&Ven_HP&Prod_v100w&Rev_1024',
         'timestamp': '2012-04-07 10:31:37.640871',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'vendor': 'Ven_HP'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Device type: Disk '
-        'Display name: HP v100w USB Device '
-        'Product: Prod_v100w '
-        'Revision: Rev_1024 '
-        'Serial: AA951D0000007252&0 '
-        'Subkey name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
-        'Vendor: Ven_HP').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

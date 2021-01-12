@@ -311,41 +311,23 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'application': 'VmApplet',
+        'command': 'SystemPropertiesPerformance.exe/pagefile',
         'data_type': 'windows:registry:winlogon',
-        'timestamp': '2013-01-30 10:47:57.000000'}
+        'key_path': key_path,
+        'timestamp': '2013-01-30 10:47:57.000000',
+        'trigger': 'Logon'}
 
     self.CheckEventValues(storage_writer, test_event1, expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'Application: VmApplet '
-        'Command: SystemPropertiesPerformance.exe/pagefile '
-        'Trigger: Logon').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, test_event1)
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'application': 'NavLogon',
+        'command': 'NavLogon.dll',
         'data_type': 'windows:registry:winlogon',
+        'key_path': '{0:s}\\Notify\\NavLogon'.format(key_path),
         'timestamp': '2013-01-30 10:47:57.000000',
         'trigger': 'Logoff'}
 
     self.CheckEventValues(storage_writer, test_event2, expected_event_values)
-
-    expected_message = (
-        '[{0:s}\\Notify\\NavLogon] '
-        'Application: NavLogon '
-        'Command: NavLogon.dll '
-        'Handler: NavLogoffEvent '
-        'Trigger: Logoff').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, test_event2)
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

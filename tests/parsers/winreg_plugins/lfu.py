@@ -115,30 +115,16 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:boot_execute',
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2012-08-31 20:45:29.000000'}
+        'timestamp': '2012-08-31 20:45:29.000000',
+        'value': 'autocheck autochk *'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'BootExecute: autocheck autochk *').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    expected_event_values = {
-        'data_type': 'windows:registry:key_value',
-        'timestamp': '2012-08-31 20:45:29.000000'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
+    expected_values = (
         'CriticalSectionTimeout: [REG_SZ] 2592000 '
         'ExcludeFromKnownDlls: [REG_MULTI_SZ] [] '
         'GlobalFlag: [REG_SZ] 0 '
@@ -146,12 +132,15 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
         'HeapDeCommitTotalFreeThreshold: [REG_SZ] 0 '
         'HeapSegmentCommit: [REG_SZ] 0 '
         'HeapSegmentReserve: [REG_SZ] 0 '
-        'NumberOfInitialSessions: [REG_SZ] 2').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'NumberOfInitialSessions: [REG_SZ] 2')
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'data_type': 'windows:registry:key_value',
+        'key_path': key_path,
+        'timestamp': '2012-08-31 20:45:29.000000',
+        'values': expected_values}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
@@ -209,22 +198,14 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:boot_verification',
+        'image_path': 'C:\\WINDOWS\\system32\\googleupdater.exe',
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'timestamp': '2012-08-31 20:45:29.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'ImagePath: C:\\WINDOWS\\system32\\googleupdater.exe').format(
-            key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

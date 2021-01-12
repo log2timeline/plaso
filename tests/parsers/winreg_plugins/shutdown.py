@@ -40,6 +40,8 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'windows:registry:shutdown',
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
@@ -48,15 +50,6 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'value_name': 'ShutdownTime'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Description: ShutdownTime').format(key_path)
-    expected_short_message = 'ShutdownTime'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

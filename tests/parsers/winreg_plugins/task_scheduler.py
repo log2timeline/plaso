@@ -44,6 +44,7 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'task_scheduler:task_cache:entry',
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
@@ -53,35 +54,17 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        '[{0:s}] '
-        'Task: SynchronizeTime '
-        '[Identifier: {{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}}]').format(
-            key_path)
-    expected_short_message = (
-        'Task: SynchronizeTime')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'data_type': 'task_scheduler:task_cache:entry',
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'task_name': 'SynchronizeTime',
+        'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}',
         'timestamp': '2009-07-14 05:08:50.811627'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Task: SynchronizeTime '
-        '[Identifier: {{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}}]').format(
-            key_path)
-    expected_short_message = (
-        'Task: SynchronizeTime')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

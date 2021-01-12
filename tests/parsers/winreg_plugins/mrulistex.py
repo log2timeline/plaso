@@ -110,25 +110,21 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     # A MRUListEx event.
+    expected_entries = (
+        'Index: 1 [MRU Value 2]: C:\\looks_legit.exe '
+        'Index: 2 [MRU Value 0]: Some random text here '
+        'Index: 3 [MRU Value 1]: c:\\evil.exe')
+
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
+        'entries': expected_entries,
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'timestamp': '2012-08-28 09:23:49.002031'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Index: 1 [MRU Value 2]: C:\\looks_legit.exe '
-        'Index: 2 [MRU Value 0]: Some random text here '
-        'Index: 3 [MRU Value 1]: c:\\evil.exe').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 class TestMRUListExShellItemListWindowsRegistryPlugin(
@@ -171,8 +167,17 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     events = list(storage_writer.GetEvents())
 
     # A MRUListEx event.
+    expected_entries = (
+        'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
+        'P:\\Application Tools\\Firefox 6.0\\Firefox Setup 6.0.exe '
+        'Index: 2 [MRU Value 0]: Shell item path: <Computers and '
+        'Devices> <UNKNOWN: 0x00>\\\\controller\\WebDavShare\\Firefox '
+        'Setup 3.6.12.exe')
+
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
+        'entries': expected_entries,
+        'key_path': '{0:s}\\exe'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
@@ -180,41 +185,19 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
 
     self.CheckEventValues(storage_writer, events[40], expected_event_values)
 
-    expected_message = (
-        '[{0:s}\\exe] '
-        'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
-        'P:\\Application Tools\\Firefox 6.0\\Firefox Setup 6.0.exe '
-        'Index: 2 [MRU Value 0]: Shell item path: <Computers and Devices> '
-        '<UNKNOWN: 0x00>\\\\controller\\WebDavShare\\Firefox Setup 3.6.12.exe'
-        '').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[40])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # A shell item event.
     expected_event_values = {
         'data_type': 'windows:shell_item:file_entry',
+        'name': 'ALLOYR~1',
+        'long_name': 'Alloy Research',
+        'file_reference': '44518-33',
+        'origin': '{0:s}\\*'.format(key_path),
+        'shell_item_path': (
+            '<Shared Documents Folder (Users Files)> '
+            '<UNKNOWN: 0x00>\\Alloy Research'),
         'timestamp': '2012-03-08 22:16:02.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Name: ALLOYR~1 '
-        'Long name: Alloy Research '
-        'NTFS file reference: 44518-33 '
-        'Shell item path: <Shared Documents Folder (Users Files)> '
-        '<UNKNOWN: 0x00>\\Alloy Research '
-        'Origin: {0:s}\\*').format(key_path)
-    expected_short_message = (
-        'Name: Alloy Research '
-        'NTFS file reference: 44518-33 '
-        'Origin: HKEY_CURRENT_USER\\...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
@@ -252,17 +235,7 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     events = list(storage_writer.GetEvents())
 
     # A MRUListEx event.
-    expected_event_values = {
-        'data_type': 'windows:registry:mrulistex',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-04-01 13:52:39.113742'}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
+    expected_entries = (
         'Index: 1 [MRU Value 17]: Path: The SHIELD, '
         'Shell item: [The SHIELD.lnk] '
         'Index: 2 [MRU Value 18]: '
@@ -302,12 +275,18 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
         'Index: 18 [MRU Value 1]: Path: Downloads, '
         'Shell item: [Downloads.lnk] '
         'Index: 19 [MRU Value 0]: Path: wallpaper_medium.jpg, '
-        'Shell item: [wallpaper_medium.lnk]').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'Shell item: [wallpaper_medium.lnk]')
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'data_type': 'windows:registry:mrulistex',
+        'entries': expected_entries,
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.plugin_name,
+        'timestamp': '2012-04-01 13:52:39.113742'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
@@ -345,46 +324,42 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     events = list(storage_writer.GetEvents())
 
     # A MRUListEx event.
+    expected_entries = (
+        'Index: 1 [MRU Value 1]: Path: chrome.exe, '
+        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
+        '<UNKNOWN: 0x00> '
+        'Index: 2 [MRU Value 7]: '
+        'Path: {48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}, '
+        'Shell item path: <Shared Documents Folder (Users Files)> '
+        '<UNKNOWN: 0x00>\\Alloy Research '
+        'Index: 3 [MRU Value 6]: '
+        'Path: {427865A0-03AF-4F25-82EE-10B6CB1DED3E}, '
+        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
+        'Index: 4 [MRU Value 5]: '
+        'Path: {24B5C9BB-48B5-47FF-8343-40481DBA1E2B}, '
+        'Shell item path: <My Computer> C:\\Users\\nfury\\Documents '
+        'Index: 5 [MRU Value 4]: '
+        'Path: {0B8CFE96-DB69-4D33-8E3C-36EAB4F709E0}, '
+        'Shell item path: <My Computer> C:\\Users\\nfury\\Documents\\'
+        'Alloy Research '
+        'Index: 6 [MRU Value 3]: '
+        'Path: {D4F85F66-003D-4127-BCE9-CAD7A57B2857}, '
+        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
+        'Index: 7 [MRU Value 0]: Path: iexplore.exe, '
+        'Shell item path: <My Computer> P:\\Application Tools\\Firefox 6.0 '
+        'Index: 8 [MRU Value 2]: Path: Skype.exe, '
+        'Shell item path: <Users Libraries> <UNKNOWN: 0x00>')
+
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
+        'entries': expected_entries,
+        'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'timestamp': '2012-04-01 13:52:38.966290'}
 
     self.CheckEventValues(storage_writer, events[30], expected_event_values)
-
-    expected_message = (
-        '[{0:s}] '
-        'Index: 1 [MRU Value 1]: Path: chrome.exe, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
-        '<UNKNOWN: 0x00> '
-        'Index: 2 [MRU Value 7]: '
-        'Path: {{48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}}, '
-        'Shell item path: <Shared Documents Folder (Users Files)> '
-        '<UNKNOWN: 0x00>\\Alloy Research '
-        'Index: 3 [MRU Value 6]: '
-        'Path: {{427865A0-03AF-4F25-82EE-10B6CB1DED3E}}, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
-        'Index: 4 [MRU Value 5]: '
-        'Path: {{24B5C9BB-48B5-47FF-8343-40481DBA1E2B}}, '
-        'Shell item path: <My Computer> C:\\Users\\nfury\\Documents '
-        'Index: 5 [MRU Value 4]: '
-        'Path: {{0B8CFE96-DB69-4D33-8E3C-36EAB4F709E0}}, '
-        'Shell item path: <My Computer> C:\\Users\\nfury\\Documents\\'
-        'Alloy Research '
-        'Index: 6 [MRU Value 3]: '
-        'Path: {{D4F85F66-003D-4127-BCE9-CAD7A57B2857}}, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
-        'Index: 7 [MRU Value 0]: Path: iexplore.exe, '
-        'Shell item path: <My Computer> P:\\Application Tools\\Firefox 6.0 '
-        'Index: 8 [MRU Value 2]: Path: Skype.exe, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00>').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[30])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
