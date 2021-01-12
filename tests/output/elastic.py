@@ -29,17 +29,6 @@ class ElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   # pylint: disable=protected-access
 
-  def testSetRawFields(self):
-    """Tests the SetRawFields function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestElasticsearchOutputModule(output_mediator)
-
-    self.assertFalse(output_module._raw_fields)
-
-    output_module.SetRawFields(True)
-
-    self.assertTrue(output_module._raw_fields)
-
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
     output_mediator = self._CreateOutputMediator()

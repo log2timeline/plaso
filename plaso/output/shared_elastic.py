@@ -168,6 +168,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
         output_mediator)
     self._host = None
     self._index_name = None
+    self._mappings = None
     self._number_of_buffered_events = 0
     self._password = None
     self._port = None
@@ -377,6 +378,14 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._index_name = index_name
     logger.debug('Elasticsearch index name: {0:s}'.format(index_name))
+
+  def SetMappings(self, mappings):
+    """Sets the mappings.
+
+    Args:
+      mappings (dict[str, object]): mappings of the index.
+    """
+    self._mappings = mappings
 
   def SetPassword(self, password):
     """Set the password.
