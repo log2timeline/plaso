@@ -48,6 +48,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'computer_name': 'WKS-WIN764BITB.shieldbase.local',
+        'data_type': 'windows:evtx:record',
         'event_identifier': 105,
         'event_level': 4,
         'record_number': 12049,
@@ -86,31 +87,19 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         '</Event>\n')
 
     expected_event_values = {
+        'computer_name': 'WKS-WIN764BITB.shieldbase.local',
+        'data_type': 'windows:evtx:record',
+        'event_level': 4,
+        'record_number': 12050,
+        'source_name': 'Service Control Manager',
+        'strings': ['Windows Modules Installer', 'stopped', (
+            '540072007500730074006500640049006E007300740061006C006C00650072002F'
+            '0031000000')],
         'timestamp': '2012-03-14 04:17:38.276340',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'xml_string': expected_xml_string}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_message = (
-        '[7036 / 0x1b7c] '
-        'Source Name: Service Control Manager '
-        'Message string: The Windows Modules Installer service entered '
-        'the stopped state. '
-        'Strings: [\'Windows Modules Installer\', \'stopped\', '
-        '\'540072007500730074006500640049006E00'
-        '7300740061006C006C00650072002F0031000000\'] '
-        'Computer Name: WKS-WIN764BITB.shieldbase.local '
-        'Record Number: 12050 '
-        'Event Level: 4')
-    expected_short_message = (
-        '[7036 / 0x1b7c] '
-        'Strings: [\'Windows Modules Installer\', \'stopped\', '
-        '\'5400720075...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParseTruncated(self):
     """Tests the Parse function on a truncated file."""
@@ -125,11 +114,13 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'windows:evtx:record',
         'event_identifier': 4624}
 
     self.CheckEventValues(storage_writer, events[356], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'windows:evtx:record',
         'event_identifier': 4648}
 
     self.CheckEventValues(storage_writer, events[360], expected_event_values)

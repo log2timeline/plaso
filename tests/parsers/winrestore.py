@@ -24,6 +24,7 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'windows:restore_point:info',
         'description': 'Software Distribution Service 3.0',
         'restore_point_event_type': 102,
         'restore_point_type': 0,
@@ -31,17 +32,6 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Software Distribution Service 3.0 '
-        'Event type: BEGIN_NESTED_SYSTEM_CHANGE '
-        'Restore point type: APPLICATION_INSTALL')
-    expected_short_message = (
-        'Software Distribution Service 3.0')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

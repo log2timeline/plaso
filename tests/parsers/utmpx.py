@@ -23,71 +23,38 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'timestamp': '2013-11-13 17:52:34.000000'}
+        'data_type': 'mac:utmpx:event',
+        'hostname': 'localhost',
+        'pid': 1,
+        'terminal_identifier': 0,
+        'timestamp': '2013-11-13 17:52:34.000000',
+        'type': 2}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'Status: BOOT_TIME '
-        'Hostname: localhost '
-        'PID: 1 '
-        'Terminal identifier: 0')
-    expected_short_message = (
-        'PID: 1 '
-        'Status: BOOT_TIME')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'data_type': 'mac:utmpx:event',
         'hostname': 'localhost',
+        'pid': 67,
         'terminal': 'console',
+        'terminal_identifier': 65583,
         'timestamp': '2013-11-13 17:52:41.736713',
         'type': 7,
         'username': 'moxilo'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_message = (
-        'User: moxilo '
-        'Status: USER_PROCESS '
-        'Hostname: localhost '
-        'Terminal: console '
-        'PID: 67 '
-        'Terminal identifier: 65583')
-    expected_short_message = (
-        'User: moxilo '
-        'PID: 67 '
-        'Status: USER_PROCESS')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'data_type': 'mac:utmpx:event',
+        'hostname': 'localhost',
+        'pid': 6899,
         'terminal': 'ttys002',
+        'terminal_identifier': 842018931,
         'timestamp': '2013-11-14 04:32:56.641464',
         'type': 8,
         'username': 'moxilo'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
-
-    expected_message = (
-        'User: moxilo '
-        'Status: DEAD_PROCESS '
-        'Hostname: localhost '
-        'Terminal: ttys002 '
-        'PID: 6899 '
-        'Terminal identifier: 842018931')
-    expected_short_message = (
-        'User: moxilo '
-        'PID: 6899 '
-        'Status: DEAD_PROCESS')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

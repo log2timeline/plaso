@@ -106,21 +106,6 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     event_data_identifier = event.GetEventDataIdentifier()
     return storage_writer.GetEventDataByIdentifier(event_data_identifier)
 
-  def _GetShortMessage(self, message_string):
-    """Shortens a message string to a maximum of 80 character width.
-
-    Args:
-      message_string (str): message string.
-
-    Returns:
-      str: short message string, if it is longer than 80 characters it will
-           be shortened to it's first 77 characters followed by a "...".
-    """
-    if len(message_string) > 80:
-      return '{0:s}...'.format(message_string[:77])
-
-    return message_string
-
   def _ParseFile(
       self, path_segments, parser, collection_filters_helper=None,
       knowledge_base_values=None, timezone='UTC'):

@@ -3,6 +3,7 @@
 """Tests for filestat parser."""
 
 import os
+
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -11,8 +12,8 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.lib import definitions
 from plaso.parsers import filestat
 
-from tests.parsers import test_lib
 from tests import test_lib as shared_test_lib
+from tests.parsers import test_lib
 
 
 class FileStatTest(test_lib.ParserTestCase):
@@ -39,6 +40,7 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'fs:stat',
         'display_name': 'TSK:/passwords.txt',
         'file_entry_type': 'file',
         'file_size': 116,
@@ -48,15 +50,6 @@ class FileStatTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'TSK:/passwords.txt '
-        'Type: file')
-    expected_short_message = '/passwords.txt'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testZipFile(self):
     """Test a ZIP file."""
@@ -79,6 +72,7 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'fs:stat',
         'display_name': 'ZIP:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -88,15 +82,6 @@ class FileStatTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'ZIP:/syslog '
-        'Type: file')
-    expected_short_message = '/syslog'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testGzipFile(self):
     """Test a GZIP file."""
@@ -120,6 +105,7 @@ class FileStatTest(test_lib.ParserTestCase):
     test_path = os.path.join(shared_test_lib.TEST_DATA_PATH, 'syslog.gz')
 
     expected_event_values = {
+        'data_type': 'fs:stat',
         'display_name': 'GZIP:{0:s}'.format(test_path),
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -129,15 +115,6 @@ class FileStatTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'GZIP:{0:s} '
-        'Type: file').format(test_path)
-    expected_short_message = self._GetShortMessage(test_path)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testTarFile(self):
     """Test a TAR file."""
@@ -160,6 +137,7 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'fs:stat',
         'display_name': 'TAR:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -169,15 +147,6 @@ class FileStatTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'TAR:/syslog '
-        'Type: file')
-    expected_short_message = '/syslog'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testNestedFile(self):
     """Test a nested file."""
@@ -202,6 +171,7 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'fs:stat',
         'display_name': 'TAR:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -211,15 +181,6 @@ class FileStatTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'TAR:/syslog '
-        'Type: file')
-    expected_short_message = '/syslog'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
     test_file_path = self._GetTestFilePath(['syslog.tgz'])
     self._SkipIfPathNotExists(test_file_path)
@@ -239,6 +200,7 @@ class FileStatTest(test_lib.ParserTestCase):
     test_path = os.path.join(shared_test_lib.TEST_DATA_PATH, 'syslog.tgz')
 
     expected_event_values = {
+        'data_type': 'fs:stat',
         'display_name': 'GZIP:{0:s}'.format(test_path),
         'file_entry_type': 'file',
         'file_size': 10240,
@@ -248,15 +210,6 @@ class FileStatTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'GZIP:{0:s} '
-        'Type: file').format(test_path)
-    expected_short_message = self._GetShortMessage(test_path)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
@@ -282,6 +235,7 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'fs:stat',
         'display_name': 'ZIP:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -291,15 +245,6 @@ class FileStatTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'ZIP:/syslog '
-        'Type: file')
-    expected_short_message = '/syslog'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
