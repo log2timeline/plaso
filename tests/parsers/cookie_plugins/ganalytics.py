@@ -39,31 +39,25 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     self.assertEqual(len(events), 25)
 
     expected_event_values = {
+        'cookie_name': '__utmz',
+        'data_type': 'cookie:google:analytics:utmz',
+        'domain_hash': '137167072',
+        'sessions': 1,
+        'sources': 1,
         'timestamp': '2013-10-30 21:56:06.000000',
         'url': 'http://ads.aha.is/',
+        'utmccn': '(referral)',
         'utmcct': (
             '/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/'),
+        'utmcmd': 'referral',
         'utmcsr': 'mbl.is'}
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
 
-    expected_message = (
-        'http://ads.aha.is/ (__utmz) Sessions: 1 Domain Hash: 137167072 '
-        'Sources: 1 Last source used to access: mbl.is Ad campaign '
-        'information: (referral) Last type of visit: referral Path to '
-        'the page of referring link: /frettir/erlent/2013/10/30/'
-        'maelt_med_kerfisbundnum_hydingum/')
-    expected_short_message = 'http://ads.aha.is/ (__utmz)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[14])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
     plugin = chrome_cookies.Chrome17CookiePlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['cookies.db'], plugin)
+    storage_writer = self._ParseDatabaseFileWithPlugin(['cookies.db'], plugin)
     events = self._GetAnalyticsCookieEvents(storage_writer)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
@@ -75,62 +69,43 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
     # Check an UTMZ Google Analytics event.
     expected_event_values = {
+        'cookie_name': '__utmz',
+        'data_type': 'cookie:google:analytics:utmz',
         'domain_hash': '68898382',
         'sessions': 1,
-        'utmctr': 'enders game'}
+        'sources': 1,
+        'url': 'http://imdb.com/',
+        'utmccn': '(organic)',
+        'utmctr': 'enders game',
+        'utmcmd': 'organic',
+        'utmcsr': 'google'}
 
     self.CheckEventValues(storage_writer, events[39], expected_event_values)
-
-    expected_message = (
-        'http://imdb.com/ (__utmz) Sessions: 1 Domain Hash: 68898382 '
-        'Sources: 1 Last source used to access: google Ad campaign '
-        'information: (organic) Last type of visit: organic Keywords '
-        'used to find site: enders game')
-    expected_short_message = 'http://imdb.com/ (__utmz)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[39])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
     # Check the UTMA Google Analytics event.
     expected_event_values = {
         'cookie_name': '__utma',
+        'data_type': 'cookie:google:analytics:utma',
+        'domain_hash': '151488169',
         'sessions': 2,
         'timestamp': '2012-03-22 01:55:29.000000',
         'timestamp_desc': 'Analytics Previous Time',
+        'url': 'http://assets.tumblr.com/',
         'visitor_id': '1827102436'}
 
     self.CheckEventValues(storage_writer, events[41], expected_event_values)
 
-    expected_message = (
-        'http://assets.tumblr.com/ (__utma) '
-        'Sessions: 2 '
-        'Domain Hash: 151488169 '
-        'Visitor ID: 1827102436')
-    expected_short_message = 'http://assets.tumblr.com/ (__utma)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[41])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Check the UTMB Google Analytics event.
     expected_event_values = {
         'cookie_name': '__utmb',
+        'data_type': 'cookie:google:analytics:utmb',
         'domain_hash': '154523900',
         'pages_viewed': 1,
         'timestamp': '2012-03-22 01:48:30.000000',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'url': 'http://upressonline.com/'}
 
     self.CheckEventValues(storage_writer, events[34], expected_event_values)
-
-    expected_message = (
-        'http://upressonline.com/ (__utmb) Pages Viewed: 1 Domain Hash: '
-        '154523900')
-    expected_short_message = 'http://upressonline.com/ (__utmb)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[34])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

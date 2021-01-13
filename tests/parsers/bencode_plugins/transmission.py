@@ -26,6 +26,7 @@ class TransmissionPluginTest(test_lib.BencodePluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'p2p:bittorrent:transmission',
         'destination': '/Users/brian/Downloads',
         'seedtime': 4,
         'timestamp': '2013-11-08 15:31:20.000000',
@@ -35,19 +36,13 @@ class TransmissionPluginTest(test_lib.BencodePluginTestCase):
 
     # Test on second event of first torrent.
     expected_event_values = {
+        'data_type': 'p2p:bittorrent:transmission',
         'destination': '/Users/brian/Downloads',
         'seedtime': 4,
         'timestamp': '2013-11-08 18:24:24.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        'Saved to /Users/brian/Downloads; '
-        'Minutes seeded: 4')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

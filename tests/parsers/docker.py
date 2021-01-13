@@ -28,7 +28,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_times = [
+    expected_timestamps = [
         '2016-01-07 16:49:10.000000',
         '2016-01-07 16:49:10.200000',
         '2016-01-07 16:49:10.230000',
@@ -40,31 +40,17 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         '2016-01-07 16:49:10.237222',
         '2016-01-07 16:49:10.237222']
 
-    expected_log = (
-        '\x1b]0;root@e7d0b7ea5ccf: '
-        '/home/plaso\x07root@e7d0b7ea5ccf:/home/plaso# ls\r\n')
-
-    expected_message = (
-        'Text: '
-        '\x1b]0;root@e7d0b7ea5ccf: /home/plaso\x07root@e7d0b7ea5ccf:'
-        '/home/plaso# ls, Container ID: {0:s}, '
-        'Source: stdout').format(container_identifier)
-    expected_short_message = (
-        'Text: '
-        '\x1b]0;root@e7d0b7ea5ccf: /home/plaso\x07root@e7d0b7ea5ccf:'
-        '/home/plaso# ls, C...'
-        )
+    expected_event_values = {
+        'container_id': container_identifier,
+        'data_type': 'docker:json:container:log',
+        'log_line': (
+            '\x1b]0;root@e7d0b7ea5ccf: '
+            '/home/plaso\x07root@e7d0b7ea5ccf:/home/plaso# ls\r\n'),
+        'log_source': 'stdout'}
 
     for index, event in enumerate(events):
-      self.CheckTimestamp(event.timestamp, expected_times[index])
-
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(event_data.container_id, container_identifier)
-      self.assertEqual(event_data.log_line, expected_log)
-      self.assertEqual(event_data.log_source, 'stdout')
-
-      self._TestGetMessageStrings(
-          event_data, expected_message, expected_short_message)
+      self.CheckTimestamp(event.timestamp, expected_timestamps[index])
+      self.CheckEventValues(storage_writer, event, expected_event_values)
 
   def testParseContainerConfig(self):
     """Tests the _ParseContainerConfigJSON function."""
@@ -85,6 +71,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'action': 'Container Started',
         'container_id': container_identifier,
         'container_name': 'e7d0b7ea5ccf',
+        'data_type': 'docker:json:container',
         'timestamp': '2016-01-07 16:49:08.674873'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -93,6 +80,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'action': 'Container Created',
         'container_id': container_identifier,
         'container_name': 'e7d0b7ea5ccf',
+        'data_type': 'docker:json:container',
         'timestamp': '2016-01-07 16:49:08.507979'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -115,6 +103,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'command': (
             '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
             '/etc/apt/sources.list'),
+        'data_type': 'docker:json:layer',
         'layer_id': layer_identifier,
         'timestamp': '2015-10-12 17:27:03.079273',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}

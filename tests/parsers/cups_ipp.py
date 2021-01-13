@@ -314,6 +314,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         'application': 'LibreOffice',
         'computer_name': 'localhost',
         'copies': 1,
+        'data_type': 'cups:ipp:event',
         'doc_type': 'application/pdf',
         'job_id': 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a',
         'job_name': 'Assignament 1',
@@ -326,25 +327,15 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'User: moxilo '
-        'Owner: Joaquin Moreno Garijo '
-        'Job Name: Assignament 1 '
-        'Application: LibreOffice '
-        'Printer: RHULBW')
-    expected_short_message = 'Job Name: Assignament 1'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'data_type': 'cups:ipp:event',
         'timestamp': '2013-11-03 18:07:21.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'cups:ipp:event',
         'timestamp': '2013-11-03 18:07:32.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_END}
 

@@ -30,6 +30,7 @@ class AMCacheParserTest(test_lib.ParserTestCase):
         'is-f4510.tmp\\idafree50.tmp')
 
     expected_event_values = {
+        'data_type': 'windows:registry:amcache',
         'full_path': expected_full_path,
         'sha1': '82274eef0911a948f91425f5e5b0e730517fe75e',
         'timestamp': '1992-06-19 22:22:17.000000'}
@@ -37,25 +38,19 @@ class AMCacheParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'windows:registry:amcache:programs',
+        'entry_type': 'AddRemoveProgram',
+        'file_paths': [
+            'c:\\program files (x86)\\fileinsight\\plugins',
+            'c:\\program files (x86)\\fileinsight\\plugins\\anomaly chart',
+            'c:\\program files (x86)\\fileinsight'],
         'name': 'FileInsight - File analysis tool',
-        'publisher': 'McAfee Inc.'}
+        'publisher': 'McAfee Inc.',
+        'uninstall_key': [
+            'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\Microsoft\\Windows\\'
+            'CurrentVersion\\Uninstall\\FileInsight']}
 
     self.CheckEventValues(storage_writer, events[1285], expected_event_values)
-
-    expected_message = (
-        'name: FileInsight - File analysis tool '
-        'publisher: McAfee Inc. '
-        'entry_type: AddRemoveProgram '
-        'uninstall_key: [\'HKEY_LOCAL_MACHINE\\\\Software\\\\Wow6432Node\\\\'
-        'Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\FileInsight\'] '
-        'file_paths: [\'c:\\\\program files (x86)\\\\fileinsight\\\\plugins\', '
-        '\'c:\\\\program files (x86)\\\\fileinsight\\\\plugins\\\\'
-        'anomaly chart\', \'c:\\\\program files (x86)\\\\fileinsight\']')
-    expected_short_message = 'name: FileInsight - File analysis tool'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1285])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParseWithSystem(self):
     """Tests the Parse function with a SYSTEM Registry file."""

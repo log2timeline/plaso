@@ -37,6 +37,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     # Test event with data type windows:srum:application_usage
     expected_event_values = {
+        'application': 'Memory Compression',
         'data_type': 'windows:srum:application_usage',
         'identifier': 22167,
         'timestamp': '2017-11-05 11:32:00.000000',
@@ -44,17 +45,9 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[92], expected_event_values)
 
-    expected_message = (
-        'Application: Memory Compression')
-
-    expected_short_message = 'Memory Compression'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[92])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test event with data type windows:srum:network_connectivity
     expected_event_values = {
+        'application': 1,
         'data_type': 'windows:srum:network_connectivity',
         'identifier': 501,
         'timestamp': '2017-11-05 10:30:48.167971',
@@ -62,32 +55,18 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_message = 'Application: 1'
-    expected_short_message = '1'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Test event with data type windows:srum:network_usage
     expected_event_values = {
+        'application': 'DiagTrack',
+        'bytes_sent': 2076,
         'data_type': 'windows:srum:network_usage',
         'identifier': 3495,
+        'interface_luid': 1689399632855040,
         'timestamp': '2017-11-05 11:32:00.000000',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_SAMPLE}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_SAMPLE,
+        'user_identifier': 'S-1-5-18'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
-
-    expected_message = (
-        'Application: DiagTrack '
-        'Bytes sent: 2076 '
-        'Interface LUID: 1689399632855040 '
-        'User identifier: S-1-5-18')
-    expected_short_message = 'DiagTrack'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[8])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

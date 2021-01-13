@@ -28,28 +28,24 @@ class BashHistoryTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'command': '/usr/lib/plaso',
+        'data_type': 'bash:history:command',
         'timestamp': '2013-10-01 12:36:17.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'command': '/bin/bash',
+        'data_type': 'bash:history:command',
         'timestamp': '2013-10-01 12:36:18.000000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'command': '/usr/local/bin/splunk -p 8080',
+        'data_type': 'bash:history:command',
         'timestamp': '2013-10-01 12:36:19.000000'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_message = 'Command executed: /usr/local/bin/splunk -p 8080'
-    expected_short_message = '/usr/local/bin/splunk -p 8080'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParsingExtractionDesync(self):
     """Tests that the parser correctly handles a desynchronized file.

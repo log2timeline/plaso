@@ -111,6 +111,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'metadata:openxml',
         'timestamp': '2012-11-07 23:29:00.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
@@ -120,6 +121,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         'app_version': '14.0000',
         'author': 'Nides',
         'creating_app': 'Microsoft Office Word',
+        'data_type': 'metadata:openxml',
         'doc_security': '0',
         'hyperlinks_changed': 'false',
         'i4': '1',
@@ -137,28 +139,6 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         'total_time': '1385'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        'Creating App: Microsoft Office Word '
-        'App version: 14.0000 '
-        'Last saved by: Nides '
-        'Author: Nides '
-        'Revision number: 3 '
-        'Template: Normal.dotm '
-        'Number of pages: 1 '
-        'Number of words: 2 '
-        'Number of characters: 13 '
-        'Number of characters with spaces: 14 '
-        'Number of lines: 1 '
-        'Hyperlinks changed: false '
-        'Links up to date: false '
-        'Scale crop: false')
-    expected_short_message = (
-        'Author: Nides')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
