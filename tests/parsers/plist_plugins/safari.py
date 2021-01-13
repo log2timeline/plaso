@@ -28,24 +28,18 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'safari:history:visit',
         'timestamp': '2013-07-08 17:31:00.000000'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
-    expected_url = 'http://netverslun.sci-mx.is/aminosyrur'
-
     expected_event_values = {
-        'url': expected_url}
+        'data_type': 'safari:history:visit',
+        'title': 'Amínósýrur',
+        'url': 'http://netverslun.sci-mx.is/aminosyrur',
+        'visit_count': 1}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
-
-    expected_message = (
-        'Visited: {0:s} (Am\xedn\xf3s\xfdrur ) '
-        'Visit Count: 1').format(expected_url)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[9])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
 
 
 if __name__ == '__main__':

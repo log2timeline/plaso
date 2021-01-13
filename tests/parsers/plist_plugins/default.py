@@ -60,16 +60,12 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'plist:key',
         'key': 'LastUsed',
         'root': '/DE-00-AD-00-BE-EF',
         'timestamp': '2012-11-02 01:21:38.997672'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_string = '/DE-00-AD-00-BE-EF/LastUsed'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(event_data, expected_string, expected_string)
 
   def testProcessMulti(self):
     """Tests Process on a plist containing five keys with date values."""
@@ -85,6 +81,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'data_type': 'plist:key',
         'key': 'LastNameUpdate',
         'root': '/DeviceCache/44-00-00-00-00-02',
         'timestamp': '2011-04-07 17:56:53.524275'}

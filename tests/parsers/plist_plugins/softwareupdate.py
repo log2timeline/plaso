@@ -27,33 +27,25 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_description = (
-        'Last Mac OS 10.9.1 (13B42) partially '
-        'update, pending 1: RAWCameraUpdate5.03(031-2664).')
-
     expected_event_values = {
-        'desc': expected_description,
+        'data_type': 'plist:key',
+        'desc': (
+            'Last Mac OS 10.9.1 (13B42) partially '
+            'update, pending 1: RAWCameraUpdate5.03(031-2664).'),
         'key': '',
         'root': '/',
         'timestamp': '2014-01-06 17:43:48.000000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_description = 'Last MacOS 10.9.1 (13B42) full update.'
-
     expected_event_values = {
-        'desc': expected_description,
+        'data_type': 'plist:key',
+        'desc': 'Last MacOS 10.9.1 (13B42) full update.',
         'key': '',
         'root': '/',
         'timestamp': '2014-01-06 17:43:48.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_string = '// {0:s}'.format(expected_description)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_string, expected_string)
 
 
 if __name__ == '__main__':

@@ -30,40 +30,32 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_timestamps = [1372106802000000, 1387980032000000, 1387980032000000]
-    timestamps = sorted([event.timestamp for event in events])
-
-    self.assertEqual(timestamps, expected_timestamps)
-
-    expected_description = (
-        'Configured Apple account email@domain.com (Joaquin Moreno Garijo)')
-
     expected_event_values = {
-        'desc': expected_description,
+        'data_type': 'plist:key',
+        'desc': (
+            'Configured Apple account email@domain.com (Joaquin Moreno '
+            'Garijo)'),
         'key': 'email@domain.com',
+        'timestamp': '2013-06-24 20:46:42.000000',
         'root': '/Accounts'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = '/Accounts/email@domain.com {0:s}'.format(
-        expected_description)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'data_type': 'plist:key',
         'desc': (
             'Connected Apple account '
-            'email@domain.com (Joaquin Moreno Garijo)')}
+            'email@domain.com (Joaquin Moreno Garijo)'),
+        'timestamp': '2013-12-25 14:00:32.000000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'plist:key',
         'desc': (
             'Last validation Apple account '
-            'email@domain.com (Joaquin Moreno Garijo)')}
+            'email@domain.com (Joaquin Moreno Garijo)'),
+        'timestamp': '2013-12-25 14:00:32.000000'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 

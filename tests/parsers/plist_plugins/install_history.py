@@ -34,31 +34,23 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(timestamps, expected_timestamps)
 
-    expected_description = (
-        'Installation of [OS X 10.9 (13A603)] using [OS X Installer]. '
-        'Packages: com.apple.pkg.BaseSystemBinaries, '
-        'com.apple.pkg.BaseSystemResources, '
-        'com.apple.pkg.Essentials, com.apple.pkg.BSD, '
-        'com.apple.pkg.JavaTools, com.apple.pkg.AdditionalEssentials, '
-        'com.apple.pkg.AdditionalSpeechVoices, '
-        'com.apple.pkg.AsianLanguagesSupport, com.apple.pkg.MediaFiles, '
-        'com.apple.pkg.JavaEssentials, com.apple.pkg.OxfordDictionaries, '
-        'com.apple.pkg.X11redirect, com.apple.pkg.OSInstall, '
-        'com.apple.pkg.update.compatibility.2013.001.')
-
     expected_event_values = {
-        'desc': expected_description,
+        'data_type': 'plist:key',
+        'desc': (
+            'Installation of [OS X 10.9 (13A603)] using [OS X Installer]. '
+            'Packages: com.apple.pkg.BaseSystemBinaries, '
+            'com.apple.pkg.BaseSystemResources, '
+            'com.apple.pkg.Essentials, com.apple.pkg.BSD, '
+            'com.apple.pkg.JavaTools, com.apple.pkg.AdditionalEssentials, '
+            'com.apple.pkg.AdditionalSpeechVoices, '
+            'com.apple.pkg.AsianLanguagesSupport, com.apple.pkg.MediaFiles, '
+            'com.apple.pkg.JavaEssentials, com.apple.pkg.OxfordDictionaries, '
+            'com.apple.pkg.X11redirect, com.apple.pkg.OSInstall, '
+            'com.apple.pkg.update.compatibility.2013.001.'),
         'key': '',
         'root': '/item'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = '/item/ {0:s}'.format(expected_description)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

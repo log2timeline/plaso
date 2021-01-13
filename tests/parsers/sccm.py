@@ -23,46 +23,48 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'software_management:sccm:log',
         'timestamp': '2014-11-29 01:03:19.766000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Test timestamps with seven digits after seconds.
     expected_event_values = {
+        'data_type': 'software_management:sccm:log',
         'timestamp': '2015-01-02 10:22:50.873496'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     # Test timestamps with '-' in microseconds.
     expected_event_values = {
+        'data_type': 'software_management:sccm:log',
         'timestamp': '2014-12-28 18:59:43.373000'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     # Test timestamps with '+' in microseconds.
     expected_event_values = {
+        'data_type': 'software_management:sccm:log',
         'timestamp': '2014-11-23 17:52:13.827000'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
-    # Test timestamps with 2 digit UTC offset
+    # Test timestamps with 2 digit UTC offset.
     expected_event_values = {
+        'data_type': 'software_management:sccm:log',
         'timestamp': '2014-11-26 05:20:47.594000'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
-    # Test full and short message formats.
-    expected_message = (
-        'ContentAccess Releasing content request '
-        '{4EA97AD6-E7E2-4583-92B9-21F532501337}')
+    # Test component and text.
+    expected_event_values = {
+        'component': 'ContentAccess',
+        'data_type': 'software_management:sccm:log',
+        'text': (
+            'Releasing content request {4EA97AD6-E7E2-4583-92B9-21F532501337}'),
+        'timestamp': '2014-12-23 12:33:10.647000'}
 
-    expected_short_message = (
-        'Releasing content request '
-        '{4EA97AD6-E7E2-4583-92B9-21F532501337}')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
 
 if __name__ == '__main__':
