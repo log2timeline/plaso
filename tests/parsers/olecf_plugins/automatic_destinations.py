@@ -31,77 +31,46 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     # Check a AutomaticDestinationsDestListEntryEvent.
     expected_event_values = {
+        'birth_droid_file_identifier': '{63eea867-7b85-11e1-8950-005056a50b40}',
+        'birth_droid_volume_identifier': (
+            '{cf6619c2-66a8-44a6-8849-1582fcd3a338}'),
         'data_type': 'olecf:dest_list:entry',
+        'droid_file_identifier': '{63eea867-7b85-11e1-8950-005056a50b40}',
+        'droid_volume_identifier': '{cf6619c2-66a8-44a6-8849-1582fcd3a338}',
+        'entry_number': 11,
+        'hostname': 'wks-win764bitb',
         'offset': 32,
+        'path': 'C:\\Users\\nfury\\Pictures\\The SHIELD',
         'pin_status': -1,
         'timestamp': '2012-04-01 13:52:38.997538',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
-    expected_message = (
-        'Entry: 11 '
-        'Pin status: Unpinned '
-        'Hostname: wks-win764bitb '
-        'Path: C:\\Users\\nfury\\Pictures\\The SHIELD '
-        'Droid volume identifier: {cf6619c2-66a8-44a6-8849-1582fcd3a338} '
-        'Droid file identifier: {63eea867-7b85-11e1-8950-005056a50b40} '
-        'Birth droid volume identifier: '
-        '{cf6619c2-66a8-44a6-8849-1582fcd3a338} '
-        'Birth droid file identifier: {63eea867-7b85-11e1-8950-005056a50b40}')
-
-    expected_short_message = (
-        'Entry: 11 '
-        'Pin status: Unpinned '
-        'Path: C:\\Users\\nfury\\Pictures\\The SHIELD')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[7])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Check a WinLnkLinkEvent.
     expected_event_values = {
         'data_type': 'windows:lnk:link',
+        'drive_serial_number': 0x24ba718b,
+        'drive_type': 3,
+        'file_attribute_flags': 0x00002020,
+        'file_size': 3545,
+        'link_target': '<Users Libraries> <UNKNOWN: 0x00>',
+        'local_path': (
+            'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\'
+            'Libraries\\Documents.library-ms'),
         'timestamp': '2010-11-10 07:51:16.749125'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_message = (
-        'File size: 3545 '
-        'File attribute flags: 0x00002020 '
-        'Drive type: 3 '
-        'Drive serial number: 0x24ba718b '
-        'Local path: C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\'
-        'Libraries\\Documents.library-ms '
-        'Link target: <Users Libraries> <UNKNOWN: 0x00>')
-
-    expected_short_message = (
-        'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\Libraries\\'
-        'Documents.library-ms')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     # Check a WindowsDistributedLinkTrackingCreationEvent.
     expected_event_values = {
         'data_type': 'windows:distributed_link_tracking:creation',
-        'timestamp': '2012-03-31 23:01:03.527742'}
+        'mac_address': '00:50:56:a5:0b:40',
+        'origin': 'DestList entry at offset: 0x00000020',
+        'timestamp': '2012-03-31 23:01:03.527742',
+        'uuid': '63eea867-7b85-11e1-8950-005056a50b40'}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
-
-    expected_message = (
-        '63eea867-7b85-11e1-8950-005056a50b40 '
-        'MAC address: 00:50:56:a5:0b:40 '
-        'Origin: DestList entry at offset: 0x00000020')
-
-    expected_short_message = (
-        '63eea867-7b85-11e1-8950-005056a50b40 '
-        'Origin: DestList entry at offset: 0x0000...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[5])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
@@ -120,32 +89,20 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     # Check a AutomaticDestinationsDestListEntryEvent.
     expected_event_values = {
+        'birth_droid_file_identifier': '{00000000-0000-0000-0000-000000000000}',
+        'birth_droid_volume_identifier': (
+            '{00000000-0000-0000-0000-000000000000}'),
         'data_type': 'olecf:dest_list:entry',
+        'droid_file_identifier': '{00000000-0000-0000-0000-000000000000}',
+        'droid_volume_identifier': '{00000000-0000-0000-0000-000000000000}',
+        'entry_number': 2,
         'offset': 32,
+        'path': 'http://support.microsoft.com/kb/3124263',
         'pin_status': -1,
         'timestamp': '2016-01-17 13:08:08.247505',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        'Entry: 2 '
-        'Pin status: Unpinned '
-        'Path: http://support.microsoft.com/kb/3124263 '
-        'Droid volume identifier: {00000000-0000-0000-0000-000000000000} '
-        'Droid file identifier: {00000000-0000-0000-0000-000000000000} '
-        'Birth droid volume identifier: '
-        '{00000000-0000-0000-0000-000000000000} '
-        'Birth droid file identifier: {00000000-0000-0000-0000-000000000000}')
-
-    expected_short_message = (
-        'Entry: 2 '
-        'Pin status: Unpinned '
-        'Path: http://support.microsoft.com/kb/3124263')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
     # Check a WinLnkLinkEvent.
     expected_event_values = {

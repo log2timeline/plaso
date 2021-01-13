@@ -22,12 +22,17 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
+    # TODO: add support for: 'Total edit time (secs): 0'
+
     expected_event_values = {
         'application': 'Microsoft Office Word',
         'author': 'DAVID NIDES',
+        'data_type': 'olecf:summary_info',
         'last_saved_by': 'Nides',
         'name': 'Summary Information',
         'number_of_characters': 18,
+        'number_of_pages': 1,
+        'number_of_words': 3,
         'revision_number': '4',
         'security': 0,
         'template': 'Normal.dotm',
@@ -36,30 +41,6 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
         'title': 'Table of Context'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_message = (
-        'Title: Table of Context '
-        'Author: DAVID NIDES '
-        'Template: Normal.dotm '
-        'Revision number: 4 '
-        'Last saved by: Nides '
-        'Number of pages: 1 '
-        'Number of words: 3 '
-        'Number of characters: 18 '
-        'Application: Microsoft Office Word '
-        'Security flags: 0x00000000')
-
-    expected_short_message = (
-        'Title: Table of Context '
-        'Author: DAVID NIDES '
-        'Revision number: 4')
-
-    # TODO: add support for:
-    #    'Total edit time (secs): 0 '
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
@@ -78,29 +59,13 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     expected_event_values = {
         'application_version': '14.0',
         'company': 'KPMG',
+        'data_type': 'olecf:document_summary_info',
         'name': 'Document Summary Information',
         'number_of_lines': 1,
         'number_of_paragraphs': 1,
         'shared_document': False}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    # TODO: add support for:
-    # self.assertFalse(event_data.is_shared)
-
-    expected_message = (
-        'Number of lines: 1 '
-        'Number of paragraphs: 1 '
-        'Company: KPMG '
-        'Shared document: False '
-        'Application version: 14.0')
-
-    expected_short_message = (
-        'Company: KPMG')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

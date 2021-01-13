@@ -23,26 +23,20 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'opera:history:typed_entry',
         'entry_selection': 'Filled from autocomplete.',
-        'timestamp': '2013-11-11 23:45:27.000000'}
+        'timestamp': '2013-11-11 23:45:27.000000',
+        'url': 'plaso.kiddaland.net'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_string = 'plaso.kiddaland.net (Filled from autocomplete.)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(event_data, expected_string, expected_string)
-
     expected_event_values = {
+        'data_type': 'opera:history:typed_entry',
         'entry_selection': 'Manually typed.',
-        'timestamp': '2013-11-11 22:46:07.000000'}
+        'timestamp': '2013-11-11 22:46:07.000000',
+        'url': 'theonion.com'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_string = 'theonion.com (Manually typed.)'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
-    self._TestGetMessageStrings(event_data, expected_string, expected_string)
 
 
 class OperaGlobalParserTest(test_lib.ParserTestCase):
@@ -59,28 +53,24 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'timestamp': '2013-11-11 22:45:46.000000'}
+        'data_type': 'opera:history:entry',
+        'description': 'First and Only Visit',
+        'timestamp': '2013-11-11 22:45:46.000000',
+        'title': 'Karl Bretaprins fær ellilífeyri - mbl.is',
+        'url': (
+            'http://www.mbl.is/frettir/erlent/2013/11/11/'
+            'karl_bretaprins_faer_ellilifeyri/')}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    expected_message = (
-        'http://www.mbl.is/frettir/erlent/2013/11/11/'
-        'karl_bretaprins_faer_ellilifeyri/ (Karl Bretaprins fær ellilífeyri'
-        ' - mbl.is) [First and Only Visit]')
-    expected_short_message = (
-        'http://www.mbl.is/frettir/erlent/2013/11/11/'
-        'karl_bretaprins_faer_ellilifeyri/...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[4])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'data_type': 'opera:history:entry',
         'timestamp': '2013-11-11 22:45:55.000000'}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'opera:history:entry',
         'timestamp': '2013-11-11 22:46:16.000000',
         'title': (
             '10 Celebrities You Never Knew Were Abducted And Murdered '

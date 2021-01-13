@@ -23,28 +23,21 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'iis:log:line',
         'dest_ip': '10.10.10.100',
         'dest_port': 80,
+        'http_method': 'GET',
+        'http_status': 200,
+        'requested_uri_stem': '/some/image/path/something.jpg',
         'source_ip': '10.10.10.100',
-        'timestamp': '2013-07-30 00:00:00.000000'}
+        'timestamp': '2013-07-30 00:00:00.000000',
+        'user_agent': (
+            'Mozilla/4.0+(compatible;+Win32;+WinHttp.WinHttpRequest.5)')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'GET /some/image/path/something.jpg '
-        '[ 10.10.10.100 > 10.10.10.100 : 80 ] '
-        'HTTP Status: 200 '
-        'User Agent: Mozilla/4.0+(compatible;+Win32;'
-        '+WinHttp.WinHttpRequest.5)')
-    expected_short_message = (
-        'GET /some/image/path/something.jpg '
-        '[ 10.10.10.100 > 10.10.10.100 : 80 ]')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
+        'data_type': 'iis:log:line',
         'http_method': 'GET',
         'http_status': 200,
         'requested_uri_stem': '/some/image/path/something.jpg',
@@ -52,23 +45,24 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
-    expected_message = (
-        'GET /some/image/path/something.htm '
-        '[ 22.22.22.200 > 10.10.10.100 : 80 ] '
-        'HTTP Status: 404 '
-        'User Agent: Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_6_8)'
-        '+AppleWebKit/534.57.2+(KHTML,+like+Gecko)+Version/5.1.7'
-        '+Safari/534.57.2')
-    expected_short_message = (
-        'GET /some/image/path/something.htm '
-        '[ 22.22.22.200 > 10.10.10.100 : 80 ]')
+    expected_event_values = {
+        'data_type': 'iis:log:line',
+        'dest_ip': '10.10.10.100',
+        'dest_port': 80,
+        'http_method': 'GET',
+        'http_status': 404,
+        'requested_uri_stem': '/some/image/path/something.htm',
+        'source_ip': '22.22.22.200',
+        'timestamp': '2013-07-30 00:00:03.000000',
+        'user_agent': (
+            'Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_6_8)+AppleWebKit/'
+            '534.57.2+(KHTML,+like+Gecko)+Version/5.1.7+Safari/534.57.2')}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'cs_uri_query': 'ID=ERROR[`cat%20passwd|echo`]'}
+        'cs_uri_query': 'ID=ERROR[`cat%20passwd|echo`]',
+        'data_type': 'iis:log:line'}
 
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
@@ -83,6 +77,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'iis:log:line',
         'protocol_version': 'HTTP/1.1',
         'timestamp': '2013-07-30 00:00:03.000000'}
 

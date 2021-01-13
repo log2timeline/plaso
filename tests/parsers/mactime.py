@@ -35,6 +35,7 @@ class MactimeTest(test_lib.ParserTestCase):
     # 1337961584|1337961585|0
 
     expected_event_values = {
+        'data_type': 'fs:mactime:line',
         'inode': 16,
         'timestamp': '2012-05-25 15:59:43.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
@@ -42,40 +43,32 @@ class MactimeTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[21], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'fs:mactime:line',
         'timestamp': '2012-05-25 15:59:44.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
-    expected_filename = '/a_directory/another_file'
-
     expected_event_values = {
-        'filename': expected_filename,
+        'data_type': 'fs:mactime:line',
+        'filename': '/a_directory/another_file',
         'mode_as_string': 'r/rrw-------',
         'timestamp': '2012-05-25 15:59:45.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
     self.CheckEventValues(storage_writer, events[23], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[23])
-    self._TestGetMessageStrings(
-        event_data, expected_filename, expected_filename)
-
-    expected_filename = '/file|with|pipes'
-
     expected_event_values = {
-        'filename': expected_filename,
+        'data_type': 'fs:mactime:line',
+        'filename': '/file|with|pipes',
         'mode_as_string': 'r/rrwxrwxrwx',
         'timestamp': '2020-07-30 06:41:05.354067',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
     self.CheckEventValues(storage_writer, events[48], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, events[48])
-    self._TestGetMessageStrings(
-        event_data, expected_filename, expected_filename)
-
     expected_event_values = {
+        'data_type': 'fs:mactime:line',
         'filename': '/file_symboliclink1',
         'mode_as_string': 'l/lrwxrwxrwx',
         'symbolic_link_target': '/mnt/ext/testdir1/testfile1',

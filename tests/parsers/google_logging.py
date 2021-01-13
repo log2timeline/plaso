@@ -28,19 +28,17 @@ class GooglelogParserTest(test_lib.ParserTestCase):
 
     # Test a regular event.
     expected_event_values = {
+        'data_type': 'googlelog:log',
+        'file_name': 'logging_functional_test_helper.py',
+        'line_number': '65',
+        'message': 'This line is log level 0',
         'timestamp': '2019-12-31 23:59:59.000002'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_string = (
-        'logging_functional_test_helper.py: 65] This line is log level 0')
-    expected_short = 'This line is log level 0'
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(event_data, expected_string, expected_short)
-
     # Test a multiline event.
     expected_event_values = {
+        'data_type': 'googlelog:log',
         'message': 'Interesting Stuff\n    that spans two lines'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)

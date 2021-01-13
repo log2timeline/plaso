@@ -24,6 +24,7 @@ class IDXTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'data_type': 'java:download:idx',
         'idx_version': 602,
         'timestamp': '2010-05-05 01:34:19.720000',
         'timestamp_desc': 'File Hosted Date',
@@ -33,19 +34,13 @@ class IDXTest(test_lib.ParserTestCase):
 
     # Parse second event. Same metadata; different timestamp event.
     expected_event_values = {
+        'data_type': 'java:download:idx',
         'idx_version': 602,
         'timestamp': '2010-05-05 03:52:31.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
         'url': 'http://www.gxxxxx.com/a/java/xxz.jar'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_message = (
-        'IDX Version: 602 '
-        'Download URL: http://www.gxxxxx.com/a/java/xxz.jar')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[1])
-    self._TestGetMessageStrings(event_data, expected_message, expected_message)
 
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
@@ -57,30 +52,28 @@ class IDXTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_url = (
-        'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
-        'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')
-
     expected_event_values = {
+        'data_type': 'java:download:idx',
         'idx_version': 605,
         'ip_address': '10.7.119.10',
         'timestamp': '2001-07-26 05:00:00.000000',
         'timestamp_desc': 'File Hosted Date',
-        'url': expected_url}
+        'url': (
+            'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
+            'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Parse second event. Same metadata; different timestamp event.
-    expected_url = (
-        'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
-        'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')
-
     expected_event_values = {
+        'data_type': 'java:download:idx',
         'idx_version': 605,
         'ip_address': '10.7.119.10',
         'timestamp': '2013-01-13 16:22:01.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
-        'url': expected_url}
+        'url': (
+            'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
+            'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 

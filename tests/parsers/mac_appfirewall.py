@@ -29,49 +29,23 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         'action': 'creating /var/log/appfirewall.log',
         'agent': 'socketfilterfw[112]',
         'computer_name': 'DarkTemplar-2.local',
+        'data_type': 'mac:appfirewall:line',
         'process_name': 'Logging',
         'status': 'Error',
         'timestamp': '2013-11-02 04:07:35.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_message = (
-        'Computer: DarkTemplar-2.local '
-        'Agent: socketfilterfw[112] '
-        'Status: Error '
-        'Process name: Logging '
-        'Log: creating /var/log/appfirewall.log')
-    expected_short_message = (
-        'Process name: Logging '
-        'Status: Error')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[0])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
         'action': 'Allow TCP LISTEN  (in:0 out:1)',
         'agent': 'socketfilterfw[87]',
         'computer_name': 'DarkTemplar-2.local',
+        'data_type': 'mac:appfirewall:line',
         'process_name': 'Dropbox',
         'status': 'Info',
         'timestamp': '2013-11-03 13:25:15.000000'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
-
-    expected_message = (
-        'Computer: DarkTemplar-2.local '
-        'Agent: socketfilterfw[87] '
-        'Status: Info '
-        'Process name: Dropbox '
-        'Log: Allow TCP LISTEN  (in:0 out:1)')
-    expected_short_message = (
-        'Process name: Dropbox '
-        'Status: Info')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[9])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
     # Check repeated lines.
     event_data = self._GetEventDataOfEvent(storage_writer, events[38])
@@ -80,6 +54,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         'action': event_data.action,
         'agent': event_data.agent,
         'computer_name': event_data.computer_name,
+        'data_type': 'mac:appfirewall:line',
         'process_name': event_data.process_name,
         'status': event_data.status}
 
@@ -87,11 +62,13 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     # Year changes.
     expected_event_values = {
+        'data_type': 'mac:appfirewall:line',
         'timestamp': '2013-12-31 23:59:23.000000'}
 
     self.CheckEventValues(storage_writer, events[45], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'mac:appfirewall:line',
         'timestamp': '2014-01-01 01:13:23.000000'}
 
     self.CheckEventValues(storage_writer, events[46], expected_event_values)

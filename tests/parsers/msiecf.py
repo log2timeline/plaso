@@ -40,50 +40,40 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     # Last checked time       : Jun 23, 2011 18:02:12
     # Cache directory index   : -2 (0xfe)
 
-    expected_url = (
-        'Visited: testing@http://www.trafficfusionx.com/download/tfscrn2'
-        '/funnycats.exe')
-
     expected_event_values = {
         'cache_directory_index': -2,
+        'cached_file_size': 0,
         'data_type': 'msiecf:url',
+        'number_of_hits': 6,
         'offset': 21376,
         'timestamp': '2011-06-23 18:02:10.066000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
-        'url': expected_url}
+        'url': (
+            'Visited: testing@http://www.trafficfusionx.com/download/tfscrn2'
+            '/funnycats.exe')}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'msiecf:url',
         'timestamp': '2011-06-23 18:02:10.066000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'msiecf:url',
         'timestamp': '2011-06-29 17:55:02.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     expected_event_values = {
+        'data_type': 'msiecf:url',
         'timestamp': '2011-06-23 18:02:12.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CHECKED}
 
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
-
-    expected_message = (
-        'Location: Visited: testing@http://www.trafficfusionx.com/download'
-        '/tfscrn2/funnycats.exe '
-        'Number of hits: 6 '
-        'Cached file size: 0')
-    expected_short_message = (
-        'Location: Visited: testing@http://www.trafficfusionx.com/download'
-        '/tfscrn2/fun...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[8])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
   def testParseLeakAndRedirect(self):
     """Tests the Parse function with leak and redirected records."""
@@ -101,37 +91,33 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # TODO: Test cached file path.
     expected_event_values = {
-        'data_type': 'msiecf:url'}
+        'cache_directory_index': 0,
+        'cache_directory_name': 'R6QWCVX4',
+        'cached_file_size': 4286,
+        'cached_filename': 'favicon[1].ico',
+        'data_type': 'msiecf:url',
+        'http_headers': (
+            'HTTP/1.1 200 OK\r\n'
+            'Content-Type: image/x-icon\r\n'
+            'ETag: "0922651f38cb1:0",\r\n'
+            'X-Powered-By: ASP.NET\r\n'
+            'P3P: CP="BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo"\r\n'
+            'Content-Length: 4286\r\n'
+            '\r\n'
+            '~U:nfury\r\n'),
+        'number_of_hits': 1,
+        'timestamp': '2010-11-10 07:54:32.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CHECKED,
+        'url': 'http://col.stc.s-msn.com/br/gbl/lg/csl/favicon.ico'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    expected_message = (
-        'Location: http://col.stc.s-msn.com/br/gbl/lg/csl/favicon.ico '
-        'Number of hits: 1 '
-        'Cached file: R6QWCVX4\\favicon[1].ico '
-        'Cached file size: 4286 '
-        'HTTP headers: HTTP/1.1 200 OK - '
-        'Content-Type: image/x-icon - '
-        'ETag: "0922651f38cb1:0", - '
-        'X-Powered-By: ASP.NET - P3P: '
-        'CP="BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo" - '
-        'Content-Length: 4286 - '
-        ' - ~U:nfury - ')
-    expected_short_message = (
-        'Location: http://col.stc.s-msn.com/br/gbl/lg/csl/favicon.ico '
-        'Cached file: R6Q...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[3])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
     expected_event_values = {
-        'cached_filename': 'ADSAdClient31[1].htm',
-        'cached_file_size': 1966,
         'cache_directory_index': 1,
         'cache_directory_name': 'VUQHQA73',
+        'cached_file_size': 1966,
+        'cached_filename': 'ADSAdClient31[1].htm',
         'data_type': 'msiecf:leak',
         'recovered': False,
         'timestamp': 0,
@@ -139,37 +125,16 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[16], expected_event_values)
 
-    expected_message = (
-        'Cached file: VUQHQA73\\ADSAdClient31[1].htm '
-        'Cached file size: 1966')
-    expected_short_message = (
-        'Cached file: VUQHQA73\\ADSAdClient31[1].htm')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[16])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    expected_url = (
-        'http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;sz=1x1;'
-        'pc=[TPAS_ID];ord=2642102')
-
     expected_event_values = {
         'data_type': 'msiecf:redirected',
         'recovered': False,
         'timestamp': 0,
         'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME,
-        'url': expected_url}
+        'url': (
+            'http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;'
+            'sz=1x1;pc=[TPAS_ID];ord=2642102')}
 
     self.CheckEventValues(storage_writer, events[21], expected_event_values)
-
-    expected_message = 'Location: {0:s}'.format(expected_url)
-    expected_short_message = (
-        'Location: http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;'
-        'sz=1x1;pc=[TPA...')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[21])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
