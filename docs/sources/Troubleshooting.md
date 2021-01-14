@@ -64,11 +64,11 @@ OK
 If an error occurs when processing a storage media image try to run with the
 storage image media file and/or the file system directly mounted. Mounting the
 storage image media file will bypass libraries (modules) supporting the storage
-image media format. Running [source_analyzer.py](https://github.com/log2timeline/dfvfs/blob/master/examples/source_analyzer.py)
+image media format. Running [source_analyzer.py](https://github.com/open-source-dfir/dfvfs-snippets/blob/main/scripts/source_analyzer.py)
 can help pinpointing the issue, e.g.
 
 ```bash
-PYTHONPATH=. python examples/source_analyzer.py --no-auto-recurse
+PYTHONPATH=. python scripts/source_analyzer.py --no-auto-recurse
 ```
 
 Try:
