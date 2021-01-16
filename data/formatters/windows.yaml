@@ -13,6 +13,17 @@ short_message:
 - 'Origin: {key_path}'
 ---
 type: 'conditional'
+data_type: 'file_history:namespace:event'
+message:
+- 'Filename: {original_filename}'
+- 'Identifier: {identifier}'
+- 'Parent Identifier: {parent_identifier}'
+- 'Attributes: {file_attribute}'
+- 'USN number: {usn_number}'
+short_message:
+- 'Filename: {original_filename}'
+---
+type: 'conditional'
 data_type: 'iis:log:line'
 message:
 - '{http_method}'
