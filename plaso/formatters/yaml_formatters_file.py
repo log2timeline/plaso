@@ -211,26 +211,17 @@ class YAMLFormattersFile(object):
       raise errors.ParseError(
           'Invalid event formatter definition missing short message.')
 
-    # TODO: pylint will complain about invalid-name because of the override
-    # of class "constants", hence that setattr is used. Change this once
-    # formatters have been migrated to configuration file. Also see:
-    # https://github.com/log2timeline/plaso/issues/444
     if formatter_type == 'basic':
-      formatter = interface.EventFormatter()
-      # TODO: check if message and short_message are strings
-      setattr(formatter, 'FORMAT_STRING', message)
-      setattr(formatter, 'FORMAT_STRING_SHORT', short_message)
+      formatter = interface.BasicEventFormatter(
+          data_type=data_type, format_string=message,
+          format_string_short=short_message)
 
     elif formatter_type == 'conditional':
-      formatter = interface.ConditionalEventFormatter()
-      separator = formatter_definition_values.get(
-          'separator', formatter.FORMAT_STRING_SEPARATOR)
-      # TODO: check if message and short_message are list of strings
-      setattr(formatter, 'FORMAT_STRING_PIECES', message)
-      setattr(formatter, 'FORMAT_STRING_SHORT_PIECES', short_message)
-      setattr(formatter, 'FORMAT_STRING_SEPARATOR', separator)
-
-    setattr(formatter, 'DATA_TYPE', data_type)
+      separator = formatter_definition_values.get('separator', None)
+      formatter = interface.ConditionalEventFormatter(
+          data_type=data_type, format_string_pieces=message,
+          format_string_separator=separator,
+          format_string_short_pieces=short_message)
 
     boolean_helpers = formatter_definition_values.get('boolean_helpers', [])
     self._ReadBooleanHelpers(formatter, boolean_helpers)

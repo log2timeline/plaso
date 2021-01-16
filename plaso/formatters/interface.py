@@ -186,39 +186,36 @@ class FlagsEventFormatterHelper(EventFormatterHelper):
 
 
 class EventFormatter(object):
-  """Base class to format event data using a format string.
-
-  Define the (long) format string and the short format string by defining
-  FORMAT_STRING and FORMAT_STRING_SHORT. The syntax of the format strings
-  is similar to that of format() where the place holder for a certain
-  event object attribute is defined as {attribute_name}.
+  """Base class to format event values.
 
   Attributes:
     custom_helpers (list[str]): identifiers of custom event formatter helpers.
     helpers (list[EventFormatterHelper]): event formatter helpers.
   """
 
-  # The data type is a unique identifier for the event data. The current
-  # approach is to define it as human readable string in the format
-  # root:branch: ... :leaf, e.g. a page visited entry inside a Chrome History
-  # database is defined as: chrome:history:page_visited.
-  DATA_TYPE = 'internal'
-
-  # The format string.
-  FORMAT_STRING = ''
-  FORMAT_STRING_SHORT = ''
-
   # The format string can be defined as:
   # {name}, {name:format}, {name!conversion}, {name!conversion:format}
   _FORMAT_STRING_ATTRIBUTE_NAME_RE = re.compile(
       '{([a-z][a-zA-Z0-9_]*)[!]?[^:}]*[:]?[^}]*}')
 
-  def __init__(self):
-    """Initializes an event formatter object."""
+  def __init__(self, data_type='internal'):
+    """Initializes an event formatter.
+
+    Args:
+      data_type (Optional[str]): unique identifier for the event data supported
+          by the formatter.
+    """
     super(EventFormatter, self).__init__()
+    self._data_type = data_type
     self._format_string_attribute_names = None
+
     self.custom_helpers = []
     self.helpers = []
+
+  @property
+  def data_type(self):
+    """str: unique identifier for the event data supported by the formatter."""
+    return self._data_type.lower()
 
   def _FormatMessage(self, format_string, event_values):
     """Determines the formatted message.
@@ -293,18 +290,13 @@ class EventFormatter(object):
     for helper in self.helpers:
       helper.FormatEventValues(event_values)
 
+  @abc.abstractmethod
   def GetFormatStringAttributeNames(self):
     """Retrieves the attribute names in the format string.
 
     Returns:
       set(str): attribute names.
     """
-    if self._format_string_attribute_names is None:
-      self._format_string_attribute_names = (
-          self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
-              self.FORMAT_STRING))
-
-    return set(self._format_string_attribute_names)
 
   # pylint: disable=unused-argument
   def AddCustomHelper(
@@ -328,6 +320,7 @@ class EventFormatter(object):
     """
     self.helpers.append(helper)
 
+  @abc.abstractmethod
   def GetMessage(self, event_values):
     """Determines the message.
 
@@ -337,7 +330,69 @@ class EventFormatter(object):
     Returns:
       str: message.
     """
-    return self._FormatMessage(self.FORMAT_STRING, event_values)
+
+  @abc.abstractmethod
+  def GetMessageShort(self, event_values):
+    """Determines the short message.
+
+    Args:
+      event_values (dict[str, object]): event values.
+
+    Returns:
+      str: short message.
+    """
+
+
+class BasicEventFormatter(EventFormatter):
+  """Format event values using a message format string.
+
+  Attributes:
+    custom_helpers (list[str]): identifiers of custom event formatter helpers.
+    helpers (list[EventFormatterHelper]): event formatter helpers.
+  """
+
+  def __init__(
+      self, data_type='basic', format_string=None, format_string_short=None):
+    """Initializes a basic event formatter.
+
+    The syntax of the format strings is similar to that of format() where
+    the place holder for a certain event object attribute is defined as
+    {attribute_name}.
+
+    Args:
+      data_type (Optional[str]): unique identifier for the event data supported
+          by the formatter.
+      format_string (Optional[str]): (long) message format string.
+      format_string_short (Optional[str]): short message format string.
+    """
+    super(BasicEventFormatter, self).__init__(data_type=data_type)
+    self._format_string_attribute_names = None
+    self._format_string = format_string
+    self._format_string_short = format_string_short
+
+  def GetFormatStringAttributeNames(self):
+    """Retrieves the attribute names in the format string.
+
+    Returns:
+      set(str): attribute names.
+    """
+    if self._format_string_attribute_names is None:
+      self._format_string_attribute_names = (
+          self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
+              self._format_string))
+
+    return set(self._format_string_attribute_names)
+
+  def GetMessage(self, event_values):
+    """Determines the message.
+
+    Args:
+      event_values (dict[str, object]): event values.
+
+    Returns:
+      str: message.
+    """
+    return self._FormatMessage(self._format_string, event_values)
 
   def GetMessageShort(self, event_values):
     """Determines the short message.
@@ -348,10 +403,10 @@ class EventFormatter(object):
     Returns:
       str: short message.
     """
-    if self.FORMAT_STRING_SHORT:
-      format_string = self.FORMAT_STRING_SHORT
+    if self._format_string_short:
+      format_string = self._format_string_short
     else:
-      format_string = self.FORMAT_STRING
+      format_string = self._format_string
 
     short_message_string = self._FormatMessage(format_string, event_values)
 
@@ -363,28 +418,38 @@ class EventFormatter(object):
 
 
 class ConditionalEventFormatter(EventFormatter):
-  """Base class to conditionally format event data using format string pieces.
+  """Conditionally format event values using format string pieces."""
 
-  Define the (long) format string and the short format string by defining
-  FORMAT_STRING_PIECES and FORMAT_STRING_SHORT_PIECES. The syntax of the
-  format strings pieces is similar to of the event formatter
-  (EventFormatter). Every format string piece should contain a single
-  attribute name or none.
+  _DEFAULT_FORMAT_STRING_SEPARATOR = ' '
 
-  FORMAT_STRING_SEPARATOR is used to control the string which the separate
-  string pieces should be joined. It contains a space by default.
-  """
-  # The format string pieces.
-  FORMAT_STRING_PIECES = ['']
-  FORMAT_STRING_SHORT_PIECES = ['']
+  def __init__(
+      self, data_type='conditional', format_string_pieces=None,
+      format_string_separator=None, format_string_short_pieces=None):
+    """Initializes a conditional event formatter.
 
-  # The separator used to join the string pieces.
-  FORMAT_STRING_SEPARATOR = ' '
+    The syntax of the format strings pieces is similar to of the basic event
+    formatter (BasicEventFormatter). Every format string piece should contain
+    at maximum one unique attribute name. Format string pieces without an
+    attribute name are supported.
 
-  def __init__(self):
-    """Initializes the conditional formatter."""
-    super(ConditionalEventFormatter, self).__init__()
+    Args:
+      data_type (Optional[str]): unique identifier for the event data supported
+          by the formatter.
+      format_string_pieces (Optional[list[str]]): (long) message format string
+          pieces.
+      format_string_separator (Optional[str]): string by which separate format
+          string pieces should be joined.
+      format_string_short_pieces (Optional[list[str]]): short message format
+          string pieces.
+    """
+    if format_string_separator is None:
+      format_string_separator = self._DEFAULT_FORMAT_STRING_SEPARATOR
+
+    super(ConditionalEventFormatter, self).__init__(data_type=data_type)
+    self._format_string_pieces = format_string_pieces or []
     self._format_string_pieces_map = []
+    self._format_string_separator = format_string_separator
+    self._format_string_short_pieces = format_string_short_pieces or []
     self._format_string_short_pieces_map = []
 
   def _CreateFormatStringMap(
@@ -433,11 +498,11 @@ class ConditionalEventFormatter(EventFormatter):
     """
     self._format_string_pieces_map = []
     self._CreateFormatStringMap(
-        self.FORMAT_STRING_PIECES, self._format_string_pieces_map)
+        self._format_string_pieces, self._format_string_pieces_map)
 
     self._format_string_short_pieces_map = []
     self._CreateFormatStringMap(
-        self.FORMAT_STRING_SHORT_PIECES, self._format_string_short_pieces_map)
+        self._format_string_short_pieces, self._format_string_short_pieces_map)
 
   def _ConditionalFormatMessage(
       self, format_string_pieces, format_string_pieces_map, event_values):
@@ -469,7 +534,7 @@ class ConditionalEventFormatter(EventFormatter):
 
         string_pieces.append(format_string_pieces[map_index])
 
-    format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
+    format_string = self._format_string_separator.join(string_pieces)
 
     return self._FormatMessage(format_string, event_values)
 
@@ -481,7 +546,7 @@ class ConditionalEventFormatter(EventFormatter):
     """
     if self._format_string_attribute_names is None:
       self._format_string_attribute_names = []
-      for format_string_piece in self.FORMAT_STRING_PIECES:
+      for format_string_piece in self._format_string_pieces:
         attribute_names = self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
             format_string_piece)
 
@@ -503,7 +568,8 @@ class ConditionalEventFormatter(EventFormatter):
       self._CreateFormatStringMaps()
 
     return self._ConditionalFormatMessage(
-        self.FORMAT_STRING_PIECES, self._format_string_pieces_map, event_values)
+        self._format_string_pieces, self._format_string_pieces_map,
+        event_values)
 
   def GetMessageShort(self, event_values):
     """Determines the short message.
@@ -517,12 +583,12 @@ class ConditionalEventFormatter(EventFormatter):
     if not self._format_string_pieces_map:
       self._CreateFormatStringMaps()
 
-    if (self.FORMAT_STRING_SHORT_PIECES and
-        self.FORMAT_STRING_SHORT_PIECES != ['']):
-      format_string_pieces = self.FORMAT_STRING_SHORT_PIECES
+    if (self._format_string_short_pieces and
+        self._format_string_short_pieces != ['']):
+      format_string_pieces = self._format_string_short_pieces
       format_string_pieces_map = self._format_string_short_pieces_map
     else:
-      format_string_pieces = self.FORMAT_STRING_PIECES
+      format_string_pieces = self._format_string_pieces
       format_string_pieces_map = self._format_string_pieces_map
 
     short_message_string = self._ConditionalFormatMessage(

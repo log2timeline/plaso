@@ -34,7 +34,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
         self._FORMATTERS_YAML)
 
     self.assertIsNotNone(formatter)
-    self.assertEqual(formatter.DATA_TYPE, 'test:fs:stat')
+    self.assertEqual(formatter.data_type, 'test:fs:stat')
 
     with self.assertRaises(errors.ParseError):
       test_formatters_file._ReadFormatterDefinition({})
@@ -94,8 +94,8 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(formatters), 2)
 
-    self.assertEqual(formatters[0].DATA_TYPE, 'test:event')
-    self.assertEqual(formatters[1].DATA_TYPE, 'test:fs:stat')
+    self.assertEqual(formatters[0].data_type, 'test:event')
+    self.assertEqual(formatters[1].data_type, 'test:fs:stat')
 
 
 if __name__ == '__main__':
