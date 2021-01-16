@@ -11,10 +11,6 @@ from plaso.containers import events
 class AnalysisPlugin(object):
   """Class that defines the analysis plugin interface."""
 
-  # The URLS should contain a list of URLs with additional information about
-  # this analysis plugin.
-  URLS = []
-
   # The name of the plugin. This is the name that is matched against when
   # loading plugins, so it is important that this name is short, concise and
   # explains the nature of the plugin easily. It also needs to be unique.
