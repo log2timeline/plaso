@@ -8,7 +8,6 @@ import requests
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
-from plaso.containers import reports
 
 
 class ChromeExtensionPlugin(interface.AnalysisPlugin):
@@ -140,8 +139,9 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append('')
     report_text = '\n'.join(lines_of_text)
-    analysis_report = reports.AnalysisReport(
-        plugin_name=self.NAME, text=report_text)
+
+    analysis_report = super(ChromeExtensionPlugin, self).CompileReport(mediator)
+    analysis_report.text = report_text
     analysis_report.report_dict = self._results
     return analysis_report
 

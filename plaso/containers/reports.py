@@ -11,7 +11,11 @@ class AnalysisReport(interface.AttributeContainer):
   """Analysis report attribute container.
 
   Attributes:
-    filter_string (str): event filter expression.
+    analysis_counter (collections.Counter): counter of analysis results, for
+         example number of events analyzed and tagged.
+    event_filter (str): event filter expression that was used when the analysis
+        plugin was run.
+    filter_string (str): deprecated variant of event_filter.
     plugin_name (str): name of the analysis plugin that generated the report.
     report_dict (dict[str]): ???
     text (str): report text.
@@ -28,6 +32,9 @@ class AnalysisReport(interface.AttributeContainer):
       text (Optional[str]): report text.
     """
     super(AnalysisReport, self).__init__()
+    self.analysis_counter = None
+    self.event_filter = None
+    # TODO: filter_string is deprecated remove at some point.
     self.filter_string = None
     self.plugin_name = plugin_name
     self.report_dict = None
@@ -70,9 +77,10 @@ class AnalysisReport(interface.AttributeContainer):
     if filter_string:
       string_list.append('Filter String: {0:s}'.format(filter_string))
 
-    string_list.append('')
-    string_list.append('Report text:')
-    string_list.append(self.text)
+    if self.text:
+      string_list.append('')
+      string_list.append('Report text:')
+      string_list.append(self.text)
 
     return '\n'.join(string_list)
 

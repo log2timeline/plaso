@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """The analysis plugin mediator object."""
 
-import calendar
 import time
 
 from plaso.containers import warnings
 from plaso.engine import path_helper
-from plaso.lib import definitions
 
 
 class AnalysisMediator(object):
@@ -99,20 +97,10 @@ class AnalysisMediator(object):
     """
     analysis_report = plugin.CompileReport(self)
     if not analysis_report:
+      # TODO: produce AnalysisWarning that no report can be generated.
       return
 
-    time_elements = time.gmtime()
-    time_compiled = (
-        calendar.timegm(time_elements) * definitions.MICROSECONDS_PER_SECOND)
-    analysis_report.time_compiled = time_compiled
-
-    plugin_name = getattr(analysis_report, 'plugin_name', plugin.plugin_name)
-    if plugin_name:
-      analysis_report.plugin_name = plugin_name
-
-    if self._event_filter_expression:
-      # TODO: rename filter string when refactoring the analysis reports.
-      analysis_report.filter_string = self._event_filter_expression
+    analysis_report.event_filter = self._event_filter_expression
 
     self._storage_writer.AddAnalysisReport(analysis_report)
 

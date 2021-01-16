@@ -17,7 +17,13 @@ class AnalysisReportTest(shared_test_lib.BaseTestCase):
     attribute_container = reports.AnalysisReport()
 
     expected_attribute_names = [
-        'filter_string', 'plugin_name', 'report_dict', 'text', 'time_compiled']
+        'analysis_counter',
+        'event_filter',
+        'filter_string',
+        'plugin_name',
+        'report_dict',
+        'text',
+        'time_compiled']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

@@ -9,7 +9,6 @@ from urllib import parse as urlparse
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
-from plaso.containers import reports
 
 
 class BrowserSearchPlugin(interface.AnalysisPlugin):
@@ -286,8 +285,9 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append('')
     report_text = '\n'.join(lines_of_text)
-    analysis_report = reports.AnalysisReport(
-        plugin_name=self.NAME, text=report_text)
+
+    analysis_report = super(BrowserSearchPlugin, self).CompileReport(mediator)
+    analysis_report.text = report_text
     analysis_report.report_dict = results
     return analysis_report
 

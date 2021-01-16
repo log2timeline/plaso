@@ -3,7 +3,6 @@
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import reports
 from plaso.lib import definitions
 
 
@@ -51,7 +50,11 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
       report_text.append('\tSession {0:d}: {1:d} events'.format(
           session, event_count))
     report_text = '\n'.join(report_text)
-    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
+
+    analysis_report = super(SessionizeAnalysisPlugin, self).CompileReport(
+        mediator)
+    analysis_report.text = report_text
+    return analysis_report
 
   # pylint: disable=unused-argument
   def ExamineEvent(self, mediator, event, event_data, event_data_stream):

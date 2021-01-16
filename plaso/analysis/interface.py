@@ -2,10 +2,15 @@
 """This file contains the interface for analysis plugins."""
 
 import abc
+import calendar
+import collections
+import time
 
-from plaso.analysis import definitions
+from plaso.analysis import definitions as analysis_definitions
 from plaso.analysis import logger
 from plaso.containers import events
+from plaso.containers import reports
+from plaso.lib import definitions
 
 
 class AnalysisPlugin(object):
@@ -19,7 +24,8 @@ class AnalysisPlugin(object):
   def __init__(self):
     """Initializes an analysis plugin."""
     super(AnalysisPlugin, self).__init__()
-    self.plugin_type = definitions.PLUGIN_TYPE_REPORT
+    self._analysis_counter = collections.Counter()
+    self.plugin_type = analysis_definitions.PLUGIN_TYPE_REPORT
 
   @property
   def plugin_name(self):
@@ -48,14 +54,12 @@ class AnalysisPlugin(object):
 
     return event_tag
 
-  # pylint: disable=redundant-returns-doc
-  @abc.abstractmethod
+  # pylint: disable=unused-argument
   def CompileReport(self, mediator):
     """Compiles a report of the analysis.
 
-    After the plugin has received every copy of an event to
-    analyze this function will be called so that the report
-    can be assembled.
+    After the plugin has received every copy of an event to analyze this
+    function will be called so that the report can be assembled.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
@@ -64,6 +68,16 @@ class AnalysisPlugin(object):
     Returns:
       AnalysisReport: report.
     """
+    analysis_report = reports.AnalysisReport(plugin_name=self.NAME)
+
+    time_elements = time.gmtime()
+    time_compiled = calendar.timegm(time_elements)
+    analysis_report.time_compiled = (
+        time_compiled * definitions.MICROSECONDS_PER_SECOND)
+
+    analysis_report.analysis_counter = self._analysis_counter
+
+    return analysis_report
 
   @abc.abstractmethod
   def ExamineEvent(self, mediator, event, event_data, event_data_stream):
