@@ -110,8 +110,6 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   # TODO: Check if there are other file types worth checking VirusTotal for.
   DATA_TYPES = ['pe:compilation:compilation_time']
 
-  URLS = ['https://virustotal.com']
-
   NAME = 'virustotal'
 
   _VIRUSTOTAL_NOT_PRESENT_RESPONSE_CODE = 0

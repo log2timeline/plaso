@@ -165,8 +165,6 @@ class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   # so look up all files.
   DATA_TYPES = ['fs:stat', 'fs:stat:ntfs']
 
-  URLS = ['https://rjhansen.github.io/nsrlsvr/']
-
   NAME = 'nsrlsvr'
 
   def __init__(self):

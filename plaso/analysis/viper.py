@@ -133,8 +133,6 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   # TODO: Check if there are other file types worth checking Viper for.
   DATA_TYPES = ['pe:compilation:compilation_time']
 
-  URLS = ['https://viper.li']
-
   NAME = 'viper'
 
   def __init__(self):
