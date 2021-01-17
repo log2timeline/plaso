@@ -74,11 +74,7 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
 
     # We cannot trust the file size in the LNK data so we get the last offset
     # that was read instead.
-    lnk_file_size = lnk_file_object.get_offset()
-
-    lnk_file_object.close()
-
-    return lnk_file_size
+    return lnk_file_object.get_offset()
 
   @classmethod
   def GetFormatSpecification(cls):

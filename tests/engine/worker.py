@@ -186,11 +186,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     display_name = mediator.GetDisplayName()
     event_data_stream = events.EventDataStream()
 
-    try:
-      extraction_worker._AnalyzeFileObject(
-          file_object, display_name, event_data_stream)
-    finally:
-      file_object.close()
+    extraction_worker._AnalyzeFileObject(
+        file_object, display_name, event_data_stream)
 
     storage_writer.WriteSessionCompletion()
     storage_writer.Close()

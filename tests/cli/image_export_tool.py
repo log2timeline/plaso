@@ -8,6 +8,7 @@ import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -86,7 +87,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         location='/a_directory', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-    with self.assertRaises(IOError):
+    with self.assertRaises(dfvfs_errors.BackEndError):
       test_tool._CalculateDigestHash(file_entry, '')
 
   # TODO: add tests for _CreateSanitizedDestination.

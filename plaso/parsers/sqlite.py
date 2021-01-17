@@ -131,7 +131,6 @@ class SQLiteDatabase(object):
     super(SQLiteDatabase, self).__init__()
     self._database = None
     self._filename = filename
-    self._is_open = False
     self._temp_db_file_path = ''
     self._temporary_directory = temporary_directory
     self._temp_wal_file_path = ''
@@ -142,10 +141,7 @@ class SQLiteDatabase(object):
   @property
   def tables(self):
     """list[str]: names of all the tables."""
-    if self._is_open:
-      return self.schema.keys()
-
-    return []
+    return self.schema.keys()
 
   def _CopyFileObjectToTemporaryFile(self, file_object, temporary_file):
     """Copies the contents of the file-like object to a temporary file.
@@ -163,9 +159,6 @@ class SQLiteDatabase(object):
   def Close(self):
     """Closes the database connection and cleans up the temporary file."""
     self.schema = {}
-
-    if self._is_open:
-      self._database.close()
     self._database = None
 
     if os.path.exists(self._temp_db_file_path):
@@ -189,8 +182,6 @@ class SQLiteDatabase(object):
                 self._temp_wal_file_path, self._filename, exception))
 
     self._temp_wal_file_path = ''
-
-    self._is_open = False
 
   def Open(self, file_object, wal_file_object=None):
     """Opens a SQLite database file.
@@ -294,8 +285,6 @@ class SQLiteDatabase(object):
               self._filename, exception))
       raise
 
-    self._is_open = True
-
   def Query(self, query):
     """Queries the database.
 
@@ -370,9 +359,6 @@ class SQLiteParser(interface.FileEntryParser):
 
       return None, None
 
-    finally:
-      wal_file_object.close()
-
     return database_wal, wal_file_entry
 
   @classmethod
@@ -407,13 +393,10 @@ class SQLiteParser(interface.FileEntryParser):
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to open SQLite database with error: {0!s}'.format(exception))
-      file_object.close()
       return
 
     database_wal, wal_file_entry = self._OpenDatabaseWithWAL(
         parser_mediator, file_entry, file_object, filename)
-
-    file_object.close()
 
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()

@@ -272,20 +272,16 @@ class BaseEngine(object):
         logger.error(exception)
         continue
 
-      try:
-        searcher = file_system_searcher.FileSystemSearcher(
-            file_system, mount_point)
+      searcher = file_system_searcher.FileSystemSearcher(
+          file_system, mount_point)
 
-        operating_system = self._DetermineOperatingSystem(searcher)
-        if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
-          preprocess_manager.PreprocessPluginsManager.RunPlugins(
-              artifacts_registry_object, file_system, mount_point,
-              self.knowledge_base)
+      operating_system = self._DetermineOperatingSystem(searcher)
+      if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
+        preprocess_manager.PreprocessPluginsManager.RunPlugins(
+            artifacts_registry_object, file_system, mount_point,
+            self.knowledge_base)
 
-          detected_operating_systems.append(operating_system)
-
-      finally:
-        file_system.Close()
+        detected_operating_systems.append(operating_system)
 
     if detected_operating_systems:
       logger.info('Preprocessing detected operating systems: {0:s}'.format(

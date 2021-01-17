@@ -40,9 +40,6 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     parser.EnablePlugins([plugin_name])
 
     file_object = file_entry.GetFileObject()
-    try:
-      parser.Parse(parser_mediator, file_object)
-    finally:
-      file_object.close()
+    parser.Parse(parser_mediator, file_object)
 
     return storage_writer

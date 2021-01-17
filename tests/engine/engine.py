@@ -57,7 +57,6 @@ class TestEngine(engine.BaseEngine):
             searcher (FileSystemSearcher) to indicate the base location of
             the file system
     """
-    self._file_system.Open(self._mount_point)
     return self._file_system, self._mount_point
 
 
@@ -133,8 +132,6 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     self.assertIsNotNone(test_mount_point)
     self.assertIsInstance(test_mount_point, path_spec.PathSpec)
-
-    test_file_system.Close()
 
     with self.assertRaises(RuntimeError):
       test_engine.GetSourceFileSystem(None)

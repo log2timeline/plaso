@@ -128,8 +128,6 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     # total 6 path specifications.
     self.assertEqual(len(path_specs), 6)
 
-    file_system.Close()
-
   def testBuildFindSpecsWithFileSystemAndGroup(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
     test_file_path = self._GetTestFilePath(['System.evtx'])
@@ -173,8 +171,6 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     # files,
     # total 6 path specifications.
     self.assertEqual(len(path_specs), 6)
-
-    file_system.Close()
 
   def testBuildFindSpecsWithRegistry(self):
     """Tests the BuildFindSpecs function on Windows Registry sources."""

@@ -76,7 +76,6 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     win_registry_reader = winreg_parser.FileObjectWinRegistryFileReader()
     registry_file = win_registry_reader.Open(file_object)
     if not registry_file:
-      file_object.close()
       return None
 
     win_registry = dfwinreg_registry.WinRegistry()
