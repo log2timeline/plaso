@@ -438,6 +438,10 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     test_file_path = self._GetTestFilePath(['psort_test.plaso'])
     self._SkipIfPathNotExists(test_file_path)
 
+    test_tagging_file_path = self._GetTestFilePath([
+        'tagging_file', 'valid.txt'])
+    self._SkipIfPathNotExists(test_tagging_file_path)
+
     session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
@@ -449,9 +453,11 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     output_module = null.NullOutputModule(output_mediator_object)
 
     data_location = ''
+
     analysis_plugin = tagging.TaggingAnalysisPlugin()
+    analysis_plugin.SetAndLoadTagFile(test_tagging_file_path)
+
     analysis_plugins = {'tagging': analysis_plugin}
-    # TODO: set tag file.
 
     configuration = configurations.ProcessingConfiguration()
 
