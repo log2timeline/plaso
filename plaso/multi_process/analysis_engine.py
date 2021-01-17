@@ -47,7 +47,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     super(AnalysisMultiProcessEngine, self).__init__()
     self._analysis_plugins = {}
-    self._completed_analysis_processes = set()
     self._data_location = None
     self._event_filter_expression = None
     self._event_queues = {}
@@ -74,14 +73,13 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._worker_memory_limit = worker_memory_limit
     self._worker_timeout = worker_timeout or definitions.DEFAULT_WORKER_TIMEOUT
 
-  def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
-    """Analyzes events in a plaso storage.
+  def _AnalyzeEventStore(self, storage_writer, analysis_plugins):
+    """Analyzes an event store.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       analysis_plugins (dict[str, AnalysisPlugin]): analysis plugins that
           should be run and their names.
-      event_filter (Optional[EventObjectFilter]): event filter.
 
     Returns:
       collections.Counter: counter containing information about the events
@@ -102,60 +100,25 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._number_of_produced_event_tags = 0
     self._number_of_produced_sources = 0
 
-    number_of_filtered_events = 0
-
-    logger.debug('Processing events.')
-
-    filter_limit = getattr(event_filter, 'limit', None)
-
-    for event in storage_writer.GetSortedEvents():
-      event_data_identifier = event.GetEventDataIdentifier()
-      event_data = storage_writer.GetEventDataByIdentifier(
-          event_data_identifier)
-
-      event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
-      if event_data_stream_identifier:
-        event_data_stream = storage_writer.GetEventDataStreamByIdentifier(
-            event_data_stream_identifier)
-      else:
-        event_data_stream = None
-
-      event_identifier = event.GetIdentifier()
-      event_tag = self._event_tag_index.GetEventTagByIdentifier(
-          storage_writer, event_identifier)
-
-      if event_filter:
-        filter_match = event_filter.Match(
-            event, event_data, event_data_stream, event_tag)
-      else:
-        filter_match = None
-
-      # pylint: disable=singleton-comparison
-      if filter_match == False:
-        number_of_filtered_events += 1
-        continue
-
-      for event_queue in self._event_queues.values():
-        # TODO: Check for premature exit of analysis plugins.
-        event_queue.PushItem((event, event_data, event_data_stream))
-
-      self._number_of_consumed_events += 1
-
-      if (event_filter and filter_limit and
-          filter_limit == self._number_of_consumed_events):
-        break
-
-    logger.debug('Finished pushing events to analysis plugins.')
-    # Signal that we have finished adding events.
-    for event_queue in self._event_queues.values():
-      event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+    # TODO: change events into Progress and have analysis plugins report
+    # progress in percentage e.g. x out of y events or x out of y event data
+    # streams. Have main process report x out of y analysis results merged.
 
     logger.debug('Processing analysis plugin results.')
 
     # TODO: use a task based approach.
     plugin_names = list(analysis_plugins.keys())
-    while plugin_names:
-      for plugin_name in list(plugin_names):
+
+    analysis_tasks = []
+    for plugin_name in analysis_plugins.keys():
+      task = tasks.Task()
+      task.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      task.identifier = plugin_name
+
+      analysis_tasks.append(task)
+
+    while analysis_tasks:
+      for task in list(analysis_tasks):
         if self._abort:
           break
 
@@ -174,6 +137,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           event_queue = self._event_queues[plugin_name]
           del self._event_queues[plugin_name]
 
+          event_queue.PushItem(plaso_queue.QueueAbort())
           event_queue.Close()
 
           storage_merge_reader = self._StartMergeTaskStorage(
@@ -182,7 +146,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           storage_merge_reader.MergeAttributeContainers(
               callback=self._MergeEventTag)
           # TODO: temporary solution.
-          plugin_names.remove(plugin_name)
+          analysis_tasks.remove(task)
 
           self._status = definitions.STATUS_INDICATOR_RUNNING
 
@@ -204,7 +168,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       logger.debug('Processing completed.')
 
     events_counter = collections.Counter()
-    events_counter['Events filtered'] = number_of_filtered_events
     events_counter['Events processed'] = self._number_of_consumed_events
 
     return events_counter
@@ -222,60 +185,50 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     # vs management).
     self._RaiseIfNotRegistered(pid)
 
-    if pid in self._completed_analysis_processes:
-      status_indicator = definitions.STATUS_INDICATOR_COMPLETED
-      process_status = {
-          'processing_status': status_indicator}
-      used_memory = 0
+    process = self._processes_per_pid[pid]
+
+    process_status = self._QueryProcessStatus(process)
+    if process_status is None:
+      process_is_alive = False
+    else:
+      process_is_alive = True
+
+    process_information = self._process_information_per_pid[pid]
+    used_memory = process_information.GetUsedMemory() or 0
+
+    if self._worker_memory_limit and used_memory > self._worker_memory_limit:
+      logger.warning((
+          'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
+          'memory limit: {2:d}.').format(
+              process.name, pid, self._worker_memory_limit))
+      self._KillProcess(pid)
+
+    if isinstance(process_status, dict):
+      self._rpc_errors_per_pid[pid] = 0
+      status_indicator = process_status.get('processing_status', None)
 
     else:
-      process = self._processes_per_pid[pid]
+      rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
+      self._rpc_errors_per_pid[pid] = rpc_errors
 
-      process_status = self._QueryProcessStatus(process)
-      if process_status is None:
+      if rpc_errors > self._MAXIMUM_RPC_ERRORS:
         process_is_alive = False
-      else:
-        process_is_alive = True
 
-      process_information = self._process_information_per_pid[pid]
-      used_memory = process_information.GetUsedMemory() or 0
-
-      if self._worker_memory_limit and used_memory > self._worker_memory_limit:
+      if process_is_alive:
+        rpc_port = process.rpc_port.value
         logger.warning((
-            'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
-            'memory limit: {2:d}.').format(
-                process.name, pid, self._worker_memory_limit))
-        self._KillProcess(pid)
+            'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
+            'RPC socket: http://localhost:{2:d}').format(
+                process.name, pid, rpc_port))
 
-      if isinstance(process_status, dict):
-        self._rpc_errors_per_pid[pid] = 0
-        status_indicator = process_status.get('processing_status', None)
-
-        if status_indicator == definitions.STATUS_INDICATOR_COMPLETED:
-          self._completed_analysis_processes.add(pid)
-
+        processing_status_string = 'RPC error'
+        status_indicator = definitions.STATUS_INDICATOR_RUNNING
       else:
-        rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
-        self._rpc_errors_per_pid[pid] = rpc_errors
+        processing_status_string = 'killed'
+        status_indicator = definitions.STATUS_INDICATOR_KILLED
 
-        if rpc_errors > self._MAXIMUM_RPC_ERRORS:
-          process_is_alive = False
-
-        if process_is_alive:
-          rpc_port = process.rpc_port.value
-          logger.warning((
-              'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
-              'RPC socket: http://localhost:{2:d}').format(
-                  process.name, pid, rpc_port))
-
-          processing_status_string = 'RPC error'
-          status_indicator = definitions.STATUS_INDICATOR_RUNNING
-        else:
-          processing_status_string = 'killed'
-          status_indicator = definitions.STATUS_INDICATOR_KILLED
-
-        process_status = {
-            'processing_status': processing_status_string}
+      process_status = {
+          'processing_status': processing_status_string}
 
     self._UpdateProcessingStatus(pid, process_status, used_memory)
 
@@ -552,7 +505,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           should be run and their names.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
-      event_filter (Optional[EventObjectFilter]): event filter.
       event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
           updates.
@@ -599,8 +551,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       try:
         storage_writer.WriteSessionConfiguration()
 
-        self._AnalyzeEvents(
-            storage_writer, analysis_plugins, event_filter=event_filter)
+        self._AnalyzeEventStore(storage_writer, analysis_plugins)
 
         self._status = definitions.STATUS_INDICATOR_FINALIZING
 
@@ -658,9 +609,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._session = None
     self._status_update_callback = None
     self._storage_file_path = None
-
-    if keyboard_interrupt:
-      raise KeyboardInterrupt
 
     if keyboard_interrupt:
       raise KeyboardInterrupt

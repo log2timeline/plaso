@@ -484,13 +484,13 @@ class StorageFileWriter(interface.StorageWriter):
   """Defines an interface for a file-backed storage writer."""
 
   def __init__(
-      self, session, output_file,
-      storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
+      self, session, path, storage_type=definitions.STORAGE_TYPE_SESSION,
+      task=None):
     """Initializes a storage writer.
 
     Args:
       session (Session): session the storage changes are part of.
-      output_file (str): path to the output file.
+      path (str): path to the storage file.
       storage_type (Optional[str]): storage type.
       task(Optional[Task]): task.
     """
@@ -841,7 +841,7 @@ class StorageFileWriter(interface.StorageWriter):
     if self._storage_profiler:
       self._storage_file.SetStorageProfiler(self._storage_profiler)
 
-    self._storage_file.Open(path=self._output_file, read_only=False)
+    self._storage_file.Open(path=self._path, read_only=False)
 
     self._first_written_event_source_index = (
         self._storage_file.GetNumberOfEventSources())
