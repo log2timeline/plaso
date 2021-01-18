@@ -7,6 +7,7 @@ import multiprocessing
 import os
 import random
 import signal
+import sys
 import time
 
 from plaso.engine import process_info
@@ -268,6 +269,22 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   # This method is part of the multiprocessing.Process interface hence
   # its name does not follow the style guide.
   def run(self):
+    """Runs the process."""
+    if '_lsprof' in sys.modules:
+      # If profiling is active make sure the worker process is included.
+      # cProfile needs to be imported only when needed otherwise the _lsprof
+      # module will be loaded.
+      import cProfile  # pylint: disable=import-outside-toplevel
+
+      profile = cProfile.Profile()
+      profile.enable()
+      profile.runcall(self._RunProcess)
+      profile.disable()
+      profile.dump_stats('{0:s}-profile.output'.format(self._name))
+    else:
+      self._RunProcess()
+
+  def _RunProcess(self):
     """Runs the process."""
     # Prevent the KeyboardInterrupt being raised inside the process.
     # This will prevent a process from generating a traceback when interrupted.
