@@ -12,7 +12,6 @@ import requests
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.containers import events
-from plaso.containers import reports
 from plaso.lib import errors
 
 
@@ -228,8 +227,10 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     for event_tag in tags:
       mediator.ProduceEventTag(event_tag)
 
-    return reports.AnalysisReport(
-        plugin_name=self.NAME, text=report_text)
+    analysis_report = super(HashTaggingAnalysisPlugin, self).CompileReport(
+        mediator)
+    analysis_report.text = report_text
+    return analysis_report
 
   def EstimateTimeRemaining(self):
     """Estimates how long until all hashes have been analyzed.

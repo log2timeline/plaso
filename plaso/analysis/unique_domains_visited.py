@@ -5,7 +5,6 @@ from urllib import parse as urlparse
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import reports
 
 
 class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
@@ -80,7 +79,11 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append('')
     report_text = '\n'.join(lines_of_text)
-    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
+
+    analysis_report = super(UniqueDomainsVisitedPlugin, self).CompileReport(
+        mediator)
+    analysis_report.text = report_text
+    return analysis_report
 
 
 manager.AnalysisPluginManager.RegisterPlugin(UniqueDomainsVisitedPlugin)

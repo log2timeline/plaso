@@ -53,8 +53,13 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     report = storage_writer.analysis_reports[0]
     self.assertIsNotNone(report)
 
-    expected_text = 'Tagging plugin produced 4 tags.\n'
-    self.assertEqual(report.text, expected_text)
+    self.assertIsNotNone(report.analysis_counter)
+    self.assertEqual(report.analysis_counter['event_tags'], 4)
+    self.assertEqual(report.analysis_counter['application_execution'], 1)
+    self.assertEqual(report.analysis_counter['file_downloaded'], 1)
+    self.assertEqual(report.analysis_counter['login_attempt'], 1)
+    self.assertEqual(report.analysis_counter['security_event'], 1)
+    self.assertEqual(report.analysis_counter['text_contains'], 1)
 
     labels = []
     for event_tag in storage_writer.GetEventTags():
@@ -62,12 +67,10 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
     self.assertEqual(len(labels), 5)
 
-    # This is from a tag rule declared in objectfilter syntax.
-    self.assertIn('application_execution', labels)
-    # This is from a tag rule declared in dotty syntax.
-    self.assertIn('login_attempt', labels)
-    # This is from a rule using the "contains" operator
-    self.assertIn('text_contains', labels)
+    expected_labels = [
+        'application_execution', 'file_downloaded', 'login_attempt',
+        'security_event', 'text_contains']
+    self.assertEqual(sorted(labels), expected_labels)
 
 
 if __name__ == '__main__':

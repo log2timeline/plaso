@@ -5,7 +5,6 @@ import yaml
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import reports
 from plaso.parsers.winreg_plugins import services
 
 
@@ -264,7 +263,11 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append('')
     report_text = '\n'.join(lines_of_text)
-    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
+
+    analysis_report = super(WindowsServicesAnalysisPlugin, self).CompileReport(
+        mediator)
+    analysis_report.text = report_text
+    return analysis_report
 
   # pylint: disable=unused-argument
   def ExamineEvent(self, mediator, event, event_data, event_data_stream):
