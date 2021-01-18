@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Timesketch output module CLI arguments helper."""
 
+import json
+import os
 import uuid
 
 from plaso.lib import errors
@@ -90,6 +92,20 @@ class TimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
     username = cls._ParseStringOption(
         options, 'username', default_value=cls._DEFAULT_USERNAME)
     output_module.SetTimelineOwner(username)
+
+    data_location = getattr(options, '_data_location', None) or 'data'
+    mappings_file_path = os.path.join(
+        data_location, output_module.MAPPINGS_FILENAME)
+
+    if not mappings_file_path or not os.path.isfile(mappings_file_path):
+      raise errors.BadConfigOption(
+          'No such Elasticsearch mappings file: {0!s}.'.format(
+              mappings_file_path))
+
+    with open(mappings_file_path, 'r') as file_object:
+      mappings_json = json.load(file_object)
+
+    output_module.SetMappings(mappings_json)
 
 
 manager.ArgumentHelperManager.RegisterHelper(TimesketchOutputArgumentsHelper)

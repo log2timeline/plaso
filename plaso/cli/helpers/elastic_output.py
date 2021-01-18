@@ -160,7 +160,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
           output_module, elastic.ElasticsearchOutputModule):
         mappings_filename = 'raw_fields.mappings'
 
-      data_location = getattr(options, '_data_location', None) or ''
+      data_location = getattr(options, '_data_location', None) or 'data'
       mappings_file_path = os.path.join(data_location, mappings_filename)
 
     if not mappings_file_path or not os.path.isfile(mappings_file_path):

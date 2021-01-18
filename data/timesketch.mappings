@@ -1,10 +1,10 @@
 {
-  'properties': {
-    'timesketch_label': {
-      'type': 'nested'
+  "properties": {
+    "timesketch_label": {
+      "type": "nested"
     },
-    'datetime': {
-      'type': 'date'
+    "datetime": {
+      "type": "date"
     }
   }
 }
