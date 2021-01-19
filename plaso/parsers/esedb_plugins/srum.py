@@ -201,7 +201,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
   _NETWORK_DATA_USAGE_VALUES_MAP = {
       'application': 'AppId',
-      'bytes_recieved': 'BytesRecvd',
+      'bytes_received': 'BytesRecvd',
       'bytes_sent': 'BytesSent',
       'identifier': 'AutoIncId',
       'interface_luid': 'InterfaceLuid',
