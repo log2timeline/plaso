@@ -29,7 +29,7 @@ class OutputMediator(object):
   # LCID 0x0409 is en-US.
   DEFAULT_LCID = 0x0409
 
-  _DEFAULT_MESSAGE_FORMATTER = default.DefaultFormatter()
+  _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
 
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
@@ -103,8 +103,7 @@ class OutputMediator(object):
         if custom_formatter_helper:
           message_formatter.AddHelper(custom_formatter_helper)
 
-      data_type = message_formatter.DATA_TYPE.lower()
-      self._message_formatters[data_type] = message_formatter
+      self._message_formatters[message_formatter.data_type] = message_formatter
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.

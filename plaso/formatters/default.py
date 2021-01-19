@@ -5,12 +5,18 @@ from plaso.formatters import interface
 from plaso.lib import definitions
 
 
-class DefaultFormatter(interface.EventFormatter):
+class DefaultEventFormatter(interface.BasicEventFormatter):
   """Formatter for events that do not have any defined formatter."""
 
   DATA_TYPE = 'event'
   FORMAT_STRING = '<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'
   FORMAT_STRING_SHORT = '<DEFAULT> {attribute_driven}'
+
+  def __init__(self):
+    """Initializes a default event formatter."""
+    super(DefaultEventFormatter, self).__init__(
+        data_type=self.DATA_TYPE, format_string=self.FORMAT_STRING,
+        format_string_short=self.FORMAT_STRING_SHORT)
 
   def FormatEventValues(self, event_values):
     """Formats event values using the helpers.

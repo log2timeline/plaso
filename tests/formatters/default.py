@@ -9,17 +9,17 @@ from plaso.formatters import default
 from tests.formatters import test_lib
 
 
-class DefaultFormatterTest(test_lib.EventFormatterTestCase):
+class DefaultEventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the default event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = default.DefaultFormatter()
+    event_formatter = default.DefaultEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = default.DefaultFormatter()
+    event_formatter = default.DefaultEventFormatter()
 
     expected_attribute_names = ['attribute_driven']
 

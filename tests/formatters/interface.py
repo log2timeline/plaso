@@ -11,39 +11,6 @@ from tests.containers import test_lib as containers_test_lib
 from tests.formatters import test_lib
 
 
-class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
-  """An event object for testing the conditional event formatter."""
-  DATA_TYPE = 'test:broken_conditional'
-  FORMAT_STRING_PIECES = ['{too} {many} formatting placeholders']
-
-
-class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
-  """A test conditional event formatter."""
-
-  DATA_TYPE = 'test:event:conditional'
-
-  FORMAT_STRING_PIECES = [
-      'Description: {description}',
-      'Comment',
-      'Value: 0x{numeric:02x}',
-      'Optional: {optional}',
-      'Text: {text}']
-
-
-class TestEventFormatter(interface.EventFormatter):
-  """Test event formatter."""
-
-  DATA_TYPE = 'test:event'
-  FORMAT_STRING = '{text}'
-
-
-class WrongEventFormatter(interface.EventFormatter):
-  """An event formatter for testing."""
-  DATA_TYPE = 'test:wrong'
-
-  FORMAT_STRING = 'This format string does not match {body}.'
-
-
 class BooleanEventFormatterHelperTest(test_lib.EventFormatterTestCase):
   """Tests for the boolean event formatter helper."""
 
@@ -105,7 +72,8 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = TestEventFormatter()
+    event_formatter = interface.BasicEventFormatter(
+        data_type='test', format_string='{text}')
     self.assertIsNotNone(event_formatter)
 
   # TODO: add tests for _FormatMessage
@@ -113,7 +81,8 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = TestEventFormatter()
+    event_formatter = interface.BasicEventFormatter(
+        data_type='test', format_string='{text}')
 
     expected_attribute_names = ['text']
 
@@ -122,7 +91,8 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessage(self):
     """Tests the GetMessage function."""
-    event_formatter = TestEventFormatter()
+    event_formatter = interface.BasicEventFormatter(
+        data_type='test', format_string='{text}')
 
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
@@ -135,7 +105,8 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessageShort(self):
     """Tests the GetMessageShort function."""
-    event_formatter = TestEventFormatter()
+    event_formatter = interface.BasicEventFormatter(
+        data_type='test', format_string='{text}')
 
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
@@ -160,18 +131,29 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
        'timestamp': 1335791207939596,
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
+  _TEST_FORMAT_STRING_PIECES = [
+      'Description: {description}',
+      'Comment',
+      'Value: 0x{numeric:02x}',
+      'Optional: {optional}',
+      'Text: {text}']
+
   def testCreateFormatStringMaps(self):
     """Tests the _CreateFormatStringMaps function."""
-    event_formatter = ConditionalTestEventFormatter()
+    event_formatter = interface.ConditionalEventFormatter(
+        data_type='test', format_string_pieces=self._TEST_FORMAT_STRING_PIECES)
     event_formatter._CreateFormatStringMaps()
 
     with self.assertRaises(RuntimeError):
-      event_formatter = BrokenConditionalEventFormatter()
+      format_string_pieces = ['{too} {many} formatting placeholders']
+      event_formatter = interface.ConditionalEventFormatter(
+          data_type='test', format_string_pieces=format_string_pieces)
       event_formatter._CreateFormatStringMaps()
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = ConditionalTestEventFormatter()
+    event_formatter = interface.ConditionalEventFormatter(
+        data_type='test', format_string_pieces=self._TEST_FORMAT_STRING_PIECES)
 
     expected_attribute_names = sorted([
         'description', 'numeric', 'optional', 'text'])
@@ -181,7 +163,8 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessage(self):
     """Tests the GetMessage function."""
-    event_formatter = ConditionalTestEventFormatter()
+    event_formatter = interface.ConditionalEventFormatter(
+        data_type='test', format_string_pieces=self._TEST_FORMAT_STRING_PIECES)
 
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
@@ -196,7 +179,8 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessageShort(self):
     """Tests the GetMessageShort function."""
-    event_formatter = ConditionalTestEventFormatter()
+    event_formatter = interface.ConditionalEventFormatter(
+        data_type='test', format_string_pieces=self._TEST_FORMAT_STRING_PIECES)
 
     _, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
