@@ -12,8 +12,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
-from plaso.output import dynamic
-from plaso.output import mediator as output_mediator
 from plaso.parsers import interface
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
@@ -172,38 +170,6 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       self.fail('Got unsupported parser type: {0!s}'.format(type(parser)))
 
     return storage_writer
-
-  def _TestGetMessageStrings(
-      self, event_data, expected_message, expected_short_message):
-    """Tests the formatting of the message strings.
-
-    This function invokes the GetMessageStrings function of the event data
-    formatter on the event data and compares the resulting messages strings
-    with those expected.
-
-    Args:
-      event_data (EventData): event data.
-      expected_message (str): expected message string.
-      expected_short_message (str): expected short message string.
-    """
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
-
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    output_mediator_object.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
-
-    fields_formatting_helper = dynamic.DynamicFieldFormattingHelper(
-        output_mediator_object)
-
-    message = fields_formatting_helper.GetFormattedField(
-        'message', None, event_data, None, None)
-    self.assertEqual(message, expected_message)
-
-    message_short = fields_formatting_helper.GetFormattedField(
-        'message_short', None, event_data, None, None)
-    self.assertEqual(message_short, expected_short_message)
 
   def CheckEventValues(self, storage_writer, event, expected_event_values):
     """Asserts that an event and its event data matches the expected values.
