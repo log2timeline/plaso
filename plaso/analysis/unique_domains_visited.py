@@ -29,11 +29,6 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       'opera:history',
       'safari:history:visit'])
 
-  def __init__(self):
-    """Initializes the domains visited plugin."""
-    super(UniqueDomainsVisitedPlugin, self).__init__()
-    self._domains = []
-
   # pylint: disable=unused-argument
   def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event and extracts domains from it.
@@ -56,34 +51,12 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       return
 
     parsed_url = urlparse.urlparse(url)
+
     domain = getattr(parsed_url, 'netloc', None)
-    if domain in self._domains:
-      # We've already found an event containing this domain.
+    if not domain:
       return
 
-    self._domains.append(domain)
-
-  def CompileReport(self, mediator):
-    """Compiles an analysis report.
-
-    Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
-
-    Returns:
-      AnalysisReport: the analysis report.
-    """
-    lines_of_text = ['Listing domains visited by all users']
-    for domain in sorted(self._domains):
-      lines_of_text.append(domain)
-
-    lines_of_text.append('')
-    report_text = '\n'.join(lines_of_text)
-
-    analysis_report = super(UniqueDomainsVisitedPlugin, self).CompileReport(
-        mediator)
-    analysis_report.text = report_text
-    return analysis_report
+    self._analysis_counter[domain] += 1
 
 
 manager.AnalysisPluginManager.RegisterPlugin(UniqueDomainsVisitedPlugin)

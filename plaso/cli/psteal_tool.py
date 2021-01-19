@@ -9,6 +9,8 @@ import textwrap
 
 import pytz
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
 # The following import makes sure the output modules are registered.
@@ -190,11 +192,26 @@ class PstealTool(
       if index + 1 <= number_of_analysis_reports:
         continue
 
+      date_time_string = None
+      if analysis_report.time_compiled is not None:
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=analysis_report.time_compiled)
+        date_time_string = date_time.CopyToDateTimeStringISO8601()
+
       title = 'Analysis report: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
-      table_view.AddRow(['String', analysis_report.GetString()])
+      table_view.AddRow(['Name plugin', analysis_report.plugin_name or 'N/A'])
+      table_view.AddRow(['Date and time', date_time_string or 'N/A'])
+      table_view.AddRow(['Event filter', analysis_report.event_filter or 'N/A'])
+
+      if not analysis_report.analysis_counter:
+        table_view.AddRow(['Text', analysis_report.text or ''])
+      else:
+        table_view.AddRow(['Results', ''])
+        for key, value in sorted(analysis_report.analysis_counter.items()):
+          table_view.AddRow([key, value])
 
       table_view.Write(self._output_writer)
 
