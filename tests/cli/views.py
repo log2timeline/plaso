@@ -185,10 +185,12 @@ class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
     expected_string = (
         b'### Title\n'
         b'\n'
-        b' | \n'
-        b'--- | ---\n'
-        b'Name | The name in the table\n'
-        b'Description | The description in the table\n'
+        b'<table>\n'
+        b'<tr><th nowrap style="text-align:left;vertical-align:top">Name</th>'
+        b'<td>The name in the table</td></tr>\n'
+        b'<tr><th nowrap style="text-align:left;vertical-align:top">Description'
+        b'</th><td>The description in the table</td></tr>\n'
+        b'</table>\n'
         b'\n')
 
     # Splitting the string makes it easier to see differences.

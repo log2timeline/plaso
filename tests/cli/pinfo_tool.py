@@ -245,7 +245,6 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     table_view.AddRow(['Debug mode', 'False'])
     table_view.AddRow(['Artifact filters', 'N/A'])
     table_view.AddRow(['Filter file', 'N/A'])
-    table_view.AddRow(['Number of event sources', '2'])
     table_view.Write(output_writer)
 
     table_view = cli_views.ViewsFactory.GetTableView(

@@ -40,6 +40,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       'reports': 'Show information about analysis reports.',
       'sessions': 'Show information about sessions.',
       'warnings': 'Show information about warnings during processing.'}
+      # TODO: add support for event sources.
+      # 'sources': 'Show information about event sources.',
+
+  _DEFAULT_OUTPUT_FORMAT = 'text'
+  _SUPPORTED_OUTPUT_FORMATS = ['json', 'markdown', 'text']
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -245,7 +250,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._output_writer.Write(
           ', "analysis_reports": {0:s}'.format(json_string))
 
-    elif self._output_format == 'text' and analysis_reports_counter:
+    elif (self._output_format in ('markdown', 'text') and
+          analysis_reports_counter):
       title = 'Reports generated per plugin'
       if session_identifier:
         title = '{0:s}: {1:s}'.format(title, session_identifier)
@@ -273,19 +279,20 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    if not storage_reader.HasAnalysisReports():
+    if (self._output_format == 'text' and
+        not storage_reader.HasAnalysisReports()):
       self._output_writer.Write('\nNo analysis reports stored.\n')
-      return
 
-    for index, analysis_report in enumerate(
-        storage_reader.GetAnalysisReports()):
-      title = 'Analysis report: {0:d}'.format(index)
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title=title)
+    else:
+      for index, analysis_report in enumerate(
+          storage_reader.GetAnalysisReports()):
+        title = 'Analysis report: {0:d}'.format(index)
+        table_view = views.ViewsFactory.GetTableView(
+            self._views_format_type, title=title)
 
-      table_view.AddRow(['String', analysis_report.GetString()])
+        table_view.AddRow(['String', analysis_report.GetString()])
 
-      table_view.Write(self._output_writer)
+        table_view.Write(self._output_writer)
 
   def _PrintAnalysisReportSection(
       self, storage_reader, analysis_reports_counter):
@@ -298,7 +305,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     """
     self._PrintAnalysisReportCounter(analysis_reports_counter)
 
-    if self._output_format == 'text':
+    if self._output_format in ('markdown', 'text'):
       self._PrintAnalysisReportsDetails(storage_reader)
 
   def _PrintCounterDifferences(
@@ -371,7 +378,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._PrintWarningCounters(
           warnings_by_path_spec, warnings_by_parser_chain)
 
-      if self._output_format == 'text' and (
+      if self._output_format in ('markdown', 'text') and (
           self._verbose or 'warnings' in self._sections):
         self._PrintExtractionWarningsDetails(storage_reader)
 
@@ -389,31 +396,41 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       json_string = json.dumps(event_labels_counter)
       self._output_writer.Write(', "event_labels": {0:s}'.format(json_string))
 
-    elif self._output_format == 'text':
-      if not event_labels_counter:
-        self._output_writer.Write('\nNo events labels stored.\n')
-
+    elif self._output_format in ('markdown', 'text'):
+      if self._output_format == 'text' and not event_labels_counter:
+        if not session_identifier:
+          self._output_writer.Write('\nNo events labels stored.\n')
       else:
         title = 'Event tags generated per label'
+
         if session_identifier:
           title = '{0:s}: {1:s}'.format(title, session_identifier)
+          title_level = 4
+        else:
+          title_level = 2
 
-        table_view = views.ViewsFactory.GetTableView(
-            self._views_format_type,
-            column_names=['Label', 'Number of event tags'], title=title)
+        if not event_labels_counter:
+          if not session_identifier:
+            self._output_writer.Write('{0:s} {1:s}\n\nN/A\n\n'.format(
+                '#' * title_level, title))
+        else:
+          table_view = views.ViewsFactory.GetTableView(
+              self._views_format_type,
+              column_names=['Label', 'Number of event tags'], title=title,
+              title_level=title_level)
 
-        for key, value in sorted(event_labels_counter.items()):
-          if key != 'total':
-            table_view.AddRow([key, value])
+          for key, value in sorted(event_labels_counter.items()):
+            if key != 'total':
+              table_view.AddRow([key, value])
 
-        try:
-          total = event_labels_counter['total']
-        except KeyError:
-          total = 'N/A'
+          try:
+            total = event_labels_counter['total']
+          except KeyError:
+            total = 'N/A'
 
-        table_view.AddRow(['Total', total])
+          table_view.AddRow(['Total', total])
 
-        table_view.Write(self._output_writer)
+          table_view.Write(self._output_writer)
 
   def _PrintParsersCounter(self, parsers_counter, session_identifier=None):
     """Prints the parsers counter
@@ -431,7 +448,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       json_string = json.dumps(parsers_counter)
       self._output_writer.Write('"parsers": {0:s}'.format(json_string))
 
-    elif self._output_format == 'text':
+    elif self._output_format in ('markdown', 'text'):
       if not parsers_counter:
         self._output_writer.Write('\nNo events stored.\n')
 
@@ -439,11 +456,14 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         title = 'Events generated per parser'
         if session_identifier:
           title = '{0:s}: {1:s}'.format(title, session_identifier)
+          title_level = 4
+        else:
+          title_level = 2
 
         table_view = views.ViewsFactory.GetTableView(
             self._views_format_type,
             column_names=['Parser (plugin) name', 'Number of events'],
-            title=title)
+            title=title, title_level=title_level)
 
         for key, value in sorted(parsers_counter.items()):
           if key != 'total':
@@ -453,72 +473,89 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
         table_view.Write(self._output_writer)
 
+  def _PrintSessionDetailsAsJSON(self, session):
+    """Prints the details of a session as JSON.
+
+    Args:
+      session (Session): session.
+    """
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            session))
+    self._output_writer.Write('"session": {0:s}'.format(json_string))
+
+  def _PrintSessionDetailsAsTable(self, session, session_identifier):
+    """Prints the details of a session as a table.
+
+    Args:
+      session (Session): session.
+      session_identifier (str): session identifier, formatted as a UUID.
+    """
+    start_time = 'N/A'
+    if session.start_time is not None:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=session.start_time)
+      start_time = date_time.CopyToDateTimeStringISO8601()
+
+    completion_time = 'N/A'
+    if session.completion_time is not None:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=session.completion_time)
+      completion_time = date_time.CopyToDateTimeStringISO8601()
+
+    enabled_parser_names = 'N/A'
+    if session.enabled_parser_names:
+      enabled_parser_names = ', '.join(sorted(session.enabled_parser_names))
+
+    command_line_arguments = session.command_line_arguments or 'N/A'
+    parser_filter_expression = session.parser_filter_expression or 'N/A'
+    preferred_encoding = session.preferred_encoding or 'N/A'
+
+    if session.artifact_filters:
+      artifact_filters_string = ', '.join(session.artifact_filters)
+    else:
+      artifact_filters_string = 'N/A'
+    filter_file = session.filter_file or 'N/A'
+
+    title = 'Session: {0:s}'.format(session_identifier)
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title=title)
+
+    table_view.AddRow(['Start time', start_time])
+    table_view.AddRow(['Completion time', completion_time])
+    table_view.AddRow(['Product name', session.product_name])
+    table_view.AddRow(['Product version', session.product_version])
+    table_view.AddRow(['Command line arguments', command_line_arguments])
+    table_view.AddRow(['Parser filter expression', parser_filter_expression])
+    table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
+    table_view.AddRow(['Preferred encoding', preferred_encoding])
+    table_view.AddRow(['Debug mode', session.debug_mode])
+    table_view.AddRow(['Artifact filters', artifact_filters_string])
+    table_view.AddRow(['Filter file', filter_file])
+
+    table_view.Write(self._output_writer)
+
   def _PrintSessionsDetails(self, storage_reader):
     """Prints the details of the sessions.
 
     Args:
       storage_reader (BaseStore): storage.
     """
+    if self._output_format == 'json':
+      self._output_writer.Write('"sessions": {')
+
     for session_index, session in enumerate(storage_reader.GetSessions()):
       session_identifier = uuid.UUID(hex=session.identifier)
       session_identifier = '{0!s}'.format(session_identifier)
-
-      start_time = 'N/A'
-      if session.start_time is not None:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=session.start_time)
-        start_time = date_time.CopyToDateTimeStringISO8601()
-
-      completion_time = 'N/A'
-      if session.completion_time is not None:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=session.completion_time)
-        completion_time = date_time.CopyToDateTimeStringISO8601()
-
-      enabled_parser_names = 'N/A'
-      if session.enabled_parser_names:
-        enabled_parser_names = ', '.join(sorted(session.enabled_parser_names))
-
-      command_line_arguments = session.command_line_arguments or 'N/A'
-      parser_filter_expression = session.parser_filter_expression or 'N/A'
-      preferred_encoding = session.preferred_encoding or 'N/A'
-
-      if session.artifact_filters:
-        artifact_filters_string = ', '.join(session.artifact_filters)
-      else:
-        artifact_filters_string = 'N/A'
-      filter_file = session.filter_file or 'N/A'
-      number_of_event_sources = storage_reader.GetNumberOfEventSources()
 
       if self._output_format == 'json':
         if session_index != 0:
           self._output_writer.Write(', ')
 
-        json_string = (
-            json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-                session))
-        self._output_writer.Write('"session": {0:s}'.format(json_string))
+        self._PrintSessionDetailsAsJSON(session)
 
-      elif self._output_format == 'text':
-        title = 'Session: {0:s}'.format(session_identifier)
-        table_view = views.ViewsFactory.GetTableView(
-            self._views_format_type, title=title)
-
-        table_view.AddRow(['Start time', start_time])
-        table_view.AddRow(['Completion time', completion_time])
-        table_view.AddRow(['Product name', session.product_name])
-        table_view.AddRow(['Product version', session.product_version])
-        table_view.AddRow(['Command line arguments', command_line_arguments])
-        table_view.AddRow([
-            'Parser filter expression', parser_filter_expression])
-        table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
-        table_view.AddRow(['Preferred encoding', preferred_encoding])
-        table_view.AddRow(['Debug mode', session.debug_mode])
-        table_view.AddRow(['Artifact filters', artifact_filters_string])
-        table_view.AddRow(['Filter file', filter_file])
-        table_view.AddRow(['Number of event sources', number_of_event_sources])
-
-        table_view.Write(self._output_writer)
+      elif self._output_format in ('markdown', 'text'):
+        self._PrintSessionDetailsAsTable(session, session_identifier)
 
       if self._verbose:
         if session.source_configurations:
@@ -537,6 +574,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             session.event_labels_counter,
             session_identifier=session_identifier)
 
+    if self._output_format == 'json':
+      self._output_writer.Write('}')
+
   def _PrintSessionsOverview(self, storage_reader):
     """Prints a sessions overview.
 
@@ -544,7 +584,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       storage_reader (StorageReader): storage reader.
     """
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Sessions')
+        self._views_format_type, title='Sessions', title_level=2)
 
     for session in storage_reader.GetSessions():
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
@@ -563,17 +603,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    if self._output_format == 'json':
-      self._output_writer.Write('"sessions": {')
-    elif self._output_format == 'text':
+    if self._output_format in ('markdown', 'text'):
       self._PrintSessionsOverview(storage_reader)
 
     if (self._output_format == 'json' or self._verbose or
         'sessions' in self._sections):
       self._PrintSessionsDetails(storage_reader)
-
-    if self._output_format == 'json':
-      self._output_writer.Write('}')
 
   def _PrintSourceConfiguration(
       self, source_configuration, session_identifier=None):
@@ -668,7 +703,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._output_writer.Write(
             '"system_configuration": {0:s}'.format(json_string))
 
-      elif self._output_format == 'text':
+      elif self._output_format in ('markdown', 'text'):
         self._PrintSourceConfiguration(
             configuration, session_identifier=session_identifier)
 
@@ -683,8 +718,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     """
     if self._output_format == 'json':
       self._output_writer.Write('{')
-    elif self._output_format == 'text':
-      self._PrintStorageOverview(storage_reader)
+    elif self._output_format in ('markdown', 'text'):
+      self._PrintStorageOverviewAsTable(storage_reader)
 
     storage_type = storage_reader.GetStorageType()
     if storage_type == definitions.STORAGE_TYPE_SESSION:
@@ -729,11 +764,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     if self._output_format == 'json':
       self._output_writer.Write('}')
-    elif self._output_format == 'text':
+    elif self._output_format in ('markdown', 'text'):
       self._output_writer.Write('\n')
 
-  def _PrintStorageOverview(self, storage_reader):
-    """Prints a storage overview.
+  def _PrintStorageOverviewAsTable(self, storage_reader):
+    """Prints a storage overview as a table.
 
     Args:
       storage_reader (StorageReader): storage reader.
@@ -743,7 +778,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     storage_type = storage_reader.GetStorageType()
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Plaso Storage Information')
+        self._views_format_type, title='Plaso Storage Information',
+        title_level=1)
     table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
     table_view.AddRow(['Format version', format_version])
     table_view.AddRow(['Storage type', storage_type])
@@ -785,7 +821,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._output_writer.Write(
           ', "warnings_by_parser": {0:s}'.format(json_string))
 
-    elif self._output_format == 'text' and warnings_by_parser_chain:
+    elif (self._output_format in ('markdown', 'text') and
+          warnings_by_parser_chain):
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type,
           column_names=['Parser (plugin) name', 'Number of warnings'],
@@ -800,7 +837,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._output_writer.Write(
           ', "warnings_by_path_spec": {0:s}'.format(json_string))
 
-    elif self._output_format == 'text' and warnings_by_path_spec:
+    elif self._output_format in ('markdown', 'text') and warnings_by_path_spec:
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type,
           column_names=['Number of warnings', 'Pathspec'],
@@ -895,10 +932,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     argument_parser.add_argument(
         '--output_format', '--output-format', dest='output_format', type=str,
-        choices=['text', 'json'], action='store', default='text',
-        metavar='FORMAT', help=(
-            'Format of the output, the default is: text. Supported options: '
-            'json, text.'))
+        choices=self._SUPPORTED_OUTPUT_FORMATS, action='store',
+        default=self._DEFAULT_OUTPUT_FORMAT, metavar='FORMAT', help=(
+            'Format of the output, the default is: {0:s}. Supported options: '
+            '{1:s}.').format(self._DEFAULT_OUTPUT_FORMAT, ', '.join(
+                sorted(self._SUPPORTED_OUTPUT_FORMATS))))
 
     argument_parser.add_argument(
         '--sections', dest='sections', type=str, action='store', default='all',
@@ -1003,10 +1041,14 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logger.error(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
+      logger.error('Format of storage file: {0:s} not supported'.format(
+          self._storage_file_path))
       return
+
+    if self._output_format in 'markdown':
+      self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
+    elif self._output_format in 'text':
+      self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
     try:
       self._PrintStorageInformation(storage_reader)
