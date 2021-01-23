@@ -205,6 +205,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   _QUEUE_TIMEOUT = 10 * 60
 
+  _HEAP_MAXIMUM_EVENTS = 500000
+
   def __init__(self, worker_memory_limit=None, worker_timeout=None):
     """Initializes a psort multi-processing engine.
 
@@ -476,7 +478,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
     """
-    if event.timestamp != self._export_event_timestamp:
+    if (event.timestamp != self._export_event_timestamp or
+        self._export_event_heap.number_of_events > self._HEAP_MAXIMUM_EVENTS):
       self._FlushExportBuffer(
           storage_reader, output_module, deduplicate_events=deduplicate_events)
       self._export_event_timestamp = event.timestamp
