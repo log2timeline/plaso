@@ -15,30 +15,6 @@ from plaso.parsers import logger
 from plaso.parsers import manager
 
 
-class FileObjectWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
-  """A single file-like object Windows Registry file reader."""
-
-  # pylint: disable=arguments-differ
-  def Open(self, file_object, ascii_codepage='cp1252'):
-    """Opens a Windows Registry file-like object.
-
-    Args:
-      file_object (dfvfs.FileIO): Windows Registry file-like object.
-      ascii_codepage (Optional[str]): ASCII string codepage.
-
-    Returns:
-      WinRegistryFile: Windows Registry file or None.
-    """
-    registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage=ascii_codepage, emulate_virtual_keys=False)
-
-    # We don't catch any IOErrors here since we want to produce a parse error
-    # from the parser if this happens.
-    registry_file.Open(file_object)
-
-    return registry_file
-
-
 class WinRegistryParser(interface.FileObjectParser):
   """Parses Windows NT Registry (REGF) files."""
 
@@ -221,48 +197,46 @@ class WinRegistryParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): parser mediator.
       file_object (dfvfs.FileIO): a file-like object.
     """
-    win_registry_reader = FileObjectWinRegistryFileReader()
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(
+        ascii_codepage=ascii_codepage, emulate_virtual_keys=False)
 
     try:
-      registry_file = win_registry_reader.Open(file_object)
+      registry_file.Open(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to open Windows Registry file with error: {0!s}'.format(
               exception))
       return
 
-    win_registry = dfwinreg_registry.WinRegistry()
+    try:
+      win_registry = dfwinreg_registry.WinRegistry()
 
-    key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
-    registry_file.SetKeyPathPrefix(key_path_prefix)
-    root_key = registry_file.GetRootKey()
-    if not root_key:
-      return
+      key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
+      registry_file.SetKeyPathPrefix(key_path_prefix)
+      root_key = registry_file.GetRootKey()
+      if root_key:
+        registry_find_specs = getattr(
+            parser_mediator.collection_filters_helper, 'registry_find_specs', None)
 
-    registry_find_specs = getattr(
-        parser_mediator.collection_filters_helper, 'registry_find_specs', None)
+        if not registry_find_specs:
+          self._ParseRecurseKeys(parser_mediator, root_key)
+        else:
+          artifacts_filters_helper = (
+              artifact_filters.ArtifactDefinitionsFiltersHelper)
+          if not artifacts_filters_helper.CheckKeyCompatibility(key_path_prefix):
+            logger.warning((
+                'Artifacts filters are not supported for Windows Registry file '
+                'with key path prefix: "{0:s}".').format(key_path_prefix))
+          else:
+            win_registry.MapFile(key_path_prefix, registry_file)
+            self._ParseKeysFromFindSpecs(
+                parser_mediator, win_registry, registry_find_specs)
 
-    if not registry_find_specs:
-      try:
-        self._ParseRecurseKeys(parser_mediator, root_key)
-      except IOError as exception:
-        parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
+    except IOError as exception:
+      parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
 
-    else:
-      artifacts_filters_helper = (
-          artifact_filters.ArtifactDefinitionsFiltersHelper)
-      if not artifacts_filters_helper.CheckKeyCompatibility(key_path_prefix):
-        logger.warning((
-            'Artifacts filters are not supported for Windows Registry file '
-            'with key path prefix: "{0:s}".').format(key_path_prefix))
-
-      else:
-        try:
-          win_registry.MapFile(key_path_prefix, registry_file)
-          self._ParseKeysFromFindSpecs(
-              parser_mediator, win_registry, registry_find_specs)
-        except IOError as exception:
-          parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
+    finally:
+      registry_file.Close()
 
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)
