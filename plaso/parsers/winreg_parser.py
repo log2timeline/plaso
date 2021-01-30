@@ -2,7 +2,6 @@
 """Parser for Windows NT Registry (REGF) files."""
 
 from dfwinreg import errors as dfwinreg_errors
-from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 from dfwinreg import registry_searcher as dfwinreg_registry_searcher
@@ -197,8 +196,9 @@ class WinRegistryParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): parser mediator.
       file_object (dfvfs.FileIO): a file-like object.
     """
+    # TODO: set codepage from mediator.
     registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage=ascii_codepage, emulate_virtual_keys=False)
+        ascii_codepage='cp1252', emulate_virtual_keys=False)
 
     try:
       registry_file.Open(file_object)
@@ -216,14 +216,16 @@ class WinRegistryParser(interface.FileObjectParser):
       root_key = registry_file.GetRootKey()
       if root_key:
         registry_find_specs = getattr(
-            parser_mediator.collection_filters_helper, 'registry_find_specs', None)
+            parser_mediator.collection_filters_helper, 'registry_find_specs',
+            None)
 
         if not registry_find_specs:
           self._ParseRecurseKeys(parser_mediator, root_key)
         else:
           artifacts_filters_helper = (
               artifact_filters.ArtifactDefinitionsFiltersHelper)
-          if not artifacts_filters_helper.CheckKeyCompatibility(key_path_prefix):
+          if not artifacts_filters_helper.CheckKeyCompatibility(
+              key_path_prefix):
             logger.warning((
                 'Artifacts filters are not supported for Windows Registry file '
                 'with key path prefix: "{0:s}".').format(key_path_prefix))

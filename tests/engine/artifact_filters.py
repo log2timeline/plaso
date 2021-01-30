@@ -7,18 +7,18 @@ import unittest
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
-from dfwinreg import registry as dfwinreg_registry
-from dfwinreg import registry_searcher as dfwinreg_registry_searcher
-
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from dfwinreg import regf as dfwinreg_regf
+from dfwinreg import registry as dfwinreg_registry
+from dfwinreg import registry_searcher as dfwinreg_registry_searcher
+
 from plaso.containers import artifacts
 from plaso.engine import artifact_filters
 from plaso.engine import knowledge_base as knowledge_base_engine
-from plaso.parsers import winreg_parser
 
 from tests import test_lib as shared_test_lib
 
@@ -186,12 +186,12 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         len(test_filters_helper.included_file_system_find_specs), 0)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 3)
 
-    win_registry_reader = winreg_parser.FileObjectWinRegistryFileReader()
-
     file_entry = self._GetTestFileEntry(['SYSTEM'])
     file_object = file_entry.GetFileObject()
 
-    registry_file = win_registry_reader.Open(file_object)
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(
+        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file.Open(file_object)
 
     win_registry = dfwinreg_registry.WinRegistry()
     key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
