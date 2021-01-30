@@ -42,11 +42,7 @@ class WindowsRegistryServiceEventData(events.EventData):
 
 
 class ServicesPlugin(interface.WindowsRegistryPlugin):
-  """Plug-in to format the Services and Drivers keys having Type and Start.
-
-  Also see:
-    http://support.microsoft.com/kb/103000
-  """
+  """Plug-in to format the Services and Drivers keys having Type and Start."""
 
   NAME = 'windows_services'
   DATA_FORMAT = 'Windows drivers and services Registry data'
