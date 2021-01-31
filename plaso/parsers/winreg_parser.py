@@ -231,6 +231,9 @@ class WinRegistryParser(interface.FileObjectParser):
                 'with key path prefix: "{0:s}".').format(key_path_prefix))
           else:
             win_registry.MapFile(key_path_prefix, registry_file)
+            # Note that win_registry will close the mapped registry_file.
+            registry_file = None
+
             self._ParseKeysFromFindSpecs(
                 parser_mediator, win_registry, registry_find_specs)
 
@@ -238,7 +241,8 @@ class WinRegistryParser(interface.FileObjectParser):
       parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
 
     finally:
-      registry_file.Close()
+      if registry_file:
+        registry_file.Close()
 
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)
