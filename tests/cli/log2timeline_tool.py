@@ -129,7 +129,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_file_path = self._GetTestFilePath(['testdir'])
     self._SkipIfPathNotExists(test_file_path)
 
-    yara_rules_path = self._GetTestFilePath(['yara.rules'])
+    yara_rules_path = self._GetTestFilePath(['rules.yara'])
     self._SkipIfPathNotExists(yara_rules_path)
 
     options = test_lib.TestOptions()
