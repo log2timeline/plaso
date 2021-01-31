@@ -39,9 +39,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       'events': 'Show information about events.',
       'reports': 'Show information about analysis reports.',
       'sessions': 'Show information about sessions.',
+      'sources': 'Show information about event sources.',
       'warnings': 'Show information about warnings during processing.'}
-      # TODO: add support for event sources.
-      # 'sources': 'Show information about event sources.',
 
   _DEFAULT_OUTPUT_FORMAT = 'text'
   _SUPPORTED_OUTPUT_FORMATS = ['json', 'markdown', 'text']
@@ -449,8 +448,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._output_writer.Write('"parsers": {0:s}'.format(json_string))
 
     elif self._output_format in ('markdown', 'text'):
-      if not parsers_counter:
-        self._output_writer.Write('\nNo events stored.\n')
+      if self._output_format == 'text' and not parsers_counter:
+        if not session_identifier:
+          self._output_writer.Write('\nNo events stored.\n')
 
       else:
         title = 'Events generated per parser'
@@ -460,18 +460,23 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         else:
           title_level = 2
 
-        table_view = views.ViewsFactory.GetTableView(
-            self._views_format_type,
-            column_names=['Parser (plugin) name', 'Number of events'],
-            title=title, title_level=title_level)
+        if not parsers_counter:
+          if not session_identifier:
+            self._output_writer.Write('{0:s} {1:s}\n\nN/A\n\n'.format(
+                '#' * title_level, title))
+        else:
+          table_view = views.ViewsFactory.GetTableView(
+              self._views_format_type,
+              column_names=['Parser (plugin) name', 'Number of events'],
+              title=title, title_level=title_level)
 
-        for key, value in sorted(parsers_counter.items()):
-          if key != 'total':
-            table_view.AddRow([key, value])
+          for key, value in sorted(parsers_counter.items()):
+            if key != 'total':
+              table_view.AddRow([key, value])
 
-        table_view.AddRow(['Total', parsers_counter['total']])
+          table_view.AddRow(['Total', parsers_counter['total']])
 
-        table_view.Write(self._output_writer)
+          table_view.Write(self._output_writer)
 
   def _PrintSessionDetailsAsJSON(self, session):
     """Prints the details of a session as JSON.
@@ -726,6 +731,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       if self._sections == 'all' or 'sessions' in self._sections:
         self._PrintSessionsSection(storage_reader)
 
+      if self._sections == 'all' or 'sources' in self._sections:
+        self._PrintSourcesOverview(storage_reader)
+
       storage_counters = self._CalculateStorageCounters(storage_reader)
 
       if self._output_format == 'json':
@@ -766,6 +774,45 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._output_writer.Write('}')
     elif self._output_format in ('markdown', 'text'):
       self._output_writer.Write('\n')
+
+  def _PrintSourcesOverview(self, storage_reader):
+    """Prints a sources overview.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write(', "event_sources": {')
+
+    elif self._output_format in ('markdown', 'text'):
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, title='Event sources', title_level=2)
+
+    for source_index, source in enumerate(storage_reader.GetEventSources()):
+      if self._output_format == 'json':
+        if source_index != 0:
+          self._output_writer.Write(', ')
+
+        json_string = (
+            json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+                source))
+        self._output_writer.Write('"source": {0:s}'.format(json_string))
+
+      elif self._output_format in ('markdown', 'text'):
+        path_spec_string = source.path_spec.comparable
+        for path_index, line in enumerate(path_spec_string.split('\n')):
+          if not line:
+            continue
+
+          if path_index == 0:
+            table_view.AddRow(['{0:d}'.format(source_index), line])
+          else:
+            table_view.AddRow(['', line])
+
+    if self._output_format == 'json':
+      self._output_writer.Write('}')
+    elif self._output_format in ('markdown', 'text'):
+      table_view.Write(self._output_writer)
 
   def _PrintStorageOverviewAsTable(self, storage_reader):
     """Prints a storage overview as a table.
