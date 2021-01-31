@@ -635,10 +635,10 @@ short_message:
 type: 'conditional'
 data_type: 'syslog:ssh:failed_connection'
 message:
-- 'Unsuccessful connection of user: {username}'
+- 'Unsuccessful connection of user: {username} '
 - 'from {address}:'
-- '{port}'
-- 'using authentication method: {authentication_method}'
+- '{port} '
+- 'using authentication method: {authentication_method} '
 - 'ssh pid: {pid}'
 separator: ''
 short_message:
@@ -647,10 +647,10 @@ short_message:
 type: 'conditional'
 data_type: 'syslog:ssh:login'
 message:
-- 'Successful login of user: {username}'
+- 'Successful login of user: {username} '
 - 'from {address}:'
-- '{port}'
-- 'using authentication method: {authentication_method}'
+- '{port} '
+- 'using authentication method: {authentication_method} '
 - 'ssh pid: {pid}'
 separator: ''
 short_message:
@@ -660,7 +660,7 @@ type: 'conditional'
 data_type: 'syslog:ssh:opened_connection'
 message:
 - 'Connection opened {address}:'
-- '{port}'
+- '{port} '
 - 'ssh pid: {pid}'
 separator: ''
 short_message:
