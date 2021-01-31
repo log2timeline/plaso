@@ -247,9 +247,6 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
           'Unable to read plist file: {0:s} with error: {1!s}'.format(
               location, exception))
 
-    finally:
-      file_object.close()
-
     return plist_file.root_key
 
   def _ParseFileEntry(self, knowledge_base, file_entry):

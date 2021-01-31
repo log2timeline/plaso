@@ -116,18 +116,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not file_object:
       return None
 
-    try:
-      file_object.seek(0, os.SEEK_SET)
+    file_object.seek(0, os.SEEK_SET)
 
-      hasher_object = hashers_manager.HashersManager.GetHasher('sha256')
+    hasher_object = hashers_manager.HashersManager.GetHasher('sha256')
 
+    data = file_object.read(self._READ_BUFFER_SIZE)
+    while data:
+      hasher_object.Update(data)
       data = file_object.read(self._READ_BUFFER_SIZE)
-      while data:
-        hasher_object.Update(data)
-        data = file_object.read(self._READ_BUFFER_SIZE)
-
-    finally:
-      file_object.close()
 
     return hasher_object.GetStringDigest()
 
@@ -551,17 +547,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not source_file_object:
       return
 
-    try:
-      with open(destination_file, 'wb') as destination_file_object:
-        source_file_object.seek(0, os.SEEK_SET)
+    with open(destination_file, 'wb') as destination_file_object:
+      source_file_object.seek(0, os.SEEK_SET)
 
+      data = source_file_object.read(self._COPY_BUFFER_SIZE)
+      while data:
+        destination_file_object.write(data)
         data = source_file_object.read(self._COPY_BUFFER_SIZE)
-        while data:
-          destination_file_object.write(data)
-          data = source_file_object.read(self._COPY_BUFFER_SIZE)
-
-    finally:
-      source_file_object.close()
 
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.

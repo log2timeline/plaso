@@ -90,7 +90,6 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       logger.warning(
           'Unable to open Windows Registry file with error: {0!s}'.format(
               exception))
-      file_object.close()
       return None
 
     return registry_file

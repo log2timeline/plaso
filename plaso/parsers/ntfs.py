@@ -453,19 +453,19 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
     """
-    volume = pyfsntfs.volume()
+    fsntfs_volume = pyfsntfs.volume()
     try:
-      volume.open_file_object(file_object)
+      fsntfs_volume.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to open NTFS volume with error: {0!s}'.format(exception))
       return
 
     try:
-      usn_change_journal = volume.get_usn_change_journal()
+      usn_change_journal = fsntfs_volume.get_usn_change_journal()
       self._ParseUSNChangeJournal(parser_mediator, usn_change_journal)
     finally:
-      volume.close()
+      fsntfs_volume.close()
 
 
 manager.ParsersManager.RegisterParsers([NTFSMFTParser, NTFSUsnJrnlParser])

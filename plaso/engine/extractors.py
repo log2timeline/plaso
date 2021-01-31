@@ -150,12 +150,8 @@ class EventExtractor(object):
     if not file_object:
       raise RuntimeError('Unable to retrieve file-like object from file entry.')
 
-    try:
-      self._ParseFileEntryWithParser(
-          parser_mediator, parser, file_entry, file_object=file_object)
-
-    finally:
-      file_object.close()
+    self._ParseFileEntryWithParser(
+        parser_mediator, parser, file_entry, file_object=file_object)
 
   def _ParseFileEntryWithParser(
       self, parser_mediator, parser, file_entry, file_object=None):
@@ -184,10 +180,6 @@ class EventExtractor(object):
 
     parser_mediator.ClearParserChain()
 
-    reference_count = (
-        parser_mediator.resolver_context.GetFileObjectReferenceCount(
-            file_entry.path_spec))
-
     parser_mediator.SampleStartTiming(parser.NAME)
 
     try:
@@ -215,15 +207,6 @@ class EventExtractor(object):
     finally:
       parser_mediator.SampleStopTiming(parser.NAME)
       parser_mediator.SampleMemoryUsage(parser.NAME)
-
-      new_reference_count = (
-          parser_mediator.resolver_context.GetFileObjectReferenceCount(
-              file_entry.path_spec))
-      if reference_count != new_reference_count:
-        display_name = parser_mediator.GetDisplayName(file_entry)
-        logger.warning((
-            '[{0:s}] did not explicitly close file-object for file: '
-            '{1:s}.').format(parser.NAME, display_name))
 
     return result
 
@@ -292,24 +275,20 @@ class EventExtractor(object):
       raise RuntimeError(
           'Unable to retrieve file-like object from file entry.')
 
-    try:
-      parser_names = self._GetSignatureMatchParserNames(file_object)
+    parser_names = self._GetSignatureMatchParserNames(file_object)
 
-      parse_with_non_sigscan_parsers = True
-      if parser_names:
-        parse_result = self._ParseFileEntryWithParsers(
-            parser_mediator, parser_names, file_entry, file_object=file_object)
-        if parse_result in (
-            self._PARSE_RESULT_FAILURE, self._PARSE_RESULT_SUCCESS):
-          parse_with_non_sigscan_parsers = False
+    parse_with_non_sigscan_parsers = True
+    if parser_names:
+      parse_result = self._ParseFileEntryWithParsers(
+          parser_mediator, parser_names, file_entry, file_object=file_object)
+      if parse_result in (
+          self._PARSE_RESULT_FAILURE, self._PARSE_RESULT_SUCCESS):
+        parse_with_non_sigscan_parsers = False
 
-      if parse_with_non_sigscan_parsers:
-        self._ParseFileEntryWithParsers(
-            parser_mediator, self._non_sigscan_parser_names, file_entry,
-            file_object=file_object)
-
-    finally:
-      file_object.close()
+    if parse_with_non_sigscan_parsers:
+      self._ParseFileEntryWithParsers(
+          parser_mediator, self._non_sigscan_parser_names, file_entry,
+          file_object=file_object)
 
   def ParseFileEntryMetadata(self, parser_mediator, file_entry):
     """Parses the file entry metadata such as file system data.
@@ -345,12 +324,9 @@ class EventExtractor(object):
       volume_file_object = path_spec_resolver.Resolver.OpenFileObject(
           parent_path_spec, resolver_context=parser_mediator.resolver_context)
 
-      try:
-        self._ParseFileEntryWithParser(
-            parser_mediator, self._usnjrnl_parser, file_entry,
-            file_object=volume_file_object)
-      finally:
-        volume_file_object.close()
+      self._ParseFileEntryWithParser(
+          parser_mediator, self._usnjrnl_parser, file_entry,
+          file_object=volume_file_object)
 
 
 class PathSpecExtractor(object):
@@ -537,9 +513,6 @@ class PathSpecExtractor(object):
           dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
         logger.warning('{0!s}'.format(exception))
-
-      finally:
-        file_system.Close()
 
   def ExtractPathSpecs(
       self, path_specs, find_specs=None, recurse_file_system=True,

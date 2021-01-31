@@ -333,9 +333,6 @@ class SignaturesFileEntryFilter(FileEntryFilter):
           'with error: {1!s}').format(location, exception))
       return False
 
-    finally:
-      file_object.close()
-
     return scan_state.number_of_scan_results > 0
 
   def Print(self, output_writer):

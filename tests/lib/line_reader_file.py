@@ -4,9 +4,9 @@
 
 import unittest
 
-from dfvfs.file_io import os_file_io
 from dfvfs.path import os_path_spec
 from dfvfs.resolver import context
+from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.lib import line_reader_file
 
@@ -26,9 +26,9 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     self._SkipIfPathNotExists(test_file_path)
 
     test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
+    file_object = path_spec_resolver.Resolver.OpenFileObject(
+        test_path_spec, resolver_context=self._resolver_context)
 
-    file_object = os_file_io.OSFile(self._resolver_context)
-    file_object.open(test_path_spec)
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     line = line_reader.readline()
@@ -45,17 +45,15 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     offset = line_reader.tell()
     self.assertEqual(offset, 11)
 
-    file_object.close()
-
   def testReadlineMultipleLines(self):
     """Test the readline() function on multiple lines."""
     test_file_path = self._GetTestFilePath(['password.csv'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
+    file_object = path_spec_resolver.Resolver.OpenFileObject(
+        test_path_spec, resolver_context=self._resolver_context)
 
-    file_object = os_file_io.OSFile(self._resolver_context)
-    file_object.open(test_path_spec)
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     line = line_reader.readline()
@@ -82,17 +80,15 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     offset = line_reader.tell()
     self.assertEqual(offset, 64)
 
-    file_object.close()
-
   def testReadlines(self):
     """Test the readlines() function."""
     test_file_path = self._GetTestFilePath(['password.csv'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
+    file_object = path_spec_resolver.Resolver.OpenFileObject(
+        test_path_spec, resolver_context=self._resolver_context)
 
-    file_object = os_file_io.OSFile(self._resolver_context)
-    file_object.open(test_path_spec)
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     lines = line_reader.readlines()
@@ -104,17 +100,15 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     self.assertEqual(lines[3], b'treasure chest,-,1111\n')
     self.assertEqual(lines[4], b'uber secret laire,admin,admin\n')
 
-    file_object.close()
-
   def testReadlinesWithSizeHint(self):
     """Test the readlines() function."""
     test_file_path = self._GetTestFilePath(['password.csv'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
+    file_object = path_spec_resolver.Resolver.OpenFileObject(
+        test_path_spec, resolver_context=self._resolver_context)
 
-    file_object = os_file_io.OSFile(self._resolver_context)
-    file_object.open(test_path_spec)
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     lines = line_reader.readlines(sizehint=60)
@@ -124,17 +118,15 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     self.assertEqual(lines[1], b'bank,joesmith,superrich\n')
     self.assertEqual(lines[2], b'alarm system,-,1234\n')
 
-    file_object.close()
-
   def testReadlinesWithFileWithoutNewLineAtEnd(self):
     """Test reading lines from a file without a new line char at the end."""
     test_file_path = self._GetTestFilePath(['mactime.body'])
     self._SkipIfPathNotExists(test_file_path)
 
-    test_file_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
+    file_object = path_spec_resolver.Resolver.OpenFileObject(
+        test_path_spec, resolver_context=self._resolver_context)
 
-    file_object = os_file_io.OSFile(self._resolver_context)
-    file_object.open(test_file_path_spec)
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     lines = line_reader.readlines()
@@ -147,9 +139,9 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     self._SkipIfPathNotExists(test_file_path)
 
     test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
+    file_object = path_spec_resolver.Resolver.OpenFileObject(
+        test_path_spec, resolver_context=self._resolver_context)
 
-    file_object = os_file_io.OSFile(self._resolver_context)
-    file_object.open(test_path_spec)
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     lines = []
@@ -162,8 +154,6 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     self.assertEqual(lines[2], b'alarm system,-,1234\n')
     self.assertEqual(lines[3], b'treasure chest,-,1111\n')
     self.assertEqual(lines[4], b'uber secret laire,admin,admin\n')
-
-    file_object.close()
 
   # TODO: Add a test which tests reading a file which is
   # larger than the buffer size, and read lines until it crosses
@@ -179,11 +169,12 @@ class BinaryDSVReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['password.csv'])
     self._SkipIfPathNotExists(test_file_path)
 
-    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
-
     resolver_context = context.Context()
-    file_object = os_file_io.OSFile(resolver_context)
-    file_object.open(test_path_spec)
+
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
+    file_object = path_spec_resolver.Resolver.OpenFileObject(
+        test_path_spec, resolver_context=resolver_context)
+
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     dsv_reader = line_reader_file.BinaryDSVReader(line_reader, delimiter=b',')

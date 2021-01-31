@@ -33,11 +33,11 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       dfvfs.FakeFile: file-like object.
     """
     resolver_context = dfvfs_context.Context()
-    file_object = fake_file_io.FakeFile(resolver_context, data)
 
     location = '/{0:s}'.format(filename)
     test_path_spec = fake_path_spec.FakePathSpec(location=location)
-    file_object.open(path_spec=test_path_spec)
+    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
+    file_object.Open()
 
     return file_object
 
@@ -161,10 +161,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     elif isinstance(parser, interface.FileObjectParser):
       file_object = file_entry.GetFileObject()
-      try:
-        parser.Parse(parser_mediator, file_object)
-      finally:
-        file_object.close()
+      parser.Parse(parser_mediator, file_object)
 
     else:
       self.fail('Got unsupported parser type: {0!s}'.format(type(parser)))

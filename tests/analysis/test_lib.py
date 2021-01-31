@@ -140,10 +140,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     elif isinstance(parser, parsers_interface.FileObjectParser):
       file_object = file_entry.GetFileObject()
-      try:
-        parser.Parse(parser_mediator, file_object)
-      finally:
-        file_object.close()
+      parser.Parse(parser_mediator, file_object)
 
     else:
       self.fail('Got unexpected parser type: {0!s}'.format(type(parser)))

@@ -164,10 +164,7 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
       PreProcessFail: if the preprocessing fails.
     """
     file_object = file_entry.GetFileObject()
-    try:
-      self._ParseFileData(knowledge_base, file_object)
-    finally:
-      file_object.close()
+    self._ParseFileData(knowledge_base, file_object)
 
 
 class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):

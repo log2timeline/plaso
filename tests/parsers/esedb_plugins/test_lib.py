@@ -39,19 +39,17 @@ class ESEDBPluginTestCase(test_lib.ParserTestCase):
 
     file_object = file_entry.GetFileObject()
 
-    try:
-      database = esedb.ESEDatabase()
-      database.Open(file_object)
+    database = esedb.ESEDatabase()
+    database.Open(file_object)
 
+    try:
       required_tables_exist = plugin.CheckRequiredTables(database)
       self.assertTrue(required_tables_exist)
 
       cache = esedb.ESEDBCache()
       plugin.Process(parser_mediator, cache=cache, database=database)
 
-      database.Close()
-
     finally:
-      file_object.close()
+      database.Close()
 
     return storage_writer

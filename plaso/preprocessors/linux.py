@@ -207,9 +207,6 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
         # TODO: add and store preprocessing errors.
         logger.error('Unable to read time zone information file.')
 
-      finally:
-        file_object.close()
-
     # TODO: check if time zone is set in knowledge base.
     if time_zone:
       try:

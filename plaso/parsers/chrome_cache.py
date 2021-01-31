@@ -426,18 +426,11 @@ class ChromeCacheParser(interface.FileEntryParser):
                 'Unable to parse data block file: {0:s} with error: '
                 '{1!s}').format(cache_address.filename, exception)
             parser_mediator.ProduceExtractionWarning(message)
-            data_block_file_object.close()
             data_block_file_object = None
 
         data_block_files[cache_address.filename] = data_block_file_object
 
-    try:
-      self._ParseCacheEntries(
-          parser_mediator, index_table, data_block_files)
-    finally:
-      for data_block_file_object in data_block_files.values():
-        if data_block_file_object:
-          data_block_file_object.close()
+    self._ParseCacheEntries(parser_mediator, index_table, data_block_files)
 
   def ParseFileEntry(self, parser_mediator, file_entry):
     """Parses Chrome Cache files.
@@ -462,8 +455,6 @@ class ChromeCacheParser(interface.FileEntryParser):
     try:
       index_file_parser.ParseFileObject(parser_mediator, file_object)
     except (IOError, errors.ParseError) as exception:
-      file_object.close()
-
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse index file {1:s} with error: {2!s}'.format(
@@ -471,13 +462,9 @@ class ChromeCacheParser(interface.FileEntryParser):
 
     # TODO: create event based on index file creation time.
 
-    try:
-      file_system = file_entry.GetFileSystem()
-      self._ParseIndexTable(
-          parser_mediator, file_system, file_entry,
-          index_file_parser.index_table)
-    finally:
-      file_object.close()
+    file_system = file_entry.GetFileSystem()
+    self._ParseIndexTable(
+        parser_mediator, file_system, file_entry, index_file_parser.index_table)
 
 
 manager.ParsersManager.RegisterParser(ChromeCacheParser)
