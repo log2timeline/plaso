@@ -398,6 +398,7 @@ optional arguments:
     options.single_process = True
     options.status_view_mode = 'none'
     options.source = test_file_path
+    options.unattended = True
     options.vss_stores = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
