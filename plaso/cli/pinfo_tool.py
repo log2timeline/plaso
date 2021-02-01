@@ -285,11 +285,27 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     else:
       for index, analysis_report in enumerate(
           storage_reader.GetAnalysisReports()):
+        date_time_string = None
+        if analysis_report.time_compiled is not None:
+          date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+              timestamp=analysis_report.time_compiled)
+          date_time_string = date_time.CopyToDateTimeStringISO8601()
+
         title = 'Analysis report: {0:d}'.format(index)
         table_view = views.ViewsFactory.GetTableView(
             self._views_format_type, title=title)
 
-        table_view.AddRow(['String', analysis_report.GetString()])
+        table_view.AddRow(['Name plugin', analysis_report.plugin_name or 'N/A'])
+        table_view.AddRow(['Date and time', date_time_string or 'N/A'])
+        table_view.AddRow([
+            'Event filter', analysis_report.event_filter or 'N/A'])
+
+        if not analysis_report.analysis_counter:
+          table_view.AddRow(['Text', analysis_report.text or ''])
+        else:
+          table_view.AddRow(['Results', ''])
+          for key, value in sorted(analysis_report.analysis_counter.items()):
+            table_view.AddRow([key, value])
 
         table_view.Write(self._output_writer)
 

@@ -48,10 +48,10 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
 
     analysis_report = storage_writer.analysis_reports[0]
 
-    report_text = analysis_report.GetString()
-    for event_dictionary in self._TEST_EVENTS:
-      domain = event_dictionary.get('domain', '')
-      self.assertIn(domain, report_text)
+    self.assertEqual(analysis_report.analysis_counter['firstevent.com'], 1)
+    self.assertEqual(analysis_report.analysis_counter['secondevent.net'], 1)
+    self.assertEqual(analysis_report.analysis_counter['thirdevent.org'], 1)
+    self.assertEqual(analysis_report.analysis_counter['fourthevent.co'], 1)
 
 
 if __name__ == '__main__':
