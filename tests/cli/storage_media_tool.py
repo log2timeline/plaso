@@ -28,8 +28,616 @@ from plaso.lib import errors
 from tests.cli import test_lib
 
 
+class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
+  """Tests for the storage media tool mediator."""
+
+  # pylint: disable=protected-access
+
+  def testFormatHumanReadableSize(self):
+    """Tests the _FormatHumanReadableSize function."""
+    test_mediator = storage_media_tool.StorageMediaToolMediator()
+
+    expected_size_string = '1000 B'
+    size_string = test_mediator._FormatHumanReadableSize(1000)
+    self.assertEqual(size_string, expected_size_string)
+
+    expected_size_string = '1.0KiB / 1.0kB (1024 B)'
+    size_string = test_mediator._FormatHumanReadableSize(1024)
+    self.assertEqual(size_string, expected_size_string)
+
+    expected_size_string = '976.6KiB / 1.0MB (1000000 B)'
+    size_string = test_mediator._FormatHumanReadableSize(1000000)
+    self.assertEqual(size_string, expected_size_string)
+
+    expected_size_string = '1.0MiB / 1.0MB (1048576 B)'
+    size_string = test_mediator._FormatHumanReadableSize(1048576)
+    self.assertEqual(size_string, expected_size_string)
+
+  def testPrintAPFSVolumeIdentifiersOverview(self):
+    """Tests the _PrintAPFSVolumeIdentifiersOverview function."""
+    test_file_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
+    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
+        parent=test_raw_path_spec)
+    test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/',
+        parent=test_tsk_partition_path_spec)
+
+    volume_system = apfs_volume_system.APFSVolumeSystem()
+    volume_system.Open(test_apfs_container_path_spec)
+
+    file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        output_writer=test_output_writer)
+
+    test_mediator._PrintAPFSVolumeIdentifiersOverview(volume_system, ['apfs1'])
+
+    file_object.seek(0, os.SEEK_SET)
+    output_data = file_object.read()
+
+    expected_output_data = [
+        b'The following Apple File System (APFS) volumes were found:',
+        b'',
+        b'Identifier      Name',
+        b'apfs1           SingleVolume',
+        b'',
+        b'']
+
+    if not win32console:
+      # Using join here since Python 3 does not support format of bytes.
+      expected_output_data[2] = b''.join([
+          b'\x1b[1m', expected_output_data[2], b'\x1b[0m'])
+
+    self.assertEqual(output_data.split(b'\n'), expected_output_data)
+
+  def testPrintLVMVolumeIdentifiersOverview(self):
+    """Tests the _PrintLVMVolumeIdentifiersOverview function."""
+    test_file_path = self._GetTestFilePath(['lvm.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
+    test_lvm_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_LVM, location='/',
+        parent=test_raw_path_spec)
+
+    volume_system = lvm_volume_system.LVMVolumeSystem()
+    volume_system.Open(test_lvm_path_spec)
+
+    file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        output_writer=test_output_writer)
+
+    test_mediator._PrintLVMVolumeIdentifiersOverview(
+        volume_system, ['lvm1', 'lvm2'])
+
+    file_object.seek(0, os.SEEK_SET)
+    output_data = file_object.read()
+
+    expected_output_data = [
+        b'The following Logical Volume Manager (LVM) volumes were found:',
+        b'',
+        b'Identifier',
+        b'lvm1',
+        b'lvm2',
+        b'',
+        b'']
+
+    if not win32console:
+      # Using join here since Python 3 does not support format of bytes.
+      expected_output_data[2] = b''.join([
+          b'\x1b[1m', expected_output_data[2], b'\x1b[0m'])
+
+    self.assertEqual(output_data.split(b'\n'), expected_output_data)
+
+  def testPrintTSKPartitionIdentifiersOverview(self):
+    """Tests the _PrintTSKPartitionIdentifiersOverview function."""
+    test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
+    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
+        parent=test_raw_path_spec)
+
+    volume_system = tsk_volume_system.TSKVolumeSystem()
+    volume_system.Open(test_tsk_partition_path_spec)
+
+    file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        output_writer=test_output_writer)
+
+    test_mediator._PrintTSKPartitionIdentifiersOverview(
+        volume_system, ['p1', 'p2'])
+
+    file_object.seek(0, os.SEEK_SET)
+    output_data = file_object.read()
+
+    expected_output_data = [
+        b'The following partitions were found:',
+        b'',
+        b'Identifier      Offset (in bytes)       Size (in bytes)',
+        (b'p1              512 (0x00000200)        175.0KiB / 179.2kB '
+         b'(179200 B)'),
+        b'p2              180224 (0x0002c000)     1.2MiB / 1.3MB (1294336 B)',
+        b'',
+        b'']
+
+    if not win32console:
+      # Using join here since Python 3 does not support format of bytes.
+      expected_output_data[2] = b''.join([
+          b'\x1b[1m', expected_output_data[2], b'\x1b[0m'])
+
+    self.assertEqual(output_data.split(b'\n'), expected_output_data)
+
+  def testPrintVSSStoreIdentifiersOverview(self):
+    """Tests the _PrintVSSStoreIdentifiersOverview function."""
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=test_os_path_spec)
+    test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, parent=test_qcow_path_spec)
+
+    volume_system = vshadow_volume_system.VShadowVolumeSystem()
+    volume_system.Open(test_vss_path_spec)
+
+    file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        output_writer=test_output_writer)
+
+    test_mediator._PrintVSSStoreIdentifiersOverview(
+        volume_system, ['vss1', 'vss2'])
+
+    file_object.seek(0, os.SEEK_SET)
+    output_data = file_object.read()
+
+    expected_output_data = [
+        b'The following Volume Shadow Snapshots (VSS) were found:',
+        b'',
+        b'Identifier      Creation Time',
+        b'vss1            2013-12-03 06:35:09.7363787',
+        b'vss2            2013-12-03 06:37:48.9190583',
+        b'',
+        b'']
+
+    if not win32console:
+      # Using join here since Python 3 does not support format of bytes.
+      expected_output_data[2] = b''.join([
+          b'\x1b[1m', expected_output_data[2], b'\x1b[0m'])
+
+    self.assertEqual(output_data.split(b'\n'), expected_output_data)
+
+  # TODO: add tests for _ReadSelectedVolumes
+
+  def testParseVolumeIdentifiersString(self):
+    """Tests the ParseVolumeIdentifiersString function."""
+    test_mediator = storage_media_tool.StorageMediaToolMediator()
+
+    volume_identifiers = test_mediator.ParseVolumeIdentifiersString('')
+    self.assertEqual(volume_identifiers, [])
+
+    volume_identifiers = test_mediator.ParseVolumeIdentifiersString('all')
+    self.assertEqual(volume_identifiers, ['all'])
+
+    volume_identifiers = test_mediator.ParseVolumeIdentifiersString('v1')
+    self.assertEqual(volume_identifiers, ['v1'])
+
+    volume_identifiers = test_mediator.ParseVolumeIdentifiersString('1')
+    self.assertEqual(volume_identifiers, ['v1'])
+
+    volume_identifiers = test_mediator.ParseVolumeIdentifiersString('1,3')
+    self.assertEqual(volume_identifiers, ['v1', 'v3'])
+
+    volume_identifiers = test_mediator.ParseVolumeIdentifiersString('1..3')
+    self.assertEqual(volume_identifiers, ['v1', 'v2', 'v3'])
+
+    volume_identifiers = test_mediator.ParseVolumeIdentifiersString('v1..v3')
+    self.assertEqual(volume_identifiers, ['v1', 'v2', 'v3'])
+
+    volume_identifiers = test_mediator.ParseVolumeIdentifiersString('1..3,5')
+    self.assertEqual(volume_identifiers, ['v1', 'v2', 'v3', 'v5'])
+
+    with self.assertRaises(ValueError):
+      test_mediator.ParseVolumeIdentifiersString('bogus')
+
+    with self.assertRaises(ValueError):
+      test_mediator.ParseVolumeIdentifiersString('1..bogus')
+
+  def testPromptUserForAPFSVolumeIdentifiers(self):
+    """Tests the PromptUserForAPFSVolumeIdentifiers function."""
+    test_file_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
+    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
+        parent=test_raw_path_spec)
+    test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/',
+        parent=test_tsk_partition_path_spec)
+
+    volume_system = apfs_volume_system.APFSVolumeSystem()
+    volume_system.Open(test_apfs_container_path_spec)
+
+    # Test selection of single volume.
+    input_file_object = io.BytesIO(b'1\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+        volume_system, ['apfs1'])
+
+    self.assertEqual(volume_identifiers, ['apfs1'])
+
+    # Test selection of single volume.
+    input_file_object = io.BytesIO(b'apfs1\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+        volume_system, ['apfs1'])
+
+    self.assertEqual(volume_identifiers, ['apfs1'])
+
+    # Test selection of single volume with invalid input on first attempt.
+    input_file_object = io.BytesIO(b'bogus\napfs1\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+        volume_system, ['apfs1'])
+
+    self.assertEqual(volume_identifiers, ['apfs1'])
+
+    # Test selection of all volumes.
+    input_file_object = io.BytesIO(b'all\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+        volume_system, ['apfs1'])
+
+    self.assertEqual(volume_identifiers, ['apfs1'])
+
+    # Test selection of no volumes.
+    input_file_object = io.BytesIO(b'\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+        volume_system, ['apfs1'])
+
+    self.assertEqual(volume_identifiers, [])
+
+  def testPromptUserForLVMVolumeIdentifiers(self):
+    """Tests the PromptUserForLVMVolumeIdentifiers function."""
+    test_file_path = self._GetTestFilePath(['lvm.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
+    test_lvm_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_LVM, location='/',
+        parent=test_raw_path_spec)
+
+    volume_system = lvm_volume_system.LVMVolumeSystem()
+    volume_system.Open(test_lvm_path_spec)
+
+    # Test selection of single volume.
+    input_file_object = io.BytesIO(b'1\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+        volume_system, ['lvm1'])
+
+    self.assertEqual(volume_identifiers, ['lvm1'])
+
+    # Test selection of single volume.
+    input_file_object = io.BytesIO(b'lvm1\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+        volume_system, ['lvm1'])
+
+    self.assertEqual(volume_identifiers, ['lvm1'])
+
+    # Test selection of single volume with invalid input on first attempt.
+    input_file_object = io.BytesIO(b'bogus\nlvm1\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+        volume_system, ['lvm1'])
+
+    self.assertEqual(volume_identifiers, ['lvm1'])
+
+    # Test selection of all volumes.
+    input_file_object = io.BytesIO(b'all\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+        volume_system, ['lvm1', 'lvm2'])
+
+    self.assertEqual(volume_identifiers, ['lvm1', 'lvm2'])
+
+    # Test selection of no volumes.
+    input_file_object = io.BytesIO(b'\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+        volume_system, ['lvm1'])
+
+    self.assertEqual(volume_identifiers, [])
+
+  # TODO: add test for PromptUserForEncryptedVolumeCredential.
+
+  def testPromptUserForPartitionIdentifiers(self):
+    """Tests the PromptUserForPartitionIdentifiers function."""
+    test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
+    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
+        parent=test_raw_path_spec)
+
+    volume_system = tsk_volume_system.TSKVolumeSystem()
+    volume_system.Open(test_tsk_partition_path_spec)
+
+    file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        output_writer=test_output_writer)
+
+    # Test selection of single partition.
+    input_file_object = io.BytesIO(b'2\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForPartitionIdentifiers(
+        volume_system, ['p1', 'p2'])
+
+    self.assertEqual(volume_identifiers, ['p2'])
+
+    # Test selection of single partition.
+    input_file_object = io.BytesIO(b'p2\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForPartitionIdentifiers(
+        volume_system, ['p1', 'p2'])
+
+    self.assertEqual(volume_identifiers, ['p2'])
+
+    # Test selection of single partition with invalid input on first attempt.
+    input_file_object = io.BytesIO(b'bogus\np2\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForPartitionIdentifiers(
+        volume_system, ['p1', 'p2'])
+
+    self.assertEqual(volume_identifiers, ['p2'])
+
+    # Test selection of all partitions.
+    input_file_object = io.BytesIO(b'all\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForPartitionIdentifiers(
+        volume_system, ['p1', 'p2'])
+
+    self.assertEqual(volume_identifiers, ['p1', 'p2'])
+
+    # TODO: test selection of no partitions.
+
+  # TODO: add test for PromptUserForVSSCurrentVolume.
+
+  def testPromptUserForVSSStoreIdentifiers(self):
+    """Tests the PromptUserForVSSStoreIdentifiers function."""
+    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=test_os_path_spec)
+    test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, parent=test_qcow_path_spec)
+
+    volume_system = vshadow_volume_system.VShadowVolumeSystem()
+    volume_system.Open(test_vss_path_spec)
+
+    file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        output_writer=test_output_writer)
+
+    # Test selection of single store.
+    input_file_object = io.BytesIO(b'2\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+        volume_system, ['vss1', 'vss2'])
+
+    self.assertEqual(volume_identifiers, ['vss2'])
+
+    # Test selection of single store.
+    input_file_object = io.BytesIO(b'vss2\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+        volume_system, ['vss1', 'vss2'])
+
+    self.assertEqual(volume_identifiers, ['vss2'])
+
+    # Test selection of single store with invalid input on first attempt.
+    input_file_object = io.BytesIO(b'bogus\nvss2\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+        volume_system, ['vss1', 'vss2'])
+
+    self.assertEqual(volume_identifiers, ['vss2'])
+
+    # Test selection of all stores.
+    input_file_object = io.BytesIO(b'all\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+        volume_system, ['vss1', 'vss2'])
+
+    self.assertEqual(volume_identifiers, ['vss1', 'vss2'])
+
+    # Test selection of no stores.
+    input_file_object = io.BytesIO(b'\n')
+    test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+    output_file_object = io.BytesIO()
+    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    test_mediator = storage_media_tool.StorageMediaToolMediator(
+        input_reader=test_input_reader, output_writer=test_output_writer)
+
+    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+        volume_system, ['vss1', 'vss2'])
+
+    self.assertEqual(volume_identifiers, [])
+
+
 class StorageMediaToolTest(test_lib.CLIToolTestCase):
-  """Tests for the storage media tool object."""
+  """Tests for the storage media tool."""
 
   # pylint: disable=protected-access
 
@@ -358,26 +966,6 @@ optional arguments:
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.PREFERRED_NTFS_BACK_END)
 
-  def testFormatHumanReadableSize(self):
-    """Tests the _FormatHumanReadableSize function."""
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    expected_size_string = '1000 B'
-    size_string = test_tool._FormatHumanReadableSize(1000)
-    self.assertEqual(size_string, expected_size_string)
-
-    expected_size_string = '1.0KiB / 1.0kB (1024 B)'
-    size_string = test_tool._FormatHumanReadableSize(1024)
-    self.assertEqual(size_string, expected_size_string)
-
-    expected_size_string = '976.6KiB / 1.0MB (1000000 B)'
-    size_string = test_tool._FormatHumanReadableSize(1000000)
-    self.assertEqual(size_string, expected_size_string)
-
-    expected_size_string = '1.0MiB / 1.0MB (1048576 B)'
-    size_string = test_tool._FormatHumanReadableSize(1048576)
-    self.assertEqual(size_string, expected_size_string)
-
   # TODO: add test for _GetAPFSVolumeIdentifiers.
   # TODO: add test for _GetLVMVolumeIdentifiers.
   # TODO: add test for _GetTSKPartitionIdentifiers.
@@ -497,41 +1085,6 @@ optional arguments:
     test_tool._ParseStorageMediaImageOptions(options)
 
     # TODO: improve test coverage.
-
-  def testParseVolumeIdentifiersString(self):
-    """Tests the _ParseVolumeIdentifiersString function."""
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    volume_identifiers = test_tool._ParseVolumeIdentifiersString('')
-    self.assertEqual(volume_identifiers, [])
-
-    volume_identifiers = test_tool._ParseVolumeIdentifiersString('all')
-    self.assertEqual(volume_identifiers, ['all'])
-
-    volume_identifiers = test_tool._ParseVolumeIdentifiersString('v1')
-    self.assertEqual(volume_identifiers, ['v1'])
-
-    volume_identifiers = test_tool._ParseVolumeIdentifiersString('1')
-    self.assertEqual(volume_identifiers, ['v1'])
-
-    volume_identifiers = test_tool._ParseVolumeIdentifiersString('1,3')
-    self.assertEqual(volume_identifiers, ['v1', 'v3'])
-
-    volume_identifiers = test_tool._ParseVolumeIdentifiersString('1..3')
-    self.assertEqual(volume_identifiers, ['v1', 'v2', 'v3'])
-
-    volume_identifiers = test_tool._ParseVolumeIdentifiersString('v1..v3')
-    self.assertEqual(volume_identifiers, ['v1', 'v2', 'v3'])
-
-    volume_identifiers = test_tool._ParseVolumeIdentifiersString('1..3,5')
-    self.assertEqual(volume_identifiers, ['v1', 'v2', 'v3', 'v5'])
-
-    with self.assertRaises(ValueError):
-      test_tool._ParseVolumeIdentifiersString('bogus')
-
-    with self.assertRaises(ValueError):
-      test_tool._ParseVolumeIdentifiersString('1..bogus')
-
   def testParseVSSProcessingOptions(self):
     """Tests the _ParseVSSProcessingOptions function."""
     test_tool = storage_media_tool.StorageMediaTool()
@@ -541,552 +1094,6 @@ optional arguments:
     test_tool._ParseVSSProcessingOptions(options)
 
     # TODO: improve test coverage.
-
-  def testPrintAPFSVolumeIdentifiersOverview(self):
-    """Tests the _PrintAPFSVolumeIdentifiersOverview function."""
-    test_file_path = self._GetTestFilePath(['apfs.dmg'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
-    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
-        parent=test_raw_path_spec)
-    test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/',
-        parent=test_tsk_partition_path_spec)
-
-    volume_system = apfs_volume_system.APFSVolumeSystem()
-    volume_system.Open(test_apfs_container_path_spec)
-
-    file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        output_writer=test_output_writer)
-
-    test_tool._PrintAPFSVolumeIdentifiersOverview(volume_system, ['apfs1'])
-
-    file_object.seek(0, os.SEEK_SET)
-    output_data = file_object.read()
-
-    expected_output_data = [
-        b'The following Apple File System (APFS) volumes were found:',
-        b'',
-        b'Identifier      Name',
-        b'apfs1           SingleVolume',
-        b'',
-        b'']
-
-    if not win32console:
-      # Using join here since Python 3 does not support format of bytes.
-      expected_output_data[2] = b''.join([
-          b'\x1b[1m', expected_output_data[2], b'\x1b[0m'])
-
-    self.assertEqual(output_data.split(b'\n'), expected_output_data)
-
-  def testPrintLVMVolumeIdentifiersOverview(self):
-    """Tests the _PrintLVMVolumeIdentifiersOverview function."""
-    test_file_path = self._GetTestFilePath(['lvm.raw'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
-    test_lvm_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_LVM, location='/',
-        parent=test_raw_path_spec)
-
-    volume_system = lvm_volume_system.LVMVolumeSystem()
-    volume_system.Open(test_lvm_path_spec)
-
-    file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        output_writer=test_output_writer)
-
-    test_tool._PrintLVMVolumeIdentifiersOverview(
-        volume_system, ['lvm1', 'lvm2'])
-
-    file_object.seek(0, os.SEEK_SET)
-    output_data = file_object.read()
-
-    expected_output_data = [
-        b'The following Logical Volume Manager (LVM) volumes were found:',
-        b'',
-        b'Identifier',
-        b'lvm1',
-        b'lvm2',
-        b'',
-        b'']
-
-    if not win32console:
-      # Using join here since Python 3 does not support format of bytes.
-      expected_output_data[2] = b''.join([
-          b'\x1b[1m', expected_output_data[2], b'\x1b[0m'])
-
-    self.assertEqual(output_data.split(b'\n'), expected_output_data)
-
-  def testPrintTSKPartitionIdentifiersOverview(self):
-    """Tests the _PrintTSKPartitionIdentifiersOverview function."""
-    test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
-    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-        parent=test_raw_path_spec)
-
-    volume_system = tsk_volume_system.TSKVolumeSystem()
-    volume_system.Open(test_tsk_partition_path_spec)
-
-    file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        output_writer=test_output_writer)
-
-    test_tool._PrintTSKPartitionIdentifiersOverview(volume_system, ['p1', 'p2'])
-
-    file_object.seek(0, os.SEEK_SET)
-    output_data = file_object.read()
-
-    expected_output_data = [
-        b'The following partitions were found:',
-        b'',
-        b'Identifier      Offset (in bytes)       Size (in bytes)',
-        (b'p1              512 (0x00000200)        175.0KiB / 179.2kB '
-         b'(179200 B)'),
-        b'p2              180224 (0x0002c000)     1.2MiB / 1.3MB (1294336 B)',
-        b'',
-        b'']
-
-    if not win32console:
-      # Using join here since Python 3 does not support format of bytes.
-      expected_output_data[2] = b''.join([
-          b'\x1b[1m', expected_output_data[2], b'\x1b[0m'])
-
-    self.assertEqual(output_data.split(b'\n'), expected_output_data)
-
-  def testPrintVSSStoreIdentifiersOverview(self):
-    """Tests the _PrintVSSStoreIdentifiersOverview function."""
-    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    test_qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=test_os_path_spec)
-    test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, parent=test_qcow_path_spec)
-
-    volume_system = vshadow_volume_system.VShadowVolumeSystem()
-    volume_system.Open(test_vss_path_spec)
-
-    file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        output_writer=test_output_writer)
-
-    test_tool._PrintVSSStoreIdentifiersOverview(volume_system, ['vss1', 'vss2'])
-
-    file_object.seek(0, os.SEEK_SET)
-    output_data = file_object.read()
-
-    expected_output_data = [
-        b'The following Volume Shadow Snapshots (VSS) were found:',
-        b'',
-        b'Identifier      Creation Time',
-        b'vss1            2013-12-03 06:35:09.7363787',
-        b'vss2            2013-12-03 06:37:48.9190583',
-        b'',
-        b'']
-
-    if not win32console:
-      # Using join here since Python 3 does not support format of bytes.
-      expected_output_data[2] = b''.join([
-          b'\x1b[1m', expected_output_data[2], b'\x1b[0m'])
-
-    self.assertEqual(output_data.split(b'\n'), expected_output_data)
-
-  def testPromptUserForAPFSVolumeIdentifiers(self):
-    """Tests the _PromptUserForAPFSVolumeIdentifiers function."""
-    test_file_path = self._GetTestFilePath(['apfs.dmg'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
-    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
-        parent=test_raw_path_spec)
-    test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/',
-        parent=test_tsk_partition_path_spec)
-
-    volume_system = apfs_volume_system.APFSVolumeSystem()
-    volume_system.Open(test_apfs_container_path_spec)
-
-    # Test selection of single volume.
-    input_file_object = io.BytesIO(b'1\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForAPFSVolumeIdentifiers(
-        volume_system, ['apfs1'])
-
-    self.assertEqual(volume_identifiers, ['apfs1'])
-
-    # Test selection of single volume.
-    input_file_object = io.BytesIO(b'apfs1\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForAPFSVolumeIdentifiers(
-        volume_system, ['apfs1'])
-
-    self.assertEqual(volume_identifiers, ['apfs1'])
-
-    # Test selection of single volume with invalid input on first attempt.
-    input_file_object = io.BytesIO(b'bogus\napfs1\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForAPFSVolumeIdentifiers(
-        volume_system, ['apfs1'])
-
-    self.assertEqual(volume_identifiers, ['apfs1'])
-
-    # Test selection of all volumes.
-    input_file_object = io.BytesIO(b'all\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForAPFSVolumeIdentifiers(
-        volume_system, ['apfs1'])
-
-    self.assertEqual(volume_identifiers, ['apfs1'])
-
-    # Test selection of no volumes.
-    input_file_object = io.BytesIO(b'\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForAPFSVolumeIdentifiers(
-        volume_system, ['apfs1'])
-
-    self.assertEqual(volume_identifiers, [])
-
-  def testPromptUserForLVMVolumeIdentifiers(self):
-    """Tests the _PromptUserForLVMVolumeIdentifiers function."""
-    test_file_path = self._GetTestFilePath(['lvm.raw'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
-    test_lvm_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_LVM, location='/',
-        parent=test_raw_path_spec)
-
-    volume_system = lvm_volume_system.LVMVolumeSystem()
-    volume_system.Open(test_lvm_path_spec)
-
-    # Test selection of single volume.
-    input_file_object = io.BytesIO(b'1\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForLVMVolumeIdentifiers(
-        volume_system, ['lvm1'])
-
-    self.assertEqual(volume_identifiers, ['lvm1'])
-
-    # Test selection of single volume.
-    input_file_object = io.BytesIO(b'lvm1\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForLVMVolumeIdentifiers(
-        volume_system, ['lvm1'])
-
-    self.assertEqual(volume_identifiers, ['lvm1'])
-
-    # Test selection of single volume with invalid input on first attempt.
-    input_file_object = io.BytesIO(b'bogus\nlvm1\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForLVMVolumeIdentifiers(
-        volume_system, ['lvm1'])
-
-    self.assertEqual(volume_identifiers, ['lvm1'])
-
-    # Test selection of all volumes.
-    input_file_object = io.BytesIO(b'all\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForLVMVolumeIdentifiers(
-        volume_system, ['lvm1', 'lvm2'])
-
-    self.assertEqual(volume_identifiers, ['lvm1', 'lvm2'])
-
-    # Test selection of no volumes.
-    input_file_object = io.BytesIO(b'\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForLVMVolumeIdentifiers(
-        volume_system, ['lvm1'])
-
-    self.assertEqual(volume_identifiers, [])
-
-  # TODO: add test for _PromptUserForEncryptedVolumeCredential.
-
-  def testPromptUserForPartitionIdentifiers(self):
-    """Tests the _PromptUserForPartitionIdentifiers function."""
-    test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
-    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-        parent=test_raw_path_spec)
-
-    volume_system = tsk_volume_system.TSKVolumeSystem()
-    volume_system.Open(test_tsk_partition_path_spec)
-
-    file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        output_writer=test_output_writer)
-
-    # Test selection of single partition.
-    input_file_object = io.BytesIO(b'2\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
-
-    self.assertEqual(volume_identifiers, ['p2'])
-
-    # Test selection of single partition.
-    input_file_object = io.BytesIO(b'p2\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
-
-    self.assertEqual(volume_identifiers, ['p2'])
-
-    # Test selection of single partition with invalid input on first attempt.
-    input_file_object = io.BytesIO(b'bogus\np2\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
-
-    self.assertEqual(volume_identifiers, ['p2'])
-
-    # Test selection of all partitions.
-    input_file_object = io.BytesIO(b'all\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
-
-    self.assertEqual(volume_identifiers, ['p1', 'p2'])
-
-    # TODO: test selection of no partitions.
-
-  # TODO: add test for _PromptUserForVSSCurrentVolume.
-
-  def testPromptUserForVSSStoreIdentifiers(self):
-    """Tests the _PromptUserForVSSStoreIdentifiers function."""
-    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    test_qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=test_os_path_spec)
-    test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, parent=test_qcow_path_spec)
-
-    volume_system = vshadow_volume_system.VShadowVolumeSystem()
-    volume_system.Open(test_vss_path_spec)
-
-    file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        output_writer=test_output_writer)
-
-    # Test selection of single store.
-    input_file_object = io.BytesIO(b'2\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForVSSStoreIdentifiers(
-        volume_system, ['vss1', 'vss2'])
-
-    self.assertEqual(volume_identifiers, ['vss2'])
-
-    # Test selection of single store.
-    input_file_object = io.BytesIO(b'vss2\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForVSSStoreIdentifiers(
-        volume_system, ['vss1', 'vss2'])
-
-    self.assertEqual(volume_identifiers, ['vss2'])
-
-    # Test selection of single store with invalid input on first attempt.
-    input_file_object = io.BytesIO(b'bogus\nvss2\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForVSSStoreIdentifiers(
-        volume_system, ['vss1', 'vss2'])
-
-    self.assertEqual(volume_identifiers, ['vss2'])
-
-    # Test selection of all stores.
-    input_file_object = io.BytesIO(b'all\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForVSSStoreIdentifiers(
-        volume_system, ['vss1', 'vss2'])
-
-    self.assertEqual(volume_identifiers, ['vss1', 'vss2'])
-
-    # Test selection of no stores.
-    input_file_object = io.BytesIO(b'\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForVSSStoreIdentifiers(
-        volume_system, ['vss1', 'vss2'])
-
-    self.assertEqual(volume_identifiers, [])
-
-  # TODO: add tests for _ReadSelectedVolumes.
 
   def testScanEncryptedVolume(self):
     """Tests the _ScanEncryptedVolume function."""
