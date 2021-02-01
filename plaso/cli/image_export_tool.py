@@ -751,10 +751,16 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     elif self._vfs_back_end == 'tsk':
       dfvfs_definitions.PREFERRED_EXT_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK)
+      dfvfs_definitions.PREFERRED_GPT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
       dfvfs_definitions.PREFERRED_HFS_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK)
       dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+    elif self._vfs_back_end == 'vsgpt':
+      dfvfs_definitions.PREFERRED_GPT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_GPT)
 
     self._ParseFilterOptions(options)
 
