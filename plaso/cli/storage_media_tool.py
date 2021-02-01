@@ -4,12 +4,11 @@
 import codecs
 import getpass
 import os
-import textwrap
 
-from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
 from dfvfs.analyzer import fvde_analyzer_helper
 from dfvfs.credentials import manager as credentials_manager
+from dfvfs.helpers import command_line as dfvfs_command_line
 from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
@@ -20,7 +19,6 @@ from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import tools
-from plaso.cli import views
 from plaso.engine import configurations
 from plaso.lib import errors
 
@@ -33,92 +31,8 @@ except KeyError:
   pass
 
 
-class StorageMediaToolMediator(object):
+class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
   """Mediator between the storage media tool and user input."""
-
-  # For context see: https://en.wikipedia.org/wiki/Byte
-  _UNITS_1000 = ['B', 'kB', 'MB', 'GB', 'TB', 'EB', 'ZB', 'YB']
-  _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
-
-  _USER_PROMPT_APFS = (
-      'Please specify the identifier(s) of the APFS volume that should be '
-      'processed: Note that a range of volumes can be defined as: 3..5. '
-      'Multiple volumes can be defined as: 1,3,5 (a list of comma separated '
-      'values). Ranges and lists can also be combined as: 1,3..5. The first '
-      'volume is 1. All volumes can be defined as "all". If no volumes are '
-      'specified none will be processed. You can abort with Ctrl^C.')
-
-  _USER_PROMPT_LVM = (
-      'Please specify the identifier(s) of the LVM volume that should be '
-      'processed: Note that a range of volumes can be defined as: 3..5. '
-      'Multiple volumes can be defined as: 1,3,5 (a list of comma separated '
-      'values). Ranges and lists can also be combined as: 1,3..5. The first '
-      'volume is 1. All volumes can be defined as "all". If no volumes are '
-      'specified none will be processed. You can abort with Ctrl^C.')
-
-  _USER_PROMPT_TSK = (
-      'Please specify the identifier of the partition that should be '
-      'processed. All partitions can be defined as: "all". Note that you can '
-      'abort with Ctrl^C.')
-
-  _USER_PROMPT_VSS = (
-      'Please specify the identifier(s) of the VSS that should be processed: '
-      'Note that a range of stores can be defined as: 3..5. Multiple stores '
-      'can be defined as: 1,3,5 (a list of comma separated values). Ranges '
-      'and lists can also be combined as: 1,3..5. The first store is 1. All '
-      'stores can be defined as "all". If no stores are specified none will '
-      'be processed. You can abort with Ctrl^C.')
-
-  def __init__(self, input_reader=None, output_writer=None):
-    """Initializes a storage media tool mediator.
-
-    Args:
-      input_reader (Optional[InputReader]): input reader, where None indicates
-          that the stdin input reader should be used.
-      output_writer (Optional[OutputWriter]): output writer, where None
-          indicates that the stdout output writer should be used.
-    """
-    super(StorageMediaToolMediator, self).__init__()
-    self._input_reader = input_reader
-    self._output_writer = output_writer
-    self._textwrapper = textwrap.TextWrapper()
-
-  def _FormatHumanReadableSize(self, size):
-    """Represents a number of bytes as a human readable string.
-
-    Args:
-      size (int): size in bytes.
-
-    Returns:
-      str: human readable string of the size.
-    """
-    magnitude_1000 = 0
-    size_1000 = float(size)
-    while size_1000 >= 1000:
-      size_1000 /= 1000
-      magnitude_1000 += 1
-
-    magnitude_1024 = 0
-    size_1024 = float(size)
-    while size_1024 >= 1024:
-      size_1024 /= 1024
-      magnitude_1024 += 1
-
-    size_string_1000 = None
-    if 0 < magnitude_1000 <= 7:
-      size_string_1000 = '{0:.1f}{1:s}'.format(
-          size_1000, self._UNITS_1000[magnitude_1000])
-
-    size_string_1024 = None
-    if 0 < magnitude_1024 <= 7:
-      size_string_1024 = '{0:.1f}{1:s}'.format(
-          size_1024, self._UNITS_1024[magnitude_1024])
-
-    if not size_string_1000 or not size_string_1024:
-      return '{0:d} B'.format(size)
-
-    return '{0:s} / {1:s} ({2:d} B)'.format(
-        size_string_1024, size_string_1000, size)
 
   def _PrintAPFSVolumeIdentifiersOverview(
       self, volume_system, volume_identifiers):
@@ -132,24 +46,8 @@ class StorageMediaToolMediator(object):
       SourceScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
-    header = 'The following Apple File System (APFS) volumes were found:\n'
-    self._output_writer.Write(header)
-
-    column_names = ['Identifier', 'Name']
-    table_view = views.CLITabularTableView(column_names=column_names)
-
-    for volume_identifier in volume_identifiers:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.SourceScannerError(
-            'Volume missing for identifier: {0:s}.'.format(
-                volume_identifier))
-
-      volume_attribute = volume.GetAttribute('name')
-      table_view.AddRow([volume.identifier, volume_attribute.value])
-
-    self._output_writer.Write('\n')
-    table_view.Write(self._output_writer)
+    super(StorageMediaToolMediator, self)._PrintAPFSVolumeIdentifiersOverview(
+        volume_system, volume_identifiers)
     self._output_writer.Write('\n')
 
   def _PrintLVMVolumeIdentifiersOverview(
@@ -164,23 +62,8 @@ class StorageMediaToolMediator(object):
       SourceScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
-    header = 'The following Logical Volume Manager (LVM) volumes were found:\n'
-    self._output_writer.Write(header)
-
-    column_names = ['Identifier']
-    table_view = views.CLITabularTableView(column_names=column_names)
-
-    for volume_identifier in volume_identifiers:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.SourceScannerError(
-            'Volume missing for identifier: {0:s}.'.format(
-                volume_identifier))
-
-      table_view.AddRow([volume.identifier])
-
-    self._output_writer.Write('\n')
-    table_view.Write(self._output_writer)
+    super(StorageMediaToolMediator, self)._PrintLVMVolumeIdentifiersOverview(
+        volume_system, volume_identifiers)
     self._output_writer.Write('\n')
 
   def _PrintTSKPartitionIdentifiersOverview(
@@ -195,27 +78,8 @@ class StorageMediaToolMediator(object):
       SourceScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
-    header = 'The following partitions were found:\n'
-    self._output_writer.Write(header)
-
-    column_names = ['Identifier', 'Offset (in bytes)', 'Size (in bytes)']
-    table_view = views.CLITabularTableView(column_names=column_names)
-
-    for volume_identifier in sorted(volume_identifiers):
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.SourceScannerError(
-            'Partition missing for identifier: {0:s}.'.format(
-                volume_identifier))
-
-      volume_extent = volume.extents[0]
-      volume_offset = '{0:d} (0x{0:08x})'.format(volume_extent.offset)
-      volume_size = self._FormatHumanReadableSize(volume_extent.size)
-
-      table_view.AddRow([volume.identifier, volume_offset, volume_size])
-
-    self._output_writer.Write('\n')
-    table_view.Write(self._output_writer)
+    super(StorageMediaToolMediator, self)._PrintPartitionIdentifiersOverview(
+        volume_system, volume_identifiers)
     self._output_writer.Write('\n')
 
   def _PrintVSSStoreIdentifiersOverview(
@@ -230,63 +94,12 @@ class StorageMediaToolMediator(object):
       SourceScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
-    header = 'The following Volume Shadow Snapshots (VSS) were found:\n'
-    self._output_writer.Write(header)
-
-    column_names = ['Identifier', 'Creation Time']
-    table_view = views.CLITabularTableView(column_names=column_names)
-
-    for volume_identifier in volume_identifiers:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.SourceScannerError(
-            'Volume missing for identifier: {0:s}.'.format(
-                volume_identifier))
-
-      volume_attribute = volume.GetAttribute('creation_time')
-      filetime = dfdatetime_filetime.Filetime(timestamp=volume_attribute.value)
-      creation_time = filetime.CopyToDateTimeString()
-
-      if volume.HasExternalData():
-        creation_time = '{0:s}\tWARNING: data stored outside volume'.format(
-            creation_time)
-
-      table_view.AddRow([volume.identifier, creation_time])
-
-    self._output_writer.Write('\n')
-    table_view.Write(self._output_writer)
+    super(StorageMediaToolMediator, self)._PrintVSSStoreIdentifiersOverview(
+        volume_system, volume_identifiers)
     self._output_writer.Write('\n')
 
-  def _ReadSelectedVolumes(self, volume_system, prefix='v'):
-    """Reads the selected volumes provided by the user.
-
-    Args:
-      volume_system (VolumeSystem): volume system.
-      prefix (Optional[str]): volume identifier prefix.
-
-    Returns:
-      list[str]: selected volume identifiers including prefix.
-
-    Raises:
-      KeyboardInterrupt: if the user requested to abort.
-      ValueError: if the volume identifiers string could not be parsed.
-    """
-    volume_identifiers_string = self._input_reader.Read()
-    volume_identifiers_string = volume_identifiers_string.strip()
-
-    if not volume_identifiers_string:
-      return []
-
-    selected_volumes = self.ParseVolumeIdentifiersString(
-        volume_identifiers_string, prefix=prefix)
-
-    if selected_volumes == ['all']:
-      return [
-          '{0:s}{1:d}'.format(prefix, volume_index)
-          for volume_index in range(1, volume_system.number_of_volumes + 1)]
-
-    return selected_volumes
-
+  # pylint: disable=arguments-differ
+  # TODO: replace this method by the one defined by CLIVolumeScannerMediator
   def ParseVolumeIdentifiersString(
       self, volume_identifiers_string, prefix='v'):
     """Parses a user specified volume identifiers string.
@@ -305,93 +118,8 @@ class StorageMediaToolMediator(object):
     Raises:
       ValueError: if the volume identifiers string is invalid.
     """
-    prefix_length = 0
-    if prefix:
-      prefix_length = len(prefix)
-
-    if not volume_identifiers_string:
-      return []
-
-    if volume_identifiers_string == 'all':
-      return ['all']
-
-    volume_identifiers = set()
-    for identifiers_range in volume_identifiers_string.split(','):
-      # Determine if the range is formatted as 1..3 otherwise it indicates
-      # a single volume identifier.
-      if '..' in identifiers_range:
-        first_identifier, last_identifier = identifiers_range.split('..')
-
-        if first_identifier.startswith(prefix):
-          first_identifier = first_identifier[prefix_length:]
-
-        if last_identifier.startswith(prefix):
-          last_identifier = last_identifier[prefix_length:]
-
-        try:
-          first_identifier = int(first_identifier, 10)
-          last_identifier = int(last_identifier, 10)
-        except ValueError:
-          raise ValueError('Invalid volume identifiers range: {0:s}.'.format(
-              identifiers_range))
-
-        for volume_identifier in range(first_identifier, last_identifier + 1):
-          if volume_identifier not in volume_identifiers:
-            volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
-            volume_identifiers.add(volume_identifier)
-      else:
-        identifier = identifiers_range
-        if identifier.startswith(prefix):
-          identifier = identifiers_range[prefix_length:]
-
-        try:
-          volume_identifier = int(identifier, 10)
-        except ValueError:
-          raise ValueError('Invalid volume identifier range: {0:s}.'.format(
-              identifiers_range))
-
-        volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
-        volume_identifiers.add(volume_identifier)
-
-    # Note that sorted will return a list.
-    return sorted(volume_identifiers)
-
-  def PromptUserForAPFSVolumeIdentifiers(
-      self, volume_system, volume_identifiers):
-    """Prompts the user to provide APFS volume identifiers.
-
-    Args:
-      volume_system (dfvfs.APFSVolumeSystem): volume system.
-      volume_identifiers (list[str]): volume identifiers including prefix.
-
-    Returns:
-      list[str]: selected volume identifiers including prefix or None.
-    """
-    self._PrintAPFSVolumeIdentifiersOverview(volume_system, volume_identifiers)
-
-    while True:
-      lines = self._textwrapper.wrap(self._USER_PROMPT_APFS)
-      self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n\nVolume identifiers: ')
-
-      try:
-        selected_volumes = self._ReadSelectedVolumes(
-            volume_system, prefix='apfs')
-        if (not selected_volumes or
-            not set(selected_volumes).difference(volume_identifiers)):
-          break
-      except ValueError:
-        pass
-
-      self._output_writer.Write('\n')
-
-      lines = self._textwrapper.wrap(
-          'Unsupported volume identifier(s), please try again or abort with '
-          'Ctrl^C.')
-      self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n\n')
-
-    return selected_volumes
+    return self._ParseVolumeIdentifiersString(
+        volume_identifiers_string, prefix=prefix)
 
   def PromptUserForEncryptedVolumeCredential(
       self, source_scanner_object, scan_context, locked_scan_node, credentials):
@@ -483,80 +211,6 @@ class StorageMediaToolMediator(object):
 
     return is_unlocked, credential_type, credential_data
 
-  def PromptUserForLVMVolumeIdentifiers(
-      self, volume_system, volume_identifiers):
-    """Prompts the user to provide LVM volume identifiers.
-
-    Args:
-      volume_system (dfvfs.LVMVolumeSystem): volume system.
-      volume_identifiers (list[str]): volume identifiers including prefix.
-
-    Returns:
-      list[str]: selected volume identifiers including prefix or None.
-    """
-    self._PrintLVMVolumeIdentifiersOverview(volume_system, volume_identifiers)
-
-    while True:
-      lines = self._textwrapper.wrap(self._USER_PROMPT_LVM)
-      self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n\nVolume identifiers: ')
-
-      try:
-        selected_volumes = self._ReadSelectedVolumes(
-            volume_system, prefix='lvm')
-        if (not selected_volumes or
-            not set(selected_volumes).difference(volume_identifiers)):
-          break
-      except ValueError:
-        pass
-
-      self._output_writer.Write('\n')
-
-      lines = self._textwrapper.wrap(
-          'Unsupported volume identifier(s), please try again or abort with '
-          'Ctrl^C.')
-      self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n\n')
-
-    return selected_volumes
-
-  def PromptUserForPartitionIdentifiers(
-      self, volume_system, volume_identifiers):
-    """Prompts the user to provide partition identifiers.
-
-    Args:
-      volume_system (dfvfs.TSKVolumeSystem): volume system.
-      volume_identifiers (list[str]): volume identifiers including prefix.
-
-    Returns:
-      list[str]: selected volume identifiers including prefix or None.
-    """
-    self._PrintTSKPartitionIdentifiersOverview(
-        volume_system, volume_identifiers)
-
-    while True:
-      lines = self._textwrapper.wrap(self._USER_PROMPT_TSK)
-      self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n\nPartition identifiers: ')
-
-      try:
-        selected_volumes = self._ReadSelectedVolumes(volume_system, prefix='p')
-        if (selected_volumes and
-            not set(selected_volumes).difference(volume_identifiers)):
-          break
-      except ValueError:
-        pass
-
-      self._output_writer.Write('\n')
-
-      lines = self._textwrapper.wrap(
-          'Unsupported partition identifier(s), please try again or abort with '
-          'Ctrl^C.')
-      self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n\n')
-
-    return selected_volumes
-
   def PromptUserForVSSCurrentVolume(self):
     """Prompts the user if the current volume with VSS should be processed.
 
@@ -583,45 +237,6 @@ class StorageMediaToolMediator(object):
 
     self._output_writer.Write('\n')
     return not process_current_volume or process_current_volume == 'yes'
-
-  def PromptUserForVSSStoreIdentifiers(self, volume_system, volume_identifiers):
-    """Prompts the user to provide VSS store identifiers.
-
-    This method first checks for the preferred VSS stores and falls back
-    to prompt the user if no usable preferences were specified.
-
-    Args:
-      volume_system (dfvfs.VShadowVolumeSystem): volume system.
-      volume_identifiers (list[str]): volume identifiers including prefix.
-
-    Returns:
-      list[str]: selected volume identifiers including prefix or None.
-    """
-    self._PrintVSSStoreIdentifiersOverview(volume_system, volume_identifiers)
-
-    while True:
-      lines = self._textwrapper.wrap(self._USER_PROMPT_VSS)
-      self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n\nVSS identifiers: ')
-
-      try:
-        selected_volumes = self._ReadSelectedVolumes(
-            volume_system, prefix='vss')
-        if (not selected_volumes or
-            not set(selected_volumes).difference(volume_identifiers)):
-          break
-      except ValueError:
-        pass
-
-      self._output_writer.Write('\n')
-
-      lines = self._textwrapper.wrap(
-          'Unsupported VSS identifier(s), please try again or abort with '
-          'Ctrl^C.')
-      self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n\n')
-
-    return selected_volumes
 
 
 class StorageMediaTool(tools.CLITool):
@@ -723,7 +338,7 @@ class StorageMediaTool(tools.CLITool):
             'More than 1 volume found but no volumes specified.')
 
       try:
-        volume_identifiers = self._mediator.PromptUserForAPFSVolumeIdentifiers(
+        volume_identifiers = self._mediator.GetAPFSVolumeIdentifiers(
             volume_system, volume_identifiers)
       except KeyboardInterrupt:
         raise errors.UserAbort('File system scan aborted.')
@@ -776,7 +391,7 @@ class StorageMediaTool(tools.CLITool):
             'More than 1 volume found but no volumes specified.')
 
       try:
-        volume_identifiers = self._mediator.PromptUserForLVMVolumeIdentifiers(
+        volume_identifiers = self._mediator.GetLVMVolumeIdentifiers(
             volume_system, volume_identifiers)
       except KeyboardInterrupt:
         raise errors.UserAbort('File system scan aborted.')
@@ -834,7 +449,7 @@ class StorageMediaTool(tools.CLITool):
             'More than 1 partition found but no partitions specified.')
 
       try:
-        volume_identifiers = self._mediator.PromptUserForPartitionIdentifiers(
+        volume_identifiers = self._mediator.GetPartitionIdentifiers(
             volume_system, volume_identifiers)
       except KeyboardInterrupt:
         raise errors.UserAbort('File system scan aborted.')
@@ -884,7 +499,7 @@ class StorageMediaTool(tools.CLITool):
       return []
 
     try:
-      volume_identifiers = self._mediator.PromptUserForVSSStoreIdentifiers(
+      volume_identifiers = self._mediator.GetVSSStoreIdentifiers(
           volume_system, volume_identifiers)
 
     except KeyboardInterrupt:
