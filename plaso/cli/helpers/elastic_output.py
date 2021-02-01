@@ -61,6 +61,12 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
             'Export string fields that will not be analyzed by Lucene.'))
 
     argument_group.add_argument(
+        '--extra_fields', '--extra-fields', dest='extra_fields',
+        action='store', default='', help=(
+            'JSON string with a dict of fields and values to add to each '
+            'event that will be indexed by Elastic.'))
+
+    argument_group.add_argument(
         '--elastic_mappings', '--elastic-mappings', dest='elastic_mappings',
         action='store', default=None, metavar='PATH', help=(
             'Username to use for Elasticsearch authentication.'))
@@ -121,6 +127,23 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     elastic_user = cls._ParseStringOption(options, 'elastic_user')
     elastic_password = cls._ParseStringOption(options, 'elastic_password')
     use_ssl = getattr(options, 'use_ssl', False)
+    extra_fields_string = cls._ParseStringOption(options, 'extra_fields')
+
+    if extra_fields_string:
+      try:
+        extra_fields = json.loads(extra_fields_string)
+      except (json.JSONDecodeError, ValueError) as exc:
+        extra_fields = {}
+        logger.warning(
+            'Unable to parse the extra fields, with error: {0!s}'.format(exc))
+
+      if not isinstance(extra_fields, dict):
+        logger.warning(
+            'Extra fields needs to be a dictionary, not [{0!s}]'.format(
+                type(extra_fields)))
+        extra_fields = {}
+    else:
+      extra_fields = {}
 
     ca_certificates_path = cls._ParseStringOption(
         options, 'ca_certificates_file_path')
@@ -146,6 +169,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     output_module.SetUseSSL(use_ssl)
     output_module.SetCACertificatesPath(ca_certificates_path)
     output_module.SetURLPrefix(elastic_url_prefix)
+    output_module.SetExtraFields(extra_fields)
 
     # TODO: remove --raw-field option.
     raw_fields = getattr(options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)

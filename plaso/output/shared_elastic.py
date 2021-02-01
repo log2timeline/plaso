@@ -163,6 +163,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     super(SharedElasticsearchOutputModule, self).__init__(output_mediator)
     self._client = None
     self._event_documents = []
+    self._extra_fields = None
     self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
     self._field_formatting_helper = SharedElasticsearchFieldFormattingHelper(
         output_mediator)
@@ -323,6 +324,9 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     event_values = self._GetSanitizedEventValues(
         event, event_data, event_data_stream, event_tag)
 
+    if self._extra_fields:
+      event_values.update(self._extra_fields)
+
     self._event_documents.append(event_document)
     self._event_documents.append(event_values)
     self._number_of_buffered_events += 1
@@ -359,6 +363,18 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._FlushEvents()
 
     self._client = None
+
+  def SetExtraFields(self, extra_fields):
+    """Set the extra field.
+
+    Args:
+      extra_fields (dict): A dict with extra fields and values that
+          will be added to each indexed event.
+    """
+    self._extra_fields = extra_fields
+    logger.debug(
+        'Extra fields set, adding fields: {0:s} to each event'.format(
+            ','.join(extra_fields.keys())))
 
   def SetFlushInterval(self, flush_interval):
     """Set the flush interval.
