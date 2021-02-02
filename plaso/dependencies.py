@@ -62,6 +62,7 @@ PYTHON_DEPENDENCIES = {
     'pytz': ('__version__', '', None, True),
     'pyvhdi': ('get_version()', '20131210', None, True),
     'pyvmdk': ('get_version()', '20140421', None, True),
+    'pyvsgpt': ('get_version()', '20210115', None, True),
     'pyvshadow': ('get_version()', '20160109', None, True),
     'pyvslvm': ('get_version()', '20160109', None, True),
     'redis': ('__version__', '3.4', None, True),

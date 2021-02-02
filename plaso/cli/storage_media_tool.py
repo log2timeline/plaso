@@ -14,6 +14,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.volume import apfs_volume_system
+from dfvfs.volume import gpt_volume_system
 from dfvfs.volume import lvm_volume_system
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
@@ -321,7 +322,7 @@ class StorageMediaTool(tools.CLITool):
     # TODO: refactor self._volumes to use scan options.
     if self._volumes:
       if self._volumes == 'all':
-        volumes = range(1, volume_system.number_of_volumes + 1)
+        volumes = volume_system.volume_identifiers
       else:
         volumes = self._mediator.ParseVolumeIdentifiersString(
             self._volumes, prefix='apfs')
@@ -374,7 +375,7 @@ class StorageMediaTool(tools.CLITool):
     # TODO: refactor self._volumes to use scan options.
     if self._volumes:
       if self._volumes == 'all':
-        volumes = range(1, volume_system.number_of_volumes + 1)
+        volumes = volume_system.volume_identifiers
       else:
         volumes = self._mediator.ParseVolumeIdentifiersString(
             self._volumes, prefix='lvm')
@@ -421,7 +422,12 @@ class StorageMediaTool(tools.CLITool):
     if not scan_node or not scan_node.path_spec:
       raise errors.SourceScannerError('Invalid scan node.')
 
-    volume_system = tsk_volume_system.TSKVolumeSystem()
+    if scan_node.path_spec.type_indicator == (
+        dfvfs_definitions.TYPE_INDICATOR_GPT):
+      volume_system = gpt_volume_system.GPTVolumeSystem()
+    else:
+      volume_system = tsk_volume_system.TSKVolumeSystem()
+
     volume_system.Open(scan_node.path_spec)
 
     volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
@@ -432,7 +438,7 @@ class StorageMediaTool(tools.CLITool):
     # TODO: refactor self._partitions to use scan options.
     if self._partitions:
       if self._partitions == 'all':
-        partitions = range(1, volume_system.number_of_volumes + 1)
+        partitions = volume_system.volume_identifiers
       else:
         partitions = self._mediator.ParseVolumeIdentifiersString(
             self._partitions, prefix='p')
@@ -484,7 +490,7 @@ class StorageMediaTool(tools.CLITool):
     # TODO: refactor to use scan options.
     if self._vss_stores:
       if self._vss_stores == 'all':
-        vss_stores = range(1, volume_system.number_of_volumes + 1)
+        vss_stores = volume_system.volume_identifiers
       else:
         vss_stores = self._mediator.ParseVolumeIdentifiersString(
             self._vss_stores, prefix='vss')
@@ -950,7 +956,8 @@ class StorageMediaTool(tools.CLITool):
       scan_node = scan_node.sub_nodes[0]
 
     base_path_specs = []
-    if scan_node.type_indicator != (
+    if scan_node.type_indicator not in (
+        dfvfs_definitions.TYPE_INDICATOR_GPT,
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
       self._ScanVolume(scan_context, scan_node, base_path_specs)
 

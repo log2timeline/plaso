@@ -54,7 +54,7 @@ optional arguments:
                         temporary files created during processing.
   --vfs_back_end TYPE, --vfs-back-end TYPE
                         The preferred dfVFS back-end: "auto", "fsext",
-                        "fshfs", "fsntfs" or "tsk".
+                        "fshfs", "fsntfs", "tsk" or "vsgpt".
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
@@ -98,7 +98,7 @@ optional arguments:
                         temporary files created during processing.
   --vfs_back_end TYPE, --vfs-back-end TYPE
                         The preferred dfVFS back-end: "auto", "fsext",
-                        "fshfs", "fsntfs" or "tsk".
+                        "fshfs", "fsntfs", "tsk" or "vsgpt".
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
