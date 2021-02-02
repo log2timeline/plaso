@@ -365,10 +365,10 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._client = None
 
   def SetAdditionalFields(self, additional_fields):
-    """Set the additional field.
+    """Sets the additional field.
 
     Args:
-      additional_fields (dict): A dict with additional fields and values that
+      additional_fields (dict[str, Any]): Additional fields and values that
           will be added to each indexed event.
     """
     self._additional_fields = additional_fields
@@ -377,7 +377,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
             ','.join(additional_fields.keys())))
 
   def SetFlushInterval(self, flush_interval):
-    """Set the flush interval.
+    """Sets the flush interval.
 
     Args:
       flush_interval (int): number of events to buffer before doing a bulk
@@ -387,7 +387,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     logger.debug('Elasticsearch flush interval: {0:d}'.format(flush_interval))
 
   def SetIndexName(self, index_name):
-    """Set the index name.
+    """Sets the index name.
 
     Args:
       index_name (str): name of the index.
@@ -404,7 +404,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._mappings = mappings
 
   def SetPassword(self, password):
-    """Set the password.
+    """Sets the password.
 
     Args:
       password (str): password to authenticate with.
@@ -413,7 +413,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     logger.debug('Elastic password: ********')
 
   def SetServerInformation(self, server, port):
-    """Set the server information.
+    """Sets the server information.
 
     Args:
       server (str): IP address or hostname of the server.

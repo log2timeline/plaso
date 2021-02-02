@@ -61,7 +61,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
             'Export string fields that will not be analyzed by Lucene.'))
 
     argument_group.add_argument(
-        '--additional', '--additional-fields', dest='additional_fields',
+        '--additional_fields', '--additional-fields', dest='additional_fields',
         action='store', default='', help=(
             'JSON string with a dict of fields and values to add to each '
             'event that will be indexed by Elastic.'))
@@ -130,21 +130,21 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     additional_fields_string = cls._ParseStringOption(
         options, 'additional_fields')
 
+    additional_fields = {}
     if additional_fields_string:
       try:
         additional_fields = json.loads(additional_fields_string)
-      except (json.JSONDecodeError, ValueError) as exc:
+      except (json.JSONDecodeError, ValueError) as exception:
         additional_fields = {}
         logger.warning(
-            'Unable to parse the extra fields, with error: {0!s}'.format(exc))
+            'Unable to parse the extra fields, with error: {0!s}'.format(
+                exception))
 
       if not isinstance(additional_fields, dict):
         logger.warning(
-            'Extra fields needs to be a dictionary, not [{0!s}]'.format(
+            'Extra fields needs to be a dictionary, not "{0!s}"'.format(
                 type(additional_fields)))
         additional_fields = {}
-    else:
-      additional_fields = {}
 
     ca_certificates_path = cls._ParseStringOption(
         options, 'ca_certificates_file_path')
