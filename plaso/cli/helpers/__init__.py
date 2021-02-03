@@ -8,6 +8,7 @@ from plaso.cli.helpers import data_location
 from plaso.cli.helpers import date_filters
 from plaso.cli.helpers import dynamic_output
 from plaso.cli.helpers import elastic_output
+from plaso.cli.helpers import elastic_ts_output
 from plaso.cli.helpers import event_filters
 from plaso.cli.helpers import extraction
 from plaso.cli.helpers import filter_file
