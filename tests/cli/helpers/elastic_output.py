@@ -21,15 +21,19 @@ class ElasticSearchOutputArgumentsHelperTest(
 
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
-                     [--raw_fields] [--elastic_mappings PATH]
-                     [--elastic_user USERNAME] [--elastic_password PASSWORD]
-                     [--use_ssl] [--ca_certificates_file_path PATH]
+                     [--raw_fields] [--additional_fields ADDITIONAL_FIELDS]
+                     [--elastic_mappings PATH] [--elastic_user USERNAME]
+                     [--elastic_password PASSWORD] [--use_ssl]
+                     [--ca_certificates_file_path PATH]
                      [--elastic_url_prefix URL_PREFIX] [--server HOSTNAME]
                      [--port PORT]
 
 Test argument parser.
 
 optional arguments:
+  --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
+                        JSON string with a dict of fields and values to add to
+                        each event that will be indexed by Elastic.
   --ca_certificates_file_path PATH, --ca-certificates-file-path PATH
                         Path to a file containing a list of root certificates
                         to trust.
