@@ -161,12 +161,12 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           modules and other components, such as storage and dfvfs.
     """
     super(SharedElasticsearchOutputModule, self).__init__(output_mediator)
-    self._additional_fields = None
     self._client = None
     self._event_documents = []
-    self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
+    self._field_names = self._DEFAULT_FIELD_NAMES
     self._field_formatting_helper = SharedElasticsearchFieldFormattingHelper(
         output_mediator)
+    self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
     self._host = None
     self._index_name = None
     self._mappings = None
@@ -284,7 +284,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       for attribute_name, attribute_value in event_data_stream.GetAttributes():
         event_values[attribute_name] = attribute_value
 
-    for attribute_name in self._DEFAULT_FIELD_NAMES:
+    for attribute_name in self._field_names:
       if attribute_name not in event_values:
         event_values[attribute_name] = None
 
@@ -324,9 +324,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     event_values = self._GetSanitizedEventValues(
         event, event_data, event_data_stream, event_tag)
 
-    if self._additional_fields:
-      event_values.update(self._additional_fields)
-
     self._event_documents.append(event_document)
     self._event_documents.append(event_values)
     self._number_of_buffered_events += 1
@@ -364,29 +361,13 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     self._client = None
 
-  def SetAdditionalFields(self, additional_fields):
-    """Sets the additional field.
-
-    This function allows for you to add a key/value pair to each document
-    that is indexed by Elastic. That is for each document or event that is
-    indexed into Elastic all key/value pairs in the additional_fields dict
-    will be added to the document.
-
-    Only keys that start with '__' will be allowed to be added in order to
-    prevent overwriting already existing keys in the event.
+  def SetFields(self, field_names):
+    """Sets the names of the fields to output.
 
     Args:
-      additional_fields (dict[str, Any]): Additional fields and values that
-          will be added to each indexed event.
+      field_names (list[str]): names of the fields to output.
     """
-    additional_keys = list(additional_fields.keys())
-    for key in additional_keys:
-      if not key.startswith('__'):
-        _ = additional_fields.pop(key)
-    self._additional_fields = additional_fields
-    logger.debug(
-        'Additional fields set, adding fields: {0:s} to each event'.format(
-            ','.join(additional_fields.keys())))
+    self._field_names = field_names
 
   def SetFlushInterval(self, flush_interval):
     """Sets the flush interval.

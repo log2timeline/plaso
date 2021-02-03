@@ -32,8 +32,10 @@ Test argument parser.
 
 optional arguments:
   --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
-                        JSON string with a dict of fields and values to add to
-                        each event that will be indexed by Elastic.
+                        Defines extra fields to be included in the output, in
+                        addition to the default fields, which are datetime,
+                        display_name, message, source_long, source_short, tag,
+                        timestamp, timestamp_desc.
   --ca_certificates_file_path PATH, --ca-certificates-file-path PATH
                         Path to a file containing a list of root certificates
                         to trust.

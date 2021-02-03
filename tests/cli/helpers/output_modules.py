@@ -24,7 +24,7 @@ usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
 Test argument parser.
 
 optional arguments:
-  --additional_fields ADDITIONAL_FIELDS
+  --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
                         Defines extra fields to be included in the output, in
                         addition to the default fields, which are datetime,
                         timestamp_desc, source, source_long, message, parser,

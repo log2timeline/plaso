@@ -34,6 +34,10 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
 
+  _DEFAULT_FIELDS = [
+      'datetime', 'display_name', 'message', 'source_long', 'source_short',
+      'tag', 'timestamp', 'timestamp_desc']
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Adds command line arguments the helper supports to an argument group.
@@ -60,11 +64,12 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         default=cls._DEFAULT_RAW_FIELDS, help=(
             'Export string fields that will not be analyzed by Lucene.'))
 
+    default_fields = ', '.join(cls._DEFAULT_FIELDS)
     argument_group.add_argument(
         '--additional_fields', '--additional-fields', dest='additional_fields',
-        action='store', default='', help=(
-            'JSON string with a dict of fields and values to add to each '
-            'event that will be indexed by Elastic.'))
+        type=str, action='store', default='', help=(
+            'Defines extra fields to be included in the output, in addition to '
+            'the default fields, which are {0:s}.'.format(default_fields)))
 
     argument_group.add_argument(
         '--elastic_mappings', '--elastic-mappings', dest='elastic_mappings',
@@ -123,28 +128,17 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'index_name', default_value=cls._DEFAULT_INDEX_NAME)
     flush_interval = cls._ParseNumericOption(
         options, 'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
+
+    fields = ','.join(cls._DEFAULT_FIELDS)
+    additional_fields = cls._ParseStringOption(options, 'additional_fields')
+
+    if additional_fields:
+      fields = ','.join([fields, additional_fields])
+
     mappings_file_path = cls._ParseStringOption(options, 'elastic_mappings')
     elastic_user = cls._ParseStringOption(options, 'elastic_user')
     elastic_password = cls._ParseStringOption(options, 'elastic_password')
     use_ssl = getattr(options, 'use_ssl', False)
-    additional_fields_string = cls._ParseStringOption(
-        options, 'additional_fields')
-
-    additional_fields = {}
-    if additional_fields_string:
-      try:
-        additional_fields = json.loads(additional_fields_string)
-      except (json.JSONDecodeError, ValueError) as exception:
-        additional_fields = {}
-        logger.warning(
-            'Unable to parse the extra fields, with error: {0!s}'.format(
-                exception))
-
-      if not isinstance(additional_fields, dict):
-        logger.warning(
-            'Extra fields needs to be a dictionary, not "{0!s}"'.format(
-                type(additional_fields)))
-        additional_fields = {}
 
     ca_certificates_path = cls._ParseStringOption(
         options, 'ca_certificates_file_path')
@@ -163,14 +157,17 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
       elastic_password = getpass.getpass('Enter your Elasticsearch password: ')
 
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
+
     output_module.SetIndexName(index_name)
     output_module.SetFlushInterval(flush_interval)
+    output_module.SetFields([
+        field_name.strip() for field_name in fields.split(',')])
+
     output_module.SetUsername(elastic_user)
     output_module.SetPassword(elastic_password)
     output_module.SetUseSSL(use_ssl)
     output_module.SetCACertificatesPath(ca_certificates_path)
     output_module.SetURLPrefix(elastic_url_prefix)
-    output_module.SetAdditionalFields(additional_fields)
 
     # TODO: remove --raw-field option.
     raw_fields = getattr(options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
