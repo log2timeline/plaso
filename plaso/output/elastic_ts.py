@@ -6,7 +6,8 @@ from plaso.output import manager
 from plaso.output import shared_elastic
 
 
-class ElasticTimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
+class ElasticTimesketchOutputModule(
+    shared_elastic.SharedElasticsearchOutputModule):
   """Output module for Timesketch Elasticsearch."""
 
   NAME = 'elastic_ts'
@@ -85,4 +86,5 @@ class ElasticTimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModu
 
 
 manager.OutputManager.RegisterOutput(
-    ElasticTimesketchOutputModule, disabled=shared_elastic.elasticsearch is None)
+    ElasticTimesketchOutputModule,
+    disabled=shared_elastic.elasticsearch is None)

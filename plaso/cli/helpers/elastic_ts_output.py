@@ -12,7 +12,6 @@ from plaso.cli.helpers import manager
 from plaso.cli.helpers import server_config
 from plaso.cli import logger
 from plaso.lib import errors
-from plaso.output import elastic
 from plaso.output import shared_elastic
 
 
@@ -169,4 +168,5 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
     output_module.SetMappings(mappings_json)
 
 
-manager.ArgumentHelperManager.RegisterHelper(ElasticTimesketchOutputArgumentsHelper)
+manager.ArgumentHelperManager.RegisterHelper(
+    ElasticTimesketchOutputArgumentsHelper)
