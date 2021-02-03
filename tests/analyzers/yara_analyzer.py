@@ -25,7 +25,7 @@ class YaraAnalyzerTest(shared_test_lib.BaseTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    yara_rules_path = self._GetTestFilePath(['yara.rules'])
+    yara_rules_path = self._GetTestFilePath(['rules.yara'])
     self._SkipIfPathNotExists(yara_rules_path)
 
     with open(yara_rules_path, 'r') as file_object:

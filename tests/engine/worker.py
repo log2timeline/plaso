@@ -432,7 +432,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testExtractionWorkerYara(self):
     """Tests that the worker applies Yara matching code correctly."""
-    yara_rule_path = self._GetTestFilePath(['yara.rules'])
+    yara_rule_path = self._GetTestFilePath(['rules.yara'])
     self._SkipIfPathNotExists(yara_rule_path)
 
     with open(yara_rule_path, 'r') as file_object:

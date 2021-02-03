@@ -41,10 +41,14 @@ optional arguments:
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    test_file_path = self._GetTestFilePath(['yara.rules'])
-    invalid_rules_path = self._GetTestFilePath(['another_file'])
-    non_existent_rules_path = '/tmp/non_existant'
+    test_file_path = self._GetTestFilePath(['rules.yara'])
     self._SkipIfPathNotExists(test_file_path)
+
+    invalid_rules_path = self._GetTestFilePath(['another_file'])
+    self._SkipIfPathNotExists(invalid_rules_path)
+
+    unsupported_rules_path = self._GetTestFilePath(['unsupported_rules.yara'])
+    self._SkipIfPathNotExists(unsupported_rules_path)
 
     options = cli_test_lib.TestOptions()
     options.yara_rules_path = test_file_path
@@ -57,11 +61,15 @@ optional arguments:
     with self.assertRaises(errors.BadConfigObject):
       yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, None)
 
-    options.yara_rules_path = non_existent_rules_path
+    options.yara_rules_path = '/tmp/non_existant'
     with self.assertRaises(errors.BadConfigOption):
       yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
 
     options.yara_rules_path = invalid_rules_path
+    with self.assertRaises(errors.BadConfigOption):
+      yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
+
+    options.yara_rules_path = unsupported_rules_path
     with self.assertRaises(errors.BadConfigOption):
       yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
 
