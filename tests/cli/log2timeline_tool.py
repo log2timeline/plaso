@@ -336,6 +336,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     self._SkipIfPathNotExists(test_file_path)
 
     options = self._CreateExtractionOptions(test_file_path)
+    options.unattended = True
     options.vss_stores = 'all'
 
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)

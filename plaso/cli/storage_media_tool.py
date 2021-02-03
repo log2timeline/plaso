@@ -100,7 +100,6 @@ class StorageMediaTool(tools.CLITool):
     self._source_path = None
     self._source_path_specs = []
     self._textwrapper = textwrap.TextWrapper()
-    self._user_selected_vss_stores = False
     self._volumes = None
     self._vss_only = False
     self._vss_stores = None
@@ -1081,6 +1080,11 @@ class StorageMediaTool(tools.CLITool):
       raise errors.SourceScannerError(
           'Invalid or missing file system scan node.')
 
+    if self._vss_only:
+      if scan_node.parent_node.sub_nodes[0].type_indicator == (
+          dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
+        return
+
     base_path_specs.append(scan_node.path_spec)
 
   def _ScanVolume(self, scan_context, scan_node, base_path_specs):
@@ -1157,12 +1161,16 @@ class StorageMediaTool(tools.CLITool):
       volume_identifiers = self._GetLVMVolumeIdentifiers(scan_node)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      if self._process_vss:
+      if not self._process_vss:
+        volume_identifiers = []
+      else:
         volume_identifiers = self._GetVSSStoreIdentifiers(scan_node)
         # Process VSS stores (snapshots) starting with the most recent one.
         volume_identifiers.reverse()
-      else:
-        volume_identifiers = []
+
+        if (not self._vss_only and not self._unattended_mode and
+            volume_identifiers):
+          self._vss_only = not self._PromptUserForVSSCurrentVolume()
 
     else:
       raise errors.SourceScannerError(

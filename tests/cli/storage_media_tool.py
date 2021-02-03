@@ -321,8 +321,10 @@ optional arguments:
 
     options = test_lib.TestOptions()
     options.source = source_path
+    options.unattended = True
     options.vss_stores = 'all'
 
+    test_tool._ParseInformationalOptions(options)
     test_tool._ParseStorageMediaImageOptions(options)
     test_tool._ParseVSSProcessingOptions(options)
     test_tool._ParseCredentialOptions(options)
@@ -1288,6 +1290,7 @@ optional arguments:
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._process_vss = True
+    test_tool._unattended_mode = True
     test_tool._vss_only = False
     test_tool._vss_stores = 'all'
 
@@ -1402,6 +1405,7 @@ optional arguments:
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._process_vss = True
+    test_tool._unattended_mode = True
     test_tool._vss_only = False
     test_tool._vss_stores = 'all'
 
