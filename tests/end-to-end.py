@@ -751,6 +751,13 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
             self._test_sources_path, filter_file_path)
       extract_options.extend(['--filter-file', filter_file_path])
 
+    yara_rules_path = getattr(test_definition, 'yara_rules', None)
+    if yara_rules_path:
+      if self._test_sources_path:
+        yara_rules_path = os.path.join(
+            self._test_sources_path, yara_rules_path)
+      extract_options.extend(['--yara-rules', yara_rules_path])
+
     logging_options = [
         option.replace('%command%', 'log2timeline')
         for option in test_definition.logging_options]
@@ -826,6 +833,9 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
 
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, 'source')
+
+    test_definition.yara_rules = test_definition_reader.GetConfigValue(
+        test_definition.name, 'yara_rules')
 
     return True
 
