@@ -1,7 +1,7 @@
-import "magic"
+import "dotnet"
 
-rule magic_mimetype
+rule not_exactly_five_streams
 {
-  condition:
-    magic.mime_type() == "application/x-dosexec"
+    condition:
+        dotnet.number_of_streams != 5
 }
