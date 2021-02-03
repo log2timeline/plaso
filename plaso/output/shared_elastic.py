@@ -367,10 +367,22 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
   def SetAdditionalFields(self, additional_fields):
     """Sets the additional field.
 
+    This function allows for you to add a key/value pair to each document
+    that is indexed by Elastic. That is for each document or event that is
+    indexed into Elastic all key/value pairs in the additional_fields dict
+    will be added to the document.
+
+    Only keys that start with '__' will be allowed to be added in order to
+    prevent overwriting already existing keys in the event.
+
     Args:
       additional_fields (dict[str, Any]): Additional fields and values that
           will be added to each indexed event.
     """
+    additional_keys = list(additional_fields.keys())
+    for key in additional_keys:
+      if not key.startswith('__'):
+        _ = additional_fields.pop(key)
     self._additional_fields = additional_fields
     logger.debug(
         'Additional fields set, adding fields: {0:s} to each event'.format(
