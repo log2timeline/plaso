@@ -34,6 +34,10 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
 
+  _DEFAULT_FIELDS = [
+      'datetime', 'display_name', 'message', 'source_long', 'source_short',
+      'tag', 'timestamp', 'timestamp_desc']
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Adds command line arguments the helper supports to an argument group.
@@ -59,6 +63,13 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         '--raw_fields', '--raw-fields', dest='raw_fields', action='store_true',
         default=cls._DEFAULT_RAW_FIELDS, help=(
             'Export string fields that will not be analyzed by Lucene.'))
+
+    default_fields = ', '.join(cls._DEFAULT_FIELDS)
+    argument_group.add_argument(
+        '--additional_fields', '--additional-fields', dest='additional_fields',
+        type=str, action='store', default='', help=(
+            'Defines extra fields to be included in the output, in addition to '
+            'the default fields, which are {0:s}.'.format(default_fields)))
 
     argument_group.add_argument(
         '--elastic_mappings', '--elastic-mappings', dest='elastic_mappings',
@@ -117,6 +128,13 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'index_name', default_value=cls._DEFAULT_INDEX_NAME)
     flush_interval = cls._ParseNumericOption(
         options, 'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
+
+    fields = ','.join(cls._DEFAULT_FIELDS)
+    additional_fields = cls._ParseStringOption(options, 'additional_fields')
+
+    if additional_fields:
+      fields = ','.join([fields, additional_fields])
+
     mappings_file_path = cls._ParseStringOption(options, 'elastic_mappings')
     elastic_user = cls._ParseStringOption(options, 'elastic_user')
     elastic_password = cls._ParseStringOption(options, 'elastic_password')
@@ -139,8 +157,12 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
       elastic_password = getpass.getpass('Enter your Elasticsearch password: ')
 
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
+
     output_module.SetIndexName(index_name)
     output_module.SetFlushInterval(flush_interval)
+    output_module.SetFields([
+        field_name.strip() for field_name in fields.split(',')])
+
     output_module.SetUsername(elastic_user)
     output_module.SetPassword(elastic_password)
     output_module.SetUseSSL(use_ssl)

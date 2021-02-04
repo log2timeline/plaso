@@ -163,9 +163,10 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     super(SharedElasticsearchOutputModule, self).__init__(output_mediator)
     self._client = None
     self._event_documents = []
-    self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
+    self._field_names = self._DEFAULT_FIELD_NAMES
     self._field_formatting_helper = SharedElasticsearchFieldFormattingHelper(
         output_mediator)
+    self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
     self._host = None
     self._index_name = None
     self._mappings = None
@@ -283,7 +284,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       for attribute_name, attribute_value in event_data_stream.GetAttributes():
         event_values[attribute_name] = attribute_value
 
-    for attribute_name in self._DEFAULT_FIELD_NAMES:
+    for attribute_name in self._field_names:
       if attribute_name not in event_values:
         event_values[attribute_name] = None
 
@@ -360,8 +361,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     self._client = None
 
+  def SetFields(self, field_names):
+    """Sets the names of the fields to output.
+
+    Args:
+      field_names (list[str]): names of the fields to output.
+    """
+    self._field_names = field_names
+
   def SetFlushInterval(self, flush_interval):
-    """Set the flush interval.
+    """Sets the flush interval.
 
     Args:
       flush_interval (int): number of events to buffer before doing a bulk
@@ -371,7 +380,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     logger.debug('Elasticsearch flush interval: {0:d}'.format(flush_interval))
 
   def SetIndexName(self, index_name):
-    """Set the index name.
+    """Sets the index name.
 
     Args:
       index_name (str): name of the index.
@@ -388,7 +397,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._mappings = mappings
 
   def SetPassword(self, password):
-    """Set the password.
+    """Sets the password.
 
     Args:
       password (str): password to authenticate with.
@@ -397,7 +406,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     logger.debug('Elastic password: ********')
 
   def SetServerInformation(self, server, port):
-    """Set the server information.
+    """Sets the server information.
 
     Args:
       server (str): IP address or hostname of the server.
