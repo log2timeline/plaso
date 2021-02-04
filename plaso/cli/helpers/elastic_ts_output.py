@@ -43,6 +43,7 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
             'The ID of the Timesketch Timeline object this data is tied to'))
 
     ElasticTimesketchArgumentsHelper.AddArguments(argument_group)
+    elastic_output.ElasticSearchOutputArgumentsHelper.Add(argument_group)
 
   # pylint: disable=arguments-differ
   @classmethod
@@ -66,6 +67,8 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'timeline_id', default_value=cls._DEFAULT_TIMELINE_ID)
 
     ElasticTimesketchArgumentsHelper.ParseOptions(options, output_module)
+    elastic_output.ElasticSearchOutputArgumentsHelper.ParseOptions(options, output_module)
+
     if timeline_id:
       output_module.SetTimelineID(timeline_id)
 
