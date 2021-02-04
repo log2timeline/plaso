@@ -33,16 +33,8 @@ except KeyError:
   pass
 
 
-class StorageMediaTool(tools.CLITool):
-  """CLI tool that supports a storage media device or image as input."""
-
-  # TODO: remove this redirect.
-  _SOURCE_OPTION = 'source'
-
-  _BINARY_DATA_CREDENTIAL_TYPES = ['key_data']
-
-  _SUPPORTED_CREDENTIAL_TYPES = [
-      'key_data', 'password', 'recovery_password', 'startup_key']
+class StorageMediaToolMediator(object):
+  """Mediator between the storage media tool and user input."""
 
   # For context see: https://en.wikipedia.org/wiki/Byte
   _UNITS_1000 = ['B', 'kB', 'MB', 'GB', 'TB', 'EB', 'ZB', 'YB']
@@ -78,7 +70,7 @@ class StorageMediaTool(tools.CLITool):
       'be processed. You can abort with Ctrl^C.')
 
   def __init__(self, input_reader=None, output_writer=None):
-    """Initializes the CLI tool object.
+    """Initializes a storage media tool mediator.
 
     Args:
       input_reader (Optional[InputReader]): input reader, where None indicates
@@ -86,38 +78,10 @@ class StorageMediaTool(tools.CLITool):
       output_writer (Optional[OutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(StorageMediaTool, self).__init__(
-        input_reader=input_reader, output_writer=output_writer)
-    self._custom_artifacts_path = None
-    self._artifact_definitions_path = None
-    self._artifact_filters = None
-    self._credentials = []
-    self._credential_configurations = []
-    self._filter_file = None
-    self._partitions = None
-    self._process_vss = False
-    self._source_scanner = source_scanner.SourceScanner()
-    self._source_path = None
-    self._source_path_specs = []
+    super(StorageMediaToolMediator, self).__init__()
+    self._input_reader = input_reader
+    self._output_writer = output_writer
     self._textwrapper = textwrap.TextWrapper()
-    self._volumes = None
-    self._vss_only = False
-    self._vss_stores = None
-
-  def _AddCredentialConfiguration(
-      self, path_spec, credential_type, credential_data):
-    """Adds a credential configuration.
-
-    Args:
-      path_spec (dfvfs.PathSpec): path specification.
-      credential_type (str): credential type.
-      credential_data (bytes): credential data.
-    """
-    credential_configuration = configurations.CredentialConfiguration(
-        credential_data=credential_data, credential_type=credential_type,
-        path_spec=path_spec)
-
-    self._credential_configurations.append(credential_configuration)
 
   def _FormatHumanReadableSize(self, size):
     """Represents a number of bytes as a human readable string.
@@ -155,444 +119,6 @@ class StorageMediaTool(tools.CLITool):
 
     return '{0:s} / {1:s} ({2:d} B)'.format(
         size_string_1024, size_string_1000, size)
-
-  def _GetAPFSVolumeIdentifiers(self, scan_node):
-    """Determines the APFS volume identifiers.
-
-    Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
-
-    Returns:
-      list[str]: APFS volume identifiers.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid or more than 1 volume
-          was found but no volumes were specified.
-      UserAbort: if the user requested to abort.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    volume_system = apfs_volume_system.APFSVolumeSystem()
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    # TODO: refactor self._volumes to use scan options.
-    if self._volumes:
-      if self._volumes == 'all':
-        volumes = range(1, volume_system.number_of_volumes + 1)
-      else:
-        volumes = self._ParseVolumeIdentifiersString(
-            self._volumes, prefix='apfs')
-
-      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
-          volume_system, volumes, prefix='apfs')
-
-      if not set(selected_volume_identifiers).difference(volume_identifiers):
-        return selected_volume_identifiers
-
-    if len(volume_identifiers) > 1:
-      if self._unattended_mode:
-        raise errors.SourceScannerError(
-            'More than 1 volume found but no volumes specified.')
-
-      try:
-        volume_identifiers = self._PromptUserForAPFSVolumeIdentifiers(
-            volume_system, volume_identifiers)
-      except KeyboardInterrupt:
-        raise errors.UserAbort('File system scan aborted.')
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='apfs')
-
-  def _GetLVMVolumeIdentifiers(self, scan_node):
-    """Determines the LVM volume identifiers.
-
-    Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
-
-    Returns:
-      list[str]: LVM volume identifiers.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid or more than 1 volume
-          was found but no volumes were specified.
-      UserAbort: if the user requested to abort.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    volume_system = lvm_volume_system.LVMVolumeSystem()
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    # TODO: refactor self._volumes to use scan options.
-    if self._volumes:
-      if self._volumes == 'all':
-        volumes = range(1, volume_system.number_of_volumes + 1)
-      else:
-        volumes = self._ParseVolumeIdentifiersString(
-            self._volumes, prefix='lvm')
-
-      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
-          volume_system, volumes, prefix='lvm')
-
-      if not set(selected_volume_identifiers).difference(volume_identifiers):
-        return selected_volume_identifiers
-
-    if len(volume_identifiers) > 1:
-      if self._unattended_mode:
-        raise errors.SourceScannerError(
-            'More than 1 volume found but no volumes specified.')
-
-      try:
-        volume_identifiers = self._PromptUserForLVMVolumeIdentifiers(
-            volume_system, volume_identifiers)
-      except KeyboardInterrupt:
-        raise errors.UserAbort('File system scan aborted.')
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='lvm')
-
-  def _GetTSKPartitionIdentifiers(self, scan_node):
-    """Determines the TSK partition identifiers.
-
-    This method first checks for the preferred partition number, then
-    falls back to prompt the user if no usable preferences were specified.
-
-    Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
-
-    Returns:
-      list[str]: TSK partition identifiers.
-
-    Raises:
-      RuntimeError: if the volume for a specific identifier cannot be
-          retrieved.
-      SourceScannerError: if the scan node is invalid or more than 1 volume
-          was found but no volumes were specified.
-      UserAbort: if the user requested to abort.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    volume_system = tsk_volume_system.TSKVolumeSystem()
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    # TODO: refactor self._partitions to use scan options.
-    if self._partitions:
-      if self._partitions == 'all':
-        partitions = range(1, volume_system.number_of_volumes + 1)
-      else:
-        partitions = self._ParseVolumeIdentifiersString(
-            self._partitions, prefix='p')
-
-      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
-          volume_system, partitions, prefix='p')
-
-      if not set(selected_volume_identifiers).difference(volume_identifiers):
-        return selected_volume_identifiers
-
-    if len(volume_identifiers) > 1:
-      if self._unattended_mode:
-        raise errors.SourceScannerError(
-            'More than 1 partition found but no partitions specified.')
-
-      try:
-        volume_identifiers = self._PromptUserForPartitionIdentifiers(
-            volume_system, volume_identifiers)
-      except KeyboardInterrupt:
-        raise errors.UserAbort('File system scan aborted.')
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='p')
-
-  def _GetVSSStoreIdentifiers(self, scan_node):
-    """Determines the VSS store identifiers.
-
-    Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
-
-    Returns:
-      list[str]: VSS store identifiers.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid.
-      UserAbort: if the user requested to abort.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    volume_system = vshadow_volume_system.VShadowVolumeSystem()
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    # TODO: refactor to use scan options.
-    if self._vss_stores:
-      if self._vss_stores == 'all':
-        vss_stores = range(1, volume_system.number_of_volumes + 1)
-      else:
-        vss_stores = self._ParseVolumeIdentifiersString(
-            self._vss_stores, prefix='vss')
-
-      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
-          volume_system, vss_stores, prefix='vss')
-
-      if not set(selected_volume_identifiers).difference(volume_identifiers):
-        return selected_volume_identifiers
-
-    if self._unattended_mode:
-      return []
-
-    try:
-      volume_identifiers = self._PromptUserForVSSStoreIdentifiers(
-          volume_system, volume_identifiers)
-
-    except KeyboardInterrupt:
-      raise errors.UserAbort('File system scan aborted.')
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='vss')
-
-  def _NormalizedVolumeIdentifiers(
-      self, volume_system, volume_identifiers, prefix='v'):
-    """Normalizes volume identifiers.
-
-    Args:
-      volume_system (VolumeSystem): volume system.
-      volume_identifiers (list[int|str]): allowed volume identifiers, formatted
-          as an integer or string with prefix.
-      prefix (Optional[str]): volume identifier prefix.
-
-    Returns:
-      list[str]: volume identifiers with prefix.
-
-    Raises:
-      SourceScannerError: if the volume identifier is not supported or no
-          volume could be found that corresponds with the identifier.
-    """
-    normalized_volume_identifiers = []
-    for volume_identifier in volume_identifiers:
-      if isinstance(volume_identifier, int):
-        volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
-
-      elif not volume_identifier.startswith(prefix):
-        try:
-          volume_identifier = int(volume_identifier, 10)
-          volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
-        except (TypeError, ValueError):
-          pass
-
-      try:
-        volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      except KeyError:
-        volume = None
-
-      if not volume:
-        raise errors.SourceScannerError(
-            'Volume missing for identifier: {0:s}.'.format(volume_identifier))
-
-      normalized_volume_identifiers.append(volume_identifier)
-
-    return normalized_volume_identifiers
-
-  def _ParseCredentialOptions(self, options):
-    """Parses the credential options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    credentials = getattr(options, 'credentials', [])
-    if not isinstance(credentials, list):
-      raise errors.BadConfigOption('Unsupported credentials value.')
-
-    for credential_string in credentials:
-      credential_type, _, credential_data = credential_string.partition(':')
-      if not credential_type or not credential_data:
-        raise errors.BadConfigOption(
-            'Badly formatted credential: {0:s}.'.format(credential_string))
-
-      if credential_type not in self._SUPPORTED_CREDENTIAL_TYPES:
-        raise errors.BadConfigOption(
-            'Unsupported credential type for: {0:s}.'.format(
-                credential_string))
-
-      if credential_type in self._BINARY_DATA_CREDENTIAL_TYPES:
-        try:
-          credential_data = codecs.decode(credential_data, 'hex')
-        except TypeError:
-          raise errors.BadConfigOption(
-              'Unsupported credential data for: {0:s}.'.format(
-                  credential_string))
-
-      self._credentials.append((credential_type, credential_data))
-
-  def _ParseSourcePathOption(self, options):
-    """Parses the source path option.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._source_path = self.ParseStringOption(options, self._SOURCE_OPTION)
-    if not self._source_path:
-      raise errors.BadConfigOption('Missing source path.')
-
-    self._source_path = os.path.abspath(self._source_path)
-
-  def _ParseStorageMediaOptions(self, options):
-    """Parses the storage media options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._ParseStorageMediaImageOptions(options)
-    self._ParseVSSProcessingOptions(options)
-    self._ParseCredentialOptions(options)
-    self._ParseSourcePathOption(options)
-
-  def _ParseStorageMediaImageOptions(self, options):
-    """Parses the storage media image options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._partitions = getattr(options, 'partitions', None)
-    if self._partitions:
-      try:
-        self._ParseVolumeIdentifiersString(self._partitions, prefix='p')
-      except ValueError:
-        raise errors.BadConfigOption('Unsupported partitions')
-
-    self._volumes = getattr(options, 'volumes', None)
-    if self._volumes:
-      try:
-        self._ParseVolumeIdentifiersString(self._volumes, prefix='apfs')
-      except ValueError:
-        raise errors.BadConfigOption('Unsupported volumes')
-
-  def _ParseVolumeIdentifiersString(
-      self, volume_identifiers_string, prefix='v'):
-    """Parses a user specified volume identifiers string.
-
-    Args:
-      volume_identifiers_string (str): user specified volume identifiers. A
-          range of volumes can be defined as: "3..5". Multiple volumes can be
-          defined as: "1,3,5" (a list of comma separated values). Ranges and
-          lists can also be combined as: "1,3..5". The first volume is 1. All
-          volumes can be defined as: "all".
-      prefix (Optional[str]): volume identifier prefix.
-
-    Returns:
-      list[str]: volume identifiers with prefix or the string "all".
-
-    Raises:
-      ValueError: if the volume identifiers string is invalid.
-    """
-    prefix_length = 0
-    if prefix:
-      prefix_length = len(prefix)
-
-    if not volume_identifiers_string:
-      return []
-
-    if volume_identifiers_string == 'all':
-      return ['all']
-
-    volume_identifiers = set()
-    for identifiers_range in volume_identifiers_string.split(','):
-      # Determine if the range is formatted as 1..3 otherwise it indicates
-      # a single volume identifier.
-      if '..' in identifiers_range:
-        first_identifier, last_identifier = identifiers_range.split('..')
-
-        if first_identifier.startswith(prefix):
-          first_identifier = first_identifier[prefix_length:]
-
-        if last_identifier.startswith(prefix):
-          last_identifier = last_identifier[prefix_length:]
-
-        try:
-          first_identifier = int(first_identifier, 10)
-          last_identifier = int(last_identifier, 10)
-        except ValueError:
-          raise ValueError('Invalid volume identifiers range: {0:s}.'.format(
-              identifiers_range))
-
-        for volume_identifier in range(first_identifier, last_identifier + 1):
-          if volume_identifier not in volume_identifiers:
-            volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
-            volume_identifiers.add(volume_identifier)
-      else:
-        identifier = identifiers_range
-        if identifier.startswith(prefix):
-          identifier = identifiers_range[prefix_length:]
-
-        try:
-          volume_identifier = int(identifier, 10)
-        except ValueError:
-          raise ValueError('Invalid volume identifier range: {0:s}.'.format(
-              identifiers_range))
-
-        volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
-        volume_identifiers.add(volume_identifier)
-
-    # Note that sorted will return a list.
-    return sorted(volume_identifiers)
-
-  def _ParseVSSProcessingOptions(self, options):
-    """Parses the VSS processing options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    vss_only = False
-    vss_stores = None
-
-    self._process_vss = not getattr(options, 'no_vss', False)
-    if self._process_vss:
-      vss_only = getattr(options, 'vss_only', False)
-      vss_stores = getattr(options, 'vss_stores', None)
-
-    if vss_stores:
-      try:
-        self._ParseVolumeIdentifiersString(vss_stores, prefix='vss')
-      except ValueError:
-        raise errors.BadConfigOption('Unsupported VSS stores')
-
-    self._vss_only = vss_only
-    self._vss_stores = vss_stores
 
   def _PrintAPFSVolumeIdentifiersOverview(
       self, volume_system, volume_identifiers):
@@ -731,7 +257,106 @@ class StorageMediaTool(tools.CLITool):
     table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
 
-  def _PromptUserForAPFSVolumeIdentifiers(
+  def _ReadSelectedVolumes(self, volume_system, prefix='v'):
+    """Reads the selected volumes provided by the user.
+
+    Args:
+      volume_system (VolumeSystem): volume system.
+      prefix (Optional[str]): volume identifier prefix.
+
+    Returns:
+      list[str]: selected volume identifiers including prefix.
+
+    Raises:
+      KeyboardInterrupt: if the user requested to abort.
+      ValueError: if the volume identifiers string could not be parsed.
+    """
+    volume_identifiers_string = self._input_reader.Read()
+    volume_identifiers_string = volume_identifiers_string.strip()
+
+    if not volume_identifiers_string:
+      return []
+
+    selected_volumes = self.ParseVolumeIdentifiersString(
+        volume_identifiers_string, prefix=prefix)
+
+    if selected_volumes == ['all']:
+      return [
+          '{0:s}{1:d}'.format(prefix, volume_index)
+          for volume_index in range(1, volume_system.number_of_volumes + 1)]
+
+    return selected_volumes
+
+  def ParseVolumeIdentifiersString(
+      self, volume_identifiers_string, prefix='v'):
+    """Parses a user specified volume identifiers string.
+
+    Args:
+      volume_identifiers_string (str): user specified volume identifiers. A
+          range of volumes can be defined as: "3..5". Multiple volumes can be
+          defined as: "1,3,5" (a list of comma separated values). Ranges and
+          lists can also be combined as: "1,3..5". The first volume is 1. All
+          volumes can be defined as: "all".
+      prefix (Optional[str]): volume identifier prefix.
+
+    Returns:
+      list[str]: volume identifiers with prefix or the string "all".
+
+    Raises:
+      ValueError: if the volume identifiers string is invalid.
+    """
+    prefix_length = 0
+    if prefix:
+      prefix_length = len(prefix)
+
+    if not volume_identifiers_string:
+      return []
+
+    if volume_identifiers_string == 'all':
+      return ['all']
+
+    volume_identifiers = set()
+    for identifiers_range in volume_identifiers_string.split(','):
+      # Determine if the range is formatted as 1..3 otherwise it indicates
+      # a single volume identifier.
+      if '..' in identifiers_range:
+        first_identifier, last_identifier = identifiers_range.split('..')
+
+        if first_identifier.startswith(prefix):
+          first_identifier = first_identifier[prefix_length:]
+
+        if last_identifier.startswith(prefix):
+          last_identifier = last_identifier[prefix_length:]
+
+        try:
+          first_identifier = int(first_identifier, 10)
+          last_identifier = int(last_identifier, 10)
+        except ValueError:
+          raise ValueError('Invalid volume identifiers range: {0:s}.'.format(
+              identifiers_range))
+
+        for volume_identifier in range(first_identifier, last_identifier + 1):
+          if volume_identifier not in volume_identifiers:
+            volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
+            volume_identifiers.add(volume_identifier)
+      else:
+        identifier = identifiers_range
+        if identifier.startswith(prefix):
+          identifier = identifiers_range[prefix_length:]
+
+        try:
+          volume_identifier = int(identifier, 10)
+        except ValueError:
+          raise ValueError('Invalid volume identifier range: {0:s}.'.format(
+              identifiers_range))
+
+        volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
+        volume_identifiers.add(volume_identifier)
+
+    # Note that sorted will return a list.
+    return sorted(volume_identifiers)
+
+  def PromptUserForAPFSVolumeIdentifiers(
       self, volume_system, volume_identifiers):
     """Prompts the user to provide APFS volume identifiers.
 
@@ -768,7 +393,97 @@ class StorageMediaTool(tools.CLITool):
 
     return selected_volumes
 
-  def _PromptUserForLVMVolumeIdentifiers(
+  def PromptUserForEncryptedVolumeCredential(
+      self, source_scanner_object, scan_context, locked_scan_node, credentials):
+    """Prompts the user to provide a credential for an encrypted volume.
+
+    Args:
+      source_scanner_object (SourceScanner): source scanner.
+      scan_context (dfvfs.SourceScannerContext): source scanner context.
+      locked_scan_node (dfvfs.SourceScanNode): locked scan node.
+      credentials (dfvfs.Credentials): credentials supported by the locked
+          scan node.
+
+    Returns:
+      tuple: contains:
+
+          bool: True if the volume was unlocked.
+          credential_identifier (str): credential identifier used to unlock
+              the scan node.
+          credential_data (bytes): credential data used to unlock the scan node.
+    """
+    # TODO: print volume description.
+    if locked_scan_node.type_indicator == (
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER):
+      header = 'Found an APFS encrypted volume.'
+    elif locked_scan_node.type_indicator == (
+        dfvfs_definitions.TYPE_INDICATOR_BDE):
+      header = 'Found a BitLocker encrypted volume.'
+    elif locked_scan_node.type_indicator == (
+        dfvfs_definitions.TYPE_INDICATOR_FVDE):
+      header = 'Found a CoreStorage (FVDE) encrypted volume.'
+    else:
+      header = 'Found an encrypted volume.'
+
+    self._output_writer.Write(header)
+
+    credentials_list = sorted(credentials.CREDENTIALS)
+    credentials_list.append('skip')
+
+    self._output_writer.Write('Supported credentials:\n\n')
+
+    for index, name in enumerate(credentials_list):
+      available_credential = '  {0:d}. {1:s}\n'.format(index + 1, name)
+      self._output_writer.Write(available_credential)
+
+    self._output_writer.Write('\nNote that you can abort with Ctrl^C.\n\n')
+
+    is_unlocked = False
+    credential_type = None
+    credential_data = None
+    while not is_unlocked:
+      self._output_writer.Write('Select a credential to unlock the volume: ')
+
+      input_line = self._input_reader.Read()
+      input_line = input_line.strip()
+
+      if input_line in credentials_list:
+        credential_type = input_line
+      else:
+        try:
+          credential_type = int(input_line, 10)
+          credential_type = credentials_list[credential_type - 1]
+        except (IndexError, ValueError):
+          self._output_writer.Write(
+              'Unsupported credential: {0:s}\n'.format(input_line))
+          continue
+
+      if credential_type == 'skip':
+        break
+
+      credential_data = getpass.getpass('Enter credential data: ')
+      self._output_writer.Write('\n')
+
+      if credential_type == 'key':
+        try:
+          credential_data = codecs.decode(credential_data, 'hex')
+        except TypeError:
+          self._output_writer.Write('Unsupported credential data.\n')
+          continue
+
+      is_unlocked = source_scanner_object.Unlock(
+          scan_context, locked_scan_node.path_spec, credential_type,
+          credential_data)
+
+      if is_unlocked:
+        self._output_writer.Write('Volume unlocked.\n\n')
+        break
+
+      self._output_writer.Write('Unable to unlock volume.\n\n')
+
+    return is_unlocked, credential_type, credential_data
+
+  def PromptUserForLVMVolumeIdentifiers(
       self, volume_system, volume_identifiers):
     """Prompts the user to provide LVM volume identifiers.
 
@@ -805,91 +520,7 @@ class StorageMediaTool(tools.CLITool):
 
     return selected_volumes
 
-  def _PromptUserForEncryptedVolumeCredential(
-      self, scan_context, locked_scan_node, credentials):
-    """Prompts the user to provide a credential for an encrypted volume.
-
-    Args:
-      scan_context (dfvfs.SourceScannerContext): source scanner context.
-      locked_scan_node (dfvfs.SourceScanNode): locked scan node.
-      credentials (dfvfs.Credentials): credentials supported by the locked
-          scan node.
-
-    Returns:
-      bool: True if the volume was unlocked.
-    """
-    # TODO: print volume description.
-    if locked_scan_node.type_indicator == (
-        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER):
-      header = 'Found an APFS encrypted volume.'
-    elif locked_scan_node.type_indicator == (
-        dfvfs_definitions.TYPE_INDICATOR_BDE):
-      header = 'Found a BitLocker encrypted volume.'
-    elif locked_scan_node.type_indicator == (
-        dfvfs_definitions.TYPE_INDICATOR_FVDE):
-      header = 'Found a CoreStorage (FVDE) encrypted volume.'
-    else:
-      header = 'Found an encrypted volume.'
-
-    self._output_writer.Write(header)
-
-    credentials_list = sorted(credentials.CREDENTIALS)
-    credentials_list.append('skip')
-
-    self._output_writer.Write('Supported credentials:\n\n')
-
-    for index, name in enumerate(credentials_list):
-      available_credential = '  {0:d}. {1:s}\n'.format(index + 1, name)
-      self._output_writer.Write(available_credential)
-
-    self._output_writer.Write('\nNote that you can abort with Ctrl^C.\n\n')
-
-    is_unlocked = False
-    while not is_unlocked:
-      self._output_writer.Write('Select a credential to unlock the volume: ')
-
-      input_line = self._input_reader.Read()
-      input_line = input_line.strip()
-
-      if input_line in credentials_list:
-        credential_type = input_line
-      else:
-        try:
-          credential_type = int(input_line, 10)
-          credential_type = credentials_list[credential_type - 1]
-        except (IndexError, ValueError):
-          self._output_writer.Write(
-              'Unsupported credential: {0:s}\n'.format(input_line))
-          continue
-
-      if credential_type == 'skip':
-        break
-
-      credential_data = getpass.getpass('Enter credential data: ')
-      self._output_writer.Write('\n')
-
-      if credential_type == 'key':
-        try:
-          credential_data = codecs.decode(credential_data, 'hex')
-        except TypeError:
-          self._output_writer.Write('Unsupported credential data.\n')
-          continue
-
-      is_unlocked = self._source_scanner.Unlock(
-          scan_context, locked_scan_node.path_spec, credential_type,
-          credential_data)
-
-      if is_unlocked:
-        self._output_writer.Write('Volume unlocked.\n\n')
-        self._AddCredentialConfiguration(
-            locked_scan_node.path_spec, credential_type, credential_data)
-        break
-
-      self._output_writer.Write('Unable to unlock volume.\n\n')
-
-    return is_unlocked
-
-  def _PromptUserForPartitionIdentifiers(
+  def PromptUserForPartitionIdentifiers(
       self, volume_system, volume_identifiers):
     """Prompts the user to provide partition identifiers.
 
@@ -926,7 +557,7 @@ class StorageMediaTool(tools.CLITool):
 
     return selected_volumes
 
-  def _PromptUserForVSSCurrentVolume(self):
+  def PromptUserForVSSCurrentVolume(self):
     """Prompts the user if the current volume with VSS should be processed.
 
     Returns:
@@ -953,8 +584,7 @@ class StorageMediaTool(tools.CLITool):
     self._output_writer.Write('\n')
     return not process_current_volume or process_current_volume == 'yes'
 
-  def _PromptUserForVSSStoreIdentifiers(
-      self, volume_system, volume_identifiers):
+  def PromptUserForVSSStoreIdentifiers(self, volume_system, volume_identifiers):
     """Prompts the user to provide VSS store identifiers.
 
     This method first checks for the preferred VSS stores and falls back
@@ -993,35 +623,431 @@ class StorageMediaTool(tools.CLITool):
 
     return selected_volumes
 
-  def _ReadSelectedVolumes(self, volume_system, prefix='v'):
-    """Reads the selected volumes provided by the user.
+
+class StorageMediaTool(tools.CLITool):
+  """CLI tool that supports a storage media device or image as input."""
+
+  # TODO: remove this redirect.
+  _SOURCE_OPTION = 'source'
+
+  _BINARY_DATA_CREDENTIAL_TYPES = ['key_data']
+
+  _SUPPORTED_CREDENTIAL_TYPES = [
+      'key_data', 'password', 'recovery_password', 'startup_key']
+
+  def __init__(self, input_reader=None, output_writer=None):
+    """Initializes a CLI tool that supports storage media as input.
+
+    Args:
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
+    """
+    super(StorageMediaTool, self).__init__(
+        input_reader=input_reader, output_writer=output_writer)
+    self._custom_artifacts_path = None
+    self._artifact_definitions_path = None
+    self._artifact_filters = None
+    self._credentials = []
+    self._credential_configurations = []
+    self._filter_file = None
+    self._mediator = StorageMediaToolMediator(
+        input_reader=input_reader, output_writer=output_writer)
+    self._partitions = None
+    self._process_vss = False
+    self._source_scanner = source_scanner.SourceScanner()
+    self._source_path = None
+    self._source_path_specs = []
+    self._volumes = None
+    self._vss_only = False
+    self._vss_stores = None
+
+  def _AddCredentialConfiguration(
+      self, path_spec, credential_type, credential_data):
+    """Adds a credential configuration.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+      credential_type (str): credential type.
+      credential_data (bytes): credential data.
+    """
+    credential_configuration = configurations.CredentialConfiguration(
+        credential_data=credential_data, credential_type=credential_type,
+        path_spec=path_spec)
+
+    self._credential_configurations.append(credential_configuration)
+
+  def _GetAPFSVolumeIdentifiers(self, scan_node):
+    """Determines the APFS volume identifiers.
+
+    Args:
+      scan_node (dfvfs.SourceScanNode): scan node.
+
+    Returns:
+      list[str]: APFS volume identifiers.
+
+    Raises:
+      SourceScannerError: if the scan node is invalid or more than 1 volume
+          was found but no volumes were specified.
+      UserAbort: if the user requested to abort.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise errors.SourceScannerError('Invalid scan node.')
+
+    volume_system = apfs_volume_system.APFSVolumeSystem()
+    volume_system.Open(scan_node.path_spec)
+
+    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
+        volume_system)
+    if not volume_identifiers:
+      return []
+
+    # TODO: refactor self._volumes to use scan options.
+    if self._volumes:
+      if self._volumes == 'all':
+        volumes = range(1, volume_system.number_of_volumes + 1)
+      else:
+        volumes = self._mediator.ParseVolumeIdentifiersString(
+            self._volumes, prefix='apfs')
+
+      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
+          volume_system, volumes, prefix='apfs')
+
+      if not set(selected_volume_identifiers).difference(volume_identifiers):
+        return selected_volume_identifiers
+
+    if len(volume_identifiers) > 1:
+      if self._unattended_mode:
+        raise errors.SourceScannerError(
+            'More than 1 volume found but no volumes specified.')
+
+      try:
+        volume_identifiers = self._mediator.PromptUserForAPFSVolumeIdentifiers(
+            volume_system, volume_identifiers)
+      except KeyboardInterrupt:
+        raise errors.UserAbort('File system scan aborted.')
+
+    return self._NormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='apfs')
+
+  def _GetLVMVolumeIdentifiers(self, scan_node):
+    """Determines the LVM volume identifiers.
+
+    Args:
+      scan_node (dfvfs.SourceScanNode): scan node.
+
+    Returns:
+      list[str]: LVM volume identifiers.
+
+    Raises:
+      SourceScannerError: if the scan node is invalid or more than 1 volume
+          was found but no volumes were specified.
+      UserAbort: if the user requested to abort.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise errors.SourceScannerError('Invalid scan node.')
+
+    volume_system = lvm_volume_system.LVMVolumeSystem()
+    volume_system.Open(scan_node.path_spec)
+
+    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
+        volume_system)
+    if not volume_identifiers:
+      return []
+
+    # TODO: refactor self._volumes to use scan options.
+    if self._volumes:
+      if self._volumes == 'all':
+        volumes = range(1, volume_system.number_of_volumes + 1)
+      else:
+        volumes = self._mediator.ParseVolumeIdentifiersString(
+            self._volumes, prefix='lvm')
+
+      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
+          volume_system, volumes, prefix='lvm')
+
+      if not set(selected_volume_identifiers).difference(volume_identifiers):
+        return selected_volume_identifiers
+
+    if len(volume_identifiers) > 1:
+      if self._unattended_mode:
+        raise errors.SourceScannerError(
+            'More than 1 volume found but no volumes specified.')
+
+      try:
+        volume_identifiers = self._mediator.PromptUserForLVMVolumeIdentifiers(
+            volume_system, volume_identifiers)
+      except KeyboardInterrupt:
+        raise errors.UserAbort('File system scan aborted.')
+
+    return self._NormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='lvm')
+
+  def _GetTSKPartitionIdentifiers(self, scan_node):
+    """Determines the TSK partition identifiers.
+
+    This method first checks for the preferred partition number, then
+    falls back to prompt the user if no usable preferences were specified.
+
+    Args:
+      scan_node (dfvfs.SourceScanNode): scan node.
+
+    Returns:
+      list[str]: TSK partition identifiers.
+
+    Raises:
+      RuntimeError: if the volume for a specific identifier cannot be
+          retrieved.
+      SourceScannerError: if the scan node is invalid or more than 1 volume
+          was found but no volumes were specified.
+      UserAbort: if the user requested to abort.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise errors.SourceScannerError('Invalid scan node.')
+
+    volume_system = tsk_volume_system.TSKVolumeSystem()
+    volume_system.Open(scan_node.path_spec)
+
+    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
+        volume_system)
+    if not volume_identifiers:
+      return []
+
+    # TODO: refactor self._partitions to use scan options.
+    if self._partitions:
+      if self._partitions == 'all':
+        partitions = range(1, volume_system.number_of_volumes + 1)
+      else:
+        partitions = self._mediator.ParseVolumeIdentifiersString(
+            self._partitions, prefix='p')
+
+      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
+          volume_system, partitions, prefix='p')
+
+      if not set(selected_volume_identifiers).difference(volume_identifiers):
+        return selected_volume_identifiers
+
+    if len(volume_identifiers) > 1:
+      if self._unattended_mode:
+        raise errors.SourceScannerError(
+            'More than 1 partition found but no partitions specified.')
+
+      try:
+        volume_identifiers = self._mediator.PromptUserForPartitionIdentifiers(
+            volume_system, volume_identifiers)
+      except KeyboardInterrupt:
+        raise errors.UserAbort('File system scan aborted.')
+
+    return self._NormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='p')
+
+  def _GetVSSStoreIdentifiers(self, scan_node):
+    """Determines the VSS store identifiers.
+
+    Args:
+      scan_node (dfvfs.SourceScanNode): scan node.
+
+    Returns:
+      list[str]: VSS store identifiers.
+
+    Raises:
+      SourceScannerError: if the scan node is invalid.
+      UserAbort: if the user requested to abort.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise errors.SourceScannerError('Invalid scan node.')
+
+    volume_system = vshadow_volume_system.VShadowVolumeSystem()
+    volume_system.Open(scan_node.path_spec)
+
+    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
+        volume_system)
+    if not volume_identifiers:
+      return []
+
+    # TODO: refactor to use scan options.
+    if self._vss_stores:
+      if self._vss_stores == 'all':
+        vss_stores = range(1, volume_system.number_of_volumes + 1)
+      else:
+        vss_stores = self._mediator.ParseVolumeIdentifiersString(
+            self._vss_stores, prefix='vss')
+
+      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
+          volume_system, vss_stores, prefix='vss')
+
+      if not set(selected_volume_identifiers).difference(volume_identifiers):
+        return selected_volume_identifiers
+
+    if self._unattended_mode:
+      return []
+
+    try:
+      volume_identifiers = self._mediator.PromptUserForVSSStoreIdentifiers(
+          volume_system, volume_identifiers)
+
+    except KeyboardInterrupt:
+      raise errors.UserAbort('File system scan aborted.')
+
+    return self._NormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='vss')
+
+  def _NormalizedVolumeIdentifiers(
+      self, volume_system, volume_identifiers, prefix='v'):
+    """Normalizes volume identifiers.
 
     Args:
       volume_system (VolumeSystem): volume system.
+      volume_identifiers (list[int|str]): allowed volume identifiers, formatted
+          as an integer or string with prefix.
       prefix (Optional[str]): volume identifier prefix.
 
     Returns:
-      list[str]: selected volume identifiers including prefix.
+      list[str]: volume identifiers with prefix.
 
     Raises:
-      KeyboardInterrupt: if the user requested to abort.
-      ValueError: if the volume identifiers string could not be parsed.
+      SourceScannerError: if the volume identifier is not supported or no
+          volume could be found that corresponds with the identifier.
     """
-    volume_identifiers_string = self._input_reader.Read()
-    volume_identifiers_string = volume_identifiers_string.strip()
+    normalized_volume_identifiers = []
+    for volume_identifier in volume_identifiers:
+      if isinstance(volume_identifier, int):
+        volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
 
-    if not volume_identifiers_string:
-      return []
+      elif not volume_identifier.startswith(prefix):
+        try:
+          volume_identifier = int(volume_identifier, 10)
+          volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
+        except (TypeError, ValueError):
+          pass
 
-    selected_volumes = self._ParseVolumeIdentifiersString(
-        volume_identifiers_string, prefix=prefix)
+      try:
+        volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      except KeyError:
+        volume = None
 
-    if selected_volumes == ['all']:
-      return [
-          '{0:s}{1:d}'.format(prefix, volume_index)
-          for volume_index in range(1, volume_system.number_of_volumes + 1)]
+      if not volume:
+        raise errors.SourceScannerError(
+            'Volume missing for identifier: {0:s}.'.format(volume_identifier))
 
-    return selected_volumes
+      normalized_volume_identifiers.append(volume_identifier)
+
+    return normalized_volume_identifiers
+
+  def _ParseCredentialOptions(self, options):
+    """Parses the credential options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    credentials = getattr(options, 'credentials', [])
+    if not isinstance(credentials, list):
+      raise errors.BadConfigOption('Unsupported credentials value.')
+
+    for credential_string in credentials:
+      credential_type, _, credential_data = credential_string.partition(':')
+      if not credential_type or not credential_data:
+        raise errors.BadConfigOption(
+            'Badly formatted credential: {0:s}.'.format(credential_string))
+
+      if credential_type not in self._SUPPORTED_CREDENTIAL_TYPES:
+        raise errors.BadConfigOption(
+            'Unsupported credential type for: {0:s}.'.format(
+                credential_string))
+
+      if credential_type in self._BINARY_DATA_CREDENTIAL_TYPES:
+        try:
+          credential_data = codecs.decode(credential_data, 'hex')
+        except TypeError:
+          raise errors.BadConfigOption(
+              'Unsupported credential data for: {0:s}.'.format(
+                  credential_string))
+
+      self._credentials.append((credential_type, credential_data))
+
+  def _ParseSourcePathOption(self, options):
+    """Parses the source path option.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._source_path = self.ParseStringOption(options, self._SOURCE_OPTION)
+    if not self._source_path:
+      raise errors.BadConfigOption('Missing source path.')
+
+    self._source_path = os.path.abspath(self._source_path)
+
+  def _ParseStorageMediaOptions(self, options):
+    """Parses the storage media options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._ParseStorageMediaImageOptions(options)
+    self._ParseVSSProcessingOptions(options)
+    self._ParseCredentialOptions(options)
+    self._ParseSourcePathOption(options)
+
+  def _ParseStorageMediaImageOptions(self, options):
+    """Parses the storage media image options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._partitions = getattr(options, 'partitions', None)
+    if self._partitions:
+      try:
+        self._mediator.ParseVolumeIdentifiersString(
+            self._partitions, prefix='p')
+      except ValueError:
+        raise errors.BadConfigOption('Unsupported partitions')
+
+    self._volumes = getattr(options, 'volumes', None)
+    if self._volumes:
+      try:
+        self._mediator.ParseVolumeIdentifiersString(
+            self._volumes, prefix='apfs')
+      except ValueError:
+        raise errors.BadConfigOption('Unsupported volumes')
+
+  def _ParseVSSProcessingOptions(self, options):
+    """Parses the VSS processing options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    vss_only = False
+    vss_stores = None
+
+    self._process_vss = not getattr(options, 'no_vss', False)
+    if self._process_vss:
+      vss_only = getattr(options, 'vss_only', False)
+      vss_stores = getattr(options, 'vss_stores', None)
+
+    if vss_stores:
+      try:
+        self._mediator.ParseVolumeIdentifiersString(vss_stores, prefix='vss')
+      except ValueError:
+        raise errors.BadConfigOption('Unsupported VSS stores')
+
+    self._vss_only = vss_only
+    self._vss_stores = vss_stores
 
   def _ScanEncryptedVolume(self, scan_context, scan_node):
     """Scans an encrypted volume scan node for volume and file systems.
@@ -1059,10 +1085,13 @@ class StorageMediaTool(tools.CLITool):
         break
 
     if not is_unlocked and self._unattended_mode:
-      is_unlocked = self._PromptUserForEncryptedVolumeCredential(
-          scan_context, scan_node, credentials)
+      is_unlocked, credential_type, credential_data = (
+          self._mediator.PromptUserForEncryptedVolumeCredential(
+              self._source_scanner, scan_context, scan_node, credentials))
 
     if is_unlocked:
+      self._AddCredentialConfiguration(
+          scan_node.path_spec, credential_type, credential_data)
       self._source_scanner.Scan(
           scan_context, scan_path_spec=scan_node.path_spec)
 
@@ -1170,7 +1199,7 @@ class StorageMediaTool(tools.CLITool):
 
         if (not self._vss_only and not self._unattended_mode and
             volume_identifiers):
-          self._vss_only = not self._PromptUserForVSSCurrentVolume()
+          self._vss_only = not self._mediator.PromptUserForVSSCurrentVolume()
 
     else:
       raise errors.SourceScannerError(
