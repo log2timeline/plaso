@@ -69,8 +69,8 @@ class ElasticTimesketchOutputModule(
       return ['timeline_id']
     return []
 
-  def SetTimelineID(self, timeline_id):
-    """Sets the timeline ID.
+  def SetTimelineIdentifier(self, timeline_id):
+    """Sets the timeline identifier.
 
     Args:
       timeline_id (int): timeline ID.

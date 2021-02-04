@@ -62,7 +62,7 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'timeline_id', default_value=cls._DEFAULT_TIMELINE_ID)
 
     if timeline_id:
-      output_module.SetTimelineID(timeline_id)
+      output_module.SetTimelineIdentifier(timeline_id)
 
 
 manager.ArgumentHelperManager.RegisterHelper(
