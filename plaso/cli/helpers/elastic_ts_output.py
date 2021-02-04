@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 """The Elastic Timesketch output module CLI arguments helper."""
 
-
-from uuid import uuid4
-
+from plaso.cli.helpers import elastic_output
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
-from plaso.cli.helpers import server_config
 from plaso.lib import errors
 from plaso.output import shared_elastic
 
 
-class ElasticTimesketchArgumentsHelper(server_config.ServerArgumentsHelper):
+class ElasticTimesketchArgumentsHelper(
+    elastic_output.ElasticSearchServerArgumentsHelper):
   """Elastic Timesketch CLI arguments helper."""
 
   _DEFAULT_SERVER = '127.0.0.1'
@@ -25,8 +23,6 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = 'output'
   DESCRIPTION = 'Argument helper for the Elastic Timesketch output modules.'
 
-  _DEFAULT_INDEX_NAME = uuid4().hex
-  _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_TIMELINE_ID = 0
 
   @classmethod
