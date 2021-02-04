@@ -5,7 +5,7 @@ from plaso.cli.helpers import elastic_output
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
 from plaso.lib import errors
-from plaso.output import shared_elastic
+from plaso.output import elastic_ts
 
 
 class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
@@ -51,7 +51,7 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
       BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(
-        output_module, shared_elastic.SharedElasticsearchOutputModule):
+        output_module, elastic_ts.ElasticTimesketchOutputModule):
       raise errors.BadConfigObject(
           'Output module is not an instance of ElasticsearchOutputModule')
 
