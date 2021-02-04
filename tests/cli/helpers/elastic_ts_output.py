@@ -20,17 +20,45 @@ class ElasticTimesketchOutputArgumentsHelperTest(
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--timeline_id TIMELINE_ID] [--server HOSTNAME]
-                     [--port PORT]
+usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
+                     [--raw_fields] [--elastic_mappings PATH]
+                     [--elastic_user USERNAME] [--elastic_password PASSWORD]
+                     [--use_ssl] [--ca_certificates_file_path PATH]
+                     [--elastic_url_prefix URL_PREFIX] [--server HOSTNAME]
+                     [--port PORT] [--timeline_id TIMELINE_ID]
 
 Test argument parser.
 
 optional arguments:
+  --ca_certificates_file_path PATH, --ca-certificates-file-path PATH
+                        Path to a file containing a list of root certificates
+                        to trust.
+  --elastic_mappings PATH, --elastic-mappings PATH
+                        Username to use for Elasticsearch authentication.
+  --elastic_password PASSWORD, --elastic-password PASSWORD
+                        Password to use for Elasticsearch authentication.
+                        WARNING: use with caution since this can expose the
+                        password to other users on the system. The password
+                        can also be set with the environment variable
+                        PLASO_ELASTIC_PASSWORD.
+  --elastic_url_prefix URL_PREFIX, --elastic-url-prefix URL_PREFIX
+                        URL prefix for elastic search.
+  --elastic_user USERNAME, --elastic-user USERNAME
+                        Username to use for Elasticsearch authentication.
+  --flush_interval INTERVAL, --flush-interval INTERVAL
+                        Events to queue up before bulk insert to
+                        ElasticSearch.
+  --index_name NAME, --index-name NAME
+                        Name of the index in ElasticSearch.
   --port PORT           The port number of the server.
+  --raw_fields, --raw-fields
+                        Export string fields that will not be analyzed by
+                        Lucene.
   --server HOSTNAME     The hostname or server IP address of the server.
   --timeline_id TIMELINE_ID, --timeline-id TIMELINE_ID
                         The ID of the Timesketch Timeline object this data is
                         tied to
+  --use_ssl, --use-ssl  Enforces use of SSL/TLS.
 """
 
   def testAddArguments(self):

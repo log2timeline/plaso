@@ -8,14 +8,6 @@ from plaso.lib import errors
 from plaso.output import shared_elastic
 
 
-class ElasticTimesketchArgumentsHelper(
-    elastic_output.ElasticSearchServerArgumentsHelper):
-  """Elastic Timesketch CLI arguments helper."""
-
-  _DEFAULT_SERVER = '127.0.0.1'
-  _DEFAULT_PORT = 9200
-
-
 class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
   """Elastic Timesketch output module CLI arguments helper."""
 
@@ -36,14 +28,14 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
     """
+    elastic_output.ElasticSearchOutputArgumentsHelper.AddArguments(
+        argument_group)
+
     argument_group.add_argument(
         '--timeline_id', '--timeline-id', dest='timeline_id', type=int,
         default=cls._DEFAULT_TIMELINE_ID, action='store',
         metavar='TIMELINE_ID', help=(
             'The ID of the Timesketch Timeline object this data is tied to'))
-
-    ElasticTimesketchArgumentsHelper.AddArguments(argument_group)
-    elastic_output.ElasticSearchOutputArgumentsHelper.Add(argument_group)
 
   # pylint: disable=arguments-differ
   @classmethod
@@ -63,11 +55,11 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           'Output module is not an instance of ElasticsearchOutputModule')
 
+    elastic_output.ElasticSearchOutputArgumentsHelper.ParseOptions(
+        options, output_module)
+
     timeline_id = cls._ParseNumericOption(
         options, 'timeline_id', default_value=cls._DEFAULT_TIMELINE_ID)
-
-    ElasticTimesketchArgumentsHelper.ParseOptions(options, output_module)
-    elastic_output.ElasticSearchOutputArgumentsHelper.ParseOptions(options, output_module)
 
     if timeline_id:
       output_module.SetTimelineID(timeline_id)
