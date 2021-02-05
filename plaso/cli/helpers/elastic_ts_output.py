@@ -13,7 +13,7 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
 
   NAME = 'elastic_ts'
   CATEGORY = 'output'
-  DESCRIPTION = 'Argument helper for the Elastic Timesketch output modules.'
+  DESCRIPTION = 'Argument helper for the Elastic Timesketch output module.'
 
   _DEFAULT_TIMELINE_IDENTIFIER = 0
 

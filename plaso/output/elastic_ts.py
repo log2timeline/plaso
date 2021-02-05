@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""An output module that saves events to Elasticsearch TS index."""
+"""An output module that saves events to Elasticsearch for Timesketch."""
 
 from plaso.output import logger
 from plaso.output import manager
@@ -18,7 +18,7 @@ class ElasticTimesketchOutputModule(
   MAPPINGS_FILENAME = 'timesketch.mappings'
 
   def __init__(self, output_mediator):
-    """Initializes a Timesketch output module.
+    """Initializes a Timesketch Elasticsearch output module.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
