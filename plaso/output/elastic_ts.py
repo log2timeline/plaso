@@ -49,9 +49,10 @@ class ElasticTimesketchOutputModule(
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    event_values = super()._GetSanitizedEventValues(
-        event=event, event_data=event_data,
-        event_data_stream=event_data_stream, event_tag=event_tag)
+    event_values = (
+        super(ElasticTimesketchOutputModule, self)._GetSanitizedEventValues(
+            event=event, event_data=event_data,
+            event_data_stream=event_data_stream, event_tag=event_tag))
 
     if self._timeline_id:
       event_values['__ts_timeline_id'] = self._timeline_id
