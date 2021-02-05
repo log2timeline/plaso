@@ -26,7 +26,7 @@ usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
                      [--elastic_password PASSWORD] [--use_ssl]
                      [--ca_certificates_file_path PATH]
                      [--elastic_url_prefix URL_PREFIX] [--server HOSTNAME]
-                     [--port PORT] [--timeline_id TIMELINE_ID]
+                     [--port PORT] [--timeline_identifier IDENTIFIER]
 
 Test argument parser.
 
@@ -61,9 +61,8 @@ optional arguments:
                         Export string fields that will not be analyzed by
                         Lucene.
   --server HOSTNAME     The hostname or server IP address of the server.
-  --timeline_id TIMELINE_ID, --timeline-id TIMELINE_ID
-                        The ID of the Timesketch Timeline object this data is
-                        tied to
+  --timeline_identifier IDENTIFIER, --timeline-identifier IDENTIFIER
+                        The identifier of the timeline in Timesketch.
   --use_ssl, --use-ssl  Enforces use of SSL/TLS.
 """
 

@@ -15,7 +15,7 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = 'output'
   DESCRIPTION = 'Argument helper for the Elastic Timesketch output modules.'
 
-  _DEFAULT_TIMELINE_ID = 0
+  _DEFAULT_TIMELINE_IDENTIFIER = 0
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -32,10 +32,11 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
         argument_group)
 
     argument_group.add_argument(
-        '--timeline_id', '--timeline-id', dest='timeline_id', type=int,
-        default=cls._DEFAULT_TIMELINE_ID, action='store',
-        metavar='TIMELINE_ID', help=(
-            'The ID of the Timesketch Timeline object this data is tied to'))
+        '--timeline_identifier', '--timeline-identifier',
+        dest='timeline_identifier', type=int,
+        default=cls._DEFAULT_TIMELINE_IDENTIFIER, action='store',
+        metavar='IDENTIFIER', help=(
+             'The identifier of the timeline in Timesketch.'))
 
   # pylint: disable=arguments-differ
   @classmethod
@@ -58,11 +59,12 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
     elastic_output.ElasticSearchOutputArgumentsHelper.ParseOptions(
         options, output_module)
 
-    timeline_id = cls._ParseNumericOption(
-        options, 'timeline_id', default_value=cls._DEFAULT_TIMELINE_ID)
+    timeline_identifier = cls._ParseNumericOption(
+        options, 'timeline_identifier',
+        default_value=cls._DEFAULT_TIMELINE_IDENTIFIER)
 
-    if timeline_id:
-      output_module.SetTimelineIdentifier(timeline_id)
+    if timeline_identifier:
+      output_module.SetTimelineIdentifier(timeline_identifier)
 
 
 manager.ArgumentHelperManager.RegisterHelper(
