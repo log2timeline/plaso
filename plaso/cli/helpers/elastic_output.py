@@ -74,7 +74,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         '--elastic_mappings', '--elastic-mappings', dest='elastic_mappings',
         action='store', default=None, metavar='PATH', help=(
-            'Username to use for Elasticsearch authentication.'))
+            'Path to a file containing mappings for Elasticsearch indexing.'))
 
     argument_group.add_argument(
         '--elastic_user', '--elastic-user', dest='elastic_user', action='store',
