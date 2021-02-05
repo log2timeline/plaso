@@ -25,7 +25,7 @@ class ElasticTimesketchOutputModule(
           modules and other components, such as storage and dfvfs.
     """
     super(ElasticTimesketchOutputModule, self).__init__(output_mediator)
-    self._timeline_id = None
+    self._timeline_identifier = None
 
   def _GetSanitizedEventValues(
       self, event, event_data, event_data_stream, event_tag):
@@ -54,8 +54,7 @@ class ElasticTimesketchOutputModule(
             event=event, event_data=event_data,
             event_data_stream=event_data_stream, event_tag=event_tag))
 
-    if self._timeline_id:
-      event_values['__ts_timeline_id'] = self._timeline_id
+    event_values['__ts_timeline_id'] = self._timeline_identifier
 
     return event_values
 
@@ -66,18 +65,18 @@ class ElasticTimesketchOutputModule(
       list[str]: names of arguments that are required by the module and have
           not been specified.
     """
-    if not self._timeline_id:
+    if not self._timeline_identifier:
       return ['timeline_id']
     return []
 
-  def SetTimelineIdentifier(self, timeline_id):
+  def SetTimelineIdentifier(self, timeline_identifier):
     """Sets the timeline identifier.
 
     Args:
       timeline_id (int): timeline ID.
     """
-    self._timeline_id = timeline_id
-    logger.info('Timeline ID: {0:d}'.format(self._timeline_id))
+    self._timeline_identifier = timeline_identifier
+    logger.info('Timeline identifier: {0:d}'.format(self._timeline_identifier))
 
   def WriteHeader(self):
     """Connects to the Elasticsearch server and creates the index."""
