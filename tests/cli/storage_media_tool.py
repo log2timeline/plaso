@@ -266,8 +266,8 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     with self.assertRaises(ValueError):
       test_mediator.ParseVolumeIdentifiersString('1..bogus')
 
-  def testPromptUserForAPFSVolumeIdentifiers(self):
-    """Tests the PromptUserForAPFSVolumeIdentifiers function."""
+  def testGetAPFSVolumeIdentifiers(self):
+    """Tests the GetAPFSVolumeIdentifiers function."""
     test_file_path = self._GetTestFilePath(['apfs.dmg'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -295,7 +295,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
         volume_system, ['apfs1'])
 
     self.assertEqual(volume_identifiers, ['apfs1'])
@@ -310,7 +310,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
         volume_system, ['apfs1'])
 
     self.assertEqual(volume_identifiers, ['apfs1'])
@@ -325,7 +325,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
         volume_system, ['apfs1'])
 
     self.assertEqual(volume_identifiers, ['apfs1'])
@@ -340,7 +340,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
         volume_system, ['apfs1'])
 
     self.assertEqual(volume_identifiers, ['apfs1'])
@@ -355,13 +355,15 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForAPFSVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
         volume_system, ['apfs1'])
 
     self.assertEqual(volume_identifiers, [])
 
-  def testPromptUserForLVMVolumeIdentifiers(self):
-    """Tests the PromptUserForLVMVolumeIdentifiers function."""
+  # TODO: add test for PromptUserForEncryptedVolumeCredential.
+
+  def testGetLVMVolumeIdentifiers(self):
+    """Tests the GetLVMVolumeIdentifiers function."""
     test_file_path = self._GetTestFilePath(['lvm.raw'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -386,7 +388,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
         volume_system, ['lvm1'])
 
     self.assertEqual(volume_identifiers, ['lvm1'])
@@ -401,7 +403,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
         volume_system, ['lvm1'])
 
     self.assertEqual(volume_identifiers, ['lvm1'])
@@ -416,7 +418,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
         volume_system, ['lvm1'])
 
     self.assertEqual(volume_identifiers, ['lvm1'])
@@ -431,7 +433,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
         volume_system, ['lvm1', 'lvm2'])
 
     self.assertEqual(volume_identifiers, ['lvm1', 'lvm2'])
@@ -446,15 +448,13 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForLVMVolumeIdentifiers(
+    volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
         volume_system, ['lvm1'])
 
     self.assertEqual(volume_identifiers, [])
 
-  # TODO: add test for PromptUserForEncryptedVolumeCredential.
-
-  def testPromptUserForPartitionIdentifiers(self):
-    """Tests the PromptUserForPartitionIdentifiers function."""
+  def testGetPartitionIdentifiers(self):
+    """Tests the GetPartitionIdentifiers function."""
     test_file_path = self._GetTestFilePath(['tsk_volume_system.raw'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -485,7 +485,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForPartitionIdentifiers(
+    volume_identifiers = test_mediator.GetPartitionIdentifiers(
         volume_system, ['p1', 'p2'])
 
     self.assertEqual(volume_identifiers, ['p2'])
@@ -500,7 +500,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForPartitionIdentifiers(
+    volume_identifiers = test_mediator.GetPartitionIdentifiers(
         volume_system, ['p1', 'p2'])
 
     self.assertEqual(volume_identifiers, ['p2'])
@@ -515,7 +515,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForPartitionIdentifiers(
+    volume_identifiers = test_mediator.GetPartitionIdentifiers(
         volume_system, ['p1', 'p2'])
 
     self.assertEqual(volume_identifiers, ['p2'])
@@ -530,7 +530,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForPartitionIdentifiers(
+    volume_identifiers = test_mediator.GetPartitionIdentifiers(
         volume_system, ['p1', 'p2'])
 
     self.assertEqual(volume_identifiers, ['p1', 'p2'])
@@ -539,8 +539,8 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
 
   # TODO: add test for PromptUserForVSSCurrentVolume.
 
-  def testPromptUserForVSSStoreIdentifiers(self):
-    """Tests the PromptUserForVSSStoreIdentifiers function."""
+  def testGetVSSStoreIdentifiers(self):
+    """Tests the GetVSSStoreIdentifiers function."""
     test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -570,7 +570,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+    volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
         volume_system, ['vss1', 'vss2'])
 
     self.assertEqual(volume_identifiers, ['vss2'])
@@ -585,7 +585,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+    volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
         volume_system, ['vss1', 'vss2'])
 
     self.assertEqual(volume_identifiers, ['vss2'])
@@ -600,7 +600,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+    volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
         volume_system, ['vss1', 'vss2'])
 
     self.assertEqual(volume_identifiers, ['vss2'])
@@ -615,7 +615,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+    volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
         volume_system, ['vss1', 'vss2'])
 
     self.assertEqual(volume_identifiers, ['vss1', 'vss2'])
@@ -630,7 +630,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_mediator = storage_media_tool.StorageMediaToolMediator(
         input_reader=test_input_reader, output_writer=test_output_writer)
 
-    volume_identifiers = test_mediator.PromptUserForVSSStoreIdentifiers(
+    volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
         volume_system, ['vss1', 'vss2'])
 
     self.assertEqual(volume_identifiers, [])
