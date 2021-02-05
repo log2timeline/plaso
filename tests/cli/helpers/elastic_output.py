@@ -40,7 +40,8 @@ optional arguments:
                         Path to a file containing a list of root certificates
                         to trust.
   --elastic_mappings PATH, --elastic-mappings PATH
-                        Username to use for Elasticsearch authentication.
+                        Path to a file containing mappings for Elasticsearch
+                        indexing.
   --elastic_password PASSWORD, --elastic-password PASSWORD
                         Password to use for Elasticsearch authentication.
                         WARNING: use with caution since this can expose the
