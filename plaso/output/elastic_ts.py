@@ -24,7 +24,7 @@ class ElasticTimesketchOutputModule(
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    super().__init__(output_mediator)
+    super(ElasticTimesketchOutputModule, self).__init__(output_mediator)
     self._timeline_id = None
 
   def _GetSanitizedEventValues(
