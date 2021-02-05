@@ -73,7 +73,7 @@ class ElasticTimesketchOutputModule(
     """Sets the timeline identifier.
 
     Args:
-      timeline_id (int): timeline ID.
+      timeline_identifier (int): timeline identifier.
     """
     self._timeline_identifier = timeline_identifier
     logger.info('Timeline identifier: {0:d}'.format(self._timeline_identifier))
