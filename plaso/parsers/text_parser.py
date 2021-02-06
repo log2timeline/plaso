@@ -7,6 +7,7 @@ parser.
 """
 
 import abc
+import codecs
 
 import pyparsing
 
@@ -177,6 +178,34 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
     self._line_structures = list(self.LINE_STRUCTURES)
+    self._parser_mediator = None
+
+    codecs.register_error('text_parser_handler', self._EncodingErrorHandler)
+
+  def _EncodingErrorHandler(self, exception):
+    """Encoding error handler.
+
+    Args:
+      exception [UnicodeDecodeError]: exception.
+
+    Returns:
+      tuple[str, int]: replacement string and a position where encoding should
+          continue.
+
+    Raises:
+      TypeError: if exception is not of type UnicodeDecodeError.
+    """
+    if not isinstance(exception, UnicodeDecodeError):
+      raise TypeError('Unsupported exception type.')
+
+    if self._parser_mediator:
+      self._parser_mediator.ProduceExtractionWarning(
+          'error decoding 0x{0:02x} at offset: {1:d}'.format(
+              exception.object[exception.start],
+              self._current_offset + exception.start))
+
+    escaped = '\\x{0:2x}'.format(exception.object[exception.start])
+    return (escaped, exception.start + 1)
 
   def _GetValueFromStructure(self, structure, name, default_value=None):
     """Retrieves a token value from a Pyparsing structure.
@@ -279,7 +308,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     Raises:
       UnicodeDecodeError: if the text cannot be decoded using the specified
-          encoding.
+          encoding and encoding errors is set to strict.
     """
     line = text_file_object.readline(size=max_len)
 
@@ -312,6 +341,10 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
           'Line structure undeclared, unable to proceed.')
 
     encoding = self._ENCODING or parser_mediator.codepage
+
+    # Use strict encoding error handling in the verification step so that
+    # a text parser does not generate extraction warning for encoding errors
+    # of unsupported files.
     text_file_object = text_file.TextFile(file_object, encoding=encoding)
 
     try:
@@ -336,6 +369,12 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     if not self.VerifyStructure(parser_mediator, line):
       raise errors.UnableToParseFile('Wrong file structure.')
+
+    self._parser_mediator = parser_mediator
+
+    text_file_object = text_file.TextFile(
+        file_object, encoding=encoding, encoding_errors='text_parser_handler')
+    line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
 
     consecutive_line_failures = 0
     index = None
@@ -569,7 +608,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     # with spaces to SkipAhead() the correct number of bytes after a match.
     for key, structure in self.LINE_STRUCTURES:
       structure.parseWithTabs()
-
 
     consecutive_line_failures = 0
     # Read every line in the text file.
