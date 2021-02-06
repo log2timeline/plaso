@@ -31,7 +31,7 @@ Hence please provide us with the following details:
 * Were you able to isolate the error to a specific file? Is it possible to share the file with the developer?
 * Any additional information that could be of use e.g. build logs, error logs, debug logs, etc.
 
-**Note that the github issue tracker uses [markdown](https://help.github.com/articles/markdown-basics/)
+**Note that the github issue tracker uses [markdown](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github)
 and thus please escape blocks of error output accordingly.**
 
 Also see the sections below on how to troubleshoot issues of a specific nature.

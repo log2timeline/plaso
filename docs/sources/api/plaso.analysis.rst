@@ -100,6 +100,14 @@ plaso.analysis.tagging module
    :undoc-members:
    :show-inheritance:
 
+plaso.analysis.test\_memory module
+----------------------------------
+
+.. automodule:: plaso.analysis.test_memory
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.analysis.unique\_domains\_visited module
 ----------------------------------------------
 

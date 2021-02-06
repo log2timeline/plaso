@@ -9,7 +9,7 @@ and/or a particular conversation, XChat will display the last messages
 exchanged. This artifact could be present, if not disabled, even if
 normal logging is disabled.
 
-From the XChat FAQ (http://xchatdata.net/Using/FAQ):
+From the XChat FAQ (http://xchat.org/faq):
 
 Q: 'How do I keep text from previous sessions from being displayed when I
 join a channel?'
