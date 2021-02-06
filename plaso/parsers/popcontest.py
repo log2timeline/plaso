@@ -5,7 +5,7 @@ Information updated 20 january 2014.
 From Debian Package Popularity Contest
 Avery Pennarun <apenwarr@debian.org>
 
-From  'http://www.unix.com/man-page/Linux/8/popularity-contest/':
+From 'https://www.unix.com/man-page/Linux/8/popularity-contest':
 
     The  popularity-contest command gathers information about Debian pack-
     ages installed on the system, and prints the name of the most  recently
@@ -19,7 +19,7 @@ From  'http://www.unix.com/man-page/Linux/8/popularity-contest/':
     which packages should be installed by default on new systems.
 
     The resulting  statistic  is  available  from  the  project  home  page
-    http://popcon.debian.org/.
+    https://popcon.debian.org
 
     Normally,    popularity-contest    is   run   from   a cron(8)   job,
     /etc/cron.daily/popularity-contest,  which  automatically  submits  the

@@ -2,7 +2,7 @@
 """Parses MacOS security daemon (securityd) log files.
 
 Also see:
-  http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
+  https://opensource.apple.com/source/Security/Security-55471/sec/securityd
 """
 
 import pyparsing

@@ -4,15 +4,15 @@ The information below is based of version 1.5.0
 
 ### Storage Media Image File Formats
 
-Storage Media Image File Format support is provided by [dfvfs](https://github.com/log2timeline/dfvfs/wiki#storage-media-types).
+Storage Media Image File Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#storage-media-types).
 
 ### Volume System Formats
 
-Volume System Format support is provided by [dfvfs](https://github.com/log2timeline/dfvfs/wiki#volume-systems).
+Volume System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#volume-systems).
 
 ### File System Formats
 
-File System Format support is provided by [dfvfs](https://github.com/log2timeline/dfvfs/wiki#file-systems).
+File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#file-systems).
 
 ### File formats
 

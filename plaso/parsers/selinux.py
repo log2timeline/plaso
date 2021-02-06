@@ -14,13 +14,6 @@ for example: "seconds: 1105758604, milliseconds: 519".
 
 The number after the timestamp (420 in the example) is a 'serial number'
 that can be used to correlate multiple logs generated from the same event.
-
-References:
-
-* http://selinuxproject.org/page/NB_AL
-* http://blog.commandlinekungfu.com/2010/08/episode-106-epoch-fail.html
-* http://www.redhat.com/promo/summit/2010/presentations/taste_of_training/
-    Summit_2010_SELinux.pdf
 """
 
 import pyparsing
