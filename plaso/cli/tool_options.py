@@ -138,8 +138,8 @@ class OutputModuleOptions(object):
       OutputModule: output module.
 
     Raises:
-      RuntimeError: if the output module cannot be created or parameters are
-          missing while running in unattended mode.
+      BadConfigOption: if parameters are missing.
+      RuntimeError: if the output module cannot be created.
     """
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
@@ -152,13 +152,13 @@ class OutputModuleOptions(object):
 
     if output_module.WRITES_OUTPUT_FILE:
       if not self._output_filename:
-        raise RuntimeError(
+        raise errors.BadConfigOption(
             'Output format: {0:s} requires an output file'.format(
                 self._output_format))
 
       if os.path.exists(self._output_filename):
-        raise RuntimeError('Output file already exists: {0:s}.'.format(
-            self._output_filename))
+        raise errors.BadConfigOption(
+            'Output file already exists: {0:s}.'.format(self._output_filename))
 
       output_module.Open(path=self._output_filename)
     else:
@@ -171,7 +171,7 @@ class OutputModuleOptions(object):
     # those that may be missing.
     missing_parameters = output_module.GetMissingArguments()
     if missing_parameters and self._unattended_mode:
-      raise RuntimeError(
+      raise errors.BadConfigOption(
           'Unable to create output module missing parameters: {0:s}'.format(
               ', '.join(missing_parameters)))
 

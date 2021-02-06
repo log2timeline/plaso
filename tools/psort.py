@@ -82,6 +82,10 @@ def Main():
     logging.warning('Aborted by user.')
     return False
 
+  except RuntimeError as exception:
+    print(exception)
+    return False
+
   except errors.BadConfigOption as exception:
     logging.warning(exception)
     return False
