@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Plist plugin related functions and classes for testing."""
 
+import plistlib
+
 from plaso.storage.fake import writer as fake_writer
 
 from plaso.containers import sessions
-from plaso.parsers import plist
 from tests.parsers import test_lib
 
 
@@ -34,8 +35,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     file_entry = self._GetTestFileEntry(path_segments)
     file_object = file_entry.GetFileObject()
 
-    parser = plist.PlistParser()
-    top_level_object = parser.GetTopLevel(file_object)
+    top_level_object = plistlib.load(file_object)
     self.assertIsNotNone(top_level_object)
 
     return self._ParsePlistWithPlugin(
