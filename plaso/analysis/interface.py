@@ -21,6 +21,9 @@ class AnalysisPlugin(object):
   # explains the nature of the plugin easily. It also needs to be unique.
   NAME = 'analysis_plugin'
 
+  # Flag to indicate the analysis is for testing purposes only.
+  TEST_PLUGIN = False
+
   def __init__(self):
     """Initializes an analysis plugin."""
     super(AnalysisPlugin, self).__init__()
