@@ -105,23 +105,28 @@ class PsortTool(
     Raises:
       BadConfigOption: if the storage file path is invalid.
     """
-    if os.path.exists(storage_file_path):
-      if not os.path.isfile(storage_file_path):
-        raise errors.BadConfigOption(
-            'Storage file: {0:s} already exists and is not a file.'.format(
-                storage_file_path))
-      logger.warning('Appending to an already existing storage file.')
+    if not storage_file_path:
+      raise errors.BadConfigOption('Missing storage file option.')
 
-    dirname = os.path.dirname(storage_file_path)
-    if not dirname:
-      dirname = '.'
+    if not os.path.exists(storage_file_path):
+      raise errors.BadConfigOption(
+          'No such storage file: {0:s}.'.format(storage_file_path))
 
-    # TODO: add a more thorough check to see if the storage file really is
-    # a plaso storage file.
+    if not os.path.isfile(storage_file_path):
+      raise errors.BadConfigOption(
+          'Storage file: {0:s} already exists and is not a file.'.format(
+              storage_file_path))
 
-    if not os.access(dirname, os.W_OK):
+    storage_file_directory = os.path.dirname(storage_file_path) or '.'
+    if not os.access(storage_file_directory, os.W_OK):
       raise errors.BadConfigOption(
           'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+    if not storage_factory.StorageFactory.CheckStorageFileHasSupportedFormat(
+        storage_file_path, check_readable_only=False):
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(
+              storage_file_path))
 
   def _GetAnalysisPlugins(self, analysis_plugins_string):
     """Retrieves analysis plugins.
@@ -503,13 +508,7 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['storage_file'])
 
-    # TODO: move check into _CheckStorageFile.
-    if not self._storage_file_path:
-      raise errors.BadConfigOption('Missing storage file option.')
-
-    if not os.path.isfile(self._storage_file_path):
-      raise errors.BadConfigOption(
-          'No such storage file: {0:s}.'.format(self._storage_file_path))
+    self._CheckStorageFile(self._storage_file_path)
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
@@ -524,8 +523,6 @@ class PsortTool(
           storage file cannot be opened with read access.
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    self._CheckStorageFile(self._storage_file_path)
-
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetStorageFileInformation(self._storage_file_path)
 
@@ -539,9 +536,7 @@ class PsortTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      raise errors.BadConfigOption(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
+      raise RuntimeError('Unable to create storage reader.')
 
     for session in storage_reader.GetSessions():
       if not session.source_configurations:
@@ -572,9 +567,7 @@ class PsortTool(
           storage_factory.StorageFactory.CreateStorageWriterForFile(
               session, self._storage_file_path))
       if not storage_writer:
-        raise errors.BadConfigOption(
-            'Format of storage file: {0:s} not supported for writing'.format(
-                self._storage_file_path))
+        raise RuntimeError('Unable to create storage writer.')
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine(
