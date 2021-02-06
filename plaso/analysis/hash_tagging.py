@@ -45,8 +45,9 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     super(HashTaggingAnalysisPlugin, self).__init__()
     self._analysis_queue_timeout = self.DEFAULT_QUEUE_TIMEOUT
     self._analyzer_started = False
-    self._event_identifiers_by_path_spec = collections.defaultdict(list)
-    self._hash_path_specs = collections.defaultdict(list)
+    self._data_stream_identifiers = set()
+    self._data_streams_by_hash = collections.defaultdict(set)
+    self._event_identifiers_by_data_stream = collections.defaultdict(set)
     self._requester_class = None
     self._time_of_last_status_log = time.time()
 
@@ -55,31 +56,29 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
 
     self._analyzer = analyzer_class(self.hash_queue, self.hash_analysis_queue)
 
-  def _HandleHashAnalysis(self, hash_analysis):
+  def _HandleHashAnalysis(self, mediator, hash_analysis):
     """Deals with the results of the analysis of a hash.
 
     This method ensures that labels are generated for the hash,
     then tags all events derived from files with that hash.
 
     Args:
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
       hash_analysis (HashAnalysis): hash analysis plugin's results for a given
           hash.
 
     Returns:
-      tuple: containing:
-
-        list[dfvfs.PathSpec]: path specifications that had the hash value
-            looked up.
-        list[str]: labels that corresponds to the hash value that was looked up.
-        list[EventTag]: event tags for all events that were extracted from the
-            path specifications.
+      collections.Counter: number of events per label.
     """
-    tags = []
+    events_per_labels_counter = collections.Counter()
+
     labels = self.GenerateLabels(hash_analysis.hash_information)
-    path_specifications = self._hash_path_specs.pop(hash_analysis.subject_hash)
-    for path_specification in path_specifications:
-      event_identifiers = self._event_identifiers_by_path_spec.pop(
-          path_specification, [])
+    data_stream_identifiers = self._data_streams_by_hash.pop(
+        hash_analysis.subject_hash)
+    for data_stream_identifier in data_stream_identifiers:
+      event_identifiers = self._event_identifiers_by_data_stream.pop(
+          data_stream_identifier)
 
       if not labels:
         continue
@@ -89,12 +88,16 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
           event_tag = events.EventTag()
           event_tag.SetEventIdentifier(event_identifier)
           event_tag.AddLabels(labels)
-          tags.append(event_tag)
         except (TypeError, ValueError) as exception:
           logger.error('unable to add labels to event with error: {0!s}'.format(
               exception))
 
-    return path_specifications, labels, tags
+        mediator.ProduceEventTag(event_tag)
+
+        for label in labels:
+          events_per_labels_counter[label] += 1
+
+    return events_per_labels_counter
 
   def _EnsureRequesterStarted(self):
     """Checks if the analyzer is running and starts it if not."""
@@ -118,41 +121,27 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
 
     self._EnsureRequesterStarted()
 
-    path_specification = getattr(event_data_stream, 'path_spec', None)
-    if not path_specification:
-      # Note that support for event_data.pathspec is kept for backwards
-      # compatibility.
-      path_specification = getattr(event_data, 'pathspec', None)
+    data_stream_identifier = event_data_stream.GetIdentifier()
+    if data_stream_identifier not in self._data_stream_identifiers:
+      self._data_stream_identifiers.add(data_stream_identifier)
 
-    # Not all events have a path specification, such as "fs:stat".
-    if not path_specification:
-      return
+      lookup_hash = '{0:s}_hash'.format(self._analyzer.lookup_hash)
+      lookup_hash = getattr(event_data_stream, lookup_hash, None)
 
-    event_identifiers = self._event_identifiers_by_path_spec[path_specification]
+      if lookup_hash:
+        self.hash_queue.put(lookup_hash)
+
+        self._data_streams_by_hash[lookup_hash].add(data_stream_identifier)
+      else:
+        path_specification = getattr(event_data_stream, 'path_spec', None)
+        display_name = mediator.GetDisplayNameForPathSpec(path_specification)
+        logger.warning((
+            'Lookup hash attribute: {0:s}_hash missing from event data stream: '
+            '{1:s}.').format(self._analyzer.lookup_hash, display_name))
 
     event_identifier = event.GetIdentifier()
-    event_identifiers.append(event_identifier)
-
-    hash_attributes_container = event_data_stream
-    if not hash_attributes_container:
-      hash_attributes_container = event_data
-
-    lookup_hash = '{0:s}_hash'.format(self._analyzer.lookup_hash)
-    lookup_hash = getattr(hash_attributes_container, lookup_hash, None)
-    if not lookup_hash:
-      display_name = mediator.GetDisplayNameForPathSpec(path_specification)
-      logger.warning((
-          'Lookup hash attribute: {0:s}_hash missing from event that '
-          'originated from: {1:s}.').format(
-              self._analyzer.lookup_hash, display_name))
-      return
-
-    path_specs = self._hash_path_specs[lookup_hash]
-    path_specs.append(path_specification)
-    # There may be multiple path specifications that have the same hash. We only
-    # want to look them up once.
-    if len(path_specs) == 1:
-      self.hash_queue.put(lookup_hash)
+    self._event_identifiers_by_data_stream[data_stream_identifier].add(
+        event_identifier)
 
   def _ContinueReportCompilation(self):
     """Determines if the plugin should continue trying to compile the report.
@@ -196,8 +185,7 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     """
     # TODO: refactor to update the counter on demand instead of
     # during reporting.
-    path_specs_per_labels_counter = collections.Counter()
-    tags = []
+    events_per_labels_counter = collections.Counter()
     while self._ContinueReportCompilation():
       try:
         self._LogProgressUpdateIfReasonable()
@@ -207,25 +195,20 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
         # The result queue is empty, but there could still be items that need
         # to be processed by the analyzer.
         continue
-      path_specs, labels, new_tags = self._HandleHashAnalysis(hash_analysis)
 
-      tags.extend(new_tags)
-      for label in labels:
-        path_specs_per_labels_counter[label] += len(path_specs)
+      hash_analysis_events_per_labels_counter = self._HandleHashAnalysis(
+          mediator, hash_analysis)
+      events_per_labels_counter += hash_analysis_events_per_labels_counter
 
     self._analyzer.SignalAbort()
 
     lines_of_text = ['{0:s} hash tagging results'.format(self.NAME)]
-    for label, count in sorted(path_specs_per_labels_counter.items()):
-      line_of_text = (
-          '{0:d} path specifications tagged with label: {1:s}'.format(
-              count, label))
+    for label, number_of_events in sorted(events_per_labels_counter.items()):
+      line_of_text = '{0:d} events tagged with label: {1:s}'.format(
+          number_of_events, label)
       lines_of_text.append(line_of_text)
     lines_of_text.append('')
     report_text = '\n'.join(lines_of_text)
-
-    for event_tag in tags:
-      mediator.ProduceEventTag(event_tag)
 
     analysis_report = super(HashTaggingAnalysisPlugin, self).CompileReport(
         mediator)

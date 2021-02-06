@@ -113,10 +113,10 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
 
     expected_text = (
         'viper hash tagging results\n'
-        '1 path specifications tagged with label: viper_present\n'
-        '1 path specifications tagged with label: viper_project_default\n'
-        '1 path specifications tagged with label: viper_tag_darkcomet\n'
-        '1 path specifications tagged with label: viper_tag_rat\n')
+        '1 events tagged with label: viper_present\n'
+        '1 events tagged with label: viper_project_default\n'
+        '1 events tagged with label: viper_tag_darkcomet\n'
+        '1 events tagged with label: viper_tag_rat\n')
 
     self.assertEqual(report.text, expected_text)
 
