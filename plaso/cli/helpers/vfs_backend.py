@@ -13,6 +13,9 @@ class VFSBackEndArgumentsHelper(interface.ArgumentsHelper):
   NAME = 'vfs_backend'
   DESCRIPTION = 'dfVFS back-end command line arguments.'
 
+  _SUPPORTED_VFS_BACK_ENDS = [
+      'auto', 'fsext', 'fshfs', 'fsntfs', 'tsk', 'vsgpt']
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Adds command line arguments to an argument group.
@@ -26,10 +29,10 @@ class VFSBackEndArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         '--vfs_back_end', '--vfs-back-end', dest='vfs_back_end',
-        choices=['auto', 'fsext', 'fshfs', 'fsntfs', 'tsk'], action='store',
-        metavar='TYPE', default='auto', help=(
-            'The preferred dfVFS back-end: "auto", "fsext", "fshfs", "fsntfs" '
-            'or "tsk".'))
+        choices=cls._SUPPORTED_VFS_BACK_ENDS, action='store', metavar='TYPE',
+        default='auto', help=(
+            'The preferred dfVFS back-end: "auto", "fsext", "fshfs", "fsntfs", '
+            '"tsk" or "vsgpt".'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):

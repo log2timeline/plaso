@@ -34,6 +34,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libsmraw-python3
                       libvhdi-python3
                       libvmdk-python3
+                      libvsgpt-python3
                       libvshadow-python3
                       libvslvm-python3
                       python3-XlsxWriter
@@ -130,6 +131,8 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libvhdi-python3-debuginfo
                     libvmdk-debuginfo
                     libvmdk-python3-debuginfo
+                    libvsgpt-debuginfo
+                    libvsgpt-python3-debuginfo
                     libvshadow-debuginfo
                     libvshadow-python3-debuginfo
                     libvslvm-debuginfo

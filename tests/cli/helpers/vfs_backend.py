@@ -25,7 +25,7 @@ Test argument parser.
 optional arguments:
   --vfs_back_end TYPE, --vfs-back-end TYPE
                         The preferred dfVFS back-end: "auto", "fsext",
-                        "fshfs", "fsntfs" or "tsk".
+                        "fshfs", "fsntfs", "tsk" or "vsgpt".
 """
 
   def testAddArguments(self):

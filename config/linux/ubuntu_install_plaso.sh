@@ -41,6 +41,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libsmraw-python3
                      libvhdi-python3
                      libvmdk-python3
+                     libvsgpt-python3
                      libvshadow-python3
                      libvslvm-python3
                      python3-artifacts
@@ -137,6 +138,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvhdi-python3-dbg
                     libvmdk-dbg
                     libvmdk-python3-dbg
+                    libvsgpt-dbg
+                    libvsgpt-python3-dbg
                     libvshadow-dbg
                     libvshadow-python3-dbg
                     libvslvm-dbg
