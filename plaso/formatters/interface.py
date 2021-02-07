@@ -227,14 +227,6 @@ class EventFormatter(object):
     Returns:
       str: formatted message.
     """
-    if not isinstance(format_string, str):
-      logger.warning('Format string: {0!s} is non-Unicode.'.format(
-          format_string))
-
-      # Plaso code files should be in UTF-8 any thus binary strings are
-      # assumed UTF-8. If this is not the case this should be fixed.
-      format_string = format_string.decode('utf-8', errors='ignore')
-
     try:
       message_string = format_string.format(**event_values)
 
@@ -245,8 +237,8 @@ class EventFormatter(object):
       parser_chain = event_values.get('parser', 'N/A')
 
       error_message = (
-          'unable to format string: "{0:s}" event object is missing required '
-          'attributes: {1!s}').format(format_string, exception)
+          'unable to format string: "{0:s}" missing required event '
+          'value: {1!s}').format(format_string, exception)
       error_message = (
           'Event: {0:s} data type: {1:s} display name: {2:s} '
           'parser chain: {3:s} with error: {4:s}').format(
@@ -519,23 +511,13 @@ class ConditionalEventFormatter(EventFormatter):
     Raises:
       RuntimeError: when an invalid format string piece is encountered.
     """
-    # Using getattr here to make sure the attribute is not set to None.
-    # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
     string_pieces = []
     for map_index, attribute_name in enumerate(format_string_pieces_map):
-      if not attribute_name or attribute_name in event_values:
-        if attribute_name:
-          attribute = event_values.get(attribute_name, None)
-          # If an attribute is an int, yet has zero value we want to include
-          # that in the format string, since that is still potentially valid
-          # information. Otherwise we would like to skip it.
-          if not isinstance(attribute, (bool, float, int)) and not attribute:
-            continue
-
+      if not attribute_name or event_values.get(
+          attribute_name, None) is not None:
         string_pieces.append(format_string_pieces[map_index])
 
     format_string = self._format_string_separator.join(string_pieces)
-
     return self._FormatMessage(format_string, event_values)
 
   def GetFormatStringAttributeNames(self):

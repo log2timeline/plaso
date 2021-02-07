@@ -162,7 +162,7 @@ class NTFSMFTParser(interface.FileObjectParser):
     event_data.file_reference = mft_entry.file_reference
     event_data.filename = parser_mediator.GetRelativePath()
     event_data.is_allocated = mft_entry.is_allocated()
-    event_data.path_hints = path_hints
+    event_data.path_hints = path_hints or None
     event_data.symbolic_link_target = mft_entry.get_symbolic_link_target()
 
     if mft_attribute.attribute_type == self._MFT_ATTRIBUTE_FILE_NAME:

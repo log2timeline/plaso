@@ -439,10 +439,14 @@ data_type: 'windows:registry:outlook_search_mru'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
 ---
-type: 'basic'
+type: 'conditional'
 data_type: 'windows:registry:run'
-message: '[{key_path}] {entries}'
-short_message: '[{key_path}] {entries}'
+message:
+- '[{key_path}]'
+- 'Entries: {entries}'
+short_message:
+- '[{key_path}]'
+- 'Entries: {entries}'
 ---
 type: 'conditional'
 data_type: 'windows:registry:sam_users'

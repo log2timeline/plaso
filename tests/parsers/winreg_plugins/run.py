@@ -74,8 +74,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:run',
-        'entries': (
-            'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun'),
+        'entries': [
+            'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
@@ -104,8 +104,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:run',
-        'entries': (
-            'mctadmin: C:\\Windows\\System32\\mctadmin.exe'),
+        'entries': [
+            'mctadmin: C:\\Windows\\System32\\mctadmin.exe'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
@@ -133,12 +133,13 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:run',
-        'entries': (
-            'McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\'
-            'McAfee\\Host Intrusion Prevention\\FireTray.exe" VMware Tools: '
-            '"C:\\Program Files\\VMware\\VMware Tools\\VMwareTray.exe" VMware '
-            'User Process: "C:\\Program Files\\VMware\\VMware Tools\\'
-            'VMwareUser.exe"'),
+        'entries': [
+            ('McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\'
+             'McAfee\\Host Intrusion Prevention\\FireTray.exe"'),
+            ('VMware Tools: "C:\\Program Files\\VMware\\VMware Tools\\'
+             'VMwareTray.exe"'),
+            ('VMware User Process: "C:\\Program Files\\VMware\\VMware Tools\\'
+             'VMwareUser.exe"')],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
@@ -167,8 +168,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:run',
-        'entries': (
-            '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq'),
+        'entries': [
+            '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
