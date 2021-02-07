@@ -234,7 +234,7 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
             file_object, file_offset, trigger_data_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.UnableToParseFile((
-            'Unable to parse trigger: {0:d} with error: {2!s}').format(
+            'Unable to parse trigger: {0:d} with error: {1!s}').format(
                 trigger_index, exception))
 
       file_offset += data_size
