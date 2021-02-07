@@ -77,6 +77,14 @@ class PlistParserTest(test_lib.ParserTestCase):
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['truncated.plist'], parser)
 
+  def testParseWithXMLFileLeadingWhitespace(self):
+    """Tests the Parse function on an XML file with leading whitespace."""
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile(['leading_whitespace.plist'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_events, 4)
+
   def testParseWithXMLFileExpatError(self):
     """Tests the Parse function on an XML file that causes an ExpatError."""
     parser = plist.PlistParser()
@@ -87,9 +95,10 @@ class PlistParserTest(test_lib.ParserTestCase):
   def testParseWithXMLFileLookupError(self):
     """Tests the Parse function on an XML file that causes a LookupError."""
     parser = plist.PlistParser()
+    storage_writer = self._ParseFile(['SAFStore.xml'], parser)
 
-    with self.assertRaises(errors.UnableToParseFile):
-      self._ParseFile(['SAFStore.xml'], parser)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_events, 0)
 
   def testParseWithXMLFileBinASCIIError(self):
     """Tests the Parse function on an XML file that causes a binascii.Error."""
