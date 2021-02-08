@@ -41,4 +41,4 @@ alphabetical order.
 
 ## Code review/submit
 
-* Create a PR to have the changes reviewed and merged with the master branch.
+* Create a PR to have the changes reviewed and merged with the main branch.

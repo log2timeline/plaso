@@ -36,7 +36,7 @@ C:\Python38\python.exe tools\update.py --preset plaso --track stable
 
 ## Packaging
 
-Download a copy of the [make_release.ps1](https://raw.githubusercontent.com/log2timeline/l2tdevtools/master/data/pyinstaller/make_release.ps1)
+Download a copy of the [make_release.ps1](https://raw.githubusercontent.com/log2timeline/l2tdevtools/main/data/pyinstaller/make_release.ps1)
 script. The easiest is to git clone l2tdevtools:
 ```
 git clone https://github.com/log2timeline/l2tdevtools.git

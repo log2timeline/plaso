@@ -59,9 +59,9 @@ Before you start writing  code, please review the following:
 
 * [Style guide](Style-guide.md). All code submitted to the project needs to
 follow this style guide.
-* [Code review](https://github.com/log2timeline/l2tdocs/blob/master/process/Code%20review%20process.md). All code that is submitted into the project is
+* [Code review](https://github.com/log2timeline/l2tdocs/blob/main/process/Code%20review%20process.md). All code that is submitted into the project is
  reviewed by at least one other person.
-* [Adding a new dependency](https://github.com/log2timeline/l2tdocs/blob/master/process/Dependencies.md).
+* [Adding a new dependency](https://github.com/log2timeline/l2tdocs/blob/main/process/Dependencies.md).
 If your code requires adding a new dependency please check out these instructions.
 
 ### Before you submit your first code review
