@@ -83,7 +83,7 @@ ignores your systems package manager.): `pip install --upgrade pip`
     ```bash
     # Where 'plaso' is your local Plaso source directory
     cd plaso
-    curl -O https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt
+    curl -O https://raw.githubusercontent.com/log2timeline/plaso/main/requirements.txt
     pip install -r requirements.txt
     ```
 1. Once you finish you development session, deactivate virtualenv: `deactivate`

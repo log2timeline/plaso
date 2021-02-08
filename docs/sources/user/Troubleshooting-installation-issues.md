@@ -15,7 +15,7 @@ dependencies are met. One way of doing that is to download the check dependency
 script and run it.
 
 ```bash
-$ wget https://raw.githubusercontent.com/log2timeline/plaso/master/utils/check_dependencies.py
+$ wget https://raw.githubusercontent.com/log2timeline/plaso/main/utils/check_dependencies.py
 $ python check_dependencies.py
 ```
 

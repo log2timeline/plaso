@@ -28,12 +28,6 @@ And is moving to support:
 * tagging events;
 * allowing more targeted approach to the collection/parsing.
 
-### Project status
-
-[Travis-CI](https://travis-ci.com/) | [AppVeyor](https://ci.appveyor.com) | [Codecov](https://codecov.io/) | [ReadTheDocs](https://readthedocs.org)
---- | --- | --- | --- 
-[![Build Status](https://travis-ci.com/log2timeline/plaso.svg?branch=master)](https://travis-ci.com/log2timeline/plaso) | [![Build status](https://ci.appveyor.com/api/projects/status/7slp4uexetn8bomg?svg=true)](https://ci.appveyor.com/project/log2timeline/plaso) | [![codecov](https://codecov.io/gh/log2timeline/plaso/branch/master/graph/badge.svg)](https://codecov.io/gh/log2timeline/plaso) | [![Documentation Status](https://readthedocs.org/projects/plaso/badge/?version=latest)](https://plaso.readthedocs.io/en/latest/?badge=latest)  
-
 ### Also see
 
 * [Homepage](https://github.com/log2timeline/plaso)

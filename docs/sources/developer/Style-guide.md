@@ -1,6 +1,6 @@
 # Style Guide
 
-Plaso follows the [log2timeline style guide](https://github.com/log2timeline/l2tdocs/blob/master/process/Style-guide.md).
+Plaso follows the [log2timeline style guide](https://github.com/log2timeline/l2tdocs/blob/main/process/Style-guide.md).
 
 ## Plaso specific style points
 
