@@ -15,7 +15,8 @@ class ElasticTimesketchOutputModule(
       'Saves the events into an Elasticsearch database for use '
       'with Timesketch.')
 
-  MAPPINGS_FILENAME = 'timesketch.mappings'
+  MAPPINGS_FILENAME = 'plaso.mappings'
+  MAPPINGS_PATH = '/etc/timesketch'
 
   def __init__(self, output_mediator):
     """Initializes a Timesketch Elasticsearch output module.
