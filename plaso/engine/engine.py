@@ -275,7 +275,12 @@ class BaseEngine(object):
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
 
-      operating_system = self._DetermineOperatingSystem(searcher)
+      try:
+        operating_system = self._DetermineOperatingSystem(searcher)
+      except (ValueError, dfvfs_errors.PathSpecError) as exception:
+        logger.error(exception)
+        continue
+
       if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
         preprocess_manager.PreprocessPluginsManager.RunPlugins(
             artifacts_registry_object, file_system, mount_point,
