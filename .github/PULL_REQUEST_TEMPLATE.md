@@ -9,7 +9,7 @@
 
 ## Notes:
 All contributions to Plaso undergo [code
-review](https://github.com/log2timeline/l2tdocs/blob/master/process/Code%20review%20process.asciidoc). This makes sure
+review](https://github.com/log2timeline/l2tdocs/blob/main/process/Code%20review%20process.asciidoc). This makes sure
 that the code has appropriate test coverage and conforms to the Plaso [style
 guide](https://plaso.readthedocs.io/en/latest/sources/developer/Style-guide.html).
 
