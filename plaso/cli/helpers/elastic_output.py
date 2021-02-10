@@ -182,8 +182,12 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
           output_module, elastic.ElasticsearchOutputModule):
         mappings_filename = 'raw_fields.mappings'
 
-      data_location = getattr(options, '_data_location', None) or 'data'
-      mappings_file_path = os.path.join(data_location, mappings_filename)
+      mappings_path = getattr(output_module, 'MAPPINGS_PATH', None)
+      if mappings_path:
+        mappings_file_path = os.path.join(mappings_path, mappings_filename)
+      else:
+        data_location = getattr(options, '_data_location', None) or 'data'
+        mappings_file_path = os.path.join(data_location, mappings_filename)
 
     if not mappings_file_path or not os.path.isfile(mappings_file_path):
       raise errors.BadConfigOption(

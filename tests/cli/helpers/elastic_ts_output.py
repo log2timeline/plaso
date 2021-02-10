@@ -3,6 +3,7 @@
 """Tests for the Elastic Timesketch output module CLI arguments helper."""
 
 import argparse
+import os
 import unittest
 
 from plaso.cli.helpers import elastic_ts_output
@@ -83,16 +84,19 @@ optional arguments:
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options._data_location = 'data'
 
     output_mediator = self._CreateOutputMediator()
     output_module = elastic_ts.ElasticTimesketchOutputModule(output_mediator)
-    elastic_ts_output.ElasticTimesketchOutputArgumentsHelper.ParseOptions(
-        options, output_module)
 
+    # The mappings file is /etc/timesketch/plaso.mappings by default which
+    # does not exist on the CI test environment.
     with self.assertRaises(errors.BadConfigObject):
       elastic_ts_output.ElasticTimesketchOutputArgumentsHelper.ParseOptions(
           options, None)
+
+    options.elastic_mappings = os.path.join('data', 'timesketch.mappings')
+    elastic_ts_output.ElasticTimesketchOutputArgumentsHelper.ParseOptions(
+        options, output_module)
 
 
 if __name__ == '__main__':
