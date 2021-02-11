@@ -705,7 +705,7 @@ class StorageMediaTool(tools.CLITool):
             scan_node.path_spec, credential_type, credential_data)
         break
 
-    if not is_unlocked and self._unattended_mode:
+    if not is_unlocked and not self._unattended_mode:
       is_unlocked, credential_type, credential_data = (
           self._mediator.PromptUserForEncryptedVolumeCredential(
               self._source_scanner, scan_context, scan_node, credentials))
