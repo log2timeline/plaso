@@ -5,6 +5,7 @@ import pyesedb
 
 from plaso.lib import specification
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import plugins
 
@@ -120,8 +121,16 @@ class ESEDBParser(interface.FileObjectParser):
         if parser_mediator.abort:
           break
 
+        file_entry = parser_mediator.GetFileEntry()
+        display_name = parser_mediator.GetDisplayName(file_entry)
+
         if not plugin.CheckRequiredTables(database):
+          logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
+              display_name, plugin.NAME))
           continue
+
+        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+            display_name, plugin.NAME))
 
         try:
           plugin.UpdateChainAndProcess(

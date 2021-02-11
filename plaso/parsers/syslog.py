@@ -16,6 +16,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -371,6 +372,12 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
             'pid': event_data.pid,
             'reporter': event_data.reporter,
             'severity': event_data.severity}
+
+        file_entry = parser_mediator.GetFileEntry()
+        display_name = parser_mediator.GetDisplayName(file_entry)
+
+        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+            display_name, plugin.NAME))
 
         try:
           # TODO: pass event_data instead of attributes.

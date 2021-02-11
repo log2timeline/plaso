@@ -181,10 +181,16 @@ class BencodeParser(interface.FileObjectParser):
         if parser_mediator.abort:
           break
 
+        file_entry = parser_mediator.GetFileEntry()
+        display_name = parser_mediator.GetDisplayName(file_entry)
+
         if not plugin.CheckRequiredKeys(bencode_file):
+          logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
+              display_name, plugin.NAME))
           continue
 
-        logger.debug('Bencode plugin used: {0:s}'.format(plugin.NAME))
+        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+            display_name, plugin.NAME))
 
         try:
           plugin.UpdateChainAndProcess(
