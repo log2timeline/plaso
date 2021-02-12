@@ -122,11 +122,17 @@ class PlistParser(interface.FileObjectParser):
           if path_filter.Match(filename_lower_case):
             path_filter_match = True
 
+      file_entry = parser_mediator.GetFileEntry()
+      display_name = parser_mediator.GetDisplayName(file_entry)
+
       if (not path_filter_match or
           not top_level_keys.issuperset(plugin.PLIST_KEYS)):
+        logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
+            display_name, plugin.NAME))
         continue
 
-      logger.debug('Plist plugin used: {0:s}'.format(plugin.NAME))
+      logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+          display_name, plugin.NAME))
 
       try:
         plugin.UpdateChainAndProcess(

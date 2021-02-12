@@ -405,8 +405,15 @@ class SQLiteParser(interface.FileEntryParser):
         required_tables_and_column_exist = plugin.CheckRequiredTablesAndColumns(
             database)
 
+        display_name = parser_mediator.GetDisplayName(file_entry)
+
         if not required_tables_and_column_exist:
+          logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
+              display_name, plugin.NAME))
           continue
+
+        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+            display_name, plugin.NAME))
 
         schema_match = plugin.CheckSchema(database)
         if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
