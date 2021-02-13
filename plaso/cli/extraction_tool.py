@@ -61,6 +61,7 @@ class ExtractionTool(
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
     self._buffer_size = 0
+    self._expanded_parser_filter_expression = None
     self._parser_filter_expression = None
     self._preferred_time_zone = None
     self._preferred_year = None
@@ -117,15 +118,18 @@ class ExtractionTool(
             preset_definition.name for preset_definition in preset_definitions]
         filter_expression = ','.join(preset_names)
 
-        logger.info('Parser filter expression set to: {0:s}'.format(
+        self._parser_filter_expression = filter_expression
+
+        logger.debug('Parser filter expression set to preset: {0:s}'.format(
             filter_expression))
-        parser_filter_expression = filter_expression
 
     parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
 
     try:
       parser_filter_expression = parser_filter_helper.ExpandPresets(
-          self._presets_manager, parser_filter_expression)
+          self._presets_manager, self._parser_filter_expression)
+      logger.debug('Parser filter expression set to: {0:s}'.format(
+          parser_filter_expression))
     except RuntimeError as exception:
       raise errors.BadConfigOption((
           'Unable to expand presets in parser filter expression with '
@@ -142,6 +146,8 @@ class ExtractionTool(
           'parser filter expression: {1:s}'.format(
               invalid_parser_names_string, parser_filter_expression))
 
+    self._expanded_parser_filter_expression = parser_filter_expression
+
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()
     configuration.artifact_filters = self._artifact_filters
@@ -156,7 +162,8 @@ class ExtractionTool(
     configuration.extraction.yara_rules_string = self._yara_rules_string
     configuration.filter_file = self._filter_file
     configuration.log_filename = self._log_file
-    configuration.parser_filter_expression = parser_filter_expression
+    configuration.parser_filter_expression = (
+        self._expanded_parser_filter_expression)
     configuration.preferred_year = self._preferred_year
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.sample_rate = self._profiling_sample_rate
@@ -346,19 +353,6 @@ class ExtractionTool(
       raise errors.BadConfigOption(
           'Unable to read parser presets from file with error: {0!s}'.format(
               exception))
-
-  def _SetExtractionParsersAndPlugins(self, configuration, session):
-    """Sets the parsers and plugins before extraction.
-
-    Args:
-      configuration (ProcessingConfiguration): processing configuration.
-      session (Session): session.
-    """
-    names_generator = parsers_manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression=configuration.parser_filter_expression)
-
-    session.enabled_parser_names = list(names_generator)
-    session.parser_filter_expression = configuration.parser_filter_expression
 
   def _SetExtractionPreferredTimeZone(self, knowledge_base):
     """Sets the preferred time zone before extraction.

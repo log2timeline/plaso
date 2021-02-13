@@ -167,7 +167,6 @@ optional arguments:
 
   # TODO: add test for _PreprocessSources
   # TODO: add test for _ReadParserPresetsFromFile
-  # TODO: add test for _SetExtractionParsersAndPlugins
   # TODO: add test for _SetExtractionPreferredTimeZone
 
   def testAddPerformanceOptions(self):

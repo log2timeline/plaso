@@ -380,7 +380,10 @@ class PstealTool(
     configuration = self._CreateProcessingConfiguration(
         extraction_engine.knowledge_base)
 
-    self._SetExtractionParsersAndPlugins(configuration, session)
+    session.enabled_parser_names = (
+        configuration.parser_filter_expression.split(','))
+    session.parser_filter_expression = self._parser_filter_expression
+
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     # TODO: set mount path in knowledge base with

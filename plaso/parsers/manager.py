@@ -176,36 +176,6 @@ class ParsersManager(object):
     return sorted(parser_names)
 
   @classmethod
-  def GetParserAndPluginNames(cls, parser_filter_expression=None):
-    """Retrieves the parser and parser plugin names.
-
-    Args:
-      parser_filter_expression (Optional[str]): parser filter expression,
-          where None represents all parsers and plugins.
-
-          A parser filter expression is a comma separated value string that
-          denotes which parsers and plugins should be used. See
-          filters/parser_filter.py for details of the expression syntax.
-
-          This function does not support presets, and requires a parser
-          filter expression where presets have been expanded.
-
-    Returns:
-      list[str]: parser and parser plugin names.
-    """
-    parser_and_plugin_names = []
-    for parser_name, parser_class in cls._GetParsers(
-        parser_filter_expression=parser_filter_expression):
-      parser_and_plugin_names.append(parser_name)
-
-      if parser_class.SupportsPlugins():
-        for plugin_name, _ in parser_class.GetPlugins():
-          parser_and_plugin_names.append(
-              '{0:s}/{1:s}'.format(parser_name, plugin_name))
-
-    return parser_and_plugin_names
-
-  @classmethod
   def GetParserPluginsInformation(cls, parser_filter_expression=None):
     """Retrieves the parser plugins information.
 
