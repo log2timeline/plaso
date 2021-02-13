@@ -408,7 +408,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           worker_memory_limit=self._worker_memory_limit,
           worker_timeout=self._worker_timeout)
 
-    # If the source is a directory or a storage media image
+    # If the source is a storage media image or device, or directory
     # run pre-processing.
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
@@ -416,7 +416,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     configuration = self._CreateProcessingConfiguration(
         extraction_engine.knowledge_base)
 
-    self._SetExtractionParsersAndPlugins(configuration, session)
+    session.enabled_parser_names = (
+        configuration.parser_filter_expression.split(','))
+    session.parser_filter_expression = self._parser_filter_expression
+
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     # TODO: set mount path in knowledge base with

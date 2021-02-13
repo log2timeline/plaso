@@ -153,39 +153,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     self.assertIn('winreg', parsers_names)
 
-  def testGetParserAndPluginNames(self):
-    """Tests the GetParserAndPluginNames function."""
-    TestParserWithPlugins.RegisterPlugin(TestPlugin)
-    manager.ParsersManager.RegisterParser(TestParserWithPlugins)
-    manager.ParsersManager.RegisterParser(TestParser)
-
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='test_parser')
-    self.assertEqual(parser_names, ['test_parser'])
-
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='!test_parser')
-    self.assertNotIn('test_parser', parser_names)
-
-    expected_parser_names = [
-        'test_parser_with_plugins',
-        'test_parser_with_plugins/test_plugin']
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='test_parser_with_plugins/test_plugin')
-    self.assertEqual(parser_names, expected_parser_names)
-
-    # Test with a parser name, not using plugin names.
-    expected_parser_names = [
-        'test_parser_with_plugins',
-        'test_parser_with_plugins/test_plugin']
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='test_parser_with_plugins')
-    self.assertEqual(parser_names, expected_parser_names)
-
-    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
-    manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
-    manager.ParsersManager.DeregisterParser(TestParser)
-
   def testGetParserPluginsInformation(self):
     """Tests the GetParserPluginsInformation function."""
     plugins_information = manager.ParsersManager.GetParserPluginsInformation()
