@@ -22,7 +22,7 @@ class ElasticTimesketchOutputArgumentsHelperTest(
 
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
-                     [--raw_fields] [--additional_fields ADDITIONAL_FIELDS]
+                     [--additional_fields ADDITIONAL_FIELDS]
                      [--elastic_mappings PATH] [--elastic_user USERNAME]
                      [--elastic_password PASSWORD] [--use_ssl]
                      [--ca_certificates_file_path PATH]
@@ -59,9 +59,6 @@ optional arguments:
   --index_name NAME, --index-name NAME
                         Name of the index in ElasticSearch.
   --port PORT           The port number of the server.
-  --raw_fields, --raw-fields
-                        Export string fields that will not be analyzed by
-                        Lucene.
   --server HOSTNAME     The hostname or server IP address of the server.
   --timeline_identifier IDENTIFIER, --timeline-identifier IDENTIFIER
                         The identifier of the timeline in Timesketch.

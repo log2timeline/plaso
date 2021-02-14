@@ -12,7 +12,6 @@ from plaso.cli.helpers import manager
 from plaso.cli.helpers import server_config
 from plaso.cli import logger
 from plaso.lib import errors
-from plaso.output import elastic
 from plaso.output import shared_elastic
 
 
@@ -58,11 +57,6 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         '--flush_interval', '--flush-interval', dest='flush_interval', type=int,
         action='store', default=cls._DEFAULT_FLUSH_INTERVAL, metavar='INTERVAL',
         help='Events to queue up before bulk insert to ElasticSearch.')
-
-    argument_group.add_argument(
-        '--raw_fields', '--raw-fields', dest='raw_fields', action='store_true',
-        default=cls._DEFAULT_RAW_FIELDS, help=(
-            'Export string fields that will not be analyzed by Lucene.'))
 
     default_fields = ', '.join(cls._DEFAULT_FIELDS)
     argument_group.add_argument(
@@ -169,18 +163,8 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     output_module.SetCACertificatesPath(ca_certificates_path)
     output_module.SetURLPrefix(elastic_url_prefix)
 
-    # TODO: remove --raw-field option.
-    raw_fields = getattr(options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
-    if raw_fields:
-      logger.warning(
-          '--raw_fields option is deprecated instead use: '
-          '--elastic_mappings=raw_fields.mappings')
-
     if not mappings_file_path or not os.path.isfile(mappings_file_path):
       mappings_filename = output_module.MAPPINGS_FILENAME
-      if raw_fields and isinstance(
-          output_module, elastic.ElasticsearchOutputModule):
-        mappings_filename = 'raw_fields.mappings'
 
       mappings_path = getattr(output_module, 'MAPPINGS_PATH', None)
       if mappings_path:
