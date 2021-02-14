@@ -94,7 +94,7 @@ optional arguments:
       elastic_ts_output.ElasticTimesketchOutputArgumentsHelper.ParseOptions(
           options, None)
 
-    options.elastic_mappings = os.path.join('data', 'timesketch.mappings')
+    options.elastic_mappings = os.path.join('data', 'elasticsearch.mappings')
     elastic_ts_output.ElasticTimesketchOutputArgumentsHelper.ParseOptions(
         options, output_module)
 

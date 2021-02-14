@@ -9,12 +9,6 @@ There are multiple ways to install the dependencies:
 * [Batch build](Development-Dependencies.md#batch-build)
 * [Manual build](Development-Dependencies.md#manual-build)
 
-## Optional dependencies
-
-Some dependencies for Plaso are optional:
-
-* [Timesketch](https://github.com/google/timesketch/blob/master/docs/Installation.md)
-
 ## Prepackaged dependencies
 
 ### Fedora

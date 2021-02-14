@@ -11,14 +11,16 @@ Name | Description
 --- | ---
 dynamic | Output events to a delimiter (comma by default) separated value output format, that supports a dynamic selection of fields.
 elastic | Output events to an ElasticSearch database. Requires elasticsearch-py.
+elastic_ts | Output events to an ElasticSearch database for use with Timesketch. Requires elasticsearch-py.
 json | Output events to JSON format.
 json_line | Output events to JSON line format.
+kml | Output events with geography data into a KML format.
 l2tcsv | Output events to log2timeline.pl legacy CSV format, with 17 fixed fields. Also see: [l2tcsv output format](Output-format-l2tcsv.md)
 l2ttln | Output events to log2timeline.pl extended TLN format, with 7 fixed field. | delimited output. Also see: [TLN](https://forensicswiki.xyz/wiki/index.php?title=TLN).
 null | Do not output events.
 rawpy | Output events in "raw" (or native) Python format.
-timesketch | Output events to a Timesketch ElasticSearch database. Requires elasticsearch-py.
 tln | Output events to TLN format, with 5 fixed fields. Also see: [TLN](https://forensicswiki.xyz/wiki/index.php?title=TLN).
+xlsx | Output events to an Excel Spreadsheet (XLSX).
 
 ### Dynamic output module fields
 
