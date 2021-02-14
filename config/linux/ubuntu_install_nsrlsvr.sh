@@ -8,6 +8,8 @@ AUXILIARY_DATA_PATH="/media/auxiliary";
 set -e
 
 # Install and configure nsrlsvr
+sudo add-apt-repository ppa:gift/dev -y
+sudo apt-get update -q
 sudo apt-get install -y curl net-tools nsrlsvr-server unzip
 
 sudo mkdir -p /var/share/nsrlsvr
