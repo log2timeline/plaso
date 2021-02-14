@@ -1,37 +1,58 @@
 environment:
   matrix:
   - DESCRIPTION: "Windows with 32-bit Python 3.9"
+    TARGET: unittests
     MACHINE_TYPE: "x86"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     PYTHON: "C:\\Python39"
     PYTHON_VERSION: "3.9"
     L2TBINARIES_TRACK: "dev"
   - DESCRIPTION: "Windows with 64-bit Python 3.9"
+    TARGET: unittests
     MACHINE_TYPE: "amd64"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     PYTHON: "C:\\Python39-x64"
     PYTHON_VERSION: "3.9"
     L2TBINARIES_TRACK: "dev"
   - DESCRIPTION: "Mac OS with Python 3.9"
+    TARGET: unittests
     APPVEYOR_BUILD_WORKER_IMAGE: macos
     HOMEBREW_NO_INSTALL_CLEANUP: 1
+  - DESCRIPTION: "Docker3.9"
+    TARGET: dockerfile
+    MACHINE_TYPE: "amd64"
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    CONTAINER_NAME: "log2timeline/plaso"
 
 install:
-- cmd: "%PYTHON%\\python.exe -m pip install -U pip setuptools wheel"
-- cmd: "%PYTHON%\\python.exe -m pip install pywin32 WMI"
-- cmd: "%PYTHON%\\python.exe %PYTHON%\\Scripts\\pywin32_postinstall.py -install"
-- ps: If ($isWindows) { .\config\appveyor\install.ps1 }
+- cmd: IF [%TARGET%]==[unittests] (
+    "%PYTHON%\\python.exe" -m pip install -U pip setuptools wheel &&
+    "%PYTHON%\\python.exe" -m pip install pywin32 WMI &&
+    "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\pywin32_postinstall.py" -install )
+- ps: If ($env:TARGET -eq "unittests" -And $isWindows) {
+    .\config\appveyor\install.ps1 }
 - sh: config/appveyor/install.sh
+- cmd: IF [%TARGET%]==[dockerfile] (
+    docker version &&
+    docker-switch-linux )
 
 build_script:
-- cmd: "%PYTHON%\\python.exe setup.py bdist_msi bdist_wheel"
+- cmd: IF [%TARGET%]==[unittests] (
+    "%PYTHON%\\python.exe" setup.py bdist_msi bdist_wheel )
+- cmd: IF [%TARGET%]==[dockerfile] (
+    cd config\docker &&
+    docker build --build-arg PPA_TRACK="dev" -f Dockerfile -t "%CONTAINER_NAME%" . )
 
 test_script:
-- cmd: "%PYTHON%\\python.exe run_tests.py"
-- cmd: IF EXIST "tests\\end-to-end.py" (
-    set PYTHONPATH=. &&
-    "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" )
+- cmd: IF [%TARGET%]==[unittests] (
+    "%PYTHON%\\python.exe" run_tests.py &&
+    IF EXIST "tests\\end-to-end.py" (
+        set PYTHONPATH=. &&
+        "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" ) )
 - sh: config/appveyor/runtests.sh
+- cmd: IF [%TARGET%]==[dockerfile] (
+    docker run -v "%cd%:/data" "%CONTAINER_NAME%" log2timeline --status_view linear /data/test.plaso /data/test_data/image.qcow2 &&
+    docker run -v "%cd%:/data" "%CONTAINER_NAME%" psort --status_view linear -w /data/timeline.log /data/test.plaso )
 
 artifacts:
 - path: dist\*.whl
