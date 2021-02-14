@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """File system stat object parser."""
 
+import pytsk3
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import events
@@ -43,6 +45,32 @@ class FileStatParser(interface.FileEntryParser):
   NAME = 'filestat'
   DATA_FORMAT = 'file system stat information'
 
+  _TSK_FS_TYPE_MAP = {}
+
+  # Maps SleuthKit file system type enumeration values to a string.
+  _TSK_FS_TYPE_MAP = {
+      pytsk3.TSK_FS_TYPE_NTFS: 'NTFS',
+      pytsk3.TSK_FS_TYPE_NTFS_DETECT: 'NTFS',
+      pytsk3.TSK_FS_TYPE_FAT12: 'FAT12',
+      pytsk3.TSK_FS_TYPE_FAT16: 'FAT16',
+      pytsk3.TSK_FS_TYPE_FAT32: 'FAT32',
+      pytsk3.TSK_FS_TYPE_EXFAT: 'exFAT',
+      pytsk3.TSK_FS_TYPE_FAT_DETECT: 'FAT',
+      pytsk3.TSK_FS_TYPE_FFS1: 'FFS1',
+      pytsk3.TSK_FS_TYPE_FFS1B: 'FFS1b',
+      pytsk3.TSK_FS_TYPE_FFS2: 'FFS2',
+      pytsk3.TSK_FS_TYPE_FFS_DETECT: 'FFS',
+      pytsk3.TSK_FS_TYPE_EXT2: 'EXT2',
+      pytsk3.TSK_FS_TYPE_EXT3: 'EXT4',
+      pytsk3.TSK_FS_TYPE_EXT_DETECT: 'EXT',
+      pytsk3.TSK_FS_TYPE_ISO9660: 'ISO9660',
+      pytsk3.TSK_FS_TYPE_ISO9660_DETECT: 'ISO9660',
+      pytsk3.TSK_FS_TYPE_HFS: 'HFS',
+      pytsk3.TSK_FS_TYPE_HFS_DETECT: 'HFS',
+      pytsk3.TSK_FS_TYPE_EXT4: 'EXT4',
+      pytsk3.TSK_FS_TYPE_YAFFS2: 'YAFFS2',
+      pytsk3.TSK_FS_TYPE_YAFFS2_DETECT: 'YAFFS2'}
+
   def _GetFileSystemTypeFromFileEntry(self, file_entry):
     """Retrieves the file system type indicator of a file entry.
 
@@ -53,19 +81,24 @@ class FileStatParser(interface.FileEntryParser):
       str: file system type.
     """
     if file_entry.type_indicator != dfvfs_definitions.TYPE_INDICATOR_TSK:
-      return file_entry.type_indicator
+      type_string = file_entry.type_indicator
+    else:
+      file_system = file_entry.GetFileSystem()
+      tsk_fs_type = file_system.GetFsType()
 
-    # TODO: Implement fs_type in dfVFS and remove this implementation
-    # once that is in place.
-    file_system = file_entry.GetFileSystem()
-    fs_info = file_system.GetFsInfo()
-    if fs_info.info:
-      type_string = '{0!s}'.format(fs_info.info.ftype)
-      if type_string.startswith('TSK_FS_TYPE_'):
-        type_string = type_string[12:]
-      if type_string.endswith('_DETECT'):
-        type_string = type_string[:-7]
+      try:
+        type_string = self._TSK_FS_TYPE_MAP.get(tsk_fs_type, None)
+      except TypeError:
+        # Older version of pytsk3 can raise:
+        # TypeError: unhashable type: 'pytsk3.TSK_FS_TYPE_ENUM'
+        type_string = '{0!s}'.format(tsk_fs_type)
+        if type_string.startswith('TSK_FS_TYPE_'):
+          type_string = type_string[12:]
+        if type_string.endswith('_DETECT'):
+          type_string = type_string[:-7]
 
+    if not type_string:
+      type_string = 'UNKNOWN'
     return type_string
 
   def ParseFileEntry(self, parser_mediator, file_entry):
