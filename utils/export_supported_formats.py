@@ -110,13 +110,16 @@ class DataFormatInformationExractor(object):
   _STANDARD_TEXT_PER_CATEGORY = {
       'File system formats': (
           'File System Format support is provided by [dfVFS]'
-          '(https://github.com/log2timeline/dfvfs/wiki#file-systems).'),
+          '(https://dfvfs.readthedocs.io/en/latest/sources/'
+          'Supported-formats.html#file-systems).'),
       'Storage media image file formats': (
           'Storage media image file format support is provided by [dfVFS]'
-          '(https://github.com/log2timeline/dfvfs/wiki#storage-media-types).'),
+          '(https://dfvfs.readthedocs.io/en/latest/sources/'
+          'Supported-formats.html#storage-media-types).'),
       'Volume system formats': (
           'Volume system format support is provided by [dfVFS]'
-          '(https://github.com/log2timeline/dfvfs/wiki#volume-systems).')}
+          '(https://dfvfs.readthedocs.io/en/latest/sources/'
+          'Supported-formats.html#volume-systems).')}
 
   def FormatDataFormats(self, data_format_descriptors):
     """Formats data format information.

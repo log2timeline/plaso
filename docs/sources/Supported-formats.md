@@ -1,16 +1,16 @@
 ## Supported Formats
 
-The information below is based of version 1.5.0
+The information below is based of version 20210213
 
-### Storage Media Image File Formats
+### Storage media image file formats
 
-Storage Media Image File Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#storage-media-types).
+Storage media image file format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#storage-media-types).
 
-### Volume System Formats
+### Volume system formats
 
-Volume System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#volume-systems).
+Volume system format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#volume-systems).
 
-### File System Formats
+### File system formats
 
 File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#file-systems).
 
@@ -66,78 +66,120 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 
 ### Bencode file formats
 
-* Transmission
-* uTorrent
+* Transmission BitTorrent activity file
+* uTorrent active torrent file
+
+### Browser cookie formats
+
+* Google Analytics __utma cookie
+* Google Analytics __utmb cookie
+* Google Analytics __utmt cookie
+* Google Analytics __utmz cookie
+
+### Compound ZIP file formats
+
+* OpenXML (OXML) file
 
 ### ESE database file formats
 
-* Internet Explorer WebCache format
-* Windows 8 File History
+* Internet Explorer WebCache ESE database (WebCacheV01.dat, WebCacheV24.dat) file
+* System Resource Usage Monitor (SRUM) ESE database file
+* Windows 8 File History ESE database file
 
 ### OLE Compound File formats
 
-* Document summary information
-* Summary information (top-level only)
-* [Jump Lists](https://forensicswiki.xyz/wiki/index.php?title=Jump_Lists) .automaticDestinations-ms files
+* [Automatic destinations jump list OLE compound file (.automaticDestinations-ms)](https://forensicswiki.xyz/wiki/index.php?title=Jump_Lists)
+* Document summary information (\0x05DocumentSummaryInformation)
+* Summary information (\0x05SummaryInformation) (top-level only)
 
 ### Property list (plist) formats
 
-* Airport
-* Apple Account
-* Bluetooth
-* Install History
-* iPod/iPhone
-* Mac User
-* [Safari history](https://forensicswiki.xyz/wiki/index.php?title=Apple_Safari)
-* Software Update
-* Spotlight
-* Spotlight Volume Information
-* Timemachine
+* Airport plist file
+* Apple account information plist file
+* Bluetooth plist file
+* iPod, iPad and iPhone plist file
+* Launchd plist file
+* MacOS installation history plist file
+* MacOS software update plist file
+* MacOS user plist file
+* [Safari history plist file](https://forensicswiki.xyz/wiki/index.php?title=Apple_Safari)
+* Spotlight plist file
+* Spotlight volume configuration plist file
+* TimeMachine plist file
 
 ### SQLite database file formats
 
-* Android call logs
-* Android SMS
-* Chrome cookies
-* Chrome browsing and downloads history
-* Chrome Extension activity
-* Firefox cookies
-* Firefox browsing and downloads history
-* Google Drive
-* iMessage (iOS and MacOS)
-* Kik (iOS)
-* Launch services quarantine events
-* MacKeeper cache
-* MacOS document versions
-* Skype text conversations
-* Twitter (iOS)
-* Zeitgeist activity database
+* Android call history SQLite database (contacts2.db) file
+* Android text messages (SMS) SQLite database (mmssms.dbs) file
+* Android WebViewCache SQLite database file
+* Android WebView SQLite database file
+* Google Chrome 17 - 65 cookies SQLite database file
+* Google Chrome 27 and later history SQLite database file
+* Google Chrome 66 and later cookies SQLite database file
+* Google Chrome 8 - 25 history SQLite database file
+* Google Chrome autofill SQLite database (Web Data) file
+* Google Chrome extension activity SQLite database file
+* Google Drive snapshot SQLite database (snapshot.db) file
+* Google Hangouts conversations SQLite database (babel.db) file
+* iOS Kik messenger SQLite database (kik.sqlite) file
+* Kodi videos SQLite database (MyVideos.db) file
+* MacOS and iOS iMessage database (chat.db, sms.db) file
+* MacOS application usage SQLite database (application_usage.sqlite) file
+* MacOS document revisions SQLite database file
+* MacOS Duet / KnowledgeC SQLites database file
+* MacOS launch services quarantine events database SQLite database file
+* MacOS MacKeeper cache SQLite database file
+* MacOS Notes SQLite database (NotesV7.storedata) file
+* MacOS Notification Center SQLite database file
+* MacOS Transaprency, Consent, Control (TCC) SQLite database (TCC.db) file
+* Mozilla Firefox cookies SQLite database file
+* Mozilla Firefox downloads SQLite database (downloads.sqlite) file
+* Mozilla Firefox history SQLite database (places.sqlite) file
+* Safari history SQLite database (History.db) file
+* Skype SQLite database (main.db) file
+* Tango on Android profile SQLite database file
+* Tango on Android TC SQLite database file
+* Twitter on Android SQLite database file
+* Twitter on iOS 8 and later SQLite database (twitter.db) file
+* Windows 10 Timeline SQLite database (ActivitiesCache.db) file
+* Zeitgeist activity SQLite database file
+
+### Syslog file formats
+
+* Cron syslog line
+* SSH syslog line
 
 ### Windows Registry formats
 
-* AppCompatCache
-* BagMRU (or ShellBags)
-* CCleaner
-* [Explorer ProgramsCache](https://github.com/libyal/winreg-kb/blob/main/documentation/Programs%20Cache%20values.asciidoc)
-* Less Frequently Used (LFU)
-* MountPoints2
-* Most Recently Used (MRU) MRUList and MRUListEx (including shell item support)
-* MSIE Zones
-* Office MRU
-* Outlook Search
-* Run and RunOnce keys
-* SAM
-* Services
-* Shutdown
-* Task Scheduler Cache (Task Cache)
-* Terminal Server MRU
-* Timezones
-* Typed URLS
-* USB
-* USBStor
-* UserAssist
-* WinRar
-* Windows version information
+* Application Compatibility Cache Registry data
+* Background Activity Moderator (BAM) Registry data
+* BagMRU (or ShellBags) Registry data
+* Boot Execution Registry data
+* CCleaner Registry data
+* Microsoft Internet Explorer zone settings Registry data
+* Microsoft Office MRU Registry data
+* Microsoft Outlook search MRU Registry data
+* Most Recently Used (MRU) Registry data
+* Run and run once Registry data
+* Security Accounts Manager (SAM) users Registry data
+* Terminal Server Client Connection Registry data
+* Terminal Server Client Most Recently Used (MRU) Registry data
+* User Assist Registry data
+* Windows boot verification Registry data
+* Windows drivers and services Registry data
+* Windows Explorer mount points Registry data
+* [Windows Explorer Programs Cache Registry data](https://github.com/libyal/winreg-kb/blob/main/documentation/Programs%20Cache%20values.asciidoc)
+* Windows Explorer typed URLs Registry data
+* Windows last shutdown Registry data
+* Windows log-on Registry data
+* Windows network drives Registry data
+* Windows networks (NetworkList) Registry data
+* Windows Task Scheduler cache Registry data
+* Windows time zone Registry data
+* Windows USB device Registry data
+* Windows USB Plug And Play Manager USBStor Registry data
+* Windows version (product) Registry data
+* WinRAR History Registry data
 
 ### Hashers Supported
 
