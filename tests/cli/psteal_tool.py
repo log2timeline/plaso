@@ -36,11 +36,11 @@ optional arguments:
                         Use "list" to see a list of available time zones.
 """
 
-  _EXPECTED_PROCESSING_OPTIONS = '\n'.join([
-      'usage: psteal_test.py',
-      '',
-      'Test argument parser.',
-      ''])
+  _EXPECTED_PROCESSING_OPTIONS = """\
+usage: psteal_test.py
+
+Test argument parser.
+"""
 
   _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
 

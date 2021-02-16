@@ -44,6 +44,17 @@ optional arguments:
                     instead.
 """
 
+  _EXPECTED_SEPARATOR_LINE = """\
+--------------------------------------------------------------------------------
+"""
+
+  _EXPECTED_TIME_ZONE_OPTIONS = """\
+
+************************************ Zones *************************************
+                        Timezone : UTC Offset
+--------------------------------------------------------------------------------
+"""
+
   # TODO: add test for _ConfigureLogging
   # TODO: add test for _EncodeString
 
@@ -116,14 +127,7 @@ optional arguments:
     cli_tool.ListTimeZones()
 
     string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'************************************ Zones '
-        b'*************************************\n'
-        b'                        Timezone : UTC Offset\n'
-        b'----------------------------------------'
-        b'----------------------------------------\n')
-    self.assertTrue(string.startswith(expected_string))
+    self.assertTrue(string[:4], self._EXPECTED_TIME_ZONE_OPTIONS)
 
   def testParseNumericOption(self):
     """Tests the ParseNumericOption function."""
@@ -201,15 +205,12 @@ optional arguments:
 
   def testPrintSeparatorLine(self):
     """Tests the PrintSeparatorLine function."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
     cli_tool = tools.CLITool(output_writer=output_writer)
 
     cli_tool.PrintSeparatorLine()
     string = output_writer.ReadOutput()
-    expected_string = (
-        b'----------------------------------------'
-        b'----------------------------------------\n')
-    self.assertEqual(string, expected_string)
+    self.assertEqual(string, self._EXPECTED_SEPARATOR_LINE)
 
 
 class CLIInputReaderTest(test_lib.CLIToolTestCase):

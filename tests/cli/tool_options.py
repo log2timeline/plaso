@@ -189,6 +189,22 @@ class ProfilingOptionsTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
+  _EXPECTED_OUTPUT = """\
+
+********************************** Profilers ***********************************
+       Name : Description
+--------------------------------------------------------------------------------
+  analyzers : Profile CPU time of analyzers, like hashing
+     memory : Profile memory usage over time
+    parsers : Profile CPU time per parser
+ processing : Profile CPU time of processing phases
+serializers : Profile CPU time of serialization
+    storage : Profile storage reads and writes
+ task_queue : Profile task queue status (multi-processing only)
+      tasks : Profile the status of tasks (multi-processing only)
+--------------------------------------------------------------------------------
+"""
+
   def testListProfilers(self):
     """Tests the ListProfilers function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -196,15 +212,8 @@ class ProfilingOptionsTest(test_lib.CLIToolTestCase):
 
     test_tool.ListProfilers()
 
-    string = output_writer.ReadOutput()
-    expected_string = (
-        '\n'
-        '********************************** Profilers '
-        '***********************************\n'
-        '       Name : Description\n'
-        '----------------------------------------'
-        '----------------------------------------\n')
-    self.assertTrue(string.startswith(expected_string))
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, self._EXPECTED_OUTPUT)
 
 
 class TestToolWithStorageFileOptions(

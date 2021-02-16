@@ -20,24 +20,22 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_PERFORMANCE_OPTIONS = '\n'.join([
-      'usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]',
-      '                               [--queue_size QUEUE_SIZE]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      ('  --buffer_size BUFFER_SIZE, --buffer-size BUFFER_SIZE, '
-       '--bs BUFFER_SIZE'),
-      ('                        The buffer size for the output (defaults to '
-       '196MiB).'),
-      '  --queue_size QUEUE_SIZE, --queue-size QUEUE_SIZE',
-      '                        The maximum number of queued items per worker',
-      '                        (defaults to 125000)',
-      ''])
+  _EXPECTED_PERFORMANCE_OPTIONS = """\
+usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]
+                               [--queue_size QUEUE_SIZE]
+
+Test argument parser.
+
+optional arguments:
+  --buffer_size BUFFER_SIZE, --buffer-size BUFFER_SIZE, --bs BUFFER_SIZE
+                        The buffer size for the output (defaults to 196MiB).
+  --queue_size QUEUE_SIZE, --queue-size QUEUE_SIZE
+                        The maximum number of queued items per worker
+                        (defaults to 125000)
+"""
 
   if resource is None:
-    _EXPECTED_PROCESSING_OPTIONS = ("""\
+    _EXPECTED_PROCESSING_OPTIONS = """\
 usage: extraction_tool_test.py [--single_process]
                                [--temporary_directory DIRECTORY]
                                [--vfs_back_end TYPE]
@@ -70,9 +68,9 @@ optional arguments:
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-""")
+"""
   else:
-    _EXPECTED_PROCESSING_OPTIONS = ("""\
+    _EXPECTED_PROCESSING_OPTIONS = """\
 usage: extraction_tool_test.py [--single_process]
                                [--process_memory_limit SIZE]
                                [--temporary_directory DIRECTORY]
@@ -114,7 +112,7 @@ optional arguments:
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-""")
+"""
 
   _EXPECTED_TIME_ZONE_OPTION = """\
 usage: extraction_tool_test.py [-z TIME_ZONE]
