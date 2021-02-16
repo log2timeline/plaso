@@ -2,12 +2,10 @@
 # -*- coding: utf-8 -*-
 """Tests for the status view."""
 
-import unittest
-try:
-  import mock  # pylint: disable=import-error
-except ImportError:
-  from unittest import mock
 import sys
+import unittest
+
+import mock
 
 from dfvfs.lib import definitions as dfvfs_definitions
 

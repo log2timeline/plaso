@@ -16,6 +16,18 @@ from tests.cli import test_lib
 class PinfoToolTest(test_lib.CLIToolTestCase):
   """Tests for the pinfo CLI tool."""
 
+  _EXPECTED_OUTPUT_COMPARE_STORES = """\
+
+************************* Events generated per parser **************************
+Parser (plugin) name : Number of events
+--------------------------------------------------------------------------------
+            filestat : 3 (6)
+               total : 3 (38)
+--------------------------------------------------------------------------------
+
+Storage files are different.
+"""
+
   # TODO: add test for _CalculateStorageCounters.
   # TODO: add test for _CompareStores.
   # TODO: add test for _PrintAnalysisReportCounter.
@@ -58,23 +70,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     self.assertFalse(test_tool.CompareStores())
 
-    expected_output = '\n'.join([
-        '',
-        ('************************* Events generated per parser ***************'
-         '***********'),
-        'Parser (plugin) name : Number of events',
-        ('---------------------------------------------------------------------'
-         '-----------'),
-        '            filestat : 3 (6)',
-        '               total : 3 (38)',
-        ('---------------------------------------------------------------------'
-         '-----------'),
-        '',
-        'Storage files are different.',
-        ''])
-
     output = output_writer.ReadOutput()
-    self.assertEqual(output, expected_output)
+    self.assertEqual(output, self._EXPECTED_OUTPUT_COMPARE_STORES)
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
