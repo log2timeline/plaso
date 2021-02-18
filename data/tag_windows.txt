@@ -249,6 +249,11 @@ login_attempt
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4648
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 2
 
+# Tags Windows log-in attempt events.
+login_attempt_ntlm
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4776
+  data_type is 'windows:evtx:record' AND source_name is 'Security' AND event_identifier is 4776
+
 # change password
 change_pw_attempt
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4723 OR event_identifier is 4724 OR event_identifier is 628 OR event_identifier is 4794)
