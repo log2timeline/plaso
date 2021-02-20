@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PCSettings>
+  <SearchableContent xmlns="http://schemas.microsoft.com/Search/2013/SettingContent">
+    <ApplicationInformation>
+      <AppID>windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel</AppID>
+      <DeepLink>{F8B5DB1C-D219-4bf9-A747-A1325024469B}</DeepLink>
+    </ApplicationInformation>
+    <SettingIdentity>
+      <PageID>{E6A0F44A-D4FC-40E6-87D7-6F7C331F8C24}</PageID>
+      <HostID>{E6A0F44A-D4FC-40E6-87D7-6F7C331F8C24}</HostID>
+    </SettingIdentity>
+    <SettingInformation>
+      <Description>@twinui.dll,-5751</Description>
+      <HighKeywords>@twinui.dll,-5752</HighKeywords>
+    </SettingInformation>
+  </SearchableContent>
+</PCSettings>
