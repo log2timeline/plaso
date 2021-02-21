@@ -70,18 +70,17 @@ class PlistParser(interface.FileObjectParser):
 
     plist_data = file_object.read()
 
-    try:
-      try:
-        top_level_object = plistlib.loads(plist_data)
-      except plistlib.InvalidFileException as exception:
-        plist_data = plist_data.lstrip()
-        if not plist_data.startswith(b'<?xml '):
-          raise errors.UnableToParseFile(
-              'Unable to parse plist with error: {0!s}'.format(exception))
+    is_binary_plist = plist_data.startswith(b'bplist0')
+    is_xml = plist_data.startswith(b'<?xml ')
+    has_leading_whitespace = False
 
-        top_level_object = plistlib.loads(plist_data)
-        parser_mediator.ProduceExtractionWarning(
-            'XML plist file with leading whitespace')
+    if not is_binary_plist and not is_xml:
+      plist_data = plist_data.lstrip()
+      is_xml = plist_data.startswith(b'<?xml ')
+      has_leading_whitespace = is_xml
+
+    try:
+      top_level_object = plistlib.loads(plist_data)
 
     except (AttributeError, binascii.Error, expat.ExpatError,
             plistlib.InvalidFileException) as exception:
@@ -96,9 +95,20 @@ class PlistParser(interface.FileObjectParser):
       return
 
     if not top_level_object:
+      if is_xml:
+        plist_data = plist_data.rstrip()
+        if not plist_data.endswith(b'</plist>'):
+          raise errors.UnableToParseFile(
+              'Unable to parse XML plist with error: missing plist XML root '
+              'element.')
+
       parser_mediator.ProduceExtractionWarning(
           'unable to parse plist file with error: missing top level object')
       return
+
+    if has_leading_whitespace:
+      parser_mediator.ProduceExtractionWarning(
+          'XML plist file with leading whitespace')
 
     filename_lower_case = filename.lower()
 

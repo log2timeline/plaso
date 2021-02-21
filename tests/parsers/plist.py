@@ -107,6 +107,24 @@ class PlistParserTest(test_lib.ParserTestCase):
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['manageconsolidatedProviders.aspx.resx'], parser)
 
+  def testParseWithXMLFileNoTopLevel(self):
+    """Tests the Parse function on an XML file without top level object."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      test_path_segments = [
+          'SettingsPane_{F8B5DB1C-D219-4bf9-A747-A1325024469B}'
+          '.settingcontent-ms']
+      self._ParseFile(test_path_segments, parser)
+
+  def testParseWithPlistXMLFileNoTopLevel(self):
+    """Tests the Parse function on a plist XML file without top level object."""
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile(['empty.plist'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_events, 0)
+
 
 if __name__ == '__main__':
   unittest.main()
