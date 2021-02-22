@@ -40,15 +40,18 @@ $ psort.py -o list
 
 ******************************** Output Modules ********************************
    dynamic : Dynamic selection of fields for a separated value output format.
-   elastic : Saves the events into an ElasticSearch database.
+   elastic : Saves the events into an Elasticsearch database.
+elastic_ts : Saves the events into an Elasticsearch database for use with
+             Timesketch.
       json : Saves the events into a JSON format.
  json_line : Saves the events into a JSON line format.
+       kml : Saves events with geography data into a KML format.
     l2tcsv : CSV format used by legacy log2timeline, with 17 fixed fields.
     l2ttln : Extended TLN 7 field | delimited output.
-      null : An output module that doesn't output anything.
-     rawpy : "raw" (or native) Python output.
-timesketch : Create a Timesketch timeline.
+      null : Output module that does not output anything.
+     rawpy : native (or "raw") Python output.
        tln : TLN 5 field | delimited output.
+      xlsx : Excel Spreadsheet (XLSX) output
 --------------------------------------------------------------------------------
 ```
 
@@ -60,16 +63,19 @@ available, which would be displayed by the ``-o list`` switch:
    dynamic : Dynamic selection of fields for a separated value output format.
       json : Saves the events into a JSON format.
  json_line : Saves the events into a JSON line format.
+       kml : Saves events with geography data into a KML format.
     l2tcsv : CSV format used by legacy log2timeline, with 17 fixed fields.
     l2ttln : Extended TLN 7 field | delimited output.
-      null : An output module that doesn't output anything.
-     rawpy : "raw" (or native) Python output.
+      null : Output module that does not output anything.
+     rawpy : native (or "raw") Python output.
        tln : TLN 5 field | delimited output.
+      xlsx : Excel Spreadsheet (XLSX) output
 --------------------------------------------------------------------------------
 
 *************************** Disabled Output Modules ****************************
    elastic : Saves the events into an ElasticSearch database.
-timesketch : Create a Timesketch timeline.
+elastic_ts : Saves the events into an Elasticsearch database for use with
+             Timesketch.
 --------------------------------------------------------------------------------
 ```
 
