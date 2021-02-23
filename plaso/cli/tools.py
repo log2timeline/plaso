@@ -74,6 +74,11 @@ class CLITool(object):
     self.preferred_encoding = preferred_encoding
     self.show_troubleshooting = False
 
+  @property
+  def data_location(self):
+    """str: path of the data files."""
+    return self._data_location
+
   def _CanEnforceProcessMemoryLimit(self):
     """Determines if a process memory limit can be enforced.
 
