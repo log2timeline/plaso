@@ -164,33 +164,29 @@ Test argument parser.
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
+    # Test when the output file is missing.
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
     options.source = 'source'
-    # Test when the output file is missing.
+
     expected_error = 'Output format: dynamic requires an output file'
     with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
+    # Test when the source is missing.
     options = test_lib.TestOptions()
     options.write = 'output.csv'
-    # Test when the source is missing.
-    expected_error = 'Missing source path.'
 
-    with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
-      test_tool.ParseOptions(options)
-
-    # Test when the source is missing.
     expected_error = 'Missing source path.'
     with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
+    # Test when both source and output are specified.
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
       options.source = test_file_path
       options.write = os.path.join(temp_directory, 'dynamic.out')
 
-      # Test when both source and output are specified.
       test_tool.ParseOptions(options)
 
       with open(options.write, 'w') as file_object:
