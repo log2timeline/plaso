@@ -98,7 +98,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
     expected_text = (
         'virustotal hash tagging results\n'
-        '1 path specifications tagged with label: virustotal_detections_10\n')
+        '1 events tagged with label: virustotal_detections_10\n')
     self.assertEqual(report.text, expected_text)
 
     labels = []

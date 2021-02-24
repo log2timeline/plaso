@@ -102,7 +102,7 @@ class HashTaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
     expected_text = (
         'test hash tagging results\n'
-        '1 path specifications tagged with label: hashtag\n')
+        '1 events tagged with label: hashtag\n')
     self.assertEqual(report.text, expected_text)
 
     labels = []

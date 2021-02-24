@@ -117,7 +117,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
 
     expected_text = (
         'nsrlsvr hash tagging results\n'
-        '1 path specifications tagged with label: nsrl_present\n')
+        '1 events tagged with label: nsrl_present\n')
     self.assertEqual(report.text, expected_text)
 
     labels = []
