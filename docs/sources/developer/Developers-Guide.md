@@ -93,7 +93,7 @@ explaining the rationale behind the change. The design doc needs to contain:
 1. A description of the problem you are facing
 1. A list of the objectives of the change
 1. A discussion of what's in scope and what's not
-1. A descripton of your proposed the solution
+1. A description of your proposed the solution
 
 The preferred way of creating these design docs is to use Google Docs and send
 the link to the development mailing list so that it can be discussed further

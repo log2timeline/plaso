@@ -52,7 +52,7 @@ class StatusView(object):
 
     Args:
       output_writer (OutputWriter): output writer.
-      tool_name (str): namd of the tool.
+      tool_name (str): name of the tool.
     """
     super(StatusView, self).__init__()
     self._artifact_filters = None

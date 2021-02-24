@@ -18,7 +18,7 @@ class APTHistoryLogEventData(events.EventData):
   """APT History log event data.
 
   Attributes:
-    command (str): command exectued
+    command (str): command executed
     error (str): reported error.
     packages (str): list of packages being affected.
     requester (str): user requesting the activity.

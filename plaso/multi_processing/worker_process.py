@@ -82,7 +82,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
       elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
         # Move the file system to the end of the list to preserve the most
-        # recently file sytem object.
+        # recently file system object.
         self._file_system_cache.remove(file_system)
         self._file_system_cache.append(file_system)
 
