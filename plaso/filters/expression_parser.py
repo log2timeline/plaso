@@ -551,7 +551,7 @@ class EventFilterExpressionParser(object):
     """
     if self._state not in (self._STATE_BINARY_OPERATOR, self._STATE_INITIAL):
       raise errors.ParseError((
-          'Unsupported intial state: {0:s} - premature end of expression '
+          'Unsupported initial state: {0:s} - premature end of expression '
           'at position {1!s}: {2!s} <---> {3!s} )').format(
               self._state, len(self._processed_buffer), self._processed_buffer,
               self._buffer))

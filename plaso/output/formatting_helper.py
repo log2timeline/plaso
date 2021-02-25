@@ -64,7 +64,7 @@ class FieldFormattingHelper(object):
     """Formats the display name.
 
     The display_name field can be set as an attribute to event_data otherwise
-    it is derived from the path specificiation.
+    it is derived from the path specification.
 
     Args:
       event (EventObject): event.

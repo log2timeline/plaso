@@ -215,7 +215,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     target_directory, target_filename = self._CreateSanitizedDestination(
         file_entry, file_entry.path_spec, data_stream_name, destination_path)
 
-    # If does not exist, append path separator to have consistant behaviour.
+    # If does not exist, append path separator to have consistent behaviour.
     if not destination_path.endswith(os.path.sep):
       destination_path = destination_path + os.path.sep
 

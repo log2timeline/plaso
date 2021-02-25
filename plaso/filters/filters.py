@@ -401,7 +401,7 @@ class Contains(GenericBinaryOperator):
   def _CompareValue(self, event_value, filter_value):
     """Compares if the second value is part of the first.
 
-    Note that this method will do a case insensitive comparion if the first
+    Note that this method will do a case insensitive comparison if the first
     value is a string.
 
     Args:
@@ -430,7 +430,7 @@ class InSet(GenericBinaryOperator):
   def _CompareValue(self, event_value, filter_value):
     """Compares if the event value is part of the second.
 
-    Note that this method will do a case insensitive string comparion if
+    Note that this method will do a case insensitive string comparison if
     the event value is a string.
 
     Args:
@@ -469,7 +469,7 @@ class Regexp(GenericBinaryOperator):
   def __init__(self, arguments=None, **kwargs):
     """Initializes a regular expression operator.
 
-    This operator uses case senstive comparision.
+    This operator uses case sensitive comparison.
 
     Args:
       arguments (Optional[object]): operands of the filter.
@@ -518,7 +518,7 @@ class RegexpInsensitive(Regexp):
   def __init__(self, arguments=None, **kwargs):
     """Initializes a regular expression operator.
 
-    This operator uses case insenstive comparision.
+    This operator uses case insensitive comparison.
 
     Args:
       arguments (Optional[object]): operands of the filter.

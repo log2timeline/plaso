@@ -13,7 +13,7 @@ class Task(interface.AttributeContainer):
   """Task attribute container.
 
   A task describes a piece of work for a multi processing worker process
-  for example a taks to process a path specification or to analyze an event.
+  for example a task to process a path specification or to analyze an event.
 
   Attributes:
     aborted (bool): True if the session was aborted.
