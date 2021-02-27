@@ -115,8 +115,8 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
     """
-    if (event_data.data_type not in self.DATA_TYPES or
-        not self._analyzer.lookup_hash):
+    if (not self._analyzer.lookup_hash or not event_data_stream or
+        event_data.data_type not in self.DATA_TYPES):
       return
 
     self._EnsureRequesterStarted()
