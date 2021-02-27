@@ -43,8 +43,8 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   # pylint: disable=protected-access
 
   _MACOS_PATHS = [
-      '/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
-      ('/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
+      '/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions',
+      ('/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions/'
        'apdfllckaahabafndbhieahigkjlhalf'),
       '/private/var/log/system.log',
       '/Users/frank/Library/Application Data/Google/Chrome/Default',
