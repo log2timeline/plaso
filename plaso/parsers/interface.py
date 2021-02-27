@@ -145,6 +145,15 @@ class BaseParser(object):
     return
 
   @classmethod
+  def GetPluginNames(cls):
+    """Retrieves the names of registered plugins.
+
+    Returns:
+      list[str]: names of the plugins.
+    """
+    return list(cls._plugin_classes.keys())
+
+  @classmethod
   def GetPluginObjectByName(cls, plugin_name):
     """Retrieves a specific plugin object by its name.
 

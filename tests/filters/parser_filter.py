@@ -166,6 +166,9 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
         presets_manager, 'olecf,!utmp')
     self.assertEqual(parser_filter_expression, '!utmp,olecf')
 
+    parser_filter_expression = test_helper.ExpandPresets(presets_manager, '')
+    self.assertIsNone(parser_filter_expression)
+
   def testSplitExpression(self):
     """Tests the SplitExpression function."""
     test_helper = parser_filter.ParserFilterExpressionHelper()
