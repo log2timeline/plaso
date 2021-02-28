@@ -28,7 +28,9 @@ class BaseParserTest(test_lib.ParserTestCase):
 
   # The DeregisterPlugin and RegisterPlugin functions are tested in manager.py
 
-  # The GetPluginObjectByName and GetPlugins functions are tested in manager.py
+  # TODO: add tests for GetPluginNames
+  # TODO: add tests for GetPluginObjectByName
+  # TODO: add tests for GetPlugins
 
 
 if __name__ == '__main__':

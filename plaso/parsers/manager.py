@@ -66,32 +66,38 @@ class ParsersManager(object):
       * set(str): parser filter expression elements that contain unknown parser
           and/or plugin names.
     """
-    if not parser_filter_expression:
-      return set(cls._parser_classes.keys()), set()
-
     known_parser_elements = set()
     unknown_parser_elements = set()
-    for element in parser_filter_expression.split(','):
-      parser_expression = element
-      if element.startswith('!'):
-        parser_expression = element[1:]
 
-      parser_name, _, plugin_name = parser_expression.partition('/')
-      parser_class = cls._parser_classes.get(parser_name, None)
-      if not parser_class:
-        unknown_parser_elements.add(element)
-        continue
+    if not parser_filter_expression:
+      for parser_name, parser_class in cls._parser_classes.items():
+        known_parser_elements.add(parser_name)
+        if parser_class.SupportsPlugins():
+          for plugin_name in parser_class.GetPluginNames():
+            known_parser_elements.add('/'.join([parser_name, plugin_name]))
 
-      if not plugin_name:
-        known_parser_elements.add(element)
-        continue
+    else:
+      for element in parser_filter_expression.split(','):
+        parser_expression = element
+        if element.startswith('!'):
+          parser_expression = element[1:]
 
-      if parser_class.SupportsPlugins():
-        plugins = dict(parser_class.GetPlugins())
-        if plugin_name in plugins:
-          known_parser_elements.add(element)
-        else:
+        parser_name, _, plugin_name = parser_expression.partition('/')
+        parser_class = cls._parser_classes.get(parser_name, None)
+        if not parser_class:
           unknown_parser_elements.add(element)
+          continue
+
+        if not plugin_name:
+          known_parser_elements.add(element)
+          continue
+
+        if parser_class.SupportsPlugins():
+          plugins = dict(parser_class.GetPlugins())
+          if plugin_name in plugins:
+            known_parser_elements.add(element)
+          else:
+            unknown_parser_elements.add(element)
 
     return known_parser_elements, unknown_parser_elements
 

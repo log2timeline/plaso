@@ -99,7 +99,7 @@ class ExtractionTool(
           be expanded or if an invalid parser or plugin name is specified.
     """
     parser_filter_expression = self._parser_filter_expression
-    if not parser_filter_expression:
+    if not parser_filter_expression and not self._single_process_mode:
       operating_system_family = knowledge_base.GetValue('operating_system')
       operating_system_product = knowledge_base.GetValue(
           'operating_system_product')
@@ -112,16 +112,13 @@ class ExtractionTool(
 
       preset_definitions = self._presets_manager.GetPresetsByOperatingSystem(
           operating_system_artifact)
-
       if preset_definitions:
-        preset_names = [
-            preset_definition.name for preset_definition in preset_definitions]
-        filter_expression = ','.join(preset_names)
-
-        self._parser_filter_expression = filter_expression
+        self._parser_filter_expression = ','.join([
+            preset_definition.name
+            for preset_definition in preset_definitions])
 
         logger.debug('Parser filter expression set to preset: {0:s}'.format(
-            filter_expression))
+            self._parser_filter_expression))
 
     parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
 
@@ -129,13 +126,13 @@ class ExtractionTool(
       parser_filter_expression = parser_filter_helper.ExpandPresets(
           self._presets_manager, self._parser_filter_expression)
       logger.debug('Parser filter expression set to: {0:s}'.format(
-          parser_filter_expression))
+          parser_filter_expression or 'N/A'))
     except RuntimeError as exception:
       raise errors.BadConfigOption((
           'Unable to expand presets in parser filter expression with '
           'error: {0!s}').format(exception))
 
-    _, invalid_parser_elements = (
+    parser_elements, invalid_parser_elements = (
         parsers_manager.ParsersManager.CheckFilterExpression(
             parser_filter_expression))
 
@@ -145,6 +142,9 @@ class ExtractionTool(
           'Unknown parser or plugin names in element(s): "{0:s}" of '
           'parser filter expression: {1:s}'.format(
               invalid_parser_names_string, parser_filter_expression))
+
+    if not parser_filter_expression:
+      parser_filter_expression = ','.join(sorted(parser_elements))
 
     self._expanded_parser_filter_expression = parser_filter_expression
 

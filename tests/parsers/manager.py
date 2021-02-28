@@ -106,8 +106,8 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
       valid_elements, invalid_elements = (
           manager.ParsersManager.CheckFilterExpression(
               expression_invalid_and_valid_names))
-      self.assertEqual(expected_valid_elements, valid_elements)
-      self.assertEqual(expected_invalid_elements, invalid_elements)
+      self.assertEqual(valid_elements, expected_valid_elements)
+      self.assertEqual(invalid_elements, expected_invalid_elements)
 
       expression_invalid_and_valid_names_with_negation = (
           '!test_parser,!non_existent')
@@ -116,8 +116,8 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
       valid_elements, invalid_elements = (
           manager.ParsersManager.CheckFilterExpression(
               expression_invalid_and_valid_names_with_negation))
-      self.assertEqual(expected_valid_elements, valid_elements)
-      self.assertEqual(expected_invalid_elements, invalid_elements)
+      self.assertEqual(valid_elements, expected_valid_elements)
+      self.assertEqual(invalid_elements, expected_invalid_elements)
 
       expression_with_plugins = (
           '!test_parser_with_plugins/test_plugin,'
@@ -126,18 +126,17 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
       expected_invalid_elements = set(['test_parser_with_plugins/non_existent'])
       valid_elements, invalid_elements = (
           manager.ParsersManager.CheckFilterExpression(expression_with_plugins))
-      self.assertEqual(expected_valid_elements, valid_elements)
-      self.assertEqual(expected_invalid_elements, invalid_elements)
+      self.assertEqual(valid_elements, expected_valid_elements)
+      self.assertEqual(invalid_elements, expected_invalid_elements)
 
       none_expression = None
-      all_parser_names = manager.ParsersManager._parser_classes.keys()
-      expected_valid_elements = set(all_parser_names)
-      expected_invalid_elements = set()
       valid_elements, invalid_elements = (
-          manager.ParsersManager.CheckFilterExpression(
-              none_expression))
-      self.assertEqual(expected_valid_elements, valid_elements)
-      self.assertEqual(expected_invalid_elements, invalid_elements)
+          manager.ParsersManager.CheckFilterExpression(none_expression))
+      self.assertNotEqual(valid_elements, set())
+      self.assertEqual(invalid_elements, set())
+
+      all_parser_names = set(manager.ParsersManager._parser_classes.keys())
+      self.assertTrue(all_parser_names.issubset(valid_elements))
 
     # Degister parsers to ensure unrelated tests don't fail.
     finally:
