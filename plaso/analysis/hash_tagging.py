@@ -72,25 +72,40 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
       collections.Counter: number of events per label.
     """
     events_per_labels_counter = collections.Counter()
-
     labels = self.GenerateLabels(hash_analysis.hash_information)
-    data_stream_identifiers = self._data_streams_by_hash.pop(
-        hash_analysis.subject_hash)
+
+    try:
+      data_stream_identifiers = self._data_streams_by_hash.pop(
+          hash_analysis.subject_hash)
+    except KeyError:
+      data_stream_identifiers = []
+      logger.error((
+          'unable to retrieve data streams for digest hash: {0:s}').format(
+              hash_analysis.subject_hash))
+
     for data_stream_identifier in data_stream_identifiers:
       event_identifiers = self._event_identifiers_by_data_stream.pop(
           data_stream_identifier)
 
+      # Do no bail out earlier to maintain the state of
+      # self._data_streams_by_hash and self._event_identifiers_by_data_stream.
       if not labels:
         continue
 
       for event_identifier in event_identifiers:
+        event_tag = events.EventTag()
+        event_tag.SetEventIdentifier(event_identifier)
+
         try:
-          event_tag = events.EventTag()
-          event_tag.SetEventIdentifier(event_identifier)
           event_tag.AddLabels(labels)
-        except (TypeError, ValueError) as exception:
-          logger.error('unable to add labels to event with error: {0!s}'.format(
-              exception))
+        except (TypeError, ValueError):
+          error_label = 'error_{0:s}'.format(self.NAME)
+          logger.error((
+              'unable to add labels: {0!s} for digest hash: {1:s} defaulting '
+              'to: {2:s}').format(
+                  labels, hash_analysis.subject_hash, error_label))
+          labels = [error_label]
+          event_tag.AddLabels(labels)
 
         mediator.ProduceEventTag(event_tag)
 
@@ -129,9 +144,11 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
       lookup_hash = getattr(event_data_stream, lookup_hash, None)
 
       if lookup_hash:
-        self.hash_queue.put(lookup_hash)
-
+        # Make sure self._data_streams_by_hash is set before calling
+        # _HandleHashAnalysis in the lookup thread.
         self._data_streams_by_hash[lookup_hash].add(data_stream_identifier)
+
+        self.hash_queue.put(lookup_hash)
       else:
         path_specification = getattr(event_data_stream, 'path_spec', None)
         display_name = mediator.GetDisplayNameForPathSpec(path_specification)
