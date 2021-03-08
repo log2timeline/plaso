@@ -1,0 +1,11 @@
+ log_tag this is debug
+ log_tag this is info
+with another line
+ log_tag !@#$%^&*()-_=+[]{}\|;:'",./<>?
+ log_tag this is critical
+ systemd[1]: Stopping Regular background program processing daemon...
+ systemd[1]: Stopped Regular background program processing daemon.
+ systemd[1]: Started Regular background program processing daemon.
+ cron[19010]: (CRON) INFO (pidfile fd = 3)
+ cron[19010]: (CRON) INFO (Skipping @reboot jobs -- not system startup)
+
