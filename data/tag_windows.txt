@@ -119,7 +119,7 @@ app_potential_exploit
 
 # malware detected by windows defender
 malware_detected
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Defender' AND (event_identifier is 1005 OR event_identifier is 1006 OR event_identifier is 1007 OR event_identifier is 1008 OR event_identifier is 1009 OR event_identifier is 1010 OR event_identifier is 1016 OR event_identifier is 1017 OR event_identifier is 1018 OR event_identifier is 1019 OR event_identifier is 1021 OR event_identifier is 1116 OR event_identifier is 1117 OR event_identifier is 1120)
+  data_type is 'windows:evtx:record' AND (source_name is 'Microsoft-Windows-Windows Defender' OR source_name is 'Microsoft Antimalware') AND (event_identifier is 1005 OR event_identifier is 1006 OR event_identifier is 1007 OR event_identifier is 1008 OR event_identifier is 1009 OR event_identifier is 1010 OR event_identifier is 1016 OR event_identifier is 1017 OR event_identifier is 1018 OR event_identifier is 1019 OR event_identifier is 1021 OR event_identifier is 1116 OR event_identifier is 1117 OR event_identifier is 1120)
   
 # error update windows defender
 windows_defender_fail
