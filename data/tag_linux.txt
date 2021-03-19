@@ -2,10 +2,11 @@
 application_execution
   data_type is 'bash:history:command'
   data_type is 'docker:json:layer'
-  data_type is 'selinux:line' AND audit_type is 'EXECVE'
+  data_type is 'selinux:line' AND (audit_type is 'EXECVE' OR audit_type is 'USER_CMD')
   data_type is 'shell:zsh:history'
   data_type is 'syslog:cron:task_run'
   reporter is 'sudo' AND body contains 'COMMAND='
+  reporter is 'CROND' AND body contains 'CMD'
 
 # Tags Linux log-in events.
 login
@@ -27,6 +28,32 @@ login_failed
   reporter is 'su' and body contains 'DENIED'
   reporter is 'nologin'
 
+# User added.
+useradd
+  reporter is 'useradd' AND body contains 'new user'
+  data_type is 'selinux:line' AND audit_type is 'ADD_USER'
+
+# Group added.
+groupadd
+  reporter is 'useradd' AND body contains 'new group'
+  data_type is 'selinux:line' AND audit_type is 'ADD_GROUP'
+  reporter is 'groupadd'
+
+# User removed.
+userdel
+  reporter is 'userdel' AND body contains 'delete user'
+  data_type is 'selinux:line' AND audit_type is 'DEL_USER'
+
+# Group removed.
+groupdel
+  reporter is 'userdel' AND body contains 'removed group'
+  data_type is 'selinux:line' AND audit_type is 'DEL_GROUP'
+  reporter is 'groupdel'
+
+# Netfilter chain modifications.
+firewall_change
+  data_type is 'selinux:line' AND audit_type is 'NETFILTER_CFG'
+
 # Tags Linux log-out events.
 logout
   # This will also flag dead gettys that init kills during shutdown/reboot (at least with SysV init)
@@ -35,6 +62,7 @@ logout
   reporter is 'sshd' AND (body contains 'session closed' OR body contains 'Close session')
   reporter is 'systemd-logind' AND body contains 'logged out'
   reporter is 'dovecot' AND body contains 'Logged out'
+  data_type is 'selinux:line' AND audit_type is 'USER_LOGOUT'
 
 # Tags Linux user session start events.
 session_start
@@ -47,14 +75,17 @@ session_stop
 # Tags Linux system boot events.
 boot
   data_type is 'linux:utmp:event' AND type == 2 AND terminal is 'system boot' AND username is 'reboot'
+  data_type is 'selinux:line' AND audit_type is 'SYSTEM_BOOT'
 
 # Tags Linux system shutdown events.
 shutdown
   data_type is 'linux:utmp:event' AND type == 1 AND (terminal is '~~' OR terminal is 'system boot') AND username is 'shutdown'
+  data_type is 'selinux:line' AND audit_type is 'SYSTEM_SHUTDOWN'
 
 # Tags Linux system run level change events.
 runlevel
   data_type is 'linux:utmp:event' AND type == 1 AND username is 'runlevel'
+  data_type is 'selinux:line' AND audit_type is 'SYSTEM_RUNLEVEL'
 
 # Tags Linux device connection events.
 device_connection

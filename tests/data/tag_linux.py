@@ -41,9 +41,10 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         docker.DockerJSONLayerEventData, attribute_values_per_name,
         ['application_execution'])
 
-    # Test: data_type is 'selinux:line' AND audit_type is 'EXECVE'
+    # Test: data_type is 'selinux:line' AND (audit_type is 'EXECVE' OR
+    #       audit_type is 'USER_CMD')
     attribute_values_per_name = {
-        'audit_type': ['EXECVE']}
+        'audit_type': ['EXECVE', 'USER_CMD']}
     self._CheckTaggingRule(
         selinux.SELinuxLogEventData, attribute_values_per_name,
         ['application_execution'])
@@ -64,6 +65,14 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'body': ['test if my COMMAND=bogus'],
         'reporter': ['sudo']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: reporter is 'CROND' AND body contains 'CMD'
+    attribute_values_per_name = {
+        'body': ['test if my CMD bogus'],
+        'reporter': ['CROND']}
     self._CheckTaggingRule(
         syslog.SyslogLineEventData, attribute_values_per_name,
         ['application_execution'])
@@ -181,6 +190,97 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         syslog.SyslogLineEventData, attribute_values_per_name,
         ['login_failed'])
 
+  def testRuleUserAdd(self):
+    """Tests the useradd tagging rule."""
+    # Test: reporter is 'useradd' AND body contains 'new user'
+    attribute_values_per_name = {
+        'reporter': ['useradd'],
+        'body': ['new user']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['useradd'])
+
+    # Test: data_type is 'selinux:line' AND audit_type is 'ADD_USER'
+    attribute_values_per_name = {
+        'audit_type': ['ADD_USER']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['useradd'])
+
+  def testRuleGroupAdd(self):
+    """Tests the groupadd tagging rule."""
+    # Test: reporter is 'useradd' AND body contains 'new group'
+    attribute_values_per_name = {
+        'reporter': ['useradd'],
+        'body': ['new group']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['groupadd'])
+
+    # Test: data_type is 'selinux:line' AND audit_type is 'ADD_GROUP'
+    attribute_values_per_name = {
+        'audit_type': ['ADD_GROUP']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['groupadd'])
+
+    # Test: reporter is 'groupadd'
+    attribute_values_per_name = {
+        'reporter': ['groupadd']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['groupadd'])
+
+  def testRuleUserDel(self):
+    """Tests the userdel tagging rule."""
+    # Test: reporter is 'userdel' AND body contains 'delete user'
+    attribute_values_per_name = {
+        'reporter': ['userdel'],
+        'body': ['delete user']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['userdel'])
+
+    # Test: data_type is 'selinux:line' AND audit_type is 'DEL_USER'
+    attribute_values_per_name = {
+        'audit_type': ['DEL_USER']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['userdel'])
+
+  def testRuleGroupDel(self):
+    """Tests the groupdel tagging rule."""
+    # Test: reporter is 'userdel' AND body contains 'removed group'
+    attribute_values_per_name = {
+        'reporter': ['userdel'],
+        'body': ['removed group']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['groupdel'])
+
+    # Test: data_type is 'selinux:line' AND audit_type is 'DEL_GROUP'
+    attribute_values_per_name = {
+        'audit_type': ['DEL_GROUP']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['groupdel'])
+
+    # Test: reporter is 'groupdel'
+    attribute_values_per_name = {
+        'reporter': ['groupdel']}
+    self._CheckTaggingRule(
+        syslog.SyslogLineEventData, attribute_values_per_name,
+        ['groupdel'])
+
+  def testRuleFirewallChange(self):
+    """Tests the firewall_change tagging rule."""
+    # Test: data_type is 'selinux:line' AND audit_type is 'NETFILTER_CFG'
+    attribute_values_per_name = {
+        'audit_type': ['NETFILTER_CFG']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['firewall_change'])
+
   def testRuleLogout(self):
     """Tests the logout tagging rule."""
     # Test: data_type is 'linux:utmp:event' AND type == 8 AND terminal != '' AND
@@ -253,6 +353,13 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckTaggingRule(
         syslog.SyslogLineEventData, attribute_values_per_name, ['logout'])
 
+    # Test: data_type is 'selinux:line' AND audit_type is 'USER_LOGOUT'
+    attribute_values_per_name = {
+        'audit_type': ['USER_LOGOUT']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['logout'])
+
   def testRuleSessionStart(self):
     """Tests the session_start tagging rule."""
     # Test: reporter is 'systemd-logind' and body contains 'New session'
@@ -284,6 +391,13 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckTaggingRule(
         utmp.UtmpEventData, attribute_values_per_name, ['boot'])
 
+    # Test: data_type is 'selinux:line' AND audit_type is 'SYSTEM_BOOT'
+    attribute_values_per_name = {
+        'audit_type': ['SYSTEM_BOOT']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['boot'])
+
   def testRuleShutdown(self):
     """Tests the shutdonw tagging rule."""
     # Test: data_type is 'linux:utmp:event' AND type == 1 AND
@@ -296,6 +410,13 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckTaggingRule(
         utmp.UtmpEventData, attribute_values_per_name, ['shutdown'])
 
+    # Test: data_type is 'selinux:line' AND audit_type is 'SYSTEM_SHUTDOWN'
+    attribute_values_per_name = {
+        'audit_type': ['SYSTEM_SHUTDOWN']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['shutdown'])
+
   def testRuleRunlevel(self):
     """Tests the runlevel tagging rule."""
     # Test: data_type is 'linux:utmp:event' AND type == 1 AND
@@ -305,6 +426,13 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         'username': ['runlevel']}
     self._CheckTaggingRule(
         utmp.UtmpEventData, attribute_values_per_name, ['runlevel'])
+
+    # Test: data_type is 'selinux:line' AND audit_type is 'SYSTEM_RUNLEVEL'
+    attribute_values_per_name = {
+        'audit_type': ['SYSTEM_RUNLEVEL']}
+    self._CheckTaggingRule(
+        selinux.SELinuxLogEventData, attribute_values_per_name,
+        ['runlevel'])
 
   def testRuleDeviceConnection(self):
     """Tests the device_connection tagging rule."""
