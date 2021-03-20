@@ -176,6 +176,8 @@ class FlagsEventFormatterHelper(EventFormatterHelper):
       event_values (dict[str, object]): event values.
     """
     input_value = event_values.get(self.input_attribute, None)
+    if input_value is None:
+      return
 
     output_values = []
     for flag, mapped_value in self.values.items():
