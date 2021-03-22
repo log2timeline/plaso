@@ -48,15 +48,24 @@ class FlagsEventFormatterHelperTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter_helper = interface.FlagsEventFormatterHelper()
+    event_formatter_helper = interface.FlagsEventFormatterHelper(
+        input_attribute='flags', output_attribute='test',
+        values={1: 'flag1', 2: 'flag2'})
     self.assertIsNotNone(event_formatter_helper)
 
   def testFormatEventValues(self):
     """Tests the FormatEventValues function."""
-    event_formatter_helper = interface.FlagsEventFormatterHelper()
+    event_formatter_helper = interface.FlagsEventFormatterHelper(
+        input_attribute='flags', output_attribute='test',
+        values={1: 'flag1', 2: 'flag2'})
+
+    event_values = {'flags': 3}
+    event_formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['test'], 'flag1, flag2')
 
     event_values = {}
     event_formatter_helper.FormatEventValues(event_values)
+    self.assertNotIn('test', event_values)
 
 
 class EventFormatterTest(test_lib.EventFormatterTestCase):
