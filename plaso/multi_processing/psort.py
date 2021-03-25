@@ -206,7 +206,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   _QUEUE_TIMEOUT = 10 * 60
 
-  _HEAP_MAXIMUM_EVENTS = 500000
+  _HEAP_MAXIMUM_EVENTS = 100000
 
   def __init__(self, worker_memory_limit=None, worker_timeout=None):
     """Initializes a psort multi-processing engine.
