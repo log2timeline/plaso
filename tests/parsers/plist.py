@@ -117,6 +117,16 @@ class PlistParserTest(test_lib.ParserTestCase):
           '.settingcontent-ms']
       self._ParseFile(test_path_segments, parser)
 
+    # UTF-8 encoded XML file with byte-order-mark.
+    with self.assertRaises(errors.UnableToParseFile):
+      test_path_segments = ['ReAgent.xml']
+      self._ParseFile(test_path_segments, parser)
+
+    # UTF-16 little-endian encoded XML file with byte-order-mark.
+    with self.assertRaises(errors.UnableToParseFile):
+      test_path_segments = ['SampleMachineList.xml']
+      self._ParseFile(test_path_segments, parser)
+
   def testParseWithPlistXMLFileNoTopLevel(self):
     """Tests the Parse function on a plist XML file without top level object."""
     parser = plist.PlistParser()
