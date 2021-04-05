@@ -13,9 +13,9 @@ class WinIISUnitTest(test_lib.ParserTestCase):
   """Tests for the Windows IIS parser."""
 
   def testParse(self):
-    """Tests the Parse function."""
+    """Tests the Parse function with an IIS 6 log file."""
     parser = iis.WinIISParser()
-    storage_writer = self._ParseFile(['iis.log'], parser)
+    storage_writer = self._ParseFile(['iis6.log'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 12)
@@ -65,6 +65,31 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         'data_type': 'iis:log:line'}
 
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
+
+  def testParseWithIIS7OWAFile(self):
+    """Tests the Parse function with an IIS 7 OWA log file."""
+    parser = iis.WinIISParser()
+    storage_writer = self._ParseFile(['iis7_owa.log'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 3)
+
+    events = list(storage_writer.GetEvents())
+
+    expected_event_values = {
+        'data_type': 'iis:log:line',
+        'dest_ip': '10.11.2.3',
+        'dest_port': 443,
+        'http_method': 'GET',
+        'http_status': 200,
+        'requested_uri_stem': '/owa/',
+        'source_ip': '77.123.22.98',
+        'timestamp': '2015-12-31 00:19:48.000000',
+        'user_agent': (
+            'Mozilla/5.0+(Windows+NT+6.1;+WOW64)+AppleWebKit/537.36+'
+            '(KHTML,+like+Gecko)+Chrome/39.0.2171.95+Safari/537.36')}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testParseWithoutDate(self):
     """Tests the Parse function with logs without a date column."""
