@@ -68,7 +68,7 @@ class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
         knowledge_base.SetValue('operating_system_product', system_product)
 
 
-class LinuxIssueFilePlugin(interface.FileEntryArtifactPreprocessorPlugin):
+class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
   """The Linux issue file plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'LinuxIssueFile'
@@ -100,29 +100,8 @@ class LinuxIssueFilePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       if system_product:
         knowledge_base.SetValue('operating_system_product', system_product)
 
-  def _ParseFileEntry(self, knowledge_base, file_entry):
-    """Parses artifact file system data for a preprocessing attribute.
 
-    Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
-      file_entry (dfvfs.FileEntry): file entry that contains the artifact
-          value data.
-
-    Raises:
-      errors.PreProcessFail: if the preprocessing fails.
-    """
-    # TODO: add support for symbolic link.
-    if file_entry and file_entry.link:
-      raise errors.PreProcessFail((
-          'Unable to read: {0:s} with error: file entry is a symbolic '
-          'link').format(self.ARTIFACT_DEFINITION_NAME))
-
-    file_object = file_entry.GetFileObject()
-    self._ParseFileData(knowledge_base, file_object)
-
-
-class LinuxStandardBaseReleasePlugin(
-    interface.FileEntryArtifactPreprocessorPlugin):
+class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
   """The Linux standard base (LSB) release plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'LinuxLSBRelease'
@@ -155,29 +134,9 @@ class LinuxStandardBaseReleasePlugin(
       if system_product:
         knowledge_base.SetValue('operating_system_product', system_product)
 
-  def _ParseFileEntry(self, knowledge_base, file_entry):
-    """Parses artifact file system data for a preprocessing attribute.
-
-    Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
-      file_entry (dfvfs.FileEntry): file entry that contains the artifact
-          value data.
-
-    Raises:
-      errors.PreProcessFail: if the preprocessing fails.
-    """
-    # TODO: add support for symbolic link.
-    if file_entry and file_entry.link:
-      raise errors.PreProcessFail((
-          'Unable to read: {0:s} with error: file entry is a symbolic '
-          'link').format(self.ARTIFACT_DEFINITION_NAME))
-
-    file_object = file_entry.GetFileObject()
-    self._ParseFileData(knowledge_base, file_object)
-
 
 class LinuxSystemdOperatingSystemPlugin(
-    interface.FileEntryArtifactPreprocessorPlugin):
+    interface.FileArtifactPreprocessorPlugin):
   """The Linux systemd operating system release plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'LinuxSystemdOSRelease'
@@ -212,26 +171,6 @@ class LinuxSystemdOperatingSystemPlugin(
       system_product = product_values.get('PRETTY_NAME', None)
       if system_product:
         knowledge_base.SetValue('operating_system_product', system_product)
-
-  def _ParseFileEntry(self, knowledge_base, file_entry):
-    """Parses artifact file system data for a preprocessing attribute.
-
-    Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
-      file_entry (dfvfs.FileEntry): file entry that contains the artifact
-          value data.
-
-    Raises:
-      errors.PreProcessFail: if the preprocessing fails.
-    """
-    # TODO: add support for symbolic link.
-    if file_entry and file_entry.link:
-      raise errors.PreProcessFail((
-          'Unable to read: {0:s} with error: file entry is a symbolic '
-          'link').format(self.ARTIFACT_DEFINITION_NAME))
-
-    file_object = file_entry.GetFileObject()
-    self._ParseFileData(knowledge_base, file_object)
 
 
 class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):

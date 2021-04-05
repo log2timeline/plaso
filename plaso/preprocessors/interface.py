@@ -163,6 +163,11 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
+    if not file_entry.IsFile():
+      raise errors.PreProcessFail((
+          'Unable to read: {0:s} with error: file entry is not a regular '
+          'file').format(self.ARTIFACT_DEFINITION_NAME))
+
     file_object = file_entry.GetFileObject()
     self._ParseFileData(knowledge_base, file_object)
 
