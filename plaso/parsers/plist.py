@@ -106,11 +106,9 @@ class PlistParser(interface.FileObjectParser):
 
     plist_data = file_object.read()
 
-    is_binary_plist = plist_data.startswith(b'bplist0')
-    is_xml = False
     has_leading_whitespace = False
 
-    if not is_binary_plist:
+    if not plist_data.startswith(b'bplist0'):
       byte_order_mark_size, encoding = self._CheckByteOrderMark(plist_data)
 
       xml_signature = '<?xml '.encode(encoding)
@@ -122,6 +120,15 @@ class PlistParser(interface.FileObjectParser):
             plist_data[byte_order_mark_size:].lstrip()])
         is_xml = plist_data[byte_order_mark_size:].startswith(xml_signature)
         has_leading_whitespace = is_xml
+
+      if is_xml:
+        plist_footer = '</plist>'.encode(encoding)
+        plist_data = plist_data.rstrip()
+
+        if not plist_data.endswith(plist_footer):
+          raise errors.UnableToParseFile(
+              'Unable to parse XML plist with error: missing plist XML root '
+              'element.')
 
     try:
       top_level_object = plistlib.loads(plist_data)
@@ -135,17 +142,10 @@ class PlistParser(interface.FileObjectParser):
       # LookupError will be raised in cases where the plist is an XML file
       # that contains an unsupported encoding.
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse plist file with error: {0!s}'.format(exception))
+          'unable to parse XML plist with error: {0!s}'.format(exception))
       return
 
     if not top_level_object:
-      if is_xml:
-        plist_data = plist_data.rstrip()
-        if not plist_data.endswith(b'</plist>'):
-          raise errors.UnableToParseFile(
-              'Unable to parse XML plist with error: missing plist XML root '
-              'element.')
-
       parser_mediator.ProduceExtractionWarning(
           'unable to parse plist file with error: missing top level object')
       return

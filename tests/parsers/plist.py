@@ -92,14 +92,6 @@ class PlistParserTest(test_lib.ParserTestCase):
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['WMSDKNS.DTD'], parser)
 
-  def testParseWithXMLFileLookupError(self):
-    """Tests the Parse function on an XML file that causes a LookupError."""
-    parser = plist.PlistParser()
-    storage_writer = self._ParseFile(['SAFStore.xml'], parser)
-
-    self.assertEqual(storage_writer.number_of_warnings, 1)
-    self.assertEqual(storage_writer.number_of_events, 0)
-
   def testParseWithXMLFileBinASCIIError(self):
     """Tests the Parse function on an XML file that causes a binascii.Error."""
     parser = plist.PlistParser()
@@ -119,13 +111,18 @@ class PlistParserTest(test_lib.ParserTestCase):
 
     # UTF-8 encoded XML file with byte-order-mark.
     with self.assertRaises(errors.UnableToParseFile):
-      test_path_segments = ['ReAgent.xml']
-      self._ParseFile(test_path_segments, parser)
+      self._ParseFile(['ReAgent.xml'], parser)
 
     # UTF-16 little-endian encoded XML file with byte-order-mark.
     with self.assertRaises(errors.UnableToParseFile):
-      test_path_segments = ['SampleMachineList.xml']
-      self._ParseFile(test_path_segments, parser)
+      self._ParseFile(['SampleMachineList.xml'], parser)
+
+  def testParseWithXMLFileEncodingUnicode(self):
+    """Tests the Parse function on a XML file with encoding unicode."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['SAFStore.xml'], parser)
 
   def testParseWithPlistXMLFileNoTopLevel(self):
     """Tests the Parse function on a plist XML file without top level object."""
