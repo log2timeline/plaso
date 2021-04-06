@@ -800,7 +800,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     if self._output_format == 'json':
       self._output_writer.Write(', "event_sources": {')
 
-    elif self._output_format in ('markdown', 'text'):
+    elif self._output_format in ('markdown', 'text') and (
+        self._verbose or 'sources' in self._sections):
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title='Event sources', title_level=2)
 
@@ -814,7 +815,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 source))
         self._output_writer.Write('"source": {0:s}'.format(json_string))
 
-      elif self._output_format in ('markdown', 'text'):
+      elif self._output_format in ('markdown', 'text') and (
+          self._verbose or 'sources' in self._sections):
         path_spec_string = source.path_spec.comparable
         for path_index, line in enumerate(path_spec_string.split('\n')):
           if not line:
@@ -827,7 +829,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     if self._output_format == 'json':
       self._output_writer.Write('}')
-    elif self._output_format in ('markdown', 'text'):
+    elif self._output_format in ('markdown', 'text') and (
+        self._verbose or 'sources' in self._sections):
       table_view.Write(self._output_writer)
 
   def _PrintStorageOverviewAsTable(self, storage_reader):
