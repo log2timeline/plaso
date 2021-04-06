@@ -36,6 +36,8 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'winiis'
   DATA_FORMAT = 'Microsoft IIS log file'
 
+  MAX_LINE_LENGTH = 800
+
   BLANK = pyparsing.Literal('-')
   WORD = pyparsing.Word(pyparsing.alphanums + '-') | BLANK
 
@@ -55,7 +57,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   USERNAME = pyparsing.Word(pyparsing.alphanums + '.-') | BLANK
 
   _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%'
-  _URI_UNSAFE_CHARACTERS = '{}|\\^~[]`'
+  _URI_UNSAFE_CHARACTERS = '{}|\\^~[]`\'"<>'
 
   URI = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS) | BLANK
 
