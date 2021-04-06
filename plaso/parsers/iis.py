@@ -36,13 +36,6 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'winiis'
   DATA_FORMAT = 'Microsoft IIS log file'
 
-  # Common Fields (6.0: date time s-sitename s-ip cs-method cs-uri-stem
-  # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
-  # sc-substatus sc-win32-status.
-  # Common Fields (7.5): date time s-ip cs-method cs-uri-stem cs-uri-query
-  # s-port cs-username c-ip cs(User-Agent) sc-status sc-substatus
-  # sc-win32-status time-taken
-
   BLANK = pyparsing.Literal('-')
   WORD = pyparsing.Word(pyparsing.alphanums + '-') | BLANK
 
@@ -57,6 +50,9 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   PORT = (
       pyparsing.Word(pyparsing.nums, min=1, max=6).setParseAction(
           text_parser.ConvertTokenToInteger) | BLANK)
+
+  # Username can consist of: domain.username
+  USERNAME = pyparsing.Word(pyparsing.alphanums + '.-') | BLANK
 
   _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%'
   _URI_UNSAFE_CHARACTERS = '{}|\\^~[]`'
@@ -84,6 +80,10 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   COMMENT = pyparsing.Literal('#') + (
       DATE_METADATA | FIELDS_METADATA | pyparsing.SkipTo(pyparsing.LineEnd()))
 
+  # IIS 6.x fields: date time s-sitename s-ip cs-method cs-uri-stem
+  # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
+  # sc-substatus sc-win32-status
+
   LOG_LINE_6_0 = (
       DATE_TIME.setResultsName('date_time') +
       URI.setResultsName('s_sitename') +
@@ -98,6 +98,10 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       INTEGER.setResultsName('sc_status') +
       INTEGER.setResultsName('sc_substatus') +
       INTEGER.setResultsName('sc_win32_status'))
+
+  # IIS 7.x fields: date time s-ip cs-method cs-uri-stem cs-uri-query
+  # s-port cs-username c-ip cs(User-Agent) sc-status sc-substatus
+  # sc-win32-status time-taken
 
   _LOG_LINE_STRUCTURES = {}
 
@@ -114,7 +118,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       'requested_uri_stem')
   _LOG_LINE_STRUCTURES['cs-uri-query'] = QUERY.setResultsName('cs_uri_query')
   _LOG_LINE_STRUCTURES['s-port'] = PORT.setResultsName('dest_port')
-  _LOG_LINE_STRUCTURES['cs-username'] = WORD.setResultsName('cs_username')
+  _LOG_LINE_STRUCTURES['cs-username'] = USERNAME.setResultsName('cs_username')
   _LOG_LINE_STRUCTURES['c-ip'] = IP_ADDRESS.setResultsName('source_ip')
   _LOG_LINE_STRUCTURES['cs(User-Agent)'] = URI.setResultsName('user_agent')
   _LOG_LINE_STRUCTURES['sc-status'] = INTEGER.setResultsName('http_status')
@@ -124,8 +128,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       'sc_win32_status')
 
   # Less common fields.
-  _LOG_LINE_STRUCTURES['s-computername'] = URI.setResultsName(
-      's_computername')
+  _LOG_LINE_STRUCTURES['s-computername'] = URI.setResultsName('s_computername')
   _LOG_LINE_STRUCTURES['sc-bytes'] = INTEGER.setResultsName('sent_bytes')
   _LOG_LINE_STRUCTURES['cs-bytes'] = INTEGER.setResultsName('received_bytes')
   _LOG_LINE_STRUCTURES['time-taken'] = INTEGER.setResultsName('time_taken')
@@ -160,13 +163,13 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     """Parses a comment.
 
     Args:
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      structure (pyparsing.ParseResults): structure parsed from a comment in
+          the log file.
     """
-    # TODO: refactor. Why is this method named _ParseComment when it extracts
-    # the date and time?
     if structure[1] == 'Date:':
       time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
       self._year, self._month, self._day_of_month, _, _, _ = time_elements_tuple
+
     elif structure[1] == 'Fields:':
       self._ParseFieldsMetadata(structure)
 
@@ -186,16 +189,14 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       fields = fields[2:]
 
     for member in fields:
-      log_line_structure += self._LOG_LINE_STRUCTURES.get(member, self.URI)
+      if member:
+        log_line_structure += self._LOG_LINE_STRUCTURES.get(member, self.URI)
 
-    updated_structures = []
-    for line_structure in self._line_structures:
-      if line_structure[0] != 'logline':
-        updated_structures.append(line_structure)
-    updated_structures.append(('logline', log_line_structure))
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
-    self._line_structures = updated_structures
+    self._line_structures = [
+      ('comment', self.COMMENT),
+      ('logline', log_line_structure)]
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and produce an event object.
