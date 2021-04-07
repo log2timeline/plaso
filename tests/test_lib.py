@@ -31,7 +31,7 @@ TEST_DATA_PATH = os.path.join(PROJECT_PATH, 'test_data')
 
 
 def GetTestFilePath(path_segments):
-  """Retrieves the path of a test file in the test data directory.
+  """Retrieves the path of a file in the test data directory.
 
   Args:
     path_segments (list[str]): path segments inside the test data directory.
@@ -74,26 +74,6 @@ class BaseTestCase(unittest.TestCase):
   # conventions.
   maxDiff = None
 
-  def _GetTestFileEntry(self, path_segments):
-    """Creates a file entry that references a file in the test data directory.
-
-    Args:
-      path_segments (list[str]): path segments inside the test data directory.
-
-    Returns:
-      dfvfs.FileEntry: file entry.
-
-    Raises:
-      SkipTest: if the path inside the test data directory does not exist and
-          the test should be skipped.
-    """
-    test_file_path = self._GetTestFilePath(path_segments)
-    self._SkipIfPathNotExists(test_file_path)
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
   def _GetDataFilePath(self, path_segments):
     """Retrieves the path of a file in the data directory.
 
@@ -107,8 +87,24 @@ class BaseTestCase(unittest.TestCase):
     # and not a list.
     return os.path.join(DATA_PATH, *path_segments)
 
+  def _GetTestFileEntry(self, path_segments):
+    """Creates a file entry that references a file in the test data directory.
+
+    Args:
+      path_segments (list[str]): path segments inside the test data directory.
+
+    Returns:
+      dfvfs.FileEntry: file entry.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
+    """
+    path_spec = self._GetTestFilePathSpec(path_segments)
+    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
   def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file in the test data directory.
+    """Retrieves the path of a file in the test data directory.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
@@ -119,6 +115,24 @@ class BaseTestCase(unittest.TestCase):
     # Note that we need to pass the individual path segments to os.path.join
     # and not a list.
     return os.path.join(TEST_DATA_PATH, *path_segments)
+
+  def _GetTestFilePathSpec(self, path_segments):
+    """Retrieves the path specification of a file in the test data directory.
+
+    Args:
+      path_segments (list[str]): path segments inside the test data directory.
+
+    Returns:
+      dfvfs.PathSpec: path specification.
+
+    Raises:
+      SkipTest: if the path does not exist and the test should be skipped.
+    """
+    test_file_path = self._GetTestFilePath(path_segments)
+    self._SkipIfPathNotExists(test_file_path)
+
+    return path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
   def _SkipIfPathNotExists(self, path):
     """Skips the test if the path does not exist.
