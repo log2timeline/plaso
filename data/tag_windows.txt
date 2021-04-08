@@ -453,7 +453,7 @@ appcert_dll
 appinit_dll
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows\\AppInit_DLLs'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows\\LoadAppInit_DLLs'
-  data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows' AND (values not contains 'AppInit_DLLs' OR values not contains 'LoadAppInit_DLLs')
+  data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\Windows NT\\CurrentVersion\\Windows' AND (values contains 'AppInit_DLLs' OR values contains 'LoadAppInit_DLLs')
 
 # Application Shimming https://attack.mitre.org/techniques/T1138
 Shimming
