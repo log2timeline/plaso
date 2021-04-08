@@ -4,10 +4,7 @@
 
 import unittest
 
-try:
-  from mock import MagicMock
-except ImportError:
-  from unittest.mock import MagicMock
+from unittest.mock import MagicMock
 
 from dfvfs.path import fake_path_spec
 
