@@ -140,14 +140,6 @@ plaso.output.shared\_json module
    :undoc-members:
    :show-inheritance:
 
-plaso.output.timesketch\_out module
------------------------------------
-
-.. automodule:: plaso.output.timesketch_out
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.output.tln module
 -----------------------
 

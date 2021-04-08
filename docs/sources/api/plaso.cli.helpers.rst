@@ -236,14 +236,6 @@ plaso.cli.helpers.text\_prepend module
    :undoc-members:
    :show-inheritance:
 
-plaso.cli.helpers.timesketch\_output module
--------------------------------------------
-
-.. automodule:: plaso.cli.helpers.timesketch_output
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.cli.helpers.vfs\_backend module
 -------------------------------------
 
