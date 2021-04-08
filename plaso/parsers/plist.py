@@ -33,7 +33,43 @@ class PlistParser(interface.FileObjectParser):
   # 50MB is 10x larger than any plist file seen to date.
   _MAXIMUM_PLIST_FILE_SIZE = 50000000
 
+  _UTF16BE_BYTE_ORDER_MARK = b'\xfe\xff'
+  _UTF16LE_BYTE_ORDER_MARK = b'\xff\xfe'
+  _UTF32BE_BYTE_ORDER_MARK = b'\x00\x00\xfe\xff'
+  _UTF32LE_BYTE_ORDER_MARK = b'\xff\xfe\x00\x00'
+  _UTF8_BYTE_ORDER_MARK = b'\xef\xbb\xbf'
+
   _plugin_classes = {}
+
+  def _CheckByteOrderMark(self, plist_data):
+    """Determines if the plist data starts with a byte-order-mark.
+
+    Args:
+      plist_data (bytes): plist data.
+
+    Returns:
+      tuple: containing:
+
+        int: size of the byte-order-mark or 0 if no byte-order-mark was
+            detected.
+        str: encoding or ascii if no byte-order-mark was detected.
+    """
+    if plist_data.startswith(self._UTF32BE_BYTE_ORDER_MARK):
+      return 4, 'utf-32-be'
+
+    if plist_data.startswith(self._UTF32LE_BYTE_ORDER_MARK):
+      return 4, 'utf-32-le'
+
+    if plist_data.startswith(self._UTF16BE_BYTE_ORDER_MARK):
+      return 2, 'utf-16-be'
+
+    if plist_data.startswith(self._UTF16LE_BYTE_ORDER_MARK):
+      return 2, 'utf-16-le'
+
+    if plist_data.startswith(self._UTF8_BYTE_ORDER_MARK):
+      return 3, 'utf-8'
+
+    return 0, 'ascii'
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -71,13 +107,21 @@ class PlistParser(interface.FileObjectParser):
     plist_data = file_object.read()
 
     is_binary_plist = plist_data.startswith(b'bplist0')
-    is_xml = plist_data.startswith(b'<?xml ')
+    is_xml = False
     has_leading_whitespace = False
 
-    if not is_binary_plist and not is_xml:
-      plist_data = plist_data.lstrip()
-      is_xml = plist_data.startswith(b'<?xml ')
-      has_leading_whitespace = is_xml
+    if not is_binary_plist:
+      byte_order_mark_size, encoding = self._CheckByteOrderMark(plist_data)
+
+      xml_signature = '<?xml '.encode(encoding)
+      is_xml = plist_data[byte_order_mark_size:].startswith(xml_signature)
+      if not is_xml:
+        # Preserve the byte-order-mark for plistlib.
+        plist_data = b''.join([
+            plist_data[:byte_order_mark_size],
+            plist_data[byte_order_mark_size:].lstrip()])
+        is_xml = plist_data[byte_order_mark_size:].startswith(xml_signature)
+        has_leading_whitespace = is_xml
 
     try:
       top_level_object = plistlib.loads(plist_data)
