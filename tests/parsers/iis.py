@@ -66,6 +66,31 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
+  def testParseWithIIS7SQLIFile(self):
+    """Tests the Parse function with an IIS 7 log file with SQLI."""
+    parser = iis.WinIISParser()
+    storage_writer = self._ParseFile(['iis7_sqli.log'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 2)
+
+    events = list(storage_writer.GetEvents())
+
+    expected_event_values = {
+        'data_type': 'iis:log:line',
+        'dest_ip': '111.111.111.111',
+        'dest_port': 443,
+        'http_method': 'GET',
+        'http_status': 500,
+        'requested_uri_stem': '/foo/bar/baz.asp',
+        'source_ip': '222.222.222.222',
+        'timestamp': '2015-10-16 13:01:02.000000',
+        'user_agent': (
+            'Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_9_2)+AppleWebKit/'
+            '537.36+(KHTML,+like+Gecko)+Chrome/34.0.1847.131+Safari/537.36')}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
   def testParseWithIIS7OWAFile(self):
     """Tests the Parse function with an IIS 7 OWA log file."""
     parser = iis.WinIISParser()
