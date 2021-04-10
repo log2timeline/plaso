@@ -12,7 +12,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -182,7 +181,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
     month = self._GetValueFromStructure(structure, 'month')
 
     try:
-      month = timelib.MONTH_DICT.get(month.lower(), 0)
+      month = self._MONTH_DICT.get(month.lower(), 0)
     except AttributeError as exception:
       raise ValueError('unable to parse month with error: {0!s}.'.format(
           exception))
