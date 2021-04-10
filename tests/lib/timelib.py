@@ -14,16 +14,6 @@ from tests import test_lib as shared_test_lib
 class TimeLibTest(shared_test_lib.BaseTestCase):
   """Tests for timestamp."""
 
-  def testCopyToIsoFormat(self):
-    """Test the CopyToIsoFormat function."""
-    timezone = pytz.timezone('CET')
-
-    timestamp = shared_test_lib.CopyTimestampFromSring(
-        '2013-03-14 20:20:08.850041')
-    date_time_string = timelib.Timestamp.CopyToIsoFormat(
-        timestamp, timezone=timezone)
-    self.assertEqual(date_time_string, '2013-03-14T21:20:08.850041+01:00')
-
   def testLocaltimeToUTC(self):
     """Test the localtime to UTC conversion."""
     timezone = pytz.timezone('CET')

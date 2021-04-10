@@ -10,7 +10,6 @@ human readable form.
 """
 
 import datetime
-import logging
 
 import pytz
 
@@ -31,45 +30,6 @@ class Timestamp(object):
   # a date and time value.
   # TODO: replace this with a real None implementation.
   NONE_TIMESTAMP = 0
-
-  @classmethod
-  def CopyToIsoFormat(cls, timestamp, timezone=pytz.UTC, raise_error=False):
-    """Copies the timestamp to an ISO 8601 formatted string.
-
-    Args:
-      timestamp (int): a timestamp containing the number of microseconds since
-          January 1, 1970, 00:00:00 UTC.
-      timezone (Optional[pytz.timezone]): time zone.
-      raise_error (Optional[bool]): True if an OverflowError should be raised
-          if the timestamp is out of bounds.
-
-    Returns:
-      str: date and time formatted in ISO 8601.
-
-    Raises:
-      OverflowError: if the timestamp value is out of bounds and raise_error
-          is True.
-      ValueError: if the timestamp value is missing.
-    """
-    datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-
-    if not timestamp:
-      if raise_error:
-        raise ValueError('Missing timestamp value')
-      return datetime_object.isoformat()
-
-    try:
-      datetime_object += datetime.timedelta(microseconds=timestamp)
-      datetime_object = datetime_object.astimezone(timezone)
-    except OverflowError as exception:
-      if raise_error:
-        raise
-
-      logging.error((
-          'Unable to copy {0:d} to a datetime object with error: '
-          '{1!s}').format(timestamp, exception))
-
-    return datetime_object.isoformat()
 
   @classmethod
   def LocaltimeToUTC(cls, timestamp, timezone, is_dst=False):

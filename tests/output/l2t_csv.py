@@ -43,6 +43,14 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+    # Test with event.date_time
+    date_string = formatting_helper._FormatDate(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_string, '06/27/2012')
+
+    # Test with event.timestamp
+    event.date_time = None
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '06/27/2012')

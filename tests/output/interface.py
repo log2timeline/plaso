@@ -6,7 +6,6 @@ import io
 import unittest
 
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import formatting_helper
 from plaso.output import interface
 from plaso.output import manager
@@ -17,6 +16,16 @@ from tests.output import test_lib
 
 class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
   """XML output module event formatting helper for testing."""
+
+  def __init__(self, output_mediator):
+    """Initializes a dynamic selected delimiter separated values output module.
+
+    Args:
+      output_mediator (OutputMediator): an output mediator.
+    """
+    super(TestXMLEventFormattingHelper, self).__init__(output_mediator)
+    self._field_formatting_helper = formatting_helper.FieldFormattingHelper(
+        output_mediator)
 
   def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
@@ -30,15 +39,15 @@ class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
     Returns:
       str: string representation of the event.
     """
-    date_time = timelib.Timestamp.CopyToIsoFormat(
-        event.timestamp, timezone=self._output_mediator.timezone,
-        raise_error=False)
+    # pylint: disable=protected-access
+    date_time_string = self._field_formatting_helper._FormatDateTime(
+        event, event_data, event_data_stream)
 
     return (
         '<Event>\n'
         '\t<DateTime>{0:s}</DateTime>\n'
         '\t<Entry>{1:s}</Entry>\n'
-        '</Event>').format(date_time, event_data.entry)
+        '</Event>').format(date_time_string, event_data.entry)
 
 
 class TestXMLOutputModule(interface.TextFileOutputModule):
@@ -101,19 +110,19 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
     expected_output = (
         '<EventFile>\n'
         '<Event>\n'
-        '\t<DateTime>2012-06-27T18:17:01+00:00</DateTime>\n'
+        '\t<DateTime>2012-06-27T18:17:01.000000+00:00</DateTime>\n'
         '\t<Entry>My Event Is Now!</Entry>\n'
         '</Event>\n'
         '<Event>\n'
-        '\t<DateTime>2012-06-27T18:18:23+00:00</DateTime>\n'
+        '\t<DateTime>2012-06-27T18:18:23.000000+00:00</DateTime>\n'
         '\t<Entry>There is no tomorrow.</Entry>\n'
         '</Event>\n'
         '<Event>\n'
-        '\t<DateTime>2012-06-27T19:11:54+00:00</DateTime>\n'
+        '\t<DateTime>2012-06-27T19:11:54.000000+00:00</DateTime>\n'
         '\t<Entry>Tomorrow is now.</Entry>\n'
         '</Event>\n'
         '<Event>\n'
-        '\t<DateTime>2012-06-27T19:12:03+00:00</DateTime>\n'
+        '\t<DateTime>2012-06-27T19:12:03.000000+00:00</DateTime>\n'
         '\t<Entry>This is just some stuff to fill the line.</Entry>\n'
         '</Event>\n'
         '</EventFile>\n')

@@ -35,6 +35,14 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+    # Test with event.date_time
+    date_string = formatting_helper._FormatDate(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_string, '2012-06-27')
+
+    # Test with event.timestamp
+    event.date_time = None
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-27')
@@ -43,22 +51,6 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '0000-00-00')
-
-  def testFormatDateTime(self):
-    """Tests the _FormatDateTime function."""
-    output_mediator = self._CreateOutputMediator()
-    formatting_helper = dynamic.DynamicFieldFormattingHelper(output_mediator)
-
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    date_time_string = formatting_helper._FormatDateTime(
-        event, event_data, event_data_stream)
-    self.assertEqual(date_time_string, '2012-06-27T18:17:01+00:00')
-
-    event.timestamp = -9223372036854775808
-    date_time_string = formatting_helper._FormatDateTime(
-        event, event_data, event_data_stream)
-    self.assertEqual(date_time_string, '0000-00-00T00:00:00')
 
   def testFormatTimestampDescription(self):
     """Tests the _FormatTimestampDescription function."""
@@ -158,7 +150,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.WriteEventBody(event, event_data, event_data_stream, None)
 
     expected_event_body = (
-        '2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
+        '2012-06-27T18:17:01.000000+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
         ' (pam_unix(cron:session): session closed for user root)\n')
 
     event_body = test_file_object.getvalue()

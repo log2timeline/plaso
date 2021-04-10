@@ -57,7 +57,7 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
 
     expected_description_string = (
-        '2012-06-27T18:17:01+00:00; '
+        '2012-06-27T18:17:01.000000+00:00; '
         'Unknown Time; '
         'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session closed '
         'for user root)')
@@ -146,7 +146,8 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream, event_data_stream)
 
     expected_event_body = (
-        '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
+        '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01.000000+00:00; '
+        'Unknown Time; '
         'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
         'session closed for user root)\n')
 
@@ -211,7 +212,8 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream, event_data_stream)
 
     expected_event_body = (
-        '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
+        '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01.000000+00:00; '
+        'Unknown Time; '
         'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
         'session closed for user root)'
         '|UTC|File: OS: /var/log/syslog.1 inode: 12345678\n')

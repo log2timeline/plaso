@@ -5,11 +5,11 @@ import abc
 import csv
 import datetime
 import os
+import pytz
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.output import logger
 
 
@@ -59,6 +59,43 @@ class FieldFormattingHelper(object):
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.
   # pylint: disable=unused-argument
+
+  def _FormatDateTime(self, event, event_data, event_data_stream):
+    """Formats a date and time field in ISO 8601 format.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: date and time field with time zone offset.
+    """
+    if event.date_time and self._output_mediator.timezone == pytz.UTC:
+      iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
+      return '{0:s}+00:00'.format(iso8601_string[:-1])
+
+    if event.date_time:
+      timestamp = event.date_time.GetPlasoTimestamp()
+    else:
+      timestamp = event.timestamp
+
+    try:
+      datetime_object = datetime.datetime(
+          1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
+      datetime_object += datetime.timedelta(microseconds=timestamp)
+      datetime_object = datetime_object.astimezone(
+          self._output_mediator.timezone)
+
+      return datetime_object.isoformat()
+
+    except (OverflowError, TypeError) as exception:
+      self._ReportEventError(event, event_data, (
+          'unable to copy timestamp: {0!s} to a human readable date and time '
+          'with error: {1!s}. Defaulting to: "0000-00-00T00:00:00'
+          '+00:00"').format(timestamp, exception))
+
+      return '0000-00-00T00:00:00+00:00'
 
   def _FormatDisplayName(self, event, event_data, event_data_stream):
     """Formats the display name.
@@ -327,19 +364,33 @@ class FieldFormattingHelper(object):
     Returns:
       str: time field.
     """
-    try:
-      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
-          event.timestamp, timezone=self._output_mediator.timezone,
-          raise_error=True)
+    if event.date_time and self._output_mediator.timezone == pytz.UTC:
+      hours, minutes, seconds = event.date_time.GetTimeOfDay()
+    else:
+      if event.date_time:
+        timestamp = event.date_time.GetPlasoTimestamp()
+      else:
+        timestamp = event.timestamp
 
-      return iso_date_time[11:19]
+      try:
+        datetime_object = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
+        datetime_object += datetime.timedelta(microseconds=timestamp)
+        datetime_object = datetime_object.astimezone(
+            self._output_mediator.timezone)
 
-    except (OverflowError, ValueError):
-      self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable time. '
-          'Defaulting to: "--:--:--"').format(event.timestamp))
+        hours = datetime_object.hour
+        minutes = datetime_object.minute
+        seconds = datetime_object.second
 
-      return '--:--:--'
+      except (OverflowError, TypeError):
+        self._ReportEventError(event, event_data, (
+            'unable to copy timestamp: {0!s} to a human readable time. '
+            'Defaulting to: "--:--:--"').format(timestamp))
+
+        return '--:--:--'
+
+    return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
 
   def _FormatTimeZone(self, event, event_data, event_data_stream):
     """Formats a time zone field.
@@ -352,17 +403,22 @@ class FieldFormattingHelper(object):
     Returns:
       str: time zone field.
     """
+    if event.date_time:
+      timestamp = event.date_time.GetPlasoTimestamp()
+    else:
+      timestamp = event.timestamp
+
     # For tzname to work the datetime object must be naive (without a time
     # zone).
     try:
       datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
-      datetime_object += datetime.timedelta(microseconds=event.timestamp)
+      datetime_object += datetime.timedelta(microseconds=timestamp)
       return self._output_mediator.timezone.tzname(datetime_object)
 
     except OverflowError:
       self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable time zone. '
-          'Defaulting to: "00/00/0000"').format(event.timestamp))
+          'Defaulting to: "00/00/0000"').format(timestamp))
 
       return '-'
 

@@ -5,9 +5,11 @@ For documentation on the L2T CSV format see:
 https://forensicswiki.xyz/wiki/index.php?title=L2T_CSV
 """
 
+import datetime
+import pytz
+
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.output import formatting_helper
 from plaso.output import interface
 from plaso.output import logger
@@ -92,20 +94,33 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     Returns:
       str: date field.
     """
-    try:
-      iso_date_time = timelib.Timestamp.CopyToIsoFormat(
-          event.timestamp, timezone=self._output_mediator.timezone,
-          raise_error=True)
+    if event.date_time and self._output_mediator.timezone == pytz.UTC:
+      year, month, day_of_month = event.date_time.GetDate()
+    else:
+      if event.date_time:
+        timestamp = event.date_time.GetPlasoTimestamp()
+      else:
+        timestamp = event.timestamp
 
-      return '{0:s}/{1:s}/{2:s}'.format(
-          iso_date_time[5:7], iso_date_time[8:10], iso_date_time[:4])
+      try:
+        datetime_object = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
+        datetime_object += datetime.timedelta(microseconds=timestamp)
+        datetime_object = datetime_object.astimezone(
+            self._output_mediator.timezone)
 
-    except (OverflowError, ValueError):
-      self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable date. '
-          'Defaulting to: "00/00/0000"').format(event.timestamp))
+        year = datetime_object.year
+        month = datetime_object.month
+        day_of_month = datetime_object.day
 
-      return '00/00/0000'
+      except (OverflowError, TypeError):
+        year, month, day_of_month = (0, 0, 0)
+
+        self._ReportEventError(event, event_data, (
+            'unable to copy timestamp: {0!s} to a human readable date. '
+            'Defaulting to: "00/00/0000"').format(timestamp))
+
+    return '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
 
   def _FormatExtraAttributes(self, event, event_data, event_data_stream):
     """Formats an extra attributes field.

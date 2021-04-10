@@ -67,6 +67,11 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
     expected_json_dict = {
         '__container_type__': 'event',
         '__type__': 'AttributeContainer',
+        'date_time': {
+            '__class_name__': 'PosixTimeInMicroseconds',
+            '__type__': 'DateTimeValues',
+            'timestamp': 1340821021000000,
+        },
         'data_type': 'test:event',
         'display_name': 'TSK:/var/log/syslog.1',
         'filename': '/var/log/syslog.1',
@@ -123,7 +128,9 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
 
     expected_json_string = (
         '{{"__container_type__": "event", "__type__": "AttributeContainer", '
-        '"data_type": "test:event", "display_name": "TSK:/var/log/syslog.1", '
+        '"data_type": "test:event", "date_time": {{"__class_name__": '
+        '"PosixTimeInMicroseconds", "__type__": "DateTimeValues", "timestamp": '
+        '1340821021000000}}, "display_name": "TSK:/var/log/syslog.1", '
         '"filename": "/var/log/syslog.1", "hostname": "ubuntu", "inode": '
         '"15", "message": "Reporter <CRON> PID: |8442| '
         '(pam_unix(cron:session): session closed for user root)", "pathspec": '
