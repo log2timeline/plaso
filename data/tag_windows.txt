@@ -113,6 +113,16 @@ file_download
 document_print
   data_type is 'olecf:summary_info' AND timestamp_desc is 'Last Printed Time'
 
-# Tags Windows Firewall With Advanced Security change events
+# Tags Windows Firewall With Advanced Security change events.
 firewall_change
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Firewall With Advanced Security' AND (event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 2005 OR event_identifier is 2006)
+
+# Tags Windows Registry modification events.
+# Microsoft-Windows-Security-Auditing - Event ID 4657: A registry value was modified
+registry_modified
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4657
+
+# Tags Windows service creation events.
+# Service Control Manager - Event ID 7045: A new service was installed in the system
+service_new
+  data_type is 'windows:evtx:record' AND source_name is 'Service Control Manager' AND event_identifier is 7045

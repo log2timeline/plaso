@@ -627,6 +627,30 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
         ['firewall_change'])
 
+  def testRegistryModified(self):
+    """Tests the registry_modified tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Security-Auditing'
+    #       event_identifier is 4657
+    attribute_values_per_name = {
+        'event_identifier': [4657],
+        'source_name': ['Microsoft-Windows-Security-Auditing']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['registry_modified'])
+
+  def testServiceNew(self):
+    """Tests the service_new tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Service Control Manager' AND
+    #       event_identifier is 7045
+    attribute_values_per_name = {
+        'event_identifier': [7045],
+        'source_name': ['Service Control Manager']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['service_new'])
+
 
 if __name__ == '__main__':
   unittest.main()
