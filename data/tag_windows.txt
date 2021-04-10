@@ -1,3 +1,147 @@
+# Tags Windows application execution events.
+# trace of execution & task schedule
+# Can help you to identify suspect command runned (wscript, hh, powershell, cmd, ...)
+# Knowledge: https://jpcertcc.github.io/ToolAnalysisResultSheet/
+application_execution
+  data_type is 'fs:stat' AND filename contains PATH('Windows/Tasks/At')
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 592
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 500
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4673 OR event_identifier is 4688)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1
+  data_type is 'windows:evtx:record' AND strings contains 'user mode service' AND strings contains 'demand start'
+  data_type is 'windows:lnk:link' AND filename contains 'Recent' AND (local_path contains '.exe' OR network_path contains '.exe' OR relative_path contains '.exe')
+  data_type is 'windows:prefetch:execution'
+  data_type is 'windows:registry:amcache'
+  data_type is 'windows:registry:appcompatcache'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Search\\RecentApps\\'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Services\\bam\\UserSettings\\'
+  data_type is 'windows:registry:key_value' AND key_path contains  'Software\\Microsoft\\Windows\\Current Version\\Search\\RecentApps'
+  data_type is 'windows:registry:mrulist' AND entries contains '.exe'
+  data_type is 'windows:registry:mrulistex' AND entries contains '.exe'
+  data_type is 'windows:registry:userassist' AND value_name contains '.exe'
+  data_type is 'windows:tasks:job'
+
+# Tags Windows application installation events.
+application_install
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 903 OR event_identifier is 904)
+
+# Tags Windows application update events.
+application_update
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 905
+
+# Tags Windows application removal events.
+application_removal
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 907 OR event_identifier is 908)
+
+# Tags Windows document open events.
+# Some documents can be used to exploit player like "pdf->js->embed", "doc->dde", 'doc->vba', 'rtf->cve', ...
+document_open
+  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains 'AppData/Roaming/Microsoft/Windows/Recent/' AND filename not contains '.exe'
+  data_type is 'windows:lnk:link' AND filename contains 'Recent' AND local_path not contains '.exe' AND network_path not contains '.exe' AND relative_path not contains '.exe'
+  data_type is 'windows:registry:bagmru'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Security\\Trusted Documents\\TrustRecords'
+  (data_type is 'windows:registry:mrulist' OR data_type is 'windows:registry:mrulistex') AND entries not contains '.exe' AND timestamp > DATETIME(0)
+  data_type is 'windows:registry:office_mru'
+  data_type is 'windows:registry:office_mru_list'
+
+# Tags Windows failed log-in events.
+# A high number of failed log-ins can indicate brute force attack.
+login_failed
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4625
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4771
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' AND event_identifier is 1148
+
+# Tags Windows log-in attempt events.
+login_attempt
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4648
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 2
+
+# Tags Windows log-off events.
+logoff
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 538
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4634
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 23 OR event_identifier is 1103)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 4
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7002
+
+# Tags terminal services (RDP) session disconnection events.
+session_disconnection
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND event_identifier is 24
+
+# Tags terminal services (RDP) session reconnection events.
+session_reconnection
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 25 OR event_identifier is 1105)
+
+# Tags terminal services (RDP) shell start events.
+shell_start
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 22 OR event_identifier is 1102)
+
+# Tags sheduled task creation events.
+task_schedule
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Microsoft-Windows-TaskScheduler' AND (event_identifier is 106 OR event_identifier is 140 OR event_identifier is 141)
+  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 602
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4698 OR event_identifier is 4702)
+
+# Tags task sheduler successful completed job events.
+job_success
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 102
+
+# Tags task sheduler successful completed actions events.
+action_success
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 201
+
+# Tags DNS resolution timeout events.
+name_resolution_timeout
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-DNS-Client' AND event_identifier is 1014
+
+# Tags system time change events.
+time_change
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 1
+
+# Tags system shutdown events.
+shutdown
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 13
+
+# Tags system start events.
+system_start
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 12
+
+# Tags system sleep events.
+system_sleep
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-Power' AND event_identifier is 42
+
+# Tags auto run events.
+autorun
+  data_type is 'windows:registry:boot_execute' AND (value contains '.exe' OR value contains '.dll')
+  data_type is 'windows:registry:boot_verification' AND (image_path contains '.exe' OR image_path contains '.dll')
+  data_type is 'windows:registry:run' AND (entries contains '.exe' OR entries contains '.dll')
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 7045 OR event_identifier is 4697)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SYSTEM\\CurrentControlSet\\Services' AND (xml_string contains 'ServiceDll' OR xml_string contains 'ServiceManifest' OR xml_string contains 'Start' OR xml_string contains 'HelperDllName' OR xml_string contains 'Library' OR xml_string contains 'Path' OR xml_string contains 'AppArgs' OR xml_string contains 'NameSpace_Callout')
+  data_type is 'windows:registry:key_value' AND key_path contains 'SYSTEM\\CurrentControlSet\\Services' AND (values contains 'Library' OR values contains 'HelperDllName' OR values contains 'Start' OR values contains 'ServiceManifest' OR values contains 'ServiceDll' OR values contains 'NameSpace_Callout' OR values contains 'AppArgs' OR values contains 'Path')
+
+# Tags file download events.
+file_download
+  data_type is 'chrome:history:file_downloaded'
+  timestamp_desc is 'File Downloaded'
+
+# Tags OLE compound document print events.
+document_print
+  data_type is 'olecf:summary_info' AND timestamp_desc is 'Last Printed Time'
+
+# Tags Windows Firewall With Advanced Security change events.
+firewall_change
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Firewall With Advanced Security' AND (event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 2005 OR event_identifier is 2006)
+
+# Tags Windows Registry modification events.
+# Microsoft-Windows-Security-Auditing - Event ID 4657: A registry value was modified
+registry_modified
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4657
+
+# Tags Windows service creation events.
+# Service Control Manager - Event ID 7045: A new service was installed in the system
+service_new
+  data_type is 'windows:evtx:record' AND source_name is 'Service Control Manager' AND event_identifier is 7045
+
 # Tags potentially suspicious files in C:\Users
 # - Executable files: *.exe, *.dll, *.sys, *.scr, *.pif, *.com, *.ms (such as *.msi, *.msp)
 # - Archive files may contains malicious files: *.zip, *.rar, *.cab, *.sfx
@@ -29,7 +173,7 @@
 user_suspect_file
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains '/Users/' AND (filename contains '.exe' OR filename contains '.zip' OR filename contains '.rar' OR filename contains '.dll' OR filename contains '.cmd' OR filename contains '.rtf' OR filename contains '.pdf' OR filename contains '.doc' OR filename contains '.ppt' OR filename contains '.xls' OR filename contains '.vb' OR filename contains '.hta' OR filename contains '.jar' OR filename contains '.swf' OR filename contains '.reg' OR filename contains '.ps' OR filename contains '.ws' OR filename contains '.mht' OR filename contains '.ms' OR filename contains '.tmp' OR filename contains '.py' OR filename contains '.xhtm' OR filename contains '.js' OR filename contains '.bat' OR filename contains '.scr' OR filename contains '.sys' OR filename contains '.com' OR filename contains '.pif' OR filename contains '.inf' OR filename contains '.scf' OR filename contains '.chm' OR filename contains '.jnlp' OR filename contains '.gadget' OR filename contains '.appref-ms' OR filename contains '.application' OR filename contains '.sfx' OR filename contains '.lnk' OR filename contains '.otf' OR filename contains '.cpl' OR filename contains '.cab')
 
-# Tags exe or ddl files that have beeen change
+# Tags EXE or DLL files that have been changed
 # Changes in the "program files" directory may occur due to the installation or update of a legitimate program.
 # However, it is possible that some modification that is not related to the above information, is malicious.
 # You can use the methods below to modify them illegally.
@@ -84,29 +228,6 @@ run_background
 #  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1 AND xml_string contains '://'
 #  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4688 AND xml_string contains '://'
 
-# trace of execution & task schedlule
-# Can help you to identify suspect command runned (wscript, hh, powershell, cmd, ...)
-# Knowledge: https://jpcertcc.github.io/ToolAnalysisResultSheet/
-# Tags Windows application execution events.
-application_execution
-  data_type is 'fs:stat' AND filename contains PATH('Windows/Tasks/At')
-  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 592
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 500
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4673 OR event_identifier is 4688)
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1
-  data_type is 'windows:evtx:record' AND strings contains 'user mode service' AND strings contains 'demand start'
-  data_type is 'windows:lnk:link' AND filename contains 'Recent' AND (local_path contains '.exe' OR network_path contains '.exe' OR relative_path contains '.exe')
-  data_type is 'windows:prefetch:execution'
-  data_type is 'windows:registry:amcache'
-  data_type is 'windows:registry:appcompatcache'
-  data_type is 'windows:registry:key_value' AND key_path contains '\\Search\\RecentApps\\'
-  data_type is 'windows:registry:key_value' AND key_path contains '\\Services\\bam\\UserSettings\\'
-  data_type is 'windows:registry:key_value' AND key_path contains  'Software\\Microsoft\\Windows\\Current Version\\Search\\RecentApps'
-  data_type is 'windows:registry:mrulist' AND entries contains '.exe'
-  data_type is 'windows:registry:mrulistex' AND entries contains '.exe'
-  data_type is 'windows:registry:userassist' AND value_name contains '.exe'
-  data_type is 'windows:tasks:job'
-
 # it's crash report, can help to identify attack to exploit CVE OR suspect process
 app_potential_exploit
   (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Application Error' AND (event_identifier is 1000 OR event_identifier is 1005 OR event_identifier is 1015)
@@ -120,12 +241,12 @@ app_potential_exploit
 # malware detected by windows defender
 malware_detected
   data_type is 'windows:evtx:record' AND (source_name is 'Microsoft-Windows-Windows Defender' OR source_name is 'Microsoft Antimalware') AND (event_identifier is 1005 OR event_identifier is 1006 OR event_identifier is 1007 OR event_identifier is 1008 OR event_identifier is 1009 OR event_identifier is 1010 OR event_identifier is 1016 OR event_identifier is 1017 OR event_identifier is 1018 OR event_identifier is 1019 OR event_identifier is 1021 OR event_identifier is 1116 OR event_identifier is 1117 OR event_identifier is 1120)
-  
+
 # error update windows defender
 windows_defender_fail
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Defender' AND (event_identifier is 2001 OR event_identifier is 2003 OR event_identifier is 2005 OR event_identifier is 2006 OR event_identifier is 2012 OR event_identifier is 2013 OR event_identifier is 3002 OR event_identifier is 5008)
-  
-# malware can be use sidbar gadget
+
+# malware can be use sidebar gadget
 sidbar_gadget
   (data_type is 'fs:stat' OR data_type is 'fs:mactime:line' OR data_type is 'windows:lnk:link') AND (filename contains 'AppData/Local/Microsoft/Windows Sidebar/Gadgets' OR filename contains '/Program Files/Windows Sidebar/Shared Gadgets/')
 
@@ -138,6 +259,10 @@ change_network
   data_type is 'windows:registry:key_value' AND key_path contains 'Windows\\CurrentVersion\\Internet Settings'
   data_type is 'windows:registry:key_value' AND key_path contains 'CurrentControlSet\\Services\\Tcpip\\Parameters'
   data_type is 'windows:registry:key_value' AND key_path contains 'Internet Settings\\Zones\\3'
+
+# Acces net share
+net_share
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 5145 OR event_identifier is 5140 OR event_identifier is 5142)
 
 # usb device (store, rubber ducky, ...) can used to spread attack
 new_device
@@ -200,17 +325,6 @@ file_created
 from_internet
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 15
 
-# Tags Windows document open events.
-# Some documents can be used to exploit player like "pdf->js->embed", "doc->dde", 'doc->vba', 'rtf->cve', ...
-document_open
-  (data_type is 'fs:stat' OR data_type is 'fs:mactime:line') AND filename contains 'AppData/Roaming/Microsoft/Windows/Recent/' AND filename not contains '.exe'
-  data_type is 'windows:lnk:link' AND filename contains 'Recent' AND local_path not contains '.exe' AND network_path not contains '.exe' AND relative_path not contains '.exe'
-  data_type is 'windows:registry:bagmru'
-  data_type is 'windows:registry:key_value' AND key_path contains 'Security\\Trusted Documents\\TrustRecords'
-  (data_type is 'windows:registry:mrulist' OR data_type is 'windows:registry:mrulistex') AND entries not contains '.exe' AND timestamp > DATETIME(0)
-  data_type is 'windows:registry:office_mru'
-  data_type is 'windows:registry:office_mru_list'
-
 # logon type 0(system),5(service),4(batch),9(New credential)
 logon_suspect
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4624 AND (xml_string contains 'LogonType\">0' OR xml_string contains 'LogonType\">4' OR xml_string contains 'LogonType\">5' OR xml_string contains 'LogonType\">9')
@@ -229,13 +343,6 @@ logon_remote
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4779 AND xml_string contains 'RDP-Tcp'
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' AND (event_identifier is 1147 OR event_identifier is 1149)
 
-# Tags Windows failed log-in events.
-# Failed log-ins can indicate brute force attack.
-login_failed
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4625
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4771
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' AND event_identifier is 1148
-
 # Tags Windows log-in attempt events.
 logon
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4624 AND (xml_string not contains 'LogonType\">10' AND xml_string not contains 'LogonType\">3')
@@ -243,11 +350,6 @@ logon
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 2
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7001
   (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 528 AND (strings not contains '\"10\"' and strings not contains '\"8\"' and strings not contains '\"3\"')
-
-# Tags Windows log-in attempt events.
-login_attempt
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4648
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 2
 
 # Tags Windows log-in attempt events.
 login_attempt_ntlm
@@ -267,76 +369,13 @@ backup_delete
 connexion
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 5156
 
-# Tags Windows log-off events.
-logoff
-  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 538
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4634
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 23 OR event_identifier is 1103)
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 4
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7002
-
 # Tags kerberos ticket TODO attempts, possilby the result running tools such as mimikatz
 kerb_ticket_attempt
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4768 OR (event_identifier is 4769 AND xml_string contains '0x40810000'))
 
-# Tags terminal services (RDP) session disconnection events.
-session_disconnection
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND event_identifier is 24
-
-# Tags terminal services (RDP) session reconnection events.
-session_reconnection
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 25 OR event_identifier is 1105)
-
-# Tags terminal services (RDP) shell start events.
-shell_start
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 22 OR event_identifier is 1102)
-
-# Tags sheduled task creation events.
-task_schedule
-  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Microsoft-Windows-TaskScheduler' AND (event_identifier is 106 OR event_identifier is 140 OR event_identifier is 141)
-  (data_type is 'windows:evt:record' OR data_type is 'windows:evtx:record') AND source_name is 'Security' AND event_identifier is 602
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4698 OR event_identifier is 4702)
-
 # Tags task sheduler lauched job events.
 job_lauch
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND (event_identifier is 200 OR event_identifier is 129)
-
-# Tags task sheduler successful completed job events.
-job_success
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 102
-
-# Tags task sheduler successful completed actions events.
-action_success
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 201
-
-# Tags DNS resolution timeout events.
-name_resolution_timeout
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-DNS-Client' AND event_identifier is 1014
-
-# Tags system time change events.
-time_change
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 1
-
-# Tags system shutdown events.
-shutdown
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 13
-
-# Tags system start events.
-system_start
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 12
-
-# Tags system sleep events.
-system_sleep
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-Power' AND event_identifier is 42
-
-# Tags auto run events.
-autorun
-  data_type is 'windows:registry:boot_execute' AND (value contains '.exe' OR value contains '.dll')
-  data_type is 'windows:registry:boot_verification' AND (image_path contains '.exe' OR image_path contains '.dll')
-  data_type is 'windows:registry:run' AND (entries contains '.exe' OR entries contains '.dll')
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 7045 OR event_identifier is 4697)
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND xml_string contains 'SYSTEM\\CurrentControlSet\\Services' AND (xml_string contains 'ServiceDll' OR xml_string contains 'ServiceManifest' OR xml_string contains 'Start' OR xml_string contains 'HelperDllName' OR xml_string contains 'Library' OR xml_string contains 'Path' OR xml_string contains 'AppArgs' OR xml_string contains 'NameSpace_Callout')
-  data_type is 'windows:registry:key_value' AND key_path contains 'SYSTEM\\CurrentControlSet\\Services' AND (values contains 'Library' OR values contains 'HelperDllName' OR values contains 'Start' OR values contains 'ServiceManifest' OR values contains 'ServiceDll' OR values contains 'NameSpace_Callout' OR values contains 'AppArgs' OR values contains 'Path')
 
 # Tags PowerShell execution events.
 powershell_execute
@@ -363,7 +402,7 @@ winrm_start
 # winrm https://attack.mitre.org/techniques/T1028/
 winrm
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WinRM' AND (event_identifier is 169 OR event_identifier is 81 OR event_identifier is 82 OR event_identifier is 134 OR event_identifier is 10148 OR event_identifier is 91)
-  
+
 # https://docs.microsoft.com/en-us/windows/win32/winrm/remote-shell-infrastructure-improvements
 winrm_shell
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-WinRM' AND event_identifier is 91 AND (strings contains 'shellId' or strings contains '7300680065006C006C002F0063006D0064' or strings contains '50006F007700650072005300680065006C006C')
@@ -421,23 +460,6 @@ applocker
 # bits job created (3) - bits job done (4)
 bits_jobs
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Bits-Client' AND (event_identifier is 3 OR event_identifier is 4 OR event_identifier is 59 OR event_identifier is 60)
-
-# Tags file download events.
-file_download
-  data_type is 'chrome:history:file_downloaded'
-  timestamp_desc is 'File Downloaded'
-
-# Acces net share
-net_share
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 5145 OR event_identifier is 5140 OR event_identifier is 5142)
-
-# Tags OLE compound document print events.
-document_print
-  data_type is 'olecf:summary_info' AND timestamp_desc is 'Last Printed Time'
-
-# Tags Windows Firewall With Advanced Security change events
-firewall_change
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Firewall With Advanced Security' AND (event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 2005 OR event_identifier is 2006)
 
 handle_object
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4656 OR event_identifier is 4658 OR event_identifier is 4663)
@@ -613,17 +635,14 @@ cert_change
   data_type is 'windows:registry:key_value' AND (key_path contains 'SOFTWARE\\Microsoft\\EnterpriseCertificates\\Root\\Certificates' OR key_path contains 'Microsoft\\SystemCertificates\\Root\\Certificates')
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND (event_identifier is 13 OR event_identifier is 12) AND (xml_string contains 'SOFTWARE\\Microsoft\\EnterpriseCertificates\\Root\\Certificates' OR xml_string contains 'Microsoft\\SystemCertificates\\Root\\Certificates')
 
-registry_modified
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4657
-
-# Microsoft-Windows-Iphlpsvc 4200 - Unable to read or write the NTE Context list for network adapter %2. IP interfaces on this network adapter may not be initialized completely.
+# TODO: needs correction
+# Microsoft-Windows-Iphlpsvc - Event ID 4200: Unable to read or write the NTE Context list for network adapter %2. IP interfaces on this network adapter may not be initialized completely.
+# Microsoft-Windows-Operating-System - Event ID 4200: TODO add description
 ip_change
   data_type is 'windows:evtx:record' AND (source_name is 'Microsoft-Windows-Iphlpsvc' OR source_name is 'Microsoft-Windows-Operating-System') AND event_identifier is 4200
 
-# Microsoft-Windows-SMBClient 30803 - Failed to establish a network connection
+# TODO: describe what is meant with "SMB trace" here
+# Microsoft-Windows-SMBClient - Event ID 30803: Failed to establish a network connection
+# Microsoft-Windows-SMBClient - Event ID 30904: TODO add description
 smb_trace
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-SMBClient' AND (event_identifier is 30803 OR event_identifier is 30904)
-
-# Service Control Manager - Event ID 7045: A new service was installed in the system
-new_service
-  data_type is 'windows:evtx:record' AND source_name is 'Service Control Manager' AND event_identifier is 7045
