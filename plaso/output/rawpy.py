@@ -4,6 +4,7 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import definitions
+from plaso.output import dynamic
 from plaso.output import formatting_helper
 from plaso.output import interface
 from plaso.output import logger
@@ -13,6 +14,16 @@ from plaso.output import manager
 class NativePythonEventFormattingHelper(
     formatting_helper.EventFormattingHelper):
   """Native (or "raw") Python output module event formatting helper."""
+
+  def __init__(self, output_mediator):
+    """Initializes a JSON output module event formatting helper.
+
+    Args:
+      output_mediator (OutputMediator): output mediator.
+    """
+    super(NativePythonEventFormattingHelper, self).__init__(output_mediator)
+    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper(
+        output_mediator)
 
   def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
@@ -62,6 +73,23 @@ class NativePythonEventFormattingHelper(
     event_attributes = list(event_data.GetAttributes())
     if event_data_stream:
       event_attributes.extend(event_data_stream.GetAttributes())
+
+    event_attribute_names = [name for name, _ in event_attributes]
+
+    if 'display_name' not in event_attribute_names:
+      attribute_value = self._field_formatting_helper.GetFormattedField(
+          'display_name', event, event_data, event_data_stream, event_tag)
+      event_attributes.append(('display_name', attribute_value))
+
+    if 'filename' not in event_attribute_names:
+      attribute_value = self._field_formatting_helper.GetFormattedField(
+          'filename', event, event_data, event_data_stream, event_tag)
+      event_attributes.append(('filename', attribute_value))
+
+    if 'inode' not in event_attribute_names:
+      attribute_value = self._field_formatting_helper.GetFormattedField(
+          'inode', event, event_data, event_data_stream, event_tag)
+      event_attributes.append(('inode', attribute_value))
 
     for attribute_name, attribute_value in sorted(event_attributes):
       # Some parsers have written bytes values to storage.

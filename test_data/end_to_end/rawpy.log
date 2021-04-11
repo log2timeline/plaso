@@ -8,7 +8,10 @@
 [Reserved attributes]:
   {body} INFO No change in [/etc/netgroup]. Done
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -27,7 +30,10 @@
 [Reserved attributes]:
   {body} INFO No new content in ímynd.dd.
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -46,7 +52,10 @@
 [Reserved attributes]:
   {body} (root) CMD (touch /var/run/crond.somecheck)
   {data_type} syslog:cron:task_run
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
   {username} root
@@ -67,7 +76,10 @@
 [Reserved attributes]:
   {body} (root) CMD (/sbin/status.mycheck))
   {data_type} syslog:cron:task_run
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
   {username} root
@@ -88,7 +100,10 @@
 [Reserved attributes]:
   {body} (root) CMD (touch /var/run/crond.somecheck)
   {data_type} syslog:cron:task_run
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
   {username} root
@@ -109,7 +124,10 @@
 [Reserved attributes]:
   {body} `cron.daily' terminated
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -127,7 +145,10 @@
 [Reserved attributes]:
   {body} testing leap year in parsing, events take place in 2012 ---
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} :
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -145,7 +166,10 @@
 [Reserved attributes]:
   {body} No true exit can exist (124 job run)
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -167,7 +191,10 @@
 [Reserved attributes]:
   {body} This syslog message has a fractional value for seconds.
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -186,7 +213,10 @@
 [Reserved attributes]:
   {body} This syslog message is brought to you by me (and not the other guy)
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -206,7 +236,10 @@
   {body} This is a multi-line message that screws up
 	many syslog parsers.
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -225,7 +258,10 @@
 [Reserved attributes]:
   {body} Another one just like this (124 job run)
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -244,7 +280,10 @@
 [Reserved attributes]:
   {body} Test message with single character day
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} victoria
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -263,7 +302,10 @@
 [Reserved attributes]:
   {body} last message repeated 5 times ---
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} :
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -284,6 +326,9 @@
 [Reserved attributes]:
   {body} [997.390602] sda2: rw=0, want=65, limit=2
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -301,7 +346,10 @@
 [Reserved attributes]:
   {body} [998.390602] sda2: rw=0, want=66, limit=2
   {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} victoria
+  {inode} -
   {offset} 0
   {parser} syslog
 
