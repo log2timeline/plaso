@@ -51,6 +51,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         'data_type': 'windows:evtx:record',
         'event_identifier': 105,
         'event_level': 4,
+        'message_identifier': 105,
         'record_number': 12049,
         'source_name': 'Microsoft-Windows-Eventlog',
         'strings': ['System', expected_string2]}
@@ -115,13 +116,15 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'windows:evtx:record',
-        'event_identifier': 4624}
+        'event_identifier': 4624,
+        'message_identifier': 4624}
 
     self.CheckEventValues(storage_writer, events[356], expected_event_values)
 
     expected_event_values = {
         'data_type': 'windows:evtx:record',
-        'event_identifier': 4648}
+        'event_identifier': 4648,
+        'message_identifier': 4648}
 
     self.CheckEventValues(storage_writer, events[360], expected_event_values)
 

@@ -146,9 +146,9 @@ class WinEvtxParser(interface.FileObjectParser):
     if event_identifier is not None:
       event_data.event_identifier = event_identifier
 
+      event_data.message_identifier = event_identifier
       if event_identifier_qualifiers is not None:
-        event_data.message_identifier = (
-            (event_identifier_qualifiers << 16) | event_identifier)
+        event_data.message_identifier |= event_identifier_qualifiers << 16
 
     event_data.event_level = evtx_record.event_level
     event_data.source_name = evtx_record.source_name
