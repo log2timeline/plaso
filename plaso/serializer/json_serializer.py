@@ -9,6 +9,7 @@ import json
 from dfdatetime import factory as dfdatetime_factory
 from dfdatetime import interface as dfdatetime_interface
 
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
@@ -419,8 +420,15 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     # Remove the class type from the JSON dict since we cannot pass it.
     del json_dict['__type__']
 
-    return dfvfs_path_spec_factory.Factory.NewPathSpec(
+    path_spec = dfvfs_path_spec_factory.Factory.NewPathSpec(
         type_indicator, **json_dict)
+
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
+      # dfvfs.OSPathSpec() will change the location to an absolute path
+      # here we want to preserve the original location.
+      path_spec.location = json_dict.get('location', None)
+
+    return path_spec
 
   @classmethod
   def _ConvertDateTimeValuesToDict(cls, date_time_values):
