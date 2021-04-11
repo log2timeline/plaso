@@ -21,8 +21,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 ************************* Events generated per parser **************************
 Parser (plugin) name : Number of events
 --------------------------------------------------------------------------------
-            filestat : 3 (6)
-               total : 3 (38)
+            filestat : 3 (12)
+               total : 3 (76)
 --------------------------------------------------------------------------------
 
 Storage files are different.
@@ -107,8 +107,8 @@ Storage files are different.
   def testPrintStorageInformationAsJSON(self):
     """Tests the PrintStorageInformation function with JSON output format."""
     test_filename = 'pinfo_test.plaso'
-    session_identifier = 'c1ce225e-7eec-49a6-9f5c-35907e518ff8'
-    session_start_time = '2020-04-04 06:40:08.695055'
+    session_identifier = '682d148b-e77c-41de-85ea-a86b9b5c490b'
+    session_start_time = '2021-04-11 05:16:05.445583'
 
     test_file_path = self._GetTestFilePath([test_filename])
     self._SkipIfPathNotExists(test_file_path)
@@ -146,11 +146,11 @@ Storage files are different.
   def testPrintStorageInformationAsText(self):
     """Tests the PrintStorageInformation function with text output format."""
     test_filename = 'pinfo_test.plaso'
-    format_version = '20190309'
-    plaso_version = '20200227'
-    session_identifier = 'c1ce225e-7eec-49a6-9f5c-35907e518ff8'
-    session_start_time = '2020-04-04T06:40:08.695055Z'
-    session_completion_time = '2020-04-04T06:40:11.180352Z'
+    format_version = '20210105'
+    plaso_version = '20210408'
+    session_identifier = '682d148b-e77c-41de-85ea-a86b9b5c490b'
+    session_start_time = '2021-04-11T05:16:05.445583Z'
+    session_completion_time = '2021-04-11T05:16:07.970584Z'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
@@ -164,20 +164,21 @@ Storage files are different.
         'czip', 'czip/oxml', 'dockerjson', 'dpkg', 'esedb',
         'esedb/file_history', 'esedb/msie_webcache', 'esedb/srum', 'filestat',
         'firefox_cache', 'firefox_cache2', 'fseventsd', 'gdrive_synclog',
-        'java_idx', 'lnk', 'mac_appfirewall_log', 'mac_keychain',
+        'googlelog', 'java_idx', 'lnk', 'mac_appfirewall_log', 'mac_keychain',
         'mac_securityd', 'mactime', 'macwifi', 'mcafee_protection', 'mft',
         'msiecf', 'networkminer_fileinfo', 'olecf',
         'olecf/olecf_automatic_destinations', 'olecf/olecf_default',
         'olecf/olecf_document_summary', 'olecf/olecf_summary', 'opera_global',
         'opera_typed_history', 'pe', 'plist', 'plist/airport', 'plist/apple_id',
-        'plist/ipod_device', 'plist/launchd_plist', 'plist/macosx_bluetooth',
-        'plist/macosx_install_history', 'plist/macuser',
-        'plist/maxos_software_update', 'plist/plist_default',
+        'plist/ipod_device', 'plist/launchd_plist',
+        'plist/macos_software_update', 'plist/macosx_bluetooth',
+        'plist/macosx_install_history', 'plist/macuser', 'plist/plist_default',
         'plist/safari_history', 'plist/spotlight', 'plist/spotlight_volume',
         'plist/time_machine', 'pls_recall', 'popularity_contest', 'prefetch',
         'recycle_bin', 'recycle_bin_info2', 'rplog', 'santa', 'sccm', 'selinux',
-        'setupapi', 'skydrive_log', 'skydrive_log_old', 'sophos_av', 'sqlite',
-        'sqlite/android_calls', 'sqlite/android_sms', 'sqlite/android_webview',
+        'setupapi', 'skydrive_log', 'skydrive_log_old', 'sophos_av',
+        'spotlight_storedb', 'sqlite', 'sqlite/android_calls',
+        'sqlite/android_sms', 'sqlite/android_webview',
         'sqlite/android_webviewcache', 'sqlite/appusage',
         'sqlite/chrome_17_cookies', 'sqlite/chrome_27_history',
         'sqlite/chrome_66_cookies', 'sqlite/chrome_8_history',
@@ -188,7 +189,8 @@ Storage files are different.
         'sqlite/kodi', 'sqlite/ls_quarantine', 'sqlite/mac_document_versions',
         'sqlite/mac_knowledgec', 'sqlite/mac_notes',
         'sqlite/mac_notificationcenter', 'sqlite/mackeeper_cache',
-        'sqlite/safari_history', 'sqlite/skype', 'sqlite/tango_android_profile',
+        'sqlite/macostcc', 'sqlite/safari_historydb', 'sqlite/skype',
+        'sqlite/tango_android_profile',
         'sqlite/tango_android_tc', 'sqlite/twitter_android',
         'sqlite/twitter_ios', 'sqlite/windows_timeline', 'sqlite/zeitgeist',
         'symantec_scanlog', 'syslog', 'syslog/cron', 'syslog/ssh',
