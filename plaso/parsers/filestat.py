@@ -61,7 +61,7 @@ class FileStatParser(interface.FileEntryParser):
       pytsk3.TSK_FS_TYPE_FFS2: 'FFS2',
       pytsk3.TSK_FS_TYPE_FFS_DETECT: 'FFS',
       pytsk3.TSK_FS_TYPE_EXT2: 'EXT2',
-      pytsk3.TSK_FS_TYPE_EXT3: 'EXT4',
+      pytsk3.TSK_FS_TYPE_EXT3: 'EXT3',
       pytsk3.TSK_FS_TYPE_EXT_DETECT: 'EXT',
       pytsk3.TSK_FS_TYPE_ISO9660: 'ISO9660',
       pytsk3.TSK_FS_TYPE_ISO9660_DETECT: 'ISO9660',
