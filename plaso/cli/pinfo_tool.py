@@ -800,11 +800,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     if self._output_format == 'json':
       self._output_writer.Write(', "event_sources": {')
 
-    elif self._output_format in ('markdown', 'text') and (
-        self._verbose or 'sources' in self._sections):
+    elif self._output_format in ('markdown', 'text'):
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title='Event sources', title_level=2)
 
+    number_of_event_sources = 0
     for source_index, source in enumerate(storage_reader.GetEventSources()):
       if self._output_format == 'json':
         if source_index != 0:
@@ -815,22 +815,25 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 source))
         self._output_writer.Write('"source": {0:s}'.format(json_string))
 
-      elif self._output_format in ('markdown', 'text') and (
-          self._verbose or 'sources' in self._sections):
-        path_spec_string = source.path_spec.comparable
-        for path_index, line in enumerate(path_spec_string.split('\n')):
-          if not line:
-            continue
+      elif self._output_format in ('markdown', 'text'):
+        if self._verbose or 'sources' in self._sections:
+          path_spec_string = source.path_spec.comparable
+          for path_index, line in enumerate(path_spec_string.split('\n')):
+            if not line:
+              continue
 
-          if path_index == 0:
-            table_view.AddRow(['{0:d}'.format(source_index), line])
-          else:
-            table_view.AddRow(['', line])
+            if path_index == 0:
+              table_view.AddRow(['{0:d}'.format(source_index), line])
+            else:
+              table_view.AddRow(['', line])
+
+      number_of_event_sources += 1
 
     if self._output_format == 'json':
       self._output_writer.Write('}')
-    elif self._output_format in ('markdown', 'text') and (
-        self._verbose or 'sources' in self._sections):
+    elif self._output_format in ('markdown', 'text'):
+      if not (self._verbose or 'sources' in self._sections):
+        table_view.AddRow(['Total', '{0:d}'.format(number_of_event_sources)])
       table_view.Write(self._output_writer)
 
   def _PrintStorageOverviewAsTable(self, storage_reader):
