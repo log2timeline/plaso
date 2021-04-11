@@ -65,23 +65,23 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       else:
         timestamp = event.timestamp
 
-      try:
-        datetime_object = datetime.datetime(
-            1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-        datetime_object += datetime.timedelta(microseconds=timestamp)
-        datetime_object = datetime_object.astimezone(
-            self._output_mediator.timezone)
+      year, month, day_of_month = (0, 0, 0)
+      if timestamp:
+        try:
+          datetime_object = datetime.datetime(
+              1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
+          datetime_object += datetime.timedelta(microseconds=timestamp)
+          datetime_object = datetime_object.astimezone(
+              self._output_mediator.timezone)
 
-        year = datetime_object.year
-        month = datetime_object.month
-        day_of_month = datetime_object.day
+          year = datetime_object.year
+          month = datetime_object.month
+          day_of_month = datetime_object.day
 
-      except (OverflowError, TypeError):
-        year, month, day_of_month = (0, 0, 0)
-
-        self._ReportEventError(event, event_data, (
-            'unable to copy timestamp: {0!s} to a human readable date. '
-            'Defaulting to: "0000-00-00"').format(timestamp))
+        except (OverflowError, TypeError):
+          self._ReportEventError(event, event_data, (
+              'unable to copy timestamp: {0!s} to a human readable date. '
+              'Defaulting to: "0000-00-00"').format(timestamp))
 
     return '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
 

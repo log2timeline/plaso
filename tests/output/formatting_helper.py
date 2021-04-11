@@ -50,6 +50,11 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01+00:00')
 
+    event.timestamp = 0
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '0000-00-00T00:00:00+00:00')
+
     event.timestamp = -9223372036854775808
     date_time_string = test_helper._FormatDateTime(
         event, event_data, event_data_stream)
@@ -210,6 +215,11 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     time_string = test_helper._FormatTime(
         event, event_data, event_data_stream)
     self.assertEqual(time_string, '18:17:01')
+
+    event.timestamp = 0
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '--:--:--')
 
     event.timestamp = -9223372036854775808
     time_string = test_helper._FormatTime(

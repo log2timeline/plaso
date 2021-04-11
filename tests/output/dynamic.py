@@ -47,6 +47,11 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-27')
 
+    event.timestamp = 0
+    date_string = formatting_helper._FormatDate(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_string, '0000-00-00')
+
     event.timestamp = -9223372036854775808
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)

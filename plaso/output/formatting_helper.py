@@ -80,6 +80,9 @@ class FieldFormattingHelper(object):
     else:
       timestamp = event.timestamp
 
+    if not timestamp:
+      return '0000-00-00T00:00:00+00:00'
+
     try:
       datetime_object = datetime.datetime(
           1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
@@ -372,6 +375,9 @@ class FieldFormattingHelper(object):
       else:
         timestamp = event.timestamp
 
+      if not timestamp:
+        return '--:--:--'
+
       try:
         datetime_object = datetime.datetime(
             1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
@@ -408,6 +414,9 @@ class FieldFormattingHelper(object):
     else:
       timestamp = event.timestamp
 
+    if not timestamp:
+      return '-'
+
     # For tzname to work the datetime object must be naive (without a time
     # zone).
     try:
@@ -418,7 +427,7 @@ class FieldFormattingHelper(object):
     except OverflowError:
       self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable time zone. '
-          'Defaulting to: "00/00/0000"').format(timestamp))
+          'Defaulting to: "-"').format(timestamp))
 
       return '-'
 
