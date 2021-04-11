@@ -316,7 +316,7 @@ optional arguments:
     self.assertEqual(TestOutputModuleMissingParameters.parameters, 'foobar')
 
     expected_line = (
-        '2021-04-11T05:15:34.607704+00:00,Last Access Time,FILE,File stat,'
+        '2021-04-11T05:15:34.607703823+00:00,Last Access Time,FILE,File stat,'
         'OS:/tmp/test/test_data/syslog Type: file,filestat,'
         'OS:/tmp/test/test_data/syslog,-')
     self.assertIn(expected_line, lines)
