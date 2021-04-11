@@ -59,6 +59,9 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """
     if event.date_time and self._output_mediator.timezone == pytz.UTC:
       year, month, day_of_month = event.date_time.GetDate()
+      if None in (year, month, day_of_month):
+        year, month, day_of_month = (0, 0, 0)
+
     else:
       if event.date_time:
         timestamp = event.date_time.GetPlasoTimestamp()

@@ -15,7 +15,7 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2014-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,syslog,OS:/tmp/test/test_data/syslog,repeated
 2014-11-18T08:30:20+00:00,Content Modification Time,LOG,Log File,[kernel] [997.390602] sda2: rw=0  want=65  limit=2,syslog,OS:/tmp/test/test_data/syslog,-
 2014-11-18T08:31:20+00:00,Content Modification Time,LOG,Log File,[kernel] [998.390602] sda2: rw=0  want=66  limit=2,syslog,OS:/tmp/test/test_data/syslog,-
-2021-04-11T05:15:32.279702+00:00,Content Modification Time,FILE,File stat,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2021-04-11T05:15:32.279702+00:00,Metadata Modification Time,FILE,File stat,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2021-04-11T05:15:34.607704+00:00,Last Access Time,FILE,File stat,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2021-04-11T05:15:37.705707+00:00,Last Access Time,FILE,File stat,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2021-04-11T05:15:32.279701691+00:00,Content Modification Time,FILE,File stat,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2021-04-11T05:15:32.279701691+00:00,Metadata Modification Time,FILE,File stat,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2021-04-11T05:15:34.607703823+00:00,Last Access Time,FILE,File stat,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2021-04-11T05:15:37.705706661+00:00,Last Access Time,FILE,File stat,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-

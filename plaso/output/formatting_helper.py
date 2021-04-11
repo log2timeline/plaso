@@ -73,32 +73,33 @@ class FieldFormattingHelper(object):
     """
     if event.date_time and self._output_mediator.timezone == pytz.UTC:
       iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
-      return '{0:s}+00:00'.format(iso8601_string[:-1])
+      if iso8601_string[10] == 'T' and iso8601_string[-1] == 'Z':
+        iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
 
-    if event.date_time:
-      timestamp = event.date_time.GetPlasoTimestamp()
     else:
-      timestamp = event.timestamp
+      if event.date_time:
+        timestamp = event.date_time.GetPlasoTimestamp()
+      else:
+        timestamp = event.timestamp
 
-    if not timestamp:
-      return '0000-00-00T00:00:00+00:00'
+      iso8601_string = '0000-00-00T00:00:00+00:00'
+      if timestamp:
+        try:
+          datetime_object = datetime.datetime(
+              1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
+          datetime_object += datetime.timedelta(microseconds=timestamp)
+          datetime_object = datetime_object.astimezone(
+              self._output_mediator.timezone)
 
-    try:
-      datetime_object = datetime.datetime(
-          1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-      datetime_object += datetime.timedelta(microseconds=timestamp)
-      datetime_object = datetime_object.astimezone(
-          self._output_mediator.timezone)
+          iso8601_string = datetime_object.isoformat()
 
-      return datetime_object.isoformat()
+        except (OverflowError, TypeError) as exception:
+          self._ReportEventError(event, event_data, (
+              'unable to copy timestamp: {0!s} to a human readable date and '
+              'time with error: {1!s}. Defaulting to: "{2:s}"').format(
+                  timestamp, exception, iso8601_string))
 
-    except (OverflowError, TypeError) as exception:
-      self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable date and time '
-          'with error: {1!s}. Defaulting to: "0000-00-00T00:00:00'
-          '+00:00"').format(timestamp, exception))
-
-      return '0000-00-00T00:00:00+00:00'
+      return iso8601_string
 
   def _FormatDisplayName(self, event, event_data, event_data_stream):
     """Formats the display name.
@@ -369,32 +370,34 @@ class FieldFormattingHelper(object):
     """
     if event.date_time and self._output_mediator.timezone == pytz.UTC:
       hours, minutes, seconds = event.date_time.GetTimeOfDay()
+
     else:
       if event.date_time:
         timestamp = event.date_time.GetPlasoTimestamp()
       else:
         timestamp = event.timestamp
 
-      if not timestamp:
-        return '--:--:--'
+      hours, minutes, seconds = (None, None, None)
 
-      try:
-        datetime_object = datetime.datetime(
-            1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-        datetime_object += datetime.timedelta(microseconds=timestamp)
-        datetime_object = datetime_object.astimezone(
-            self._output_mediator.timezone)
+      if timestamp:
+        try:
+          datetime_object = datetime.datetime(
+              1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
+          datetime_object += datetime.timedelta(microseconds=timestamp)
+          datetime_object = datetime_object.astimezone(
+              self._output_mediator.timezone)
 
-        hours = datetime_object.hour
-        minutes = datetime_object.minute
-        seconds = datetime_object.second
+          hours, minutes, seconds = (
+              datetime_object.hour, datetime_object.minute,
+              datetime_object.second)
 
-      except (OverflowError, TypeError):
-        self._ReportEventError(event, event_data, (
-            'unable to copy timestamp: {0!s} to a human readable time. '
-            'Defaulting to: "--:--:--"').format(timestamp))
+        except (OverflowError, TypeError):
+          self._ReportEventError(event, event_data, (
+              'unable to copy timestamp: {0!s} to a human readable time. '
+              'Defaulting to: "--:--:--"').format(timestamp))
 
-        return '--:--:--'
+    if None in (hours, minutes, seconds):
+      return '--:--:--'
 
     return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
 
