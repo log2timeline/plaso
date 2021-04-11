@@ -27,9 +27,7 @@ class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
 
   _TEST_EVENTS = [
       {'data_type': 'test:output',
-       'display_name': 'OS: /var/log/syslog.1',
        'hostname': 'ubuntu',
-       'inode': 12345678,
        'pathspec': path_spec_factory.Factory.NewPathSpec(
            dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
            location='/var/log/syslog.1', parent=_OS_PATH_SPEC),
@@ -72,9 +70,10 @@ class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         '\n'
         '[Reserved attributes]:\n'
         '  {{data_type}} test:output\n'
-        '  {{display_name}} OS: /var/log/syslog.1\n'
+        '  {{display_name}} TSK:/var/log/syslog.1\n'
+        '  {{filename}} /var/log/syslog.1\n'
         '  {{hostname}} ubuntu\n'
-        '  {{inode}} 12345678\n'
+        '  {{inode}} 15\n'
         '  {{username}} root\n'
         '\n'
         '[Additional attributes]:\n'
@@ -99,9 +98,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
 
   _TEST_EVENTS = [
       {'data_type': 'test:output',
-       'display_name': 'OS: /var/log/syslog.1',
        'hostname': 'ubuntu',
-       'inode': 12345678,
        'path_spec': path_spec_factory.Factory.NewPathSpec(
            dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
            location='/var/log/syslog.1', parent=_OS_PATH_SPEC),
@@ -145,9 +142,10 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         '\n'
         '[Reserved attributes]:\n'
         '  {{data_type}} test:output\n'
-        '  {{display_name}} OS: /var/log/syslog.1\n'
+        '  {{display_name}} TSK:/var/log/syslog.1\n'
+        '  {{filename}} /var/log/syslog.1\n'
         '  {{hostname}} ubuntu\n'
-        '  {{inode}} 12345678\n'
+        '  {{inode}} 15\n'
         '  {{username}} root\n'
         '\n'
         '[Additional attributes]:\n'

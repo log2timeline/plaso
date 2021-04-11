@@ -73,8 +73,12 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     notes = getattr(event_data, 'notes', '')
     if not notes:
-      display_name = getattr(event_data, 'display_name', '')
-      notes = 'File: {0:s} inode: {1!s}'.format(display_name, inode)
+      display_name = self._FormatDisplayName(
+          event, event_data, event_data_stream)
+      notes = 'File: {0:s}'.format(display_name)
+
+      if inode != '-':
+        notes = '{0:s} inode: {1:s}'.format(notes, inode)
 
     return notes
 

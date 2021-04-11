@@ -11,7 +11,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -33,7 +33,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -55,7 +55,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
   {username} root
@@ -79,7 +79,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
   {username} root
@@ -103,7 +103,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
   {username} root
@@ -127,7 +127,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -148,7 +148,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} :
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -169,7 +169,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -194,7 +194,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -216,7 +216,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -239,7 +239,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -261,7 +261,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -283,7 +283,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} victoria
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -305,7 +305,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} :
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -328,7 +328,7 @@
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -349,7 +349,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} victoria
-  {inode} 5428140
+  {inode} -
   {offset} 0
   {parser} syslog
 
@@ -359,7 +359,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2020-04-04T06:39:36.000000Z
+  2021-04-11T05:15:32.279702Z
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -368,7 +368,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 5428140
+  {inode} 36003
   {parser} filestat
 
 [Additional attributes]:
@@ -380,7 +380,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2020-04-04T06:39:36.000000Z
+  2021-04-11T05:15:32.279702Z
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -389,7 +389,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 5428140
+  {inode} 36003
   {parser} filestat
 
 [Additional attributes]:
@@ -401,7 +401,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2020-04-04T06:39:38.000000Z
+  2021-04-11T05:15:34.607704Z
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -410,7 +410,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 5428140
+  {inode} 36003
   {parser} filestat
 
 [Additional attributes]:
@@ -422,7 +422,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2020-04-04T06:39:41.000000Z
+  2021-04-11T05:15:37.705707Z
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -431,7 +431,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 5428140
+  {inode} 36003
   {parser} filestat
 
 [Additional attributes]:

@@ -41,9 +41,23 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
     del event_data_json_dict['__container_type__']
     del event_data_json_dict['__type__']
 
+    display_name = event_data_json_dict.get('display_name', None)
+    if display_name is None:
+      display_name = self._field_formatting_helper.GetFormattedField(
+          'display_name', event, event_data, event_data_stream, event_tag)
+      event_data_json_dict['display_name'] = display_name
+
+    filename = event_data_json_dict.get('filename', None)
+    if filename is None:
+      filename = self._field_formatting_helper.GetFormattedField(
+          'filename', event, event_data, event_data_stream, event_tag)
+      event_data_json_dict['filename'] = filename
+
     inode = event_data_json_dict.get('inode', None)
     if inode is None:
-      event_data_json_dict['inode'] = 0
+      inode = self._field_formatting_helper.GetFormattedField(
+          'inode', event, event_data, event_data_stream, event_tag)
+      event_data_json_dict['inode'] = inode
 
     try:
       message = self._field_formatting_helper.GetFormattedField(

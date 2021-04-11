@@ -42,6 +42,17 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(display_name_string, 'FAKE:log/syslog.1')
 
+  def testFormatFilename(self):
+    """Tests the _FormatFilename function."""
+    output_mediator = self._CreateOutputMediator()
+    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    filename_string = test_helper._FormatFilename(
+        event, event_data, event_data_stream)
+    self.assertEqual(filename_string, 'log/syslog.1')
+
   def testFormatHostname(self):
     """Tests the _FormatHostname function."""
     output_mediator = self._CreateOutputMediator()

@@ -472,8 +472,8 @@ Test argument parser.
     test_file_path = self._GetTestFilePath(['psort_test.plaso'])
     self._SkipIfPathNotExists(test_file_path)
 
-    expected_output_file_path = self._GetTestFilePath(
-        ['end_to_end', 'dynamic.log'])
+    expected_output_file_path = self._GetTestFilePath([
+        'end_to_end', 'dynamic.log'])
     self._SkipIfPathNotExists(expected_output_file_path)
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')

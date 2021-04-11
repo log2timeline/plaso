@@ -30,9 +30,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
 
   _TEST_EVENTS = [
       {'data_type': 'test:event',
-       'display_name': 'OS: /var/log/syslog.1',
        'hostname': 'ubuntu',
-       'inode': 12345678,
        'path_spec': path_spec_factory.Factory.NewPathSpec(
            dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
            location='/var/log/syslog.1', parent=_OS_PATH_SPEC),
@@ -104,9 +102,10 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
             '__container_type__': 'event',
             '__type__': 'AttributeContainer',
             'data_type': 'test:event',
-            'display_name': 'OS: /var/log/syslog.1',
+            'display_name': 'TSK:/var/log/syslog.1',
+            'filename': '/var/log/syslog.1',
             'hostname': 'ubuntu',
-            'inode': 12345678,
+            'inode': '15',
             'message': (
                 'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
                 'session closed for user root)'),
