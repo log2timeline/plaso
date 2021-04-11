@@ -99,7 +99,7 @@ class FieldFormattingHelper(object):
               'time with error: {1!s}. Defaulting to: "{2:s}"').format(
                   timestamp, exception, iso8601_string))
 
-      return iso8601_string
+    return iso8601_string
 
   def _FormatDisplayName(self, event, event_data, event_data_stream):
     """Formats the display name.
