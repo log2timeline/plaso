@@ -15,7 +15,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -321,7 +320,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
       month = self._GetValueFromStructure(structure, 'month')
       try:
-        month = timelib.MONTH_DICT.get(month.lower(), 0)
+        month = self._MONTH_DICT.get(month.lower(), 0)
       except AttributeError:
         parser_mediator.ProduceExtractionWarning(
             'invalid month value: {0!s}'.format(month))

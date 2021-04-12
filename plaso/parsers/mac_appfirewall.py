@@ -9,7 +9,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -109,7 +108,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     # Note that dfdatetime_time_elements.TimeElements will raise ValueError
     # for an invalid month.
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     if month != 0 and month < self._last_month:
       # Gap detected between years.

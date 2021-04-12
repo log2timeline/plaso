@@ -60,7 +60,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -169,7 +168,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     # TODO: what if time_elements_tuple is None.
     month, day, hours, minutes, seconds = time_elements_tuple
 
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     if month != 0 and month < self._last_month:
       # Gap detected between years.
@@ -190,7 +189,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     # TODO: what if time_elements_tuple is None.
     _, month, day, hours, minutes, seconds, year = time_elements_tuple
 
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     time_elements_tuple = (year, month, day, hours, minutes, seconds)
 
@@ -323,7 +322,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple))
       return False
 
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     time_elements_tuple = (year, month, day, hours, minutes, seconds)
 

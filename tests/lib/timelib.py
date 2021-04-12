@@ -24,15 +24,6 @@ class TimeLibTest(shared_test_lib.BaseTestCase):
         timestamp, timezone=timezone)
     self.assertEqual(date_time_string, '2013-03-14T21:20:08.850041+01:00')
 
-  def testMonthDict(self):
-    """Test the month dict, both inside and outside of scope."""
-    self.assertEqual(timelib.MONTH_DICT['nov'], 11)
-    self.assertEqual(timelib.MONTH_DICT['jan'], 1)
-    self.assertEqual(timelib.MONTH_DICT['may'], 5)
-
-    month = timelib.MONTH_DICT.get('doesnotexist')
-    self.assertIsNone(month)
-
   def testLocaltimeToUTC(self):
     """Test the localtime to UTC conversion."""
     timezone = pytz.timezone('CET')

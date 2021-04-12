@@ -8,7 +8,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import text_parser
 from plaso.parsers import manager
@@ -76,7 +75,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
     _, month, day_of_month, hours, minutes, seconds, year = time_elements_tuple
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
     return (year, month, day_of_month, hours, minutes, seconds)
 
 
