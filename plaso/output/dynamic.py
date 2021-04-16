@@ -57,7 +57,10 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     Returns:
       str: date field.
     """
-    if event.date_time and self._output_mediator.timezone == pytz.UTC:
+    # For now check if event.timestamp is set, to mimic existing behavior of
+    # using 0000-00-00 for 0 timestamp values.
+    if (event.date_time and event.timestamp and
+        self._output_mediator.timezone == pytz.UTC):
       year, month, day_of_month = event.date_time.GetDate()
       if None in (year, month, day_of_month):
         year, month, day_of_month = (0, 0, 0)
