@@ -76,7 +76,10 @@ class FieldFormattingHelper(object):
     if (event.date_time and event.timestamp and
         self._output_mediator.timezone == pytz.UTC):
       iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
-      if iso8601_string[10] == 'T' and iso8601_string[-1] == 'Z':
+      if not iso8601_string:
+        iso8601_string = '0000-00-00T00:00:00+00:00'
+
+      elif iso8601_string[10] == 'T' and iso8601_string[-1] == 'Z':
         iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
 
     else:
