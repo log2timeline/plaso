@@ -101,6 +101,11 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
         'event_0': {
             '__container_type__': 'event',
             '__type__': 'AttributeContainer',
+            'date_time': {
+                '__class_name__': 'PosixTimeInMicroseconds',
+                '__type__': 'DateTimeValues',
+                'timestamp': 1340821021000000,
+            },
             'data_type': 'test:event',
             'display_name': 'TSK:/var/log/syslog.1',
             'filename': '/var/log/syslog.1',

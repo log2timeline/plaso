@@ -31,6 +31,35 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
 
+  def testFormatDateTime(self):
+    """Tests the _FormatDateTime function."""
+    output_mediator = self._CreateOutputMediator()
+    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+    # Test with event.date_time
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
+
+    # Test with event.timestamp
+    event.date_time = None
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T18:17:01+00:00')
+
+    event.timestamp = 0
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '0000-00-00T00:00:00+00:00')
+
+    event.timestamp = -9223372036854775808
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '0000-00-00T00:00:00+00:00')
+
   def testFormatDisplayName(self):
     """Tests the _FormatDisplayName function."""
     output_mediator = self._CreateOutputMediator()
@@ -175,9 +204,22 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+    # Test with event.date_time
     time_string = test_helper._FormatTime(
         event, event_data, event_data_stream)
     self.assertEqual(time_string, '18:17:01')
+
+    # Test with event.timestamp
+    event.date_time = None
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '18:17:01')
+
+    event.timestamp = 0
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '--:--:--')
 
     event.timestamp = -9223372036854775808
     time_string = test_helper._FormatTime(

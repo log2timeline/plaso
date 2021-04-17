@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Containers related functions and classes for testing."""
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.containers import events
 from plaso.containers import interface
 
@@ -28,6 +30,9 @@ def CreateEventFromValues(event_values):
         attribute_value = shared_test_lib.CopyTimestampFromSring(
             attribute_value)
       setattr(event, attribute_name, attribute_value)
+
+  event.date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+      timestamp=event.timestamp)
 
   event_data_stream = events.EventDataStream()
   for attribute_name in ('path_spec', 'md5_hash', 'sha256_hash'):

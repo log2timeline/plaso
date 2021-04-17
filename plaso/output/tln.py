@@ -5,9 +5,6 @@ For documentation on the TLN format see:
 https://forensicswiki.xyz/wiki/index.php?title=TLN
 """
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
-from plaso.lib import timelib
 from plaso.output import formatting_helper
 from plaso.output import manager
 from plaso.output import shared_dsv
@@ -48,8 +45,8 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       NoFormatterFound: If no event formatter can be found to match the data
           type in the event data.
     """
-    date_time_string = timelib.Timestamp.CopyToIsoFormat(
-        event.timestamp, timezone=self._output_mediator.timezone)
+    date_time_string = self._FormatDateTime(
+        event, event_data, event_data_stream)
     timestamp_description = event.timestamp_desc or 'UNKNOWN'
 
     message = self._FormatMessage(event, event_data, event_data_stream)
@@ -93,14 +90,12 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     Returns:
       str: timestamp.
     """
-    # TODO: preserve dfdatetime as an object.
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=event.timestamp)
-    posix_timestamp = date_time.CopyToPosixTimestamp()
-    if not posix_timestamp:
-      posix_timestamp = 0
+    if event.date_time:
+      posix_timestamp = event.date_time.CopyToPosixTimestamp()
+    else:
+      posix_timestamp, _ = divmod(event.timestamp, 1000000)
 
-    return '{0:d}'.format(posix_timestamp)
+    return '{0:d}'.format(posix_timestamp or 0)
 
 
 class TLNOutputModule(shared_dsv.DSVOutputModule):
