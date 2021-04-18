@@ -3,8 +3,8 @@
 
 import pyregf
 
-from dfdatetime import filetime
-from dfdatetime import posix_time
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import posix_time as dfdatetime_posix_time
 
 from dfwinreg import definitions as dfwinreg_definitions
 
@@ -275,7 +275,8 @@ class AMCacheParser(interface.FileObjectParser):
     amcache_time_value = file_reference_key.get_value_by_name(
         self._AMCACHE_ENTRY_WRITE_TIME)
     if amcache_time_value:
-      amcache_time = filetime.Filetime(amcache_time_value.get_data_as_integer())
+      timestamp = amcache_time_value.get_data_as_integer()
+      amcache_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           amcache_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -283,8 +284,8 @@ class AMCacheParser(interface.FileObjectParser):
     creation_time_value = file_reference_key.get_value_by_name(
         self._AMCACHE_FILE_CREATION_TIME)
     if creation_time_value:
-      creation_time = filetime.Filetime(
-          creation_time_value.get_data_as_integer())
+      timestamp = creation_time_value.get_data_as_integer()
+      creation_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           creation_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -292,8 +293,8 @@ class AMCacheParser(interface.FileObjectParser):
     modification_time_value = file_reference_key.get_value_by_name(
         self._AMCACHE_FILE_MODIFICATION_TIME)
     if modification_time_value:
-      modification_time = filetime.Filetime(
-          modification_time_value.get_data_as_integer())
+      timestamp = modification_time_value.get_data_as_integer()
+      modification_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           modification_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -301,8 +302,8 @@ class AMCacheParser(interface.FileObjectParser):
     compilation_time_value = file_reference_key.get_value_by_name(
         self._AMCACHE_COMPILATION_TIME)
     if compilation_time_value:
-      link_time = posix_time.PosixTime(
-          compilation_time_value.get_data_as_integer())
+      timestamp = compilation_time_value.get_data_as_integer()
+      link_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           link_time, definitions.TIME_DESCRIPTION_CHANGE)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -328,8 +329,8 @@ class AMCacheParser(interface.FileObjectParser):
     installation_time_value = program_key.get_value_by_name(
         self._AMCACHE_P_INSTALLATION_TIME)
     if installation_time_value:
-      installation_time = posix_time.PosixTime(
-          installation_time_value.get_data_as_integer())
+      timestamp = installation_time_value.get_data_as_integer()
+      installation_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           installation_time, definitions.TIME_DESCRIPTION_INSTALLATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -407,8 +408,8 @@ class AMCacheParser(interface.FileObjectParser):
         '{0:s}: {1!s}'.format(name, value)
         for name, value in sorted(values_dict.items())]) or None
 
-    last_written_time = filetime.Filetime(
-        regf_key.get_last_written_time_as_integer())
+    timestamp = regf_key.get_last_written_time_as_integer()
+    last_written_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
