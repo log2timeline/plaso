@@ -152,6 +152,50 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     # Ensure there are no events left unaccounted for.
     self.assertEqual(event_counters, collections.Counter())
 
+  def testAnalyzeDataStream(self):
+    """Tests the _AnalyzeDataStream function."""
+    knowledge_base_values = {'year': 2016}
+    session = sessions.Session()
+
+    storage_writer = fake_writer.FakeStorageWriter(session)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.items():
+        knowledge_base_object.SetValue(identifier, value)
+
+    resolver_context = context.Context()
+    mediator = parsers_mediator.ParserMediator(
+        storage_writer, knowledge_base_object, preferred_year=2016,
+        resolver_context=resolver_context)
+
+    extraction_worker = worker.EventExtractionWorker()
+
+    test_analyzer = analyzers_manager_test.TestAnalyzer()
+    self.assertEqual(len(test_analyzer.GetResults()), 0)
+
+    extraction_worker._analyzers = [test_analyzer]
+
+    storage_writer.Open()
+    storage_writer.WriteSessionStart()
+
+    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+    mediator.SetFileEntry(file_entry)
+
+    display_name = mediator.GetDisplayName()
+    event_data_stream = events.EventDataStream()
+
+    extraction_worker._AnalyzeDataStream(
+        file_entry, '', display_name, event_data_stream)
+
+    storage_writer.WriteSessionCompletion()
+    storage_writer.Close()
+
+    self.assertIsNotNone(event_data_stream)
+
+    event_attribute = getattr(event_data_stream, 'test_result', None)
+    self.assertEqual(event_attribute, 'is_vegetable')
+
   def testAnalyzeFileObject(self):
     """Tests the _AnalyzeFileObject function."""
     knowledge_base_values = {'year': 2016}
@@ -179,7 +223,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
     storage_writer.WriteSessionStart()
 
-    file_entry = self._GetTestFileEntry(['ímynd.dd'])
+    file_entry = self._GetTestFileEntry(['syslog.tgz'])
     mediator.SetFileEntry(file_entry)
 
     file_object = file_entry.GetFileObject()
@@ -196,6 +240,194 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     event_attribute = getattr(event_data_stream, 'test_result', None)
     self.assertEqual(event_attribute, 'is_vegetable')
+
+  def testCanSkipDataStream(self):
+    """Tests the _CanSkipDataStream function."""
+    extraction_worker = worker.EventExtractionWorker()
+
+    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+
+    result = extraction_worker._CanSkipDataStream(file_entry, None)
+    self.assertFalse(result)
+
+  def testCanSkipContentExtraction(self):
+    """Tests the _CanSkipContentExtraction function."""
+    extraction_worker = worker.EventExtractionWorker()
+
+    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+
+    result = extraction_worker._CanSkipContentExtraction(file_entry)
+    self.assertFalse(result)
+
+  def testExtractContentFromDataStream(self):
+    """Tests the _ExtractContentFromDataStream function."""
+    knowledge_base_values = {'year': 2016}
+    session = sessions.Session()
+
+    storage_writer = fake_writer.FakeStorageWriter(session)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.items():
+        knowledge_base_object.SetValue(identifier, value)
+
+    resolver_context = context.Context()
+    mediator = parsers_mediator.ParserMediator(
+        storage_writer, knowledge_base_object, preferred_year=2016,
+        resolver_context=resolver_context)
+
+    extraction_worker = worker.EventExtractionWorker()
+
+    test_analyzer = analyzers_manager_test.TestAnalyzer()
+    self.assertEqual(len(test_analyzer.GetResults()), 0)
+
+    extraction_worker._analyzers = [test_analyzer]
+
+    storage_writer.Open()
+    storage_writer.WriteSessionStart()
+
+    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+    mediator.SetFileEntry(file_entry)
+
+    extraction_worker._ExtractContentFromDataStream(
+        mediator, file_entry, '')
+
+    storage_writer.WriteSessionCompletion()
+    storage_writer.Close()
+
+    # TODO: check results in storage writer
+
+  def testExtractMetadataFromFileEntry(self):
+    """Tests the _ExtractMetadataFromFileEntry function."""
+    knowledge_base_values = {'year': 2016}
+    session = sessions.Session()
+
+    storage_writer = fake_writer.FakeStorageWriter(session)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.items():
+        knowledge_base_object.SetValue(identifier, value)
+
+    resolver_context = context.Context()
+    mediator = parsers_mediator.ParserMediator(
+        storage_writer, knowledge_base_object, preferred_year=2016,
+        resolver_context=resolver_context)
+
+    extraction_worker = worker.EventExtractionWorker()
+
+    test_analyzer = analyzers_manager_test.TestAnalyzer()
+    self.assertEqual(len(test_analyzer.GetResults()), 0)
+
+    extraction_worker._analyzers = [test_analyzer]
+
+    storage_writer.Open()
+    storage_writer.WriteSessionStart()
+
+    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+    mediator.SetFileEntry(file_entry)
+
+    extraction_worker._ExtractMetadataFromFileEntry(
+        mediator, file_entry, '')
+
+    storage_writer.WriteSessionCompletion()
+    storage_writer.Close()
+
+    # TODO: check results in storage writer
+
+  def testGetArchiveTypes(self):
+    """Tests the _GetArchiveTypes function."""
+    knowledge_base_values = {'year': 2016}
+    session = sessions.Session()
+
+    storage_writer = fake_writer.FakeStorageWriter(session)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.items():
+        knowledge_base_object.SetValue(identifier, value)
+
+    resolver_context = context.Context()
+    mediator = parsers_mediator.ParserMediator(
+        storage_writer, knowledge_base_object, preferred_year=2016,
+        resolver_context=resolver_context)
+
+    extraction_worker = worker.EventExtractionWorker()
+
+    test_analyzer = analyzers_manager_test.TestAnalyzer()
+    self.assertEqual(len(test_analyzer.GetResults()), 0)
+
+    extraction_worker._analyzers = [test_analyzer]
+
+    storage_writer.Open()
+    storage_writer.WriteSessionStart()
+
+    extraction_worker = worker.EventExtractionWorker()
+
+    path_spec = self._GetTestFilePathSpec(['syslog.tar'])
+
+    type_indicators = extraction_worker._GetArchiveTypes(mediator, path_spec)
+    self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_TAR])
+
+    storage_writer.WriteSessionCompletion()
+    storage_writer.Close()
+
+  def testGetCompressedStreamTypes(self):
+    """Tests the _GetCompressedStreamTypes function."""
+    knowledge_base_values = {'year': 2016}
+    session = sessions.Session()
+
+    storage_writer = fake_writer.FakeStorageWriter(session)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.items():
+        knowledge_base_object.SetValue(identifier, value)
+
+    resolver_context = context.Context()
+    mediator = parsers_mediator.ParserMediator(
+        storage_writer, knowledge_base_object, preferred_year=2016,
+        resolver_context=resolver_context)
+
+    extraction_worker = worker.EventExtractionWorker()
+
+    test_analyzer = analyzers_manager_test.TestAnalyzer()
+    self.assertEqual(len(test_analyzer.GetResults()), 0)
+
+    extraction_worker._analyzers = [test_analyzer]
+
+    storage_writer.Open()
+    storage_writer.WriteSessionStart()
+
+    extraction_worker = worker.EventExtractionWorker()
+
+    path_spec = self._GetTestFilePathSpec(['syslog.tgz'])
+
+    type_indicators = extraction_worker._GetCompressedStreamTypes(
+        mediator, path_spec)
+    self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_GZIP])
+
+    storage_writer.WriteSessionCompletion()
+    storage_writer.Close()
+
+  def testIsMetadataFile(self):
+    """Tests the _IsMetadataFile function."""
+    extraction_worker = worker.EventExtractionWorker()
+
+    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+
+    result = extraction_worker._IsMetadataFile(file_entry)
+    self.assertFalse(result)
+
+  # TODO: add tests for _ProcessArchiveTypes
+  # TODO: add tests for _ProcessCompressedStreamTypes
+  # TODO: add tests for _ProcessDirectory
+  # TODO: add tests for _ProcessFileEntry
+  # TODO: add tests for _ProcessFileEntryDataStream
+  # TODO: add tests for _ProcessMetadataFile
+  # TODO: add tests for _SetHashers
+  # TODO: add tests for _SetYaraRules
+  # TODO: add tests for GetAnalyzerNames
 
   def testProcessPathSpecFile(self):
     """Tests the ProcessPathSpec function on a file."""
@@ -394,6 +626,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_counters,
         knowledge_base_values=knowledge_base_values)
+
+  # TODO: add tests for SetExtractionConfiguration
+  # TODO: add tests for SetAnalyzersProfiler
+  # TODO: add tests for SetProcessingProfiler
+  # TODO: add tests for SignalAbort
 
   def testExtractionWorkerHashing(self):
     """Test that the worker sets up and runs hashing code correctly."""
