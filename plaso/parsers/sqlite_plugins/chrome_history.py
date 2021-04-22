@@ -998,7 +998,7 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
     event_data = ChromeHistoryFileDownloadedEventData()
     event_data.danger_type = self._GetRowValue(query_hash, row, 'danger_type')
     event_data.end_time = self._GetRowValue(query_hash, row, 'end_time')
-    event_data.target_path = self._GetRowValue(query_hash, row, 'target_path')
+    event_data.full_path = self._GetRowValue(query_hash, row, 'target_path')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.interrupt_reason = self._GetRowValue(
         query_hash, row, 'interrupt_reason')
