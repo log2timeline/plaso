@@ -133,7 +133,8 @@ message:
 - '{url}'
 - '({full_path}).'
 - 'State: {state_string}.'
-- 'Received {received_bytes} of {total_bytes} bytes.'
+- 'Received {received_bytes} of'
+- '{total_bytes} bytes.'
 - 'Interrupt Reason: {interrupt_reason_string}.'
 - 'Danger Type: {danger_type_string}.'
 short_message:
