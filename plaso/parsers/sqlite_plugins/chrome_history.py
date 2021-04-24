@@ -15,14 +15,19 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
   """Chrome History file downloaded event data.
 
   Attributes:
-    danger_type (int): enum indicating if the download was dangerous.
-    end_time (int): when the download ended.
+    danger_type (int): assessment by Safe Browsing of the danger of the
+        downloaded content.
+    end_time (int): when the download ended. In Chrome versions
+        15 - 25, this value is in a POSIX timestamp; in version 26
+        and later, it is a WebKit timestamp.
     full_path (str): full path where the file was downloaded to.
     interrupt_reason (int): enum indicating why the download stopped.
     opened (int): if the downloaded file was opened from the browser.
     received_bytes (int): number of bytes received while downloading.
-    start_time (int): when the download started.
-    state (int): state of the download (finished, cancelled, etc).
+    start_time (int): when the download started. In Chrome versions
+        1 - 25, this value is in a POSIX timestamp; in version 26
+        and later, it is a WebKit timestamp.
+    state (int): state of the download, such as finished or cancelled.
     total_bytes (int): total number of bytes to download.
     url (str): URL of the downloaded file.
   """

@@ -68,7 +68,7 @@ enumeration_helpers:
   # Also see: https://cs.chromium.org/chromium/src/components/download/public/common/download_danger_type.h
   values:
     0: 'Not Dangerous'
-    1: 'Dangerous (eg: a pdf or extension from places other than gallery)'
+    1: 'Dangerous (for example, a pdf or extension from places other than gallery)'
     2: 'Dangerous URL - Safe Browsing shows this URL leads to a malicious file download'
     3: 'Dangerous Content -  Safe Browsing shows this file content as being malicious'
     4: 'Content May Be Malicious - (eg: extension is exe but Safe Browsing has not finished checking the content)'
