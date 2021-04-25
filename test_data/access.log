@@ -10,3 +10,5 @@ plaso.log2timeline.net:443 10.1.1.2 - - [13/Jan/2018:19:31:17 +0000] "GET /wp-co
 plaso.log2timeline.net:443 192.168.0.2 - - [13/Jan/2018:19:31:17 +0000] "GET /wp-content/themes/darkmode/evil.php HTTP/1.1" 200 1063 "-" "Mozilla/5.0 (Windows NT 7.1) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.112 Safari/534.30"
 plaso-2.log2timeline.net:443 192.168.0.2 - - [13/Jan/2018:19:31:19 +0000] "GET /wp-content/themes/darkmode/evil.php?cmd=ver%3B+uname+-a HTTP/1.1" 200 694 "-" "Mozilla/5.0 (Windows  U  Windows NT 5.1  en-US) AppleWebKit/534.12 (KHTML, like Gecko) Chrome/9.0.583.0 Safari/534.12"
 plaso-2.log2timeline.net:443 192.168.0.2 - - [13/Jan/2018:19:31:20 +0200] "GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a HTTP/1.1" 200 694 "http://localhost/" "Mozilla/5.0 (X11; Linux i686; rv:2.0b12pre) Gecko/20100101 Firefox/4"
+1.2.3.4 - - [25/Apr/2021:06:15:33 +0000] "GET /aaaa.xxxx/SomeText?action=edit&template=<script>alert("text")</script> HTTP/1.0" 404 1164
+1.2.3.4 - - [25/Apr/2021:06:15:33 +0000] "GET /$%7B("TextString"+"123456")%7D/actionChain1.action HTTP/1.0" 404 1164

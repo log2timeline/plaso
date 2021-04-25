@@ -79,7 +79,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
   _HTTP_REQUEST = (
       pyparsing.Suppress('"') +
-      pyparsing.SkipTo('"').setResultsName('http_request') +
+      pyparsing.SkipTo('" ').setResultsName('http_request') +
       pyparsing.Suppress('"'))
 
   _PORT_NUMBER = text_parser.PyparsingConstants.INTEGER.setResultsName(
@@ -95,7 +95,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
   _REFERER = (
       pyparsing.Suppress('"') +
-      pyparsing.SkipTo('"').setResultsName('referer') +
+      pyparsing.SkipTo('" ').setResultsName('referer') +
       pyparsing.Suppress('"'))
 
   _SERVER_NAME = (
