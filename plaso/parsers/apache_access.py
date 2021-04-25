@@ -108,7 +108,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Suppress('"'))
 
   _USER_NAME = (
-      pyparsing.Word(pyparsing.alphanums + '.') |
+      pyparsing.Word(pyparsing.alphanums) |
       pyparsing.Literal('-')).setResultsName('user_name')
 
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
