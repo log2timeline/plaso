@@ -18,7 +18,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(['access.log'], parser)
 
     self.assertEqual(storage_writer.number_of_warnings, 1)
-    self.assertEqual(storage_writer.number_of_events, 11)
+    self.assertEqual(storage_writer.number_of_events, 13)
 
     # The order in which parser generates events is nondeterministic hence
     # we sort the events.
