@@ -36,14 +36,6 @@ plaso.cli.helpers.data\_location module
    :undoc-members:
    :show-inheritance:
 
-plaso.cli.helpers.database\_config module
------------------------------------------
-
-.. automodule:: plaso.cli.helpers.database_config
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.cli.helpers.date\_filters module
 --------------------------------------
 
