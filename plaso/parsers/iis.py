@@ -21,6 +21,29 @@ class IISEventData(events.EventData):
   """IIS log event data.
 
   Attributes:
+    cs_cookie (str): Content of a sent or received cookie.
+    cs_host (str): HTTP host header name.
+    cs_referrer (str): Site that referred to the requested site.
+    cs_uri_query (str): URI query that was requested.
+    cs_username (str): Username of the authenticated user that accessed
+        the server, where anonymous users are indicated by a hyphen.
+    dest_ip (str): IP address of the server that generated the logged activity.
+    dest_port (str): Server port number.
+    http_method (str): HTTP request method, such as GET or POST.
+    http_status (str): HTTP status code that was returned by the server.
+    protocol_version (str): HTTP protocol version that was used.
+    received_bytes (str): Number of bytes received and processed by the server.
+    requested_uri_stem (str): File requested, such as index.php or Default.htm
+    s_computername (str): Name of the server that generated the logged activity.
+    sc_substatus (str):  HTTP substatus error code that was returned by the
+        server.
+    sc_win32_status (str): Windows status code of the server.
+    sent_bytes (str): Number of bytes sent by the server.
+    source_ip (str): IP address of the client that made the request.
+    s_sitename (str): Service name and instance number that was running on the
+        client.
+    time_taken (str): Time taken, in milliseconds, to process the request.
+    user_agent (str): User agent that was used.
   """
 
   DATA_TYPE = 'iis:log:line'
@@ -28,6 +51,26 @@ class IISEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(IISEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.cs_cookie = None
+    self.cs_host = None
+    self.cs_referrer = None
+    self.cs_uri_query = None
+    self.cs_username = None
+    self.dest_ip = None
+    self.dest_port = None
+    self.http_method = None
+    self.http_status = None
+    self.protocol_version = None
+    self.received_bytes = None
+    self.requested_uri_stem = None
+    self.s_computername = None
+    self.sc_substatus = None
+    self.sc_win32_status = None
+    self.sent_bytes = None
+    self.source_ip = None
+    self.s_sitename = None
+    self.time_taken = None
+    self.user_agent = None
 
 
 class WinIISParser(text_parser.PyparsingSingleLineTextParser):
@@ -246,15 +289,26 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     event_data = IISEventData()
-
-    for key, value in structure.items():
-      if key in ('date', 'date_time', 'time') or value == '-':
-        continue
-
-      if isinstance(value, pyparsing.ParseResults):
-        value = ''.join(value)
-
-      setattr(event_data, key, value)
+    event_data.cs_cookie = structure.get('cs_cookie', None)
+    event_data.cs_host = structure.get('cs_host', None)
+    event_data.cs_referrer = structure.get('cs_referrer', None)
+    event_data.cs_uri_query = structure.get('cs_uri_query', None)
+    event_data.cs_username = structure.get('cs_username', None)
+    event_data.dest_ip = structure.get('dest_ip', None)
+    event_data.dest_port = structure.get('dest_port', None)
+    event_data.http_method = structure.get('http_method', None)
+    event_data.http_status = structure.get('http_status', None)
+    event_data.protocol_version = structure.get('protocol_version', None)
+    event_data.received_bytes = structure.get('received_bytes', None)
+    event_data.requested_uri_stem = structure.get('requested_uri_stem', None)
+    event_data.s_computername = structure.get('s_computername', None)
+    event_data.sc_substatus = structure.get('sc_substatus', None)
+    event_data.sc_win32_status = structure.get('sc_win32_status', None)
+    event_data.sent_bytes = structure.get('sent_bytes', None)
+    event_data.source_ip = structure.get('source_ip', None)
+    event_data.s_sitename = structure.get('s_sitename', None)
+    event_data.time_taken = structure.get('time_taken', None)
+    event_data.user_agent = structure.get('user_agent', None)
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
