@@ -17,16 +17,10 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
   Attributes:
     danger_type (int): assessment by Safe Browsing of the danger of the
         downloaded content.
-    end_time (int): when the download ended. In Chrome versions
-        15 - 25, this value is in a POSIX timestamp; in version 26
-        and later, it is a WebKit timestamp.
     full_path (str): full path where the file was downloaded to.
     interrupt_reason (int): enum indicating why the download stopped.
     opened (int): if the downloaded file was opened from the browser.
     received_bytes (int): number of bytes received while downloading.
-    start_time (int): when the download started. In Chrome versions
-        1 - 25, this value is in a POSIX timestamp; in version 26
-        and later, it is a WebKit timestamp.
     state (int): state of the download, such as finished or cancelled.
     total_bytes (int): total number of bytes to download.
     url (str): URL of the downloaded file.
@@ -39,12 +33,10 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
     super(ChromeHistoryFileDownloadedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.danger_type = None
-    self.end_time = None
     self.full_path = None
     self.interrupt_reason = None
     self.opened = None
     self.received_bytes = None
-    self.start_time = None
     self.state = None
     self.total_bytes = None
     self.url = None
@@ -1002,7 +994,6 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
     event_data = ChromeHistoryFileDownloadedEventData()
     event_data.danger_type = self._GetRowValue(query_hash, row, 'danger_type')
-    event_data.end_time = self._GetRowValue(query_hash, row, 'end_time')
     event_data.full_path = self._GetRowValue(query_hash, row, 'target_path')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.interrupt_reason = self._GetRowValue(
@@ -1011,16 +1002,25 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
     event_data.query = query
     event_data.received_bytes = self._GetRowValue(
         query_hash, row, 'received_bytes')
-    event_data.start_time = self._GetRowValue(query_hash, row, 'start_time')
     event_data.state = self._GetRowValue(query_hash, row, 'state')
     event_data.total_bytes = self._GetRowValue(query_hash, row, 'total_bytes')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = self._GetRowValue(query_hash, row, 'start_time')
-    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    start_timestamp = self._GetRowValue(query_hash, row, 'start_time')
+    if start_timestamp:
+      start_date_time = dfdatetime_webkit_time.WebKitTime(
+          timestamp=start_timestamp)
+      start_event = time_events.DateTimeValuesEvent(
+          start_date_time, definitions.TIME_DESCRIPTION_START)
+      parser_mediator.ProduceEventWithEventData(start_event, event_data)
+
+    end_timestamp = self._GetRowValue(query_hash, row, 'end_time')
+    if end_timestamp:
+      end_date_time = dfdatetime_webkit_time.WebKitTime(
+          timestamp=end_timestamp)
+      end_event = time_events.DateTimeValuesEvent(
+          end_date_time, definitions.TIME_DESCRIPTION_END)
+      parser_mediator.ProduceEventWithEventData(end_event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugins([
