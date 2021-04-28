@@ -61,8 +61,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History-57.0.2987.133'], plugin)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    # The History file contains 2 events (1 page visits, 1 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 2)
+    # The History file contains 3 events (1 page visit, 2 file downloads).
+    self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetEvents())
 
@@ -87,7 +87,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
         'timestamp': '2018-01-21 14:09:53.900399',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 3080192,
         'url': (
             'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
@@ -102,8 +102,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History-58.0.3029.96'], plugin)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    # The History file contains 2 events (1 page visits, 1 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 2)
+    # The History file contains 3 events (1 page visit, 2 file downloads).
+    self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetEvents())
 
@@ -128,7 +128,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
         'timestamp': '2018-01-21 14:09:27.200398',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 3080192,
         'url': (
             'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
@@ -143,8 +143,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History-59.0.3071.86'], plugin)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    # The History file contains 2 events (1 page visits, 1 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 2)
+    # The History file contains 3 events (1 page visit, 2 file downloads).
+    self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetEvents())
 
@@ -169,7 +169,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
         'timestamp': '2018-01-21 14:08:51.811123',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 3080192,
         'url': (
             'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
@@ -186,8 +186,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History-59_added-fake-column'], plugin)
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
-    # The History file contains 2 events (1 page visits, 1 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 2)
+    # The History file contains 3 events (1 page visit, 2 file downloads).
+    self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetEvents())
 
@@ -212,7 +212,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
         'timestamp': '2018-01-21 14:08:51.811123',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 3080192,
         'url': (
             'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
