@@ -15,8 +15,14 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
   """Chrome History file downloaded event data.
 
   Attributes:
+    danger_type (int): assessment by Safe Browsing of the danger of the
+        downloaded content.
     full_path (str): full path where the file was downloaded to.
+    interrupt_reason (int): indication why the download was interrupted.
+    opened (int): value to indicate if the downloaded file was opened from
+        the browser.
     received_bytes (int): number of bytes received while downloading.
+    state (int): state of the download, such as finished or cancelled.
     total_bytes (int): total number of bytes to download.
     url (str): URL of the downloaded file.
   """
@@ -27,8 +33,12 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
     """Initializes event data."""
     super(ChromeHistoryFileDownloadedEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.danger_type = None
     self.full_path = None
+    self.interrupt_reason = None
+    self.opened = None
     self.received_bytes = None
+    self.state = None
     self.total_bytes = None
     self.url = None
 
@@ -187,7 +197,7 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
   REQUIRED_STRUCTURE = {
       'downloads': frozenset([
           'id', 'full_path', 'received_bytes', 'total_bytes', 'url',
-          'start_time']),
+          'start_time', 'state']),
       'urls': frozenset([
           'id', 'url', 'title', 'visit_count', 'typed_count',
           'last_visit_time', 'hidden']),
@@ -201,7 +211,7 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         'AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER '
         'BY visits.visit_time'), 'ParseLastVisitedRow'),
       (('SELECT id, full_path, url, start_time, received_bytes, '
-        'total_bytes FROM downloads'), 'ParseFileDownloadedRow')]
+        'total_bytes, state FROM downloads'), 'ParseFileDownloadedRow')]
 
   _SCHEMA_8 = {
       'downloads': (
@@ -371,6 +381,7 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
     event_data.query = query
     event_data.received_bytes = self._GetRowValue(
         query_hash, row, 'received_bytes')
+    event_data.state = self._GetRowValue(query_hash, row, 'state')
     event_data.total_bytes = self._GetRowValue(query_hash, row, 'total_bytes')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
 
@@ -389,7 +400,8 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
   REQUIRED_STRUCTURE = {
       'downloads': frozenset([
-          'id', 'target_path', 'received_bytes', 'total_bytes', 'start_time']),
+          'id', 'target_path', 'received_bytes', 'total_bytes', 'start_time',
+          'end_time', 'state', 'danger_type', 'interrupt_reason', 'opened']),
       'downloads_url_chains': frozenset([
           'id', 'url']),
       'urls': frozenset([
@@ -406,7 +418,9 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         'BY visits.visit_time'), 'ParseLastVisitedRow'),
       (('SELECT downloads.id AS id, downloads.start_time,'
         'downloads.target_path, downloads_url_chains.url, '
-        'downloads.received_bytes, downloads.total_bytes FROM downloads,'
+        'downloads.received_bytes, downloads.total_bytes, '
+        'downloads.end_time, downloads.state, downloads.danger_type, '
+        'downloads.interrupt_reason, downloads.opened FROM downloads,'
         ' downloads_url_chains WHERE downloads.id = '
         'downloads_url_chains.id'), 'ParseFileDownloadedRow')]
 
@@ -980,19 +994,34 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
     query_hash = hash(query)
 
     event_data = ChromeHistoryFileDownloadedEventData()
+    event_data.danger_type = self._GetRowValue(query_hash, row, 'danger_type')
     event_data.full_path = self._GetRowValue(query_hash, row, 'target_path')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
+    event_data.interrupt_reason = self._GetRowValue(
+        query_hash, row, 'interrupt_reason')
+    event_data.opened = self._GetRowValue(query_hash, row, 'opened')
     event_data.query = query
     event_data.received_bytes = self._GetRowValue(
         query_hash, row, 'received_bytes')
+    event_data.state = self._GetRowValue(query_hash, row, 'state')
     event_data.total_bytes = self._GetRowValue(query_hash, row, 'total_bytes')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = self._GetRowValue(query_hash, row, 'start_time')
-    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    start_timestamp = self._GetRowValue(query_hash, row, 'start_time')
+    if start_timestamp:
+      start_date_time = dfdatetime_webkit_time.WebKitTime(
+          timestamp=start_timestamp)
+      start_event = time_events.DateTimeValuesEvent(
+          start_date_time, definitions.TIME_DESCRIPTION_START)
+      parser_mediator.ProduceEventWithEventData(start_event, event_data)
+
+    end_timestamp = self._GetRowValue(query_hash, row, 'end_time')
+    if end_timestamp:
+      end_date_time = dfdatetime_webkit_time.WebKitTime(
+          timestamp=end_timestamp)
+      end_event = time_events.DateTimeValuesEvent(
+          end_date_time, definitions.TIME_DESCRIPTION_END)
+      parser_mediator.ProduceEventWithEventData(end_event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugins([
