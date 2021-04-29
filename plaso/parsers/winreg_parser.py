@@ -160,18 +160,29 @@ class WinRegistryParser(interface.FileObjectParser):
     if matching_plugin:
       self._ParseKeyWithPlugin(parser_mediator, registry_key, matching_plugin)
 
-  def _ParseRecurseKeys(self, parser_mediator, root_key):
+  def _ParseRecurseKeys(self, parser_mediator, registry_key):
     """Parses the Registry keys recursively.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      root_key (dfwinreg.WinRegistryKey): root Windows Registry key.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    for registry_key in root_key.RecurseKeys():
+    # Note that we do not use dfWinReg generators here to be able to catch
+    # exceptions raised by corrupt files.
+
+    self._ParseKey(parser_mediator, registry_key)
+
+    for subkey_index in range(registry_key.number_of_subkeys):
       if parser_mediator.abort:
         break
 
-      self._ParseKey(parser_mediator, registry_key)
+      try:
+        subkey = registry_key.GetSubkeyByIndex(subkey_index)
+      except IOError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'in key: {0:s} error: {1!s}'.format(registry_key.path, exception))
+
+      self._ParseRecurseKeys(parser_mediator, subkey)
 
   def _ParseKeysFromFindSpecs(self, parser_mediator, win_registry, find_specs):
     """Parses the Registry keys from FindSpecs.
