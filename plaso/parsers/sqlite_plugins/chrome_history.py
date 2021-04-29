@@ -18,8 +18,9 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
     danger_type (int): assessment by Safe Browsing of the danger of the
         downloaded content.
     full_path (str): full path where the file was downloaded to.
-    interrupt_reason (int): enum indicating why the download stopped.
-    opened (int): if the downloaded file was opened from the browser.
+    interrupt_reason (int): indication why the download was interrupted.
+    opened (int): value to indicate if the downloaded file was opened from
+        the browser.
     received_bytes (int): number of bytes received while downloading.
     state (int): state of the download, such as finished or cancelled.
     total_bytes (int): total number of bytes to download.
