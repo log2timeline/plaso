@@ -3,3 +3,4 @@ pyparsing
 recommonmark
 sphinx >= 2.0.1
 sphinx-markdown-tables
+sphinx-rtd-theme >= 0.5.1
