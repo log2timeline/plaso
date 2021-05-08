@@ -1,7 +1,7 @@
-import "dotnet"
+import "bogus"
 
 rule not_exactly_five_streams
 {
     condition:
-        dotnet.number_of_streams != 5
+        bogus.number_of_streams != 5
 }
