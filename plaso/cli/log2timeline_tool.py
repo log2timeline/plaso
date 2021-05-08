@@ -266,6 +266,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
+    self._WaitUserWarning()
+
     loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
         quiet_mode=self._quiet_mode)

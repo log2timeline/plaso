@@ -7,6 +7,7 @@ import datetime
 import locale
 import sys
 import time
+import textwrap
 
 import pytz
 
@@ -64,6 +65,7 @@ class CLITool(object):
     self._data_location = None
     self._debug_mode = False
     self._encode_errors = 'strict'
+    self._has_user_warning = False
     self._input_reader = input_reader
     self._log_file = None
     self._output_writer = output_writer
@@ -160,6 +162,19 @@ class CLITool(object):
               local_date_time.day, local_date_time.hour, local_date_time.minute,
               local_date_time.second)
 
+  def _PrintUserWarning(self, warning_text):
+    """Prints a warning to the user.
+
+    Args:
+      warning_text (str): text used to warn the user.
+    """
+    warning_text = 'WARNING: {0:s}'.format(warning_text)
+    warning_text = textwrap.wrap(warning_text, 80)
+    print('\n'.join(warning_text))
+    print('')
+
+    self._has_user_warning = True
+
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input.
 
@@ -171,6 +186,11 @@ class CLITool(object):
     """
     self._output_writer.Write('{0:s}: '.format(input_text))
     return self._input_reader.Read()
+
+  def _WaitUserWarning(self):
+    """Waits 15 seconds after printing warnings to the user."""
+    if self._has_user_warning:
+      time.sleep(15)
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.
@@ -238,11 +258,9 @@ class CLITool(object):
     if date_time_delta.days > 180:
       logger.warning('This version of plaso is more than 6 months old.')
 
-      print('WARNING the version of plaso you are using is more than 6 months')
-      print('old. We strongly recommend to update it.')
-      print('')
-
-      time.sleep(5)
+      self._PrintUserWarning((
+          'the version of plaso you are using is more than 6 months old. We '
+          'strongly recommend to update it.'))
 
   def GetCommandLineArguments(self):
     """Retrieves the command line arguments.
