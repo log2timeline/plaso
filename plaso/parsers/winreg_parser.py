@@ -178,11 +178,11 @@ class WinRegistryParser(interface.FileObjectParser):
 
       try:
         subkey = registry_key.GetSubkeyByIndex(subkey_index)
+        self._ParseRecurseKeys(parser_mediator, subkey)
+
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning(
             'in key: {0:s} error: {1!s}'.format(registry_key.path, exception))
-
-      self._ParseRecurseKeys(parser_mediator, subkey)
 
   def _ParseKeysFromFindSpecs(self, parser_mediator, win_registry, find_specs):
     """Parses the Registry keys from FindSpecs.

@@ -50,6 +50,24 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     self.assertNotEqual(parser._plugins, [])
     self.assertEqual(len(parser._plugins), 1)
 
+  def testParse(self):
+    """Test the parse function on a Windows NT Registry file."""
+    parser = winreg_parser.WinRegistryParser()
+    storage_writer = self._ParseFile([
+        'regf', '100_sub_keys.hiv'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 101)
+
+  def testParseCorruptionInSubKeyList(self):
+    """Test the parse function on a corrupted Windows NT Registry file."""
+    parser = winreg_parser.WinRegistryParser()
+    storage_writer = self._ParseFile([
+        'regf', 'corrupt_sub_key_list.hiv'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_events, 100)
+
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
     parser = winreg_parser.WinRegistryParser()
