@@ -6,6 +6,7 @@ import codecs
 import datetime
 import locale
 import sys
+import time
 
 import pytz
 
@@ -240,6 +241,8 @@ class CLITool(object):
       print('WARNING the version of plaso you are using is more than 6 months')
       print('old. We strongly recommend to update it.')
       print('')
+
+      time.sleep(5)
 
   def GetCommandLineArguments(self):
     """Retrieves the command line arguments.

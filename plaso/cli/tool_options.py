@@ -2,6 +2,7 @@
 """The CLI tool options mix-ins."""
 
 import os
+import time
 
 from plaso.analysis import manager as analysis_manager
 from plaso.cli import logger
@@ -95,6 +96,10 @@ class OutputModuleOptions(object):
 
   # pylint: disable=no-member
 
+  # Output format that have second-only date and time value and/or a limited
+  # predefined set of output fields.
+  _DEPRECATED_OUTPUT_FORMATS = frozenset(['l2tcsv', 'l2ttln', 'tln'])
+
   _MESSAGE_FORMATTERS_DIRECTORY_NAME = 'formatters'
   _MESSAGE_FORMATTERS_FILE_NAME = 'formatters.yaml'
 
@@ -141,6 +146,17 @@ class OutputModuleOptions(object):
       BadConfigOption: if parameters are missing.
       RuntimeError: if the output module cannot be created.
     """
+    if self._output_format in self._DEPRECATED_OUTPUT_FORMATS:
+      print((
+          'WARNING the output format: {0:s} has significant limitations '
+          'such').format(self._output_format))
+      print('as second-only date and time values and/or a limited predefined')
+      print('set of output fields. We strongly recommend to use an alternative')
+      print('like: dynamic.')
+      print('')
+
+      time.sleep(5)
+
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
           self._output_format, mediator)
