@@ -7,8 +7,6 @@ import datetime
 import os
 import textwrap
 
-import pytz
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -110,7 +108,6 @@ class PstealTool(
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
     self._output_format = None
-    self._output_time_zone = None
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
     self._preferred_year = None
@@ -124,7 +121,6 @@ class PstealTool(
     self.list_language_identifiers = False
     self.list_output_modules = False
     self.list_parsers_and_plugins = False
-    self.list_time_zones = False
 
   def _GenerateStorageFileName(self):
     """Generates a name for the storage file.
@@ -155,29 +151,6 @@ class PstealTool(
       source_name = 'ROOT'
 
     return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
-
-  def _ParseOutputTimeZoneOption(self, options):
-    """Parses the output time zone options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    time_zone_string = self.ParseStringOption(options, 'output_time_zone')
-    if isinstance(time_zone_string, str):
-      if time_zone_string.lower() == 'list':
-        self.list_time_zones = True
-
-      elif time_zone_string:
-        try:
-          pytz.timezone(time_zone_string)
-        except pytz.UnknownTimeZoneError:
-          raise errors.BadConfigOption(
-              'Unknown time zone: {0:s}'.format(time_zone_string))
-
-        self._output_time_zone = time_zone_string
 
   def _PrintAnalysisReportsDetails(
       self, storage_reader, number_of_analysis_reports):
@@ -214,22 +187,6 @@ class PstealTool(
           table_view.AddRow([key, value])
 
       table_view.Write(self._output_writer)
-
-  def AddOutputTimeZoneOption(self, argument_group):
-    """Adds the output time zone option to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    # Note the default here is None so we can determine if the time zone
-    # option was set.
-    argument_group.add_argument(
-        '--output_time_zone', '--output-time-zone', dest='output_time_zone',
-        action='store', metavar='TIME_ZONE', type=str, default=None, help=(
-            'time zone of date and time values written to the output, if '
-            'supported by the output format. Output formats that support '
-            'this are: dynamic and l2t_csv. Use "list" to see a list of '
-            'available time zones.'))
 
   def AnalyzeEvents(self):
     """Analyzes events from a plaso storage file and generate a report.

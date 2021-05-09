@@ -6,8 +6,6 @@ import collections
 import os
 import time
 
-import pytz
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 # The following import makes sure the filters are registered.
@@ -48,7 +46,6 @@ class PsortTool(
     list_output_modules (bool): True if information about the output modules
         should be shown.
     list_profilers (bool): True if the profilers should be listed.
-    list_time_zones (bool): True if the time zones should be listed.
   """
 
   NAME = 'psort'
@@ -76,7 +73,6 @@ class PsortTool(
     self._event_filter = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
-    self._output_time_zone = None
     self._preferred_language = 'en-US'
     self._process_memory_limit = None
     self._status_view_mode = status_view.StatusView.MODE_WINDOW
@@ -94,7 +90,6 @@ class PsortTool(
     self.list_language_identifiers = False
     self.list_output_modules = False
     self.list_profilers = False
-    self.list_time_zones = False
 
   def _CheckStorageFile(self, storage_file_path):  # pylint: disable=arguments-differ
     """Checks if the storage file path is valid.
@@ -200,29 +195,6 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['status_view'])
 
-  def _ParseOutputTimeZoneOption(self, options):
-    """Parses the output time zone options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    time_zone_string = self.ParseStringOption(options, 'output_time_zone')
-    if isinstance(time_zone_string, str):
-      if time_zone_string.lower() == 'list':
-        self.list_time_zones = True
-
-      elif time_zone_string:
-        try:
-          pytz.timezone(time_zone_string)
-        except pytz.UnknownTimeZoneError:
-          raise errors.BadConfigOption(
-              'Unknown time zone: {0:s}'.format(time_zone_string))
-
-        self._output_time_zone = time_zone_string
-
   def _ParseProcessingOptions(self, options):
     """Parses the processing options.
 
@@ -287,22 +259,6 @@ class PsortTool(
           table_view.AddRow([key, value])
 
       table_view.Write(self._output_writer)
-
-  def AddOutputTimeZoneOption(self, argument_group):
-    """Adds the output time zone option to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    # Note the default here is None so we can determine if the time zone
-    # option was set.
-    argument_group.add_argument(
-        '--output_time_zone', '--output-time-zone', dest='output_time_zone',
-        action='store', metavar='TIME_ZONE', type=str, default=None, help=(
-            'time zone of date and time values written to the output, if '
-            'supported by the output format. Output formats that support '
-            'this are: dynamic and l2t_csv. Use "list" to see a list of '
-            'available time zones.'))
 
   def AddProcessingOptions(self, argument_group):
     """Adds processing options to the argument group
