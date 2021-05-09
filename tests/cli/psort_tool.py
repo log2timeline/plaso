@@ -249,6 +249,7 @@ optional arguments:
 
     options = test_lib.TestOptions()
     options.data_location = shared_test_lib.DATA_PATH
+    options.dynamic_time = True
     options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
     options.output_format = 'test_missing'
 

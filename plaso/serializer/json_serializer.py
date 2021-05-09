@@ -470,8 +470,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       json_dict['string'] = date_time_values.string
 
     elif class_name == 'FATDateTime':
-      # TODO: set fat_date_time value
-      pass
+      json_dict['fat_date_time'] = date_time_values.fat_date_time
 
     elif class_name == 'RFC2579DateTime':
       json_dict['rfc2579_date_time_tuple'] = (

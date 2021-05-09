@@ -34,15 +34,19 @@ class OutputMediator(object):
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
   def __init__(
-      self, knowledge_base, data_location=None, preferred_encoding='utf-8'):
+      self, knowledge_base, data_location=None, dynamic_time=False,
+      preferred_encoding='utf-8'):
     """Initializes an output mediator.
 
     Args:
       knowledge_base (KnowledgeBase): knowledge base.
       data_location (Optional[str]): path of the formatter data files.
+      dynamic_time (Optional[bool]): True if date and time values should be
+          represented in their granularity or semantically.
       preferred_encoding (Optional[str]): preferred encoding to output.
     """
     super(OutputMediator, self).__init__()
+    self._dynamic_time = dynamic_time
     self._knowledge_base = knowledge_base
     self._language_identifier = self.DEFAULT_LANGUAGE_IDENTIFIER
     self._lcid = self.DEFAULT_LCID
@@ -52,6 +56,13 @@ class OutputMediator(object):
     self._winevt_database_reader = None
 
     self.data_location = data_location
+
+  @property
+  def dynamic_time(self):
+    """bool: True if date and time values should be represented in their
+             granularity or semantically.
+    """
+    return self._dynamic_time
 
   @property
   def encoding(self):

@@ -443,7 +443,7 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_group, names=['language'])
 
-    self.AddOutputTimeZoneOption(output_group)
+    self.AddOutputOptions(output_group)
 
     output_format_group = argument_parser.add_argument_group(
         'output format arguments')
@@ -499,7 +499,7 @@ class PstealTool(
 
     # The output modules options are dependent on the preferred_language
     # and output_time_zone options.
-    self._ParseOutputTimeZoneOption(options)
+    self._ParseOutputOptions(options)
 
     argument_helper_names = [
         'artifact_definitions', 'hashers', 'language', 'parsers']

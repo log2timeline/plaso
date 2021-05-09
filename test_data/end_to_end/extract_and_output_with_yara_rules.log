@@ -1,13 +1,13 @@
 datetime,timestamp_desc,source,source_long,message,parser,md5_hash,yara_match
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/bin Type: directory,filestat,-,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/bin/bzcat Type: file,filestat,cc9478ee8d2f0345f383e01bcbc1680d,libcrypto_hash
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/bin/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/home Type: directory,filestat,-,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/home/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,-,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/sbin Type: directory,filestat,-,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/sbin/tune2fs Type: file,filestat,d5d2147a5fdae62ecda7c66bc8c765e0,
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/sbin/visudo Type: file,filestat,a49f5fa523b10b5921afa5801f1ca8cb,
+Not set,Creation Time,FILE,File stat,TSK:/bin Type: directory,filestat,-,-
+Not set,Creation Time,FILE,File stat,TSK:/bin/bzcat Type: file,filestat,cc9478ee8d2f0345f383e01bcbc1680d,libcrypto_hash
+Not set,Creation Time,FILE,File stat,TSK:/bin/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
+Not set,Creation Time,FILE,File stat,TSK:/home Type: directory,filestat,-,-
+Not set,Creation Time,FILE,File stat,TSK:/home/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
+Not set,Creation Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,-,-
+Not set,Creation Time,FILE,File stat,TSK:/sbin Type: directory,filestat,-,-
+Not set,Creation Time,FILE,File stat,TSK:/sbin/tune2fs Type: file,filestat,d5d2147a5fdae62ecda7c66bc8c765e0,
+Not set,Creation Time,FILE,File stat,TSK:/sbin/visudo Type: file,filestat,a49f5fa523b10b5921afa5801f1ca8cb,
 2019-10-31T13:23:21+00:00,Content Modification Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,-,-
 2019-10-31T13:23:21+00:00,Last Access Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,-,-
 2019-10-31T13:23:21+00:00,Metadata Modification Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,-,-

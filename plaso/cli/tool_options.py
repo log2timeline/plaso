@@ -110,6 +110,7 @@ class OutputModuleOptions(object):
   def __init__(self):
     """Initializes output module options."""
     super(OutputModuleOptions, self).__init__()
+    self._output_dynamic_time = None
     self._output_filename = None
     self._output_format = None
     self._output_module = None
@@ -128,6 +129,7 @@ class OutputModuleOptions(object):
     """
     mediator = output_mediator.OutputMediator(
         self._knowledge_base, data_location=self._data_location,
+        dynamic_time=self._output_dynamic_time,
         preferred_encoding=self.preferred_encoding)
 
     try:
@@ -216,8 +218,8 @@ class OutputModuleOptions(object):
 
     return output_modules_information
 
-  def _ParseOutputTimeZoneOption(self, options):
-    """Parses the output time zone options.
+  def _ParseOutputOptions(self, options):
+    """Parses the output options.
 
     Args:
       options (argparse.Namespace): command line arguments.
@@ -225,6 +227,8 @@ class OutputModuleOptions(object):
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    self._output_dynamic_time = getattr(options, 'dynamic_time', False)
+
     time_zone_string = self.ParseStringOption(options, 'output_time_zone')
     if isinstance(time_zone_string, str):
       if time_zone_string.lower() == 'list':
@@ -289,12 +293,17 @@ class OutputModuleOptions(object):
     else:
       raise errors.BadConfigOption('Missing formatters file and directory.')
 
-  def AddOutputTimeZoneOption(self, argument_group):
-    """Adds the output time zone option to the argument group.
+  def AddOutputOptions(self, argument_group):
+    """Adds the output options to the argument group.
 
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
+    argument_group.add_argument(
+        '--dynamic_time', '--dynamic-time', dest='dynamic_time',
+        action='store_true', default=False, help=(
+            'Indicate that the output should use dynamic time.'))
+
     # Note the default here is None so we can determine if the time zone
     # option was set.
     argument_group.add_argument(

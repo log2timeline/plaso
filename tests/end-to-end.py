@@ -923,7 +923,8 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
     self._psteal_path = os.path.join(self._tools_path, 'psteal.py')
 
   def _RunPsteal(
-      self, test_definition, temp_directory, storage_file, source_path):
+      self, test_definition, temp_directory, storage_file, source_path,
+      output_options=None):
     """Runs psteal with the parameters specified by the test definition.
 
     Args:
@@ -931,19 +932,21 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
       temp_directory (str): name of a temporary directory.
       storage_file (str): path of the storage file.
       source_path (str): path of the source.
+      output_options (Optional[str]): output options.
 
     Returns:
       bool: True if psteal ran successfully.
     """
+    output_options = output_options or []
+
+    output_format = test_definition.output_format or 'null'
+    if '-o' not in output_options and '--output-format' not in output_options:
+      output_options.extend(['--output-format', output_format])
+
     psteal_options = [
         '--source={0:s}'.format(source_path),
-        '--status-view=none',
-        '--storage-file={0:s}'.format(storage_file),
-        '--unattended']
+        '--storage-file={0:s}'.format(storage_file)]
     psteal_options.extend(test_definition.extract_options)
-
-    if test_definition.output_format:
-      psteal_options.extend(['-o', test_definition.output_format])
 
     output_file_path = None
     if test_definition.output_file:
@@ -963,6 +966,8 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
     command = [self._psteal_path]
     command.extend(psteal_options)
     command.extend(logging_options)
+    command.extend(output_options)
+    command.extend(['--status-view', 'none', '--unattended'])
     command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
@@ -1049,7 +1054,8 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
 
       # Extract and output events with psteal.
       if not self._RunPsteal(
-          test_definition, temp_directory, storage_file, source_path):
+          test_definition, temp_directory, storage_file, source_path,
+          output_options=test_definition.output_options):
         return False
 
       # Compare output file with a reference output file.

@@ -1,10 +1,10 @@
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/bin Type: directory,filestat,TSK:/bin,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/bin/echo Type: file,filestat,TSK:/bin/echo,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/home Type: directory,filestat,TSK:/home,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/home/echo Type: file,filestat,TSK:/home/echo,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,TSK:/lost+found,-
-0000-00-00T00:00:00+00:00,Creation Time,FILE,File stat,TSK:/sbin Type: directory,filestat,TSK:/sbin,-
+Not set,Creation Time,FILE,File stat,TSK:/bin Type: directory,filestat,TSK:/bin,-
+Not set,Creation Time,FILE,File stat,TSK:/bin/echo Type: file,filestat,TSK:/bin/echo,-
+Not set,Creation Time,FILE,File stat,TSK:/home Type: directory,filestat,TSK:/home,-
+Not set,Creation Time,FILE,File stat,TSK:/home/echo Type: file,filestat,TSK:/home/echo,-
+Not set,Creation Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,TSK:/lost+found,-
+Not set,Creation Time,FILE,File stat,TSK:/sbin Type: directory,filestat,TSK:/sbin,-
 2019-10-31T13:23:21+00:00,Content Modification Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,TSK:/lost+found,-
 2019-10-31T13:23:21+00:00,Last Access Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,TSK:/lost+found,-
 2019-10-31T13:23:21+00:00,Metadata Modification Time,FILE,File stat,TSK:/lost+found Type: directory,filestat,TSK:/lost+found,-
