@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tool options mix-ins."""
 
+import argparse
 import unittest
 
 from plaso.cli import tool_options
@@ -132,6 +133,19 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
+  _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
+usage: tool_options.py [--output_time_zone TIME_ZONE]
+
+Test argument parser.
+
+optional arguments:
+  --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
+                        time zone of date and time values written to the
+                        output, if supported by the output format. Output
+                        formats that support this are: dynamic and l2t_csv.
+                        Use "list" to see a list of available time zones.
+"""
+
   def testGetOutputModulesInformation(self):
     """Tests the _GetOutputModulesInformation function."""
     test_tool = TestToolWithOutputModuleOptions()
@@ -142,6 +156,35 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
     available_module_names = [name for name, _ in modules_info]
     self.assertIn('dynamic', available_module_names)
     self.assertIn('json', available_module_names)
+
+  def testParseOutputTimeZoneOption(self):
+    """Tests the _ParseOutputTimeZoneOption function."""
+    test_tool = TestToolWithOutputModuleOptions()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertIsNone(test_tool._output_time_zone)
+
+    options.output_time_zone = 'list'
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertIsNone(test_tool._output_time_zone)
+
+    options.output_time_zone = 'CET'
+    test_tool._ParseOutputTimeZoneOption(options)
+    self.assertEqual(test_tool._output_time_zone, 'CET')
+
+  def testAddOutputTimeZoneOption(self):
+    """Tests the AddOutputTimeZoneOption function."""
+    argument_parser = argparse.ArgumentParser(
+        prog='tool_options.py', description='Test argument parser.',
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+
+    test_tool = TestToolWithOutputModuleOptions()
+    test_tool.AddOutputTimeZoneOption(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_OUTPUT_TIME_ZONE_OPTION)
 
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""

@@ -2,6 +2,7 @@
 """The CLI tool options mix-ins."""
 
 import os
+import pytz
 
 from plaso.analysis import manager as analysis_manager
 from plaso.cli import logger
@@ -91,7 +92,11 @@ class HashersOptions(object):
 
 
 class OutputModuleOptions(object):
-  """Output module options mix-in."""
+  """Output module options mix-in.
+
+  Attributes:
+    list_time_zones (bool): True if the time zones should be listed.
+  """
 
   # pylint: disable=no-member
 
@@ -108,6 +113,9 @@ class OutputModuleOptions(object):
     self._output_filename = None
     self._output_format = None
     self._output_module = None
+    self._output_time_zone = None
+
+    self.list_time_zones = False
 
   def _CreateOutputMediator(self):
     """Creates an output mediator.
@@ -196,6 +204,41 @@ class OutputModuleOptions(object):
 
     return output_module
 
+  def _GetOutputModulesInformation(self):
+    """Retrieves the output modules information.
+
+    Returns:
+      list[tuple[str, str]]: pairs of output module names and descriptions.
+    """
+    output_modules_information = []
+    for name, output_class in output_manager.OutputManager.GetOutputClasses():
+      output_modules_information.append((name, output_class.DESCRIPTION))
+
+    return output_modules_information
+
+  def _ParseOutputTimeZoneOption(self, options):
+    """Parses the output time zone options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    time_zone_string = self.ParseStringOption(options, 'output_time_zone')
+    if isinstance(time_zone_string, str):
+      if time_zone_string.lower() == 'list':
+        self.list_time_zones = True
+
+      elif time_zone_string:
+        try:
+          pytz.timezone(time_zone_string)
+        except pytz.UnknownTimeZoneError:
+          raise errors.BadConfigOption(
+              'Unknown time zone: {0:s}'.format(time_zone_string))
+
+        self._output_time_zone = time_zone_string
+
   def _PromptUserForMissingOutputModuleParameters(
       self, options, missing_parameters):
     """Prompts the user for missing output module parameters.
@@ -246,6 +289,22 @@ class OutputModuleOptions(object):
     else:
       raise errors.BadConfigOption('Missing formatters file and directory.')
 
+  def AddOutputTimeZoneOption(self, argument_group):
+    """Adds the output time zone option to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    # Note the default here is None so we can determine if the time zone
+    # option was set.
+    argument_group.add_argument(
+        '--output_time_zone', '--output-time-zone', dest='output_time_zone',
+        action='store', metavar='TIME_ZONE', type=str, default=None, help=(
+            'time zone of date and time values written to the output, if '
+            'supported by the output format. Output formats that support '
+            'this are: dynamic and l2t_csv. Use "list" to see a list of '
+            'available time zones.'))
+
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""
     table_view = views.ViewsFactory.GetTableView(
@@ -255,18 +314,6 @@ class OutputModuleOptions(object):
         language_ids.LANGUAGE_IDENTIFIERS.items()):
       table_view.AddRow([language_id, value_list[1]])
     table_view.Write(self._output_writer)
-
-  def _GetOutputModulesInformation(self):
-    """Retrieves the output modules information.
-
-    Returns:
-      list[tuple[str, str]]: pairs of output module names and descriptions.
-    """
-    output_modules_information = []
-    for name, output_class in output_manager.OutputManager.GetOutputClasses():
-      output_modules_information.append((name, output_class.DESCRIPTION))
-
-    return output_modules_information
 
   def ListOutputModules(self):
     """Lists the output modules."""
