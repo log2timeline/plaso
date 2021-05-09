@@ -2,7 +2,6 @@
 """The CLI tool options mix-ins."""
 
 import os
-import time
 
 from plaso.analysis import manager as analysis_manager
 from plaso.cli import logger
@@ -147,15 +146,12 @@ class OutputModuleOptions(object):
       RuntimeError: if the output module cannot be created.
     """
     if self._output_format in self._DEPRECATED_OUTPUT_FORMATS:
-      print((
-          'WARNING the output format: {0:s} has significant limitations '
-          'such').format(self._output_format))
-      print('as second-only date and time values and/or a limited predefined')
-      print('set of output fields. We strongly recommend to use an alternative')
-      print('like: dynamic.')
-      print('')
-
-      time.sleep(5)
+      self._PrintUserWarning((
+          'the output format: {0:s} has significant limitations such as '
+          'second-only date and time values and/or a limited predefined '
+          'set of output fields. It is strongly recommend to use an '
+          'alternative output format like: dynamic.').format(
+              self._output_format))
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
