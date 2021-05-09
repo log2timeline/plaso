@@ -99,12 +99,16 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     if (event.date_time and event.timestamp and
         self._output_mediator.timezone == pytz.UTC):
       year, month, day_of_month = event.date_time.GetDate()
+      if None in (year, month, day_of_month):
+        year, month, day_of_month = (0, 0, 0)
+
     else:
       if event.date_time:
         timestamp = event.date_time.GetPlasoTimestamp()
       else:
         timestamp = event.timestamp
 
+      year, month, day_of_month = (0, 0, 0)
       try:
         datetime_object = datetime.datetime(
             1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
@@ -117,8 +121,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         day_of_month = datetime_object.day
 
       except (OverflowError, TypeError):
-        year, month, day_of_month = (0, 0, 0)
-
         self._ReportEventError(event, event_data, (
             'unable to copy timestamp: {0!s} to a human readable date. '
             'Defaulting to: "00/00/0000"').format(timestamp))
