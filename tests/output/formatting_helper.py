@@ -4,6 +4,7 @@
 
 import unittest
 
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfvfs.path import fake_path_spec
 
 from plaso.containers import events
@@ -32,8 +33,33 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
 
   def testFormatDateTime(self):
-    """Tests the _FormatDateTime function."""
+    """Tests the _FormatDateTime function with dynamic time."""
     output_mediator = self._CreateOutputMediator()
+    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
+
+    output_mediator.SetTimezone('Europe/Amsterdam')
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T20:17:01.000000+02:00')
+
+    output_mediator.SetTimezone('UTC')
+    event.date_time = dfdatetime_semantic_time.InvalidTime()
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, 'Invalid')
+
+  def testFormatDateTimeWithoutDynamicTime(self):
+    """Tests the _FormatDateTime function without dynamic time."""
+    output_mediator = self._CreateOutputMediator(dynamic_time=False)
     test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
 
     event, event_data, event_data_stream = (
@@ -44,21 +70,34 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
 
+    output_mediator.SetTimezone('Europe/Amsterdam')
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T20:17:01.000000+02:00')
+
+    output_mediator.SetTimezone('UTC')
+    event.date_time = dfdatetime_semantic_time.InvalidTime()
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '0000-00-00T00:00:00.000000+00:00')
+
     # Test with event.timestamp
     event.date_time = None
     date_time_string = test_helper._FormatDateTime(
         event, event_data, event_data_stream)
-    self.assertEqual(date_time_string, '2012-06-27T18:17:01+00:00')
+    self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
 
     event.timestamp = 0
     date_time_string = test_helper._FormatDateTime(
         event, event_data, event_data_stream)
-    self.assertEqual(date_time_string, '0000-00-00T00:00:00+00:00')
+    self.assertEqual(date_time_string, '0000-00-00T00:00:00.000000+00:00')
 
     event.timestamp = -9223372036854775808
     date_time_string = test_helper._FormatDateTime(
         event, event_data, event_data_stream)
-    self.assertEqual(date_time_string, '0000-00-00T00:00:00+00:00')
+    self.assertEqual(date_time_string, '0000-00-00T00:00:00.000000+00:00')
 
   def testFormatDisplayName(self):
     """Tests the _FormatDisplayName function."""

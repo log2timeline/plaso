@@ -14,10 +14,12 @@ class TestConfig(object):
 class OutputModuleTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a output module."""
 
-  def _CreateOutputMediator(self, storage_file=None):
+  def _CreateOutputMediator(self, dynamic_time=True, storage_file=None):
     """Creates a test output mediator.
 
     Args:
+      dynamic_time (Optional[bool]): True if date and time values should be
+          represented in their granularity or semantically.
       storage_file (Optional[StorageFile]): storage file.
 
     Returns:
@@ -38,6 +40,6 @@ class OutputModuleTestCase(shared_test_lib.BaseTestCase):
 
     output_mediator = mediator.OutputMediator(
         knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH,
-        dynamic_time=True)
+        dynamic_time=dynamic_time)
 
     return output_mediator

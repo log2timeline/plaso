@@ -532,7 +532,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     self.assertEqual(len(lines), 22)
 
     expected_line = (
-        '2014-11-18T01:15:43+00:00,'
+        '2014-11-18T01:15:43.000000+00:00,'
         'Content Modification Time,'
         'LOG,'
         'Log File,'
