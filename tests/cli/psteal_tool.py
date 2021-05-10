@@ -432,6 +432,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
+    options.dynamic_time = True
     options.storage_file = test_file_path
     options.source = 'unused_source'
 

@@ -71,16 +71,16 @@ class FieldFormattingHelper(object):
     Returns:
       str: date and time field with time zone offset.
     """
-    # For now check if event.timestamp is set, to mimic existing behavior of
-    # using 0000-00-00T00:00:00+00:00 for 0 timestamp values.
-    if (event.date_time and event.timestamp and
+    if (self._output_mediator.dynamic_time and event.date_time and
         self._output_mediator.timezone == pytz.UTC):
-      iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
+      iso8601_string = getattr(event.date_time, 'string', None)
       if not iso8601_string:
-        iso8601_string = '0000-00-00T00:00:00+00:00'
+        iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
+        if not iso8601_string:
+          iso8601_string = 'Error'
 
-      elif iso8601_string[10] == 'T' and iso8601_string[-1] == 'Z':
-        iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
+        elif iso8601_string[10] == 'T' and iso8601_string[-1] == 'Z':
+          iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
 
     else:
       if event.date_time:

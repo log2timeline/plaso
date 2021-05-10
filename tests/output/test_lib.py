@@ -37,6 +37,7 @@ class OutputModuleTestCase(shared_test_lib.BaseTestCase):
                 session_identifier=session.identifier)
 
     output_mediator = mediator.OutputMediator(
-        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH,
+        dynamic_time=True)
 
     return output_mediator

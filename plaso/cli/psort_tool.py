@@ -349,7 +349,7 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_group, names=['language'])
 
-    self.AddOutputTimeZoneOption(output_group)
+    self.AddOutputOptions(output_group)
 
     output_format_group = argument_parser.add_argument_group(
         'Output Format Arguments')
@@ -412,7 +412,7 @@ class PsortTool(
     """
     # The output modules options are dependent on the preferred_language
     # and output_time_zone options.
-    self._ParseOutputTimeZoneOption(options)
+    self._ParseOutputOptions(options)
 
     names = ['analysis_plugins', 'language', 'profiling']
     helpers_manager.ArgumentHelperManager.ParseOptions(
