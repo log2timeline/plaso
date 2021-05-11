@@ -100,7 +100,7 @@ class FieldFormattingHelper(object):
           iso8601_string = ''.join([
               isoformat_string[:19], iso8601_string[19:-1],
               isoformat_string[-6:]])
-        except (OverflowError, TypeError):
+        except (OverflowError, TypeError, ValueError):
           return 'Invalid'
 
     else:
@@ -126,7 +126,7 @@ class FieldFormattingHelper(object):
 
         iso8601_string = datetime_object.isoformat(timespec='microseconds')
 
-      except (OverflowError, TypeError) as exception:
+      except (OverflowError, TypeError, ValueError) as exception:
         iso8601_string = '0000-00-00T00:00:00.000000+00:00'
         self._ReportEventError(event, event_data, (
             'unable to copy timestamp: {0!s} to a human readable date and '
@@ -427,7 +427,7 @@ class FieldFormattingHelper(object):
             datetime_object.hour, datetime_object.minute,
             datetime_object.second)
 
-      except (OverflowError, TypeError):
+      except (OverflowError, TypeError, ValueError):
         hours, minutes, seconds = (None, None, None)
 
     if None in (hours, minutes, seconds):
@@ -470,7 +470,7 @@ class FieldFormattingHelper(object):
           year, month, day_of_month, hours, minutes, seconds)
       return self._output_mediator.timezone.tzname(datetime_object)
 
-    except (OverflowError, TypeError):
+    except (OverflowError, TypeError, ValueError):
       self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable time zone. '
           'Defaulting to: "-"').format(event.timestamp))
