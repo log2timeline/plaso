@@ -71,16 +71,36 @@ class FieldFormattingHelper(object):
     Returns:
       str: date and time field with time zone offset.
     """
-    if (self._output_mediator.dynamic_time and event.date_time and
-        self._output_mediator.timezone == pytz.UTC):
+    if self._output_mediator.dynamic_time and event.date_time:
       iso8601_string = getattr(event.date_time, 'string', None)
-      if not iso8601_string:
-        iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
-        if not iso8601_string:
-          iso8601_string = 'Error'
+      if iso8601_string:
+        return iso8601_string
 
-        elif iso8601_string[10] == 'T' and iso8601_string[-1] == 'Z':
-          iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
+      iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
+      if not iso8601_string:
+        return 'Error'
+
+      if self._output_mediator.timezone == pytz.UTC:
+        iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
+      else:
+        # For output in a specific time zone overwrite the date, time in seconds
+        # and time zone offset in the UTC ISO8601 string.
+        year, month, day_of_month, hours, minutes, seconds = (
+            event.date_time.GetDateWithTimeOfDay())
+
+        try:
+          datetime_object = datetime.datetime(
+              year, month, day_of_month, hours, minutes, seconds,
+              tzinfo=pytz.UTC)
+          datetime_object = datetime_object.astimezone(
+              self._output_mediator.timezone)
+
+          isoformat_string = datetime_object.isoformat()
+          iso8601_string = ''.join([
+              isoformat_string[:19], iso8601_string[19:-1],
+              isoformat_string[-6:]])
+        except (OverflowError, TypeError):
+          return 'Error'
 
     else:
       if event.date_time:
@@ -88,7 +108,7 @@ class FieldFormattingHelper(object):
       else:
         timestamp = event.timestamp
 
-      iso8601_string = '0000-00-00T00:00:00+00:00'
+      iso8601_string = '0000-00-00T00:00:00.000000+00:00'
       if timestamp:
         try:
           datetime_object = datetime.datetime(
@@ -97,7 +117,7 @@ class FieldFormattingHelper(object):
           datetime_object = datetime_object.astimezone(
               self._output_mediator.timezone)
 
-          iso8601_string = datetime_object.isoformat()
+          iso8601_string = datetime_object.isoformat(timespec='microseconds')
 
         except (OverflowError, TypeError) as exception:
           self._ReportEventError(event, event_data, (
