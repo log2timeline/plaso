@@ -41,6 +41,14 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-27')
 
+    output_mediator.SetTimezone('Australia/Sydney')
+
+    date_string = formatting_helper._FormatDate(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_string, '2012-06-28')
+
+    output_mediator.SetTimezone('UTC')
+
     # Test with event.timestamp
     event.date_time = None
     date_string = formatting_helper._FormatDate(

@@ -7,6 +7,7 @@ import datetime
 import os
 import pytz
 
+from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.lib import errors
@@ -69,7 +70,7 @@ class FieldFormattingHelper(object):
       event_data_stream (EventDataStream): event data stream.
 
     Returns:
-      str: date and time field with time zone offset.
+      str: date and time field with time zone offset, semantic time.
     """
     if self._output_mediator.dynamic_time and event.date_time:
       iso8601_string = getattr(event.date_time, 'string', None)
@@ -78,7 +79,7 @@ class FieldFormattingHelper(object):
 
       iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
       if not iso8601_string:
-        return 'Error'
+        return 'Invalid'
 
       if self._output_mediator.timezone == pytz.UTC:
         iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
@@ -100,30 +101,37 @@ class FieldFormattingHelper(object):
               isoformat_string[:19], iso8601_string[19:-1],
               isoformat_string[-6:]])
         except (OverflowError, TypeError):
-          return 'Error'
+          return 'Invalid'
 
     else:
-      if event.date_time:
-        timestamp = event.date_time.GetPlasoTimestamp()
-      else:
-        timestamp = event.timestamp
+      # For now check if event.timestamp is set, to mimic existing behavior of
+      # using 0000-00-00T00:00:00.000000+00:00 for 0 timestamp values
+      if not self._output_mediator.dynamic_time and not event.timestamp:
+        return '0000-00-00T00:00:00.000000+00:00'
 
-      iso8601_string = '0000-00-00T00:00:00.000000+00:00'
-      if timestamp:
-        try:
-          datetime_object = datetime.datetime(
-              1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-          datetime_object += datetime.timedelta(microseconds=timestamp)
-          datetime_object = datetime_object.astimezone(
-              self._output_mediator.timezone)
+      date_time = event.date_time
+      if not date_time:
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=event.timestamp)
 
-          iso8601_string = datetime_object.isoformat(timespec='microseconds')
+      year, month, day_of_month, hours, minutes, seconds = (
+          date_time.GetDateWithTimeOfDay())
 
-        except (OverflowError, TypeError) as exception:
-          self._ReportEventError(event, event_data, (
-              'unable to copy timestamp: {0!s} to a human readable date and '
-              'time with error: {1!s}. Defaulting to: "{2:s}"').format(
-                  timestamp, exception, iso8601_string))
+      try:
+        datetime_object = datetime.datetime(
+            year, month, day_of_month, hours, minutes, seconds,
+            tzinfo=pytz.UTC)
+        datetime_object = datetime_object.astimezone(
+            self._output_mediator.timezone)
+
+        iso8601_string = datetime_object.isoformat(timespec='microseconds')
+
+      except (OverflowError, TypeError) as exception:
+        iso8601_string = '0000-00-00T00:00:00.000000+00:00'
+        self._ReportEventError(event, event_data, (
+            'unable to copy timestamp: {0!s} to a human readable date and '
+            'time with error: {1!s}. Defaulting to: "{2:s}"').format(
+                event.timestamp, exception, iso8601_string))
 
     return iso8601_string
 
@@ -392,40 +400,40 @@ class FieldFormattingHelper(object):
       event_data_stream (EventDataStream): event data stream.
 
     Returns:
-      str: time field.
+      str: time in seconds formatted as "HH:MM:SS" or "--:--:--" on error.
     """
     # For now check if event.timestamp is set, to mimic existing behavior of
     # using --:--:-- for 0 timestamp values.
-    if (event.date_time and event.timestamp and
-        self._output_mediator.timezone == pytz.UTC):
-      hours, minutes, seconds = event.date_time.GetTimeOfDay()
+    if not event.timestamp:
+      return '--:--:--'
 
-    else:
-      if event.date_time:
-        timestamp = event.date_time.GetPlasoTimestamp()
-      else:
-        timestamp = event.timestamp
+    date_time = event.date_time
+    if not date_time:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=event.timestamp)
 
-      hours, minutes, seconds = (None, None, None)
+    year, month, day_of_month, hours, minutes, seconds = (
+        date_time.GetDateWithTimeOfDay())
 
-      if timestamp:
-        try:
-          datetime_object = datetime.datetime(
-              1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-          datetime_object += datetime.timedelta(microseconds=timestamp)
-          datetime_object = datetime_object.astimezone(
-              self._output_mediator.timezone)
+    if self._output_mediator.timezone != pytz.UTC:
+      try:
+        datetime_object = datetime.datetime(
+            year, month, day_of_month, hours, minutes, seconds,
+            tzinfo=pytz.UTC)
+        datetime_object = datetime_object.astimezone(
+            self._output_mediator.timezone)
 
-          hours, minutes, seconds = (
-              datetime_object.hour, datetime_object.minute,
-              datetime_object.second)
+        hours, minutes, seconds = (
+            datetime_object.hour, datetime_object.minute,
+            datetime_object.second)
 
-        except (OverflowError, TypeError):
-          self._ReportEventError(event, event_data, (
-              'unable to copy timestamp: {0!s} to a human readable time. '
-              'Defaulting to: "--:--:--"').format(timestamp))
+      except (OverflowError, TypeError):
+        hours, minutes, seconds = (None, None, None)
 
     if None in (hours, minutes, seconds):
+      self._ReportEventError(event, event_data, (
+          'unable to copy timestamp: {0!s} to a human readable time. '
+          'Defaulting to: "--:--:--"').format(event.timestamp))
       return '--:--:--'
 
     return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
@@ -441,25 +449,31 @@ class FieldFormattingHelper(object):
     Returns:
       str: time zone field.
     """
-    if event.date_time:
-      timestamp = event.date_time.GetPlasoTimestamp()
-    else:
-      timestamp = event.timestamp
-
-    if not timestamp:
+    if not event.timestamp:
       return '-'
 
-    # For tzname to work the datetime object must be naive (without a time
-    # zone).
+    if self._output_mediator.timezone == pytz.UTC:
+      return 'UTC'
+
+    date_time = event.date_time
+    if not date_time:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=event.timestamp)
+
+    year, month, day_of_month, hours, minutes, seconds = (
+        date_time.GetDateWithTimeOfDay())
+
     try:
-      datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
-      datetime_object += datetime.timedelta(microseconds=timestamp)
+      # For tzname to work the datetime object must be naive (without
+      # a time zone).
+      datetime_object = datetime.datetime(
+          year, month, day_of_month, hours, minutes, seconds)
       return self._output_mediator.timezone.tzname(datetime_object)
 
-    except OverflowError:
+    except (OverflowError, TypeError):
       self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable time zone. '
-          'Defaulting to: "-"').format(timestamp))
+          'Defaulting to: "-"').format(event.timestamp))
 
       return '-'
 

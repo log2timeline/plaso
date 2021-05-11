@@ -32,15 +32,15 @@ composed at runtime.
 
 Name | Description
 --- | ---
-date | The date of the event
-datetime | The date and time of the event in ISO 8601 format
+date | The date of the event formatted as "YYYY-MM-DD" or "0000-00-00" on error
+datetime | The date and time of the event in ISO 8601 format in microseconds or "0000-00-00T00:00:00.000000+00:00" on error
 description | The event message string as defined by the message formatter
 description_short | The short event message string as defined by the message formatter
 display_name | Human readable representation of the path specification
 filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
 host | The hostname derived by pre-processing
 hostname | The hostname derived by pre-processing
-inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, mft entry) in the path specification
+inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, MFT entry) in the path specification
 macb | MACB (Modification, Access, Change, Birth) group representation
 message | The event message string as defined by the message formatter
 message_short | The short event message string as defined by the message formatter
@@ -48,13 +48,20 @@ source | The short event source as defined by the message formatter
 sourcetype | The event source as defined by the message formatter
 source_long | The event source as defined by the message formatter
 tag | The labels defined by event tags
-time | The time of the event
+time | The time of the event in seconds formatted as "HH:MM:SS" or "--:--:--" on error
 timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
 timezone | Time zone indicator
 type | Indication of what the event time represents such as Creation Time or Program Execution Duration
 user | The username derived by pre-processing
 username | The username derived by pre-processing
 zone | Time zone indicator
+
+Note that the `--dynamic-time` output option will change the format of the
+datetime output field to use value appropriate granularity, for example seconds
+for a HFS+ timestamp will be "YYYY-MM-DDTHH:MM:SS" but for an NTFS filetime it
+will be "YYYY-MM-DDTHH:MM:SS.#######", or a semantic time, for example
+"Not set", or "Error" on error. Older Plaso storage files do not necessarily
+support the dynamic time option.
 
 Output fields that are not part of the event data but of the data stream the
 event data originates from.

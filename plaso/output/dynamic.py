@@ -4,6 +4,8 @@
 import datetime
 import pytz
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.output import formatting_helper
 from plaso.output import manager
 from plaso.output import shared_dsv
@@ -55,39 +57,41 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       event_data_stream (EventDataStream): event data stream.
 
     Returns:
-      str: date field.
+      str: date formatted as "YYYY-MM-DD" or "0000-00-00" on error.
     """
     # For now check if event.timestamp is set, to mimic existing behavior of
     # using 0000-00-00 for 0 timestamp values.
-    if (event.date_time and event.timestamp and
-        self._output_mediator.timezone == pytz.UTC):
-      year, month, day_of_month = event.date_time.GetDate()
-      if None in (year, month, day_of_month):
-        year, month, day_of_month = (0, 0, 0)
+    if not event.timestamp:
+      return '0000-00-00'
 
-    else:
-      if event.date_time:
-        timestamp = event.date_time.GetPlasoTimestamp()
-      else:
-        timestamp = event.timestamp
+    date_time = event.date_time
+    if not date_time:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=event.timestamp)
 
-      year, month, day_of_month = (0, 0, 0)
-      if timestamp:
-        try:
-          datetime_object = datetime.datetime(
-              1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-          datetime_object += datetime.timedelta(microseconds=timestamp)
-          datetime_object = datetime_object.astimezone(
-              self._output_mediator.timezone)
+    year, month, day_of_month, hours, minutes, seconds = (
+        date_time.GetDateWithTimeOfDay())
 
-          year = datetime_object.year
-          month = datetime_object.month
-          day_of_month = datetime_object.day
+    if self._output_mediator.timezone != pytz.UTC:
+      try:
+        datetime_object = datetime.datetime(
+            year, month, day_of_month, hours, minutes, seconds,
+            tzinfo=pytz.UTC)
+        datetime_object = datetime_object.astimezone(
+            self._output_mediator.timezone)
 
-        except (OverflowError, TypeError):
-          self._ReportEventError(event, event_data, (
-              'unable to copy timestamp: {0!s} to a human readable date. '
-              'Defaulting to: "0000-00-00"').format(timestamp))
+        year = datetime_object.year
+        month = datetime_object.month
+        day_of_month = datetime_object.day
+
+      except (OverflowError, TypeError):
+        year, month, day_of_month = (None, None, None)
+
+    if None in (year, month, day_of_month):
+      self._ReportEventError(event, event_data, (
+          'unable to copy timestamp: {0!s} to a human readable date. '
+          'Defaulting to: "0000-00-00"').format(event.timestamp))
+      return '0000-00-00'
 
     return '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
 
