@@ -249,6 +249,14 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(time_string, '18:17:01')
 
+    output_mediator.SetTimezone('Europe/Amsterdam')
+
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '20:17:01')
+
+    output_mediator.SetTimezone('UTC')
+
     # Test with event.timestamp
     event.date_time = None
     time_string = test_helper._FormatTime(

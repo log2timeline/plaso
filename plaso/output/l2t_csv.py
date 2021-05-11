@@ -8,6 +8,8 @@ https://forensicswiki.xyz/wiki/index.php?title=L2T_CSV
 import datetime
 import pytz
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.output import formatting_helper
@@ -92,27 +94,26 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       event_data_stream (EventDataStream): event data stream.
 
     Returns:
-      str: date field.
+      str: date formatted as "MM/DD/YYYY" or "00/00/0000" on error.
     """
     # For now check if event.timestamp is set, to mimic existing behavior of
     # using 00/00/0000 for 0 timestamp values.
-    if (event.date_time and event.timestamp and
-        self._output_mediator.timezone == pytz.UTC):
-      year, month, day_of_month = event.date_time.GetDate()
-      if None in (year, month, day_of_month):
-        year, month, day_of_month = (0, 0, 0)
+    if not event.timestamp:
+      return '00/00/0000'
 
-    else:
-      if event.date_time:
-        timestamp = event.date_time.GetPlasoTimestamp()
-      else:
-        timestamp = event.timestamp
+    date_time = event.date_time
+    if not date_time:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=event.timestamp)
 
-      year, month, day_of_month = (0, 0, 0)
+    year, month, day_of_month, hours, minutes, seconds = (
+        date_time.GetDateWithTimeOfDay())
+
+    if self._output_mediator.timezone != pytz.UTC:
       try:
         datetime_object = datetime.datetime(
-            1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-        datetime_object += datetime.timedelta(microseconds=timestamp)
+            year, month, day_of_month, hours, minutes, seconds,
+            tzinfo=pytz.UTC)
         datetime_object = datetime_object.astimezone(
             self._output_mediator.timezone)
 
@@ -121,9 +122,13 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         day_of_month = datetime_object.day
 
       except (OverflowError, TypeError):
-        self._ReportEventError(event, event_data, (
-            'unable to copy timestamp: {0!s} to a human readable date. '
-            'Defaulting to: "00/00/0000"').format(timestamp))
+        year, month, day_of_month = (None, None, None)
+
+    if None in (year, month, day_of_month):
+      self._ReportEventError(event, event_data, (
+          'unable to copy timestamp: {0!s} to a human readable date. '
+          'Defaulting to: "00/00/0000"').format(event.timestamp))
+      return '00/00/0000'
 
     return '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
 

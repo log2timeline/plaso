@@ -88,7 +88,7 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       event_data_stream (EventDataStream): event data stream.
 
     Returns:
-      str: timestamp.
+      str: POSIX timestamp in seconds or 0 on error.
     """
     if event.date_time:
       posix_timestamp = event.date_time.CopyToPosixTimestamp()
@@ -131,7 +131,7 @@ class TLNOutputModule(shared_dsv.DSVOutputModule):
 class L2TTLNOutputModule(shared_dsv.DSVOutputModule):
   """Output module for the log2timeline extended variant of the TLN format.
 
-  l2tTLN is an extended variant of TLN introduced log2timeline 0.65.
+  l2tTLN is an extended variant of TLN introduced log2timeline.pl 0.65.
 
   l2tTLN extends basic TLN to 7 | separated fields, namely:
   * Time - 32-bit POSIX (or Unix) epoch timestamp.
