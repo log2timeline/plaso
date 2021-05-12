@@ -102,6 +102,10 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
     Raises:
       UnableToParseFile: if the DestList cannot be parsed.
     """
+    if olecf_item.size == 0:
+      parser_mediator.ProduceExtractionWarning('empty DestList stream')
+      return
+
     header_map = self._GetDataTypeMap('dest_list_header')
 
     try:
