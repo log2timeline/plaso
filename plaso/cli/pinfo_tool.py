@@ -987,12 +987,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
+    self.AddStorageOptions(argument_parser)
 
-    argument_helper_names = ['storage_file']
     if self._CanEnforceProcessMemoryLimit():
-      argument_helper_names.append('process_resources')
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=argument_helper_names)
+      helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+          argument_parser, names=['process_resources'])
 
     argument_parser.add_argument(
         '--compare', dest='compare_storage_file', type=str,
@@ -1074,11 +1073,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     self._output_filename = getattr(options, 'write', None)
 
-    argument_helper_names = ['process_resources', 'storage_file']
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=argument_helper_names)
+        options, self, names=['process_resources'])
 
     # TODO: move check into _CheckStorageFile.
+    self._storage_file_path = self.ParseStringOption(options, 'storage_file')
     if not self._storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')
 

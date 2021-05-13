@@ -3,7 +3,6 @@
 
 import argparse
 import collections
-import datetime
 import os
 import textwrap
 
@@ -122,36 +121,6 @@ class PstealTool(
     self.list_output_modules = False
     self.list_parsers_and_plugins = False
 
-  def _GenerateStorageFileName(self):
-    """Generates a name for the storage file.
-
-    The result use a timestamp and the basename of the source path.
-
-    Returns:
-      str: a filename for the storage file in the form <time>-<source>.plaso
-
-    Raises:
-      BadConfigOption: raised if the source path is not set.
-    """
-    if not self._source_path:
-      raise errors.BadConfigOption('Please define a source (--source).')
-
-    timestamp = datetime.datetime.now()
-    datetime_string = timestamp.strftime('%Y%m%dT%H%M%S')
-
-    source_path = os.path.abspath(self._source_path)
-
-    if source_path.endswith(os.path.sep):
-      source_path = os.path.dirname(source_path)
-
-    source_name = os.path.basename(source_path)
-
-    if not source_name or source_name in ('/', '\\'):
-      # The user passed the filesystem's root as source
-      source_name = 'ROOT'
-
-    return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
-
   def _PrintAnalysisReportsDetails(
       self, storage_reader, number_of_analysis_reports):
     """Prints the details of the analysis reports.
@@ -187,6 +156,18 @@ class PstealTool(
           table_view.AddRow([key, value])
 
       table_view.Write(self._output_writer)
+
+  def AddStorageOptions(self, argument_group):
+    """Adds the storage options to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        '--storage_file', '--storage-file', dest='storage_file', metavar='PATH',
+        type=str, default=None, help=(
+            'The path of the storage file. If not specified, one will be made '
+            'in the form <timestamp>-<source>.plaso'))
 
   def AnalyzeEvents(self):
     """Analyzes events from a plaso storage file and generate a report.
@@ -410,12 +391,7 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         extraction_group, names=argument_helper_names)
 
-    extraction_group.add_argument(
-        '--storage_file', '--storage-file', metavar='PATH', type=str,
-        default=None, help=(
-            'The path of the storage file. If not specified, one will be made '
-            'in the form <timestamp>-<source>.plaso'))
-
+    self.AddStorageOptions(extraction_group)
     self.AddStorageMediaImageOptions(extraction_group)
     self.AddTimeZoneOption(extraction_group)
     self.AddVSSProcessingOptions(extraction_group)
@@ -465,6 +441,13 @@ class PstealTool(
       self._output_writer.Write('\n')
       self._output_writer.Write(argument_parser.format_help())
       return False
+
+    # Properly prepare the attributes according to local encoding.
+    if self.preferred_encoding == 'ascii':
+      self._PrintUserWarning((
+          'the preferred encoding of your system is ASCII, which is not '
+          'optimal for the typically non-ASCII characters that need to be '
+          'parsed and processed. This will most likely result in an error.'))
 
     try:
       self.ParseOptions(options)
@@ -547,7 +530,7 @@ class PstealTool(
     self._ParsePerformanceOptions(options)
     self._ParseProcessingOptions(options)
 
-    self._storage_file_path = getattr(options, 'storage_file', None)
+    self._storage_file_path = self.ParseStringOption(options, 'storage_file')
     if not self._storage_file_path:
       self._storage_file_path = self._GenerateStorageFileName()
 

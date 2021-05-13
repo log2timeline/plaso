@@ -4,7 +4,6 @@
 import argparse
 import collections
 import os
-import time
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -307,9 +306,7 @@ class PsortTool(
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=['storage_file'])
+    self.AddStorageOptions(argument_parser)
 
     analysis_group = argument_parser.add_argument_group('Analysis Arguments')
 
@@ -374,15 +371,10 @@ class PsortTool(
 
     # Properly prepare the attributes according to local encoding.
     if self.preferred_encoding == 'ascii':
-      logger.warning(
-          'The preferred encoding of your system is ASCII, which is not '
+      self._PrintUserWarning((
+          'the preferred encoding of your system is ASCII, which is not '
           'optimal for the typically non-ASCII characters that need to be '
-          'parsed and processed. The tool will most likely crash and die, '
-          'perhaps in a way that may not be recoverable. A five second delay '
-          'is introduced to give you time to cancel the runtime and '
-          'reconfigure your preferred encoding, otherwise continue at own '
-          'risk.')
-      time.sleep(5)
+          'parsed and processed. This will most likely result in an error.'))
 
     try:
       self.ParseOptions(options)
@@ -463,9 +455,8 @@ class PsortTool(
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=['storage_file'])
-
+    # TODO: move check into _CheckStorageFile.
+    self._storage_file_path = self.ParseStringOption(options, 'storage_file')
     self._CheckStorageFile(self._storage_file_path)
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)

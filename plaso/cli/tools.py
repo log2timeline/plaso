@@ -190,6 +190,9 @@ class CLITool(object):
   def _WaitUserWarning(self):
     """Waits 15 seconds after printing warnings to the user."""
     if self._has_user_warning:
+      print('Waiting for 15 second to give you time to cancel.')
+      print('')
+
       time.sleep(15)
 
   def AddBasicOptions(self, argument_group):

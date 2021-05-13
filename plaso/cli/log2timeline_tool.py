@@ -128,6 +128,28 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     return return_dict
 
+  def AddLegacyStorageOptions(self, argument_parser):
+    """Adds the legacy storage options to the argument group.
+
+    Args:
+      argument_parser (argparse.ArgumentParser): argparse argument parser.
+    """
+    argument_parser.add_argument(
+        'storage_file_legacy', metavar='PATH', nargs='?', type=str,
+        default=None, help='Path to a storage file.')
+
+  def AddStorageOptions(self, argument_group):
+    """Adds the storage options to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        '--storage_file', '--storage-file', dest='storage_file', metavar='PATH',
+        type=str, default=None, help=(
+            'The path of the storage file. If not specified, one will be made '
+            'in the form <timestamp>-<source>.plaso'))
+
   def ParseArguments(self, arguments):
     """Parses the command line arguments.
 
@@ -145,8 +167,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.AddBasicOptions(argument_parser)
 
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=['storage_file'])
+    self.AddLegacyStorageOptions(argument_parser)
 
     data_location_group = argument_parser.add_argument_group(
         'data location arguments')
@@ -240,15 +261,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     # Properly prepare the attributes according to local encoding.
     if self.preferred_encoding == 'ascii':
-      logger.warning(
-          'The preferred encoding of your system is ASCII, which is not '
+      self._PrintUserWarning((
+          'the preferred encoding of your system is ASCII, which is not '
           'optimal for the typically non-ASCII characters that need to be '
-          'parsed and processed. The tool will most likely crash and die, '
-          'perhaps in a way that may not be recoverable. A five second delay '
-          'is introduced to give you time to cancel the runtime and '
-          'reconfigure your preferred encoding, otherwise continue at own '
-          'risk.')
-      time.sleep(5)
+          'parsed and processed. This will most likely result in an error.'))
 
     if self._process_archives:
       logger.warning(
@@ -317,17 +333,36 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     argument_helper_names = [
         'artifact_definitions', 'artifact_filters', 'extraction',
-        'filter_file', 'status_view', 'storage_file', 'storage_format',
-        'text_prepend', 'yara_rules']
+        'filter_file', 'status_view', 'storage_format', 'text_prepend',
+        'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
     self._ParseLogFileOptions(options)
 
+    if (hasattr(options, 'storage_file_legacy') and
+        not getattr(options, self._SOURCE_OPTION, None)):
+      source_option = getattr(options, 'storage_file_legacy', None)
+      setattr(options, self._SOURCE_OPTION, source_option)
+      delattr(options, 'storage_file_legacy')
+
     self._ParseStorageMediaOptions(options)
 
     self._ParsePerformanceOptions(options)
     self._ParseProcessingOptions(options)
+
+    storage_file_legacy = self.ParseStringOption(options, 'storage_file_legacy')
+    if storage_file_legacy and self._source_path:
+      self._PrintUserWarning((
+          'the storage file option has been deprecated you can now safely '
+          'omit it or use "--storage_file" instead.'))
+
+    if storage_file_legacy:
+      self._storage_file_path = storage_file_legacy
+    else:
+      self._storage_file_path = self.ParseStringOption(options, 'storage_file')
+      if not self._storage_file_path:
+        self._storage_file_path = self._GenerateStorageFileName()
 
     if not self._storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')
