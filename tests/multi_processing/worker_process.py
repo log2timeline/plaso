@@ -137,9 +137,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     self.assertEqual(parser_mediator._number_of_warnings, 0)
     self.assertTrue(test_process._abort)
 
-    test_process._ProcessPathSpec(None, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_warnings, 1)
-
   def testProcessTask(self):
     """Tests the _ProcessTask function."""
     session = sessions.Session()

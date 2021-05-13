@@ -2,6 +2,10 @@
 """The definitions."""
 
 
+# Exceptions (or errors) that should not be caught in a catch all try-catch.
+EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL = (
+    AttributeError, ImportError, NameError, TypeError, UnboundLocalError)
+
 MICROSECONDS_PER_SECOND = 1000000
 MICROSECONDS_PER_MINUTE = 60000000
 NANOSECONDS_PER_SECOND = 1000000000

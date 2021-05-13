@@ -7,6 +7,7 @@ import tempfile
 
 from dfvfs.path import factory as dfvfs_factory
 
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -372,6 +373,7 @@ class SQLiteParser(interface.FileEntryParser):
     format_specification.AddNewSignature(b'SQLite format 3', offset=0)
     return format_specification
 
+  # pylint: disable=missing-raises-doc
   def ParseFileEntry(self, parser_mediator, file_entry):
     """Parses a SQLite database file entry.
 
@@ -425,10 +427,14 @@ class SQLiteParser(interface.FileEntryParser):
         parser_mediator.SetFileEntry(file_entry)
         parser_mediator.AddEventAttribute('schema_match', schema_match)
 
+      # pylint: disable=try-except-raise
         try:
           plugin.UpdateChainAndProcess(
               parser_mediator, cache=cache, database=database,
               database_wal=database_wal, wal_file_entry=wal_file_entry)
+
+        except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+          raise
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
@@ -450,6 +456,9 @@ class SQLiteParser(interface.FileEntryParser):
           plugin.UpdateChainAndProcess(
               parser_mediator, cache=cache, database=database,
               database_wal=database_wal, wal_file_entry=wal_file_entry)
+
+        except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+          raise
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((

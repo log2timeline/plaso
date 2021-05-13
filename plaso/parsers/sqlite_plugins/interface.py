@@ -3,6 +3,7 @@
 
 import sqlite3
 
+from plaso.lib import definitions
 from plaso.parsers import logger
 from plaso.parsers import plugins
 
@@ -89,6 +90,7 @@ class SQLitePlugin(plugins.BasePlugin):
 
     return hash(' '.join(values))
 
+  # pylint: disable=missing-raises-doc
   def _ParseQuery(self, parser_mediator, database, query, callback, cache):
     """Queries a database and parses the results.
 
@@ -118,8 +120,12 @@ class SQLitePlugin(plugins.BasePlugin):
       if row_hash in row_cache:
         continue
 
+      # pylint: disable=try-except-raise
       try:
         callback(parser_mediator, query, row, cache=cache, database=database)
+
+      except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+        raise
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning((
