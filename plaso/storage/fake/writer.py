@@ -42,6 +42,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._events = []
     self._extraction_warnings = []
     self._is_open = False
+    self._recovery_warnings = []
     self._task_storage_writers = {}
     self.analysis_reports = []
     self.session_completion = None
@@ -237,6 +238,24 @@ class FakeStorageWriter(interface.StorageWriter):
     self._extraction_warnings.append(extraction_warning)
     self.number_of_extraction_warnings += 1
 
+  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+    """Adds a recovery warning.
+
+    Args:
+      recovery_warning (ExtractionWarning): recovery warning.
+      serialized_data (Optional[bytes]): serialized form of the warning.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    recovery_warning = self._PrepareAttributeContainer(recovery_warning)
+
+    self._recovery_warnings.append(recovery_warning)
+    self.number_of_recovery_warnings += 1
+
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging into the session store.
 
@@ -403,6 +422,14 @@ class FakeStorageWriter(interface.StorageWriter):
     event_source = self._event_sources[self._written_event_source_index]
     self._written_event_source_index += 1
     return event_source
+
+  def GetRecoveryWarnings(self):
+    """Retrieves the recovery warnings.
+
+    Returns:
+      generator(RecoveryWarning): recovery warning generator.
+    """
+    return iter(self._recovery_warnings)
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.

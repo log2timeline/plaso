@@ -59,7 +59,8 @@ class ParserMediator(object):
     self._memory_profiler = None
     self._number_of_event_sources = 0
     self._number_of_events = 0
-    self._number_of_warnings = 0
+    self._number_of_extraction_warnings = 0
+    self._number_of_recovery_warnings = 0
     self._parser_chain_components = []
     self._preferred_year = preferred_year
     self._process_information = None
@@ -103,7 +104,8 @@ class ParserMediator(object):
   @property
   def number_of_produced_warnings(self):
     """int: number of produced warnings."""
-    return self._number_of_warnings
+    return (
+        self._number_of_extraction_warnings + self._number_of_recovery_warnings)
 
   @property
   def operating_system(self):
@@ -539,7 +541,33 @@ class ParserMediator(object):
     warning = warnings.ExtractionWarning(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
     self._storage_writer.AddExtractionWarning(warning)
-    self._number_of_warnings += 1
+    self._number_of_extraction_warnings += 1
+
+    self.last_activity_timestamp = time.time()
+
+  def ProduceRecoveryWarning(self, message, path_spec=None):
+    """Produces a recovery warning.
+
+    Args:
+      message (str): message of the warning.
+      path_spec (Optional[dfvfs.PathSpec]): path specification, where None
+          will use the path specification of current file entry set in
+          the mediator.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
+    """
+    if not self._storage_writer:
+      raise RuntimeError('Storage writer not set.')
+
+    if not path_spec and self._file_entry:
+      path_spec = self._file_entry.path_spec
+
+    parser_chain = self.GetParserChain()
+    warning = warnings.RecoveryWarning(
+        message=message, parser_chain=parser_chain, path_spec=path_spec)
+    self._storage_writer.AddRecoveryWarning(warning)
+    self._number_of_recovery_warnings += 1
 
     self.last_activity_timestamp = time.time()
 

@@ -221,7 +221,34 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
       parser_mediator.ProduceEventWithEventData(
           event_without_timestamp, event_data)
 
-  # TODO: add tests for ProduceExtractionWarning.
+  def testProduceExtractionWarning(self):
+    """Tests the ProduceExtractionWarning method."""
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    parser_mediator = mediator.ParserMediator(
+        storage_writer, knowledge_base_object)
+
+    storage_writer.Open()
+
+    parser_mediator.ProduceExtractionWarning('test')
+    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_events, 0)
+
+  def testProduceRecoveryWarning(self):
+    """Tests the ProduceRecoveryWarning method."""
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    parser_mediator = mediator.ParserMediator(
+        storage_writer, knowledge_base_object)
+
+    storage_writer.Open()
+
+    parser_mediator.ProduceRecoveryWarning('test')
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 0)
+
   # TODO: add tests for RemoveEventAttribute.
 
   def testResetFileEntry(self):

@@ -376,6 +376,14 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.GetNumberOfEventSources()
 
+  def GetRecoveryWarnings(self):
+    """Retrieves the recovery warnings.
+
+    Returns:
+      generator(RecoveryWarning): recovery warning generator.
+    """
+    return self._storage_file.GetRecoveryWarnings()
+
   def GetSessions(self):
     """Retrieves the sessions.
 
@@ -422,6 +430,14 @@ class StorageFileReader(interface.StorageReader):
       bool: True if the store contains extraction warnings.
     """
     return self._storage_file.HasExtractionWarnings()
+
+  def HasRecoveryWarnings(self):
+    """Determines if a store contains recovery warnings.
+
+    Returns:
+      bool: True if the store contains recovery warnings.
+    """
+    return self._storage_file.HasRecoveryWarnings()
 
   # TODO: remove, this method is kept for backwards compatibility reasons.
   def ReadSystemConfiguration(self, knowledge_base):
@@ -708,6 +724,24 @@ class StorageFileWriter(interface.StorageWriter):
     self._storage_file.AddExtractionWarning(
         extraction_warning, serialized_data=serialized_data)
     self.number_of_extraction_warnings += 1
+
+  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+    """Adds a recovery warning.
+
+    Args:
+      recovery_warning (RecoveryWarning): an recovery warning.
+      serialized_data (Optional[bytes]): serialized form of the recovery
+          warning.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    self._storage_file.AddRecoveryWarning(
+        recovery_warning, serialized_data=serialized_data)
+    self.number_of_recovery_warnings += 1
 
   def Close(self):
     """Closes the storage writer.

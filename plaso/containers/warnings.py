@@ -61,5 +61,34 @@ class ExtractionWarning(interface.AttributeContainer):
     self.path_spec = path_spec
 
 
+class RecoveryWarning(interface.AttributeContainer):
+  """Recovery warning attribute container.
+
+  Recovery warnings are warning encountered during recovery. They are typically
+  produced by parsers/plugins when they are unable to recover events.
+
+  Attributes:
+    message (str): warning message.
+    parser_chain (str): parser chain to which the warning applies.
+    path_spec (dfvfs.PathSpec): path specification of the file entry to which
+        the warning applies.
+  """
+  CONTAINER_TYPE = 'recovery_warning'
+
+  def __init__(self, message=None, parser_chain=None, path_spec=None):
+    """Initializes a recovery warning.
+
+    Args:
+      message (Optional[str]): warning message.
+      parser_chain (Optional[str]): parser chain to which the warning applies.
+      path_spec (Optional[dfvfs.PathSpec]): path specification of the file entry
+          to which the warning applies.
+    """
+    super(RecoveryWarning, self).__init__()
+    self.message = message
+    self.parser_chain = parser_chain
+    self.path_spec = path_spec
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    AnalysisWarning, ExtractionWarning])
+    AnalysisWarning, ExtractionWarning, RecoveryWarning])

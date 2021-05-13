@@ -141,6 +141,14 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.GetNumberOfEventSources()
 
+  def GetRecoveryWarnings(self):
+    """Retrieves the recovery warnings.
+
+    Returns:
+      generator(RecoveryWarning): recovery warning generator.
+    """
+    return self._store.GetRecoveryWarnings()
+
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
@@ -187,6 +195,14 @@ class RedisStorageReader(interface.StorageReader):
       bool: True if the store contains extraction warnings.
     """
     return self._store.HasExtractionWarnings()
+
+  def HasRecoveryWarnings(self):
+    """Determines if a store contains recovery warnings.
+
+    Returns:
+      bool: True if the store contains recovery warnings.
+    """
+    return self._store.HasRecoveryWarnings()
 
   # pylint: disable=unused-argument
   def ReadSystemConfiguration(self, knowledge_base):

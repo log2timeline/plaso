@@ -119,7 +119,7 @@ class RedisStorageWriter(interface.StorageWriter):
       serialized_data (Optional[bytes]): serialized form of the analysis
           warning.
     """
-    self._store.AddExtractionWarning(
+    self._store.AddAnalysisWarning(
         analysis_warning, serialized_data=serialized_data)
 
   def AddEvent(self, event, serialized_data=None):
@@ -178,6 +178,17 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddExtractionWarning(
         extraction_warning, serialized_data=serialized_data)
+
+  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+    """Adds a recovery warning.
+
+    Args:
+      recovery_warning (RecoveryWarning): a recovery warning.
+      serialized_data (Optional[bytes]): serialized form of the recovery
+          warning.
+    """
+    self._store.AddRecoveryWarning(
+        recovery_warning, serialized_data=serialized_data)
 
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging into the store.
