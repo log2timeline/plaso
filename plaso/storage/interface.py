@@ -31,6 +31,7 @@ class BaseStore(object):
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
   _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_CONFIGURATION = (
       sessions.SessionConfiguration.CONTAINER_TYPE)
@@ -271,6 +272,20 @@ class BaseStore(object):
         self._CONTAINER_TYPE_EXTRACTION_WARNING, extraction_warning,
         serialized_data=serialized_data)
 
+  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+    """Adds a recovery warning.
+
+    Args:
+      recovery_warning (RecoveryWarning): recovery warning.
+      serialized_data (Optional[bytes]): serialized form of the recovery
+          warning.
+    """
+    self._RaiseIfNotWritable()
+
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_RECOVERY_WARNING, recovery_warning,
+        serialized_data=serialized_data)
+
   @abc.abstractmethod
   def Close(self):
     """Closes the store."""
@@ -389,6 +404,14 @@ class BaseStore(object):
     return self._GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
 
+  def GetRecoveryWarnings(self):
+    """Retrieves the recovery warnings.
+
+    Returns:
+      generator(RecoveryWarning): recovery warning generator.
+    """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_RECOVERY_WARNING)
+
   def GetSessions(self):
     """Retrieves the sessions.
 
@@ -490,6 +513,14 @@ class BaseStore(object):
       bool: True if the store contains event tags.
     """
     return self._HasAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
+
+  def HasRecoveryWarnings(self):
+    """Determines if a store contains recovery warnings.
+
+    Returns:
+      bool: True if the store contains recovery warnings.
+    """
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   @abc.abstractmethod
   def Open(self, **kwargs):
@@ -703,6 +734,7 @@ class StorageMergeReader(object):
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
   _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
@@ -727,7 +759,8 @@ class StorageMergeReader(object):
       _CONTAINER_TYPE_EVENT_DATA_STREAM: '_AddEventDataStream',
       _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
       _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
-      _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddExtractionWarning'}
+      _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddExtractionWarning',
+      _CONTAINER_TYPE_RECOVERY_WARNING: '_AddRecoveryWarning'}
 
   def __init__(self, storage_writer):
     """Initializes a storage merge reader.
@@ -812,10 +845,22 @@ class StorageMergeReader(object):
 
     Args:
       extraction_warning (ExtractionWarning): extraction warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
+      serialized_data (Optional[bytes]): serialized form of the extraction
+          warning.
     """
     self._storage_writer.AddExtractionWarning(
         extraction_warning, serialized_data=serialized_data)
+
+  def _AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+    """Adds a recovery warning.
+
+    Args:
+      recovery_warning (RecoveryWarning): recovery warning.
+      serialized_data (Optional[bytes]): serialized form of the recovery
+          warning.
+    """
+    self._storage_writer.AddRecoveryWarning(
+        recovery_warning, serialized_data=serialized_data)
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -1001,6 +1046,14 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetRecoveryWarnings(self):
+    """Retrieves the recovery warnings.
+
+    Yields:
+      RecoveryWarning: recovery warning.
+    """
+
+  @abc.abstractmethod
   def GetSessions(self):
     """Retrieves the sessions.
 
@@ -1047,6 +1100,14 @@ class StorageReader(object):
       bool: True if the store contains extraction warnings.
     """
 
+  @abc.abstractmethod
+  def HasRecoveryWarnings(self):
+    """Determines if a store contains recovery warnings.
+
+    Returns:
+      bool: True if the store contains recovery warnings.
+    """
+
   # TODO: remove, this method is kept for backwards compatibility reasons.
   @abc.abstractmethod
   def ReadSystemConfiguration(self, knowledge_base):
@@ -1087,6 +1148,7 @@ class StorageWriter(object):
     number_of_event_tags (int): number of event tags written.
     number_of_events (int): number of events written.
     number_of_extraction_warnings (int): number of extraction warnings written.
+    number_of_recovery_warnings (int): number of recovery warnings written.
   """
 
   def __init__(
@@ -1112,6 +1174,7 @@ class StorageWriter(object):
     self.number_of_event_tags = 0
     self.number_of_events = 0
     self.number_of_extraction_warnings = 0
+    self.number_of_recovery_warnings = 0
 
   @property
   def number_of_warnings(self):
@@ -1190,6 +1253,16 @@ class StorageWriter(object):
     Args:
       extraction_warning (ExtractionWarning): an extraction warning.
       serialized_data (Optional[bytes]): serialized form of the extraction
+          warning.
+    """
+
+  @abc.abstractmethod
+  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+    """Adds a recovery warning.
+
+    Args:
+      recovery_warning (RecoveryWarning): a recovery warning.
+      serialized_data (Optional[bytes]): serialized form of the recovery
           warning.
     """
 

@@ -130,15 +130,15 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
     extraction_worker = TestEventExtractionWorker()
     test_process._ProcessPathSpec(extraction_worker, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_warnings, 0)
+    self.assertEqual(parser_mediator._number_of_extraction_warnings, 0)
 
     extraction_worker = TestFailureEventExtractionWorker()
     test_process._ProcessPathSpec(extraction_worker, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_warnings, 0)
+    self.assertEqual(parser_mediator._number_of_extraction_warnings, 0)
     self.assertTrue(test_process._abort)
 
     test_process._ProcessPathSpec(None, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_warnings, 1)
+    self.assertEqual(parser_mediator._number_of_extraction_warnings, 1)
 
   def testProcessTask(self):
     """Tests the _ProcessTask function."""
