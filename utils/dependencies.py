@@ -25,6 +25,8 @@ class DependencyDefinition(object):
     rpm_name (str): name of the rpm package that provides the dependency.
     skip_check (bool): True if the dependency should be skipped by the
         CheckDependencies or CheckTestDependencies methods of DependencyHelper.
+    skip_requires (bool): True if the dependency should be excluded from
+        requirements.txt or setup.py install_requires.
     version_property (str): name of the version attribute or function.
   """
 
@@ -46,6 +48,7 @@ class DependencyDefinition(object):
     self.python3_only = False
     self.rpm_name = None
     self.skip_check = None
+    self.skip_requires = None
     self.version_property = None
 
 
@@ -63,6 +66,7 @@ class DependencyDefinitionReader(object):
       'python3_only',
       'rpm_name',
       'skip_check',
+      'skip_requires',
       'version_property'])
 
   def _GetConfigValue(self, config_parser, section_name, value_name):
