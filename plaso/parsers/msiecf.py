@@ -185,7 +185,7 @@ class MSIECFParser(interface.FileObjectParser):
               recovered=True)
 
       except IOError as exception:
-        parser_mediator.ProduceExtractionWarning(
+        parser_mediator.ProduceRecoveryWarning(
             'Unable to parse recovered item: {0:d} with error: {1!s}'.format(
                 item_index, exception))
 
@@ -284,10 +284,14 @@ class MSIECFParser(interface.FileObjectParser):
           try:
             http_headers = msiecf_item.data[:-1].decode('ascii')
           except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning((
+            warning_message = (
                 'unable to decode HTTP headers of URL record at offset: '
                 '0x{0:08x}. Characters that cannot be decoded will be '
-                'replaced with "?" or "\\ufffd".').format(msiecf_item.offset))
+                'replaced with "?" or "\\ufffd".').format(msiecf_item.offset)
+            if recovered:
+              parser_mediator.ProduceRecoveryWarning(warning_message)
+            else:
+              parser_mediator.ProduceExtractionWarning(warning_message)
             http_headers = msiecf_item.data[:-1].decode(
                 'ascii', errors='replace')
 

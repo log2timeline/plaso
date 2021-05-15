@@ -21,7 +21,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     storage_type (str): storage type.
   """
 
-  _FORMAT_VERSION = 20210105
+  _FORMAT_VERSION = 20210514
 
   # The earliest format version, stored in-file, that this class
   # is able to append (write).
@@ -580,6 +580,13 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     setattr(event_tag, '_event_row_identifier', event_identifier.row_identifier)
 
+  def _UpdateStorageMetadataFormatVersion(self):
+    """Updates the storage metadata format version."""
+    query = (
+        'UPDATE metadata SET value = {0:d} '
+        'WHERE key = "format_version"').format(self._FORMAT_VERSION)
+    self._cursor.execute(query)
+
   def _WriteAttributeContainer(
       self, attribute_container, serialized_data=None):
     """Writes an attribute container.
@@ -1052,6 +1059,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         self._WriteStorageMetadata()
       else:
         self._ReadAndCheckStorageMetadata()
+
+        # Update the storage metadata format version in case we are adding
+        # new format features that are not backwards compatible.
+        self._UpdateStorageMetadataFormatVersion()
 
       for container_type in self._CONTAINER_TYPES:
         if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
