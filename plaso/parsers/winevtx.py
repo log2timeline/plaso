@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows XML EventLog (EVTX) files."""
 
-from xml.parsers import expat
-
 import pyevtx
 
-from defusedxml import ElementTree
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
-from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -58,59 +54,6 @@ class WinEvtxParser(interface.FileObjectParser):
 
   NAME = 'winevtx'
   DATA_FORMAT = 'Windows XML EventLog (EVTX) file'
-
-  def _GetCreationTimeFromXMLString(
-      self, parser_mediator, record_index, xml_string, recovered=False):
-    """Retrieves the creation time from the XML string.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      record_index (int): event record index.
-      xml_string (str): event XML string.
-      recovered (Optional[bool]): True if the record was recovered.
-
-    Returns:
-      str: creation date and time formatted as ISO 8601 or None if not
-          available.
-    """
-    try:
-      xml_root = ElementTree.fromstring(xml_string)
-    except (LookupError, ElementTree.ParseError, expat.ExpatError) as exception:
-      warning_message = (
-          'unable to parse XML string of event record: {0:d} with error: '
-          '{1!s}').format(record_index, exception)
-      if recovered:
-        parser_mediator.ProduceRecoveryWarning(warning_message)
-      else:
-        parser_mediator.ProduceExtractionWarning(warning_message)
-      return None
-
-    system_xml_element = xml_root.find(
-        '{http://schemas.microsoft.com/win/2004/08/events/event}System')
-    if system_xml_element is None:
-      warning_message = (
-          'missing System XML element in event record: {0:d}').format(
-              record_index)
-      if recovered:
-        parser_mediator.ProduceRecoveryWarning(warning_message)
-      else:
-        parser_mediator.ProduceExtractionWarning(warning_message)
-      return None
-
-    time_created_xml_element = system_xml_element.find(
-        '{http://schemas.microsoft.com/win/2004/08/events/event}TimeCreated')
-    if time_created_xml_element is None:
-      warning_message = (
-          'missing TimeCreated XML element in event record: {0:d}').format(
-              record_index)
-      if recovered:
-        parser_mediator.ProduceRecoveryWarning(warning_message)
-      else:
-        parser_mediator.ProduceExtractionWarning(warning_message)
-      return None
-
-    return time_created_xml_element.get('SystemTime')
 
   def _GetEventDataFromRecord(
       self, parser_mediator, record_index, evtx_record, recovered=False):
@@ -225,29 +168,23 @@ class WinEvtxParser(interface.FileObjectParser):
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    creation_time_string = self._GetCreationTimeFromXMLString(
-        parser_mediator, record_index, event_data.xml_string,
-        recovered=recovered)
-    if creation_time_string:
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+    try:
+      creation_time = evtx_record.get_creation_time_as_integer()
+    except OverflowError as exception:
+      warning_message = (
+          'unable to read creation time from event record: {0:d} '
+          'with error: {1!s}').format(record_index, exception)
+      if recovered:
+        parser_mediator.ProduceRecoveryWarning(warning_message)
+      else:
+        parser_mediator.ProduceExtractionWarning(warning_message)
 
-      try:
-        date_time.CopyFromStringISO8601(creation_time_string)
-      except ValueError as exception:
-        warning_message = (
-            'unsupported creation time: {0:s} with error: {1!s}.').format(
-                creation_time_string, exception)
-        if recovered:
-          parser_mediator.ProduceRecoveryWarning(warning_message)
-        else:
-          parser_mediator.ProduceExtractionWarning(warning_message)
+      creation_time = None
 
-        date_time = None
-
-      if date_time:
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_CREATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+    if creation_time:
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseRecords(self, parser_mediator, evtx_file):
     """Parses Windows XML EventLog (EVTX) records.
@@ -270,7 +207,7 @@ class WinEvtxParser(interface.FileObjectParser):
         evtx_record = evtx_file.get_record(record_index)
         self._ParseRecord(parser_mediator, record_index, evtx_record)
 
-      except (IOError, ElementTree.ParseError) as exception:
+      except IOError as exception:
         parser_mediator.ProduceExtractionWarning(
             'unable to parse event record: {0:d} with error: {1!s}'.format(
                 record_index, exception))
@@ -284,7 +221,7 @@ class WinEvtxParser(interface.FileObjectParser):
         self._ParseRecord(
             parser_mediator, record_index, evtx_record, recovered=True)
 
-      except (IOError, ElementTree.ParseError) as exception:
+      except IOError as exception:
         parser_mediator.ProduceRecoveryWarning((
             'unable to parse recovered event record: {0:d} with error: '
             '{1!s}').format(record_index, exception))
