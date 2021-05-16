@@ -423,7 +423,6 @@ class SQLiteParser(interface.FileEntryParser):
           continue
 
         parser_mediator.SetFileEntry(file_entry)
-        parser_mediator.AddEventAttribute('schema_match', schema_match)
 
         try:
           plugin.UpdateChainAndProcess(
@@ -435,16 +434,10 @@ class SQLiteParser(interface.FileEntryParser):
               'plugin: {0:s} unable to parse SQLite database with error: '
               '{1!s}').format(plugin.NAME, exception))
 
-        finally:
-          parser_mediator.RemoveEventAttribute('schema_match')
-
         if not database_wal:
           continue
 
-        schema_match = plugin.CheckSchema(database)
-
         parser_mediator.SetFileEntry(wal_file_entry)
-        parser_mediator.AddEventAttribute('schema_match', schema_match)
 
         try:
           plugin.UpdateChainAndProcess(
@@ -455,9 +448,6 @@ class SQLiteParser(interface.FileEntryParser):
           parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse SQLite database and WAL with '
               'error: {1!s}').format(plugin.NAME, exception))
-
-        finally:
-          parser_mediator.RemoveEventAttribute('schema_match')
 
     finally:
       database.Close()

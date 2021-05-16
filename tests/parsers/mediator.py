@@ -53,9 +53,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     # TODO: improve test coverage.
 
-  # TODO: add tests for AddEventAttribute.
   # TODO: add tests for AppendToParserChain.
-  # TODO: add tests for ClearEventAttributes.
   # TODO: add tests for ClearParserChain.
 
   def testGetDisplayName(self):
@@ -248,8 +246,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     parser_mediator.ProduceRecoveryWarning('test')
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
-
-  # TODO: add tests for RemoveEventAttribute.
 
   def testResetFileEntry(self):
     """Tests the ResetFileEntry function."""
