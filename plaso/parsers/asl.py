@@ -80,12 +80,6 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the record cannot be parsed.
     """
-    record_strings_data_offset = file_object.tell()
-    record_strings_data_size = record_offset - record_strings_data_offset
-
-    record_strings_data = self._ReadData(
-        file_object, record_strings_data_offset, record_strings_data_size)
-
     record_map = self._GetDataTypeMap('asl_record')
 
     try:
@@ -97,20 +91,16 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
           '{1!s}').format(record_offset, exception))
 
     hostname = self._ParseRecordString(
-        record_strings_data, record_strings_data_offset,
-        record.hostname_string_offset)
+        file_object, record.hostname_string_offset)
 
     sender = self._ParseRecordString(
-        record_strings_data, record_strings_data_offset,
-        record.sender_string_offset)
+        file_object, record.sender_string_offset)
 
     facility = self._ParseRecordString(
-        record_strings_data, record_strings_data_offset,
-        record.facility_string_offset)
+        file_object, record.facility_string_offset)
 
     message = self._ParseRecordString(
-        record_strings_data, record_strings_data_offset,
-        record.message_string_offset)
+        file_object, record.message_string_offset)
 
     file_offset = record_offset + record_data_size
     additional_data_size = record.data_size + 6 - record_data_size
@@ -131,12 +121,10 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
       file_offset += 16
 
       name = self._ParseRecordString(
-          record_strings_data, record_strings_data_offset,
-          record_extra_field.name_string_offset)
+          file_object, record_extra_field.name_string_offset)
 
       value = self._ParseRecordString(
-          record_strings_data, record_strings_data_offset,
-          record_extra_field.value_string_offset)
+          file_object, record_extra_field.value_string_offset)
 
       if name is not None:
         extra_fields[name] = value
@@ -146,7 +134,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     event_data = ASLEventData()
     event_data.computer_name = hostname
     event_data.extra_information = ', '.join([
-        '{0:s}: {1:s}'.format(name, value)
+        '{0:s}: {1!s}'.format(name, value)
         for name, value in sorted(extra_fields.items())])
     event_data.facility = facility
     event_data.group_id = record.group_identifier
@@ -198,14 +186,11 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
 
     return record_extra_field
 
-  def _ParseRecordString(
-      self, record_strings_data, record_strings_data_offset, string_offset):
+  def _ParseRecordString(self, file_object, string_offset):
     """Parses a record string.
 
     Args:
-      record_strings_data (bytes): record strings data.
-      record_strings_data_offset (int): offset of the record strings data
-          relative to the start of the file.
+      file_object (file): file-like object.
       string_offset (int): offset of the string relative to the start of
           the file.
 
@@ -237,12 +222,11 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
             'Unable to decode inline record string with error: {0!s}.'.format(
                 exception))
 
-    data_offset = string_offset - record_strings_data_offset
     record_string_map = self._GetDataTypeMap('asl_record_string')
 
     try:
-      record_string = self._ReadStructureFromByteStream(
-          record_strings_data[data_offset:], string_offset, record_string_map)
+      record_string, _ = self._ReadStructureFromFileObject(
+          file_object, string_offset, record_string_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to parse record string at offset: 0x{0:08x} with error: '

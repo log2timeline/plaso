@@ -109,28 +109,35 @@ class ASLParserTest(test_lib.ParserTestCase):
     # Prefix the string data with 4 bytes since string offset cannot be 0.
     string_data = b''.join([b'\x00\x00\x00\x00', string_data])
 
-    string_value = parser._ParseRecordString(string_data, 0, 0)
+    file_object = self._CreateFileObject('asl', string_data)
+    string_value = parser._ParseRecordString(file_object, 0)
     self.assertIsNone(string_value)
 
-    string_value = parser._ParseRecordString(string_data, 0, 4)
+    file_object = self._CreateFileObject('asl', string_data)
+    string_value = parser._ParseRecordString(file_object, 4)
     self.assertEqual(string_value, 'test')
 
     # Test with string data too small.
+    file_object = self._CreateFileObject('asl', string_data[:-1])
     with self.assertRaises(errors.ParseError):
-      parser._ParseRecordString(string_data[:-1], 0, 4)
+      parser._ParseRecordString(file_object, 4)
 
     # Test with inline string data.
-    string_value = parser._ParseRecordString(b'', 0, 0x8474657374000000)
+    file_object = self._CreateFileObject('asl', b'')
+    string_value = parser._ParseRecordString(file_object, 0x8474657374000000)
     self.assertEqual(string_value, 'test')
 
+    file_object = self._CreateFileObject('asl', b'')
     with self.assertRaises(errors.ParseError):
-      parser._ParseRecordString(b'', 0, 0xf474657374000000)
+      parser._ParseRecordString(file_object, 0xf474657374000000)
 
+    file_object = self._CreateFileObject('asl', b'')
     with self.assertRaises(errors.ParseError):
-      parser._ParseRecordString(b'', 0, 0x8f74657374000000)
+      parser._ParseRecordString(file_object, 0x8f74657374000000)
 
+    file_object = self._CreateFileObject('asl', b'')
     with self.assertRaises(errors.ParseError):
-      parser._ParseRecordString(b'', 0, 0x84ffffffff000000)
+      parser._ParseRecordString(file_object, 0x84ffffffff000000)
 
   def testGetFormatSpecification(self):
     """Tests the GetFormatSpecification function."""
@@ -232,6 +239,32 @@ class ASLParserTest(test_lib.ParserTestCase):
         'user_sid': '205'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
+    # Check a second event to ensure record strings are parsed correctly.
+    expected_event_values = {
+        'computer_name': 'DarkTemplar-2.local',
+        'data_type': 'mac:asl:event',
+        'extra_information': (
+            'CFLog Local Time: 2013-11-25 17:12:43.537, '
+            'CFLog Thread: 1007, '
+            'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51'),
+        'facility': 'com.apple.locationd',
+        'group_id': 205,
+        'level': 4,
+        'message': (
+            'Incorrect NSStringEncoding value 0x8000100 detected. '
+            'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
+            'mapping behavior in the near future.'),
+        'message_id': 102643,
+        'pid': 69,
+        'read_gid': -1,
+        'read_uid': 205,
+        'record_position': 974,
+        'sender': 'locationd',
+        'timestamp': '2013-11-25 17:12:43.571140',
+        'user_sid': '205'}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 if __name__ == '__main__':
