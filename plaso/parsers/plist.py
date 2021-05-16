@@ -108,7 +108,8 @@ class PlistParser(interface.FileObjectParser):
 
     has_leading_whitespace = False
 
-    if not plist_data.startswith(b'bplist0'):
+    is_binary_plist = plist_data.startswith(b'bplist0')
+    if not is_binary_plist:
       byte_order_mark_size, encoding = self._CheckByteOrderMark(plist_data)
 
       xml_signature = '<?xml '.encode(encoding)
@@ -146,8 +147,12 @@ class PlistParser(interface.FileObjectParser):
       return
 
     if not top_level_object:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse plist file with error: missing top level object')
+      # Do not produce an extraction warning for a binary plist without a top
+      # level object.
+      if not is_binary_plist:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to parse XML plist file with error: missing top level '
+            'object'))
       return
 
     if has_leading_whitespace:
