@@ -702,8 +702,6 @@ class EventExtractionWorker(object):
         '[ProcessFileEntryDataStream] processing data stream: "{0:s}" of '
         'file entry: {1:s}').format(data_stream_name, display_name))
 
-    mediator.ClearEventAttributes()
-
     event_data_stream = None
     if data_stream:
       display_name = mediator.GetDisplayName()

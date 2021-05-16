@@ -51,7 +51,6 @@ class ParserMediator(object):
     self._abort = False
     self._cpu_time_profiler = None
     self._event_data_stream_identifier = None
-    self._extra_event_attributes = {}
     self._file_entry = None
     self._knowledge_base = knowledge_base
     self._last_event_data_hash = None
@@ -185,26 +184,6 @@ class ParserMediator(object):
     year, _, _ = date_time.GetDate()
     return year
 
-  def AddEventAttribute(self, attribute_name, attribute_value):
-    """Adds an attribute that will be set on all events produced.
-
-    Setting attributes using this method will cause events produced via this
-    mediator to have an attribute with the provided name set with the
-    provided value.
-
-    Args:
-      attribute_name (str): name of the attribute to add.
-      attribute_value (str): value of the attribute to add.
-
-    Raises:
-      KeyError: if the event attribute is already set.
-    """
-    if attribute_name in self._extra_event_attributes:
-      raise KeyError('Event attribute {0:s} already set'.format(
-          attribute_name))
-
-    self._extra_event_attributes[attribute_name] = attribute_value
-
   def AppendToParserChain(self, plugin_or_parser):
     """Adds a parser or parser plugin to the parser chain.
 
@@ -212,10 +191,6 @@ class ParserMediator(object):
       plugin_or_parser (BaseParser): parser or parser plugin.
     """
     self._parser_chain_components.append(plugin_or_parser.NAME)
-
-  def ClearEventAttributes(self):
-    """Clears the extra event attributes."""
-    self._extra_event_attributes = {}
 
   def ClearParserChain(self):
     """Clears the parser chain."""
@@ -417,12 +392,6 @@ class ParserMediator(object):
     if not getattr(event_data, 'query', None) and query:
       event_data.query = query
 
-    for attribute, value in self._extra_event_attributes.items():
-      if hasattr(event_data, attribute):
-        raise KeyError('Event already has a value for {0:s}'.format(attribute))
-
-      setattr(event_data, attribute, value)
-
   def ProduceEventDataStream(self, event_data_stream):
     """Produces an event data stream.
 
@@ -570,20 +539,6 @@ class ParserMediator(object):
     self._number_of_recovery_warnings += 1
 
     self.last_activity_timestamp = time.time()
-
-  def RemoveEventAttribute(self, attribute_name):
-    """Removes an attribute from being set on all events produced.
-
-    Args:
-      attribute_name (str): name of the attribute to remove.
-
-    Raises:
-      KeyError: if the event attribute is not set.
-    """
-    if attribute_name not in self._extra_event_attributes:
-      raise KeyError('Event attribute: {0:s} not set'.format(attribute_name))
-
-    del self._extra_event_attributes[attribute_name]
 
   def ResetFileEntry(self):
     """Resets the active file entry."""
