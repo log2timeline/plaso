@@ -100,7 +100,7 @@ class PlistParserTest(test_lib.ParserTestCase):
       self._ParseFile(['manageconsolidatedProviders.aspx.resx'], parser)
 
   def testParseWithXMLFileNoTopLevel(self):
-    """Tests the Parse function on an XML file without top level object."""
+    """Tests the Parse function on an XML file without top level."""
     parser = plist.PlistParser()
 
     with self.assertRaises(errors.UnableToParseFile):
@@ -118,14 +118,23 @@ class PlistParserTest(test_lib.ParserTestCase):
       self._ParseFile(['SampleMachineList.xml'], parser)
 
   def testParseWithXMLFileEncodingUnicode(self):
-    """Tests the Parse function on a XML file with encoding unicode."""
+    """Tests the Parse function on an XML file with encoding Unicode."""
     parser = plist.PlistParser()
 
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['SAFStore.xml'], parser)
 
-  def testParseWithPlistXMLFileNoTopLevel(self):
-    """Tests the Parse function on a plist XML file without top level object."""
+  def testParseWithEmptyBinaryPlistFile(self):
+    """Tests the Parse function on an empty binary plist file."""
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile([
+        'com.apple.networkextension.uuidcache.plist'], parser)
+
+    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 0)
+
+  def testParseWithXMLPlistFileNoTopLevel(self):
+    """Tests the Parse function on an XML plist file without top level."""
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['empty.plist'], parser)
 
