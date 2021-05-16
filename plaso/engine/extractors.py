@@ -29,10 +29,12 @@ class EventExtractor(object):
   _PARSE_RESULT_SUCCESS = 2
   _PARSE_RESULT_UNSUPPORTED = 3
 
-  def __init__(self, parser_filter_expression=None):
+  def __init__(self, force_parser=False, parser_filter_expression=None):
     """Initializes an event extractor.
 
     Args:
+      force_parser (Optional[bool]): True if a specified parser should be forced
+          to be used to extract events.
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
@@ -43,6 +45,7 @@ class EventExtractor(object):
     super(EventExtractor, self).__init__()
     self._file_scanner = None
     self._filestat_parser = None
+    self._force_parser = force_parser
     self._formats_with_signatures = None
     self._mft_parser = None
     self._non_sigscan_parser_names = None
@@ -288,6 +291,13 @@ class EventExtractor(object):
     if parse_with_non_sigscan_parsers:
       self._ParseFileEntryWithParsers(
           parser_mediator, self._non_sigscan_parser_names, file_entry,
+          file_object=file_object)
+
+    if self._force_parser and self._usnjrnl_parser:
+      # TODO: the usnjrnl needs to be adjusted to be used on an export of
+      # $UsnJrnl:$J
+      self._ParseFileEntryWithParser(
+          parser_mediator, self._usnjrnl_parser, file_entry,
           file_object=file_object)
 
   def ParseFileEntryMetadata(self, parser_mediator, file_entry):

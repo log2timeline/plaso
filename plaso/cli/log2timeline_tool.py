@@ -440,11 +440,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     processing_status = None
     if single_process_mode:
+      force_parser = False
+      number_of_parsers = len(configuration.parser_filter_expression.split(','))
+      if (self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE and
+          not is_archive and number_of_parsers == 1):
+        force_parser = True
+
       logger.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
           session, self._source_path_specs, storage_writer,
-          self._resolver_context, configuration,
+          self._resolver_context, configuration, force_parser=force_parser,
           status_update_callback=status_update_callback)
 
     else:
