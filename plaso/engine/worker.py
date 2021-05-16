@@ -93,10 +93,12 @@ class EventExtractionWorker(object):
   _TYPES_WITH_ROOT_METADATA = frozenset([
       dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
-  def __init__(self, parser_filter_expression=None):
+  def __init__(self, force_parser=False, parser_filter_expression=None):
     """Initializes an event extraction worker.
 
     Args:
+      force_parser (Optional[bool]): True if a specified parser should be forced
+          to be used to extract events.
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
@@ -112,7 +114,9 @@ class EventExtractionWorker(object):
     self._analyzers = []
     self._analyzers_profiler = None
     self._event_extractor = extractors.EventExtractor(
+        force_parser=force_parser,
         parser_filter_expression=parser_filter_expression)
+    self._force_parser = force_parser
     self._hasher_file_size_limit = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_archives = None
@@ -270,6 +274,9 @@ class EventExtractionWorker(object):
     Returns:
       bool: True if content extraction can be skipped.
     """
+    if self._force_parser:
+      return False
+
     # TODO: make this filtering solution more generic. Also see:
     # https://github.com/log2timeline/plaso/issues/467
     location = getattr(file_entry.path_spec, 'location', None)
@@ -895,7 +902,7 @@ class EventExtractionWorker(object):
     self._SetYaraRules(configuration.yara_rules_string)
 
   def SetAnalyzersProfiler(self, analyzers_profiler):
-    """Sets the parsers profiler.
+    """Sets the analyzers profiler.
 
     Args:
       analyzers_profiler (AnalyzersProfiler): analyzers profile.

@@ -247,7 +247,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def ProcessSources(
       self, session, source_path_specs, storage_writer, resolver_context,
-      processing_configuration, status_update_callback=None):
+      processing_configuration, force_parser=False,
+      status_update_callback=None):
     """Processes the sources.
 
     Args:
@@ -258,6 +259,8 @@ class SingleProcessEngine(engine.BaseEngine):
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
+      force_parser (Optional[bool]): True if a specified parser should be forced
+          to be used to extract events.
       status_update_callback (Optional[function]): callback function for status
           updates.
 
@@ -274,7 +277,7 @@ class SingleProcessEngine(engine.BaseEngine):
         temporary_directory=processing_configuration.temporary_directory)
 
     extraction_worker = worker.EventExtractionWorker(
-        parser_filter_expression=(
+        force_parser=force_parser, parser_filter_expression=(
             processing_configuration.parser_filter_expression))
 
     extraction_worker.SetExtractionConfiguration(
