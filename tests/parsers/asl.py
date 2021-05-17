@@ -175,8 +175,9 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Test with file header data too small.
     file_object = self._CreateFileObject('asl', file_header_data[:-1])
@@ -200,18 +201,28 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParse(self):
     """Tests the Parse function."""
     parser = asl.ASLParser()
     storage_writer = self._ParseFile(['applesystemlog.asl'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
+    events = list(storage_writer.GetSortedEvents())
+
+    expected_event_values = {
+        'data_type': 'mac:asl:file',
+        'format_version': 2,
+        'is_dirty': False,
+        'timestamp': '2013-11-25 09:45:35.000000'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Note that "compatiblity" is spelt incorrectly in the actual message being
     # tested here.
@@ -238,7 +249,7 @@ class ASLParserTest(test_lib.ParserTestCase):
         'timestamp': '2013-11-25 09:45:35.705481',
         'user_sid': '205'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # Check a second event to ensure record strings are parsed correctly.
     expected_event_values = {
@@ -264,7 +275,26 @@ class ASLParserTest(test_lib.ParserTestCase):
         'timestamp': '2013-11-25 17:12:43.571140',
         'user_sid': '205'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+
+  def testParseDirtyFile(self):
+    """Tests the Parse function on a dirty file."""
+    parser = asl.ASLParser()
+    storage_writer = self._ParseFile(['2019.09.26.asl'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 319)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 1)
+
+    events = list(storage_writer.GetSortedEvents())
+
+    expected_event_values = {
+        'data_type': 'mac:asl:file',
+        'format_version': 2,
+        'is_dirty': True,
+        'timestamp': '2019-09-25 22:50:16.000000'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@
 """The Apple System Log (ASL) file parser."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -51,6 +52,24 @@ class ASLEventData(events.EventData):
     self.record_position = None
     self.sender = None
     self.user_sid = None
+
+
+class ASLFileEventData(events.EventData):
+  """Apple System Log (ASL) file event data.
+
+  Attributes:
+    format_version (int): ASL file format version.
+    is_dirty (bool): True if the last log entry offset does not match value
+        in file header and the file is considered dirty.
+  """
+
+  DATA_TYPE = 'mac:asl:file'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(ASLFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.format_version = None
+    self.is_dirty = None
 
 
 class ASLParser(dtfabric_parser.DtFabricBaseParser):
@@ -267,8 +286,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
           'Unable to parse file header with error: {0!s}'.format(
               exception))
 
-    # TODO: generate event for creation time.
-
+    is_dirty = False
     file_size = file_object.get_size()
 
     if file_header.first_log_entry_offset > 0:
@@ -290,8 +308,23 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
           break
 
       if last_log_entry_offset != file_header.last_log_entry_offset:
-        parser_mediator.ProduceExtractionWarning(
+        is_dirty = True
+        parser_mediator.ProduceRecoveryWarning(
             'last log entry offset does not match value in file header.')
+
+    event_data = ASLFileEventData()
+    event_data.format_version = file_header.format_version
+    event_data.is_dirty = is_dirty
+
+    if file_header.creation_time:
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=file_header.creation_time)
+    else:
+      date_time = dfdatetime_semantic_time.NotSet()
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(ASLParser)

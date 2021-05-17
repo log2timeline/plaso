@@ -96,6 +96,19 @@ short_message:
 - 'Sender: {sender}'
 - 'Facility: {facility}'
 ---
+type: 'conditional'
+data_type: 'mac:asl:file'
+boolean_helpers:
+- input_attribute: 'is_dirty'
+  output_attribute: 'is_dirty_string'
+  value_if_true: '(Is dirty)'
+message:
+- 'Format version: {format_version}'
+- '{is_dirty_string}'
+short_message:
+- 'Format version: {format_version}'
+- '{is_dirty_string}'
+---
 type: 'basic'
 data_type: 'macosx:application_usage'
 message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
