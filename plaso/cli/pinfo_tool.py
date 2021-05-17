@@ -349,7 +349,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     self._output_writer.Write('\n')
 
   def _PrintExtractionWarningsDetails(self, storage_reader):
-    """Prints the details of the warnings.
+    """Prints the details of the extraction warnings.
 
     Args:
       storage_reader (StorageReader): storage reader.
@@ -373,29 +373,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           table_view.AddRow(['', line])
 
       table_view.Write(self._output_writer)
-
-  def _PrintExtractionWarningsSection(
-      self, storage_reader, warnings_by_path_spec, warnings_by_parser_chain):
-    """Prints the warnings section.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-      warnings_by_path_spec (collections.Counter): number of warnings per path
-          specification.
-      warnings_by_parser_chain (collections.Counter): number of warnings per
-          parser chain.
-    """
-    if (self._output_format == 'text' and
-        not storage_reader.HasExtractionWarnings()):
-      self._output_writer.Write('\nNo warnings stored.\n')
-
-    else:
-      self._PrintWarningCounters(
-          warnings_by_path_spec, warnings_by_parser_chain)
-
-      if self._output_format in ('markdown', 'text') and (
-          self._verbose or 'warnings' in self._sections):
-        self._PrintExtractionWarningsDetails(storage_reader)
 
   def _PrintEventLabelsCounter(
       self, event_labels_counter, session_identifier=None):
@@ -493,6 +470,32 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           table_view.AddRow(['Total', parsers_counter['total']])
 
           table_view.Write(self._output_writer)
+
+  def _PrintRecoveryWarningsDetails(self, storage_reader):
+    """Prints the details of the recovery warnings.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    for index, warning in enumerate(storage_reader.GetRecoveryWarnings()):
+      title = 'Warning: {0:d}'.format(index)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow(['Message', warning.message])
+      table_view.AddRow(['Parser chain', warning.parser_chain])
+
+      path_specification = warning.path_spec.comparable
+      for path_index, line in enumerate(path_specification.split('\n')):
+        if not line:
+          continue
+
+        if path_index == 0:
+          table_view.AddRow(['Path specification', line])
+        else:
+          table_view.AddRow(['', line])
+
+      table_view.Write(self._output_writer)
 
   def _PrintSessionDetailsAsJSON(self, session):
     """Prints the details of a session as JSON.
@@ -771,7 +774,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         warnings_by_parser_chain = storage_counters.get(
             'warnings_by_parser_chain', collections.Counter())
 
-        self._PrintExtractionWarningsSection(
+        self._PrintWarningsSection(
             storage_reader, warnings_by_path_spec, warnings_by_parser_chain)
 
       if self._sections == 'all' or 'reports' in self._sections:
@@ -923,6 +926,31 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             table_view.AddRow(['', line])
 
       table_view.Write(self._output_writer)
+
+  def _PrintWarningsSection(
+      self, storage_reader, warnings_by_path_spec, warnings_by_parser_chain):
+    """Prints the warnings section.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      warnings_by_path_spec (collections.Counter): number of extraction
+          warnings per path specification.
+      warnings_by_parser_chain (collections.Counter): number of extraction
+          warnings per parser chain.
+    """
+    if (self._output_format == 'text' and (
+        not storage_reader.HasExtractionWarnings() or
+        not storage_reader.HasRecoveryWarnings())):
+      self._output_writer.Write('\nNo warnings stored.\n')
+
+    else:
+      self._PrintWarningCounters(
+          warnings_by_path_spec, warnings_by_parser_chain)
+
+      if self._output_format in ('markdown', 'text') and (
+          self._verbose or 'warnings' in self._sections):
+        self._PrintExtractionWarningsDetails(storage_reader)
+        self._PrintRecoveryWarningsDetails(storage_reader)
 
   def CompareStores(self):
     """Compares the contents of two stores.
