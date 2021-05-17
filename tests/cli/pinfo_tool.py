@@ -32,10 +32,11 @@ Storage files are different.
   # TODO: add test for _CompareStores.
   # TODO: add test for _PrintAnalysisReportCounter.
   # TODO: add test for _PrintAnalysisReportsDetails.
-  # TODO: add test for _PrintWarningsDetails.
+  # TODO: add test for _PrintExtractionWarningsDetails.
   # TODO: add test for _PrintEventLabelsCounter.
   # TODO: add test for _PrintParsersCounter.
   # TODO: add test for _PrintPreprocessingInformation.
+  # TODO: add test for _PrintRecoveryWarningsDetails.
   # TODO: add test for _PrintSessionsDetails.
   # TODO: add test for _PrintSessionsOverview.
   # TODO: add test for _PrintTasksInformation.
