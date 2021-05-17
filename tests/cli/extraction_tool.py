@@ -128,7 +128,43 @@ optional arguments:
                         to see a list of available time zones.
 """
 
+  _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
+
   # TODO: add test for _CreateProcessingConfiguration
+
+  def testGenerateStorageFileName(self):
+    """Tests the _GenerateStorageFileName function."""
+    test_tool = extraction_tool.ExtractionTool()
+
+    test_tool._source_path = '/test/storage/path'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename='path')
+    self.assertRegex(storage_filename, expected_storage_filename)
+
+    test_tool._source_path = '/test/storage/path/'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename='path')
+    self.assertRegex(storage_filename, expected_storage_filename)
+
+    test_tool._source_path = '/'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename='ROOT')
+    self.assertRegex(storage_filename, expected_storage_filename)
+
+    test_tool._source_path = '/foo/..'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename='ROOT')
+    self.assertRegex(storage_filename, expected_storage_filename)
+
+    test_tool._source_path = 'foo/../bar'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename='bar')
+    self.assertRegex(storage_filename, expected_storage_filename)
 
   def testParsePerformanceOptions(self):
     """Tests the _ParsePerformanceOptions function."""

@@ -408,3 +408,13 @@ class StorageFileOptions(object):
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
           'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+  def AddStorageOptions(self, argument_parser):
+    """Adds the storage options to the argument group.
+
+    Args:
+      argument_parser (argparse.ArgumentParser): argparse argument parser.
+    """
+    argument_parser.add_argument(
+        'storage_file', metavar='PATH', nargs='?', type=str, default=None,
+        help='Path to a storage file.')

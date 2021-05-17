@@ -22,8 +22,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
   _BDE_PASSWORD = 'bde-TEST'
 
-  _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
-
   def _CheckOutput(self, output, expected_output):
     """Compares the output against the expected output.
 
@@ -38,40 +36,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(output[:3], expected_output[:3])
     self.assertTrue(output[3].startswith('Processing time\t\t: '))
     self.assertEqual(output[4:], expected_output[4:])
-
-  def testGenerateStorageFileName(self):
-    """Tests the _GenerateStorageFileName function."""
-    test_tool = psteal_tool.PstealTool()
-
-    test_tool._source_path = '/test/storage/path'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='path')
-    self.assertRegex(storage_filename, expected_storage_filename)
-
-    test_tool._source_path = '/test/storage/path/'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='path')
-    self.assertRegex(storage_filename, expected_storage_filename)
-
-    test_tool._source_path = '/'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='ROOT')
-    self.assertRegex(storage_filename, expected_storage_filename)
-
-    test_tool._source_path = '/foo/..'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='ROOT')
-    self.assertRegex(storage_filename, expected_storage_filename)
-
-    test_tool._source_path = 'foo/../bar'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='bar')
-    self.assertRegex(storage_filename, expected_storage_filename)
 
   def testFailWhenOutputAlreadyExists(self):
     """Test to make sure the tool raises when the output file already exists."""

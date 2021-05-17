@@ -21,7 +21,6 @@ from plaso.cli.helpers import profiling
 from plaso.cli.helpers import process_resources
 from plaso.cli.helpers import sessionize_analysis
 from plaso.cli.helpers import status_view
-from plaso.cli.helpers import storage_file
 from plaso.cli.helpers import storage_format
 from plaso.cli.helpers import tagging_analysis
 from plaso.cli.helpers import temporary_directory

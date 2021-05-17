@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
+import datetime
 import os
 import pytz
 
@@ -172,6 +173,36 @@ class ExtractionTool(
     configuration.temporary_directory = self._temporary_directory
 
     return configuration
+
+  def _GenerateStorageFileName(self):
+    """Generates a name for the storage file.
+
+    The result use a timestamp and the basename of the source path.
+
+    Returns:
+      str: a filename for the storage file in the form <time>-<source>.plaso
+
+    Raises:
+      BadConfigOption: raised if the source path is not set.
+    """
+    if not self._source_path:
+      raise errors.BadConfigOption('Please define a source (--source).')
+
+    timestamp = datetime.datetime.now()
+    datetime_string = timestamp.strftime('%Y%m%dT%H%M%S')
+
+    source_path = os.path.abspath(self._source_path)
+
+    if source_path.endswith(os.path.sep):
+      source_path = os.path.dirname(source_path)
+
+    source_name = os.path.basename(source_path)
+
+    if not source_name or source_name in ('/', '\\'):
+      # The user passed the filesystem's root as source
+      source_name = 'ROOT'
+
+    return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
   def _IsArchiveFile(self, path_spec):
     """Determines if a path specification references an archive file.
