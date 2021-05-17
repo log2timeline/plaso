@@ -240,6 +240,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     storage_group = argument_parser.add_argument_group('storage arguments')
 
+    self.AddStorageOptions(storage_group)
+
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         storage_group, names=['storage_format'])
 
