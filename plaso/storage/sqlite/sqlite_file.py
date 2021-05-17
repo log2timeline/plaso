@@ -272,8 +272,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       AttributeContainer: attribute container or None if not available.
 
     Raises:
-      OSError: if an unsupported identifier is provided.
       IOError: if an unsupported identifier is provided.
+      OSError: if an unsupported identifier is provided.
     """
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
       raise IOError('Unsupported event data identifier type: {0!s}'.format(
@@ -868,8 +868,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       EventData: event data or None if not available.
 
     Raises:
-      OSError: if an invalid identifier is provided.
       IOError: if an invalid identifier is provided.
+      OSError: if an invalid identifier is provided.
     """
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
       raise IOError('Unsupported event data identifier type: {0!s}'.format(
@@ -925,8 +925,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       EventTag: event tag or None if not available.
 
     Raises:
-      OSError: if an invalid identifier is provided.
       IOError: if an invalid identifier is provided.
+      OSError: if an invalid identifier is provided.
     """
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
       raise IOError('Unsupported event data identifier type: {0!s}'.format(
