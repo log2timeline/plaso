@@ -1,8 +1,8 @@
 # Using pinfo.py
 
-**pinfo** is a command line tool to provide information about the contents of a plaso storage file.
+**pinfo** is a command line tool to provide information about the contents of a Plaso storage file.
 
-The plaso storage file contains information about:
+The Plaso storage file contains information about:
 
  + When and how the tool was run
  + Information gathered during the pre-processing stage
@@ -18,13 +18,13 @@ Usage of **pinfo** is very simple, however for full list of parameters use the `
 
 The simplest way to run the tool is to run it without any parameters:
 
-```
-$ pinfo.py test.plaso
+```bash
+$ pinfo.py timeline.plaso
 
 --------------------------------------------------------------------------------
                 Plaso Storage Information
 --------------------------------------------------------------------------------
-Storage file:           test.plaso
+Storage file:           timeline.plaso
 Serialization format:   json
 Source processed:       N/A
 Time of processing:     2015-07-16T20:39:40+00:00
@@ -35,11 +35,11 @@ Collection information:
         preferred_encoding = UTF-8
         os_detected = Windows
         workers = 0
-        output_file = test.plaso
+        output_file = timeline.plaso
         method = imaged processed
         preprocess = True
         version = 1.3.0
-        cmd_line = /usr/bin/log2timeline.py test.plaso test.dd
+        cmd_line = /usr/bin/log2timeline.py timeline.plaso test.dd
         debug = False
         runtime = multi process mode
         parsers = bencode, binary_cookies, chrome_cache, chrome_preferences, esedb, filestat, firefox_cache, java_idx, lnk, mcafee_protection, msiecf, olecf, openxml, opera_global, opera_typed_history, pe, plist, prefetch, recycle_bin_info2, skydrive_log, skydrive_log_error, sqlite, symantec_scanlog, winevt, winfirewall, winjob, winreg
@@ -61,8 +61,8 @@ Parser counter information:
 
 This produces the basic information the storage file stores. To get more verbose output, for instance to see the information collected during the pre-processing stage or content of analysis reports use the verbose switch, ``-v``
 
-```
-$ pinfo.py -v test.plaso
+```bash
+$ pinfo.py -v timeline.plaso
 ...
 Preprocessing information:
         Operating system        : Microsoft Windows XP
@@ -97,7 +97,7 @@ Preprocessing information:
 
 If analysis plugins have been run the reports are also displayed:
 
-```
+```bash
 Report generated from: browser_search
 Generated on: 2015-07-17T02:52:07+00:00
 
@@ -109,21 +109,27 @@ Report text:
 
 Same if there are any tags stored in the storage file.
 
-```
+```bash
 Parser counter information:
         Counter: Total Tags = 146
         Counter: Application Execution = 144
         Counter: Document Printed = 2
 ```
 
-There is also an option to compare two storage files, for instance if you run the tool against a storage media file, then later re-run the tool and you want to quickly determine if there is a difference between the two storage files (does not go into content, only counters).
+There is also an option to compare two storage files, for instance if you run
+the tool against a storage media file, then later re-run the tool and you want
+to quickly determine if there is a difference between the two storage files
+(does not go into content, only counters).
 
-```
-$ pinfo.py --compare older_test.plaso test.plaso
+```bash
+$ pinfo.py --compare older_timeline.plaso timeline.plaso
 
 collection_information.version value mismatch 1.3.0_20150716 != 1.3.0_20150713.
 counter.filestat value mismatch 49090 != 28894.
 counter.total value mismatch 143960 != 123764.
 ```
 
-This shows the comparison between two runtimes of the tool against the same test dataset, before a bug was fixed and after. There are two things that changed, the version number increased and there are a lot more filestat events in the newer storage file.
+This shows the comparison between two runtimes of the tool against the same
+test dataset, before a bug was fixed and after. There are two things that
+changed, the version number increased and there are a lot more filestat events
+in the newer storage file.

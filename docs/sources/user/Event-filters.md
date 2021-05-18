@@ -75,7 +75,7 @@ This event filter applies to all events where:
 * the body attribute contains the substring 'root' (case insensitive).
 
 Use "log2timeline --info" to retrieve a list of the names of all the available
-parsers. Or use the ```pinfo.py test.plaso``` to see a list of all parsers that
+parsers. Or use the ```pinfo.py timeline.plaso``` to see a list of all parsers that
 were used to produce the output in the storage file.
 
 ```

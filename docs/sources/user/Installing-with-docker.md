@@ -8,13 +8,13 @@ To install Docker see: [https://docs.docker.com/get-docker](https://docs.docker.
 
 ### From Docker Hub
 
-```
+```bash
 $ docker pull log2timeline/plaso
 ```
 
 ### From Dockerfile
 
-```
+```bash
 $ git clone https://github.com/log2timeline/plaso
 $ cd plaso/config/docker
 $ docker build -f Dockerfile .
@@ -24,7 +24,7 @@ $ docker build -f Dockerfile .
 
 To test your Plaso Docker image:
 
-```
+```bash
 $ docker run log2timeline/plaso log2timeline.py --version
 plaso - log2timeline version 20200717
 ```
@@ -38,7 +38,7 @@ from Docker Hub.
 
 First, export the image:
 
-```
+```bash
 $ docker save <CONTAINER_NAME> | gzip -c > saved_docker_image.tgz
 ```
 
@@ -46,7 +46,7 @@ Then copy saved_docker_image.tgz to an external disk.
 
 Finally, on the other system, and from the mounted external disk, run:
 
-```
+```bash
 $ zcat saved_docker_image.tgz | docker load
 ```
 
@@ -61,7 +61,7 @@ For example, if you store your current evidences to analyse in
 /data/evidences/, you could tell log2timeline to generate the Plaso storage
 file as /data/evidences.plaso this way:
 
-```
+```bash
 $ docker run -v /data/:/data log2timeline/plaso log2timeline /data/evidences.plaso /data/evidences
 ```
 
@@ -75,7 +75,7 @@ work with WSL. Also see: [Mapped drives as shared drives with linux containers: 
 
 Next step is to run analysis with psort:
 
-```
+```bash
 $ docker run -v /data/:/data log2timeline/plaso psort -w /data/timeline.log /data/evidences.plaso
 Datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 ....
@@ -101,6 +101,6 @@ It understands the following commands, and runs the appropriate programs:
 If you're not interested in running any of these, and just want to drop to a
 prompt inside your Plaso container, you can run:
 
-```
+```bash
 docker run -t -i --entrypoint=/bin/bash -v /data:/data log2timeline/plaso
 ```

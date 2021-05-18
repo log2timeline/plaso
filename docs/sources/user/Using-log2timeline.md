@@ -27,14 +27,14 @@ such as a mount point. log2timeline.py will go through the entire data set and
 produce a "*kitchen sink*" timeline, containing information extracted from all
 discovered files.
 
-```
-$ log2timeline.py OUTPUT INPUT
+```bash
+$ log2timeline.py --storage-file OUTPUT INPUT
 ```
 
 For example:
 
-```
-$ log2timeline.py test.plaso /PATH/image.E01
+```bash
+$ log2timeline.py --storage-file timeline.plaso /PATH/image.E01
 2021-05-09 10:15:19,162 [INFO] (MainProcess) PID:3143504 <artifact_definitions> Determined artifact definitions path: /usr/share/artifacts/
 Checking availability and versions of dependencies.
 [OK]
@@ -47,7 +47,7 @@ Processing time		: 00:00:00
 Processing started.
 ```
 
-```
+```bash
 plaso - log2timeline version 20210412
 
 Source path		: /PATH/image.E01
@@ -84,8 +84,8 @@ than a single partition, an encrypted partition or that the partition contains
 Volume Shadow Copies (VSS) it will ask the user for further details, for
 example:
 
-```
-$ log2timeline.py bde_windows.plaso bde_enabled_windows.dd
+```bash
+$ log2timeline.py --storage-file timeline.plaso bde_enabled_windows.dd
 
 The following partitions were found:
 Identifier      Offset (in bytes)       Size (in bytes)
@@ -112,7 +112,7 @@ After finding a partition to process log2timeline.py will start the
 pre-processing stage, where it collects information from the storage media.
 That is evident by the entries like:
 
-```
+```bash
 2015-07-16 16:54:05,368 [INFO] (MainProcess) PID:98252 <interface> [PreProcess] Set attribute: hostname to N-1A9ODN6ZXK4LQ
 ```
 
@@ -128,7 +128,7 @@ process.
 The first option is the ``--info`` which prints out information about all
 supported plugins, parsers, output modules, etc.
 
-```
+```bash
 $ log2timeline.py --info
 ======================== log2timeline/plaso information ========================
 
@@ -162,8 +162,8 @@ Another useful option to use is the ```--logfile```. This will redirect all log
 messages from log2timeline.py to a file. This can be coupled with ```-d``` if
 you wish to get more detailed debug information.
 
-```
-$ log2timeline.py --logfile test.log test.plaso test.vhd
+```bash
+$ log2timeline.py --logfile test.log --storage-file timeline.plaso test.vhd
 ```
 
 Note that the foreman (main process) and each worker will have a separate log
@@ -175,8 +175,8 @@ log file.
 Sometimes you may not want to do a complete timeline that extracts events from
 every discovered file. To do more targeted extraction a filter file can be used.
 
-```
-$ log2timeline.py -f filter test.plaso test.vhd
+```bash
+$ log2timeline.py -f filter --storage-file timeline.plaso test.vhd
 
 Source path	: /PATH/test.vhd
 Source type	: storage media image
@@ -190,7 +190,7 @@ Processing completed.
 Instead of processing all the files only the file paths included in the filter
 file will be used. Here the content is:
 
-```
+```bash
 $ cat filter
 {sysregistry}/.+
 /Users/.+/NTUSER.DAT
@@ -199,10 +199,8 @@ $ cat filter
 
 This can be verified against the event sources:
 
-```
-$ pinfo.py --sections sources test.plaso test.plaso
+```bash
+$ pinfo.py --sections sources timeline.plaso
 ```
 
-More information about the collection filters can be found
-[here](Collection-Filters.md).
-
+More information about the collection filters can be found [here](Collection-Filters.md).

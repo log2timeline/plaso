@@ -9,7 +9,7 @@ CPU ussage profiler.
 To profile the CPU usage run log2timeline.py with the following options:
 
 ```bash
-log2timeline.py --profilers=${PROFILERS} --profiling-directory=profile plaso.db image.raw
+log2timeline.py --profilers=${PROFILERS} --profiling-directory=profile --storage-file timeline.plaso image.raw
 ```
 
 Where ${PROFILERS} is comma separated list of one or more of the following
@@ -30,7 +30,7 @@ the memory profiler.
 To profile the memory usage run log2timeline.py with the following options:
 
 ```bash
-log2timeline.py --profilers=memory --profiling-directory=profile plaso.db image.raw
+log2timeline.py --profilers=memory --profiling-directory=profile --storage-file timeline.plaso image.raw
 ```
 
 ## Profiling storage
@@ -41,7 +41,7 @@ the storage profiler.
 To profile the storage run log2timeline.py with the following options:
 
 ```bash
-log2timeline.py --profilers=storage --profiling-directory=profile plaso.db image.raw
+log2timeline.py --profilers=storage --profiling-directory=profile --storage-file timeline.plaso image.raw
 ```
 
 ## Profiling the task queue
@@ -57,7 +57,7 @@ The task queue profiler tracks:
 To profile the task queue statue run log2timeline.py with the following options:
 
 ```bash
-log2timeline.py --profilers=task_queue --profiling-directory=profile plaso.db image.raw
+log2timeline.py --profilers=task_queue --profiling-directory=profile --storage-file timeline.plaso image.raw
 ```
 
 ## Graphing profiles

@@ -14,8 +14,8 @@ To see a list of all available parameters you can pass to psort use ``-h`` or
 The most basic way to use **psort** is to provide it with a storage file and
 output file, for example:
 
-```
-$ psort.py -w test.log test.plaso
+```bash
+$ psort.py -w test.log timeline.plaso
 ```
 
 This will use the default dynamic output format and write to test.log all
@@ -26,7 +26,7 @@ will be in UTC.
 
 Some other basic options are:
 
-```
+```bash
 $ psort.py [-a] [-o FORMAT] [-w OUTPUTFILE] [--output-time-zone TIME_ZONE] STORAGE_FILE FILTER
 ```
 
@@ -35,7 +35,7 @@ $ psort.py [-a] [-o FORMAT] [-w OUTPUTFILE] [--output-time-zone TIME_ZONE] STORA
 **psort** uses output modules to output in different formats. To see a list of
 the available supported output modules use the ``-o list`` parameter:
 
-```
+```bash
 $ psort.py -o list
 
 ******************************** Output Modules ********************************
@@ -58,7 +58,7 @@ elastic_ts : Saves the events into an Elasticsearch database for use with
 If you are missing any optional dependencies not all output modules may be
 available, which would be displayed by the ``-o list`` switch:
 
-```
+```bash
 ******************************** Output Modules ********************************
    dynamic : Dynamic selection of fields for a separated value output format.
       json : Saves the events into a JSON format.
@@ -85,8 +85,8 @@ Also see [output and formatting](Output-and-formatting.md).
 
 To change the output use the ``-o FORMAT`` parameter, for example:
 
-```
-$ psort.py -o l2tcsv -w test.l2tcsv test.plaso
+```bash
+$ psort.py -o l2tcsv -w test.l2tcsv timeline.plaso
 ```
 
 This would use the "l2tcsv" output module, which is the CSV output of the older
@@ -99,14 +99,14 @@ output formats, like dynamic and l2tcsv can output date and time values in
 a different time zone. This can be controlled using the
 ``--output-time-zone TIME_ZONE`` parameter, for example.
 
-```
-$ psort.py --output-time-zone EST5EDT test.plaso
+```bash
+$ psort.py --output-time-zone EST5EDT timeline.plaso
 ```
 
-To see a list of all supported time zones use the ```--output-time-zone list```
+To see a list of all supported time zones use the `--output-time-zone list`
 parameter:
 
-```
+```bash
 $ psort.py --output-time-zone list
 
 ************************************ Zones *************************************
@@ -126,8 +126,8 @@ $ psort.py --output-time-zone list
 filtered out due to filter settings or to duplication removals. This
 information is printed out at the end of each run, for example:
 
-```
-$ psort.py test.plaso "SELECT timestamp LIMIT 10"
+```bash
+$ psort.py timeline.plaso "SELECT timestamp LIMIT 10"
 ...
 [INFO] Output processing is done.
 
@@ -139,8 +139,8 @@ $ psort.py test.plaso "SELECT timestamp LIMIT 10"
 
 Or from a full run:
 
-```
-$ psort.py test.plaso
+```bash
+$ psort.py timeline.plaso
 ...
 *********************************** Counter ************************************
             Stored Events : 143960
@@ -160,15 +160,15 @@ there may be duplicate entries in an output:
 If you don't want duplicate entries to be removed it is possible to supply the
 flag ``-a`` or ``--include_all` to **psort**.
 
-```
-$ psort.py -a -w all_events.txt test.plaso
+```bash
+$ psort.py -a -w all_events.txt timeline.plaso
 ```
 
 If you on the other hand do not want to see the overview printed at the end it
 is possible to silence it with the ``-q`` flag:
 
-```
-$ psort.py -q -w output.csv test.plaso
+```bash
+$ psort.py -q -w output.csv timeline.plaso
 ```
 
 ### Automatic Analysis
@@ -186,13 +186,13 @@ are immediately available in post processing.
 
 The syntax works by using the ``--analysis PLUGIN`` syntax, for example:
 
-```
+```bash
 $ psort.py --analysis PLUGIN_NAME ...
 ```
 
 To get a full list of the available plugins use the ``--analysis list`` parameter:
 
-```
+```bash
 $ psort.py --analysis list
 
 ******************************* Analysis Plugins *******************************
@@ -217,7 +217,7 @@ Some of these plugins may provide additional parameters that may be required
 for each analysis plugin. To know which parameters are exposed use the ``-h``
 flag in addition to the ``--analysis PLUGIN``, for example:
 
-```
+```bash
 $ psort.py --analysis virustotal -h
 ...
 Analysis Arguments:
@@ -245,8 +245,8 @@ Analysis Arguments:
 
 An example run could therefore be:
 
-```
-$ psort.py -o null --analysis tagging --tagging-file tag_windows.txt test.plaso
+```bash
+$ psort.py -o null --analysis tagging --tagging-file tag_windows.txt timeline.plaso
 ```
 
 What this does is:
@@ -266,7 +266,7 @@ used without creating any file.
 At the end of the run the tool will produce a summary or reports of the
 analysis plugins:
 
-```
+```bash
 [INFO] All analysis plugins are now completed.
 Report generated from: tagging
 Generated on: 2015-07-31T17:38:32+00:00
@@ -278,8 +278,8 @@ Tagging plugin produced 146 tags.
 And in this case, since this was tagging the results of what tags were provided
 can be viewed using **pinfo**:
 
-```
-$ pinfo.py test.plaso
+```bash
+$ pinfo.py timeline.plaso
 ...
 Parser counter information:
 	Counter: Total Tags = 146
@@ -290,8 +290,8 @@ Parser counter information:
 
 The tags are now included in the output:
 
-```
-$ psort.py -w output_tags.csv test.plaso
+```bash
+$ psort.py -w output_tags.csv timeline.plaso
 $ grep "Document Printed" output_tags.csv
 1999-05-15T15:39:16+00:00,Document Last Printed Time,OLECF,OLECF Summary Info,Title: Microsoft Powertoys for Windows XP  Subject: Powertoys Author: Microsoft Corporation Keywords: Powertoy Template: Intel;1033 Revision number: {1DA2A275-1387-4A40-8453-EFDF70F62811} Last saved by: InstallShield  Number of pages: 110 Number of words: 0 Number of characters: 0 Application: InstallShield® Developer 7.0 Security: 0x00000001: Password protected,olecf/olecf_summary,TSK:/WINDOWS/Downloaded Installations/Powertoys For Windows XP.msi;TSK:/WINDOWS/Installer/ac704.msi,Document Printed,1,888
 ...
@@ -320,7 +320,7 @@ DATE_TIME`` parameter, for example:
 be defined in ISO 8601 format.**
 
 ```bash
-$ psort.py -q --slice "2004-09-20T16:13:02" test.plaso
+$ psort.py -q --slice "2004-09-20T16:13:02" timeline.plaso
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 2004-09-20T16:13:02+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://www.microsoft.com/windows/ie/getosver/javaxp.asp Number of hits: 2 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143661
 2004-09-20T16:13:12+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://fosi.ural.net Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143663
@@ -330,8 +330,8 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 By default the tool chooses 5 minutes prior and after the timestamp in
 question. To configure that use the ``--slice_size SLICE_SIZE`` parameter.
 
-```
-$ psort.py -q --slice "2004-09-20T16:13:02" --slice_size 100 test.plaso
+```bash
+$ psort.py -q --slice "2004-09-20T16:13:02" --slice_size 100 timeline.plaso
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 2004-09-20T15:18:38+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: :2004082520040826: Mr. Evil@http://www.yahoo.com Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/MSHist012004082520040826/index.dat,-,1,143624
 2004-09-20T15:18:38+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://www.yahoo.com Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143625
@@ -339,6 +339,7 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 2004-09-20T15:19:00+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: :2004082520040826: Mr. Evil@http://story.news.yahoo.com/news?tmpl=story&cid=564&ncid=564&e=1&u=/nm/20040825/ts_nm/iraq_usa_beheading_dc Number of hits: 1 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/MSHist012004082520040826/index.dat,-,1,143627
 ...
 ```
+
 #### Filters
 
 A more comprehensive discussions of the filters can be [read here](Event-filters.md).
@@ -346,14 +347,14 @@ A more comprehensive discussions of the filters can be [read here](Event-filters
 For **psort** the filters are included at the end of the command line
 arguments, for example:
 
-```
-$ psort.py -q test.plaso FILTER
+```bash
+$ psort.py -q timeline.plaso FILTER
 ```
 
 An example filter that filters out all events within a certain time range:
 
-```
-$ psort.py -q  test.plaso "date < '2004-09-20 16:20:00' and date > '2004-09-20 16:10:00'"
+```bash
+$ psort.py -q  timeline.plaso "date < '2004-09-20 16:20:00' and date > '2004-09-20 16:10:00'"
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 2004-09-20T16:13:02+00:00,Expiration Time,WEBHIST,MSIE Cache File URL record,Location: Visited: Mr. Evil@http://www.microsoft.com/windows/ie/getosver/javaxp.asp Number of hits: 2 Cached file size: 0,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/History/History.IE5/index.dat,-,1,143661
 ...
@@ -366,8 +367,9 @@ include some context surrounding those matches you can run the tool with the
 flag ``--slicer`` in addition to the filter.
 
 An example:
-```
-$ psort.py -q test.plaso "cached_file_size is 43"
+
+```bash
+$ psort.py -q timeline.plaso "cached_file_size is 43"
 [INFO] Data files will be loaded from /usr/share/plaso by default.
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 1994-04-15T00:00:00+00:00,Content Modification Time,WEBHIST,MSIE Cache File URL record,Location: http://us.i1.yimg.com/us.yimg.com/i/us/hdr/el/uh_bk.gif Number of hits: 5 Cached file: PTV39NDQ\uh_bk[1].gif Cached file size: 43 HTTP headers: HTTP/1.0 200 OK - Content-Type: image/gif - Content-Length: 43 -  - ~U:mr. evil - ,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/index.dat,-,1,370
@@ -379,8 +381,8 @@ for all IE cache files that are 43 bytes in size. If we wanted to gather some
 context surrounding these events we can supply the ``--slicer`` flag, for
 example:
 
-```
-$ psort.py --slicer -q test.plaso "cached_file_size is 43"
+```bash
+$ psort.py --slicer -q timeline.plaso "cached_file_size is 43"
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
 ...
 2001-02-23T03:15:06+00:00,Content Modification Time,WEBHIST,MSIE Cache File URL record,Location: http://www.2600.org/images/masthead2.jpg Number of hits: 1 Cached file: JIRVJY9X\masthead2[1].jpg Cached file size: 2558 HTTP headers: HTTP/1.0 200 OK - ETag: "565062-9fe-3a95d5ba" - Content-Length: 2558 - Content-Type: image/jpeg -  - ~U:mr. evil - ,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/index.dat,-,1,1413
@@ -395,8 +397,8 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 By default the tool will include five events before and after each filter match.
 This can be controlled using the ``--slice_size``.
 
-```
-$ psort.py --slice_size 15 --slicer -q test.plaso "cached_file_size is 43"
+```bash
+$ psort.py --slice_size 15 --slicer -q timeline.plaso "cached_file_size is 43"
 ```
 
 ### Other options
@@ -411,8 +413,8 @@ This data path can be changed from the default location, for instance if you
 have your own *winevt-rc.db* database or set of filter files. This can be
 achieved using the ``--data PATH`` parameter, for example:
 
-```
-$ psort.py --data /where/my/data/is/stored test.plaso
+```bash
+$ psort.py --data /where/my/data/is/stored timeline.plaso
 ```
 
 #### Debug
@@ -428,7 +430,7 @@ This can be used to debug the problem and fix the issue.
 
 ### How do I filter on tags?
 
-```
+```bash
 psort.py -w timeline.log timeline.plaso "tag contains 'browser_search'"
 ```
 
