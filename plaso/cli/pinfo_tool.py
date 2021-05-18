@@ -938,9 +938,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       warnings_by_parser_chain (collections.Counter): number of extraction
           warnings per parser chain.
     """
-    if (self._output_format == 'text' and (
-        not storage_reader.HasExtractionWarnings() or
-        not storage_reader.HasRecoveryWarnings())):
+    if (self._output_format == 'text' and
+        not storage_reader.HasExtractionWarnings() and
+        not storage_reader.HasRecoveryWarnings()):
       self._output_writer.Write('\nNo warnings stored.\n')
 
     else:
