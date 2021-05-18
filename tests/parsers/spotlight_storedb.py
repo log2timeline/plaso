@@ -18,8 +18,9 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
     parser = spotlight_storedb.SpotlightStoreDatabaseParser()
     storage_writer = self._ParseFile(['store.db'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1159238)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -33,6 +34,24 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[12], expected_event_values)
+
+  def testParseLZ4CompressedPage(self):
+    """Tests the Parse function on a file with a LZ4 compressed page."""
+    parser = spotlight_storedb.SpotlightStoreDatabaseParser()
+    storage_writer = self._ParseFile(['859631-store.db'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 1848)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    events = list(storage_writer.GetEvents())
+
+    expected_event_values = {
+        'data_type': 'spotlight:metadata_item',
+        'timestamp': '2019-09-17 09:22:07.536585',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_UPDATE}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':
