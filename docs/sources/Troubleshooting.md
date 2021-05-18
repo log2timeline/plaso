@@ -216,12 +216,12 @@ First make sure you have the debug symbols installed.
 Then run Plaso as a single process with gdb:
 
 ```bash
-gdb --ex r --args log2timeline.py --single-process -d /tmp/test.dump /tmp/file_that_crashes_the_tool
+gdb --ex r --args log2timeline.py --single-process -d docs/sources/Troubleshooting.md --storage-file timeline.plaso file_that_crashes_the_tool
 ```
 
 To generate a back trace:
 
-```
+```bash
 bt
 ```
 

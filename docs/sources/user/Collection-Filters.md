@@ -37,7 +37,9 @@ urls: ['https://forensicswiki.xyz/wiki/index.php?title=Windows_Event_Log_(EVT)']
 
 To use:
 
-`log2timeline.py --artifact-filters WindowsEventLogSystem name.plaso source.raw`
+```bash
+log2timeline.py --artifact-filters WindowsEventLogSystem --storage-file timeline.plaso source.raw
+```
 
 **Note that for convenience the Forensic Artifacts definition names can also
 be stored in a file.**
@@ -58,7 +60,9 @@ and case insensitive when compared to a case insensitive file system.
 
 To use:
 
-`log2timeline.py --file-filter windows.yaml name.plaso source.raw`
+```bash
+log2timeline.py --file-filter windows.yaml --storage-file timeline.plaso source.raw
+```
 
 ### Text-based filter file format
 

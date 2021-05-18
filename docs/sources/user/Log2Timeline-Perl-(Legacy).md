@@ -86,7 +86,7 @@ mount the image first (and mounting them is actually highly discouraged), the
 timeline can be created in a single step:
 
 ```bash
-log2timeline.py /cases/timeline/myhost.plaso image.dd
+log2timeline.py --storage-file /cases/timeline/timeline.plaso image.dd
 ```
 
 The tool will detect whether or not the input is a file, directory or a disk
@@ -115,7 +115,7 @@ processing all VSS stores.
 This can be achieved without calculating the offset into the disk image.
 
 ```bash
-log2timeline.py --partitions 2 /cases/timeline/myhost.plaso image.dd
+log2timeline.py --partitions 2 --storage-file /cases/timeline/timeline.plaso image.dd
 ```
 
 First of all there is quite a difference in the number of parameters, let's go
@@ -149,9 +149,9 @@ parameter. In the new version this same functionality is exposed as the
 `--parsers` parameter. Example usage of this parameter is:
 
 ```bash
-log2timeline.py --parsers "win7" /cases/timeline/myhost.plaso image.dd
-log2timeline.py --parsers "win7,\!winreg" /cases/timeline/myhost.plaso image.dd
-log2timeline.py --parsers "winreg,winevt,winevtx" /cases/timeline/myhost.plaso image.dd
+log2timeline.py --parsers "win7" --storage-file /cases/timeline/timeline.plaso image.dd
+log2timeline.py --parsers "win7,\!winreg" --storage-file /cases/timeline/timeline.plaso image.dd
+log2timeline.py --parsers "winreg,winevt,winevtx" --storage-file /cases/timeline/timeline.plaso image.dd
 ```
 
 There is another difference, the old tool used l2t_csv as the default output,
@@ -172,7 +172,7 @@ to grep or analyze the output of the tool, now you need to run a second tool to
 sort, remove duplicates and change it into a human readable format.
 
 ```bash
-psort.py -w /cases/timeline/myhost.sorted.csv /cases/timeline/myhost.plaso
+psort.py -w /cases/timeline/myhost.sorted.csv /cases/timeline/timeline.plaso
 ```
 
 There is a command line tool psteal.py which runs log2timeline.py and psort.py
@@ -183,19 +183,19 @@ things are now available that were not possible in the older version. For
 instance the possibility to scope the time windows of the output to few minutes:
 
 ```bash
-psort.py /cases/timeline/myhost.plaso "date > '2012-10-10 18:24:00' and date < '2012-10-10 22:25:19'"
+psort.py /cases/timeline/timeline.plaso "date > '2012-10-10 18:24:00' and date < '2012-10-10 22:25:19'"
 ```
 
 Or to a specific dataset:
 
 ```bash
-psort.py /cases/timeline/myhost.plaso "date > '2012-10-10 12:00:00' and date < '2012-10-10 23:55:14' and message contains 'evil' and (source is 'LNK' or timestamp_desc iregexp 'st\swr' or filename contains 'mystery')"
+psort.py /cases/timeline/timeline.plaso "date > '2012-10-10 12:00:00' and date < '2012-10-10 23:55:14' and message contains 'evil' and (source is 'LNK' or timestamp_desc iregexp 'st\swr' or filename contains 'mystery')"
 ```
 
 Or to just present a small time slice based on a particular event of interest:
 
 ```bash
-psort.py --slice "2012-10-10T12:00:00" /cases/timeline/myhost.plaso
+psort.py --slice "2012-10-10T12:00:00" /cases/timeline/timeline.plaso
 ```
 
 More information about event filters can be found [here](Event-filters.md).
@@ -206,7 +206,7 @@ filter against every attribute that is stored inside the event. Some types of
 events will store certain attributes, while others will not.
 
 ```bash
-psort.py /cases/timeline/myhost.plaso "username contains 'joe'"
+psort.py /cases/timeline/timeline.plaso "username contains 'joe'"
 ```
 
 Filter like this one above will go through every event and only include those
@@ -235,7 +235,7 @@ the new version. Some of the metadata stored can be used for filtering out data
 since it contains useful information about the collection.
 
 ```bash
-pinfo.py -v /cases/timeline/myhost.plaso
+pinfo.py -v /cases/timeline/timeline.plaso
 ```
 
 This tool will show metadata information that is stored inside the storage

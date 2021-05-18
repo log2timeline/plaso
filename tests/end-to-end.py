@@ -770,7 +770,7 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     command.extend(extract_options)
     command.extend(logging_options)
     command.extend(test_definition.profiling_options)
-    command.extend([storage_file, source_path])
+    command.extend(['--storage-file', storage_file, source_path])
 
     with open(stdout_file, 'w') as stdout:
       with open(stderr_file, 'w') as stderr:

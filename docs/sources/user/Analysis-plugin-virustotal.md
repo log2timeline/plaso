@@ -11,8 +11,8 @@ API key to operate. The process for obtaining an API key is [here](https://devel
 
 First run log2timeline to hash files and extract events:
 
-```
-log2timeline.py timeline.plaso image.raw
+```bash
+log2timeline.py --storage-file timeline.plaso image.raw
 ```
 
 Note that hashing must be turned on for the virustotal plugin to work
@@ -20,7 +20,7 @@ correctly. This is default setting for log2timeline.py.
 
 Next run psort to tag events:
 
-```
+```bash
 psort.py --analysis virustotal --virustotal-api-key $API_KEY -o dynamic -w timeline_with_virustotal_tags.csv timeline.plaso
 ```
 
