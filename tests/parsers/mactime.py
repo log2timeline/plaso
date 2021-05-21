@@ -23,8 +23,9 @@ class MactimeTest(test_lib.ParserTestCase):
     # timestamp value and are omitted.
     # Total entries: ( 11 * 3 ) + ( 6 * 4 ) = 41
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 60)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
@@ -76,6 +77,15 @@ class MactimeTest(test_lib.ParserTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[57], expected_event_values)
+
+  def testParseOnCorruptFile(self):
+    """Tests the Parse function on a corrupt bodyfile."""
+    parser = mactime.MactimeParser()
+    storage_writer = self._ParseFile(['corrupt.body'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
 
 if __name__ == '__main__':
