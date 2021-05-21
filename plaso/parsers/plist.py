@@ -139,9 +139,11 @@ class PlistParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           'Unable to parse plist with error: {0!s}'.format(exception))
 
-    except LookupError as exception:
+    except (LookupError, ValueError) as exception:
       # LookupError will be raised in cases where the plist is an XML file
       # that contains an unsupported encoding.
+      # ValueError will be raised in cases where the plist is an XML file
+      # that contains an unsupported date and time value.
       parser_mediator.ProduceExtractionWarning(
           'unable to parse XML plist with error: {0!s}'.format(exception))
       return
