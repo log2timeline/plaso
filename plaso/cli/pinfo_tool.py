@@ -355,7 +355,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       storage_reader (StorageReader): storage reader.
     """
     for index, warning in enumerate(storage_reader.GetExtractionWarnings()):
-      title = 'Warning: {0:d}'.format(index)
+      title = 'Extraction warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
@@ -478,7 +478,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       storage_reader (StorageReader): storage reader.
     """
     for index, warning in enumerate(storage_reader.GetRecoveryWarnings()):
-      title = 'Warning: {0:d}'.format(index)
+      title = 'Recovery warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
