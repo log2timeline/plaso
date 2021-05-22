@@ -837,6 +837,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_ANALYSIS_REPORT)
       self._WriteSerializedAttributeContainerList(
+          self._CONTAINER_TYPE_ANALYSIS_WARNING)
+      self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EVENT_SOURCE)
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EVENT_DATA_STREAM)
@@ -847,6 +849,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
           self._CONTAINER_TYPE_EVENT_TAG)
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EXTRACTION_WARNING)
+      self._WriteSerializedAttributeContainerList(
+          self._CONTAINER_TYPE_RECOVERY_WARNING)
 
     if self._connection:
       # We need to run commit or not all data is stored in the database.
