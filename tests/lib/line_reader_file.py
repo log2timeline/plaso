@@ -131,7 +131,7 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 
     lines = line_reader.readlines()
 
-    self.assertEqual(len(lines), 22)
+    self.assertEqual(len(lines), 23)
 
   def testIterator(self):
     """Test the iterator functionality."""
