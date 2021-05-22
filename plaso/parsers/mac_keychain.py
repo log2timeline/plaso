@@ -698,6 +698,9 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       dfdatetime.TimeElements: date and time extracted from the value or None
           if the value does not represent a valid string.
     """
+    if not date_time_value:
+      return None
+
     if date_time_value[14] != 'Z':
       parser_mediator.ProduceExtractionWarning(
           'invalid date and time value: {0!s}'.format(date_time_value))
@@ -726,7 +729,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       return None
 
   def _ParseBinaryDataAsString(self, parser_mediator, binary_data_value):
-    """Parses a binary data value as string
+    """Parses a binary data value as string.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -749,6 +752,23 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
               repr(binary_data_value)))
       return None
 
+  def _ParseIntegerTagString(self, integer_value):
+    """Parses an integer value as a tag string.
+
+    Args:
+      integer_value (int): integer value (CSSM_DB_ATTRIBUTE_FORMAT_SINT32,
+          CSSM_DB_ATTRIBUTE_FORMAT_UINT32) that represents a tag string.
+
+    Returns:
+      str: integer value formatted as a tag string or None if integer value is
+          None (NULL).
+    """
+    if not integer_value:
+      return None
+
+    tag_string = codecs.decode('{0:08x}'.format(integer_value), 'hex')
+    return codecs.decode(tag_string, 'utf-8')
+
   def _ParseApplicationPasswordRecord(self, parser_mediator, record):
     """Extracts the information from an application password record.
 
@@ -769,8 +789,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     event_data = KeychainApplicationRecordEventData()
     event_data.account_name = self._ParseBinaryDataAsString(
         parser_mediator, record['acct'])
-    event_data.comments = self._ParseBinaryDataAsString(
-        parser_mediator, record['crtr'])
+    event_data.comments = self._ParseIntegerTagString(record['crtr'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
     ssgp_hash = codecs.encode(key[4:], 'hex')
@@ -813,8 +832,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     event_data = KeychainInternetRecordEventData()
     event_data.account_name = self._ParseBinaryDataAsString(
         parser_mediator, record['acct'])
-    event_data.comments = self._ParseBinaryDataAsString(
-        parser_mediator, record['crtr'])
+    event_data.comments = self._ParseIntegerTagString(record['crtr'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
     event_data.protocol = self._PROTOCOL_TRANSLATION_DICT.get(
