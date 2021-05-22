@@ -194,21 +194,6 @@ class DSVParser(interface.FileObjectParser):
 
     return None, 0
 
-  # pylint: disable=unused-argument
-  def ParseCorruptRow(self, parser_mediator, row_offset, row):
-    """Parses a line of the log file on which the csv module errored.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      row_offset (int): offset of the row.
-      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
-
-    Returns:
-      bool: True if the line was parsed successful.
-    """
-    return False
-
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a DSV text file-like object.
 
@@ -303,11 +288,10 @@ class DSVParser(interface.FileObjectParser):
         break
 
       except csv.Error as exception:
-        if not self.ParseCorruptRow(parser_mediator, row_offset, row):
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse line: {0:d} with error: {1!s}'.format(
-                  line_number, exception))
-          break
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse line: {0:d} with error: {1!s}'.format(
+                line_number, exception))
+        break
 
   @abc.abstractmethod
   def ParseRow(self, parser_mediator, row_offset, row):
