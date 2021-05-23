@@ -28,8 +28,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     #   Icon location                  : %windir%\system32\migwiz\migwiz.exe
     #   Environment variables location : %windir%\system32\migwiz\migwiz.exe
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -86,8 +87,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     parser = winlnk.WinLnkParser()
     storage_writer = self._ParseFile(['NeroInfoTool.lnk'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 20)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 

@@ -56,8 +56,9 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'regf', '100_sub_keys.hiv'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 101)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseCorruptionInSubKeyList(self):
     """Test the parse function on a corrupted Windows NT Registry file."""
@@ -65,8 +66,9 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'regf', 'corrupt_sub_key_list.hiv'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 100)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
@@ -87,8 +89,9 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg_parser.WinRegistryParser()
     storage_writer = self._ParseFile(['ntuser.dat.LOG'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""

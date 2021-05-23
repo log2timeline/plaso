@@ -17,40 +17,43 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
     parser = xchatscrollback.XChatScrollbackParser()
     storage_writer = self._ParseFile(['xchatscrollback.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2009-01-16 02:56:19',
         'data_type': 'xchat:scrollback:line',
-        'text': '* Speaking now on ##plaso##',
-        'timestamp': '2009-01-16 02:56:19.000000'}
+        'text': '* Speaking now on ##plaso##'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2009-01-16 02:56:27',
         'data_type': 'xchat:scrollback:line',
-        'text': '* Joachim \xe8 uscito (Client exited)',
-        'timestamp': '2009-01-16 02:56:27.000000'}
+        'text': '* Joachim \xe8 uscito (Client exited)'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2009-01-18 21:58:36',
         'data_type': 'xchat:scrollback:line',
-        'text': 'Tcl interface unloaded',
-        'timestamp': '2009-01-18 21:58:36.000000'}
+        'text': 'Tcl interface unloaded'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2009-01-18 21:58:36',
         'data_type': 'xchat:scrollback:line',
-        'text': 'Python interface unloaded',
-        'timestamp': '2009-01-18 21:58:36.000000'}
+        'text': 'Python interface unloaded'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
+    # TODO: change parser to return NotSet semantic time.
     expected_event_values = {
+        'date_time': '1970-01-01 00:00:00',
         'data_type': 'xchat:scrollback:line',
         'nickname': 'fpi',
         'text': '0 is a good timestamp',
@@ -59,31 +62,31 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2009-01-26 08:50:56',
         'data_type': 'xchat:scrollback:line',
-        'text': '* Topic of #plasify \xe8: .',
-        'timestamp': '2009-01-26 08:50:56.000000'}
+        'text': '* Topic of #plasify \xe8: .'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
-        'data_type': 'xchat:scrollback:line',
-        'timestamp': '2009-01-26 08:51:02.000000'}
+        'date_time': '2009-01-26 08:51:02',
+        'data_type': 'xchat:scrollback:line'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2009-01-26 08:52:12',
         'data_type': 'xchat:scrollback:line',
         'nickname': 'fpi',
-        'text': 'Hi Kristinn!',
-        'timestamp': '2009-01-26 08:52:12.000000'}
+        'text': 'Hi Kristinn!'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2009-01-26 08:53:13',
         'data_type': 'xchat:scrollback:line',
         'nickname': 'Kristinn',
-        'text': 'GO AND WRITE PARSERS!!! O_o',
-        'timestamp': '2009-01-26 08:53:13.000000'}
+        'text': 'GO AND WRITE PARSERS!!! O_o'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 

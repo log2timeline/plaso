@@ -18,8 +18,9 @@ class WinJobTest(test_lib.ParserTestCase):
     parser = winjob.WinJobParser()
     storage_writer = self._ParseFile(['wintask.job'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -33,22 +34,21 @@ class WinJobTest(test_lib.ParserTestCase):
     expected_event_values = {
         'application': (
             'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe'),
+        'date_time': '2013-08-24 12:42:00.112',
         'data_type': 'windows:tasks:job',
         'comment': expected_comment,
         'parameters': '/ua /installsource scheduler',
-        'timestamp': '2013-08-24 12:42:00.112000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'username': 'Brian'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    # Parse second event. Same metadata; different timestamp event.
     expected_event_values = {
         'application': (
             'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe'),
+        'date_time': '2013-07-12 15:42:00',
         'data_type': 'windows:tasks:job',
         'parameters': '/ua /installsource scheduler',
-        'timestamp': '2013-07-12 15:42:00.000000',
         'timestamp_desc': 'Scheduled to start',
         'trigger_type': 1,
         'username': 'Brian'}
@@ -60,14 +60,16 @@ class WinJobTest(test_lib.ParserTestCase):
     parser = winjob.WinJobParser()
     storage_writer = self._ParseFile(['wintask.job'], parser, timezone='CET')
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'application': (
             'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe'),
+        'date_time': '2013-07-12 15:42:00',
         'data_type': 'windows:tasks:job',
         'parameters': '/ua /installsource scheduler',
         'timestamp': '2013-07-12 13:42:00.000000',
