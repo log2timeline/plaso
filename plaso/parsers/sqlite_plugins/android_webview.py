@@ -23,6 +23,7 @@ class WebViewCookieEventData(events.EventData):
     data (str): data stored in the cookie.
     host (str): host that set the cookie.
     path (str): path for which the cookie was set.
+    query (str): SQL query that was used to obtain the event data.
     secure (bool): True if the cookie should only be transmitted over
         a secure channel.
     url (str): URL of the cookie.
@@ -37,6 +38,7 @@ class WebViewCookieEventData(events.EventData):
     self.data = None
     self.host = None
     self.path = None
+    self.query = None
     self.secure = None
     self.url = None
 

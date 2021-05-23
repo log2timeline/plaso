@@ -18,6 +18,7 @@ class MacOSTCCEntry(events.EventData):
     client (str): name of the client requesting access to the service.
     prompt_count (int): number of times an appplication prompted the user for
         access to a service.
+    query (str): SQL query that was used to obtain the event data.
     service (str): name of the service.
   """
 
@@ -29,6 +30,7 @@ class MacOSTCCEntry(events.EventData):
     self.allowed = None
     self.client = None
     self.prompt_count = None
+    self.query = None
     self.service = None
 
 

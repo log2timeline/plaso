@@ -24,6 +24,7 @@ class FirefoxCookieEventData(events.EventData):
         side script.
     host (str): hostname of host that set the cookie value.
     path (str): URI of the page that set the cookie.
+    query (str): SQL query that was used to obtain the event data.
     secure (bool): True if the cookie should only be transmitted over a secure
         channel.
   """
@@ -38,6 +39,7 @@ class FirefoxCookieEventData(events.EventData):
     self.host = None
     self.httponly = None
     self.path = None
+    self.query = None
     self.secure = None
     self.url = None
 

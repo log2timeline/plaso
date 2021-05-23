@@ -358,8 +358,7 @@ class ParserMediator(object):
     """Removes the last added parser or parser plugin from the parser chain."""
     self._parser_chain_components.pop()
 
-  def ProcessEventData(
-      self, event_data, parser_chain=None, file_entry=None, query=None):
+  def ProcessEventData(self, event_data, parser_chain=None, file_entry=None):
     """Processes event data before it written to the storage.
 
     Args:
@@ -367,7 +366,6 @@ class ParserMediator(object):
       parser_chain (Optional[str]): parsing chain up to this point.
       file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
           use the current file entry set in the mediator.
-      query (Optional[str]): query that was used to obtain the event data.
 
     Raises:
       KeyError: if there's an attempt to add a duplicate attribute value to the
@@ -388,9 +386,6 @@ class ParserMediator(object):
       username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
       if username:
         event_data.username = username
-
-    if not getattr(event_data, 'query', None) and query:
-      event_data.query = query
 
   def ProduceEventDataStream(self, event_data_stream):
     """Produces an event data stream.

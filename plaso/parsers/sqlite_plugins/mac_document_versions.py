@@ -14,11 +14,12 @@ class MacDocumentVersionsEventData(events.EventData):
   """MacOS document revision event data.
 
   Attributes:
+    last_time (str): the system user ID of the user that opened the file.
     name (str): name of the original file.
     path (str): path from the original file.
-    version_path (str): path to the version copy of the original file.
-    last_time (str): the system user ID of the user that opened the file.
+    query (str): SQL query that was used to obtain the event data.
     user_sid (str): identification user ID that open the file.
+    version_path (str): path to the version copy of the original file.
   """
 
   DATA_TYPE = 'mac:document_versions:file'
@@ -30,6 +31,7 @@ class MacDocumentVersionsEventData(events.EventData):
     self.last_time = None
     self.name = None
     self.path = None
+    self.query = None
     self.user_sid = None
     self.version_path = None
 

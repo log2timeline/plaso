@@ -15,6 +15,7 @@ class SafariHistoryPageVisitedEventData(events.EventData):
 
   Attributes:
     host (str): hostname of the server.
+    query (str): SQL query that was used to obtain the event data.
     title (str): title of the webpage visited.
     url (str): URL visited.
     visit_count (int): number of times the website was visited.
@@ -29,6 +30,7 @@ class SafariHistoryPageVisitedEventData(events.EventData):
     super(SafariHistoryPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.host = None
+    self.query = None
     self.title = None
     self.url = None
     self.visit_count = None

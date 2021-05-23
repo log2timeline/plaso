@@ -15,17 +15,18 @@ class ChromeAutofillEventData(events.EventData):
 
   Attributes:
     field_name (str): name of form field.
-    value (str): value populated in form field.
+    query (str): SQL query that was used to obtain the event data.
     usage_count (int): count of times value has been used in field_name.
+    value (str): value populated in form field.
   """
 
   DATA_TYPE = 'chrome:autofill:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeAutofillEventData, self).__init__(
-        data_type=self.DATA_TYPE)
+    super(ChromeAutofillEventData, self).__init__(data_type=self.DATA_TYPE)
     self.field_name = None
+    self.query = None
     self.usage_count = None
     self.value = None
 

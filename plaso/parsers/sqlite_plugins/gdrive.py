@@ -16,6 +16,7 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
   Attributes:
     doc_type (int): document type.
     path (str): path of the file.
+    query (str): SQL query that was used to obtain the event data.
     shared (bool): True if the file is shared, False if the file is private.
     size (int): size of the file.
     url (str): URL of the file.
@@ -29,6 +30,7 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.document_type = None
     self.path = None
+    self.query = None
     self.shared = None
     self.size = None
     self.url = None
@@ -39,6 +41,7 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
 
   Attributes:
     path (str): path of the file.
+    query (str): SQL query that was used to obtain the event data.
     size (int): size of the file.
   """
 
@@ -49,6 +52,7 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
     super(GoogleDriveSnapshotLocalEntryEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.path = None
+    self.query = None
     self.size = None
 
 

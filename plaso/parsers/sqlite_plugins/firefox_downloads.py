@@ -17,6 +17,7 @@ class FirefoxDownloadEventData(events.EventData):
     full_path (str): full path of the target of the download.
     mime_type (str): mime type of the download.
     name (str): name of the download.
+    query (str): SQL query that was used to obtain the event data.
     received_bytes (int): number of bytes received.
     referrer (str): referrer URL of the download.
     temporary_location (str): temporary location of the download.
@@ -33,6 +34,7 @@ class FirefoxDownloadEventData(events.EventData):
     self.mime_type = None
     self.name = None
     self.offset = None
+    self.query = None
     self.received_bytes = None
     self.referrer = None
     self.temporary_location = None

@@ -14,6 +14,7 @@ class SkypeChatEventData(events.EventData):
 
   Attributes:
     from_account (str): from display name and the author.
+    query (str): SQL query that was used to obtain the event data.
     text (str): body XML.
     title (str): title.
     to_account (str): accounts, excluding the author, of the conversation.
@@ -25,6 +26,7 @@ class SkypeChatEventData(events.EventData):
     """Initializes event data."""
     super(SkypeChatEventData, self).__init__(data_type=self.DATA_TYPE)
     self.from_account = None
+    self.query = None
     self.text = None
     self.title = None
     self.to_account = None
@@ -37,6 +39,7 @@ class SkypeAccountEventData(events.EventData):
     country (str): home country of the account holder.
     display_name (str): display name of the account holder.
     email (str): registered email address of the account holder.
+    query (str): SQL query that was used to obtain the event data.
     username (str): full name of the Skype account holder and display name.
   """
 
@@ -49,6 +52,7 @@ class SkypeAccountEventData(events.EventData):
     self.display_name = None
     self.email = None
     self.offset = None
+    self.query = None
     self.username = None
 
 
@@ -57,6 +61,7 @@ class SkypeSMSEventData(events.EventData):
 
   Attributes:
     number (str): phone number where the SMS was sent.
+    query (str): SQL query that was used to obtain the event data.
     text (str): text (SMS body) that was sent.
   """
 
@@ -66,6 +71,7 @@ class SkypeSMSEventData(events.EventData):
     """Initialize event data."""
     super(SkypeSMSEventData, self).__init__(data_type=self.DATA_TYPE)
     self.number = None
+    self.query = None
     self.text = None
 
 
@@ -75,6 +81,7 @@ class SkypeCallEventData(events.EventData):
   Attributes:
     call_type (str): call type, such as: WAITING, STARTED, FINISHED.
     dst_call (str): account which received the call.
+    query (str): SQL query that was used to obtain the event data.
     src_call (str): account which started the call.
     user_start_call (bool): True if the owner account started the call.
     video_conference (bool): True if the call was a video conference.
@@ -87,6 +94,7 @@ class SkypeCallEventData(events.EventData):
     super(SkypeCallEventData, self).__init__(data_type=self.DATA_TYPE)
     self.call_type = None
     self.dst_call = None
+    self.query = None
     self.src_call = None
     self.user_start_call = None
     self.video_conference = None
@@ -99,6 +107,7 @@ class SkypeTransferFileEventData(events.EventData):
     action_type (str): action type such as: "GETSOLICITUDE", "SENDSOLICITUDE",
         "ACCEPTED" or "FINISHED".
     destination (str): account that received the file.
+    query (str): SQL query that was used to obtain the event data.
     source (str): account that sent the file.
     transferred_filename (str): name of the file transferred.
     transferred_filepath (str): path of the file transferred.
@@ -112,6 +121,7 @@ class SkypeTransferFileEventData(events.EventData):
     super(SkypeTransferFileEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action_type = None
     self.destination = None
+    self.query = None
     self.source = None
     self.transferred_filename = None
     self.transferred_filepath = None

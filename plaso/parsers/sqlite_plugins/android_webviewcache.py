@@ -15,6 +15,7 @@ class AndroidWebViewCacheEventData(events.EventData):
 
   Attributes:
     content_length (int): size of the cached content.
+    query (str): SQL query that was used to obtain the event data.
     url (str): URL the content was retrieved from.
   """
 
@@ -24,6 +25,7 @@ class AndroidWebViewCacheEventData(events.EventData):
     """Initializes event data."""
     super(AndroidWebViewCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.content_length = None
+    self.query = None
     self.url = None
 
 

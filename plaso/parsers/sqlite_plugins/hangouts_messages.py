@@ -17,6 +17,7 @@ class HangoutsMessageData(events.EventData):
     body (str): content of the SMS text message.
     message_status (int): message status.
     message_type (int): message type.
+    query (str): SQL query that was used to obtain the event data.
     sender (str): Name with the sender.
   """
 
@@ -28,6 +29,7 @@ class HangoutsMessageData(events.EventData):
     self.body = None
     self.message_status = None
     self.message_type = None
+    self.query = None
     self.sender = None
 
 

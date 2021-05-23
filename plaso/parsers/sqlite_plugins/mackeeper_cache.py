@@ -21,6 +21,7 @@ class MacKeeperCacheEventData(events.EventData):
   Attributes:
     description (str): description.
     event_type (str): event type.
+    query (str): SQL query that was used to obtain the event data.
     record_id (int): record identifier.
     room (str): room.
     text (str): text.
@@ -35,6 +36,7 @@ class MacKeeperCacheEventData(events.EventData):
     super(MacKeeperCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.description = None
     self.event_type = None
+    self.query = None
     self.record_id = None
     self.room = None
     self.text = None

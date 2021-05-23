@@ -16,6 +16,7 @@ class KodiVideoEventData(events.EventData):
   Attributes:
     filename (str): video filename.
     play_count (int): number of times the video has been played.
+    query (str): SQL query that was used to obtain the event data.
   """
 
   DATA_TYPE = 'kodi:videos:viewing'
@@ -25,6 +26,7 @@ class KodiVideoEventData(events.EventData):
     super(KodiVideoEventData, self).__init__(data_type=self.DATA_TYPE)
     self.filename = None
     self.play_count = None
+    self.query = None
 
 
 class KodiMyVideosPlugin(interface.SQLitePlugin):

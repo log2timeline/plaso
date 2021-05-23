@@ -16,6 +16,7 @@ class AndroidSMSEventData(events.EventData):
   Attributes:
     address (str): phone number associated to the sender or receiver.
     body (str): content of the SMS text message.
+    query (str): SQL query that was used to obtain the event data.
     sms_read (str): message read status, either Read or Unread.
     sms_type (str): message type, either Sent or Received.
   """
@@ -27,6 +28,7 @@ class AndroidSMSEventData(events.EventData):
     super(AndroidSMSEventData, self).__init__(data_type=self.DATA_TYPE)
     self.address = None
     self.body = None
+    self.query = None
     self.sms_read = None
     self.sms_type = None
 

@@ -21,6 +21,7 @@ class TwitterIOSContactEventData(events.EventData):
     location (str): location of the profile.
     name (str): name of the profile.
     profile_url (str): URL of the profile picture.
+    query (str): SQL query that was used to obtain the event data.
     screen_name (str): screen name.
     url (str): URL of the profile.
   """
@@ -37,6 +38,7 @@ class TwitterIOSContactEventData(events.EventData):
     self.location = None
     self.name = None
     self.profile_url = None
+    self.query = None
     self.screen_name = None
     self.url = None
 
@@ -48,6 +50,7 @@ class TwitterIOSStatusEventData(events.EventData):
     favorite_count (int): number of times the status message has been favorited.
     favorited (int): value to mark status as favorite by the account.
     name (str): user's profile name.
+    query (str): SQL query that was used to obtain the event data.
     retweet_count (str): number of times the status message has been retweeted.
     text (str): content of the status message.
     user_id (int): user unique identifier.
@@ -61,6 +64,7 @@ class TwitterIOSStatusEventData(events.EventData):
     self.favorite_count = None
     self.favorited = None
     self.name = None
+    self.query = None
     self.retweet_count = None
     self.text = None
     self.user_id = None
