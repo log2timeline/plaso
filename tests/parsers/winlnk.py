@@ -19,22 +19,23 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(['example.lnk'], parser)
 
     # Link information:
-    # 	Creation time			: Jul 13, 2009 23:29:02.849131000 UTC
-    # 	Modification time		: Jul 14, 2009 01:39:18.220000000 UTC
-    # 	Access time			: Jul 13, 2009 23:29:02.849131000 UTC
-    # 	Description			: @%windir%\system32\migwiz\wet.dll,-590
-    # 	Relative path			: .\migwiz\migwiz.exe
-    # 	Working directory		: %windir%\system32\migwiz
-    # 	Icon location			: %windir%\system32\migwiz\migwiz.exe
-    # 	Environment variables location	: %windir%\system32\migwiz\migwiz.exe
+    #   Creation time                  : Jul 13, 2009 23:29:02.849131000 UTC
+    #   Modification time              : Jul 14, 2009 01:39:18.220000000 UTC
+    #   Access time                    : Jul 13, 2009 23:29:02.849131000 UTC
+    #   Description                    : @%windir%\system32\migwiz\wet.dll,-590
+    #   Relative path                  : .\migwiz\migwiz.exe
+    #   Working directory              : %windir%\system32\migwiz
+    #   Icon location                  : %windir%\system32\migwiz\migwiz.exe
+    #   Environment variables location : %windir%\system32\migwiz\migwiz.exe
 
     self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())
 
-    # A last accessed shortcut event.
+    # A shortcut last accessed event.
     expected_event_values = {
+        'date_time': '2009-07-13 23:29:02.8491310',
         'data_type': 'windows:lnk:link',
         'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
         'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
@@ -42,22 +43,22 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'file_size': 544768,
         'icon_location': '%windir%\\system32\\migwiz\\migwiz.exe',
         'relative_path': '.\\migwiz\\migwiz.exe',
-        'timestamp': '2009-07-13 23:29:02.849131',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS,
         'working_directory': '%windir%\\system32\\migwiz'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    # The creation timestamp.
+    # A shortcut creation event.
     expected_event_values = {
+        'date_time': '2009-07-13 23:29:02.8491310',
         'data_type': 'windows:lnk:link',
-        'timestamp': '2009-07-13 23:29:02.849131',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    # A last modification shortcut event.
+    # A shortcut last modification event.
     expected_event_values = {
+        'date_time': '2009-07-14 01:39:18.2200000',
         'data_type': 'windows:lnk:link',
         'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
         'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
@@ -65,17 +66,16 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'file_size': 544768,
         'icon_location': '%windir%\\system32\\migwiz\\migwiz.exe',
         'relative_path': '.\\migwiz\\migwiz.exe',
-        'timestamp': '2009-07-14 01:39:18.220000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
         'working_directory': '%windir%\\system32\\migwiz'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    # A distributed link tracking event.
+    # A distributed link tracking creation event.
     expected_event_values = {
+        'date_time': '2009-07-14 05:45:20.5000123',
         'data_type': 'windows:distributed_link_tracking:creation',
         'mac_address': '00:1d:09:fa:5a:1c',
-        'timestamp': '2009-07-14 05:45:20.500012',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'uuid': '846ee3bb-7039-11de-9d20-001d09fa5a1c'}
 
@@ -91,8 +91,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # A shortcut event.
+    # A shortcut creation event.
     expected_event_values = {
+        'date_time': '2009-06-05 20:13:20.0000000',
         'data_type': 'windows:lnk:link',
         'description': (
             'Nero InfoTool provides you with information about the most '
@@ -111,7 +112,6 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'relative_path': (
             '..\\..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\'
             'Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe'),
-        'timestamp': '2009-06-05 20:13:20.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'volume_label': 'OS',
         'working_directory': (
@@ -121,6 +121,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # A shell item event.
     expected_event_values = {
+        'date_time': '2009-06-05 20:13:20',
         'data_type': 'windows:shell_item:file_entry',
         'file_reference': '81349-1',
         'long_name': 'InfoTool.exe',
@@ -129,7 +130,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'shell_item_path': (
             '<My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
             'Nero InfoTool\\InfoTool.exe'),
-        'timestamp': '2009-06-05 20:13:20.000000'}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
