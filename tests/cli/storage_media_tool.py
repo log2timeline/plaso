@@ -63,7 +63,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
     test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
+        dfvfs_definitions.PREFERRED_GPT_BACK_END, location='/p1',
         parent=test_raw_path_spec)
     test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/',
@@ -276,7 +276,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
     test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
+        dfvfs_definitions.PREFERRED_GPT_BACK_END, location='/p1',
         parent=test_raw_path_spec)
     test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/',
@@ -746,12 +746,18 @@ optional arguments:
     scan_context = test_tool.ScanSource(source_path)
     self.assertIsNotNone(scan_context)
 
-    scan_node = self._GetTestScanNode(scan_context)
+    scan_node = scan_context.GetRootScanNode()
+    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
     self.assertIsNotNone(scan_node)
     self.assertEqual(
-        scan_node.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
-    self.assertEqual(len(scan_node.sub_nodes), 6)
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_GPT_BACK_END)
+    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      expected_number_of_sub_nodes = 6
+    else:
+      expected_number_of_sub_nodes = 1
+
+    self.assertEqual(len(scan_node.sub_nodes), expected_number_of_sub_nodes)
 
     for scan_node in scan_node.sub_nodes:
       if getattr(scan_node.path_spec, 'location', None) == '/p1':
@@ -759,12 +765,13 @@ optional arguments:
 
     self.assertIsNotNone(scan_node)
     self.assertEqual(
-        scan_node.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_GPT_BACK_END)
     self.assertEqual(len(scan_node.sub_nodes), 1)
 
     path_spec = scan_node.path_spec
-    self.assertEqual(path_spec.start_offset, 20480)
+    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      self.assertEqual(path_spec.start_offset, 20480)
 
     scan_node = scan_node.sub_nodes[0]
     self.assertIsNotNone(scan_node)
@@ -1143,9 +1150,14 @@ optional arguments:
     scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
-    scan_node = self._GetTestScanNode(scan_context)
+    scan_node = scan_context.GetRootScanNode()
+    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
 
-    apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
+    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
+    else:
+      apfs_container_scan_node = scan_node.sub_nodes[0].sub_nodes[0]
 
     # Test on volume system sub node.
     test_tool._ScanEncryptedVolume(
@@ -1179,9 +1191,14 @@ optional arguments:
     scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
-    scan_node = self._GetTestScanNode(scan_context)
+    scan_node = scan_context.GetRootScanNode()
+    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
 
-    apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
+    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
+    else:
+      apfs_container_scan_node = scan_node.sub_nodes[0].sub_nodes[0]
 
     # Test on volume system root node.
     base_path_specs = []
@@ -1231,9 +1248,14 @@ optional arguments:
     scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
-    scan_node = self._GetTestScanNode(scan_context)
+    scan_node = scan_context.GetRootScanNode()
+    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
 
-    apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
+    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
+    else:
+      apfs_container_scan_node = scan_node.sub_nodes[0].sub_nodes[0]
 
     # Test on volume system root node.
     base_path_specs = []
@@ -1348,9 +1370,14 @@ optional arguments:
     scan_context.OpenSourcePath(test_file_path)
 
     test_tool._source_scanner.Scan(scan_context)
-    scan_node = self._GetTestScanNode(scan_context)
+    scan_node = scan_context.GetRootScanNode()
+    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
 
-    apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
+    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
+    else:
+      apfs_container_scan_node = scan_node.sub_nodes[0].sub_nodes[0]
 
     base_path_specs = []
     test_tool._ScanVolumeSystemRoot(

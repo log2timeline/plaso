@@ -400,23 +400,22 @@ class StorageMediaTool(tools.CLITool):
     return self._NormalizedVolumeIdentifiers(
         volume_system, volume_identifiers, prefix='lvm')
 
-  def _GetTSKPartitionIdentifiers(self, scan_node):
-    """Determines the TSK partition identifiers.
+  def _GetPartitionIdentifiers(self, scan_node):
+    """Determines the partition identifiers.
 
-    This method first checks for the preferred partition number, then
-    falls back to prompt the user if no usable preferences were specified.
+    This function determines which partition identifiers need to be scanned
+    based on the volume scanner options. If no options are provided and there
+    is more than a single partition the mediator is used to ask the user.
 
     Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
+      scan_node (SourceScanNode): scan node.
 
     Returns:
-      list[str]: TSK partition identifiers.
+      list[str]: partition identifiers.
 
     Raises:
-      RuntimeError: if the volume for a specific identifier cannot be
-          retrieved.
-      SourceScannerError: if the scan node is invalid or more than 1 volume
-          was found but no volumes were specified.
+      SourceScannerError: if the scan node is invalid or the scanner does not
+          know how to proceed.
       UserAbort: if the user requested to abort.
     """
     if not scan_node or not scan_node.path_spec:
@@ -435,33 +434,39 @@ class StorageMediaTool(tools.CLITool):
     if not volume_identifiers:
       return []
 
-    # TODO: refactor self._partitions to use scan options.
     if self._partitions:
       if self._partitions == 'all':
         partitions = volume_system.volume_identifiers
       else:
-        partitions = self._mediator.ParseVolumeIdentifiersString(
-            self._partitions, prefix='p')
+        partitions = self._partitions
 
-      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
-          volume_system, partitions, prefix='p')
+      try:
+        selected_volumes = self._NormalizedVolumeIdentifiers(
+            volume_system, partitions,
+            prefix=volume_system.VOLUME_IDENTIFIER_PREFIX)
 
-      if not set(selected_volume_identifiers).difference(volume_identifiers):
-        return selected_volume_identifiers
+        if not set(selected_volumes).difference(volume_identifiers):
+          return selected_volumes
+      except errors.SourceScannerError as exception:
+        if self._mediator:
+          self._mediator.PrintWarning('{0!s}'.format(exception))
 
     if len(volume_identifiers) > 1:
-      if self._unattended_mode:
+      if not self._mediator:
         raise errors.SourceScannerError(
-            'More than 1 partition found but no partitions specified.')
+            'Unable to proceed. More than one partitions found but no mediator '
+            'to determine how they should be used.')
 
       try:
         volume_identifiers = self._mediator.GetPartitionIdentifiers(
             volume_system, volume_identifiers)
+
       except KeyboardInterrupt:
-        raise errors.UserAbort('File system scan aborted.')
+        raise errors.UserAbort('Volume scan aborted.')
 
     return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='p')
+        volume_system, volume_identifiers,
+        prefix=volume_system.VOLUME_IDENTIFIER_PREFIX)
 
   def _GetVSSStoreIdentifiers(self, scan_node):
     """Determines the VSS store identifiers.
@@ -807,6 +812,9 @@ class StorageMediaTool(tools.CLITool):
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER):
       volume_identifiers = self._GetAPFSVolumeIdentifiers(scan_node)
 
+    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GPT:
+      volume_identifiers = self._GetPartitionIdentifiers(scan_node)
+
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_LVM:
       volume_identifiers = self._GetLVMVolumeIdentifiers(scan_node)
 
@@ -963,7 +971,7 @@ class StorageMediaTool(tools.CLITool):
 
     else:
       # Determine which partition needs to be processed.
-      partition_identifiers = self._GetTSKPartitionIdentifiers(scan_node)
+      partition_identifiers = self._GetPartitionIdentifiers(scan_node)
       if not partition_identifiers:
         raise errors.SourceScannerError('No partitions found.')
 
