@@ -316,7 +316,7 @@ class DSVParser(interface.FileObjectParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row_offset (int): offset of the row.
+      row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
 

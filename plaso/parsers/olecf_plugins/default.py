@@ -49,7 +49,6 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
 
     event_data = OLECFItemEventData()
     event_data.name = olecf_item.name
-    event_data.offset = 0
     event_data.size = olecf_item.size
 
     creation_time, modification_time = self._GetTimestamps(olecf_item)
@@ -93,7 +92,6 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
     if not self._ParseItem(parser_mediator, root_item):
       event_data = OLECFItemEventData()
       event_data.name = root_item.name
-      event_data.offset = 0
       event_data.size = root_item.size
 
       # If no event was produced, produce at least one for the root item.

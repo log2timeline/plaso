@@ -152,8 +152,6 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     event_data.audit_type = self._GetValueFromStructure(structure, 'type')
     event_data.body = body_text
     event_data.pid = self._GetValueFromStructure(body_structure, 'pid')
-    # TODO: pass line number to offset or remove.
-    event_data.offset = 0
 
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=timestamp)

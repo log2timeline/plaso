@@ -15,6 +15,8 @@ class FirefoxPlacesBookmarkAnnotationEventData(events.EventData):
 
   Attributes:
     content (str): annotation content.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     title (str): title of the bookmark folder.
     url (str): bookmarked URL.
@@ -27,6 +29,7 @@ class FirefoxPlacesBookmarkAnnotationEventData(events.EventData):
     super(FirefoxPlacesBookmarkAnnotationEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.content = None
+    self.offset = None
     self.query = None
     self.title = None
     self.url = None
@@ -36,6 +39,8 @@ class FirefoxPlacesBookmarkFolderEventData(events.EventData):
   """Firefox bookmark folder event data.
 
   Attributes:
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     title (str): title of the bookmark folder.
   """
@@ -46,6 +51,7 @@ class FirefoxPlacesBookmarkFolderEventData(events.EventData):
     """Initializes event data."""
     super(FirefoxPlacesBookmarkFolderEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.offset = None
     self.query = None
     self.title = None
 
@@ -55,6 +61,8 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
 
   Attributes:
     host (str): visited hostname.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     places_title (str): places title.
     query (str): SQL query that was used to obtain the event data.
     title (str): title of the bookmark folder.
@@ -70,6 +78,7 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
     super(FirefoxPlacesBookmarkEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.host = None
+    self.offset = None
     self.places_title = None
     self.query = None
     self.title = None
@@ -85,6 +94,8 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
     from_visit (str): URL that referred to the visited page.
     hidden (str): value to indicated if the URL was hidden.
     host (str): visited hostname.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     title (str): title of the visited page.
     typed (str): value to indicated if the URL was typed.
@@ -102,6 +113,7 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
     self.from_visit = None
     self.hidden = None
     self.host = None
+    self.offset = None
     self.query = None
     self.title = None
     self.typed = None

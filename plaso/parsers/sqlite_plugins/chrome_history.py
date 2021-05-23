@@ -19,6 +19,8 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
         downloaded content.
     full_path (str): full path where the file was downloaded to.
     interrupt_reason (int): indication why the download was interrupted.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     opened (int): value to indicate if the downloaded file was opened from
         the browser.
     query (str): SQL query that was used to obtain the event data.
@@ -37,6 +39,7 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
     self.danger_type = None
     self.full_path = None
     self.interrupt_reason = None
+    self.offset = None
     self.opened = None
     self.query = None
     self.received_bytes = None
@@ -50,6 +53,8 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
 
   Attributes:
     from_visit (str): URL where the visit originated from.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     page_transition_type (int): type of transitions between pages.
     query (str): SQL query that was used to obtain the event data.
     title (str): title of the visited page.
@@ -66,6 +71,7 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
     super(ChromeHistoryPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.from_visit = None
+    self.offset = None
     self.page_transition_type = None
     self.query = None
     self.title = None

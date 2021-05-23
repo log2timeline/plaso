@@ -143,8 +143,6 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
     event_data.body = tokens.get('body', None)
     event_data.fingerprint = tokens.get('fingerprint', None)
     event_data.hostname = tokens.get('hostname', None)
-    # TODO: pass line number to offset or remove.
-    event_data.offset = 0
     event_data.pid = tokens.get('pid', None)
     event_data.protocol = tokens.get('protocol', None)
     event_data.port = tokens.get('port', None)

@@ -12,12 +12,14 @@ from plaso.parsers import manager
 
 
 class UtmpEventData(events.EventData):
-  """utmp event data.
+  """Linux libc6 utmp event data.
 
   Attributes:
     exit_status (int): exit status.
     hostname (str): hostname or IP address.
     ip_address (str): IP address from the connection.
+    offset (int): offset of the utmp record relative to the start of the file,
+        from which the event data was extracted.
     pid (int): process identifier (PID).
     terminal_identifier (int): inittab identifier.
     terminal (str): type of terminal.
@@ -33,6 +35,7 @@ class UtmpEventData(events.EventData):
     self.exit_status = None
     self.hostname = None
     self.ip_address = None
+    self.offset = None
     self.pid = None
     self.terminal_identifier = None
     self.terminal = None

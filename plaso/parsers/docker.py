@@ -286,8 +286,6 @@ class DockerJSONParser(interface.FileObjectParser):
       event_data.container_id = container_id
       event_data.log_line = json_log_line.get('log', None)
       event_data.log_source = json_log_line.get('stream', None)
-      # TODO: pass line number to offset or remove.
-      event_data.offset = 0
 
       try:
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()

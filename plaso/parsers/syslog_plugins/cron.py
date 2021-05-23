@@ -73,8 +73,6 @@ class CronSyslogPlugin(interface.SyslogPlugin):
     event_data.body = tokens.get('body', None)
     event_data.command = tokens.get('command', None)
     event_data.hostname = tokens.get('hostname', None)
-    # TODO: pass line number to offset or remove.
-    event_data.offset = 0
     event_data.pid = tokens.get('pid', None)
     event_data.reporter = tokens.get('reporter', None)
     event_data.severity = tokens.get('severity', None)

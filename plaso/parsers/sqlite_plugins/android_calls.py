@@ -17,6 +17,8 @@ class AndroidCallEventData(events.EventData):
     duration (int): number of seconds the call lasted.
     name (str): name associated to the remote party.
     number (str): phone number associated to the remote party.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
   """
 
@@ -29,6 +31,7 @@ class AndroidCallEventData(events.EventData):
     self.duration = None
     self.name = None
     self.number = None
+    self.offset = None
     self.query = None
 
 

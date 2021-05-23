@@ -23,6 +23,8 @@ class MSIECFLeakEventData(events.EventData):
     cached_file_size (int): size of the cached file.
     cache_directory_index (int): index of the cache directory.
     cache_directory_name (str): name of the cache directory.
+    offset (int): offset of the MSIECF item relative to the start of the file,
+        from which the event data was extracted.
     recovered (bool): True if the item was recovered.
   """
 
@@ -35,6 +37,7 @@ class MSIECFLeakEventData(events.EventData):
     self.cached_file_size = None
     self.cache_directory_index = None
     self.cache_directory_name = None
+    self.offset = None
     self.recovered = None
 
 
@@ -42,6 +45,8 @@ class MSIECFRedirectedEventData(events.EventData):
   """MSIECF redirected event data.
 
   Attributes:
+    offset (int): offset of the MSIECF item relative to the start of the file,
+        from which the event data was extracted.
     recovered (bool): True if the item was recovered.
     url (str): location URL.
   """
@@ -51,6 +56,7 @@ class MSIECFRedirectedEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(MSIECFRedirectedEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.offset = None
     self.recovered = None
     self.url = None
 
@@ -65,6 +71,8 @@ class MSIECFURLEventData(events.EventData):
     cache_directory_name (str): name of the cache directory.
     http_headers (str): HTTP headers.
     number_of_hits (int): number of hits.
+    offset (int): offset of the MSIECF item relative to the start of the file,
+        from which the event data was extracted.
     recovered (bool): True if the item was recovered.
     url (str): location URL.
   """

@@ -350,15 +350,11 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     if key == 'syslog_comment':
       event_data = SyslogCommentEventData()
       event_data.body = self._GetValueFromStructure(structure, 'body')
-      # TODO: pass line number to offset or remove.
-      event_data.offset = 0
 
     else:
       event_data = SyslogLineEventData()
       event_data.body = self._GetValueFromStructure(structure, 'body')
       event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-      # TODO: pass line number to offset or remove.
-      event_data.offset = 0
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
       event_data.reporter = self._GetValueFromStructure(structure, 'reporter')
       event_data.severity = self._GetValueFromStructure(structure, 'severity')
