@@ -834,7 +834,7 @@ optional arguments:
     scan_node = self._GetTestScanNode(scan_context)
     self.assertIsNotNone(scan_node)
     self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
 
   def _TestScanSourceLVMImage(self, source_path):
     """Tests the ScanSource function on a LVM image.
@@ -872,7 +872,7 @@ optional arguments:
     scan_node = scan_node.sub_nodes[0]
     self.assertIsNotNone(scan_node)
     self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
 
   def _TestScanSourcePartitionedImage(self, source_path):
     """Tests the ScanSource function on an image containing multiple partitions.
@@ -917,7 +917,7 @@ optional arguments:
     scan_node = scan_node.sub_nodes[0]
     self.assertIsNotNone(scan_node)
     self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
 
   def _TestScanSourceVSSImage(self, source_path):
     """Tests the ScanSource function on a VSS storage media image.
