@@ -119,8 +119,9 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     if registry_value:
       event_data.object_name = registry_value.GetDataAsObject()
 
-    values_dict = self._GetValuesFromKey(registry_key, names_to_skip=[
-        'ErrorControl', 'ImagePath', 'ObjectName', 'Start', 'Type'])
+    values_dict = self._GetValuesFromKey(
+         parser_mediator, registry_key, names_to_skip=[
+            'ErrorControl', 'ImagePath', 'ObjectName', 'Start', 'Type'])
     event_data.values = ' '.join([
         '{0:s}: {1!s}'.format(name, value)
         for name, value in sorted(values_dict.items())]) or None
