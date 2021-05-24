@@ -31,7 +31,7 @@ PYTHON_DEPENDENCIES = {
     'future': ('__version__', '0.16.0', None, True),
     'idna': ('__version__', '2.5', None, True),
     'lz4': ('__version__', '0.10.0', None, True),
-    'pefile': ('__version__', '2021.5.13', None, True),
+    'pefile': ('__version__', '2021.5.24', None, True),
     'psutil': ('__version__', '5.4.3', None, True),
     'pybde': ('get_version()', '20140531', None, True),
     'pycreg': ('get_version()', '20200725', None, True),
