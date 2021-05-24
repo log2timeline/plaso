@@ -101,15 +101,36 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     storage_counters = {}
 
-    warnings_by_path_spec = collections.Counter()
-    warnings_by_parser_chain = collections.Counter()
+    extraction_warnings_by_path_spec = collections.Counter()
+    extraction_warnings_by_parser_chain = collections.Counter()
 
-    for warning in list(storage_reader.GetExtractionWarnings()):
-      warnings_by_path_spec[warning.path_spec.comparable] += 1
-      warnings_by_parser_chain[warning.parser_chain] += 1
+    if storage_reader.HasExtractionWarnings():
+      for warning in list(storage_reader.GetExtractionWarnings()):
+        extraction_warnings_by_path_spec[warning.path_spec.comparable] += 1
+        extraction_warnings_by_parser_chain[warning.parser_chain] += 1
 
-    storage_counters['warnings_by_path_spec'] = warnings_by_path_spec
-    storage_counters['warnings_by_parser_chain'] = warnings_by_parser_chain
+    storage_counters['extraction_warnings_by_path_spec'] = (
+        extraction_warnings_by_path_spec)
+    storage_counters['extraction_warnings_by_parser_chain'] = (
+        extraction_warnings_by_parser_chain)
+
+    # TODO: kept for backwards compatibility.
+    storage_counters['warnings_by_path_spec'] = extraction_warnings_by_path_spec
+    storage_counters['warnings_by_parser_chain'] = (
+        extraction_warnings_by_parser_chain)
+
+    recovery_warnings_by_path_spec = collections.Counter()
+    recovery_warnings_by_parser_chain = collections.Counter()
+
+    if storage_reader.HasRecoveryWarnings():
+      for warning in list(storage_reader.GetRecoveryWarnings()):
+        recovery_warnings_by_path_spec[warning.path_spec.comparable] += 1
+        recovery_warnings_by_parser_chain[warning.parser_chain] += 1
+
+    storage_counters['recovery_warnings_by_path_spec'] = (
+        recovery_warnings_by_path_spec)
+    storage_counters['recovery_warnings_by_parser_chain'] = (
+        recovery_warnings_by_parser_chain)
 
     if not analysis_reports_counter_error:
       storage_counters['analysis_reports'] = analysis_reports_counter
@@ -174,11 +195,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           column_names=['Parser (plugin) name', 'Number of events'],
           title='Events generated per parser')
 
-    # Compare warnings by parser chain.
+    # Compare extraction warnings by parser chain.
     warnings_counter = storage_counters.get(
-        'warnings_by_parser_chain', collections.Counter())
+        'extraction_warnings_by_parser_chain', collections.Counter())
     compare_warnings_counter = compare_storage_counters.get(
-        'warnings_by_parser_chain', collections.Counter())
+        'extraction_warnings_by_parser_chain', collections.Counter())
     differences = self._CompareCounter(
         warnings_counter, compare_warnings_counter)
 
@@ -188,13 +209,13 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._PrintCounterDifferences(
           differences,
           column_names=['Parser (plugin) name', 'Number of warnings'],
-          title='Warnings generated per parser')
+          title='Extraction warnings generated per parser')
 
-    # Compare warnings by path specification
+    # Compare extraction warnings by path specification
     warnings_counter = storage_counters.get(
-        'warnings_by_path_spec', collections.Counter())
+        'extraction_warnings_by_path_spec', collections.Counter())
     compare_warnings_counter = compare_storage_counters.get(
-        'warnings_by_path_spec', collections.Counter())
+        'extraction_warnings_by_path_spec', collections.Counter())
     differences = self._CompareCounter(
         warnings_counter, compare_warnings_counter)
 
@@ -203,7 +224,38 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
       self._PrintCounterDifferences(
           differences, column_names=['Number of warnings', 'Pathspec'],
-          reverse=True, title='Pathspecs with most warnings')
+          reverse=True, title='Pathspecs with most extraction warnings')
+
+    # Compare recovery warnings by parser chain.
+    warnings_counter = storage_counters.get(
+        'recovery_warnings_by_parser_chain', collections.Counter())
+    compare_warnings_counter = compare_storage_counters.get(
+        'recovery_warnings_by_parser_chain', collections.Counter())
+    differences = self._CompareCounter(
+        warnings_counter, compare_warnings_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences,
+          column_names=['Parser (plugin) name', 'Number of warnings'],
+          title='Recovery warnings generated per parser')
+
+    # Compare recovery warnings by path specification
+    warnings_counter = storage_counters.get(
+        'recovery_warnings_by_path_spec', collections.Counter())
+    compare_warnings_counter = compare_storage_counters.get(
+        'recovery_warnings_by_path_spec', collections.Counter())
+    differences = self._CompareCounter(
+        warnings_counter, compare_warnings_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences, column_names=['Number of warnings', 'Pathspec'],
+          reverse=True, title='Pathspecs with most recovery warnings')
 
     # Compare event labels.
     labels_counter = storage_counters.get('event_labels', collections.Counter())
@@ -769,13 +821,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._PrintEventLabelsCounter(event_labels)
 
       if self._sections == 'all' or 'warnings' in self._sections:
-        warnings_by_path_spec = storage_counters.get(
-            'warnings_by_path_spec', collections.Counter())
-        warnings_by_parser_chain = storage_counters.get(
-            'warnings_by_parser_chain', collections.Counter())
-
-        self._PrintWarningsSection(
-            storage_reader, warnings_by_path_spec, warnings_by_parser_chain)
+        self._PrintWarningsSection(storage_reader, storage_counters)
 
       if self._sections == 'all' or 'reports' in self._sections:
         analysis_reports = storage_counters.get(
@@ -878,42 +924,52 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     table_view.Write(self._output_writer)
 
-  def _PrintWarningCounters(
+  def _PrintWarningCountersJSON(
       self, warnings_by_path_spec, warnings_by_parser_chain):
-    """Prints a summary of the warnings.
+    """Prints JSON containing a summary of the number of warnings.
 
     Args:
-      warnings_by_path_spec (collections.Counter): number of warnings per path
-          specification.
+      warnings_by_path_spec (collections.Counter): number of warnings per
+          path specification.
       warnings_by_parser_chain (collections.Counter): number of warnings per
           parser chain.
     """
-    if self._output_format == 'json':
-      json_string = json.dumps(warnings_by_parser_chain)
-      self._output_writer.Write(
-          ', "warnings_by_parser": {0:s}'.format(json_string))
+    json_string = json.dumps(warnings_by_parser_chain)
+    self._output_writer.Write(
+        ', "warnings_by_parser": {0:s}'.format(json_string))
 
-    elif (self._output_format in ('markdown', 'text') and
-          warnings_by_parser_chain):
+    json_string = json.dumps(warnings_by_path_spec)
+    self._output_writer.Write(
+        ', "warnings_by_path_spec": {0:s}'.format(json_string))
+
+  def _PrintWarningCountersTable(
+      self, description, warnings_by_path_spec, warnings_by_parser_chain):
+    """Prints a table containing a summary of the number of warnings.
+
+    Args:
+      description (str): description of the type of warning.
+      warnings_by_path_spec (collections.Counter): number of warnings per
+          path specification.
+      warnings_by_parser_chain (collections.Counter): number of warnings per
+          parser chain.
+    """
+    if warnings_by_parser_chain:
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type,
           column_names=['Parser (plugin) name', 'Number of warnings'],
-          title='Warnings generated per parser')
+          title='{0:s} warnings generated per parser'.format(
+              description.title()))
       for parser_chain, count in warnings_by_parser_chain.items():
         parser_chain = parser_chain or '<No parser>'
         table_view.AddRow([parser_chain, '{0:d}'.format(count)])
       table_view.Write(self._output_writer)
 
-    if self._output_format == 'json':
-      json_string = json.dumps(warnings_by_path_spec)
-      self._output_writer.Write(
-          ', "warnings_by_path_spec": {0:s}'.format(json_string))
-
-    elif self._output_format in ('markdown', 'text') and warnings_by_path_spec:
+    if warnings_by_path_spec:
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type,
           column_names=['Number of warnings', 'Pathspec'],
-          title='Path specifications with most warnings')
+          title='Path specifications with most {0:s} warnings'.format(
+              description))
 
       for path_spec, count in warnings_by_path_spec.most_common(10):
         for path_index, line in enumerate(path_spec.split('\n')):
@@ -927,16 +983,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
       table_view.Write(self._output_writer)
 
-  def _PrintWarningsSection(
-      self, storage_reader, warnings_by_path_spec, warnings_by_parser_chain):
+  def _PrintWarningsSection(self, storage_reader, storage_counters):
     """Prints the warnings section.
 
     Args:
       storage_reader (StorageReader): storage reader.
-      warnings_by_path_spec (collections.Counter): number of extraction
-          warnings per path specification.
-      warnings_by_parser_chain (collections.Counter): number of extraction
-          warnings per parser chain.
+      storage_counters (dict[str, collections.Counter]): storage counters.
     """
     if (self._output_format == 'text' and
         not storage_reader.HasExtractionWarnings() and
@@ -944,13 +996,35 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._output_writer.Write('\nNo warnings stored.\n')
 
     else:
-      self._PrintWarningCounters(
-          warnings_by_path_spec, warnings_by_parser_chain)
+      warnings_by_path_spec = storage_counters.get(
+          'extraction_warnings_by_path_spec', collections.Counter())
+      warnings_by_parser_chain = storage_counters.get(
+          'extraction_warnings_by_parser_chain', collections.Counter())
 
-      if self._output_format in ('markdown', 'text') and (
-          self._verbose or 'warnings' in self._sections):
-        self._PrintExtractionWarningsDetails(storage_reader)
-        self._PrintRecoveryWarningsDetails(storage_reader)
+      if self._output_format == 'json':
+        self._PrintWarningCountersJSON(
+            warnings_by_path_spec, warnings_by_parser_chain)
+
+      elif self._output_format in ('markdown', 'text'):
+        self._PrintWarningCountersTable(
+            'extraction', warnings_by_path_spec, warnings_by_parser_chain)
+
+        if self._verbose or 'warnings' in self._sections:
+          self._PrintExtractionWarningsDetails(storage_reader)
+
+      warnings_by_path_spec = storage_counters.get(
+          'recovery_warnings_by_path_spec', collections.Counter())
+      warnings_by_parser_chain = storage_counters.get(
+          'recovery_warnings_by_parser_chain', collections.Counter())
+
+      # TODO: print recovery warnings as part of JSON output format.
+
+      if self._output_format in ('markdown', 'text'):
+        self._PrintWarningCountersTable(
+            'recovery', warnings_by_path_spec, warnings_by_parser_chain)
+
+        if self._verbose or 'warnings' in self._sections:
+          self._PrintRecoveryWarningsDetails(storage_reader)
 
   def CompareStores(self):
     """Compares the contents of two stores.
