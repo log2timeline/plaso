@@ -261,18 +261,17 @@ class PstealTool(
     """
     self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
 
-    scan_context = self.ScanSource(self._source_path)
-    source_type = scan_context.source_type
+    self.ScanSource(self._source_path)
 
     is_archive = False
-    if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       is_archive = self._IsArchiveFile(self._source_path_specs[0])
       if is_archive:
-        source_type = definitions.SOURCE_TYPE_ARCHIVE
+        self._source_type = definitions.SOURCE_TYPE_ARCHIVE
 
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetSourceInformation(
-        self._source_path, source_type,
+        self._source_path, self._source_type,
         artifact_filters=self._artifact_filters,
         filter_file=self._filter_file)
 
@@ -298,7 +297,7 @@ class PstealTool(
           'Unsupported storage format: {0:s}'.format(self._storage_format))
 
     single_process_mode = self._single_process_mode
-    if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       if not self._process_archives or not is_archive:
         single_process_mode = True
 
@@ -312,7 +311,7 @@ class PstealTool(
 
     # If the source is a directory or a storage media image
     # run pre-processing.
-    if source_type in self._SOURCE_TYPES_TO_PREPROCESS:
+    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
     configuration = self._CreateProcessingConfiguration(

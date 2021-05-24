@@ -91,7 +91,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._enable_sigsegv_handler = False
     self._number_of_extraction_workers = 0
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
-    self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._stdout_output_writer = isinstance(
@@ -396,8 +395,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
 
-    scan_context = self.ScanSource(self._source_path)
-    self._source_type = scan_context.source_type
+    self.ScanSource(self._source_path)
 
     is_archive = False
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:

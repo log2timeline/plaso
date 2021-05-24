@@ -95,7 +95,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._paths_by_hash = collections.defaultdict(list)
     self._resolver_context = context.Context()
     self._skip_duplicates = True
-    self._source_type = None
 
     self.has_filters = False
     self.list_signature_identifiers = False
@@ -785,8 +784,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           file system.
       UserAbort: if the user initiated an abort.
     """
-    scan_context = self.ScanSource(self._source_path)
-    self._source_type = scan_context.source_type
+    self.ScanSource(self._source_path)
 
     self._output_writer.Write('Export started.\n')
 
