@@ -3,6 +3,8 @@
 
 import abc
 
+from dfwinreg import errors as dfwinreg_errors
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -214,7 +216,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   # parse the Windows Registry key or its values.
   FILTERS = frozenset()
 
-  def _GetValuesFromKey(self, registry_key, names_to_skip=None):
+  def _GetValuesFromKey(
+      self, parser_mediator, registry_key, names_to_skip=None):
     """Retrieves the values from a Windows Registry key.
 
     Where:
@@ -225,6 +228,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     * empty multi value string values are represented as "[]".
 
     Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       names_to_skip (Optional[list[str]]): names of values that should
           be skipped.
@@ -240,24 +245,32 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
       if value_name.lower() in names_to_skip:
         continue
 
+      data_type_string = registry_value.data_type_string
+
       if registry_value.data is None:
         value_string = '(empty)'
       else:
-        value_object = registry_value.GetDataAsObject()
+        try:
+          value_object = registry_value.GetDataAsObject()
 
-        if registry_value.DataIsMultiString():
-          value_string = '[{0:s}]'.format(', '.join(value_object or []))
+          if registry_value.DataIsMultiString():
+            value_string = '[{0:s}]'.format(', '.join(value_object or []))
 
-        elif (registry_value.DataIsInteger() or
-              registry_value.DataIsString()):
-          value_string = '{0!s}'.format(value_object)
+          elif (registry_value.DataIsInteger() or
+                registry_value.DataIsString()):
+            value_string = '{0!s}'.format(value_object)
 
-        else:
-          # Represent remaining types like REG_BINARY and
-          # REG_RESOURCE_REQUIREMENT_LIST.
-          value_string = '({0:d} bytes)'.format(len(value_object))
+          else:
+            # Represent remaining types like REG_BINARY and
+            # REG_RESOURCE_REQUIREMENT_LIST.
+            value_string = '({0:d} bytes)'.format(len(value_object))
 
-      data_type_string = registry_value.data_type_string
+        except dfwinreg_errors.WinRegistryValueError as exception:
+          parser_mediator.ProduceRecoveryWarning((
+              'Unable to retrieve value data of type: {0:s} as object from '
+              'value: {1:s} in key: {2:s} with error: {3!s}').format(
+                  data_type_string, value_name, registry_key.path, exception))
+          value_string = '({0:d} bytes)'.format(len(registry_value.data))
 
       value_string = '[{0:s}] {1:s}'.format(data_type_string, value_string)
       values_dict[value_name] = value_string
@@ -276,7 +289,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
           be skipped.
     """
     values_dict = self._GetValuesFromKey(
-        registry_key, names_to_skip=names_to_skip)
+        parser_mediator, registry_key, names_to_skip=names_to_skip)
 
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path
