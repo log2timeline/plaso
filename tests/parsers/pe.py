@@ -56,10 +56,9 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    # Note that pefile pre 2021.5.13 indicated pe_type is 'Driver (SYS)'
     expected_event_values = {
         'data_type': 'pe:compilation:compilation_time',
-        'pe_type': 'Executable (EXE)',
+        'pe_type': 'Driver (SYS)',
         'timestamp': '2015-04-21 14:53:54.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
