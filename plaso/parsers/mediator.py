@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The parser mediator."""
 
-import copy
 import datetime
 import time
 
@@ -81,16 +80,6 @@ class ParserMediator(object):
     return self._knowledge_base.codepage
 
   @property
-  def hostname(self):
-    """str: hostname."""
-    return self._knowledge_base.hostname
-
-  @property
-  def knowledge_base(self):
-    """KnowledgeBase: knowledge base."""
-    return self._knowledge_base
-
-  @property
   def number_of_produced_event_sources(self):
     """int: number of produced event sources."""
     return self._number_of_event_sources
@@ -105,11 +94,6 @@ class ParserMediator(object):
     """int: number of produced warnings."""
     return (
         self._number_of_extraction_warnings + self._number_of_recovery_warnings)
-
-  @property
-  def operating_system(self):
-    """str: operating system or None if not set."""
-    return self._knowledge_base.GetValue('operating_system')
 
   @property
   def resolver_context(self):
@@ -358,35 +342,6 @@ class ParserMediator(object):
     """Removes the last added parser or parser plugin from the parser chain."""
     self._parser_chain_components.pop()
 
-  def ProcessEventData(self, event_data, parser_chain=None, file_entry=None):
-    """Processes event data before it written to the storage.
-
-    Args:
-      event_data (EventData): event data.
-      parser_chain (Optional[str]): parsing chain up to this point.
-      file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
-          use the current file entry set in the mediator.
-
-    Raises:
-      KeyError: if there's an attempt to add a duplicate attribute value to the
-          event data.
-    """
-    # TODO: rename this to event_data.parser_chain or equivalent.
-    if not getattr(event_data, 'parser', None) and parser_chain:
-      event_data.parser = parser_chain
-
-    if file_entry is None:
-      file_entry = self._file_entry
-
-    if not getattr(event_data, 'hostname', None) and self.hostname:
-      event_data.hostname = self.hostname
-
-    if not getattr(event_data, 'username', None):
-      user_sid = getattr(event_data, 'user_sid', None)
-      username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
-      if username:
-        event_data.username = username
-
   def ProduceEventDataStream(self, event_data_stream):
     """Produces an event data stream.
 
@@ -447,6 +402,9 @@ class ParserMediator(object):
     if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
       raise errors.InvalidEvent('Event timestamp value out of bounds.')
 
+    # TODO: rename this to event_data.parser_chain or equivalent.
+    event_data.parser = self.GetParserChain()
+
     try:
       event_data_hash = event_data.GetAttributeValuesHash()
     except TypeError as exception:
@@ -455,13 +413,6 @@ class ParserMediator(object):
               exception))
 
     if event_data_hash != self._last_event_data_hash:
-      # Make a copy of the event data before adding additional values.
-      event_data = copy.deepcopy(event_data)
-
-      self.ProcessEventData(
-          event_data, parser_chain=self.GetParserChain(),
-          file_entry=self._file_entry)
-
       if self._event_data_stream_identifier:
         event_data.SetEventDataStreamIdentifier(
             self._event_data_stream_identifier)
