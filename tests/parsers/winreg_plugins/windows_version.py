@@ -24,8 +24,8 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_data_stream_row_identifier', 'build_number', 'data_type',
-        'key_path', 'offset', 'owner', 'parser', 'product_name', 'query',
-        'service_pack', 'version']
+        'key_path', 'offset', 'owner', 'parser', 'product_name', 'service_pack',
+        'version']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

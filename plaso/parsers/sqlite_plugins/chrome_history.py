@@ -21,6 +21,7 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
     interrupt_reason (int): indication why the download was interrupted.
     opened (int): value to indicate if the downloaded file was opened from
         the browser.
+    query (str): SQL query that was used to obtain the event data.
     received_bytes (int): number of bytes received while downloading.
     state (int): state of the download, such as finished or cancelled.
     total_bytes (int): total number of bytes to download.
@@ -37,6 +38,7 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
     self.full_path = None
     self.interrupt_reason = None
     self.opened = None
+    self.query = None
     self.received_bytes = None
     self.state = None
     self.total_bytes = None
@@ -49,6 +51,7 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
   Attributes:
     from_visit (str): URL where the visit originated from.
     page_transition_type (int): type of transitions between pages.
+    query (str): SQL query that was used to obtain the event data.
     title (str): title of the visited page.
     typed_count (int): number of characters of the URL that were typed.
     url (str): URL of the visited page.
@@ -64,6 +67,7 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.from_visit = None
     self.page_transition_type = None
+    self.query = None
     self.title = None
     self.typed_count = None
     self.url = None

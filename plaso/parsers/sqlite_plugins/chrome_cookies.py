@@ -23,6 +23,7 @@ class ChromeCookieEventData(events.EventData):
         side script.
     path (str): path where the cookie got set.
     persistent (bool): True if the cookie is persistent.
+    query (str): SQL query that was used to obtain the event data.
     secure (bool): True if the cookie should only be transmitted over a
         secure channel.
     url (str): URL or path where the cookie got set.
@@ -40,6 +41,7 @@ class ChromeCookieEventData(events.EventData):
     self.httponly = None
     self.path = None
     self.persistent = None
+    self.query = None
     self.secure = None
     self.url = None
 

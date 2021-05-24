@@ -15,9 +15,10 @@ class LsQuarantineEventData(events.EventData):
   """MacOS launch services quarantine event data.
 
   Attributes:
+    agent (str): user agent that was used to download the file.
     data (bytes): data.
+    query (str): SQL query that was used to obtain the event data.
     url (str): original URL of the file.
-    user_agent (str): user agent that was used to download the file.
   """
 
   DATA_TYPE = 'macosx:lsquarantine'
@@ -27,6 +28,7 @@ class LsQuarantineEventData(events.EventData):
     super(LsQuarantineEventData, self).__init__(data_type=self.DATA_TYPE)
     self.agent = None
     self.data = None
+    self.query = None
     self.url = None
 
 

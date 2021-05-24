@@ -18,7 +18,6 @@ class EventData(interface.AttributeContainer):
     offset (int): offset relative to the start of the data stream where
         the event data is stored.
     parser (str): string identifying the parser that produced the event data.
-    query (str): query that was used to obtain the event data.
   """
   CONTAINER_TYPE = 'event_data'
 
@@ -36,7 +35,6 @@ class EventData(interface.AttributeContainer):
     self.data_type = data_type
     self.offset = None
     self.parser = None
-    self.query = None
 
   def GetAttributeValuesString(self):
     """Retrieves a comparable string of the attribute values.

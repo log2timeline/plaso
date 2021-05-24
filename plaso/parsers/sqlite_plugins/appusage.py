@@ -17,6 +17,7 @@ class MacOSApplicationUsageEventData(events.EventData):
     app_version (str): version of the application.
     bundle_id (str): bundle identifier of the application.
     count (int): TODO: number of times what?
+    query (str): SQL query that was used to obtain the event data.
   """
 
   DATA_TYPE = 'macosx:application_usage'
@@ -29,6 +30,7 @@ class MacOSApplicationUsageEventData(events.EventData):
     self.app_version = None
     self.bundle_id = None
     self.count = None
+    self.query = None
 
 
 class ApplicationUsagePlugin(interface.SQLitePlugin):

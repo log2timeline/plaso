@@ -17,6 +17,7 @@ class AndroidCallEventData(events.EventData):
     duration (int): number of seconds the call lasted.
     name (str): name associated to the remote party.
     number (str): phone number associated to the remote party.
+    query (str): SQL query that was used to obtain the event data.
   """
 
   DATA_TYPE = 'android:event:call'
@@ -28,6 +29,7 @@ class AndroidCallEventData(events.EventData):
     self.duration = None
     self.name = None
     self.number = None
+    self.query = None
 
 
 class AndroidCallPlugin(interface.SQLitePlugin):

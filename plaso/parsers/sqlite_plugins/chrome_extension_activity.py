@@ -23,6 +23,7 @@ class ChromeExtensionActivityEventData(events.EventData):
     other (str): other.
     page_title (str): title of webpage.
     page_url (str): URL of webpage.
+    query (str): SQL query that was used to obtain the event data.
   """
 
   DATA_TYPE = 'chrome:extension_activity:activity_log'
@@ -40,6 +41,7 @@ class ChromeExtensionActivityEventData(events.EventData):
     self.other = None
     self.page_title = None
     self.page_url = None
+    self.query = None
 
 
 class ChromeExtensionActivityPlugin(interface.SQLitePlugin):

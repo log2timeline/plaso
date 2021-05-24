@@ -19,6 +19,7 @@ class IMessageEventData(events.EventData):
         to or received from.
     message_type (int): value to indicate the message was sent (1) or
         received (0).
+    query (str): SQL query that was used to obtain the event data.
     read_receipt (bool): True if the message read receipt was received.
     service (str): service, which is either SMS or iMessage.
     text (str): content of the message.
@@ -32,6 +33,7 @@ class IMessageEventData(events.EventData):
     self.attachment_location = None
     self.imessage_id = None
     self.message_type = None
+    self.query = None
     self.read_receipt = None
     self.service = None
     self.text = None
