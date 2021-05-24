@@ -22,7 +22,6 @@ class DateTimeValuesEventTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_row_identifier',
         'date_time',
-        'parser',
         'timestamp',
         'timestamp_desc']
 

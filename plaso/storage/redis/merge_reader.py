@@ -26,18 +26,19 @@ class RedisMergeReader(interface.StorageMergeReader):
     """
     super(RedisMergeReader, self).__init__(storage_writer)
     self._active_container_type = None
-    self._container_types = []
     self._active_cursor = 0
+    self._active_extra_containers = []
     self._add_active_container_method = None
+    self._add_container_type_methods = {}
+    self._container_types = []
+    self._event_data_identifier_mappings = {}
+    self._event_data_stream_identifier_mappings = {}
+
     self._store = redis_store.RedisStore(
         definitions.STORAGE_TYPE_TASK,
         session_identifier=task.session_identifier,
         task_identifier=task.identifier)
     self._store.Open(redis_client=redis_client)
-    self._event_data_identifier_mappings = {}
-    self._event_data_stream_identifier_mappings = {}
-    self._add_container_type_methods = {}
-    self._active_extra_containers = []
 
     # Create a runtime lookup table for the add container type method. This
     # prevents having to create a series of if-else checks for container types.

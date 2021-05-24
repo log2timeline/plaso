@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Registry file parser."""
 
+import collections
 import unittest
 
 from artifacts import reader as artifacts_reader
@@ -21,23 +22,32 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def _GetParserChains(self, events):
-    """Return a dict with a plugin count given a list of events."""
-    parser_chains = {}
-    for event in events:
-      parser_chain = getattr(event, 'parser', None)
-      if not parser_chain:
-        continue
+  def _GetParserChains(self, storage_writer):
+    """Determines the number of events extracted by a parser plugin.
 
-      if parser_chain in parser_chains:
-        parser_chains[parser_chain] += 1
-      else:
-        parser_chains[parser_chain] = 1
+    Args:
+      storage_writer (FakeStorageWriter): storage writer.
+
+    Return:
+      collections.Counter: number of events extracted by a parser plugin.
+    """
+    parser_chains = collections.Counter()
+    for event in storage_writer.GetEvents():
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      parser_chain = getattr(event_data, 'parser', 'N/A')
+      parser_chains[parser_chain] += 1
 
     return parser_chains
 
-  def _PluginNameToParserChain(self, plugin_name):
-    """Generate the correct parser chain for a given plugin."""
+  def _GetParserChainOfPlugin(self, plugin_name):
+    """Determines the parser chain of a parser plugin.
+
+    Args:
+      plugin_name (str): name of the parser plugin.
+
+    Return:
+      str: parser chain of the parser plugin.
+    """
     return 'winreg/{0:s}'.format(plugin_name)
 
   def testEnablePlugins(self):
@@ -75,12 +85,10 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg_parser.WinRegistryParser()
     storage_writer = self._ParseFile(['NTUSER.DAT'], parser)
 
-    events = list(storage_writer.GetEvents())
+    parser_chains = self._GetParserChains(storage_writer)
 
-    parser_chains = self._GetParserChains(events)
-
-    expected_parser_chain = self._PluginNameToParserChain('userassist')
-    self.assertTrue(expected_parser_chain in parser_chains)
+    expected_parser_chain = self._GetParserChainOfPlugin('userassist')
+    self.assertIn(expected_parser_chain, parser_chains.keys())
 
     self.assertEqual(parser_chains[expected_parser_chain], 14)
 
@@ -98,9 +106,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg_parser.WinRegistryParser()
     storage_writer = self._ParseFile(['SYSTEM'], parser)
 
-    events = list(storage_writer.GetEvents())
-
-    parser_chains = self._GetParserChains(events)
+    parser_chains = self._GetParserChains(storage_writer)
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
@@ -108,19 +114,17 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
         'windows_usbstor_devices', 'windows_boot_execute',
         'windows_services']
     for plugin in plugin_names:
-      expected_parser_chain = self._PluginNameToParserChain(plugin)
-      self.assertTrue(
-          expected_parser_chain in parser_chains,
-          'Chain {0:s} not found in events.'.format(expected_parser_chain))
+      expected_parser_chain = self._GetParserChainOfPlugin(plugin)
+      self.assertIn(expected_parser_chain, parser_chains.keys())
 
     # Check that the number of events produced by each plugin are correct.
-    parser_chain = self._PluginNameToParserChain('windows_usbstor_devices')
+    parser_chain = self._GetParserChainOfPlugin('windows_usbstor_devices')
     self.assertEqual(parser_chains.get(parser_chain, 0), 10)
 
-    parser_chain = self._PluginNameToParserChain('windows_boot_execute')
+    parser_chain = self._GetParserChainOfPlugin('windows_boot_execute')
     self.assertEqual(parser_chains.get(parser_chain, 0), 4)
 
-    parser_chain = self._PluginNameToParserChain('windows_services')
+    parser_chain = self._GetParserChainOfPlugin('windows_services')
     self.assertEqual(parser_chains.get(parser_chain, 0), 831)
 
   def testParseSystemWithArtifactFilters(self):
@@ -147,9 +151,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['SYSTEM'], parser, collection_filters_helper=artifacts_filters_helper)
 
-    events = list(storage_writer.GetEvents())
-
-    parser_chains = self._GetParserChains(events)
+    parser_chains = self._GetParserChains(storage_writer)
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
@@ -157,16 +159,14 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
         'windows_usbstor_devices', 'windows_boot_execute',
         'windows_services']
     for plugin in plugin_names:
-      expected_parser_chain = self._PluginNameToParserChain(plugin)
-      self.assertTrue(
-          expected_parser_chain in parser_chains,
-          'Chain {0:s} not found in events.'.format(expected_parser_chain))
+      expected_parser_chain = self._GetParserChainOfPlugin(plugin)
+      self.assertIn(expected_parser_chain, parser_chains.keys())
 
     # Check that the number of events produced by each plugin are correct.
 
     # There will be 10 usbstor chains for ControlSet001 and ControlSet002:
     # 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
-    parser_chain = self._PluginNameToParserChain('windows_usbstor_devices')
+    parser_chain = self._GetParserChainOfPlugin('windows_usbstor_devices')
     number_of_parser_chains = parser_chains.get(parser_chain, 0)
     self.assertEqual(number_of_parser_chains, 10)
 
@@ -175,14 +175,14 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     #     value: 'BootExecute'}
     # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet002\Control\Session Manager',
     #     value: 'BootExecute'}
-    parser_chain = self._PluginNameToParserChain('windows_boot_execute')
+    parser_chain = self._GetParserChainOfPlugin('windows_boot_execute')
     number_of_parser_chains = parser_chains.get(parser_chain, 0)
     self.assertEqual(number_of_parser_chains, 4)
 
     # There will be 831 windows services chains for keys:
     # 'HKEY_LOCAL_MACHINE\System\ControlSet001\services\**'
     # 'HKEY_LOCAL_MACHINE\System\ControlSet002\services\**'
-    parser_chain = self._PluginNameToParserChain('windows_services')
+    parser_chain = self._GetParserChainOfPlugin('windows_services')
     number_of_parser_chains = parser_chains.get(parser_chain, 0)
     self.assertEqual(number_of_parser_chains, 831)
 

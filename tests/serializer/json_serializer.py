@@ -8,16 +8,19 @@ import time
 import unittest
 import uuid
 
+from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import fake_path_spec
 from dfvfs.path import factory as path_spec_factory
 
 import plaso
+
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.lib import definitions
 from plaso.serializer import json_serializer
 
 from tests import test_lib as shared_test_lib
@@ -214,9 +217,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""
     expected_event = events.EventObject()
-    expected_event.parser = 'test_parser'
-    expected_event.timestamp = 1234124
-    expected_event.timestamp_desc = 'Written'
+    expected_event.date_time = dfdatetime_posix_time.PosixTime(
+        timestamp=1621839644)
+    expected_event.timestamp = 1621839644
+    expected_event.timestamp_desc = definitions.TIME_DESCRIPTION_MODIFICATION
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -231,9 +235,9 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event, events.EventObject)
 
     expected_event_dict = {
-        'parser': 'test_parser',
-        'timestamp': 1234124,
-        'timestamp_desc': 'Written'}
+        'date_time': expected_event.date_time,
+        'timestamp': 1621839644,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     event_dict = event.CopyToDict()
 
