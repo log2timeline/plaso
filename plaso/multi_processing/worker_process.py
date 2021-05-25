@@ -95,14 +95,14 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if self._parser_mediator:
       number_of_produced_events = (
           self._parser_mediator.number_of_produced_events)
+      number_of_produced_extraction_warnings = (
+          self._parser_mediator.number_of_produced_extraction_warnings)
       number_of_produced_sources = (
           self._parser_mediator.number_of_produced_event_sources)
-      number_of_produced_warnings = (
-          self._parser_mediator.number_of_produced_warnings)
     else:
       number_of_produced_events = None
+      number_of_produced_extraction_warnings = None
       number_of_produced_sources = None
-      number_of_produced_warnings = None
 
     if self._extraction_worker and self._parser_mediator:
       last_activity_timestamp = max(
@@ -133,12 +133,13 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         'last_activity_timestamp': last_activity_timestamp,
         'number_of_consumed_event_tags': None,
         'number_of_consumed_events': self._number_of_consumed_events,
+        'number_of_consumed_extraction_warnings': None,
         'number_of_consumed_sources': self._number_of_consumed_sources,
-        'number_of_consumed_warnings': None,
         'number_of_produced_event_tags': None,
         'number_of_produced_events': number_of_produced_events,
+        'number_of_produced_extraction_warnings': (
+            number_of_produced_extraction_warnings),
         'number_of_produced_sources': number_of_produced_sources,
-        'number_of_produced_warnings': number_of_produced_warnings,
         'processing_status': processing_status,
         'task_identifier': task_identifier,
         'used_memory': used_memory}

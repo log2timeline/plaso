@@ -101,10 +101,9 @@ class ParserMediator(object):
     return self._number_of_events
 
   @property
-  def number_of_produced_warnings(self):
-    """int: number of produced warnings."""
-    return (
-        self._number_of_extraction_warnings + self._number_of_recovery_warnings)
+  def number_of_produced_extraction_warnings(self):
+    """int: number of produced extraction warnings."""
+    return self._number_of_extraction_warnings
 
   @property
   def operating_system(self):
