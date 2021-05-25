@@ -18,17 +18,10 @@ class MactimeTest(test_lib.ParserTestCase):
     parser = mactime.MactimeParser()
     storage_writer = self._ParseFile(['mactime.body'], parser)
 
-    # The file contains 17 lines x 4 timestamps per line, which should be
-    # 68 events in total. However several of these events have an empty
-    # timestamp value and are omitted.
-    # Total entries: ( 11 * 3 ) + ( 6 * 4 ) = 41
-
-    self.assertEqual(storage_writer.number_of_events, 60)
+    self.assertEqual(storage_writer.number_of_events, 67)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
-    # The order in which DSVParser generates events is nondeterministic
-    # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # Test this entry:
@@ -41,14 +34,14 @@ class MactimeTest(test_lib.ParserTestCase):
         'timestamp': '2012-05-25 15:59:43.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    self.CheckEventValues(storage_writer, events[21], expected_event_values)
+    self.CheckEventValues(storage_writer, events[25], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
         'timestamp': '2012-05-25 15:59:44.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckEventValues(storage_writer, events[22], expected_event_values)
+    self.CheckEventValues(storage_writer, events[26], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
@@ -57,7 +50,15 @@ class MactimeTest(test_lib.ParserTestCase):
         'timestamp': '2012-05-25 15:59:45.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
-    self.CheckEventValues(storage_writer, events[23], expected_event_values)
+    self.CheckEventValues(storage_writer, events[27], expected_event_values)
+
+    expected_event_values = {
+        'data_type': 'fs:mactime:line',
+        'filename': '/passwordz\r.txt',
+        'timestamp': '2012-05-25 16:17:43.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
+
+    self.CheckEventValues(storage_writer, events[38], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
@@ -66,7 +67,7 @@ class MactimeTest(test_lib.ParserTestCase):
         'timestamp': '2020-07-30 06:41:05.354067',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
-    self.CheckEventValues(storage_writer, events[48], expected_event_values)
+    self.CheckEventValues(storage_writer, events[55], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
@@ -76,16 +77,36 @@ class MactimeTest(test_lib.ParserTestCase):
         'timestamp': '2020-08-19 18:48:01.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckEventValues(storage_writer, events[57], expected_event_values)
+    self.CheckEventValues(storage_writer, events[64], expected_event_values)
 
   def testParseOnCorruptFile(self):
     """Tests the Parse function on a corrupt bodyfile."""
     parser = mactime.MactimeParser()
     storage_writer = self._ParseFile(['corrupt.body'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 3)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 1)
+
+    events = list(storage_writer.GetSortedEvents())
+
+    # Event extracted from line with unescaped \r character.
+    expected_event_values = {
+        'data_type': 'fs:mactime:line',
+        'filename': '/passwords\r.txt',
+        'timestamp': '2012-05-25 16:00:53.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
+
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
+
+    # Event extracted from line with unescaped \\ character.
+    expected_event_values = {
+        'data_type': 'fs:mactime:line',
+        'filename': '/Windows\\System32',
+        'timestamp': '2019-03-19 04:37:22.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
 
 if __name__ == '__main__':

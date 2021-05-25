@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Sleuthkit (TSK) bodyfile or mactime format.
+"""Parser for the Sleuthkit (TSK) mactime bodyfile format.
 
-The format specifications can be read here:
-  http://wiki.sleuthkit.org/index.php?title=Body_file
+Sleuthkit version 3 format:
+MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime
+0|/lost+found|11|d/drwx------|0|0|12288|1337961350|1337961350|1337961350|0
+
+More information about the format specifications can be read here:
+  https://forensicswiki.xyz/wiki/index.php?title=Bodyfile
 """
 
 import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import dsv_parser
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -50,176 +56,261 @@ class MactimeEventData(events.EventData):
     self.user_sid = None
 
 
-class MactimeParser(dsv_parser.DSVParser):
+class MactimeParser(interface.FileObjectParser):
   """SleuthKit bodyfile parser."""
 
   NAME = 'mactime'
   DATA_FORMAT = 'SleuthKit version 3 bodyfile'
 
-  COLUMNS = [
-      'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',
-      'atime', 'mtime', 'ctime', 'btime']
-
-  DELIMITER = '|'
-
-  ESCAPE_CHARACTER = '\\'
-
-  _ENCODING = 'utf-8'
+  _INITIAL_FILE_OFFSET = 0
 
   _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
 
-  # Mapping according to:
-  # http://wiki.sleuthkit.org/index.php?title=Mactime_output
-  _TIMESTAMP_DESC_MAP = {
-      'atime': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-      'btime': definitions.TIME_DESCRIPTION_CREATION,
-      'ctime': definitions.TIME_DESCRIPTION_CHANGE,
-      'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
-  }
+  _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + list(range(0x7f, 0xa0))
+  _ESCAPE_CHARACTERS = str.maketrans({
+      value: '\\x{0:02x}'.format(value)
+      for value in _NON_PRINTABLE_CHARACTERS})
 
-  def _GetFloatingPointValue(self, row, value_name):
-    """Converts a specific value of the row to a floating-point number.
+  def _GetDateTimeFromTimestamp(self, float_value):
+    """Retrieves a date time object from the floating-point timestamp.
 
     Args:
-      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
-      value_name (str): name of the value within the row.
+      float_value (float): floating-point timestamp in number of seconds since
+          January 1, 1970 00:00:00 UTC.
 
     Returns:
-      float: value or None if the value cannot be converted.
+      dfdatetime.TimeElements: date and time based on the floating-point
+          timestamp.
     """
-    value = row.get(value_name, None)
-    try:
-      return float(value)
-    except (TypeError, ValueError):
-      return None
+    integer_value = int(float_value)
+    if integer_value != float_value:
+      integer_value = int(float_value * definitions.NANOSECONDS_PER_SECOND)
+      date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+          timestamp=integer_value)
+    else:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=integer_value)
 
-  def _GetIntegerValue(self, row, value_name):
-    """Converts a specific value of the row to an integer.
+    return date_time
 
-    Args:
-      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
-      value_name (str): name of the value within the row.
-
-    Returns:
-      int: value or None if the value cannot be converted.
-    """
-    value = row.get(value_name, None)
-    try:
-      return int(value, 10)
-    except (TypeError, ValueError):
-      return None
-
-  def ParseRow(self, parser_mediator, row_offset, row):
-    """Parses a line of the log file and produces events.
+  def _GetLastValueAsBase10Integer(
+      self, parser_mediator, values, description, line_number):
+    """Retrieves the last value as a base 10 integer.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row_offset (int): number of the corresponding line.
-      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
-    """
-    filename = row.get('name', None)
-    md5_hash = row.get('md5', None)
-    mode = row.get('mode_as_string', None)
-
-    inode_number = row.get('inode', None)
-    if '-' in inode_number:
-      inode_number, _, _ = inode_number.partition('-')
-
-    try:
-      inode_number = int(inode_number, 10)
-    except (TypeError, ValueError):
-      inode_number = None
-
-    data_size = self._GetIntegerValue(row, 'size')
-    user_uid = self._GetIntegerValue(row, 'uid')
-    user_gid = self._GetIntegerValue(row, 'gid')
-
-    symbolic_link_target = ''
-    if mode and mode[0] == 'l' and ' -> ' in filename:
-      filename, _, symbolic_link_target = filename.rpartition(' -> ')
-
-    event_data = MactimeEventData()
-    event_data.filename = filename
-    event_data.inode = inode_number
-    event_data.md5 = md5_hash
-    event_data.mode_as_string = mode
-    event_data.offset = row_offset
-    event_data.size = data_size
-    event_data.symbolic_link_target = symbolic_link_target
-    event_data.user_gid = user_gid
-
-    if user_uid is None:
-      event_data.user_sid = None
-    else:
-      # Note that the user_sid value is expected to be a string.
-      event_data.user_sid = '{0:d}'.format(user_uid)
-
-    for value_name, timestamp_description in self._TIMESTAMP_DESC_MAP.items():
-      posix_time = self._GetFloatingPointValue(row, value_name)
-
-      # mactime will return 0 if the timestamp is not set.
-      if not posix_time:
-        posix_time = self._GetIntegerValue(row, value_name)
-
-      if not posix_time:
-        continue
-
-      if posix_time == 0:
-        date_time = dfdatetime_semantic_time.NotSet()
-
-      elif isinstance(posix_time, float):
-        posix_time = int(posix_time * definitions.NANOSECONDS_PER_SECOND)
-        date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
-            timestamp=posix_time)
-
-      else:
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=posix_time)
-
-      event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-  # pylint: disable=unused-argument
-  def VerifyRow(self, parser_mediator, row):
-    """Verifies if a line of the file is in the expected format.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
-      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+      values (list[str]): values extracted from the line.
+      description (str): human readable description of the value.
+      line_number (int): number of the line the values were extracted from.
 
     Returns:
-      bool: True if this is the correct parser, False otherwise.
+      int: integer value or None if not available or invalid.
+
+    Raises:
+      UnableToParseFile: when an invalid integer value is found on
+          the first line.
     """
-    # Sleuthkit version 3 format:
-    # MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime
-    # 0|/lost+found|11|d/drwx------|0|0|12288|1337961350|1337961350|1337961350|0
+    integer_value = values.pop(-1) or None
+    if integer_value is not None:
+      try:
+        integer_value = int(integer_value, 10)
+      except ValueError:
+        error_string = 'invalid {0:s} value in line: {1:d}'.format(
+            description, line_number)
+        if line_number == 0:
+          raise errors.UnableToParseFile(error_string)
 
-    if row['md5'] != '0' and not self._MD5_RE.match(row['md5']):
-      return False
+        parser_mediator.ProduceRecoveryWarning(error_string)
+        integer_value = None
 
-    # Check if the following columns contain a base 10 integer value if set.
-    for column_name in ('uid', 'gid', 'size'):
-      column_value = row.get(column_name, None)
-      if not column_value:
-        continue
+    return integer_value
+
+  def _GetLastValueAsFloatingPoint(
+      self, parser_mediator, values, description, line_number):
+    """Retrieves the last value as floating-point.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      values (list[str]): values extracted from the line.
+      description (str): human readable description of the value.
+      line_number (int): number of the line the values were extracted from.
+
+    Returns:
+      float: floating-point value or None if not available or invalid.
+
+    Raises:
+      UnableToParseFile: when an invalid floating-point value is found on
+          the first line.
+    """
+    float_value = values.pop(-1) or None
+    if float_value is not None:
+      try:
+        float_value = float(float_value)
+      except ValueError:
+        error_string = 'invalid {0:s} value in line: {1:d}'.format(
+            description, line_number)
+        if line_number == 0:
+          raise errors.UnableToParseFile(error_string)
+
+        parser_mediator.ProduceRecoveryWarning(error_string)
+        float_value = None
+
+    return float_value
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a mactime bodyfile file-like object.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    # Note that we cannot use the DSVParser here since the mactime bodyfile
+    # format is not strict and clean file format.
+    line_reader = text_file.TextFile(
+        file_object, encoding='UTF-8', end_of_line='\n')
+
+    line_number = 0
+
+    try:
+      line = line_reader.readline()
+    except UnicodeDecodeError as exception:
+      raise errors.UnableToParseFile(
+          'unable to read line: {0:d} with error: {1!s}'.format(
+              line_number, exception))
+
+    while line:
+      values = line.split('|')
+      number_of_values = len(values)
+      if number_of_values < 11:
+        error_string = 'invalid number of values: {0:d} in line: {1:d}'.format(
+            number_of_values, line_number)
+        if line_number == 0:
+          raise errors.UnableToParseFile(error_string)
+
+        parser_mediator.ProduceExtractionWarning(error_string)
+
+      else:
+        md5_value = values.pop(0)
+        if md5_value == '0':
+          md5_value = None
+        elif md5_value and not self._MD5_RE.match(md5_value):
+          error_string = 'invalid MD5 value: {0:s} in line: {1:d}'.format(
+              md5_value, line_number)
+          if line_number == 0:
+            raise errors.UnableToParseFile(error_string)
+
+          parser_mediator.ProduceRecoveryWarning(error_string)
+
+        crtime_value = self._GetLastValueAsFloatingPoint(
+            parser_mediator, values, 'creation time', line_number)
+        ctime_value = self._GetLastValueAsFloatingPoint(
+            parser_mediator, values, 'inode change time', line_number)
+        mtime_value = self._GetLastValueAsFloatingPoint(
+            parser_mediator, values, 'modification time', line_number)
+        atime_value = self._GetLastValueAsFloatingPoint(
+            parser_mediator, values, 'access time', line_number)
+
+        size_value = self._GetLastValueAsBase10Integer(
+            parser_mediator, values, 'size', line_number)
+        gid_value = self._GetLastValueAsBase10Integer(
+            parser_mediator, values, 'group identifier (GID)', line_number)
+        uid_value = self._GetLastValueAsBase10Integer(
+            parser_mediator, values, 'user identifier (UID)', line_number)
+
+        if uid_value is not None:
+          # Note that the user_sid attribute of MactimeEventData is expected to
+          # be a string or None.
+          uid_value = '{0:d}'.format(uid_value)
+
+        mode_as_string_value = values.pop(-1) or None
+
+        inode_value = values.pop(-1) or None
+        if '-' in inode_value:
+          inode_value, _, _ = inode_value.partition('-')
+
+        try:
+          inode_value = int(inode_value, 10)
+        except (TypeError, ValueError):
+          inode_value = None
+          parser_mediator.ProduceRecoveryWarning(
+              'invalid inode value: {0!s} in line: {1:d}'.format(
+                  inode_value, line_number))
+
+        filename = '|'.join(values)
+        escaped_filename = filename.translate(self._ESCAPE_CHARACTERS)
+        if filename != escaped_filename:
+          parser_mediator.ProduceRecoveryWarning((
+              'filename in line: {0:d} contains unescaped control '
+              'characters').format(line_number))
+
+        else:
+          for character in self._NON_PRINTABLE_CHARACTERS:
+            escaped_character = '\\x{0:02x}'.format(character)
+            filename = filename.replace(escaped_character, chr(character))
+
+          filename = filename.replace('\\|', '|')
+          filename = filename.replace('\\\\', '\\')
+
+        symbolic_link_target = ''
+        if (mode_as_string_value and mode_as_string_value[0] == 'l' and
+            ' -> ' in filename):
+          filename, _, symbolic_link_target = filename.rpartition(' -> ')
+
+        event_data = MactimeEventData()
+        event_data.filename = filename
+        event_data.inode = inode_value
+        event_data.md5 = md5_value
+        event_data.mode_as_string = mode_as_string_value
+        event_data.offset = file_object.tell()
+        event_data.size = size_value
+        event_data.symbolic_link_target = symbolic_link_target
+        event_data.user_gid = gid_value
+        event_data.user_sid = uid_value
+
+        if atime_value:
+          date_time = self._GetDateTimeFromTimestamp(atime_value)
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+
+        if ctime_value:
+          date_time = self._GetDateTimeFromTimestamp(ctime_value)
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_CHANGE)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+
+        if crtime_value:
+          date_time = self._GetDateTimeFromTimestamp(crtime_value)
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_CREATION)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+
+        if mtime_value:
+          date_time = self._GetDateTimeFromTimestamp(mtime_value)
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+
+        elif not atime_value and not ctime_value and not crtime_value:
+          date_time = dfdatetime_semantic_time.NotSet()
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      line_number += 1
 
       try:
-        int(column_value, 10)
-      except (TypeError, ValueError):
-        return False
-
-    for column_name in ('atime', 'mtime', 'ctime', 'crtime'):
-      column_value = row.get(column_name, None)
-      if not column_value:
-        continue
-
-      try:
-        float(column_value)
-      except (TypeError, ValueError):
-        return False
-
-    return True
+        line = line_reader.readline()
+      except UnicodeDecodeError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to read line: {0:d} with error: {1!s}'.format(
+                line_number, exception))
+        break
 
 
 manager.ParsersManager.RegisterParser(MactimeParser)
