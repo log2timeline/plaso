@@ -24,9 +24,10 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     #   Number of items                 : 7
     #   Number of recovered items       : 11
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     # 7 + 11 records, each with 4 records.
     self.assertEqual(storage_writer.number_of_events, (7 + 11) * 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -79,7 +80,8 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     """Tests the Parse function with leak and redirected records."""
     parser = msiecf.MSIECFParser()
     storage_writer = self._ParseFile(['nfury_index.dat'], parser)
-    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # MSIE Cache File information:
     #   Version                         : 5.2
@@ -135,6 +137,43 @@ class MSIECFParserTest(test_lib.ParserTestCase):
             'sz=1x1;pc=[TPAS_ID];ord=2642102')}
 
     self.CheckEventValues(storage_writer, events[21], expected_event_values)
+
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    parser = msiecf.MSIECFParser()
+    storage_writer = self._ParseFile(
+        ['MSHist012013031020130311-index.dat'], parser,
+        timezone='Europe/Amsterdam')
+
+    self.assertEqual(storage_writer.number_of_events, 83)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    events = list(storage_writer.GetEvents())
+
+    # Test primary last visited time, in UTC, event.
+    expected_event_values = {
+        'timestamp': '2013-03-10 10:18:17.281000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}
+
+    self.CheckEventValues(storage_writer, events[80], expected_event_values)
+
+    # Test secondary last visited time, in local time, event.
+    expected_event_values = {
+        'timestamp': '2013-03-10 10:18:17.281000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}
+
+    self.CheckEventValues(storage_writer, events[81], expected_event_values)
+
+    # Test last checked time event.
+    expected_event_values = {
+        'timestamp': '2013-03-10 10:18:18.000000',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CHECKED,
+        'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}
+
+    self.CheckEventValues(storage_writer, events[82], expected_event_values)
 
 
 if __name__ == '__main__':
