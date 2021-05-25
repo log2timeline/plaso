@@ -94,6 +94,7 @@ class MactimeTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'fs:mactime:line',
         'filename': '/passwords\r.txt',
+        'inode': 15,
         'timestamp': '2012-05-25 16:00:53.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
@@ -103,6 +104,7 @@ class MactimeTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'fs:mactime:line',
         'filename': '/Windows\\System32',
+        'inode': 75520,
         'timestamp': '2019-03-19 04:37:22.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 

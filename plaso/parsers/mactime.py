@@ -65,6 +65,9 @@ class MactimeParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = 0
 
+  _UINT32_MAX = (1 << 32) - 1
+  _UINT48_MAX = (1 << 48) - 1
+
   _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
 
   _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + list(range(0x7f, 0xa0))
@@ -241,6 +244,12 @@ class MactimeParser(interface.FileObjectParser):
           parser_mediator.ProduceRecoveryWarning(
               'invalid inode value: {0!s} in line: {1:d}'.format(
                   inode_value, line_number))
+
+        # Determine if the inode value is actually a 64-bit NTFS file reference.
+        if inode_value > self._UINT48_MAX:
+          mft_entry = inode_value & 0xffffffffffff
+          if mft_entry <= self._UINT32_MAX:
+            inode_value = mft_entry
 
         filename = '|'.join(values)
         escaped_filename = filename.translate(self._ESCAPE_CHARACTERS)
