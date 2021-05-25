@@ -2,7 +2,10 @@
 """Parser for Apple Spotlight store database files."""
 
 from collections import abc as collections
+
 import zlib
+
+import lz4.block
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -879,6 +882,47 @@ class SpotlightStoreDatabaseParser(dtfabric_parser.DtFabricBaseParser):
 
     return metadata_item, data_offset
 
+  def _DecompressLZ4PageData(self, compressed_page_data, file_offset):
+    """Decompresses LZ4 compressed page data.
+
+    Args:
+      compressed_page_data (bytes): LZ4 compressed page data.
+      file_offset (int): file offset.
+
+    Returns:
+      bytes: uncompressed page data.
+
+    Raises:
+      ParseError: if the page data cannot be decompressed.
+    """
+    data_type_map = self._GetDataTypeMap(
+        'spotlight_store_db_lz4_block_header')
+
+    try:
+      lz4_block_header = data_type_map.MapByteStream(compressed_page_data)
+    except dtfabric_errors.MappingError as exception:
+      raise errors.ParseError((
+          'Unable to map LZ4 block header at offset: 0x{0:08x} with error: '
+          '{1!s}').format(file_offset, exception))
+
+    lz4_block_header_size = data_type_map.GetByteSize()
+    end_of_compressed_data_offset = (
+        lz4_block_header_size + lz4_block_header.compressed_data_size)
+
+    page_data = lz4.block.decompress(
+        compressed_page_data[12:end_of_compressed_data_offset],
+        uncompressed_size=lz4_block_header.uncompressed_data_size)
+
+    end_of_compressed_data_identifier = compressed_page_data[
+        end_of_compressed_data_offset:end_of_compressed_data_offset + 4]
+
+    if end_of_compressed_data_identifier != b'bv4$':
+      raise errors.ParseError((
+          'Unsupported LZ4 end of compressed data marker at offset: '
+          '0x{0:08x}').format(file_offset + end_of_compressed_data_offset))
+
+    return page_data
+
   def _ReadRecordPage(self, file_object, file_offset):
     """Reads a record page.
 
@@ -896,19 +940,29 @@ class SpotlightStoreDatabaseParser(dtfabric_parser.DtFabricBaseParser):
     page_header, bytes_read = self._ReadPropertyPageHeader(
         file_object, file_offset)
 
-    if page_header.property_table_type != 0x00000009:
+    if page_header.property_table_type not in (0x00000009, 0x00001009):
       raise errors.ParseError(
           'Unsupported property table type: 0x{0:08x}'.format(
               page_header.property_table_type))
 
     page_data = file_object.read(page_header.page_size - bytes_read)
 
-    if page_header.uncompressed_page_size > 0:
-      # TODO: add support for other compression types.
-      if page_data[0] != 0x78:
-        raise errors.ParseError('Unsupported compression type')
+    file_offset += bytes_read
 
-      page_data = zlib.decompress(page_data)
+    if page_header.uncompressed_page_size > 0:
+      compressed_page_data = page_data
+
+      if (page_header.property_table_type == 0x00000009 and
+          compressed_page_data[0] == 0x78):
+        page_data = zlib.decompress(compressed_page_data)
+
+      elif (page_header.property_table_type == 0x00001009 and
+            compressed_page_data[0:4] == b'bv41'):
+        page_data = self._DecompressLZ4PageData(
+            compressed_page_data, file_offset)
+
+      else:
+        raise errors.ParseError('Unsupported compression type')
 
     return page_header, page_data
 

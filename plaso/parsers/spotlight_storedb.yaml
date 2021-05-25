@@ -254,3 +254,18 @@ attributes:
 members:
 - name: data_size
   data_type: uint32
+---
+name: spotlight_store_db_lz4_block_header
+type: structure
+description: LZ4 block header.
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  number_of_elements: 4
+- name: uncompressed_data_size
+  data_type: uint32
+- name: compressed_data_size
+  data_type: uint32
