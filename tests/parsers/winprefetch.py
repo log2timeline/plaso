@@ -18,8 +18,9 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['CMD.EXE-087B4001.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -65,11 +66,11 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         '\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\IE7\\SPUNINST\\IERESETICONS.EXE']
 
     expected_event_values = {
+        'date_time': '2013-03-10 10:11:49.2812500',
         'data_type': 'windows:prefetch:execution',
         'executable': 'CMD.EXE',
         'mapped_files': expected_mapped_files,
         'prefetch_hash': 0x087b4001,
-        'timestamp': '2013-03-10 10:11:49.281250',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 17,
         'volume_serial_numbers': [0x24cb074b]}
@@ -78,11 +79,11 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     # Check the volume creation event.
     expected_event_values = {
+        'date_time': '2013-03-10 10:19:46.2343750',
         'data_type': 'windows:volume:creation',
         'device_path': '\\DEVICE\\HARDDISKVOLUME1',
         'origin': 'CMD.EXE-087B4001.pf',
         'serial_number': 0x24cb074b,
-        'timestamp': '2013-03-10 10:19:46.234375',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -92,19 +93,20 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['PING.EXE-B29F6629.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
     expected_event_values = {
+        'date_time': '2012-04-06 19:00:55.9329556',
         'data_type': 'windows:prefetch:execution',
         'executable': 'PING.EXE',
         'path_hints': ['\\WINDOWS\\SYSTEM32\\PING.EXE'],
         'prefetch_hash': 0xb29f6629,
         'run_count': 14,
-        'timestamp': '2012-04-06 19:00:55.932956',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 23,
         'volume_device_paths': ['\\DEVICE\\HARDDISKVOLUME1'],
@@ -114,8 +116,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     # The volume creation event.
     expected_event_values = {
+        'date_time': '2010-11-10 17:37:26.4843750',
         'data_type': 'windows:volume:creation',
-        'timestamp': '2010-11-10 17:37:26.484375',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -126,19 +128,20 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['WUAUCLT.EXE-830BCC14.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
     expected_event_values = {
+        'date_time': '2012-03-15 21:17:39.8079963',
         'data_type': 'windows:prefetch:execution',
         'executable': 'WUAUCLT.EXE',
         'path_hints': ['\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE'],
         'prefetch_hash': 0x830bcc14,
         'run_count': 25,
-        'timestamp': '2012-03-15 21:17:39.807996',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 23,
         'volume_device_paths': [
@@ -154,8 +157,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     # The volume creation event.
     expected_event_values = {
+        'date_time': '2010-11-10 17:37:26.4843750',
         'data_type': 'windows:volume:creation',
-        'timestamp': '2010-11-10 17:37:26.484375',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -166,18 +169,19 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['TASKHOST.EXE-3AE259FC.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
     expected_event_values = {
+        'date_time': '2013-10-04 15:40:09.0378333',
         'data_type': 'windows:prefetch:execution',
         'executable': 'TASKHOST.EXE',
         'prefetch_hash': 0x3ae259fc,
         'run_count': 4,
-        'timestamp': '2013-10-04 15:40:09.037833',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 26}
 
@@ -247,8 +251,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTASN1.DLL [46261-1]']
 
     expected_event_values = {
+        'date_time': '2013-10-04 15:28:09.0103565',
         'mapped_files': expected_mapped_files,
-        'timestamp': '2013-10-04 15:28:09.010357',
         'timestamp_desc': 'Previous {0:s}'.format(
             definitions.TIME_DESCRIPTION_LAST_RUN)}
 
@@ -256,8 +260,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     # The volume creation event.
     expected_event_values = {
+        'date_time': '2013-10-04 15:57:26.1465476',
         'data_type': 'windows:volume:creation',
-        'timestamp': '2013-10-04 15:57:26.146548',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -268,18 +272,19 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
     expected_event_values = {
+        'date_time': '2015-05-14 22:11:58.0911341',
         'data_type': 'windows:prefetch:execution',
         'executable': 'BYTECODEGENERATOR.EXE',
         'prefetch_hash': 0xc1e9bce6,
         'run_count': 7,
-        'timestamp': '2015-05-14 22:11:58.091134',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 30}
 
@@ -287,7 +292,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     # The prefetch previous last run event.
     expected_event_values = {
-        'timestamp': '2015-05-14 22:11:55.357652',
+        'date_time': '2015-05-14 22:11:55.3576520',
         'timestamp_desc': 'Previous {0:s}'.format(
             definitions.TIME_DESCRIPTION_LAST_RUN)}
 
@@ -298,8 +303,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     # The volume creation event.
     expected_event_values = {
+        'date_time': '2015-05-15 06:54:55.1392941',
         'data_type': 'windows:volume:creation',
-        'timestamp': '2015-05-15 06:54:55.139294',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -309,18 +314,19 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['NOTEPAD.EXE-D8414F97.pf'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # The prefetch last run event.
     expected_event_values = {
+        'date_time': '2019-06-05 19:55:04.8777787',
         'data_type': 'windows:prefetch:execution',
         'executable': 'NOTEPAD.EXE',
         'prefetch_hash': 0xd8414f97,
         'run_count': 2,
-        'timestamp': '2019-06-05 19:55:04.877779',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 30}
 
@@ -328,7 +334,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     # The prefetch previous last run event.
     expected_event_values = {
-        'timestamp': '2019-06-05 19:23:00.815705',
+        'date_time': '2019-06-05 19:23:00.8157052',
         'timestamp_desc': 'Previous {0:s}'.format(
             definitions.TIME_DESCRIPTION_LAST_RUN)}
 
@@ -339,8 +345,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     # The volume creation event.
     expected_event_values = {
+        'date_time': '2017-07-30 19:40:03.5487843',
         'data_type': 'windows:volume:creation',
-        'timestamp': '2017-07-30 19:40:03.548784',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

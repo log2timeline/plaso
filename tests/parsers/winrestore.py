@@ -18,17 +18,18 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
     parser = winrestore.RestorePointLogParser()
     storage_writer = self._ParseFile(['rp.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2015-03-23 18:38:14.2469544',
         'data_type': 'windows:restore_point:info',
         'description': 'Software Distribution Service 3.0',
         'restore_point_event_type': 102,
         'restore_point_type': 0,
-        'timestamp': '2015-03-23 18:38:14.246954',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

@@ -24,13 +24,14 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #	Number of recovered records : 438
     #	Log type                    : System
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, (6063 + 438) * 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'timestamp': '2011-07-27 06:41:47.000000',
+        'date_time': '2011-07-27 06:41:47',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -56,6 +57,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'computer_name': 'WKS-WINXP32BIT',
+        'date_time': '2011-07-27 06:41:47',
         'data_type': 'windows:evt:record',
         'event_category': 3,
         'event_identifier': 40961,
@@ -64,7 +66,6 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         'severity': 2,
         'source_name': 'LSASRV',
         'strings': ['cifs/CONTROLLER', expected_string2],
-        'timestamp': '2011-07-27 06:41:47.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)

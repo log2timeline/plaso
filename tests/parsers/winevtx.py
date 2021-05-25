@@ -18,15 +18,15 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     parser = winevtx.WinEvtxParser()
     storage_writer = self._ParseFile(['System.evtx'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 3202)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Windows Event Viewer Log (EVTX) information:
     #   Version                     : 3.1
     #   Number of records           : 1601
     #   Number of recovered records : 0
     #   Log type                    : System
-
-    self.assertEqual(storage_writer.number_of_events, 3202)
 
     events = list(storage_writer.GetEvents())
 
@@ -89,6 +89,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'computer_name': 'WKS-WIN764BITB.shieldbase.local',
+        'date_time': '2012-03-14 04:17:38.2763402',
         'data_type': 'windows:evtx:record',
         'event_level': 4,
         'record_number': 12050,
@@ -96,7 +97,6 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         'strings': ['Windows Modules Installer', 'stopped', (
             '540072007500730074006500640049006E007300740061006C006C00650072002F'
             '0031000000')],
-        'timestamp': '2012-03-14 04:17:38.276340',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'xml_string': expected_xml_string}
 
@@ -109,8 +109,9 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # contains invalid log at the end.
     storage_writer = self._ParseFile(['System2.evtx'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 388)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
