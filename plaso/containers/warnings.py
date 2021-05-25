@@ -61,6 +61,38 @@ class ExtractionWarning(interface.AttributeContainer):
     self.path_spec = path_spec
 
 
+class PreprocessingWarning(interface.AttributeContainer):
+  """Preprocessing warning attribute container.
+
+  Preprocessing warnings are produced by preprocessing plugins when they
+  encounter situations that should be brought to the users' attention but are
+  not preprocessing results.
+
+  Attributes:
+    message (str): warning message.
+    path_spec (dfvfs.PathSpec): path specification of the file entry to which
+        the warning applies.
+    plugin_name (str): name of the preprocessing plugin to which the warning
+        applies.
+  """
+  CONTAINER_TYPE = 'preprocessing_warning'
+
+  def __init__(self, message=None, path_spec=None, plugin_name=None):
+    """Initializes an extraction warning.
+
+    Args:
+      message (Optional[str]): warning message.
+      path_spec (Optional[dfvfs.PathSpec]): path specification of the file entry
+          to which the warning applies.
+      plugin_name (Optional[str]): name of the preprocessing plugin to which the
+          warning applies.
+    """
+    super(PreprocessingWarning, self).__init__()
+    self.message = message
+    self.path_spec = path_spec
+    self.plugin_name = plugin_name
+
+
 class RecoveryWarning(interface.AttributeContainer):
   """Recovery warning attribute container.
 
@@ -91,4 +123,4 @@ class RecoveryWarning(interface.AttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    AnalysisWarning, ExtractionWarning, RecoveryWarning])
+    AnalysisWarning, ExtractionWarning, PreprocessingWarning, RecoveryWarning])

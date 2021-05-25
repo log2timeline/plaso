@@ -31,6 +31,17 @@ class ExtractionWarningTest(shared_test_lib.BaseTestCase):
     self.assertEqual(attribute_names, ['message', 'parser_chain', 'path_spec'])
 
 
+class PreprocessingWarningTest(shared_test_lib.BaseTestCase):
+  """Tests for the preprocessing warning attribute container."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = warnings.PreprocessingWarning()
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+    self.assertEqual(attribute_names, ['message', 'path_spec', 'plugin_name'])
+
+
 class RecoveryWarningTest(shared_test_lib.BaseTestCase):
   """Tests for the recovery warning attribute container."""
 
