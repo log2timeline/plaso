@@ -33,7 +33,8 @@ class MactimeEventData(events.EventData):
         in the context of mactime and used for MFT entry index values as well.
     md5 (str): MD5 hash of the file content, formatted as a hexadecimal string.
     mode_as_string (str): protection mode.
-    offset (int): number of the corresponding line.
+    offset (int): number of the corresponding line, from which the event data
+        was extracted.
     size (int): size of the file content.
     symbolic_link_target (str): path of the symbolic link target.
     user_gid (int): user group identifier (GID).

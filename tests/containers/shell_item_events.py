@@ -18,7 +18,7 @@ class ShellItemFileEntryEventDataTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_data_stream_row_identifier', 'data_type', 'file_reference',
-        'localized_name', 'long_name', 'name', 'offset', 'origin', 'parser',
+        'localized_name', 'long_name', 'name', 'origin', 'parser',
         'shell_item_path']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())

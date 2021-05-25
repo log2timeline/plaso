@@ -66,6 +66,8 @@ class NTFSUSNChangeEventData(events.EventData):
     file_reference (int): NTFS file reference.
     file_system_type (str): file system type.
     parent_file_reference (int): NTFS file reference of the parent.
+    offset (int): offset of the USN record relative to the start of the $J data
+        stream, from which the event data was extracted.
     update_reason_flags (int): update reason flags.
     update_sequence_number (int): update sequence number.
     update_source_flags (int): update source flags.
@@ -80,6 +82,7 @@ class NTFSUSNChangeEventData(events.EventData):
     self.filename = None
     self.file_reference = None
     self.parent_file_reference = None
+    self.offset = None
     self.update_reason_flags = None
     self.update_sequence_number = None
     self.update_source_flags = None

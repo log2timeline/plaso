@@ -21,6 +21,8 @@ class McafeeAVEventData(events.EventData):
   Attributes:
     action (str): action.
     filename (str): filename.
+    offset (int): offset of the line relative to the start of the file, from
+        which the event data was extracted.
     rule (str): rule.
     status (str): status.
     trigger_location (str): trigger location.
@@ -34,6 +36,7 @@ class McafeeAVEventData(events.EventData):
     super(McafeeAVEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.filename = None
+    self.offset = None
     self.rule = None
     self.status = None
     self.trigger_location = None
@@ -122,7 +125,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row_offset (int): line number of the row.
+      row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     try:

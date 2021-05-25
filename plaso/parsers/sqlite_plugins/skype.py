@@ -39,6 +39,8 @@ class SkypeAccountEventData(events.EventData):
     country (str): home country of the account holder.
     display_name (str): display name of the account holder.
     email (str): registered email address of the account holder.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     username (str): full name of the Skype account holder and display name.
   """
@@ -81,6 +83,8 @@ class SkypeCallEventData(events.EventData):
   Attributes:
     call_type (str): call type, such as: WAITING, STARTED, FINISHED.
     dst_call (str): account which received the call.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     src_call (str): account which started the call.
     user_start_call (bool): True if the owner account started the call.
@@ -94,6 +98,7 @@ class SkypeCallEventData(events.EventData):
     super(SkypeCallEventData, self).__init__(data_type=self.DATA_TYPE)
     self.call_type = None
     self.dst_call = None
+    self.offset = None
     self.query = None
     self.src_call = None
     self.user_start_call = None
@@ -107,6 +112,8 @@ class SkypeTransferFileEventData(events.EventData):
     action_type (str): action type such as: "GETSOLICITUDE", "SENDSOLICITUDE",
         "ACCEPTED" or "FINISHED".
     destination (str): account that received the file.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     source (str): account that sent the file.
     transferred_filename (str): name of the file transferred.
@@ -121,6 +128,7 @@ class SkypeTransferFileEventData(events.EventData):
     super(SkypeTransferFileEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action_type = None
     self.destination = None
+    self.offset = None
     self.query = None
     self.source = None
     self.transferred_filename = None

@@ -146,7 +146,6 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     super(XChatLogParser, self).__init__()
     self._last_month = 0
     self._xchat_year = None
-    self.offset = 0
 
   def _GetTimeElementsTuple(self, structure):
     """Retrieves a time elements tuple from the structure.

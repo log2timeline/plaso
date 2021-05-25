@@ -30,7 +30,7 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
     path (str): path.
     pin_status (int): pin status.
     offset (int): offset of the DestList entry relative to the start of
-        the DestList stream.
+        the DestList stream, from which the event data was extracted.
   """
 
   DATA_TYPE = 'olecf:dest_list:entry'

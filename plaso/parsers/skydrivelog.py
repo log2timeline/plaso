@@ -327,7 +327,6 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     super(SkyDriveOldLogParser, self).__init__()
     self._last_date_time = None
     self._last_event_data = None
-    self.offset = 0
 
   def _ParseLogline(self, parser_mediator, structure):
     """Parse a logline and store appropriate attributes.
@@ -357,7 +356,6 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
 
     event_data = SkyDriveOldLogEventData()
     event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
-    event_data.offset = self.offset
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
     event_data.text = self._GetValueFromStructure(structure, 'text')
@@ -383,7 +381,6 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     event_data = SkyDriveOldLogEventData()
-    event_data.offset = self._last_event_data.offset
     event_data.text = self._GetValueFromStructure(structure, 'text')
 
     event = time_events.DateTimeValuesEvent(

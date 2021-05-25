@@ -18,6 +18,8 @@ class BSMEventData(events.EventData):
     event_type (int): identifier that represents the type of the event.
     extra_tokens (list[dict[str, dict[str, str]]]): event extra tokens, which
         is a list of dictionaries that contain: {token type: {token values}}
+    offset (int): offset of the BSM record relative to the start of the file,
+        from which the event data was extracted.
     record_length (int): record length in bytes (trailer number).
     return_value (str): processed return value and exit status.
   """
@@ -29,6 +31,7 @@ class BSMEventData(events.EventData):
     super(BSMEventData, self).__init__(data_type=self.DATA_TYPE)
     self.event_type = None
     self.extra_tokens = None
+    self.offset = None
     self.record_length = None
     self.return_value = None
 

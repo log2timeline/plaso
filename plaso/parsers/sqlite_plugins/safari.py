@@ -15,6 +15,8 @@ class SafariHistoryPageVisitedEventData(events.EventData):
 
   Attributes:
     host (str): hostname of the server.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     title (str): title of the webpage visited.
     url (str): URL visited.
@@ -30,6 +32,7 @@ class SafariHistoryPageVisitedEventData(events.EventData):
     super(SafariHistoryPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.host = None
+    self.offset = None
     self.query = None
     self.title = None
     self.url = None

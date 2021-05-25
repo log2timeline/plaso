@@ -19,7 +19,6 @@ class EventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_row_identifier',
         'data_type',
-        'offset',
         'parser']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())

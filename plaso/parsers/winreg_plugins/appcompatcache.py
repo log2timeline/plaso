@@ -21,6 +21,9 @@ class AppCompatCacheEventData(events.EventData):
   Attributes:
     entry_index (int): cache entry index number for the record.
     key_path (str): Windows Registry key path.
+    offset (int): offset of the Application Compatibility Cache entry relative
+        to the start of the Windows Registry value data, from which the event
+        data was extracted.
     path (str): full path to the executable.
   """
 
@@ -31,6 +34,7 @@ class AppCompatCacheEventData(events.EventData):
     super(AppCompatCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_index = None
     self.key_path = None
+    self.offset = None
     self.path = None
 
 

@@ -23,6 +23,8 @@ class FirefoxCookieEventData(events.EventData):
     httponly (bool): True if the cookie cannot be accessed through client
         side script.
     host (str): hostname of host that set the cookie value.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     path (str): URI of the page that set the cookie.
     query (str): SQL query that was used to obtain the event data.
     secure (bool): True if the cookie should only be transmitted over a secure
@@ -38,6 +40,7 @@ class FirefoxCookieEventData(events.EventData):
     self.data = None
     self.host = None
     self.httponly = None
+    self.offset = None
     self.path = None
     self.query = None
     self.secure = None

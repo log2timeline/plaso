@@ -97,7 +97,6 @@ class ShutdownWindowsRegistryPlugin(
       if date_time:
         event_data = ShutdownWindowsRegistryEventData()
         event_data.key_path = registry_key.path
-        event_data.offset = shutdown_value.offset
         event_data.value_name = shutdown_value.name
 
         event = time_events.DateTimeValuesEvent(

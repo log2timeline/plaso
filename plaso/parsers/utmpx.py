@@ -17,6 +17,8 @@ class UtmpxMacOSEventData(events.EventData):
 
   Attributes:
     hostname (str): hostname or IP address.
+    offset (int): offset of the utmpx record relative to the start of the file,
+        from which the event data was extracted.
     pid (int): process identifier (PID).
     terminal (str): name of the terminal.
     terminal_identifier (int): inittab identifier.
@@ -30,6 +32,7 @@ class UtmpxMacOSEventData(events.EventData):
     """Initializes event data."""
     super(UtmpxMacOSEventData, self).__init__(data_type=self.DATA_TYPE)
     self.hostname = None
+    self.offset = None
     self.pid = None
     self.terminal = None
     self.terminal_identifier = None

@@ -15,8 +15,6 @@ class EventData(interface.AttributeContainer):
 
   Attributes:
     data_type (str): event data type indicator.
-    offset (int): offset relative to the start of the data stream where
-        the event data is stored.
     parser (str): string identifying the parser that produced the event data.
   """
   CONTAINER_TYPE = 'event_data'
@@ -33,7 +31,6 @@ class EventData(interface.AttributeContainer):
     self._event_data_stream_identifier = None
     self._event_data_stream_row_identifier = None
     self.data_type = data_type
-    self.offset = None
     self.parser = None
 
   def GetAttributeValuesString(self):

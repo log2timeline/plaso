@@ -18,6 +18,8 @@ class KikIOSMessageEventData(events.EventData):
     message_status (str): message status, such as:
         read, unread, not sent, delivered, etc.
     message_type (str): message type, either Sent or Received.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     username (str): unique username of the sender or receiver.
   """
@@ -31,6 +33,7 @@ class KikIOSMessageEventData(events.EventData):
     self.displayname = None
     self.message_status = None
     self.message_type = None
+    self.offset = None
     self.query = None
     self.username = None
 

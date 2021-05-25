@@ -14,6 +14,8 @@ class ZeitgeistActivityEventData(events.EventData):
   """Zeitgeist activity event data.
 
   Attributes:
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     query (str): SQL query that was used to obtain the event data.
     subject_uri (str): subject URI.
   """
@@ -23,6 +25,7 @@ class ZeitgeistActivityEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(ZeitgeistActivityEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.offset = None
     self.query = None
     self.subject_uri = None
 

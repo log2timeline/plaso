@@ -24,6 +24,8 @@ class WinEvtRecordEventData(events.EventData):
     event_type (int): event type.
     facility (int): event facility.
     message_identifier (int): event message identifier.
+    offset (int): offset of the EVT record relative to the start of the file,
+        from which the event data was extracted.
     record_number (int): event record number.
     recovered (bool): True if the record was recovered.
     severity (int): event severity.
@@ -43,6 +45,7 @@ class WinEvtRecordEventData(events.EventData):
     self.event_type = None
     self.facility = None
     self.message_identifier = None
+    self.offset = None
     self.record_number = None
     self.recovered = None
     self.severity = None

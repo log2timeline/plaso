@@ -231,8 +231,6 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
 
     event_data = SCCMLogEventData()
     event_data.component = self._GetValueFromStructure(structure, 'component')
-    # TODO: pass line number to offset or remove.
-    event_data.offset = 0
     event_data.text = self._GetValueFromStructure(structure, 'text')
 
     event = time_events.DateTimeValuesEvent(

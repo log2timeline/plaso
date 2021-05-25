@@ -31,7 +31,6 @@ class OLECFParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'olecf:item',
-        'offset': 0,
         'timestamp': '2013-05-16 02:29:49.785000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 

@@ -18,8 +18,11 @@ class WinRecycleBinEventData(events.EventData):
   Attributes:
     drive_number (int): drive number.
     file_size (int): file size.
+    offset (int): offset of the Recycle Bin record relative to the start of
+        the file, from which the event data was extracted.
     original_filename (str): filename.
-    record_index (int): index of the record on which the event is based.
+    record_index (int): index of the record, from which the event data was
+        extracted.
     short_filename (str): short filename.
   """
 
@@ -30,6 +33,7 @@ class WinRecycleBinEventData(events.EventData):
     super(WinRecycleBinEventData, self).__init__(data_type=self.DATA_TYPE)
     self.drive_number = None
     self.file_size = None
+    self.offset = None
     self.original_filename = None
     self.record_index = None
     self.short_filename = None

@@ -98,11 +98,6 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   MSG_ENTRY = MSG_ENTRY_NICK + MSG_ENTRY_TEXT
   MSG_ENTRY.parseWithTabs()
 
-  def __init__(self):
-    """Initializes a parser."""
-    super(XChatScrollbackParser, self).__init__()
-    self._offset = 0
-
   def _StripThenGetNicknameAndText(self, text):
     """Strips decorators from text and gets <nickname> if available.
 
@@ -155,12 +150,11 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       text = self._GetValueFromStructure(structure, 'text', default_value='')
       nickname, text = self._StripThenGetNicknameAndText(text)
     except pyparsing.ParseException:
-      logger.debug('Error parsing entry at offset {0:d}'.format(self._offset))
+      logger.debug('Unable to parse entry')
       return
 
     event_data = XChatScrollbackEventData()
     event_data.nickname = nickname
-    event_data.offset = self._offset
     event_data.text = text
 
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)

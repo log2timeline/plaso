@@ -16,6 +16,8 @@ class PlsRecallEventData(events.EventData):
 
   Attributes:
     database_name (str): name of the database.
+    offset (int): offset of the PL/SQL Recall record relative to the start of
+        the file, from which the event data was extracted.
     query (str): PL/SQL query.
     sequence_number (int): sequence number.
     username (str): username used to query.
@@ -27,6 +29,7 @@ class PlsRecallEventData(events.EventData):
     """Initializes event data."""
     super(PlsRecallEventData, self).__init__(data_type=self.DATA_TYPE)
     self.database_name = None
+    self.offset = None
     self.query = None
     self.sequence_number = None
     self.username = None

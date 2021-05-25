@@ -25,6 +25,8 @@ class TrendMicroAVEventData(events.EventData):
   Attributes:
     action (str): action.
     filename (str): filename.
+    offset (int): offset of the line relative to the start of the file, from
+        which the event data was extracted.
     path (str): path.
     scan_type (str): scan_type.
     threat (str): threat.
@@ -37,9 +39,45 @@ class TrendMicroAVEventData(events.EventData):
     super(TrendMicroAVEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.filename = None
+    self.offset = None
     self.path = None
     self.scan_type = None
     self.threat = None
+
+
+class TrendMicroUrlEventData(events.EventData):
+  """Trend Micro Web Reputation Log event data.
+
+  Attributes:
+    application_name (str): application name.
+    block_mode (str): operation mode.
+    credibility_rating (int): credibility rating.
+    credibility_score (int): credibility score.
+    group_code (str): group code.
+    group_name (str): group name.
+    ip (str): IP address.
+    offset (int): offset of the line relative to the start of the file, from
+        which the event data was extracted.
+    policy_identifier (int): policy identifier.
+    threshold (int): threshold value.
+    url (str): accessed URL.
+  """
+  DATA_TYPE = 'av:trendmicro:webrep'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(TrendMicroUrlEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.application_name = None
+    self.block_mode = None
+    self.credibility_rating = None
+    self.credibility_score = None
+    self.group_code = None
+    self.group_name = None
+    self.ip = None
+    self.offset = None
+    self.policy_identifier = None
+    self.threshold = None
+    self.url = None
 
 
 class TrendMicroBaseParser(dsv_parser.DSVParser):
@@ -195,7 +233,7 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row_offset (int): line number of the row.
+      row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     timestamp = self._ParseTimestamp(parser_mediator, row)
@@ -257,38 +295,6 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     return action in self._SUPPORTED_SCAN_RESULTS
 
 
-class TrendMicroUrlEventData(events.EventData):
-  """Trend Micro Web Reputation Log event data.
-
-  Attributes:
-    block_mode (str): operation mode.
-    url (str): accessed URL.
-    group_code (str): group code.
-    group_name (str): group name.
-    credibility_rating (int): credibility rating.
-    credibility_score (int): credibility score.
-    policy_identifier (int): policy identifier.
-    application_name (str): application name.
-    ip (str): IP address.
-    threshold (int): threshold value.
-  """
-  DATA_TYPE = 'av:trendmicro:webrep'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(TrendMicroUrlEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.block_mode = None
-    self.url = None
-    self.group_code = None
-    self.group_name = None
-    self.credibility_rating = None
-    self.credibility_score = None
-    self.policy_identifier = None
-    self.application_name = None
-    self.ip = None
-    self.threshold = None
-
-
 class OfficeScanWebReputationParser(TrendMicroBaseParser):
   """Parses the Trend Micro Office Scan Web Reputation detection log."""
   NAME = 'trendmicro_url'
@@ -309,7 +315,7 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row_offset (int): line number of the row.
+      row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     timestamp = self._ParseTimestamp(parser_mediator, row)
