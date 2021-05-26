@@ -10,13 +10,12 @@ from dfvfs.analyzer import fvde_analyzer_helper
 from dfvfs.credentials import manager as credentials_manager
 from dfvfs.helpers import command_line as dfvfs_command_line
 from dfvfs.helpers import source_scanner
+from dfvfs.helpers import volume_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.volume import apfs_volume_system
-from dfvfs.volume import gpt_volume_system
 from dfvfs.volume import lvm_volume_system
-from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import tools
@@ -44,7 +43,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
       volume_identifiers (list[str]): allowed volume identifiers.
 
     Raises:
-      SourceScannerError: if a volume cannot be resolved from the volume
+      dfvfs.ScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
     super(StorageMediaToolMediator, self)._PrintAPFSVolumeIdentifiersOverview(
@@ -60,7 +59,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
       volume_identifiers (list[str]): allowed volume identifiers.
 
     Raises:
-      SourceScannerError: if a volume cannot be resolved from the volume
+      dfvfs.ScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
     super(StorageMediaToolMediator, self)._PrintLVMVolumeIdentifiersOverview(
@@ -76,7 +75,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
       volume_identifiers (list[str]): allowed volume identifiers.
 
     Raises:
-      SourceScannerError: if a volume cannot be resolved from the volume
+      dfvfs.ScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
     super(StorageMediaToolMediator, self)._PrintPartitionIdentifiersOverview(
@@ -92,7 +91,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
       volume_identifiers (list[str]): allowed volume identifiers.
 
     Raises:
-      SourceScannerError: if a volume cannot be resolved from the volume
+      dfvfs.ScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
     super(StorageMediaToolMediator, self)._PrintVSSStoreIdentifiersOverview(
@@ -240,6 +239,283 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
     return not process_current_volume or process_current_volume == 'yes'
 
 
+class StorageMediaToolVolumeScanner(volume_scanner.VolumeScanner):
+  """Volume scanner used by the storage media tool."""
+
+  def __init__(self, mediator=None):
+    """Initializes a volume scanner.
+
+    Args:
+      mediator (Optional[VolumeScannerMediator]): a volume scanner mediator.
+    """
+    super(StorageMediaToolVolumeScanner, self).__init__(mediator=mediator)
+    self._credentials = None
+    self._credential_configurations = []
+    self._unattended_mode = False
+    self._vss_only = False
+
+  def _AddCredentialConfiguration(
+      self, path_spec, credential_type, credential_data):
+    """Adds a credential configuration.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+      credential_type (str): credential type.
+      credential_data (bytes): credential data.
+    """
+    credential_configuration = configurations.CredentialConfiguration(
+        credential_data=credential_data, credential_type=credential_type,
+        path_spec=path_spec)
+
+    self._credential_configurations.append(credential_configuration)
+
+  def _ScanEncryptedVolume(self, scan_context, scan_node):
+    """Scans an encrypted volume scan node for volume and file systems.
+
+    Args:
+      scan_context (SourceScannerContext): source scanner context.
+      scan_node (SourceScanNode): volume scan node.
+
+    Raises:
+      dfvfs.ScannerError: if the format of or within the source is not
+          supported, the scan node is invalid or there are no credentials
+          defined for the format.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise dfvfs_errors.ScannerError('Invalid or missing scan node.')
+
+    credentials = credentials_manager.CredentialsManager.GetCredentials(
+        scan_node.path_spec)
+    if not credentials:
+      raise dfvfs_errors.ScannerError('Missing credentials for scan node.')
+
+    credentials_dict = dict(self._credentials)
+
+    is_unlocked = False
+    for credential_type in sorted(credentials.CREDENTIALS):
+      credential_data = credentials_dict.get(credential_type, None)
+      if not credential_data:
+        continue
+
+      is_unlocked = self._source_scanner.Unlock(
+          scan_context, scan_node.path_spec, credential_type, credential_data)
+      if is_unlocked:
+        self._AddCredentialConfiguration(
+            scan_node.path_spec, credential_type, credential_data)
+        break
+
+    if not is_unlocked:
+      if not self._mediator:
+        raise dfvfs_errors.ScannerError(
+            'Unable to proceed. Encrypted volume found but no mediator to '
+            'determine how it should be unlocked.')
+
+      is_unlocked, credential_type, credential_data = (
+          self._mediator.PromptUserForEncryptedVolumeCredential(
+              self._source_scanner, scan_context, scan_node, credentials))
+
+    if is_unlocked:
+      self._AddCredentialConfiguration(
+          scan_node.path_spec, credential_type, credential_data)
+      self._source_scanner.Scan(
+          scan_context, scan_path_spec=scan_node.path_spec)
+
+  def _ScanFileSystem(self, scan_node, base_path_specs):
+    """Scans a file system scan node for file systems.
+
+    Args:
+      scan_node (SourceScanNode): file system scan node.
+      base_path_specs (list[PathSpec]): file system base path specifications.
+
+    Raises:
+      dfvfs.ScannerError: if the scan node is invalid.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise dfvfs_errors.ScannerError(
+          'Invalid or missing file system scan node.')
+
+    if self._vss_only:
+      if scan_node.parent_node.sub_nodes[0].type_indicator == (
+          dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
+        return
+
+    base_path_specs.append(scan_node.path_spec)
+
+  def _ScanVolume(self, scan_context, scan_node, options, base_path_specs):
+    """Scans a volume scan node for volume and file systems.
+
+    Args:
+      scan_context (SourceScannerContext): source scanner context.
+      scan_node (SourceScanNode): volume scan node.
+      options (VolumeScannerOptions): volume scanner options.
+      base_path_specs (list[PathSpec]): file system base path specifications.
+
+    Raises:
+      dfvfs.ScannerError: if the format of or within the source
+          is not supported or the scan node is invalid.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise dfvfs_errors.ScannerError('Invalid or missing scan node.')
+
+    if scan_context.IsLockedScanNode(scan_node.path_spec):
+      # The source scanner found a locked volume and we need a credential to
+      # unlock it.
+      self._ScanEncryptedVolume(scan_context, scan_node)
+
+      if scan_context.IsLockedScanNode(scan_node.path_spec):
+        return
+
+    if scan_node.IsVolumeSystemRoot():
+      self._ScanVolumeSystemRoot(
+          scan_context, scan_node, options, base_path_specs)
+
+    elif scan_node.IsFileSystem():
+      self._ScanFileSystem(scan_node, base_path_specs)
+
+    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
+      # TODO: look into building VSS store on demand.
+
+      # We "optimize" here for user experience, alternatively we could scan
+      # for a file system instead of hard coding a child path specification.
+      if dfvfs_definitions.PREFERRED_NTFS_BACK_END == (
+          dfvfs_definitions.TYPE_INDICATOR_TSK):
+        location = '/'
+      else:
+        location = '\\'
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.PREFERRED_NTFS_BACK_END, location=location,
+          parent=scan_node.path_spec)
+
+      base_path_specs.append(path_spec)
+
+    else:
+      for sub_scan_node in scan_node.sub_nodes:
+        self._ScanVolume(scan_context, sub_scan_node, options, base_path_specs)
+
+  def _ScanVolumeSystemRoot(
+      self, scan_context, scan_node, options, base_path_specs):
+    """Scans a volume system root scan node for volume and file systems.
+
+    Args:
+      scan_context (SourceScannerContext): source scanner context.
+      scan_node (SourceScanNode): volume system root scan node.
+      options (VolumeScannerOptions): volume scanner options.
+      base_path_specs (list[PathSpec]): file system base path specifications.
+
+    Raises:
+      dfvfs.ScannerError: if the scan node is invalid, the scan node type is not
+          supported or if a sub scan node cannot be retrieved.
+    """
+    if not scan_node or not scan_node.path_spec:
+      raise dfvfs_errors.ScannerError('Invalid scan node.')
+
+    if scan_node.type_indicator == (
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER):
+      volume_system = apfs_volume_system.APFSVolumeSystem()
+      volume_system.Open(scan_node.path_spec)
+
+      volume_identifiers = self._GetVolumeIdentifiers(volume_system, options)
+
+    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GPT:
+      volume_identifiers = self._GetPartitionIdentifiers(scan_node, options)
+
+    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_LVM:
+      volume_system = lvm_volume_system.LVMVolumeSystem()
+      volume_system.Open(scan_node.path_spec)
+
+      volume_identifiers = self._GetVolumeIdentifiers(volume_system, options)
+
+    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
+      volume_system = vshadow_volume_system.VShadowVolumeSystem()
+      volume_system.Open(scan_node.path_spec)
+
+      volume_identifiers = self._GetVolumeSnapshotIdentifiers(
+          volume_system, options)
+      # Process VSS stores (snapshots) starting with the most recent one.
+      volume_identifiers.reverse()
+
+      if not self._vss_only and self._mediator and volume_identifiers:
+        self._vss_only = not self._mediator.PromptUserForVSSCurrentVolume()
+
+    else:
+      raise dfvfs_errors.ScannerError(
+          'Unsupported volume system type: {0:s}.'.format(
+              scan_node.type_indicator))
+
+    for volume_identifier in volume_identifiers:
+      location = '/{0:s}'.format(volume_identifier)
+      sub_scan_node = scan_node.GetSubNodeByLocation(location)
+      if not sub_scan_node:
+        raise dfvfs_errors.ScannerError(
+            'Scan node missing for volume identifier: {0:s}.'.format(
+                volume_identifier))
+
+      self._ScanVolume(scan_context, sub_scan_node, options, base_path_specs)
+
+  def ScanSource(self, source_path, options, base_path_specs):
+    """Scans the source path for volume and file systems.
+
+    This function sets the internal source path specification and source
+    type values.
+
+    Args:
+      source_path (str): path to the source.
+      options (VolumeScannerOptions): volume scanner options.
+      base_path_specs (list[PathSpec]): file system base path specifications.
+
+    Returns:
+      dfvfs.SourceScannerContext: source scanner context.
+
+    Raises:
+      dfvfs.ScannerError: if the format of or within the source is
+          not supported.
+    """
+    if (not source_path.startswith('\\\\.\\') and
+        not os.path.exists(source_path)):
+      raise dfvfs_errors.ScannerError(
+          'No such device, file or directory: {0:s}.'.format(source_path))
+
+    scan_context = source_scanner.SourceScannerContext()
+    scan_context.OpenSourcePath(source_path)
+
+    try:
+      self._source_scanner.Scan(scan_context)
+    except (ValueError, dfvfs_errors.BackEndError) as exception:
+      raise dfvfs_errors.ScannerError(
+          'Unable to scan source with error: {0!s}.'.format(exception))
+
+    if scan_context.source_type not in (
+        scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
+      scan_node = scan_context.GetRootScanNode()
+      base_path_specs.append(scan_node.path_spec)
+      return scan_context
+
+    # Get the first node where where we need to decide what to process.
+    scan_node = scan_context.GetRootScanNode()
+    while len(scan_node.sub_nodes) == 1:
+      scan_node = scan_node.sub_nodes[0]
+
+    if scan_node.type_indicator not in (
+        dfvfs_definitions.TYPE_INDICATOR_GPT,
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      self._ScanVolume(scan_context, scan_node, options, base_path_specs)
+
+    else:
+      # Determine which partition needs to be processed.
+      partition_identifiers = self._GetPartitionIdentifiers(scan_node, options)
+      if not partition_identifiers:
+        raise dfvfs_errors.ScannerError('No partitions found.')
+
+      for partition_identifier in partition_identifiers:
+        location = '/{0:s}'.format(partition_identifier)
+        sub_scan_node = scan_node.GetSubNodeByLocation(location)
+        self._ScanVolume(scan_context, sub_scan_node, options, base_path_specs)
+
+    return scan_context
+
+
 class StorageMediaTool(tools.CLITool):
   """CLI tool that supports a storage media device or image as input."""
 
@@ -272,294 +548,12 @@ class StorageMediaTool(tools.CLITool):
         input_reader=input_reader, output_writer=output_writer)
     self._partitions = None
     self._process_vss = False
-    self._source_scanner = source_scanner.SourceScanner()
     self._source_path = None
     self._source_path_specs = []
+    self._source_type = None
     self._volumes = None
     self._vss_only = False
     self._vss_stores = None
-
-  def _AddCredentialConfiguration(
-      self, path_spec, credential_type, credential_data):
-    """Adds a credential configuration.
-
-    Args:
-      path_spec (dfvfs.PathSpec): path specification.
-      credential_type (str): credential type.
-      credential_data (bytes): credential data.
-    """
-    credential_configuration = configurations.CredentialConfiguration(
-        credential_data=credential_data, credential_type=credential_type,
-        path_spec=path_spec)
-
-    self._credential_configurations.append(credential_configuration)
-
-  def _GetAPFSVolumeIdentifiers(self, scan_node):
-    """Determines the APFS volume identifiers.
-
-    Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
-
-    Returns:
-      list[str]: APFS volume identifiers.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid or more than 1 volume
-          was found but no volumes were specified.
-      UserAbort: if the user requested to abort.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    volume_system = apfs_volume_system.APFSVolumeSystem()
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    # TODO: refactor self._volumes to use scan options.
-    if self._volumes:
-      if self._volumes == 'all':
-        volumes = volume_system.volume_identifiers
-      else:
-        volumes = self._mediator.ParseVolumeIdentifiersString(
-            self._volumes, prefix='apfs')
-
-      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
-          volume_system, volumes, prefix='apfs')
-
-      if not set(selected_volume_identifiers).difference(volume_identifiers):
-        return selected_volume_identifiers
-
-    if len(volume_identifiers) > 1:
-      if self._unattended_mode:
-        raise errors.SourceScannerError(
-            'More than 1 volume found but no volumes specified.')
-
-      try:
-        volume_identifiers = self._mediator.GetAPFSVolumeIdentifiers(
-            volume_system, volume_identifiers)
-      except KeyboardInterrupt:
-        raise errors.UserAbort('File system scan aborted.')
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='apfs')
-
-  def _GetLVMVolumeIdentifiers(self, scan_node):
-    """Determines the LVM volume identifiers.
-
-    Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
-
-    Returns:
-      list[str]: LVM volume identifiers.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid or more than 1 volume
-          was found but no volumes were specified.
-      UserAbort: if the user requested to abort.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    volume_system = lvm_volume_system.LVMVolumeSystem()
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    # TODO: refactor self._volumes to use scan options.
-    if self._volumes:
-      if self._volumes == 'all':
-        volumes = volume_system.volume_identifiers
-      else:
-        volumes = self._mediator.ParseVolumeIdentifiersString(
-            self._volumes, prefix='lvm')
-
-      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
-          volume_system, volumes, prefix='lvm')
-
-      if not set(selected_volume_identifiers).difference(volume_identifiers):
-        return selected_volume_identifiers
-
-    if len(volume_identifiers) > 1:
-      if self._unattended_mode:
-        raise errors.SourceScannerError(
-            'More than 1 volume found but no volumes specified.')
-
-      try:
-        volume_identifiers = self._mediator.GetLVMVolumeIdentifiers(
-            volume_system, volume_identifiers)
-      except KeyboardInterrupt:
-        raise errors.UserAbort('File system scan aborted.')
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='lvm')
-
-  def _GetPartitionIdentifiers(self, scan_node):
-    """Determines the partition identifiers.
-
-    This function determines which partition identifiers need to be scanned
-    based on the volume scanner options. If no options are provided and there
-    is more than a single partition the mediator is used to ask the user.
-
-    Args:
-      scan_node (SourceScanNode): scan node.
-
-    Returns:
-      list[str]: partition identifiers.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid or the scanner does not
-          know how to proceed.
-      UserAbort: if the user requested to abort.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    if scan_node.path_spec.type_indicator == (
-        dfvfs_definitions.TYPE_INDICATOR_GPT):
-      volume_system = gpt_volume_system.GPTVolumeSystem()
-    else:
-      volume_system = tsk_volume_system.TSKVolumeSystem()
-
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    if self._partitions:
-      if self._partitions == 'all':
-        partitions = volume_system.volume_identifiers
-      else:
-        partitions = self._partitions
-
-      try:
-        selected_volumes = self._NormalizedVolumeIdentifiers(
-            volume_system, partitions,
-            prefix=volume_system.VOLUME_IDENTIFIER_PREFIX)
-
-        if not set(selected_volumes).difference(volume_identifiers):
-          return selected_volumes
-      except errors.SourceScannerError as exception:
-        if self._mediator:
-          self._mediator.PrintWarning('{0!s}'.format(exception))
-
-    if len(volume_identifiers) > 1:
-      if not self._mediator:
-        raise errors.SourceScannerError(
-            'Unable to proceed. More than one partitions found but no mediator '
-            'to determine how they should be used.')
-
-      try:
-        volume_identifiers = self._mediator.GetPartitionIdentifiers(
-            volume_system, volume_identifiers)
-
-      except KeyboardInterrupt:
-        raise errors.UserAbort('Volume scan aborted.')
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers,
-        prefix=volume_system.VOLUME_IDENTIFIER_PREFIX)
-
-  def _GetVSSStoreIdentifiers(self, scan_node):
-    """Determines the VSS store identifiers.
-
-    Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
-
-    Returns:
-      list[str]: VSS store identifiers.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid.
-      UserAbort: if the user requested to abort.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    volume_system = vshadow_volume_system.VShadowVolumeSystem()
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    # TODO: refactor to use scan options.
-    if self._vss_stores:
-      if self._vss_stores == 'all':
-        vss_stores = volume_system.volume_identifiers
-      else:
-        vss_stores = self._mediator.ParseVolumeIdentifiersString(
-            self._vss_stores, prefix='vss')
-
-      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
-          volume_system, vss_stores, prefix='vss')
-
-      if not set(selected_volume_identifiers).difference(volume_identifiers):
-        return selected_volume_identifiers
-
-    if self._unattended_mode:
-      return []
-
-    try:
-      volume_identifiers = self._mediator.GetVSSStoreIdentifiers(
-          volume_system, volume_identifiers)
-
-    except KeyboardInterrupt:
-      raise errors.UserAbort('File system scan aborted.')
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='vss')
-
-  def _NormalizedVolumeIdentifiers(
-      self, volume_system, volume_identifiers, prefix='v'):
-    """Normalizes volume identifiers.
-
-    Args:
-      volume_system (VolumeSystem): volume system.
-      volume_identifiers (list[int|str]): allowed volume identifiers, formatted
-          as an integer or string with prefix.
-      prefix (Optional[str]): volume identifier prefix.
-
-    Returns:
-      list[str]: volume identifiers with prefix.
-
-    Raises:
-      SourceScannerError: if the volume identifier is not supported or no
-          volume could be found that corresponds with the identifier.
-    """
-    normalized_volume_identifiers = []
-    for volume_identifier in volume_identifiers:
-      if isinstance(volume_identifier, int):
-        volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
-
-      elif not volume_identifier.startswith(prefix):
-        try:
-          volume_identifier = int(volume_identifier, 10)
-          volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
-        except (TypeError, ValueError):
-          pass
-
-      try:
-        volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      except KeyError:
-        volume = None
-
-      if not volume:
-        raise errors.SourceScannerError(
-            'Volume missing for identifier: {0:s}.'.format(volume_identifier))
-
-      normalized_volume_identifiers.append(volume_identifier)
-
-    return normalized_volume_identifiers
 
   def _ParseCredentialOptions(self, options):
     """Parses the credential options.
@@ -675,176 +669,6 @@ class StorageMediaTool(tools.CLITool):
     self._vss_only = vss_only
     self._vss_stores = vss_stores
 
-  def _ScanEncryptedVolume(self, scan_context, scan_node):
-    """Scans an encrypted volume scan node for volume and file systems.
-
-    Args:
-      scan_context (SourceScannerContext): source scanner context.
-      scan_node (SourceScanNode): volume scan node.
-
-    Raises:
-      SourceScannerError: if the format of or within the source is not
-          supported, the scan node is invalid or there are no credentials
-          defined for the format.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid or missing scan node.')
-
-    credentials = credentials_manager.CredentialsManager.GetCredentials(
-        scan_node.path_spec)
-    if not credentials:
-      raise errors.SourceScannerError('Missing credentials for scan node.')
-
-    credentials_dict = dict(self._credentials)
-
-    is_unlocked = False
-    for credential_type in sorted(credentials.CREDENTIALS):
-      credential_data = credentials_dict.get(credential_type, None)
-      if not credential_data:
-        continue
-
-      is_unlocked = self._source_scanner.Unlock(
-          scan_context, scan_node.path_spec, credential_type, credential_data)
-      if is_unlocked:
-        self._AddCredentialConfiguration(
-            scan_node.path_spec, credential_type, credential_data)
-        break
-
-    if not is_unlocked and not self._unattended_mode:
-      is_unlocked, credential_type, credential_data = (
-          self._mediator.PromptUserForEncryptedVolumeCredential(
-              self._source_scanner, scan_context, scan_node, credentials))
-
-    if is_unlocked:
-      self._AddCredentialConfiguration(
-          scan_node.path_spec, credential_type, credential_data)
-      self._source_scanner.Scan(
-          scan_context, scan_path_spec=scan_node.path_spec)
-
-  def _ScanFileSystem(self, scan_node, base_path_specs):
-    """Scans a file system scan node for file systems.
-
-    Args:
-      scan_node (SourceScanNode): file system scan node.
-      base_path_specs (list[PathSpec]): file system base path specifications.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError(
-          'Invalid or missing file system scan node.')
-
-    if self._vss_only:
-      if scan_node.parent_node.sub_nodes[0].type_indicator == (
-          dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
-        return
-
-    base_path_specs.append(scan_node.path_spec)
-
-  def _ScanVolume(self, scan_context, scan_node, base_path_specs):
-    """Scans a volume scan node for volume and file systems.
-
-    Args:
-      scan_context (SourceScannerContext): source scanner context.
-      scan_node (SourceScanNode): volume scan node.
-      base_path_specs (list[PathSpec]): file system base path specifications.
-
-    Raises:
-      SourceScannerError: if the format of or within the source
-          is not supported or the scan node is invalid.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid or missing scan node.')
-
-    if scan_context.IsLockedScanNode(scan_node.path_spec):
-      # The source scanner found a locked volume and we need a credential to
-      # unlock it.
-      self._ScanEncryptedVolume(scan_context, scan_node)
-
-      if scan_context.IsLockedScanNode(scan_node.path_spec):
-        return
-
-    if scan_node.IsVolumeSystemRoot():
-      self._ScanVolumeSystemRoot(scan_context, scan_node, base_path_specs)
-
-    elif scan_node.IsFileSystem():
-      self._ScanFileSystem(scan_node, base_path_specs)
-
-    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      if self._process_vss:
-        # TODO: look into building VSS store on demand.
-
-        # We "optimize" here for user experience, alternatively we could scan
-        # for a file system instead of hard coding a child path specification.
-        if dfvfs_definitions.PREFERRED_NTFS_BACK_END == (
-            dfvfs_definitions.TYPE_INDICATOR_TSK):
-          location = '/'
-        else:
-          location = '\\'
-
-        path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.PREFERRED_NTFS_BACK_END, location=location,
-            parent=scan_node.path_spec)
-
-        base_path_specs.append(path_spec)
-
-    else:
-      for sub_scan_node in scan_node.sub_nodes:
-        self._ScanVolume(scan_context, sub_scan_node, base_path_specs)
-
-  def _ScanVolumeSystemRoot(self, scan_context, scan_node, base_path_specs):
-    """Scans a volume system root scan node for volume and file systems.
-
-    Args:
-      scan_context (SourceScannerContext): source scanner context.
-      scan_node (SourceScanNode): volume system root scan node.
-      base_path_specs (list[PathSpec]): file system base path specifications.
-
-    Raises:
-      SourceScannerError: if the scan node is invalid, the scan node type is not
-          supported or if a sub scan node cannot be retrieved.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise errors.SourceScannerError('Invalid scan node.')
-
-    if scan_node.type_indicator == (
-        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER):
-      volume_identifiers = self._GetAPFSVolumeIdentifiers(scan_node)
-
-    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GPT:
-      volume_identifiers = self._GetPartitionIdentifiers(scan_node)
-
-    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_LVM:
-      volume_identifiers = self._GetLVMVolumeIdentifiers(scan_node)
-
-    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      if not self._process_vss:
-        volume_identifiers = []
-      else:
-        volume_identifiers = self._GetVSSStoreIdentifiers(scan_node)
-        # Process VSS stores (snapshots) starting with the most recent one.
-        volume_identifiers.reverse()
-
-        if (not self._vss_only and not self._unattended_mode and
-            volume_identifiers):
-          self._vss_only = not self._mediator.PromptUserForVSSCurrentVolume()
-
-    else:
-      raise errors.SourceScannerError(
-          'Unsupported volume system type: {0:s}.'.format(
-              scan_node.type_indicator))
-
-    for volume_identifier in volume_identifiers:
-      location = '/{0:s}'.format(volume_identifier)
-      sub_scan_node = scan_node.GetSubNodeByLocation(location)
-      if not sub_scan_node:
-        raise errors.SourceScannerError(
-            'Scan node missing for volume identifier: {0:s}.'.format(
-                volume_identifier))
-
-      self._ScanVolume(scan_context, sub_scan_node, base_path_specs)
-
   def AddCredentialOptions(self, argument_group):
     """Adds the credential options to the argument group.
 
@@ -937,53 +761,51 @@ class StorageMediaTool(tools.CLITool):
     if os.path.islink(source_path):
       source_path = os.path.realpath(source_path)
 
-    if (not source_path.startswith('\\\\.\\') and
-        not os.path.exists(source_path)):
-      raise errors.SourceScannerError(
-          'No such device, file or directory: {0:s}.'.format(source_path))
+    options = volume_scanner.VolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
 
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(source_path)
+    if self._partitions == 'all':
+      options.partitions = ['all']
+    else:
+      options.partitions = self._partitions
 
-    try:
-      self._source_scanner.Scan(scan_context)
-    except (ValueError, dfvfs_errors.BackEndError) as exception:
-      raise errors.SourceScannerError(
-          'Unable to scan source with error: {0!s}.'.format(exception))
+    if not self._process_vss or not self._vss_stores:
+      options.snapshots = ['none']
+    elif self._vss_stores == 'all':
+      options.snapshots = ['all']
+    else:
+      options.snapshots = self._vss_stores
 
-    if scan_context.source_type not in (
-        scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
-      scan_node = scan_context.GetRootScanNode()
-      self._source_path_specs.append(scan_node.path_spec)
-      return scan_context
+    if self._volumes == 'all':
+      options.volumes = ['all']
+    else:
+      options.volumes = self._volumes
 
-    # Get the first node where where we need to decide what to process.
-    scan_node = scan_context.GetRootScanNode()
-    while len(scan_node.sub_nodes) == 1:
-      scan_node = scan_node.sub_nodes[0]
+    if self._unattended_mode:
+      mediator = None
+    else:
+      mediator = self._mediator
+
+    volume_scanner_object = StorageMediaToolVolumeScanner(mediator=mediator)
+    # pylint: disable=protected-access
+    volume_scanner_object._credentials = self._credentials
+    volume_scanner_object._unattended_mode = self._unattended_mode
+    volume_scanner_object._vss_only = self._vss_only
 
     base_path_specs = []
-    if scan_node.type_indicator not in (
-        dfvfs_definitions.TYPE_INDICATOR_GPT,
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-      self._ScanVolume(scan_context, scan_node, base_path_specs)
-
-    else:
-      # Determine which partition needs to be processed.
-      partition_identifiers = self._GetPartitionIdentifiers(scan_node)
-      if not partition_identifiers:
-        raise errors.SourceScannerError('No partitions found.')
-
-      for partition_identifier in partition_identifiers:
-        location = '/{0:s}'.format(partition_identifier)
-        sub_scan_node = scan_node.GetSubNodeByLocation(location)
-        self._ScanVolume(scan_context, sub_scan_node, base_path_specs)
+    try:
+      scan_context = volume_scanner_object.ScanSource(
+          source_path, options, base_path_specs)
+    except dfvfs_errors.ScannerError as exception:
+      raise errors.SourceScannerError(exception)
 
     if not base_path_specs:
       raise errors.SourceScannerError(
           'No supported file system found in source.')
 
+    self._credential_configurations = (
+        volume_scanner_object._credential_configurations)
     self._source_path_specs = base_path_specs
+    self._source_type = scan_context.source_type
 
     return scan_context
