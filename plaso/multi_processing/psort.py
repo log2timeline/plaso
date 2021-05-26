@@ -240,16 +240,16 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._knowledge_base = None
     self._memory_profiler = None
     self._merge_task = None
+    self._number_of_consumed_analysis_warnings = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
-    self._number_of_consumed_warnings = 0
+    self._number_of_produced_analysis_warnings = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
-    self._number_of_produced_warnings = 0
     self._processing_configuration = None
     self._processing_profiler = None
     self._serializers_profiler = None
@@ -275,14 +275,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       RuntimeError: if a non-recoverable situation is encountered.
     """
     self._status = definitions.STATUS_INDICATOR_RUNNING
+    self._number_of_consumed_analysis_warnings = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
-    self._number_of_consumed_warnings = 0
+    self._number_of_produced_analysis_warnings = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
-    self._number_of_produced_warnings = 0
 
     number_of_filtered_events = 0
 
@@ -758,7 +758,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._number_of_consumed_events, self._number_of_produced_events,
         self._number_of_consumed_event_tags,
         self._number_of_produced_event_tags,
-        self._number_of_consumed_warnings, self._number_of_produced_warnings,
+        self._number_of_consumed_analysis_warnings,
+        self._number_of_produced_analysis_warnings,
         self._number_of_consumed_reports, self._number_of_produced_reports)
 
     self._processing_status.UpdateEventsStatus(self._events_status)
@@ -788,6 +789,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     display_name = process_status.get('display_name', '')
 
+    number_of_consumed_analysis_warnings = process_status.get(
+        'number_of_consumed_analysis_warnings', None)
+    number_of_produced_analysis_warnings = process_status.get(
+        'number_of_produced_analysis_warnings', None)
+
     number_of_consumed_event_tags = process_status.get(
         'number_of_consumed_event_tags', None)
     number_of_produced_event_tags = process_status.get(
@@ -807,11 +813,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         'number_of_consumed_sources', None)
     number_of_produced_sources = process_status.get(
         'number_of_produced_sources', None)
-
-    number_of_consumed_warnings = process_status.get(
-        'number_of_consumed_warnings', None)
-    number_of_produced_warnings = process_status.get(
-        'number_of_produced_warnings', None)
 
     if status_indicator != definitions.STATUS_INDICATOR_IDLE:
       last_activity_timestamp = process_status.get(
@@ -833,7 +834,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_reports, number_of_produced_reports,
-        number_of_consumed_warnings, number_of_produced_warnings)
+        number_of_consumed_analysis_warnings,
+        number_of_produced_analysis_warnings)
 
   def _StartWorkerProcess(self, process_name, storage_writer):
     """Creates, starts, monitors and registers a worker process.

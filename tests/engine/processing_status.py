@@ -10,18 +10,6 @@ from plaso.engine import processing_status
 class ProcessStatusTest(unittest.TestCase):
   """Tests the process status."""
 
-  def testUpdateNumberOfErrors(self):
-    """Tests the UpdateNumberOfWarnings function."""
-    process_status = processing_status.ProcessStatus()
-
-    process_status.UpdateNumberOfWarnings(5, 5)
-
-    with self.assertRaises(ValueError):
-      process_status.UpdateNumberOfWarnings(1, 10)
-
-    with self.assertRaises(ValueError):
-      process_status.UpdateNumberOfWarnings(10, 1)
-
   def testUpdateNumberOfEventReports(self):
     """Tests the UpdateNumberOfEventReports function."""
     process_status = processing_status.ProcessStatus()
@@ -69,6 +57,18 @@ class ProcessStatusTest(unittest.TestCase):
 
     with self.assertRaises(ValueError):
       process_status.UpdateNumberOfEventTags(10, 1)
+
+  def testUpdateNumberOfExtractionWarnings(self):
+    """Tests the UpdateNumberOfExtractionWarnings function."""
+    process_status = processing_status.ProcessStatus()
+
+    process_status.UpdateNumberOfExtractionWarnings(5, 5)
+
+    with self.assertRaises(ValueError):
+      process_status.UpdateNumberOfExtractionWarnings(1, 10)
+
+    with self.assertRaises(ValueError):
+      process_status.UpdateNumberOfExtractionWarnings(10, 1)
 
 
 class ProcessingStatusTest(unittest.TestCase):

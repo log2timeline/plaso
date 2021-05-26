@@ -483,8 +483,8 @@ class StatusView(object):
       else:
         self._output_writer.Write('Processing completed.\n')
 
-      number_of_warnings = (
-          processing_status.foreman_status.number_of_produced_warnings)
+      foreman_status = processing_status.foreman_status
+      number_of_warnings = foreman_status.number_of_produced_extraction_warnings
       if number_of_warnings:
         output_text = '\n'.join([
             '',
