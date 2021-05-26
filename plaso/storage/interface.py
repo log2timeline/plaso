@@ -31,6 +31,8 @@ class BaseStore(object):
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
   _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
+      warnings.PreprocessingWarning.CONTAINER_TYPE)
   _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_CONFIGURATION = (
@@ -50,6 +52,7 @@ class BaseStore(object):
       _CONTAINER_TYPE_EVENT_DATA_STREAM,
       _CONTAINER_TYPE_EVENT_SOURCE,
       _CONTAINER_TYPE_EVENT_TAG,
+      _CONTAINER_TYPE_PREPROCESSING_WARNING,
       _CONTAINER_TYPE_RECOVERY_WARNING,
       _CONTAINER_TYPE_SESSION_COMPLETION,
       _CONTAINER_TYPE_SESSION_CONFIGURATION,
@@ -274,6 +277,21 @@ class BaseStore(object):
         self._CONTAINER_TYPE_EXTRACTION_WARNING, extraction_warning,
         serialized_data=serialized_data)
 
+  def AddPreprocessingWarning(
+      self, preprocessing_warning, serialized_data=None):
+    """Adds a preprocessing warning.
+
+    Args:
+      preprocessing_warning (PreprocessingWarning): preprocessing warning.
+      serialized_data (Optional[bytes]): serialized form of the preprocessing
+          warning.
+    """
+    self._RaiseIfNotWritable()
+
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING, preprocessing_warning,
+        serialized_data=serialized_data)
+
   def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
     """Adds a recovery warning.
 
@@ -299,6 +317,14 @@ class BaseStore(object):
       generator(AnalysisReport): analysis report generator.
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
+
+  def GetAnalysisWarnings(self):
+    """Retrieves the analysis warnings.
+
+    Returns:
+      generator(AnalysisWarning): analysis warning generator.
+    """
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_WARNING)
 
   def GetEventData(self):
     """Retrieves the event data.
@@ -406,6 +432,15 @@ class BaseStore(object):
     return self._GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
 
+  def GetPreprocessingWarnings(self):
+    """Retrieves the preprocessing warnings.
+
+    Returns:
+      generator(PreprocessingWarning): preprocessing warning generator.
+    """
+    return self._GetAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
+
   def GetRecoveryWarnings(self):
     """Retrieves the recovery warnings.
 
@@ -500,6 +535,14 @@ class BaseStore(object):
     """
     return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
+  def HasAnalysisWarnings(self):
+    """Determines if a store contains analysis warnings.
+
+    Returns:
+      bool: True if the store contains analysis warnings.
+    """
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_WARNING)
+
   def HasExtractionWarnings(self):
     """Determines if a store contains extraction warnings.
 
@@ -515,6 +558,15 @@ class BaseStore(object):
       bool: True if the store contains event tags.
     """
     return self._HasAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
+
+  def HasPreprocessingWarnings(self):
+    """Determines if a store contains preprocessing warnings.
+
+    Returns:
+      bool: True if the store contains preprocessing warnings.
+    """
+    return self._HasAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
 
   def HasRecoveryWarnings(self):
     """Determines if a store contains recovery warnings.

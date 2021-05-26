@@ -954,14 +954,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       self._UpdateEventIdentifierAfterDeserialize(event_tag)
       yield event_tag
 
-  def GetExtractionWarnings(self):
-    """Retrieves the extraction warnings.
-
-    Returns:
-      generator(ExtractionWarning): extraction warning generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
   def GetNumberOfEventSources(self):
     """Retrieves the number event sources.
 
@@ -974,14 +966,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     number_of_event_sources += self._GetNumberOfSerializedAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
     return number_of_event_sources
-
-  def GetRecoveryWarnings(self):
-    """Retrieves the recovery warnings.
-
-    Returns:
-      generator(RecoveryWarning): recovery warning generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
