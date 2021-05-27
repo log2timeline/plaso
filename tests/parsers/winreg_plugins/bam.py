@@ -109,6 +109,8 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
         parser_chain=plugin.plugin_name)
 
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -116,11 +118,11 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
         'binary_path': (
             '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
             'v1.0\\powershell.exe'),
+        'date_time': '2019-03-19 13:25:26.1496853',
         'data_type': 'windows:registry:bam',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2019-03-19 13:25:26.149685',
         'user_sid': 'S-1-5-21-321011808-3761883066-353627080-1000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

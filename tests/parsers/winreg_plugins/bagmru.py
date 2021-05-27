@@ -59,32 +59,33 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 15)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2009-08-04 15:19:16.9977500',
         'data_type': 'windows:registry:bagmru',
         'entries': (
             'Index: 1 [MRU Value 0]: Shell item path: <My Computer>'),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2009-08-04 15:19:16.997750'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2009-08-04 15:19:10.6696250',
         'entries': (
-            'Index: 1 [MRU Value 0]: Shell item path: <My Computer> C:\\'),
-        'timestamp': '2009-08-04 15:19:10.669625'}
+            'Index: 1 [MRU Value 0]: Shell item path: <My Computer> C:\\')}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'key_path': '{0:s}\\0\\0\\0\\0\\0'.format(key_path),
-        'timestamp': '2009-08-04 15:19:16.997750'}
+        'date_time': '2009-08-04 15:19:16.9977500',
+        'key_path': '{0:s}\\0\\0\\0\\0\\0'.format(key_path)}
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
 

@@ -34,18 +34,19 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-04-04 01:58:40.8392499',
         'data_type': 'windows:registry:shutdown',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2012-04-04 01:58:40.839250',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_SHUTDOWN,
         'value_name': 'ShutdownTime'}
 

@@ -44,13 +44,15 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 77)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # The ProgramsCache entry shell item event.
     expected_event_values = {
+        'date_time': '2009-08-04 15:12:24',
         'data_type': 'windows:shell_item:file_entry',
         'localized_name': '@shell32.dll,-21782',
         'long_name': 'Programs',
@@ -58,7 +60,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'origin': '{0:s} ProgramsCache'.format(key_path),
         'parser': 'explorer_programscache/shell_items',
         'shell_item_path': 'Programs',
-        'timestamp': '2009-08-04 15:12:24.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -87,11 +88,11 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         '19: Internet Explorer (No Add-ons).lnk')
 
     expected_event_values = {
+        'date_time': '2009-08-04 15:22:18.4196250',
         'data_type': 'windows:registry:explorer:programcache',
         'entries': expected_entries,
         'key_path': key_path,
         'parser': 'explorer_programscache',
-        'timestamp': '2009-08-04 15:22:18.419625',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
     self.CheckEventValues(storage_writer, events[75], expected_event_values)
@@ -105,10 +106,10 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'StartMenu_Start_Time: [REG_BINARY] (8 bytes)')
 
     expected_event_values = {
+        'date_time': '2009-08-04 15:22:18.4196250',
         'data_type': 'windows:registry:key_value',
         'key_path': key_path,
         'parser': 'explorer_programscache',
-        'timestamp': '2009-08-04 15:22:18.419625',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'values': expected_values}
 
@@ -128,16 +129,17 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 118)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2010-11-10 07:50:38',
         'data_type': 'windows:shell_item:file_entry',
         'origin': '{0:s} ProgramsCache'.format(key_path),
         'parser': 'explorer_programscache/shell_items',
-        'timestamp': '2010-11-10 07:50:38.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

@@ -65,8 +65,9 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = winrar.WinRARHistoryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -75,13 +76,13 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
         '1: C:\\Downloads\\plaso-static.rar')
 
     expected_event_values = {
+        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'winrar:history',
         'entries': expected_entries,
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-08-28 09:23:49.002031'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

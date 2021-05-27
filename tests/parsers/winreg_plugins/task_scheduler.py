@@ -37,32 +37,33 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 174)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2009-07-14 04:53:25.8116181',
         'data_type': 'task_scheduler:task_cache:entry',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'task_name': 'SynchronizeTime',
-        'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}',
-        'timestamp': '2009-07-14 04:53:25.811618'}
+        'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2009-07-14 05:08:50.8116269',
         'data_type': 'task_scheduler:task_cache:entry',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'task_name': 'SynchronizeTime',
-        'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}',
-        'timestamp': '2009-07-14 05:08:50.811627'}
+        'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 

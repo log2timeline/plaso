@@ -34,12 +34,14 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-04-07 10:31:37.6408714',
         'data_type': 'windows:registry:usbstor',
         'device_type': 'Disk',
         'display_name': 'HP v100w USB Device',
@@ -51,7 +53,6 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         'revision': 'Rev_1024',
         'serial': 'AA951D0000007252&0',
         'subkey_name': 'Disk&Ven_HP&Prod_v100w&Rev_1024',
-        'timestamp': '2012-04-07 10:31:37.640871',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'vendor': 'Ven_HP'}
 

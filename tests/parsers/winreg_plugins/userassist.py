@@ -53,18 +53,19 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2009-08-04 15:11:22.8110676',
         'key_path': '{0:s}\\Count'.format(key_path),
         'number_of_executions': 14,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2009-08-04 15:11:22.811068',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'value_name': 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'}
 
@@ -84,20 +85,21 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 61)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'application_focus_count': 21,
         'application_focus_duration': 420000,
+        'date_time': '2010-11-10 07:49:37.0780676',
         'key_path': '{0:s}\\Count'.format(key_path),
         'number_of_executions': 14,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2010-11-10 07:49:37.078068',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'value_name': 'Microsoft.Windows.GettingStarted'}
 

@@ -288,8 +288,9 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     plugin = winlogon.WinlogonPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -312,9 +313,9 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'application': 'VmApplet',
         'command': 'SystemPropertiesPerformance.exe/pagefile',
+        'date_time': '2013-01-30 10:47:57.0000000',
         'data_type': 'windows:registry:winlogon',
         'key_path': key_path,
-        'timestamp': '2013-01-30 10:47:57.000000',
         'trigger': 'Logon'}
 
     self.CheckEventValues(storage_writer, test_event1, expected_event_values)
@@ -322,9 +323,9 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'application': 'NavLogon',
         'command': 'NavLogon.dll',
+        'date_time': '2013-01-30 10:47:57.0000000',
         'data_type': 'windows:registry:winlogon',
         'key_path': '{0:s}\\Notify\\NavLogon'.format(key_path),
-        'timestamp': '2013-01-30 10:47:57.000000',
         'trigger': 'Logoff'}
 
     self.CheckEventValues(storage_writer, test_event2, expected_event_values)

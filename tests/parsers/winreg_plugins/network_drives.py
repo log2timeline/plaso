@@ -142,24 +142,24 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function on created key."""
     key_path = 'HKEY_CURRENT_USER\\Network'
-    time_string = '2013-01-30 10:47:57'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey(key_path, '2013-01-30 10:47:57')
 
     plugin = network_drives.NetworkDrivesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'date_time': '2013-01-30 10:47:57.0000000',
         'data_type': 'windows:registry:network_drive',
         'drive_letter': 'H',
         'key_path': key_path,
         'server_name': 'acme.local',
-        'share_name': '\\Shares\\User_Data\\John.Doe',
-        'timestamp': '2013-01-30 10:47:57.000000'}
+        'share_name': '\\Shares\\User_Data\\John.Doe'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

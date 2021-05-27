@@ -42,8 +42,9 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -63,13 +64,13 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         'url13: http://go.microsoft.com/fwlink/?LinkId=69157')
 
     expected_event_values = {
+        'date_time': '2012-03-12 21:23:53.3077499',
         'data_type': 'windows:registry:typedurls',
         'entries': expected_entries,
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-03-12 21:23:53.307750'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -91,8 +92,9 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -100,13 +102,13 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
         'url1: \\\\controller')
 
     expected_event_values = {
+        'date_time': '2010-11-10 07:58:15.8116250',
         'data_type': 'windows:registry:typedurls',
         'entries': expected_entries,
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2010-11-10 07:58:15.811625'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
