@@ -362,8 +362,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(volume_identifiers, [])
 
-  # TODO: add test for PromptUserForEncryptedVolumeCredential.
-
   def testGetLVMVolumeIdentifiers(self):
     """Tests the GetLVMVolumeIdentifiers function."""
     test_file_path = self._GetTestFilePath(['lvm.raw'])
