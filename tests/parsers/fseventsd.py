@@ -29,22 +29,21 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 12)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    # The timestamp since it is derived from the file entry.
+    # The date and time are derived from the file entry.
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
-    expected_time = os_file_entry.modification_time
-    expected_timestamp = expected_time.GetPlasoTimestamp()
 
     expected_event_values = {
         'data_type': 'macos:fseventsd:record',
+        'date_time': os_file_entry.modification_time,
         'event_identifier': 47747061,
         'flags': 0x01000080,
-        'path': '.Spotlight-V100/Store-V1',
-        'timestamp': expected_timestamp}
+        'path': '.Spotlight-V100/Store-V1'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
@@ -61,22 +60,21 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    # The timestamp since it is derived from the file entry.
+    # The date and time are derived from the file entry.
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
-    expected_time = os_file_entry.modification_time
-    expected_timestamp = expected_time.GetPlasoTimestamp()
 
     expected_event_values = {
         'data_type': 'macos:fseventsd:record',
+        'date_time': os_file_entry.modification_time,
         'event_identifier': 1706838,
         'flags': 0x01000008,
-        'path': 'Hi, Sierra',
-        'timestamp': expected_timestamp}
+        'path': 'Hi, Sierra'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 

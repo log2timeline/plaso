@@ -18,18 +18,19 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     plugin = file_history.FileHistoryESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(['Catalog1.edb'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2713)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'file_history:namespace:event',
+        'date_time': '2013-10-12 17:34:36.6885806',
         'file_attribute': 16,
         'identifier': 356,
         'original_filename': '?UP\\Favorites\\Links\\Lenovo',
         'parent_identifier': 230,
-        'timestamp': '2013-10-12 17:34:36.688581',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
         'usn_number': 9251162904}
 

@@ -17,25 +17,29 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     parser = gdrive_synclog.GoogleDriveSyncLogParser()
     storage_writer = self._ParseFile(['sync_log.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2190)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'gdrive_sync:log:line',
+        'date_time': '2018-01-24 18:25:08.454',
         'timestamp': '2018-01-25 02:25:08.454000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'data_type': 'gdrive_sync:log:line',
+        'date_time': '2018-01-24 18:25:08.454',
         'timestamp': '2018-01-25 02:25:08.454000'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'gdrive_sync:log:line',
+        'date_time': '2018-01-24 18:25:08.456',
         'log_level': 'INFO',
         'message': ' SSL: OpenSSL 1.0.2m  2 Nov 2017',
         'pid': 'pid=2376',
@@ -49,6 +53,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     # TODO: change parser to remove pid= from pid value.
     expected_event_values = {
         'data_type': 'gdrive_sync:log:line',
+        'date_time': '2018-01-24 18:25:09.453',
         'log_level': 'INFO',
         'message': (
             ' Initialize factory with policy PlatformPolicy('
@@ -64,6 +69,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'gdrive_sync:log:line',
+        'date_time': '2018-01-24 18:25:18.563',
         'log_level': 'INFO',
         'message': (
             ' Exception while auto resolving proxy. Traceback (most recent '
@@ -89,13 +95,15 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     parser = gdrive_synclog.GoogleDriveSyncLogParser()
     storage_writer = self._ParseFile(['sync_log-osx.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2338)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'gdrive_sync:log:line',
+        'date_time': '2018-03-01 12:48:14.224',
         'log_level': 'INFO',
         'message': ' OS: Darwin/10.13.3',
         'pid': 'pid=1730',
@@ -109,18 +117,19 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     # line 215. Confirm the switch is handled correctly.
     expected_event_values = {
         'data_type': 'gdrive_sync:log:line',
+        'date_time': '2018-03-01 20:57:33.499',
         'log_level': 'INFO',
         'message': ' SSL: OpenSSL 1.0.2n  7 Dec 2017',
         'pid': 'pid=2590',
         'source_code': 'logging_config.pyo:299',
-        'thread': '140736280556352:MainThread',
-        'timestamp': '2018-03-01 20:57:33.499000'}
+        'thread': '140736280556352:MainThread'}
 
     self.CheckEventValues(storage_writer, events[169], expected_event_values)
 
     # Ensure Unicode characters in filenames are handled cleanly.
     expected_event_values = {
         'data_type': 'gdrive_sync:log:line',
+        'date_time': '2018-03-05 03:09:15.806',
         'log_level': 'INFO',
         'message': (
             ' Updating local entry local_id=LocalID(inode=870321, volume='
@@ -129,8 +138,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
             'size=185, is_folder=False'),
         'pid': 'pid=2608',
         'source_code': 'snapshot_sqlite.pyo:219',
-        'thread': '123145558327296:Worker-1',
-        'timestamp': '2018-03-05 03:09:15.806000'}
+        'thread': '123145558327296:Worker-1'}
 
     self.CheckEventValues(storage_writer, events[1400], expected_event_values)
 

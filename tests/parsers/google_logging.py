@@ -21,24 +21,26 @@ class GooglelogParserTest(test_lib.ParserTestCase):
         ['googlelog_test.INFO'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
     # Test a regular event.
     expected_event_values = {
         'data_type': 'googlelog:log',
+        'date_time': '2019-12-31 23:59:59.000002',
         'file_name': 'logging_functional_test_helper.py',
         'line_number': '65',
-        'message': 'This line is log level 0',
-        'timestamp': '2019-12-31 23:59:59.000002'}
+        'message': 'This line is log level 0'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # Test a multiline event.
     expected_event_values = {
         'data_type': 'googlelog:log',
+        'date_time': '2019-12-31 23:59:59.000003',
         'message': 'Interesting Stuff\n    that spans two lines'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)

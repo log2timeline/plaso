@@ -20,8 +20,9 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         ['appfirewall.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 47)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -30,9 +31,9 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         'agent': 'socketfilterfw[112]',
         'computer_name': 'DarkTemplar-2.local',
         'data_type': 'mac:appfirewall:line',
+        'date_time': '2013-11-02 04:07:35',
         'process_name': 'Logging',
-        'status': 'Error',
-        'timestamp': '2013-11-02 04:07:35.000000'}
+        'status': 'Error'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -41,9 +42,9 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         'agent': 'socketfilterfw[87]',
         'computer_name': 'DarkTemplar-2.local',
         'data_type': 'mac:appfirewall:line',
+        'date_time': '2013-11-03 13:25:15',
         'process_name': 'Dropbox',
-        'status': 'Info',
-        'timestamp': '2013-11-03 13:25:15.000000'}
+        'status': 'Info'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
@@ -63,13 +64,13 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
     # Year changes.
     expected_event_values = {
         'data_type': 'mac:appfirewall:line',
-        'timestamp': '2013-12-31 23:59:23.000000'}
+        'date_time': '2013-12-31 23:59:23'}
 
     self.CheckEventValues(storage_writer, events[45], expected_event_values)
 
     expected_event_values = {
         'data_type': 'mac:appfirewall:line',
-        'timestamp': '2014-01-01 01:13:23.000000'}
+        'date_time': '2014-01-01 01:13:23'}
 
     self.CheckEventValues(storage_writer, events[46], expected_event_values)
 
