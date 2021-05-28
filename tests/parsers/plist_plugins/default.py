@@ -52,8 +52,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistWithPlugin(
         plugin, 'single', self._TOP_LEVEL_DICT_SINGLE_KEY)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -61,9 +62,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2012-11-02 01:21:38.997672',
         'key': 'LastUsed',
-        'root': '/DE-00-AD-00-BE-EF',
-        'timestamp': '2012-11-02 01:21:38.997672'}
+        'root': '/DE-00-AD-00-BE-EF'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -73,8 +74,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistWithPlugin(
         plugin, 'nested', self._TOP_LEVEL_DICT_MULTIPLE_KEYS)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -82,9 +84,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2011-04-07 17:56:53.524275',
         'key': 'LastNameUpdate',
-        'root': '/DeviceCache/44-00-00-00-00-02',
-        'timestamp': '2011-04-07 17:56:53.524275'}
+        'root': '/DeviceCache/44-00-00-00-00-02'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

@@ -17,8 +17,9 @@ class PlsRecallTest(test_lib.ParserTestCase):
     parser = pls_recall.PlsRecallParser()
     storage_writer = self._ParseFile(['PLSRecall_Test.dat'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -26,10 +27,10 @@ class PlsRecallTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'PLSRecall:event',
         'database_name': 'DB11',
+        'date_time': '2013-06-18 19:50:00.550000',
         'query': (
             'SELECT * from test_databae where date > \'01/01/2012\''),
         'sequence_number': 206,
-        'timestamp': '2013-06-18 19:50:00.550000',
         'username': 'tsltmp'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

@@ -23,8 +23,9 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -32,30 +33,30 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2013-06-24 20:46:42.000000',
         'desc': (
             'Configured Apple account email@domain.com (Joaquin Moreno '
             'Garijo)'),
         'key': 'email@domain.com',
-        'timestamp': '2013-06-24 20:46:42.000000',
         'root': '/Accounts'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2013-12-25 14:00:32.000000',
         'desc': (
             'Connected Apple account '
-            'email@domain.com (Joaquin Moreno Garijo)'),
-        'timestamp': '2013-12-25 14:00:32.000000'}
+            'email@domain.com (Joaquin Moreno Garijo)')}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2013-12-25 14:00:32.000000',
         'desc': (
             'Last validation Apple account '
-            'email@domain.com (Joaquin Moreno Garijo)'),
-        'timestamp': '2013-12-25 14:00:32.000000'}
+            'email@domain.com (Joaquin Moreno Garijo)')}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 

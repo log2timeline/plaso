@@ -25,23 +25,23 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'pe:compilation:compilation_time',
-        'pe_type': 'Executable (EXE)',
-        'timestamp': '2015-04-21 14:53:56.000000'}
+        'date_time': '2015-04-21 14:53:56',
+        'pe_type': 'Executable (EXE)'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
         'data_type': 'pe:import:import_time',
-        'timestamp': '2015-04-21 14:53:55.000000'}
+        'date_time': '2015-04-21 14:53:55'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'pe:delay_import:import_time',
+        'date_time': '2015-04-21 14:53:54',
         'dll_name': 'USER32.dll',
         'imphash': '8d0739063fc8f9955cc6696b462544ab',
-        'pe_type': 'Executable (EXE)',
-        'timestamp': '2015-04-21 14:53:54.000000'}
+        'pe_type': 'Executable (EXE)'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -58,8 +58,8 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'pe:compilation:compilation_time',
-        'pe_type': 'Driver (SYS)',
-        'timestamp': '2015-04-21 14:53:54.000000'}
+        'date_time': '2015-04-21 14:53:54',
+        'pe_type': 'Driver (SYS)'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

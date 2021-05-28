@@ -18,16 +18,17 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     plugin = default.DefaultOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # Check the Root Entry event.
     expected_event_values = {
         'data_type': 'olecf:item',
+        'date_time': '2013-05-16 02:29:49.7950000',
         'name': 'Root Entry',
-        'timestamp': '2013-05-16 02:29:49.795000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -35,8 +36,8 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     # Check one other entry.
     expected_event_values = {
         'data_type': 'olecf:item',
-        'name': 'MsoDataStore',
-        'timestamp': '2013-05-16 02:29:49.704000'}
+        'date_time': '2013-05-16 02:29:49.7040000',
+        'name': 'MsoDataStore'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 

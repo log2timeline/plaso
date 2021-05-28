@@ -18,8 +18,9 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['networkminer.pcap.FileInfos.csv'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
@@ -27,6 +28,7 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'networkminer:fileinfos:file',
+        'date_time': '2007-12-17 04:32:30.399052',
         'destination_ip': '192.168.151.130',
         'destination_port': 'TCP 48304',
         'file_details': 'travelocity.com/',
@@ -35,8 +37,7 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
         'file_path': 'D:\\case-export\\AssembledFiles\\index.html',
         'filename': 'index.html',
         'source_ip': '111.123.124.11',
-        'source_port': 'TCP 80',
-        'timestamp': '2007-12-17 04:32:30.399052'}
+        'source_port': 'TCP 80'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 

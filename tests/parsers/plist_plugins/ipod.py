@@ -21,8 +21,9 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -30,20 +31,20 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'ipod:device:entry',
-        'device_id': '0000A11300000000',
-        'timestamp': '1995-11-22 18:25:07.000000'}
+        'date_time': '1995-11-22 18:25:07.000000',
+        'device_id': '0000A11300000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'data_type': 'ipod:device:entry',
+        'date_time': '2013-10-09 19:27:54.000000',
         'device_class': 'iPhone',
         'device_id': '4C6F6F6E65000000',
         'family_id': 10016,
         'firmware_version': 256,
         'imei': '012345678901234',
         'serial_number': '526F676572',
-        'timestamp': '2013-10-09 19:27:54.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CONNECTED,
         'use_count': 1}
 
