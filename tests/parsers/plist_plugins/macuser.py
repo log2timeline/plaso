@@ -20,8 +20,9 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -29,6 +30,7 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2013-12-28 04:35:47',
         'desc': (
             'Last time user (501) changed the password: '
             '$ml$37313$fa6cac1869263baa85cffc5e77a3d4ee164b7'
@@ -39,8 +41,7 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
             '3c40ec0f148b66d5b9ab014449f9b2e103928ef21db6e25'
             'b536a60ff17a84e985be3aa7ba3a4c16b34e0d1d2066ae178'),
         'key': 'passwordLastSetTime',
-        'root': '/',
-        'timestamp': '2013-12-28 04:35:47.000000'}
+        'root': '/'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

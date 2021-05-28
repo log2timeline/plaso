@@ -17,8 +17,9 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     plugin = summary.SummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -28,6 +29,7 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
         'application': 'Microsoft Office Word',
         'author': 'DAVID NIDES',
         'data_type': 'olecf:summary_info',
+        'date_time': '2012-12-10 18:38:00.0000000',
         'last_saved_by': 'Nides',
         'name': 'Summary Information',
         'number_of_characters': 18,
@@ -36,7 +38,6 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
         'revision_number': '4',
         'security': 0,
         'template': 'Normal.dotm',
-        'timestamp': '2012-12-10 18:38:00.000000',
         'timestamp_desc': 'Document Creation Time',
         'title': 'Table of Context'}
 
@@ -51,8 +52,9 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     plugin = summary.DocumentSummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -60,6 +62,7 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
         'application_version': '14.0',
         'company': 'KPMG',
         'data_type': 'olecf:document_summary_info',
+        'date_time': '2013-05-16 02:29:49.7950000',
         'name': 'Document Summary Information',
         'number_of_lines': 1,
         'number_of_paragraphs': 1,

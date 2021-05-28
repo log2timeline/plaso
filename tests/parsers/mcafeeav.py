@@ -17,8 +17,9 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     parser = mcafeeav.McafeeAccessProtectionParser()
     storage_writer = self._ParseFile(['AccessProtectionLog.txt'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
@@ -26,7 +27,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'av:mcafee:accessprotectionlog',
-        'timestamp': '2013-09-27 14:42:26.000000'}
+        'date_time': '2013-09-27 14:42:26'}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
@@ -43,13 +44,13 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     expected_event_values = {
         'action': 'Action blocked : Terminate',
         'data_type': 'av:mcafee:accessprotectionlog',
+        'date_time': '2013-09-27 14:42:39',
         'filename': 'C:\\Windows\\System32\\procexp64.exe',
         'rule': (
             'Common Standard Protection:Prevent termination of McAfee '
             'processes'),
         # Note that the trailing space is part of the status event value.
         'status': 'Blocked by Access Protection rule ',
-        'timestamp': '2013-09-27 14:42:39.000000',
         'trigger_location': (
             'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
             'workService.exe'),

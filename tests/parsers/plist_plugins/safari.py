@@ -20,8 +20,9 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 18)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -29,12 +30,13 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'safari:history:visit',
-        'timestamp': '2013-07-08 17:31:00.000000'}
+        'date_time': '2013-07-08 17:31:00.000000'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_event_values = {
         'data_type': 'safari:history:visit',
+        'date_time': '2013-07-08 20:53:54.000000',
         'title': 'Amínósýrur',
         'url': 'http://netverslun.sci-mx.is/aminosyrur',
         'visit_count': 1}

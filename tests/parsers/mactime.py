@@ -30,51 +30,51 @@ class MactimeTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
+        'date_time': '2012-05-25 15:59:43',
         'inode': 16,
-        'timestamp': '2012-05-25 15:59:43.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[25], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
-        'timestamp': '2012-05-25 15:59:44.000000',
+        'date_time': '2012-05-25 15:59:44',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[26], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
+        'date_time': '2012-05-25 15:59:45',
         'filename': '/a_directory/another_file',
         'mode_as_string': 'r/rrw-------',
-        'timestamp': '2012-05-25 15:59:45.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
     self.CheckEventValues(storage_writer, events[27], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
+        'date_time': '2012-05-25 16:17:43',
         'filename': '/passwordz\r.txt',
-        'timestamp': '2012-05-25 16:17:43.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
     self.CheckEventValues(storage_writer, events[38], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
+        'date_time': '2020-07-30 06:41:05.354067456',
         'filename': '/file|with|pipes',
         'mode_as_string': 'r/rrwxrwxrwx',
-        'timestamp': '2020-07-30 06:41:05.354067',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
     self.CheckEventValues(storage_writer, events[55], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:mactime:line',
+        'date_time': '2020-08-19 18:48:01',
         'filename': '/file_symboliclink1',
         'mode_as_string': 'l/lrwxrwxrwx',
         'symbolic_link_target': '/mnt/ext/testdir1/testfile1',
-        'timestamp': '2020-08-19 18:48:01.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[64], expected_event_values)
@@ -93,9 +93,9 @@ class MactimeTest(test_lib.ParserTestCase):
     # Event extracted from line with unescaped \r character.
     expected_event_values = {
         'data_type': 'fs:mactime:line',
+        'date_time': '2012-05-25 16:00:53',
         'filename': '/passwords\r.txt',
         'inode': 15,
-        'timestamp': '2012-05-25 16:00:53.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
@@ -103,9 +103,9 @@ class MactimeTest(test_lib.ParserTestCase):
     # Event extracted from line with unescaped \\ character.
     expected_event_values = {
         'data_type': 'fs:mactime:line',
+        'date_time': '2019-03-19 04:37:22',
         'filename': '/Windows\\System32',
         'inode': 75520,
-        'timestamp': '2019-03-19 04:37:22.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)

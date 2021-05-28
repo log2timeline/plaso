@@ -20,8 +20,9 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -29,21 +30,21 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2014-01-06 17:43:48.000000',
         'desc': (
             'Last Mac OS 10.9.1 (13B42) partially '
             'update, pending 1: RAWCameraUpdate5.03(031-2664).'),
         'key': '',
-        'root': '/',
-        'timestamp': '2014-01-06 17:43:48.000000'}
+        'root': '/'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2014-01-06 17:43:48.000000',
         'desc': 'Last MacOS 10.9.1 (13B42) full update.',
         'key': '',
-        'root': '/',
-        'timestamp': '2014-01-06 17:43:48.000000'}
+        'root': '/'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

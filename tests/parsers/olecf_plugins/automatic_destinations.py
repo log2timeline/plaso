@@ -24,8 +24,9 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # windows:lnk:link 33
     # windows:distributed_link_tracking:creation: 44
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 88)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -35,6 +36,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'birth_droid_volume_identifier': (
             '{cf6619c2-66a8-44a6-8849-1582fcd3a338}'),
         'data_type': 'olecf:dest_list:entry',
+        'date_time': '2012-04-01 13:52:38.9975382',
         'droid_file_identifier': '{63eea867-7b85-11e1-8950-005056a50b40}',
         'droid_volume_identifier': '{cf6619c2-66a8-44a6-8849-1582fcd3a338}',
         'entry_number': 11,
@@ -42,7 +44,6 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'offset': 32,
         'path': 'C:\\Users\\nfury\\Pictures\\The SHIELD',
         'pin_status': -1,
-        'timestamp': '2012-04-01 13:52:38.997538',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
@@ -50,6 +51,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # Check a WinLnkLinkEvent.
     expected_event_values = {
         'data_type': 'windows:lnk:link',
+        'date_time': '2010-11-10 07:51:16.7491250',
         'drive_serial_number': 0x24ba718b,
         'drive_type': 3,
         'file_attribute_flags': 0x00002020,
@@ -57,17 +59,16 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'link_target': '<Users Libraries> <UNKNOWN: 0x00>',
         'local_path': (
             'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\'
-            'Libraries\\Documents.library-ms'),
-        'timestamp': '2010-11-10 07:51:16.749125'}
+            'Libraries\\Documents.library-ms')}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # Check a WindowsDistributedLinkTrackingCreationEvent.
     expected_event_values = {
         'data_type': 'windows:distributed_link_tracking:creation',
+        'date_time': '2012-03-31 23:01:03.5277415',
         'mac_address': '00:50:56:a5:0b:40',
         'origin': 'DestList entry at offset: 0x00000020',
-        'timestamp': '2012-03-31 23:01:03.527742',
         'uuid': '63eea867-7b85-11e1-8950-005056a50b40'}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
@@ -82,8 +83,9 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # olecf:dest_list:entry: 2
     # windows:lnk:link 2
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -93,13 +95,13 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'birth_droid_volume_identifier': (
             '{00000000-0000-0000-0000-000000000000}'),
         'data_type': 'olecf:dest_list:entry',
+        'date_time': '2016-01-17 13:08:08.2475045',
         'droid_file_identifier': '{00000000-0000-0000-0000-000000000000}',
         'droid_volume_identifier': '{00000000-0000-0000-0000-000000000000}',
         'entry_number': 2,
         'offset': 32,
         'path': 'http://support.microsoft.com/kb/3124263',
         'pin_status': -1,
-        'timestamp': '2016-01-17 13:08:08.247505',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -107,6 +109,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # Check a WinLnkLinkEvent.
     expected_event_values = {
         'data_type': 'windows:lnk:link',
+        'date_time': 'Not set',
         'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

@@ -24,14 +24,15 @@ class OLECFParserTest(test_lib.ParserTestCase):
     #     Sector size         : 512
     #     Short sector size   : 64
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'olecf:item',
-        'timestamp': '2013-05-16 02:29:49.785000',
+        'date_time': '2013-05-16 02:29:49.7850000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
@@ -42,8 +43,9 @@ class OLECFParserTest(test_lib.ParserTestCase):
     parser = olecf.OLECFParser()
     parser.ParseFileObject(parser_mediator, None)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     warnings = list(storage_writer.GetExtractionWarnings())
 

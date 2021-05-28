@@ -21,8 +21,9 @@ class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [test_file_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -30,10 +31,10 @@ class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'plist:key',
+        'date_time': '2012-11-02 01:13:17.324095',
         'desc': 'Paired:True Name:Apple Magic Trackpad 2',
         'key': '44-00-00-00-00-04',
-        'root': '/DeviceCache',
-        'timestamp': '2012-11-02 01:13:17.324095'}
+        'root': '/DeviceCache'}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
 

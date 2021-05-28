@@ -28,17 +28,18 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(os_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 126352)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # A distributed link tracking event.
     expected_event_values = {
         'data_type': 'windows:distributed_link_tracking:creation',
+        'date_time': '2007-06-30 12:58:40.5000041',
         'mac_address': 'db:30:99:be:ae:3c',
         'origin': '$MFT: 462-1',
-        'timestamp': '2007-06-30 12:58:40.500004',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'uuid': '9fe44b69-2709-11dc-a06b-db3099beae3c'}
 
@@ -59,6 +60,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2009-01-14 03:38:58.5869993',
         'is_allocated': False,
         'name': 'CAJA1S19.js',
         'path_hints': expected_path_hints}
@@ -68,6 +70,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # Testing path hint of orphaned file.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2009-01-14 21:07:11.5721856',
         'name': 'menu.text.css',
         'path_hints': ['$Orphan\\session\\menu.text.css']}
 
@@ -90,16 +93,17 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 284)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # The creation timestamp.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2013-12-03 06:30:41.8079077',
         'is_allocated': True,
-        'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -107,8 +111,8 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The last modification timestamp.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2013-12-03 06:30:41.8079077',
         'is_allocated': True,
-        'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -116,8 +120,8 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The last accessed timestamp.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2013-12-03 06:30:41.8079077',
         'is_allocated': True,
-        'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
@@ -126,11 +130,11 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000010,
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2013-12-03 06:30:41.8079077',
         'display_name': 'TSK:/$MFT',
         'file_reference': 0x1000000000000,
         'is_allocated': True,
         'path_hints': ['\\$MFT'],
-        'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
@@ -139,21 +143,22 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000030,
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2013-12-03 06:30:41.8079077',
         'file_reference': 0x1000000000000,
         'is_allocated': True,
         'name': '$MFT',
         'parent_file_reference': 0x5000000000005,
         'path_hints': ['\\$MFT'],
-        'timestamp': '2013-12-03 06:30:41.807908',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'attribute_type': 0x00000010,
+        'data_type': 'fs:stat:ntfs',
+        'date_time': '2013-12-03 06:35:09.5179783',
         'display_name': 'TSK:/$MFT',
         'file_reference': 0x1000000000026,
-        'data_type': 'fs:stat:ntfs',
         'path_hints': [
             '\\System Volume Information\\{3808876b-c176-4e48-b7ae-'
             '04046e6cc752}']}
@@ -163,6 +168,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000030,
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2013-12-03 06:35:09.5023783',
         'display_name': 'TSK:/$MFT',
         'file_reference': 0x1000000000026,
         'name': '{38088~1',
@@ -174,6 +180,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000030,
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2013-12-03 06:35:09.5023783',
         'display_name': 'TSK:/$MFT',
         'file_reference': 0x1000000000026,
         'name': '{3808876b-c176-4e48-b7ae-04046e6cc752}',
@@ -199,8 +206,9 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 184)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
 
 class NTFSUsnJrnlParser(test_lib.ParserTestCase):
@@ -225,17 +233,18 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     # requires to read directly from the volume.
     storage_writer = self._ParseFileByPathSpec(volume_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 19)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'fs:ntfs:usn_change',
+        'date_time': '2015-11-30 21:15:27.2031250',
         'filename': 'Nieuw - Tekstdocument.txt',
         'file_reference': 0x100000000001e,
         'parent_file_reference': 0x5000000000005,
-        'timestamp': '2015-11-30 21:15:27.203125',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION,
         'update_reason_flags': 0x00000100}
 
