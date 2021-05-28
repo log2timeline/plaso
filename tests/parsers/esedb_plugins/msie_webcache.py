@@ -39,8 +39,9 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     plugin = msie_webcache.MsieWebCacheESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(['WebCacheV01.dat'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1354)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which ESEDBPlugin._GetRecordValues() generates events is
     # nondeterministic hence we sort the events.
@@ -49,12 +50,12 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     expected_event_values = {
         'container_identifier': 1,
         'data_type': 'msie:webcache:containers',
+        'date_time': '2014-05-12 07:30:25.4861987',
         'directory': (
             'C:\\Users\\test\\AppData\\Local\\Microsoft\\Windows\\'
             'INetCache\\IE\\'),
         'name': 'Content',
         'set_identifier': 0,
-        'timestamp': '2014-05-12 07:30:25.486199',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[567], expected_event_values)
@@ -65,8 +66,9 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(
         ['PartitionsEx-WebCacheV01.dat'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 3)
     self.assertEqual(storage_writer.number_of_events, 4014)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 3)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which ESEDBPlugin._GetRecordValues() generates events is
     # nondeterministic hence we sort the events.
@@ -79,6 +81,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'cached_filename': 'b83d57c0[1].svg',
         'container_identifier': 14,
         'data_type': 'msie:webcache:container',
+        'date_time': '2019-03-20 17:22:14.0000000',
         'entry_identifier': 63,
         'sync_count': 0,
         'response_headers': (
@@ -86,7 +89,6 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
             'x-cache: TCP_HIT; x-msedge-ref: Ref A: 3CD5FCBC8EAD4E0A80FA41A62'
             'FBC8CCC Ref B: PRAEDGE0910 Ref C: 2019-12-16T20:55:28Z; date: '
             'Mon, 16 Dec 2019 20:55:28 GMT]'),
-        'timestamp': '2019-03-20 17:22:14.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
         'url': 'https://www.bing.com/rs/3R/kD/ic/878ca0cd/b83d57c0.svg'}
 

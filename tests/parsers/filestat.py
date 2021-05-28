@@ -34,19 +34,20 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'fs:stat',
+        'date_time': '2012-05-25 16:00:53',
         'display_name': 'TSK:/passwords.txt',
         'file_entry_type': 'file',
         'file_size': 116,
         'file_system_type': 'EXT2',
         'inode': 15,
-        'timestamp': '2012-05-25 16:00:53.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -66,19 +67,20 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'fs:stat',
+        'date_time': '2012-07-24 14:45:24',
         'display_name': 'ZIP:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
         'file_system_type': 'ZIP',
         'inode': None,
-        'timestamp': '2012-07-24 14:45:24.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -97,8 +99,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -106,12 +109,12 @@ class FileStatTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat',
+        'date_time': '2012-07-28 16:44:07',
         'display_name': 'GZIP:{0:s}'.format(test_path),
         'file_entry_type': 'file',
         'file_size': 1247,
         'file_system_type': 'GZIP',
         'inode': None,
-        'timestamp': '2012-07-28 16:44:07.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -131,19 +134,20 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'fs:stat',
+        'date_time': '2012-07-24 21:45:24',
         'display_name': 'TAR:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
         'file_system_type': 'TAR',
         'inode': None,
-        'timestamp': '2012-07-24 21:45:24.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -165,19 +169,20 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'fs:stat',
+        'date_time': '2012-07-24 21:45:24',
         'display_name': 'TAR:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
         'file_system_type': 'TAR',
         'inode': None,
-        'timestamp': '2012-07-24 21:45:24.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -192,8 +197,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -201,12 +207,12 @@ class FileStatTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat',
+        'date_time': '2012-07-28 16:44:43',
         'display_name': 'GZIP:{0:s}'.format(test_path),
         'file_entry_type': 'file',
         'file_size': 10240,
         'file_system_type': 'GZIP',
         'inode': None,
-        'timestamp': '2012-07-28 16:44:43.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -229,19 +235,20 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'fs:stat',
+        'date_time': '2012-07-20 15:44:14',
         'display_name': 'ZIP:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
         'file_system_type': 'ZIP',
         'inode': None,
-        'timestamp': '2012-07-20 15:44:14.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

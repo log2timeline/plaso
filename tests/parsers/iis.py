@@ -17,20 +17,21 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     parser = iis.WinIISParser()
     storage_writer = self._ParseFile(['iis6.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 12)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'iis:log:line',
+        'date_time': '2013-07-30 00:00:00',
         'dest_ip': '10.10.10.100',
         'dest_port': 80,
         'http_method': 'GET',
         'http_status': 200,
         'requested_uri_stem': '/some/image/path/something.jpg',
         'source_ip': '10.10.10.100',
-        'timestamp': '2013-07-30 00:00:00.000000',
         'user_agent': (
             'Mozilla/4.0+(compatible;+Win32;+WinHttp.WinHttpRequest.5)')}
 
@@ -38,22 +39,22 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'iis:log:line',
+        'date_time': '2013-07-30 00:00:05',
         'http_method': 'GET',
         'http_status': 200,
-        'requested_uri_stem': '/some/image/path/something.jpg',
-        'timestamp': '2013-07-30 00:00:05.000000'}
+        'requested_uri_stem': '/some/image/path/something.jpg'}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_event_values = {
         'data_type': 'iis:log:line',
+        'date_time': '2013-07-30 00:00:03',
         'dest_ip': '10.10.10.100',
         'dest_port': 80,
         'http_method': 'GET',
         'http_status': 404,
         'requested_uri_stem': '/some/image/path/something.htm',
         'source_ip': '22.22.22.200',
-        'timestamp': '2013-07-30 00:00:03.000000',
         'user_agent': (
             'Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_6_8)+AppleWebKit/'
             '534.57.2+(KHTML,+like+Gecko)+Version/5.1.7+Safari/534.57.2')}
@@ -71,20 +72,21 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     parser = iis.WinIISParser()
     storage_writer = self._ParseFile(['iis7_sqli.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'iis:log:line',
+        'date_time': '2015-10-16 13:01:02',
         'dest_ip': '111.111.111.111',
         'dest_port': 443,
         'http_method': 'GET',
         'http_status': 500,
         'requested_uri_stem': '/foo/bar/baz.asp',
         'source_ip': '222.222.222.222',
-        'timestamp': '2015-10-16 13:01:02.000000',
         'user_agent': (
             'Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_9_2)+AppleWebKit/'
             '537.36+(KHTML,+like+Gecko)+Chrome/34.0.1847.131+Safari/537.36')}
@@ -96,20 +98,21 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     parser = iis.WinIISParser()
     storage_writer = self._ParseFile(['iis7_owa.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'iis:log:line',
+        'date_time': '2015-12-31 00:19:48',
         'dest_ip': '10.11.2.3',
         'dest_port': 443,
         'http_method': 'GET',
         'http_status': 200,
         'requested_uri_stem': '/owa/',
         'source_ip': '77.123.22.98',
-        'timestamp': '2015-12-31 00:19:48.000000',
         'user_agent': (
             'Mozilla/5.0+(Windows+NT+6.1;+WOW64)+AppleWebKit/537.36+'
             '(KHTML,+like+Gecko)+Chrome/39.0.2171.95+Safari/537.36')}
@@ -121,13 +124,15 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     parser = iis.WinIISParser()
     storage_writer = self._ParseFile(['iis_without_date.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 11)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'iis:log:line',
+        'date_time': '2013-07-30 00:00:03',
         'protocol_version': 'HTTP/1.1',
         'timestamp': '2013-07-30 00:00:03.000000'}
 

@@ -18,15 +18,16 @@ class IDXTest(test_lib.ParserTestCase):
     parser = java_idx.JavaIDXParser()
     storage_writer = self._ParseFile(['java_602.idx'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'java:download:idx',
+        'date_time': '2010-05-05 01:34:19.720',
         'idx_version': 602,
-        'timestamp': '2010-05-05 01:34:19.720000',
         'timestamp_desc': 'File Hosted Date',
         'url': 'http://www.gxxxxx.com/a/java/xxz.jar'}
 
@@ -35,8 +36,8 @@ class IDXTest(test_lib.ParserTestCase):
     # Parse second event. Same metadata; different timestamp event.
     expected_event_values = {
         'data_type': 'java:download:idx',
+        'date_time': '2010-05-05 03:52:31',
         'idx_version': 602,
-        'timestamp': '2010-05-05 03:52:31.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
         'url': 'http://www.gxxxxx.com/a/java/xxz.jar'}
 
@@ -47,16 +48,17 @@ class IDXTest(test_lib.ParserTestCase):
     parser = java_idx.JavaIDXParser()
     storage_writer = self._ParseFile(['java.idx'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'java:download:idx',
+        'date_time': '2001-07-26 05:00:00.000',
         'idx_version': 605,
         'ip_address': '10.7.119.10',
-        'timestamp': '2001-07-26 05:00:00.000000',
         'timestamp_desc': 'File Hosted Date',
         'url': (
             'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
@@ -67,9 +69,9 @@ class IDXTest(test_lib.ParserTestCase):
     # Parse second event. Same metadata; different timestamp event.
     expected_event_values = {
         'data_type': 'java:download:idx',
+        'date_time': '2013-01-13 16:22:01',
         'idx_version': 605,
         'ip_address': '10.7.119.10',
-        'timestamp': '2013-01-13 16:22:01.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
         'url': (
             'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'

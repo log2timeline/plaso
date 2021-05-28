@@ -20,8 +20,9 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(['SRUDB.dat'], plugin)
 
     # TODO: confirm this is working as intended. Also see: #2134
-    self.assertEqual(storage_writer.number_of_warnings, 2)
     self.assertEqual(storage_writer.number_of_events, 18543)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 2)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -39,8 +40,8 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     expected_event_values = {
         'application': 'Memory Compression',
         'data_type': 'windows:srum:application_usage',
+        'date_time': '2017-11-05 11:32:00.000000',
         'identifier': 22167,
-        'timestamp': '2017-11-05 11:32:00.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_SAMPLE}
 
     self.CheckEventValues(storage_writer, events[92], expected_event_values)
@@ -49,8 +50,8 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     expected_event_values = {
         'application': 1,
         'data_type': 'windows:srum:network_connectivity',
+        'date_time': '2017-11-05 10:30:48.1679714',
         'identifier': 501,
-        'timestamp': '2017-11-05 10:30:48.167971',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FIRST_CONNECTED}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
@@ -60,9 +61,9 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'application': 'DiagTrack',
         'bytes_sent': 2076,
         'data_type': 'windows:srum:network_usage',
+        'date_time': '2017-11-05 11:32:00.000000',
         'identifier': 3495,
         'interface_luid': 1689399632855040,
-        'timestamp': '2017-11-05 11:32:00.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_SAMPLE,
         'user_identifier': 'S-1-5-18'}
 
