@@ -18,29 +18,30 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'systemd', 'journal', 'system.journal'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2101)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'body': 'Started User Manager for UID 1000.',
+        'date_time': '2017-01-27 09:40:55.913258',
         'data_type': 'systemd:journal',
         'hostname': 'test-VirtualBox',
         'pid': '1',
-        'reporter': 'systemd',
-        'timestamp': '2017-01-27 09:40:55.913258'}
+        'reporter': 'systemd'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Test an event with XZ compressed data.
     expected_event_values = {
         'body': 'a' * 692,
+        'date_time': '2017-02-06 16:24:32.564585',
         'data_type': 'systemd:journal',
         'hostname': 'test-VirtualBox',
         'pid': '22921',
-        'reporter': 'root',
-        'timestamp': '2017-02-06 16:24:32.564585'}
+        'reporter': 'root'}
 
     self.CheckEventValues(storage_writer, events[2098], expected_event_values)
 
@@ -50,18 +51,19 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'systemd', 'journal', 'system.journal.lz4'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 85)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'body': 'Reached target Paths.',
+        'date_time': '2018-07-03 15:00:16.682340',
         'data_type': 'systemd:journal',
         'hostname': 'testlol',
         'pid': '822',
-        'reporter': 'systemd',
-        'timestamp': '2018-07-03 15:00:16.682340'}
+        'reporter': 'systemd'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -79,11 +81,11 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'body': expected_body,
+        'date_time': '2018-07-03 15:19:04.667807',
         'data_type': 'systemd:journal',
         'hostname': 'testlol',
         'pid': '34757',
-        'reporter': 'test',
-        'timestamp': '2018-07-03 15:19:04.667807'}
+        'reporter': 'test'}
 
     self.CheckEventValues(storage_writer, events[84], expected_event_values)
 
@@ -101,8 +103,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 2211)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -110,11 +113,11 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         'body': (
             'Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M '
             'free.'),
+        'date_time': '2016-10-24 13:20:01.063423',
         'data_type': 'systemd:journal',
         'hostname': 'test-VirtualBox',
         'pid': '569',
-        'reporter': 'systemd-journald',
-        'timestamp': '2016-10-24 13:20:01.063423'}
+        'reporter': 'systemd-journald'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

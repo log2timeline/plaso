@@ -17,16 +17,17 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     parser = trendmicroav.OfficeScanVirusDetectionParser()
     storage_writer = self._ParseFile(['pccnt35.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'data_type': 'av:trendmicro:scan',
-        'timestamp': '2018-01-30 14:45:32.000000'}
+        'date_time': '2018-01-30 14:45:32',
+        'data_type': 'av:trendmicro:scan'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -34,12 +35,12 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     # format for log lines (without a Unix timestamp).
     expected_event_values = {
         'action': 10,
+        'date_time': '2018-01-30 14:46:00',
         'data_type': 'av:trendmicro:scan',
         'filename': 'eicar.com_.gstmp',
         'path': 'C:\\temp\\',
         'scan_type': 1,
-        'threat': 'Eicar_test_1',
-        'timestamp': '2018-01-30 14:46:00.000000'}
+        'threat': 'Eicar_test_1'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
@@ -48,16 +49,17 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     parser = trendmicroav.OfficeScanWebReputationParser()
     storage_writer = self._ParseFile(['OfcUrlf.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'data_type': 'av:trendmicro:webrep',
-        'timestamp': '2018-01-23 13:16:22.000000'}
+        'date_time': '2018-01-23 13:16:22',
+        'data_type': 'av:trendmicro:webrep'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -66,6 +68,7 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
         'block_mode': 1,
         'credibility_rating': 1,
         'credibility_score': 49,
+        'date_time': '2018-01-23 13:17:02',
         'data_type': 'av:trendmicro:webrep',
         'group_code': '4E',
         'group_name': 'Malware Accomplice',

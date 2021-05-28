@@ -18,8 +18,9 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
         ['syslog_ssh.log'], 'ssh',
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -38,31 +39,32 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
     expected_event_values = {
         'address': '192.168.0.1',
         'body': expected_body,
+        'date_time': '2016-03-11 19:26:39',
         'data_type': 'syslog:ssh:login',
-        'fingerprint': expected_fingerprint,
-        'timestamp': '2016-03-11 19:26:39.000000'}
+        'fingerprint': expected_fingerprint}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'address': '001:db8:a0b:12f0::1',
+        'date_time': '2016-03-11 22:55:30',
         'data_type': 'syslog:ssh:failed_connection',
-        'port': '8759',
-        'timestamp': '2016-03-11 22:55:30.000000'}
+        'port': '8759'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
         'address': '188.124.3.41',
-        'data_type': 'syslog:ssh:opened_connection',
-        'timestamp': '2016-03-11 22:55:31.000000'}
+        'date_time': '2016-03-11 22:55:31',
+        'data_type': 'syslog:ssh:opened_connection'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
         'address': '192.0.2.60',
+        'date_time': '2016-03-11 22:55:34',
+        'data_type': 'syslog:ssh:login',
         'port': '20042',
-        'timestamp': '2016-03-11 22:55:34.000000',
         'username': 'fred'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)

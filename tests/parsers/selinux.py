@@ -20,8 +20,9 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         ['selinux.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 4)
     self.assertEqual(storage_writer.number_of_events, 7)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 4)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -31,9 +32,9 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         'body': (
             'pid=25443 uid=0 old auid=4294967295 new auid=0 old ses=4294967295 '
             'new ses=1165'),
+        'date_time': '2012-05-24 07:40:01.174000',
         'data_type': 'selinux:line',
-        'pid': '25443',
-        'timestamp': '2012-05-24 07:40:01.174000'}
+        'pid': '25443'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -41,16 +42,16 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     expected_event_values = {
         'audit_type': 'SHORTDATE',
         'body': 'check rounding',
-        'data_type': 'selinux:line',
-        'timestamp': '2012-05-24 07:40:01.000000'}
+        'date_time': '2012-05-24 07:40:01.000000',
+        'data_type': 'selinux:line'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # Test case: no message.
     expected_event_values = {
         'audit_type': 'NOMSG',
-        'data_type': 'selinux:line',
-        'timestamp': '2012-05-24 07:40:22.174000'}
+        'date_time': '2012-05-24 07:40:22.174000',
+        'data_type': 'selinux:line'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
@@ -60,9 +61,9 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         'body': (
             'pid=25444 uid=0 old auid=4294967295 new auid=54321 old '
             'ses=4294967295 new ses=1166'),
+        'date_time': '2012-05-24 07:47:46.174000',
         'data_type': 'selinux:line',
-        'pid': '25444',
-        'timestamp': '2012-05-24 07:47:46.174000'}
+        'pid': '25444'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
