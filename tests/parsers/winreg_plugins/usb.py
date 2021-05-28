@@ -33,12 +33,14 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 7)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-04-07 10:31:37.6252465',
         'data_type': 'windows:registry:usb',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
@@ -47,7 +49,6 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
         'product': 'PID_0002',
         'serial': '6&2ab01149&0&2',
         'subkey_name': 'VID_0E0F&PID_0002',
-        'timestamp': '2012-04-07 10:31:37.625247',
         'vendor': 'VID_0E0F'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)

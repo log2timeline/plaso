@@ -108,18 +108,19 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
     plugin = lfu.BootExecutePlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-08-31 20:45:29.0000000',
         'data_type': 'windows:registry:boot_execute',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2012-08-31 20:45:29.000000',
         'value': 'autocheck autochk *'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -135,9 +136,9 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
         'NumberOfInitialSessions: [REG_SZ] 2')
 
     expected_event_values = {
+        'date_time': '2012-08-31 20:45:29.0000000',
         'data_type': 'windows:registry:key_value',
         'key_path': key_path,
-        'timestamp': '2012-08-31 20:45:29.000000',
         'values': expected_values}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -191,19 +192,20 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
     plugin = lfu.BootVerificationPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-08-31 20:45:29.0000000',
         'data_type': 'windows:registry:boot_verification',
         'image_path': 'C:\\WINDOWS\\system32\\googleupdater.exe',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-08-31 20:45:29.000000'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

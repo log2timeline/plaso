@@ -37,12 +37,14 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2011-08-23 17:10:14.9609605',
         'data_type': 'windows:registry:mount_points2',
         'key_path': key_path,
         'label': 'Home Drive',
@@ -52,7 +54,6 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
         'parser': plugin.plugin_name,
         'server_name': 'controller',
         'share_name': '\\home\\nfury',
-        'timestamp': '2011-08-23 17:10:14.960961',
         'type': 'Remote Drive'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

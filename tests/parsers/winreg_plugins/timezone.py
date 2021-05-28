@@ -124,8 +124,9 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     plugin = timezone.WinRegTimezonePlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -141,9 +142,9 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'configuration': expected_configuration,
-        'key_path': key_path,
+        'date_time': '2013-01-30 10:47:57.0000000',
         'data_type': 'windows:registry:timezone',
-        'timestamp': '2013-01-30 10:47:57.000000'}
+        'key_path': key_path}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -161,8 +162,9 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -178,9 +180,9 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'configuration': expected_configuration,
-        'key_path': key_path,
         'data_type': 'windows:registry:timezone',
-        'timestamp': '2012-03-11 07:00:00.000642'}
+        'date_time': '2012-03-11 07:00:00.0006424',
+        'key_path': key_path}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

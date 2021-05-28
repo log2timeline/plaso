@@ -34,18 +34,19 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2013-07-13 10:03:14',
         'data_type': 'ccleaner:update',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2013-07-13 10:03:14.000000'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -69,9 +70,9 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'configuration': expected_configuration,
+        'date_time': '2013-07-13 14:03:26.8616882',
         'data_type': 'ccleaner:configuration',
-        'key_path': key_path,
-        'timestamp': '2013-07-13 14:03:26.861688'}
+        'key_path': key_path}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -86,12 +87,14 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry, timezone='CET')
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2013-07-13 10:03:14',
         'data_type': 'ccleaner:update',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,

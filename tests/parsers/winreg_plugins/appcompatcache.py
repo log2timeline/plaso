@@ -298,17 +298,18 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2004-08-04 14:00:00.0000000',
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
-        'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll',
-        'timestamp': '2004-08-04 14:00:00.000000'}
+        'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -322,18 +323,19 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2003-03-24 20:32:18.0000000',
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': (
-            '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe'),
-        'timestamp': '2003-03-24 20:32:18.000000'}
+            '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -349,17 +351,18 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2006-11-02 12:35:24.7041218',
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
-        'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE',
-        'timestamp': '2006-11-02 12:35:24.704122'}
+        'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -379,19 +382,20 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 330)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-04-04 01:46:37.9329644',
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 10,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'path': '\\??\\C:\\Windows\\PSEXESVC.EXE',
-        'timestamp': '2012-04-04 01:46:37.932964'}
+        'path': '\\??\\C:\\Windows\\PSEXESVC.EXE'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
@@ -407,17 +411,18 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-02-18 05:18:23.9350000',
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
-        'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe',
-        'timestamp': '2012-02-18 05:18:23.935000'}
+        'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -431,17 +436,18 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2013-08-22 12:35:25.3750709',
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
-        'path': 'SYSVOL\\Windows\\System32\\dllhost.exe',
-        'timestamp': '2013-08-22 12:35:25.375071'}
+        'path': 'SYSVOL\\Windows\\System32\\dllhost.exe'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -455,17 +461,18 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2014-09-22 06:42:39.0000000',
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
-        'path': 'C:\\Windows\\system32\\MpSigStub.exe',
-        'timestamp': '2014-09-22 06:42:39.000000'}
+        'path': 'C:\\Windows\\system32\\MpSigStub.exe'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -480,17 +487,19 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         parser_chain=plugin.plugin_name)
 
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2017-03-16 22:56:01.2487145',
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': (
             'C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\'
-            'nvstreg.exe'),
-        'timestamp': '2017-03-16 22:56:01.248715'}
+            'nvstreg.exe')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

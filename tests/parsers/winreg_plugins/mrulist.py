@@ -92,18 +92,19 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
         'InterestingApp\\MRU')
-    time_string = '2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
 
     plugin = mrulist.MRUListStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:mrulist',
         'entries': (
             'Index: 1 [MRU Value a]: Some random text here '
@@ -111,8 +112,7 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
             'Index: 3 [MRU Value b]: c:/evil.exe'),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-08-28 09:23:49.002031'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -181,37 +181,37 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         'Explorer\\DesktopStreamMRU')
-    time_string = '2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
 
     plugin = mrulist.MRUListShellItemListWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # A MRUList event.
     expected_event_values = {
+        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:mrulist',
         'entries': (
             'Index: 1 [MRU Value a]: Shell item path: <My Computer> '
             'C:\\Winnt\\Profiles\\Administrator\\Desktop'),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-08-28 09:23:49.002031'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     # A shell item event.
     expected_event_values = {
+        'date_time': '2011-01-14 12:03:52',
         'data_type': 'windows:shell_item:file_entry',
         'name': 'Winnt',
         'origin': key_path,
-        'shell_item_path': '<My Computer> C:\\Winnt',
-        'timestamp': '2011-01-14 12:03:52.000000'}
+        'shell_item_path': '<My Computer> C:\\Winnt'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

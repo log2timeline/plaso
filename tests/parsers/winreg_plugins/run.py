@@ -67,19 +67,20 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-04-05 17:03:53.9920616',
         'data_type': 'windows:registry:run',
         'entries': [
             'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-04-05 17:03:53.992062'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -97,19 +98,20 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-04-05 17:03:53.9920616',
         'data_type': 'windows:registry:run',
         'entries': [
             'mctadmin: C:\\Windows\\System32\\mctadmin.exe'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-04-05 17:03:53.992062'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -128,10 +130,13 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2011-09-16 20:57:09.0675758',
         'data_type': 'windows:registry:run',
         'entries': [
             ('McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\'
@@ -142,8 +147,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
              'VMwareUser.exe"')],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2011-09-16 20:57:09.067576'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -161,19 +165,20 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-04-06 14:07:27.7500000',
         'data_type': 'windows:registry:run',
         'entries': [
             '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
-        'timestamp': '2012-04-06 14:07:27.750000'}
+        'parser': plugin.plugin_name}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

@@ -206,35 +206,35 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function on created key."""
     key_path = (
         'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-    time_string = '2013-01-30 10:47:57'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey(key_path, '2013-01-30 10:47:57')
 
     plugin = networks.NetworksWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
         'connection_type': 'Wired',
+        'date_time': '2014-05-06 17:02:19.795',
         'data_type': 'windows:registry:network',
         'default_gateway_mac': '00:50:56:ea:6c:ec',
         'description': 'Network',
         'dns_suffix': 'localdomain',
         'ssid': 'Network',
-        'timestamp': '2014-05-06 17:02:19.795000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'connection_type': 'Wireless',
+        'date_time': '2015-01-27 15:15:27.965',
         'data_type': 'windows:registry:network',
         'description': 'My Awesome Wifi Hotspot',
         'ssid': 'My Awesome Wifi Hotspot',
-        'timestamp': '2015-01-27 15:15:27.965000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CONNECTED}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)

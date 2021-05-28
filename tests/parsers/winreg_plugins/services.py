@@ -90,16 +90,15 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a virtual key."""
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services\\TestDriver')
-    time_string = '2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services\\TestDriver'
+    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
 
     plugin = services.ServicesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -109,6 +108,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'Group: [REG_SZ] Pnp Filter')
 
     expected_event_values = {
+        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:service',
         'error_control': 1,
         'image_path': 'C:\\Dell\\testdriver.sys',
@@ -118,7 +118,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'parser': plugin.plugin_name,
         'service_type': 2,
         'start_type': 2,
-        'timestamp': '2012-08-28 09:23:49.002031',
         'values': expected_values}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -152,14 +151,14 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(len(bits_events), 1)
 
     expected_event_values = {
+        'date_time': '2012-04-06 20:43:27.6390752',
         'data_type': 'windows:registry:service',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
         'service_dll': '%SystemRoot%\\System32\\qmgr.dll',
         'service_type': 0x20,
-        'start_type': 3,
-        'timestamp': '2012-04-06 20:43:27.639075'}
+        'start_type': 3}
 
     self.CheckEventValues(
         bits_storage_writer, bits_events[0], expected_event_values)
@@ -173,9 +172,9 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(len(mc_task_manager_events), 1)
 
     expected_event_values = {
+        'date_time': '2011-09-16 20:49:16.8774156',
         'data_type': 'windows:registry:service',
-        'service_type': 0x10,
-        'timestamp': '2011-09-16 20:49:16.877416'}
+        'service_type': 0x10}
 
     self.CheckEventValues(
         mc_task_manager_storage_writer, mc_task_manager_events[0],
@@ -196,10 +195,10 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(len(rdp_video_miniport_events), 1)
 
     expected_event_values = {
+        'date_time': '2011-09-17 13:37:59.3471577',
         'data_type': 'windows:registry:service',
         'image_path': 'System32\\drivers\\rdpvideominiport.sys',
-        'start_type': 3,
-        'timestamp': '2011-09-17 13:37:59.347158'}
+        'start_type': 3}
 
     self.CheckEventValues(
         rdp_video_miniport_storage_writer, rdp_video_miniport_events[0],

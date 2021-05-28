@@ -34,17 +34,18 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 7)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'account_rid': 500,
         'comments': 'Built-in account for administering the computer/domain',
+        'date_time': '2014-09-24 03:36:06.3588374',
         'data_type': 'windows:registry:sam_users',
         'login_count': 6,
-        'timestamp': '2014-09-24 03:36:06.358837',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'username': 'Administrator'}
 
@@ -54,9 +55,9 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'account_rid': 500,
         'comments': 'Built-in account for administering the computer/domain',
+        'date_time': '2010-11-20 21:48:12.5692440',
         'data_type': 'windows:registry:sam_users',
         'login_count': 6,
-        'timestamp': '2010-11-20 21:48:12.569244',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_LOGIN,
         'username': 'Administrator'}
 

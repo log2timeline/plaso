@@ -73,12 +73,14 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2012-03-13 18:27:15.0898020',
         'data_type': 'windows:registry:office_mru_list',
         'entries': (
             'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*'
@@ -96,7 +98,6 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.plugin_name,
-        'timestamp': '2012-03-13 18:27:15.089802',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
@@ -108,9 +109,9 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         'SA-23E Mitchell-Hyundyne Starfury.docx')
 
     expected_event_values = {
+        'date_time': '2012-03-13 18:27:15.0830000',
         'data_type': 'windows:registry:office_mru',
         'key_path': key_path,
-        'timestamp': '2012-03-13 18:27:15.083000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'value_string': expected_value_string}
 
