@@ -18,15 +18,16 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['activity.sqlite'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 44)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'zeitgeist:activity',
-        'subject_uri': 'application://rhythmbox.desktop',
-        'timestamp': '2013-10-22 08:53:19.477000'}
+        'date_time': '2013-10-22 08:53:19.477',
+        'subject_uri': 'application://rhythmbox.desktop'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

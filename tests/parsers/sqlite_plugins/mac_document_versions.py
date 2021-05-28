@@ -19,16 +19,17 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['document_versions.sql'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'mac:document_versions:file',
+        'date_time': '2014-01-21 02:03:00',
         'name': 'Spain is beautiful.rtf',
         'path': '/Users/moxilo/Documents',
-        'timestamp': '2014-01-21 02:03:00.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'user_sid': '501',
         'version_path': (

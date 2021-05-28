@@ -19,6 +19,10 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['firefox_cookies.sqlite'], plugin)
 
+    self.assertEqual(storage_writer.number_of_events, 295)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
     # sqlite> SELECT COUNT(id) FROM moz_cookies;
     # 90
     # Thus the cookie database contains 93 entries:
@@ -51,10 +55,10 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__utma',
         'data_type': 'firefox:cookie:entry',
+        'date_time': '2015-10-30 21:56:03',
         'host': 's.greenqloud.com',
         'httponly': False,
         'secure': False,
-        'timestamp': '2015-10-30 21:56:03.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION,
         'url': 'http://s.greenqloud.com/'}
 
@@ -64,10 +68,10 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': 'KRTBCOOKIE_391',
         'data_type': 'firefox:cookie:entry',
+        'date_time': '2013-11-29 21:56:04',
         'httponly': False,
         'path': '/',
         'secure': False,
-        'timestamp': '2013-11-29 21:56:04.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION,
         'url': 'http://pubmatic.com/'}
 

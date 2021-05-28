@@ -19,16 +19,18 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['windows_timeline_ActivitiesCache.db'], plugin)
 
-    self.assertEqual(112, storage_writer.number_of_events)
+    self.assertEqual(storage_writer.number_of_events, 112)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'active_duration_seconds': 9,
         'data_type': 'windows:timeline:user_engaged',
+        'date_time': '2018-08-03 11:29:00',
         'package_identifier': 'c:\\python34\\python.exe',
         'reporting_app': 'ShellActivityMonitor',
-        'timestamp': '2018-08-03 11:29:00.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -36,11 +38,11 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'active_duration_seconds': 11,
         'data_type': 'windows:timeline:user_engaged',
+        'date_time': '2018-07-27 11:58:55',
         'package_identifier': (
             'c:\\users\\demouser\\appdata\\local\\programs\\python\\'
             'python37-32\\python.exe'),
         'reporting_app': 'ShellActivityMonitor',
-        'timestamp': '2018-07-27 11:58:55.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
@@ -48,9 +50,9 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'application_display_name': 'OneDrive',
         'data_type': 'windows:timeline:generic',
+        'date_time': '2018-07-25 12:04:48',
         'description': '',
         'package_identifier': 'Microsoft.SkyDrive.Desktop',
-        'timestamp': '2018-07-25 12:04:48.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[80], expected_event_values)
@@ -58,10 +60,10 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'application_display_name': 'Notepad',
         'data_type': 'windows:timeline:generic',
+        'date_time': '2018-07-27 12:36:09',
         'description': 'C:\\Users\\demouser\\Desktop\\SCHEMA.txt',
         'package_identifier': (
             '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe'),
-        'timestamp': '2018-07-27 12:36:09.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[96], expected_event_values)

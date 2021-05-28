@@ -19,13 +19,17 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_knowledgec-10.13.db'], plugin)
 
-    self.assertEqual(0, storage_writer.number_of_warnings)
-    self.assertEqual(51, storage_writer.number_of_events)
+    self.assertEqual(storage_writer.number_of_events, 51)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
     events = list(storage_writer.GetEvents())
 
+    # TODO: look into rounding difference between date_time and timestamp
     expected_event_values = {
         'bundle_identifier': 'com.apple.Installer-Progress',
         'data_type': 'mac:knowledgec:application',
+        'date_time': '2019-02-10 16:59:58.860664',
         'duration': 1,
         'timestamp': '2019-02-10 16:59:58.860665',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
@@ -38,23 +42,25 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_knowledgec-10.14.db'], plugin)
 
-    self.assertEqual(0, storage_writer.number_of_warnings)
-    self.assertEqual(231, storage_writer.number_of_events)
+    self.assertEqual(storage_writer.number_of_events, 231)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'bundle_identifier': 'com.apple.Terminal',
         'data_type': 'mac:knowledgec:application',
+        'date_time': '2019-05-08 13:57:30.668998',
         'duration': 1041,
-        'timestamp': '2019-05-08 13:57:30.668998',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[225], expected_event_values)
 
     expected_event_values = {
         'data_type': 'mac:knowledgec:safari',
+        'date_time': '2019-05-08 13:57:20.000000',
         'duration': 0,
-        'timestamp': '2019-05-08 13:57:20.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_END,
         'title': 'Instagram',
         'url': 'https://www.instagram.com/'}

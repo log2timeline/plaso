@@ -19,19 +19,20 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['imessage_chat.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'imessage:event:chat',
+        'date_time': '2015-11-30 10:48:40.000000',
         'imessage_id': 'xxxxxx2015@icloud.com',
         'message_type': 0,
         'read_receipt': 1,
         'service': 'iMessage',
         'text': 'Did you try to send me a message?',
-        'timestamp': '2015-11-30 10:48:40.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)

@@ -20,14 +20,18 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_notificationcenter.db'], plugin)
 
-    self.assertEqual(6, storage_writer.number_of_events)
+    self.assertEqual(storage_writer.number_of_events, 6)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
+    # TODO: look into rounding differences between date_time and timestamp
     expected_event_values = {
         'body': 'KeePassXC can now be run',
         'bundle_name': 'com.google.santagui',
         'data_type': 'mac:notificationcenter:db',
+        'date_time': '2018-05-02 10:59:18.930155',
         'presented': 1,
         'timestamp': '2018-05-02 10:59:18.930156',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
@@ -39,6 +43,7 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'body': 'Drive File Stream is loading your files…',
         'bundle_name': 'com.google.drivefs',
         'data_type': 'mac:notificationcenter:db',
+        'date_time': '2018-05-02 11:13:21.531085',
         'presented': 1,
         'timestamp': '2018-05-02 11:13:21.531085',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
@@ -50,6 +55,7 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'body': 'PyCharm can now be run',
         'bundle_name': 'com.google.santagui',
         'data_type': 'mac:notificationcenter:db',
+        'date_time': '2018-05-16 16:38:04.686079',
         'presented': 1,
         'timestamp': '2018-05-16 16:38:04.686080',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,

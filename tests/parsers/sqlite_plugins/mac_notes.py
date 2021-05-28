@@ -18,17 +18,18 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
         ['NotesV7.storedata'], plugin_object)
 
     self.assertEqual(storage_writer.number_of_events, 6)
-    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'mac:notes:note',
+        'date_time': '2014-02-11 02:38:27.097813',
         'text': (
             'building 4th brandy gibs microsoft office body soul and peace '
             'example.com 3015555555: plumbing and heating claim#123456 Small '
             'business '),
-        'timestamp': '2014-02-11 02:38:27.097813',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'title': 'building 4th brandy gibs'}
 

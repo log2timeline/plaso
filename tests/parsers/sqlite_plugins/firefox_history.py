@@ -27,16 +27,17 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # However there are three events that do not have a timestamp
     # so the test file will show 202 extracted events.
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 202)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # Check the first page visited event.
     expected_event_values = {
         'data_type': 'firefox:places:page_visited',
+        'date_time': '2011-07-01 11:16:21.371935',
         'host': 'news.google.com',
-        'timestamp': '2011-07-01 11:16:21.371935',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': 'Google News',
         'url': 'http://news.google.com/',
@@ -48,7 +49,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first bookmark event.
     expected_event_values = {
         'data_type': 'firefox:places:bookmark',
-        'timestamp': '2011-07-01 11:13:59.266344',
+        'date_time': '2011-07-01 11:13:59.266344',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -56,11 +57,11 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the second bookmark event.
     expected_event_values = {
         'data_type': 'firefox:places:bookmark',
+        'date_time': '2011-07-01 11:13:59.267198',
         'places_title': (
             'folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder=TOOLBAR&'
             'sort=12&excludeQueries=1&excludeItemIfParentHasAnnotation=livemark'
             '%2FfeedURI&maxResults=10&queryType=1'),
-        'timestamp': '2011-07-01 11:13:59.267198',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
         'title': 'Recently Bookmarked',
         'type': 'URL',
@@ -75,7 +76,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first bookmark annotation event.
     expected_event_values = {
         'data_type': 'firefox:places:bookmark_annotation',
-        'timestamp': '2011-07-01 11:13:59.267146',
+        'date_time': '2011-07-01 11:13:59.267146',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
     self.CheckEventValues(storage_writer, events[183], expected_event_values)
@@ -84,7 +85,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'content': 'RecentTags',
         'data_type': 'firefox:places:bookmark_annotation',
-        'timestamp': '2011-07-01 11:13:59.267605',
+        'date_time': '2011-07-01 11:13:59.267605',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED,
         'title': 'Recent Tags',
         'url': 'place:sort=14&type=6&maxResults=10&queryType=1'}
@@ -94,7 +95,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the second last bookmark folder event.
     expected_event_values = {
         'data_type': 'firefox:places:bookmark_folder',
-        'timestamp': '2011-03-21 10:05:01.553774',
+        'date_time': '2011-03-21 10:05:01.553774',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
     self.CheckEventValues(storage_writer, events[200], expected_event_values)
@@ -102,7 +103,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the last bookmark folder event.
     expected_event_values = {
         'data_type': 'firefox:places:bookmark_folder',
-        'timestamp': '2011-07-01 11:14:11.766851',
+        'date_time': '2011-07-01 11:14:11.766851',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
         'title': 'Latest Headlines'}
 
@@ -120,8 +121,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     #     14 bookmark folders
     #     8 annotations
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 84)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -137,8 +139,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:places:page_visited',
+        'date_time': '2013-10-30 21:57:11.281942',
         'host': 'code.google.com',
-        'timestamp': '2013-10-30 21:57:11.281942',
         'url': 'http://code.google.com/p/plaso',
         'visit_count': 1,
         'visit_type': 2}
