@@ -31,8 +31,9 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     parser = symantec.SymantecParser()
     storage_writer = self._ParseFile(['Symantec.Log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
@@ -43,12 +44,12 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
         'action1': '5',
         'action2': '3',
         'cat': '1',
+        'date_time': '2012-11-30 10:47:29',
         'data_type': 'av:symantec:scanlog',
         'event': '5',
         'event_data': '201\t4\t6\t1\t65542\t0\t0\t0\t0\t0\t0',
         'file': 'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt',
         'scanid': '0',
-        'timestamp': '2012-11-30 10:47:29.000000',
         'user': 'davnads',
         'virus': 'W32.Changeup!gen33'}
 

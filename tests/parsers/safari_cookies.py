@@ -18,19 +18,21 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     parser = safari_cookies.BinaryCookieParser()
     storage_writer = self._ParseFile(['Cookies.binarycookies'], parser)
 
+    # There should be:
+    # * 207 events in total
+    # * 182 events from the safari cookie parser
+    # * 25 event from the cookie plugins
+
+    self.assertEqual(storage_writer.number_of_events, 207)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
     events = []
     for event in storage_writer.GetEvents():
       event_data = self._GetEventDataOfEvent(storage_writer, event)
       if event_data.data_type == 'safari:cookie:entry':
         events.append(event)
 
-    # There should be:
-    # * 207 events in total
-    # * 182 events from the safari cookie parser
-    # * 25 event from the cookie plugins
-
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 207)
     self.assertEqual(len(events), 182)
 
     expected_event_values = {
@@ -43,10 +45,10 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'cookie_name': 'nonsession',
+        'date_time': '2013-07-08 20:54:50.000000',
         'data_type': 'safari:cookie:entry',
         'flags': 0,
         'path': '/',
-        'timestamp': '2013-07-08 20:54:50.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'url': '.ebay.com'}
 
@@ -59,6 +61,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
             '4YyWAG2cT2FVSqOvGGi_Y1OPrngmNvpKPPyz5gIUP6x_EQeM7bR3jsrg_F1UXVOgu'
             '6JgkFwqO5uHrv4HiL05qb.85Bl.V__HZI5wpAGOGPz1XHhY5mOMH.g.pkVDLli36W'
             '2iuYwA-&v=2'),
+        'date_time': '2013-07-08 17:24:30.000000',
         'data_type': 'safari:cookie:entry',
         'path': '/',
         'url': '.www.yahoo.com'}

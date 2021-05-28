@@ -21,8 +21,9 @@ class SantaUnitTest(test_lib.ParserTestCase):
     # - 3 lines should be skipped in the results.
     # - 17 new events should be added from existing lines.
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 208)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which parser generates events is nondeterministic hence
     # we sort the events.
@@ -30,6 +31,7 @@ class SantaUnitTest(test_lib.ParserTestCase):
 
     # Execution event with quarantine URL.
     expected_event_values = {
+        'date_time': '2018-08-19 03:17:55.765',
         'data_type': 'santa:execution',
         'decision': 'ALLOW',
         'process_hash': (
@@ -37,14 +39,14 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'process_path': '/Applications/Skype.app/Contents/MacOS/Skype',
         'quarantine_url': (
             'https://endpoint920510.azureedge.net/s4l/s4l/download/mac/'
-            'Skype-8.28.0.41.dmg'),
-        'timestamp': '2018-08-19 03:17:55.765000'}
+            'Skype-8.28.0.41.dmg')}
 
     self.CheckEventValues(storage_writer, events[46], expected_event_values)
 
     # File operation event log
     expected_event_values = {
         'action': 'WRITE',
+        'date_time': '2018-08-19 04:02:47.911',
         'data_type': 'santa:file_system_event',
         'file_path': '/Users/qwerty/newfile',
         'gid': '20',
@@ -54,7 +56,6 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'process': 'Finder',
         'process_path': (
             '/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder'),
-        'timestamp': '2018-08-19 04:02:47.911000',
         'uid': '501',
         'user': 'qwerty'}
 
@@ -66,21 +67,21 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'appearance': '2018-08-19T03:17:28.982Z',
         'bsd_name': 'disk2s1',
         'bus': 'Virtual Interface',
+        'date_time': '2018-08-19 03:17:29.036',
         'data_type': 'santa:diskmount',
         'dmg_path': '/Users/qwerty/Downloads/Skype-8.28.0.41.dmg',
         'fs': 'hfs',
         'model': 'Apple Disk Image',
         'mount': '',
         'serial': '',
-        'timestamp': '2018-08-19 03:17:29.036000',
         'volume': 'Skype'}
 
     self.CheckEventValues(storage_writer, events[38], expected_event_values)
 
     # Test Disk event created from appearance timestamp.
     expected_event_values = {
+        'date_time': '2018-08-19 03:17:28.982',
         'data_type': 'santa:diskmount',
-        'timestamp': '2018-08-19 03:17:28.982000',
         'timestamp_desc': 'First Connection Time'}
 
     self.CheckEventValues(storage_writer, events[35], expected_event_values)

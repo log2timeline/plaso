@@ -19,8 +19,9 @@ class SyslogParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['syslog_rsyslog'], parser, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseRsyslogTraditional(self):
     """Tests the Parse function on a traditional rsyslog file."""
@@ -30,17 +31,18 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog_rsyslog_traditional'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'date_time': '2016-01-22 07:54:32',
         'data_type': 'syslog:line',
         'hostname': 'myhostname.myhost.com',
         'reporter': 'Job',
-        'severity': None,
-        'timestamp': '2016-01-22 07:54:32.000000'}
+        'severity': None}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -52,8 +54,9 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog_osx'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseChromeOS(self):
     """Tests the Parse function."""
@@ -63,13 +66,16 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog_chromeos'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
+    # Note that syslog_chromeos contains -07:00 as time zone offset.
     expected_event_values = {
         'body': 'cleanup_logs: job completed',
+        'date_time': '2016-10-25 12:37:23.297265',
         'data_type': 'syslog:line',
         'reporter': 'periodic_scheduler',
         'pid': 13707,
@@ -79,23 +85,24 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2016-10-25 12:37:24.987014',
         'data_type': 'syslog:line',
         'reporter': 'kernel',
-        'severity': 'DEBUG',
-        'timestamp': '2016-10-25 19:37:24.987014'}
+        'severity': 'DEBUG'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # Testing year increment.
     expected_event_values = {
+        'date_time': '2016-10-25 12:37:24.993079',
         'data_type': 'syslog:line',
         'reporter': 'kernel',
-        'severity': 'DEBUG',
-        'timestamp': '2016-10-25 19:37:24.993079'}
+        'severity': 'DEBUG'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2016-10-25 12:37:25.007963',
         'data_type': 'syslog:line',
         'reporter': 'kernel',
         'severity': 'ERR'}
@@ -106,6 +113,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         'body': (
             '[  316.587330] cfg80211: This is a multi-line\n\tmessage that '
             'screws up many syslog parsers.'),
+        'date_time': '2016-10-25 12:37:25.014015',
         'data_type': 'syslog:line',
         'reporter': 'aprocess',
         'severity': 'INFO'}
@@ -119,41 +127,43 @@ class SyslogParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['syslog'], parser, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 16)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
         'body': 'INFO No new content in ímynd.dd.',
+        'date_time': '2012-01-22 07:52:33',
         'data_type': 'syslog:line',
         'hostname': 'myhostname.myhost.com',
         'pid': 30840,
         'reporter': 'client',
-        'severity': None,
-        'timestamp': '2012-01-22 07:52:33.000000'}
+        'severity': None}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2012-02-29 01:15:43',
         'data_type': 'syslog:line',
         'reporter': '---',
-        'severity': None,
-        'timestamp': '2012-02-29 01:15:43.000000'}
+        'severity': None}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     # Testing year increment.
     expected_event_values = {
         'body': 'This syslog message has a fractional value for seconds.',
+        'date_time': '2013-03-23 23:01:18',
         'data_type': 'syslog:line',
         'reporter': 'somrandomexe',
-        'severity': None,
-        'timestamp': '2013-03-23 23:01:18.000000'}
+        'severity': None}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_event_values = {
+        'date_time': '2013-12-31 17:54:32',
         'data_type': 'syslog:line',
         'reporter': '/sbin/anacron',
         'severity': None}
@@ -164,6 +174,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         'body': (
             'This is a multi-line message that screws up\n\tmany syslog '
             'parsers.'),
+        'date_time': '2013-11-18 01:15:20',
         'data_type': 'syslog:line',
         'pid': 10100,
         'reporter': 'aprocess',
@@ -173,6 +184,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'body': '[997.390602] sda2: rw=0, want=65, limit=2',
+        'date_time': '2014-11-18 08:30:20',
         'data_type': 'syslog:line',
         'hostname': None,
         'reporter': 'kernel',
@@ -187,8 +199,9 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 2)
     self.assertEqual(storage_writer.number_of_events, 15)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 2)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseWithTimeZone(self):
     """Tests the Parse function with a time zone."""
@@ -198,12 +211,14 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog_rsyslog_traditional'], parser,
         knowledge_base_values=knowledge_base_values, timezone='CET')
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'date_time': '2016-01-22 07:54:32',
         'data_type': 'syslog:line',
         'hostname': 'myhostname.myhost.com',
         'reporter': 'Job',

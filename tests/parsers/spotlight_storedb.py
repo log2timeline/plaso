@@ -25,12 +25,12 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2013-06-04 20:53:10.000000',
         'data_type': 'spotlight:metadata_item',
         'file_name': 'CIJCanoScan9000F.icns',
         'file_system_identifier': 41322,
         'kind': 'Apple icon image',
         'parent_file_system_identifier': 41320,
-        'timestamp': '2013-06-04 20:53:10.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[12], expected_event_values)
@@ -47,8 +47,8 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
+        'date_time': '2019-09-17 09:22:07.536585',
         'data_type': 'spotlight:metadata_item',
-        'timestamp': '2019-09-17 09:22:07.536585',
         'timestamp_desc': definitions.TIME_DESCRIPTION_UPDATE}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
