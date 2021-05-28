@@ -19,18 +19,19 @@ class KikMessageTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['kik_ios.sqlite'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 60)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'body': 'Hello',
         'data_type': 'ios:kik:messaging',
+        'date_time': '2015-06-29 12:26:11.000000',
         'displayname': 'Ken Doh',
         'message_status': 94,
         'message_type': 2,
-        'timestamp': '2015-06-29 12:26:11.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'username': 'ken.doh'}
 

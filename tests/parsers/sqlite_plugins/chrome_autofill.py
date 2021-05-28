@@ -18,15 +18,16 @@ class ChromeAutofillPluginTest(test_lib.SQLitePluginTestCase):
     plugin = chrome_autofill.ChromeAutofillPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['Web Data'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'chrome:autofill:entry',
+        'date_time': '2018-08-17 19:35:51',
         'field_name': 'repo',
-        'timestamp': '2018-08-17 19:35:51.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'usage_count': 1,
         'value': 'log2timeline/plaso'}

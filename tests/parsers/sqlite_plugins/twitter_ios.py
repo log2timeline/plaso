@@ -24,13 +24,16 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     # * 25 Contacts update events.
     # * 67 Status creation events.
     # * 67 Status update events.
-    self.assertEqual(184, storage_writer.number_of_events)
+    self.assertEqual(storage_writer.number_of_events, 184)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # Test the first contact creation event.
     expected_event_values = {
         'data_type': 'twitter:ios:contact',
+        'date_time': '2007-04-22 14:42:37',
         'description': (
             'Breaking news alerts and updates from the BBC. For news, '
             'features, analysis follow @BBCWorld (international) or @BBCNews '
@@ -44,7 +47,6 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
             'https://pbs.twimg.com/profile_images/460740982498013184/'
             'wIPwMwru_normal.png'),
         'screen_name': 'BBCBreaking',
-        'timestamp': '2007-04-22 14:42:37.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'url': 'http://www.bbc.co.uk/news'}
 
@@ -53,6 +55,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     # Test a contact modification event.
     expected_event_values = {
         'data_type': 'twitter:ios:contact',
+        'date_time': '2015-12-02 15:35:44',
         'description': (
             'Breaking news alerts and updates from the BBC. For news, '
             'features, analysis follow @BBCWorld (international) or @BBCNews '
@@ -66,7 +69,6 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
             'https://pbs.twimg.com/profile_images/'
             '460740982498013184/wIPwMwru_normal.png'),
         'screen_name': 'BBCBreaking',
-        'timestamp': '2015-12-02 15:35:44.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_UPDATE,
         'url': 'http://www.bbc.co.uk/news'}
 
@@ -75,12 +77,12 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     # Test a status creation event.
     expected_event_values = {
         'data_type': 'twitter:ios:status',
+        'date_time': '2014-09-11 11:46:16',
         'favorite_count': 3,
         'favorited': 0,
         'name': 'Heather Mahalik',
         'retweet_count': 2,
         'text': 'Never forget. http://t.co/L7bjWue1A2',
-        'timestamp': '2014-09-11 11:46:16.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'user_id': 475222380}
 
@@ -89,12 +91,12 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     # Test a status update event.
     expected_event_values = {
         'data_type': 'twitter:ios:status',
+        'date_time': '2015-12-02 15:39:37',
         'favorite_count': 3,
         'favorited': 0,
         'name': 'Heather Mahalik',
         'retweet_count': 2,
         'text': 'Never forget. http://t.co/L7bjWue1A2',
-        'timestamp': '2015-12-02 15:39:37.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_UPDATE,
         'user_id': 475222380}
 

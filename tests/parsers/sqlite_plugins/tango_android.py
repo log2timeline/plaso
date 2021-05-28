@@ -20,8 +20,9 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
         ['tango_android_profile.db'], plugin)
 
     # We should have 115 events in total with no warnings.
-    self.assertEqual(115, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_warnings)
+    self.assertEqual(storage_writer.number_of_events, 115)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -29,6 +30,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'birthday': '1980-10-01',
         'data_type': 'tango:android:contact',
+        'date_time': '2016-01-15 13:21:45.624',
         'distance': 39.04880905,
         'first_name': 'Rouel',
         'friend_request_message': 'I am following you on Tango',
@@ -37,7 +39,6 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
         'is_friend': False,
         'last_name': 'Henry',
         'status': 'Praying!',
-        'timestamp': '2016-01-15 13:21:45.624000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACTIVE}
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
@@ -45,7 +46,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     # Test a contact last access event.
     expected_event_values = {
         'data_type': 'tango:android:contact',
-        'timestamp': '2016-01-15 14:35:20.633000',
+        'date_time': '2016-01-15 14:35:20.633',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[57], expected_event_values)
@@ -53,7 +54,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     # Test a contact request sent event.
     expected_event_values = {
         'data_type': 'tango:android:contact',
-        'timestamp': '2016-01-15 14:35:20.436000',
+        'date_time': '2016-01-15 14:35:20.436',
         'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
 
     self.CheckEventValues(storage_writer, events[56], expected_event_values)
@@ -69,8 +70,9 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
         ['tango_android_tc.db'], plugin)
 
     # We should have 43 events in total with no warnings.
-    self.assertEqual(43, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_warnings)
+    self.assertEqual(storage_writer.number_of_events, 43)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -78,7 +80,7 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'conversation_identifier': 'DyGWr_010wQM_ozkIe-9Ww',
         'data_type': 'tango:android:conversation',
-        'timestamp': '1970-01-01 00:00:00.000000',
+        'date_time': 'Not set',
         'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
@@ -86,9 +88,9 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     # Test a message creation event.
     expected_event_values = {
         'data_type': 'tango:android:message',
+        'date_time': '2016-01-15 14:41:33.027',
         'direction': 2,
         'message_identifier': 16777224,
-        'timestamp': '2016-01-15 14:41:33.027000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[21], expected_event_values)
@@ -96,9 +98,9 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     # Test a message sent event.
     expected_event_values = {
         'data_type': 'tango:android:message',
+        'date_time': '2016-01-15 14:41:34.238',
         'direction': 2,
         'message_identifier': 16777224,
-        'timestamp': '2016-01-15 14:41:34.238000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
 
     self.CheckEventValues(storage_writer, events[22], expected_event_values)

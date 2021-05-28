@@ -19,8 +19,9 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['Extension Activity'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 56)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -29,8 +30,8 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
         'activity_id': 48,
         'api_name': 'browserAction.onClicked',
         'data_type': 'chrome:extension_activity:activity_log',
+        'date_time': '2014-11-25 21:08:23.698737',
         'extension_id': 'ognampngfcbddbfemdapefohjiobgbdl',
-        'timestamp': '2014-11-25 21:08:23.698737',
         'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

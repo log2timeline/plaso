@@ -19,16 +19,17 @@ class KodiVideosTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['MyVideos107.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
         'data_type': 'kodi:videos:viewing',
+        'date_time': '2017-07-16 04:54:54',
         'filename': 'plugin://plugin.video.youtube/play/?video_id=7WX0-O_ENlk',
         'play_count': 1,
-        'timestamp': '2017-07-16 04:54:54.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)

@@ -18,14 +18,15 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     plugin = safari.SafariHistoryPluginSqlite()
     storage_writer = self._ParseDatabaseFileWithPlugin(['History.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 25)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'safari:history:visit_sqlite',
-        'timestamp': '2017-11-09 21:24:28.829571',
+        'date_time': '2017-11-09 21:24:28.829571',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'url': 'http://facebook.com/',

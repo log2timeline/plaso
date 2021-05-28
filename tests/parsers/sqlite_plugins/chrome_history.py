@@ -19,17 +19,18 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 71 events (69 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 71)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # Check the first page visited entry.
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
+        'date_time': '2011-04-07 12:03:11.000000',
         'page_transition_type': 0,
-        'timestamp': '2011-04-07 12:03:11.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': 'Ubuntu Start Page',
         'typed_count': 0,
@@ -41,9 +42,9 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first file downloaded entry.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
+        'date_time': '2011-05-23 08:35:30',
         'full_path': '/home/john/Downloads/funcats_scr.exe',
         'received_bytes': 1132155,
-        'timestamp': '2011-05-23 08:35:30.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
         'total_bytes': 1132155,
         'url': 'http://fatloss4idiotsx.com/download/funcats/funcats_scr.exe'}
@@ -60,9 +61,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-57.0.2987.133'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 3 events (1 page visit, 2 file downloads).
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -73,7 +75,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'timestamp': '2018-01-21 14:09:53.885478',
+        'date_time': '2018-01-21 14:09:53.885478',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'typed_count': 0,
@@ -84,9 +86,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
+        'date_time': '2018-01-21 14:09:53.900399',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
-        'timestamp': '2018-01-21 14:09:53.900399',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 3080192,
         'url': (
@@ -101,9 +103,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-58.0.3029.96'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 3 events (1 page visit, 2 file downloads).
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -114,7 +117,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'timestamp': '2018-01-21 14:09:27.315765',
+        'date_time': '2018-01-21 14:09:27.315765',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'typed_count': 0,
@@ -125,9 +128,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
+        'date_time': '2018-01-21 14:09:27.200398',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
-        'timestamp': '2018-01-21 14:09:27.200398',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 3080192,
         'url': (
@@ -142,9 +145,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59.0.3071.86'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 3 events (1 page visit, 2 file downloads).
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -155,7 +159,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'timestamp': '2018-01-21 14:08:52.037692',
+        'date_time': '2018-01-21 14:08:52.037692',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'typed_count': 0,
@@ -166,9 +170,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
+        'date_time': '2018-01-21 14:08:51.811123',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
-        'timestamp': '2018-01-21 14:08:51.811123',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 3080192,
         'url': (
@@ -185,9 +189,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59_added-fake-column'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 3 events (1 page visit, 2 file downloads).
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -198,7 +203,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'timestamp': '2018-01-21 14:08:52.037692',
+        'date_time': '2018-01-21 14:08:52.037692',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'typed_count': 0,
@@ -209,9 +214,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
+        'date_time': '2018-01-21 14:08:51.811123',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
-        'timestamp': '2018-01-21 14:08:51.811123',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,
         'total_bytes': 3080192,
         'url': (

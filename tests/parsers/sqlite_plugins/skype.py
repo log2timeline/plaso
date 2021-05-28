@@ -33,8 +33,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['skype_main.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 24)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -65,9 +66,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'action_type': 'SENDSOLICITUDE',
         'data_type': 'skype:event:transferfile',
+        'date_time': '2013-10-24 21:49:32',
         'destination': 'european.bbq.competitor <European BBQ>',
         'source': 'gen.beringer <Gen Beringer>',
-        'timestamp': '2013-10-24 21:49:32.000000',
         'transferred_filename': 'secret-project.pdf'}
 
     self.CheckEventValues(storage_writer, events[17], expected_event_values)
@@ -75,11 +76,11 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test SMS event.
     expected_event_values = {
         'data_type': 'skype:event:sms',
+        'date_time': '2013-07-01 22:14:22',
         'number': '+34123456789',
         'text': (
             'If you want I can copy some documents for you, if you can pay '
-            'it... ;)'),
-        'timestamp': '2013-07-01 22:14:22.000000'}
+            'it... ;)')}
 
     self.CheckEventValues(storage_writer, events[16], expected_event_values)
 
@@ -87,9 +88,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'action_type': 'GETSOLICITUDE',
         'data_type': 'skype:event:transferfile',
+        'date_time': '2013-10-24 21:49:35',
         'destination': 'european.bbq.competitor <European BBQ>',
         'source': 'gen.beringer <Gen Beringer>',
-        'timestamp': '2013-10-24 21:49:35.000000',
         'transferred_filename': 'secret-project.pdf',
         'transferred_filepath': '/Users/gberinger/Desktop/secret-project.pdf',
         'transferred_filesize': 69986}
@@ -99,9 +100,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test chat event.
     expected_event_values = {
         'data_type': 'skype:event:chat',
+        'date_time': '2013-07-30 21:27:11',
         'from_account': 'Gen Beringer <gen.beringer>',
         'text': 'need to know if you got it this time.',
-        'timestamp': '2013-07-30 21:27:11.000000',
         'title': 'European Competitor | need to know if you got it..',
         'to_account': 'european.bbq.competitor'}
 
@@ -110,9 +111,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test chat room event.
     expected_event_values = {
         'data_type': 'skype:event:chat',
+        'date_time': '2013-10-27 15:29:19',
         'from_account': 'European Competitor <european.bbq.competitor>',
         'text': 'He is our new employee',
-        'timestamp': '2013-10-27 15:29:19.000000',
         'title': 'European Competitor, Echo123',
         'to_account': 'gen.beringer, echo123'}
 
@@ -121,9 +122,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test call event.
     expected_event_values = {
         'data_type': 'skype:event:call',
+        'date_time': '2013-07-01 22:12:17',
         'dst_call': 'european.bbq.competitor',
         'src_call': 'gen.beringer',
-        'timestamp': '2013-07-01 22:12:17.000000',
         'user_start_call': False,
         'video_conference': False}
 

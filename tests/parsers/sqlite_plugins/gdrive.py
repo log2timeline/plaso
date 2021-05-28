@@ -18,8 +18,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     plugin = gdrive.GoogleDrivePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['snapshot.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 30)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Let's verify that we've got the correct balance of cloud and local
     # entry events.
@@ -41,21 +42,21 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     # Test one local and one cloud entry.
     expected_event_values = {
         'data_type': 'gdrive:snapshot:local_entry',
+        'date_time': '2014-01-28 00:11:25',
         'path': (
             '%local_sync_root%/Top Secret/Enn meiri '
             'leyndarmál/Sýnileiki - Örverpi.gdoc'),
-        'size': 184,
-        'timestamp': '2014-01-28 00:11:25.000000'}
+        'size': 184}
 
     self.CheckEventValues(
         storage_writer, local_entries[5], expected_event_values)
 
     expected_event_values = {
         'data_type': 'gdrive:snapshot:cloud_entry',
+        'date_time': '2014-01-28 00:12:27',
         'document_type': 6,
         'path': '/Almenningur/Saklausa hliðin',
         'size': 0,
-        'timestamp': '2014-01-28 00:12:27.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
         'url': (
             'https://docs.google.com/document/d/1ypXwXhQWliiMSQN9S5M0K6Wh39XF4U'

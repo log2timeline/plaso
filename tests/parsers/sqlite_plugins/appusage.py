@@ -18,8 +18,9 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['application_usage.sqlite'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -30,7 +31,7 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
         'bundle_id': 'com.apple.Safari',
         'count': 1,
         'data_type': 'macosx:application_usage',
-        'timestamp': '2014-05-07 18:52:02.000000'}
+        'date_time': '2014-05-07 18:52:02'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

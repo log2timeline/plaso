@@ -18,9 +18,10 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     plugin = android_sms.AndroidSMSPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['mmssms.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEqual(storage_writer.number_of_events, 9)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -29,9 +30,9 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
         'address': '1 555-521-5554',
         'body': 'Yo Fred this is my new number.',
         'data_type': 'android:messaging:sms',
+        'date_time': '2013-10-29 16:56:28.038',
         'sms_type': 'SENT',
         'sms_read': 'READ',
-        'timestamp': '2013-10-29 16:56:28.038000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

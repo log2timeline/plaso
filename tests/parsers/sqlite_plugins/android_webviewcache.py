@@ -18,15 +18,16 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['webviewCache.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'android:webviewcache',
+        'date_time': '2013-03-28 09:48:18.000',
         'content_length': 1821,
-        'timestamp': '2013-03-28 09:48:18.000000',
         'url': (
             'https://apps.skypeassets.com/static/skype.skypeloginstatic/css/'
             'print.css?_version=1.15')}

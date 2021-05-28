@@ -19,18 +19,19 @@ class HangoutsMessagesTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['googlehangouts.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
         'body': 'How are you?',
         'data_type': 'android:messaging:hangouts',
+        'date_time': '2017-07-17 04:41:54.326967',
         'message_status': 4,
         'message_type': 2,
         'sender': 'John Macron',
-        'timestamp': '2017-07-17 04:41:54.326967',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)

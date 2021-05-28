@@ -17,8 +17,9 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
     plugin = android_webview.WebViewPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['webview.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -27,10 +28,10 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
         'data': (
             'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER='),
         'data_type': 'webview:cookie',
+        'date_time': '2014-03-05 15:04:44.000',
         'host': 'skype.com',
         'path': '/',
-        'secure': False,
-        'timestamp': '2014-03-05 15:04:44.000000'}
+        'secure': False}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
