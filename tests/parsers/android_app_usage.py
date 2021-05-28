@@ -17,25 +17,26 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
     parser = android_app_usage.AndroidAppUsageParser()
     storage_writer = self._ParseFile(['usage-history.xml'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 28)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'android:event:last_resume_time',
+        'date_time': '2013-12-09 19:28:33.047',
         'component': (
             'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd'),
-        'package': 'com.sec.android.widgetapp.ap.hero.accuweather',
-        'timestamp': '2013-12-09 19:28:33.047000'}
+        'package': 'com.sec.android.widgetapp.ap.hero.accuweather'}
 
     self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
     expected_event_values = {
         'data_type': 'android:event:last_resume_time',
+        'date_time': '2013-09-27 19:45:55.675',
         'component': 'com.google.android.gsf.login.NameActivity',
-        'package': 'com.google.android.gsf.login',
-        'timestamp': '2013-09-27 19:45:55.675000'}
+        'package': 'com.google.android.gsf.login'}
 
     self.CheckEventValues(storage_writer, events[17], expected_event_values)
 

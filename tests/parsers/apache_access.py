@@ -17,16 +17,19 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     parser = apache_access.ApacheAccessParser()
     storage_writer = self._ParseFile(['access.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 13)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which parser generates events is nondeterministic hence
     # we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # Test combined log format event.
+    # 13/Jan/2016:19:31:20 +0200
     expected_event_values = {
         'data_type': 'apache:access',
+        'date_time': '2016-01-13 19:31:20',
         'http_request': (
             'GET /wp-content/themes/darkmode/evil.php?cmd=uname+-a HTTP/1.1'),
         'http_request_referer': 'http://localhost/',
@@ -45,13 +48,13 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     # Test common log format parser event.
     expected_event_values = {
         'data_type': 'apache:access',
+        'date_time': '2016-01-13 19:31:16',
         'http_request': (
             'GET /wp-content/themes/darkmode/header.php?install2 HTTP/1.1'),
         'http_response_code': 200,
         'http_response_bytes': 494,
         'ip_address': '10.0.0.1',
         'remote_name': '-',
-        'timestamp': '2016-01-13 19:31:16.000000',
         'user_name': '-'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
@@ -68,6 +71,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     # Test vhost_combined log format event.
     expected_event_values = {
         'data_type': 'apache:access',
+        'date_time': '2018-01-13 19:31:17',
         'http_request': 'GET /wp-content/themes/darkmode/evil.php HTTP/1.1',
         'http_request_referer': '-',
         'http_request_user_agent': (
@@ -79,7 +83,6 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'port_number': 443,
         'remote_name': '-',
         'server_name': 'plaso.log2timeline.net',
-        'timestamp': '2018-01-13 19:31:17.000000',
         'user_name': '-'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)

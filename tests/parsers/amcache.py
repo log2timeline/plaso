@@ -20,8 +20,9 @@ class AMCacheParserTest(test_lib.ParserTestCase):
 
     # 1178 windows:registry:amcache events
     # 2105 last written time events
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3283)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -31,14 +32,15 @@ class AMCacheParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:amcache',
+        'date_time': '1992-06-19 22:22:17',
         'full_path': expected_full_path,
-        'sha1': '82274eef0911a948f91425f5e5b0e730517fe75e',
-        'timestamp': '1992-06-19 22:22:17.000000'}
+        'sha1': '82274eef0911a948f91425f5e5b0e730517fe75e'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'data_type': 'windows:registry:amcache:programs',
+        'date_time': '2017-08-01 12:52:59',
         'entry_type': 'AddRemoveProgram',
         'file_paths': [
             'c:\\program files (x86)\\fileinsight\\plugins',
@@ -58,8 +60,9 @@ class AMCacheParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFile(['SYSTEM'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
 
 if __name__ == '__main__':

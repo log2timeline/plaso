@@ -35,16 +35,17 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         ['firefox_cookies.sqlite'], plugin)
     events = self._GetAnalyticsCookieEvents(storage_writer)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(len(events), 25)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     expected_event_values = {
         'cookie_name': '__utmz',
         'data_type': 'cookie:google:analytics:utmz',
+        'date_time': '2013-10-30 21:56:06',
         'domain_hash': '137167072',
         'sessions': 1,
         'sources': 1,
-        'timestamp': '2013-10-30 21:56:06.000000',
         'url': 'http://ads.aha.is/',
         'utmccn': '(referral)',
         'utmcct': (
@@ -60,11 +61,12 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(['cookies.db'], plugin)
     events = self._GetAnalyticsCookieEvents(storage_writer)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-
     # The cookie database contains 560 entries in total. Out of them
     # there are 75 events created by the Google Analytics plugin.
     self.assertEqual(len(events), 75)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
     # Check few "random" events to verify.
 
     # Check an UTMZ Google Analytics event.
@@ -86,9 +88,9 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__utma',
         'data_type': 'cookie:google:analytics:utma',
+        'date_time': '2012-03-22 01:55:29',
         'domain_hash': '151488169',
         'sessions': 2,
-        'timestamp': '2012-03-22 01:55:29.000000',
         'timestamp_desc': 'Analytics Previous Time',
         'url': 'http://assets.tumblr.com/',
         'visitor_id': '1827102436'}
@@ -99,9 +101,9 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__utmb',
         'data_type': 'cookie:google:analytics:utmb',
+        'date_time': '2012-03-22 01:48:30',
         'domain_hash': '154523900',
         'pages_viewed': 1,
-        'timestamp': '2012-03-22 01:48:30.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'url': 'http://upressonline.com/'}
 

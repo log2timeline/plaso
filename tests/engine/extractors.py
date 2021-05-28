@@ -100,7 +100,8 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
     test_extractor.ParseDataStream(parser_mediator, file_entry, '')
 
     self.assertEqual(storage_writer.number_of_events, 4)
-    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseDataStreamWithForceParser(self):
     """Tests the ParseDataStream function with force parser."""
@@ -121,7 +122,8 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
     test_extractor.ParseDataStream(parser_mediator, file_entry, '')
 
     self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   # TODO: add test for ParseFileEntryMetadata
   # TODO: add test for ParseMetadataFile

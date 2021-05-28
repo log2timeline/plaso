@@ -32,8 +32,9 @@ class CompoundZIPTest(test_lib.ParserTestCase):
     parser = czip.CompoundZIPParser()
     storage_writer = self._ParseFile(['syslog.zip'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Try parsing a file that is not a ZIP file.
     parser = czip.CompoundZIPParser()
