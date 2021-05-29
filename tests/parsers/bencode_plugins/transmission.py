@@ -18,8 +18,9 @@ class TransmissionPluginTest(test_lib.BencodePluginTestCase):
     parser = bencode_parser.BencodeParser()
     storage_writer = self._ParseFile(['bencode', 'transmission'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which BencodeParser generates events is nondeterministic
     # hence we sort the events.
@@ -27,9 +28,9 @@ class TransmissionPluginTest(test_lib.BencodePluginTestCase):
 
     expected_event_values = {
         'data_type': 'p2p:bittorrent:transmission',
+        'date_time': '2013-11-08 15:31:20',
         'destination': '/Users/brian/Downloads',
         'seedtime': 4,
-        'timestamp': '2013-11-08 15:31:20.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -37,9 +38,9 @@ class TransmissionPluginTest(test_lib.BencodePluginTestCase):
     # Test on second event of first torrent.
     expected_event_values = {
         'data_type': 'p2p:bittorrent:transmission',
+        'date_time': '2013-11-08 18:24:24',
         'destination': '/Users/brian/Downloads',
         'seedtime': 4,
-        'timestamp': '2013-11-08 18:24:24.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)

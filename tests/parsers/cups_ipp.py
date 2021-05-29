@@ -268,8 +268,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Test with attribute group data too small.
     storage_writer = self._CreateStorageWriter()
@@ -280,8 +281,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Test attribute with date time value.
     datetime_data = self._CreateDateTimeValueData(parser)
@@ -296,8 +298,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -305,8 +308,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     parser = cups_ipp.CupsIppParser()
     storage_writer = self._ParseFile(['mac_cups_ipp'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -315,12 +319,12 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         'computer_name': 'localhost',
         'copies': 1,
         'data_type': 'cups:ipp:event',
+        'date_time': '2013-11-03 18:07:21',
         'doc_type': 'application/pdf',
         'job_id': 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a',
         'job_name': 'Assignament 1',
         'owner': 'Joaquin Moreno Garijo',
         'printer_id': 'RHULBW',
-        'timestamp': '2013-11-03 18:07:21.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'uri': 'ipp://localhost:631/printers/RHULBW',
         'user': 'moxilo'}
@@ -329,14 +333,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'cups:ipp:event',
-        'timestamp': '2013-11-03 18:07:21.000000',
+        'date_time': '2013-11-03 18:07:21',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'cups:ipp:event',
-        'timestamp': '2013-11-03 18:07:32.000000',
+        'date_time': '2013-11-03 18:07:32',
         'timestamp_desc': definitions.TIME_DESCRIPTION_END}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)

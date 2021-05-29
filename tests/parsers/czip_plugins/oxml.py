@@ -89,30 +89,33 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         parser_mediator, event_data, properties, 'modified',
         definitions.TIME_DESCRIPTION_MODIFICATION, 'modification time')
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Test parsing a date and time string in intervals of 100 ns.
     plugin._ProduceEvent(
         parser_mediator, event_data, properties, 'created',
         definitions.TIME_DESCRIPTION_CREATION, 'creation time')
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
     plugin = oxml.OpenXMLPlugin()
     storage_writer = self._ParseZIPFileWithPlugin(['Document.docx'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'metadata:openxml',
-        'timestamp': '2012-11-07 23:29:00.000000',
+        'date_time': '2012-11-07 23:29:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -122,6 +125,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         'author': 'Nides',
         'creating_app': 'Microsoft Office Word',
         'data_type': 'metadata:openxml',
+        'date_time': '2013-08-25 22:18:00',
         'doc_security': '0',
         'hyperlinks_changed': 'false',
         'i4': '1',

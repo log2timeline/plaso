@@ -57,7 +57,8 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
         configuration)
 
     self.assertEqual(storage_writer.number_of_events, 15)
-    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
 
 if __name__ == '__main__':

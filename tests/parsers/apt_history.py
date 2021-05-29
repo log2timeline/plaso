@@ -22,20 +22,21 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
     parser = apt_history.APTHistoryLogParser()
     storage_writer = self._ParseFile(['apt_history.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'apt:history:line',
-        'timestamp': '2019-07-10 16:38:08.000000'}
+        'date_time': '2019-07-10 16:38:08'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'data_type': 'apt:history:line',
-        'timestamp': '2019-07-10 16:38:12.000000'}
+        'date_time': '2019-07-10 16:38:12'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -44,6 +45,7 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
             'Commandline: apt-get -y install python-pip python3-pip python-dev '
             'python3-dev git tmux screen joe'),
         'data_type': 'apt:history:line',
+        'date_time': '2019-07-11 12:20:55',
         'packages': (
             'Install: libmpc3:amd64 (1.0.3-1+b2, automatic), '
             'manpages:amd64 (4.10-2, automatic), '
@@ -157,8 +159,7 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
             'python-all-dev:amd64 (2.7.13-2, automatic), '
             'python3-pyasn1:amd64 (0.1.9-2, automatic), '
             'libstdc++-6-dev:amd64 (6.3.0-18+deb9u1, automatic), '
-            'liberror-perl:amd64 (0.17024-1, automatic)'),
-        'timestamp': '2019-07-11 12:20:55.000000'}
+            'liberror-perl:amd64 (0.17024-1, automatic)')}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
@@ -167,6 +168,7 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
             'Commandline: apt-get install -y docker-ce docker-ce-cli '
             'containerd.io'),
         'data_type': 'apt:history:line',
+        'date_time': '2019-07-11 12:25:24',
         'error': 'Error: Sub-process /usr/bin/dpkg returned an error code (1)',
         'packages': (
             'Install: containerd.io:amd64 (1.2.6-3), linux-headers-4.9.0-9-'
@@ -180,31 +182,30 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
             'linux-headers-4.9.0-9-amd64:amd64 (4.9.168-1+deb9u3, automatic), '
             'pigz:amd64 (2.3.4-1, automatic), '
             'docker-ce:amd64 (5:18.09.7~3-0~debian-stretch), '
-            'docker-ce-cli:amd64 (5:18.09.7~3-0~debian-stretch)'),
-        'timestamp': '2019-07-11 12:25:24.000000'}
+            'docker-ce-cli:amd64 (5:18.09.7~3-0~debian-stretch)')}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
         'command': 'Commandline: apt-get remove volatility',
         'data_type': 'apt:history:line',
+        'date_time': '2019-07-12 04:12:20',
         'packages': (
             'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5)'),
-        'requester': 'Requested-By: jxs (1005)',
-        'timestamp': '2019-07-12 04:12:20.000000'}
+        'requester': 'Requested-By: jxs (1005)'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
         'command': 'Commandline: apt-get autoremove',
         'data_type': 'apt:history:line',
+        'date_time': '2019-07-12 04:19:26',
         'packages': (
             'Remove: python-distorm3:amd64 (3.3.4-2), python-imaging:amd64 '
             '(4.0.0-4), python-py:amd64 (1.4.32-3), python-openpyxl:amd64 '
             '(2.3.0-3), libdistorm3-3:amd64 (3.3.4-2), python-jdcal:amd64 '
             '(1.0-1.2~deb9u1)'),
-        'requester': 'Requested-By: jxs (1005)',
-        'timestamp': '2019-07-12 04:19:26.000000'}
+        'requester': 'Requested-By: jxs (1005)'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
@@ -214,13 +215,15 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['apt_history.log'], parser, timezone='CET')
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
         'data_type': 'apt:history:line',
+        'date_time': '2019-07-10 16:38:08',
         'timestamp': '2019-07-10 14:38:08.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

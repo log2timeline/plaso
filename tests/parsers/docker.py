@@ -23,8 +23,9 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'docker', 'containers', container_identifier, 'container-json.log']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -62,8 +63,9 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'docker', 'containers', container_identifier, 'config.json']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -72,7 +74,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'container_id': container_identifier,
         'container_name': 'e7d0b7ea5ccf',
         'data_type': 'docker:json:container',
-        'timestamp': '2016-01-07 16:49:08.674873'}
+        'date_time': '2016-01-07 16:49:08.674873'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -81,7 +83,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'container_id': container_identifier,
         'container_name': 'e7d0b7ea5ccf',
         'data_type': 'docker:json:container',
-        'timestamp': '2016-01-07 16:49:08.507979'}
+        'date_time': '2016-01-07 16:49:08.507979'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -94,8 +96,9 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
     path_segments = ['docker', 'graph', layer_identifier, 'json']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -104,8 +107,8 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
             '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
             '/etc/apt/sources.list'),
         'data_type': 'docker:json:layer',
+        'date_time': '2015-10-12 17:27:03.079273',
         'layer_id': layer_identifier,
-        'timestamp': '2015-10-12 17:27:03.079273',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

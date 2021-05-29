@@ -22,8 +22,9 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
         ['apple.bsm'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 54)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -42,10 +43,10 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'bsm:event',
+        'date_time': '2013-11-04 18:36:20.000381',
         'event_type': 45029,
         'extra_tokens': expected_extra_tokens,
-        'return_value': expected_return_value,
-        'timestamp': '2013-11-04 18:36:20.000381'}
+        'return_value': expected_return_value}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -73,10 +74,11 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
         '\'call_status\': 5000}')
 
     expected_event_values = {
+        'data_type': 'bsm:event',
+        'date_time': '2013-11-04 18:36:26.000171',
         'event_type': 45023,
         'extra_tokens': expected_extra_tokens,
-        'return_value': expected_return_value,
-        'timestamp': '2013-11-04 18:36:26.000171'}
+        'return_value': expected_return_value}
 
     self.CheckEventValues(storage_writer, events[15], expected_event_values)
 
@@ -104,10 +106,11 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
         '{\'error\': \'Success\', \'token_status\': 0, \'call_status\': 0}')
 
     expected_event_values = {
+        'data_type': 'bsm:event',
+        'date_time': '2013-11-04 18:36:26.000530',
         'event_type': 45025,
         'extra_tokens': expected_extra_tokens,
-        'return_value': expected_return_value,
-        'timestamp': '2013-11-04 18:36:26.000530'}
+        'return_value': expected_return_value}
 
     self.CheckEventValues(storage_writer, events[31], expected_event_values)
 
@@ -143,10 +146,11 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
         '{\'error\': \'Success\', \'token_status\': 0, \'call_status\': 0}')
 
     expected_event_values = {
+        'data_type': 'bsm:event',
+        'date_time': '2013-11-04 18:37:36.000399',
         'event_type': 44903,
         'extra_tokens': expected_extra_tokens,
-        'return_value': expected_return_value,
-        'timestamp': '2013-11-04 18:37:36.000399'}
+        'return_value': expected_return_value}
 
     self.CheckEventValues(storage_writer, events[50], expected_event_values)
 
@@ -162,8 +166,9 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['openbsm.bsm'], parser, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 50)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 

@@ -18,8 +18,9 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     parser = bencode_parser.BencodeParser()
     storage_writer = self._ParseFile(['bencode', 'utorrent'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which BencodeParser generates events is nondeterministic
     # hence we sort the events.
@@ -29,9 +30,9 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_event_values = {
         'caption': 'plaso test',
         'data_type': 'p2p:bittorrent:utorrent',
+        'date_time': '2013-08-03 14:52:12',
         'path': 'e:\\torrent\\files\\plaso test',
         'seedtime': 511,
-        'timestamp': '2013-08-03 14:52:12.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -40,9 +41,9 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_event_values = {
         'caption': 'plaso test',
         'data_type': 'p2p:bittorrent:utorrent',
+        'date_time': '2013-08-03 18:11:35',
         'path': 'e:\\torrent\\files\\plaso test',
         'seedtime': 511,
-        'timestamp': '2013-08-03 18:11:35.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
@@ -51,9 +52,9 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_event_values = {
         'caption': 'plaso test',
         'data_type': 'p2p:bittorrent:utorrent',
+        'date_time': '2013-08-03 18:11:34',
         'path': 'e:\\torrent\\files\\plaso test',
         'seedtime': 511,
-        'timestamp': '2013-08-03 18:11:34.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
@@ -62,9 +63,9 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_event_values = {
         'caption': 'plaso test',
         'data_type': 'p2p:bittorrent:utorrent',
+        'date_time': '2013-08-03 16:27:59',
         'path': 'e:\\torrent\\files\\plaso test',
         'seedtime': 511,
-        'timestamp': '2013-08-03 16:27:59.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
