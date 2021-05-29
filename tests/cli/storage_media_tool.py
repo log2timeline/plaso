@@ -664,6 +664,239 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
 
     return scan_node
 
+  def _TestScanSourceAPFSImage(self, source_path):
+    """Tests the ScanSource function on an APFS image.
+
+    Args:
+      source_path (str): path of the source device, directory or file.
+    """
+    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
+    # TODO: change to use options
+    test_scanner._credentials = [
+        ('password', '{0:s}'.format(self._APFS_PASSWORD))]
+
+    options = volume_scanner.VolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
+    options.partitions = ['all']
+    options.volumes = ['all']
+
+    base_path_specs = []
+    scan_context = test_scanner.ScanSource(
+        source_path, options, base_path_specs)
+    self.assertIsNotNone(scan_context)
+
+    scan_node = scan_context.GetRootScanNode()
+    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_GPT_BACK_END)
+    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      expected_number_of_sub_nodes = 6
+    else:
+      expected_number_of_sub_nodes = 1
+
+    self.assertEqual(len(scan_node.sub_nodes), expected_number_of_sub_nodes)
+
+    for scan_node in scan_node.sub_nodes:
+      if getattr(scan_node.path_spec, 'location', None) == '/p1':
+        break
+
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_GPT_BACK_END)
+    self.assertEqual(len(scan_node.sub_nodes), 1)
+
+    path_spec = scan_node.path_spec
+    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      self.assertEqual(path_spec.start_offset, 20480)
+
+    scan_node = scan_node.sub_nodes[0]
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator,
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER)
+    self.assertEqual(len(scan_node.sub_nodes), 1)
+
+    scan_node = scan_node.sub_nodes[0]
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator,
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER)
+    self.assertEqual(len(scan_node.sub_nodes), 1)
+
+    scan_node = scan_node.sub_nodes[0]
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_APFS)
+
+  def _TestScanSourceDirectory(self, source_path):
+    """Tests the ScanSource function on a directory.
+
+    Args:
+      source_path (str): path of the source device, directory or file.
+    """
+    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
+
+    options = volume_scanner.VolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
+
+    base_path_specs = []
+    scan_context = test_scanner.ScanSource(
+        source_path, options, base_path_specs)
+    self.assertIsNotNone(scan_context)
+
+    scan_node = scan_context.GetRootScanNode()
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_OS)
+
+    path_spec = scan_node.path_spec
+    self.assertEqual(path_spec.location, os.path.abspath(source_path))
+
+  def _TestScanSourceImage(self, source_path):
+    """Tests the ScanSource function on an image containing a single partition.
+
+    Args:
+      source_path (str): path of the source device, directory or file.
+    """
+    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
+
+    options = volume_scanner.VolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
+
+    base_path_specs = []
+    scan_context = test_scanner.ScanSource(
+        source_path, options, base_path_specs)
+    self.assertIsNotNone(scan_context)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
+
+  def _TestScanSourceLVMImage(self, source_path):
+    """Tests the ScanSource function on a LVM image.
+
+    Args:
+      source_path (str): path of the source device, directory or file.
+    """
+    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
+
+    options = volume_scanner.VolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
+    options.partitions = ['all']
+    options.volumes = ['all']
+
+    base_path_specs = []
+    scan_context = test_scanner.ScanSource(
+        source_path, options, base_path_specs)
+    self.assertIsNotNone(scan_context)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_LVM)
+    self.assertEqual(len(scan_node.sub_nodes), 2)
+
+    scan_node = scan_node.sub_nodes[0]
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_LVM)
+    self.assertEqual(len(scan_node.sub_nodes), 1)
+
+    scan_node = scan_node.sub_nodes[0]
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
+
+  def _TestScanSourcePartitionedImage(self, source_path):
+    """Tests the ScanSource function on an image containing multiple partitions.
+
+    Args:
+      source_path (str): path of the source device, directory or file.
+    """
+    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
+
+    options = volume_scanner.VolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
+    options.partitions = ['all']
+
+    base_path_specs = []
+    scan_context = test_scanner.ScanSource(
+        source_path, options, base_path_specs)
+    self.assertIsNotNone(scan_context)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator,
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
+    self.assertEqual(len(scan_node.sub_nodes), 7)
+
+    for scan_node in scan_node.sub_nodes:
+      if getattr(scan_node.path_spec, 'location', None) == '/p2':
+        break
+
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator,
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
+    self.assertEqual(len(scan_node.sub_nodes), 1)
+
+    path_spec = scan_node.path_spec
+    self.assertEqual(path_spec.start_offset, 180224)
+
+    scan_node = scan_node.sub_nodes[0]
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
+
+  def _TestScanSourceVSSImage(self, source_path):
+    """Tests the ScanSource function on a VSS storage media image.
+
+    Args:
+      source_path (str): path of the source device, directory or file.
+    """
+    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
+
+    options = volume_scanner.VolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
+    options.partitions = ['all']
+    options.snapshots = ['all']
+    options.volumes = ['all']
+
+    base_path_specs = []
+    scan_context = test_scanner.ScanSource(
+        source_path, options, base_path_specs)
+    self.assertIsNotNone(scan_context)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertIsNotNone(scan_node)
+    self.assertEqual(
+        scan_node.type_indicator,
+        dfvfs_definitions.TYPE_INDICATOR_QCOW)
+    self.assertEqual(len(scan_node.sub_nodes), 2)
+
+    volume_scan_node = scan_node
+
+    scan_node = volume_scan_node.sub_nodes[0]
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_VSHADOW)
+    self.assertEqual(len(scan_node.sub_nodes), 2)
+
+    scan_node = scan_node.sub_nodes[0]
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_VSHADOW)
+
+    # By default the file system inside a VSS volume is not scanned.
+    self.assertEqual(len(scan_node.sub_nodes), 0)
+
+    scan_node = volume_scan_node.sub_nodes[1]
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.PREFERRED_NTFS_BACK_END)
+
   # TODO: add tests for _AddCredentialConfiguration
 
   def testScanEncryptedVolume(self):
@@ -1076,6 +1309,91 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
         scan_context, vss_scan_node, options, base_path_specs)
     self.assertEqual(len(base_path_specs), 0)
 
+  def testScanSourceAPFS(self):
+    """Tests the ScanSource function on an APFS image."""
+    source_path = self._GetTestFilePath(['apfs.dmg'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceAPFSImage(source_path)
+
+  def testScanSourceEncryptedAPFS(self):
+    """Tests the ScanSource function on an encrypted APFS image."""
+    resolver.Resolver.key_chain.Empty()
+
+    source_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceAPFSImage(source_path)
+
+  def testScanSourcePartitionedImage(self):
+    """Tests the ScanSource function on a partitioned image."""
+    source_path = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourcePartitionedImage(source_path)
+
+  def testScanSourceSplitEWF(self):
+    """Tests the ScanSource function on a split EWF image."""
+    source_path = self._GetTestFilePath(['image-split.E01'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourcePartitionedImage(source_path)
+
+  def testScanSourceEWF(self):
+    """Tests the ScanSource function on an EWF image."""
+    source_path = self._GetTestFilePath(['image.E01'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceImage(source_path)
+
+  def testScanSourceLVM(self):
+    """Tests the ScanSource function on a LVM image."""
+    source_path = self._GetTestFilePath(['lvm.raw'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceLVMImage(source_path)
+
+  def testScanSourceNonExisitingFile(self):
+    """Tests the ScanSource function on a non existing file."""
+    with self.assertRaises(dfvfs_errors.ScannerError):
+      source_path = self._GetTestFilePath(['nosuchfile.raw'])
+      self._TestScanSourceImage(source_path)
+
+  def testScanSourceQCOW(self):
+    """Tests the ScanSource function on a QCOW image."""
+    source_path = self._GetTestFilePath(['image.qcow2'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceImage(source_path)
+
+  def testScanSourceTextDirectory(self):
+    """Tests the ScanSource function on a directory."""
+    source_path = self._GetTestFilePath(['text_parser'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceDirectory(source_path)
+
+  def testScanSourceVHDI(self):
+    """Tests the ScanSource function on a VHD image."""
+    source_path = self._GetTestFilePath(['image.vhd'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceImage(source_path)
+
+  def testScanSourceVMDK(self):
+    """Tests the ScanSource function on a VMDK image."""
+    source_path = self._GetTestFilePath(['image.vmdk'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceImage(source_path)
+
+  def testScanSourceVSS(self):
+    """Tests the ScanSource function on a VSS."""
+    source_path = self._GetTestFilePath(['vsstest.qcow2'])
+    self._SkipIfPathNotExists(source_path)
+
+    self._TestScanSourceVSSImage(source_path)
+
 
 class StorageMediaToolTest(test_lib.CLIToolTestCase):
   """Tests for the storage media tool."""
@@ -1164,255 +1482,6 @@ optional arguments:
       scan_node = scan_node.sub_nodes[0]
 
     return scan_node
-
-  def _TestScanSourceAPFSImage(self, source_path):
-    """Tests the ScanSource function on an APFS image.
-
-    Args:
-      source_path (str): path of the source device, directory or file.
-    """
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    options = test_lib.TestOptions()
-    options.credentials = ['password:{0:s}'.format(self._APFS_PASSWORD)]
-    options.partitions = 'all'
-    options.source = source_path
-    options.volumes = 'all'
-
-    test_tool._ParseStorageMediaImageOptions(options)
-    test_tool._ParseVSSProcessingOptions(options)
-    test_tool._ParseCredentialOptions(options)
-    test_tool._ParseSourcePathOption(options)
-
-    scan_context = test_tool.ScanSource(source_path)
-    self.assertIsNotNone(scan_context)
-
-    scan_node = scan_context.GetRootScanNode()
-    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.PREFERRED_GPT_BACK_END)
-    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-      expected_number_of_sub_nodes = 6
-    else:
-      expected_number_of_sub_nodes = 1
-
-    self.assertEqual(len(scan_node.sub_nodes), expected_number_of_sub_nodes)
-
-    for scan_node in scan_node.sub_nodes:
-      if getattr(scan_node.path_spec, 'location', None) == '/p1':
-        break
-
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.PREFERRED_GPT_BACK_END)
-    self.assertEqual(len(scan_node.sub_nodes), 1)
-
-    path_spec = scan_node.path_spec
-    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-      self.assertEqual(path_spec.start_offset, 20480)
-
-    scan_node = scan_node.sub_nodes[0]
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER)
-    self.assertEqual(len(scan_node.sub_nodes), 1)
-
-    scan_node = scan_node.sub_nodes[0]
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER)
-    self.assertEqual(len(scan_node.sub_nodes), 1)
-
-    scan_node = scan_node.sub_nodes[0]
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_APFS)
-
-  def _TestScanSourceDirectory(self, source_path):
-    """Tests the ScanSource function on a directory.
-
-    Args:
-      source_path (str): path of the source device, directory or file.
-    """
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    options = test_lib.TestOptions()
-    options.source = source_path
-
-    test_tool._ParseStorageMediaImageOptions(options)
-    test_tool._ParseVSSProcessingOptions(options)
-    test_tool._ParseCredentialOptions(options)
-    test_tool._ParseSourcePathOption(options)
-
-    scan_context = test_tool.ScanSource(source_path)
-    self.assertIsNotNone(scan_context)
-
-    scan_node = scan_context.GetRootScanNode()
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_OS)
-
-    path_spec = scan_node.path_spec
-    self.assertEqual(path_spec.location, os.path.abspath(source_path))
-
-  def _TestScanSourceImage(self, source_path):
-    """Tests the ScanSource function on an image containing a single partition.
-
-    Args:
-      source_path (str): path of the source device, directory or file.
-    """
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    options = test_lib.TestOptions()
-    options.source = source_path
-
-    test_tool._ParseStorageMediaImageOptions(options)
-    test_tool._ParseVSSProcessingOptions(options)
-    test_tool._ParseCredentialOptions(options)
-    test_tool._ParseSourcePathOption(options)
-
-    scan_context = test_tool.ScanSource(source_path)
-    self.assertIsNotNone(scan_context)
-
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
-
-  def _TestScanSourceLVMImage(self, source_path):
-    """Tests the ScanSource function on a LVM image.
-
-    Args:
-      source_path (str): path of the source device, directory or file.
-    """
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    options = test_lib.TestOptions()
-    options.partitions = 'all'
-    options.source = source_path
-    options.volumes = 'all'
-
-    test_tool._ParseStorageMediaImageOptions(options)
-    test_tool._ParseVSSProcessingOptions(options)
-    test_tool._ParseCredentialOptions(options)
-    test_tool._ParseSourcePathOption(options)
-
-    scan_context = test_tool.ScanSource(source_path)
-    self.assertIsNotNone(scan_context)
-
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_LVM)
-    self.assertEqual(len(scan_node.sub_nodes), 2)
-
-    scan_node = scan_node.sub_nodes[0]
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_LVM)
-    self.assertEqual(len(scan_node.sub_nodes), 1)
-
-    scan_node = scan_node.sub_nodes[0]
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
-
-  def _TestScanSourcePartitionedImage(self, source_path):
-    """Tests the ScanSource function on an image containing multiple partitions.
-
-    Args:
-      source_path (str): path of the source device, directory or file.
-    """
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    options = test_lib.TestOptions()
-    options.partitions = 'all'
-    options.source = source_path
-
-    test_tool._ParseStorageMediaImageOptions(options)
-    test_tool._ParseVSSProcessingOptions(options)
-    test_tool._ParseCredentialOptions(options)
-    test_tool._ParseSourcePathOption(options)
-
-    scan_context = test_tool.ScanSource(source_path)
-    self.assertIsNotNone(scan_context)
-
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
-    self.assertEqual(len(scan_node.sub_nodes), 7)
-
-    for scan_node in scan_node.sub_nodes:
-      if getattr(scan_node.path_spec, 'location', None) == '/p2':
-        break
-
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
-    self.assertEqual(len(scan_node.sub_nodes), 1)
-
-    path_spec = scan_node.path_spec
-    self.assertEqual(path_spec.start_offset, 180224)
-
-    scan_node = scan_node.sub_nodes[0]
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.PREFERRED_EXT_BACK_END)
-
-  def _TestScanSourceVSSImage(self, source_path):
-    """Tests the ScanSource function on a VSS storage media image.
-
-    Args:
-      source_path (str): path of the source device, directory or file.
-    """
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    options = test_lib.TestOptions()
-    options.source = source_path
-    options.unattended = True
-    options.vss_stores = 'all'
-
-    test_tool._ParseInformationalOptions(options)
-    test_tool._ParseStorageMediaImageOptions(options)
-    test_tool._ParseVSSProcessingOptions(options)
-    test_tool._ParseCredentialOptions(options)
-    test_tool._ParseSourcePathOption(options)
-
-    scan_context = test_tool.ScanSource(source_path)
-    self.assertIsNotNone(scan_context)
-
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertIsNotNone(scan_node)
-    self.assertEqual(
-        scan_node.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_QCOW)
-    self.assertEqual(len(scan_node.sub_nodes), 2)
-
-    volume_scan_node = scan_node
-
-    scan_node = volume_scan_node.sub_nodes[0]
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_VSHADOW)
-    self.assertEqual(len(scan_node.sub_nodes), 2)
-
-    scan_node = scan_node.sub_nodes[0]
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_VSHADOW)
-
-    # By default the file system inside a VSS volume is not scanned.
-    self.assertEqual(len(scan_node.sub_nodes), 0)
-
-    scan_node = volume_scan_node.sub_nodes[1]
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.PREFERRED_NTFS_BACK_END)
 
   def testParseCredentialOptions(self):
     """Tests the _ParseCredentialOptions function."""
@@ -1511,91 +1580,6 @@ optional arguments:
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)
-
-  def testScanSourceAPFS(self):
-    """Tests the ScanSource function on an APFS image."""
-    source_path = self._GetTestFilePath(['apfs.dmg'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceAPFSImage(source_path)
-
-  def testScanSourceEncryptedAPFS(self):
-    """Tests the ScanSource function on an encrypted APFS image."""
-    resolver.Resolver.key_chain.Empty()
-
-    source_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceAPFSImage(source_path)
-
-  def testScanSourcePartitionedImage(self):
-    """Tests the ScanSource function on a partitioned image."""
-    source_path = self._GetTestFilePath(['tsk_volume_system.raw'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourcePartitionedImage(source_path)
-
-  def testScanSourceSplitEWF(self):
-    """Tests the ScanSource function on a split EWF image."""
-    source_path = self._GetTestFilePath(['image-split.E01'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourcePartitionedImage(source_path)
-
-  def testScanSourceEWF(self):
-    """Tests the ScanSource function on an EWF image."""
-    source_path = self._GetTestFilePath(['image.E01'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceImage(source_path)
-
-  def testScanSourceLVM(self):
-    """Tests the ScanSource function on a LVM image."""
-    source_path = self._GetTestFilePath(['lvm.raw'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceLVMImage(source_path)
-
-  def testScanSourceQCOW(self):
-    """Tests the ScanSource function on a QCOW image."""
-    source_path = self._GetTestFilePath(['image.qcow2'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceImage(source_path)
-
-  def testScanSourceVSS(self):
-    """Tests the ScanSource function on a VSS."""
-    source_path = self._GetTestFilePath(['vsstest.qcow2'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceVSSImage(source_path)
-
-  def testScanSourceTextDirectory(self):
-    """Tests the ScanSource function on a directory."""
-    source_path = self._GetTestFilePath(['text_parser'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceDirectory(source_path)
-
-  def testScanSourceVHDI(self):
-    """Tests the ScanSource function on a VHD image."""
-    source_path = self._GetTestFilePath(['image.vhd'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceImage(source_path)
-
-  def testScanSourceVMDK(self):
-    """Tests the ScanSource function on a VMDK image."""
-    source_path = self._GetTestFilePath(['image.vmdk'])
-    self._SkipIfPathNotExists(source_path)
-
-    self._TestScanSourceImage(source_path)
-
-  def testScanSourceNonExisitingFile(self):
-    """Tests the ScanSource function on a non existing file."""
-    with self.assertRaises(errors.SourceScannerError):
-      source_path = self._GetTestFilePath(['nosuchfile.raw'])
-      self._TestScanSourceImage(source_path)
 
 
 if __name__ == '__main__':
