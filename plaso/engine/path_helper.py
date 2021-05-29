@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The path helper."""
 
+import re
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.engine import logger
@@ -27,6 +29,8 @@ class PathHelper(object):
           ['%%users.userprofile%%', 'AppData', 'LocalLow']],
       '%%users.temp%%': [
           ['%%users.localappdata%%', 'Temp']]}
+
+  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   @classmethod
   def _ExpandUsersHomeDirectoryPathSegments(
@@ -335,7 +339,13 @@ class PathHelper(object):
         return 'VSS{0:d}:{1:s}:{2:s}'.format(
             store_index + 1, path_spec.type_indicator, relative_path)
 
-    return '{0:s}:{1:s}'.format(path_type_indicator, relative_path)
+    display_name = '{0:s}:{1:s}'.format(path_type_indicator, relative_path)
+
+    if cls._UNICODE_SURROGATES_RE.search(display_name):
+      display_name = display_name.encode('utf-8', errors='surrogateescape')
+      display_name = display_name.decode('utf-8', errors='backslashreplace')
+
+    return display_name
 
   @classmethod
   def GetRelativePathForPathSpec(cls, path_spec, mount_path=None):
