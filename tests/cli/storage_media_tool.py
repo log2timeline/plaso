@@ -15,7 +15,6 @@ except ImportError:
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.helpers import source_scanner
-from dfvfs.helpers import volume_scanner
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver
 from dfvfs.volume import apfs_volume_system
@@ -669,11 +668,9 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
       source_path (str): path of the source device, directory or file.
     """
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-    # TODO: change to use options
-    test_scanner._credentials = [
-        ('password', '{0:s}'.format(self._APFS_PASSWORD))]
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
+    options.credentials = [('password', '{0:s}'.format(self._APFS_PASSWORD))]
     options.scan_mode = options.SCAN_MODE_ALL
     options.partitions = ['all']
     options.volumes = ['all']
@@ -737,7 +734,7 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     """
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
     options.scan_mode = options.SCAN_MODE_ALL
 
     base_path_specs = []
@@ -761,7 +758,7 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     """
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
     options.scan_mode = options.SCAN_MODE_ALL
 
     base_path_specs = []
@@ -782,7 +779,7 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     """
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
     options.scan_mode = options.SCAN_MODE_ALL
     options.partitions = ['all']
     options.volumes = ['all']
@@ -817,7 +814,7 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     """
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
     options.scan_mode = options.SCAN_MODE_ALL
     options.partitions = ['all']
 
@@ -859,7 +856,7 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     """
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
     options.scan_mode = options.SCAN_MODE_ALL
     options.partitions = ['all']
     options.snapshots = ['all']
@@ -895,22 +892,6 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.PREFERRED_NTFS_BACK_END)
 
-  # TODO: add tests for _AddCredentialConfiguration
-
-  def testScanEncryptedVolume(self):
-    """Tests the _ScanEncryptedVolume function."""
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-
-    scan_context = source_scanner.SourceScannerContext()
-
-    # Test error conditions.
-    with self.assertRaises(dfvfs_errors.ScannerError):
-      test_scanner._ScanEncryptedVolume(scan_context, None)
-
-    scan_node = source_scanner.SourceScanNode(None)
-    with self.assertRaises(dfvfs_errors.ScannerError):
-      test_scanner._ScanEncryptedVolume(scan_context, scan_node)
-
   def testScanEncryptedVolumeOnBDE(self):
     """Tests the _ScanEncryptedVolume function on a BDE image."""
     test_file_path = self._GetTestFilePath(['bdetogo.raw'])
@@ -919,8 +900,9 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     resolver.Resolver.key_chain.Empty()
 
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-    # TODO: change to use options
-    test_scanner._credentials = [('password', self._BDE_PASSWORD)]
+
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
+    options.credentials = [('password', self._BDE_PASSWORD)]
 
     scan_context = source_scanner.SourceScannerContext()
     scan_context.OpenSourcePath(test_file_path)
@@ -930,240 +912,14 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
 
     bde_scan_node = scan_node.sub_nodes[0]
 
-    test_scanner._ScanEncryptedVolume(scan_context, bde_scan_node)
-
-  def testScanEncryptedVolumeOnEncryptedAPFS(self):
-    """Tests the _ScanEncryptedVolume function on an encrypted APFS image."""
-    test_file_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    resolver.Resolver.key_chain.Empty()
-
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-    # TODO: change to use options
-    test_scanner._credentials = [('password', self._APFS_PASSWORD)]
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_file_path)
-
-    test_scanner._source_scanner.Scan(scan_context)
-    scan_node = scan_context.GetRootScanNode()
-    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
-
-    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-      apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
-    else:
-      apfs_container_scan_node = scan_node.sub_nodes[0].sub_nodes[0]
-
-    # Test on volume system sub node.
-    test_scanner._ScanEncryptedVolume(
-        scan_context, apfs_container_scan_node.sub_nodes[0])
-
-  def testScanVolume(self):
-    """Tests the _ScanVolume function."""
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-
-    options = volume_scanner.VolumeScannerOptions()
-
-    scan_context = source_scanner.SourceScannerContext()
-
-    # Test error conditions.
-    with self.assertRaises(dfvfs_errors.ScannerError):
-      test_scanner._ScanVolume(scan_context, None, options, [])
-
-    scan_node = source_scanner.SourceScanNode(None)
-    with self.assertRaises(dfvfs_errors.ScannerError):
-      test_scanner._ScanVolume(scan_context, scan_node, options, [])
-
-  def testScanVolumeOnAPFS(self):
-    """Tests the _ScanVolume function on an APFS image."""
-    test_file_path = self._GetTestFilePath(['apfs.dmg'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    resolver.Resolver.key_chain.Empty()
-
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-
-    options = volume_scanner.VolumeScannerOptions()
-    options.volumes = ['all']
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_file_path)
-
-    test_scanner._source_scanner.Scan(scan_context)
-    scan_node = scan_context.GetRootScanNode()
-    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
-
-    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-      apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
-    else:
-      apfs_container_scan_node = scan_node.sub_nodes[0].sub_nodes[0]
-
-    # Test on volume system root node.
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, apfs_container_scan_node, options, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-    # Test on volume system sub node.
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, apfs_container_scan_node.sub_nodes[0], options,
-        base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-  def testScanVolumeOnBDE(self):
-    """Tests the _ScanVolume function on a BDE image."""
-    test_file_path = self._GetTestFilePath(['bdetogo.raw'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    resolver.Resolver.key_chain.Empty()
-
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-    # TODO: change to use options
-    test_scanner._credentials = [('password', self._BDE_PASSWORD)]
-
-    options = volume_scanner.VolumeScannerOptions()
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_file_path)
-
-    test_scanner._source_scanner.Scan(scan_context)
-    scan_node = self._GetTestScanNode(scan_context)
-
-    bde_scan_node = scan_node.sub_nodes[0]
-
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, bde_scan_node, options, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-  def testScanVolumeOnEncryptedAPFS(self):
-    """Tests the _ScanVolume function on an encrypted APFS image."""
-    test_file_path = self._GetTestFilePath(['apfs_encrypted.dmg'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    resolver.Resolver.key_chain.Empty()
-
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-    # TODO: change to use options
-    test_scanner._credentials = [('password', self._APFS_PASSWORD)]
-
-    options = volume_scanner.VolumeScannerOptions()
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_file_path)
-
-    test_scanner._source_scanner.Scan(scan_context)
-    scan_node = scan_context.GetRootScanNode()
-    scan_node = scan_node.sub_nodes[0].sub_nodes[0]
-
-    if dfvfs_definitions.PREFERRED_GPT_BACK_END == (
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-      apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
-    else:
-      apfs_container_scan_node = scan_node.sub_nodes[0].sub_nodes[0]
-
-    # Test on volume system root node.
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, apfs_container_scan_node, options, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-    # Test on volume system sub node.
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, apfs_container_scan_node.sub_nodes[0], options,
-        base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-  def testScanVolumeOnRAW(self):
-    """Tests the _ScanVolume function on a RAW image."""
-    test_file_path = self._GetTestFilePath(['ímynd.dd'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-
-    options = volume_scanner.VolumeScannerOptions()
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_file_path)
-
-    test_scanner._source_scanner.Scan(scan_context)
-    scan_node = scan_context.GetRootScanNode()
-
-    base_path_specs = []
-    test_scanner._ScanVolume(scan_context, scan_node, options, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-  def testScanVolumeOnLVM(self):
-    """Tests the _ScanVolume function on a LVM image."""
-    test_file_path = self._GetTestFilePath(['lvm.raw'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-
-    options = volume_scanner.VolumeScannerOptions()
-    options.volumes = ['all']
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_file_path)
-
-    test_scanner._source_scanner.Scan(scan_context)
-    lvm_scan_node = self._GetTestScanNode(scan_context)
-
-    # Test on volume system root node.
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, lvm_scan_node, options, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-    # Test on volume system sub node.
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, lvm_scan_node.sub_nodes[0], options, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-  def testScanVolumeOnVSS(self):
-    """Tests the _ScanVolume function on VSS."""
-    test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-    # TODO: change to use options
-    test_scanner._unattended_mode = True
-    test_scanner._vss_only = False
-
-    options = volume_scanner.VolumeScannerOptions()
-    options.snapshots = ['all']
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(test_file_path)
-
-    test_scanner._source_scanner.Scan(scan_context)
-    scan_node = self._GetTestScanNode(scan_context)
-
-    vss_scan_node = scan_node.sub_nodes[0]
-
-    # Test on volume system root node.
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, vss_scan_node, options, base_path_specs)
-    self.assertEqual(len(base_path_specs), 2)
-
-    # Test on volume system sub node.
-    base_path_specs = []
-    test_scanner._ScanVolume(
-        scan_context, vss_scan_node.sub_nodes[0], options, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
+    test_scanner._ScanEncryptedVolume(scan_context, bde_scan_node, options)
 
   def testScanVolumeSystemRoot(self):
     """Tests the _ScanVolumeSystemRoot function."""
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
 
     scan_context = source_scanner.SourceScannerContext()
 
@@ -1184,7 +940,8 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
 
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
     options.volumes = ['all']
 
     scan_context = source_scanner.SourceScannerContext()
@@ -1220,7 +977,8 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
 
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
     options.volumes = ['all']
 
     scan_context = source_scanner.SourceScannerContext()
@@ -1246,7 +1004,8 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
 
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
 
     scan_context = source_scanner.SourceScannerContext()
     scan_context.OpenSourcePath(test_file_path)
@@ -1264,11 +1023,9 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     self._SkipIfPathNotExists(test_file_path)
 
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
-    # TODO: change to use options
-    test_scanner._unattended_mode = True
-    test_scanner._vss_only = False
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_SNAPSHOTS_ONLY
     options.snapshots = ['all']
 
     scan_context = source_scanner.SourceScannerContext()
@@ -1291,7 +1048,8 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
 
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
-    options = volume_scanner.VolumeScannerOptions()
+    options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
+    options.scan_mode = options.SCAN_MODE_ALL
     options.snapshots = ['none']
 
     scan_context = source_scanner.SourceScannerContext()
