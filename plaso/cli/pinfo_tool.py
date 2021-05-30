@@ -5,6 +5,7 @@ import argparse
 import collections
 import json
 import os
+import re
 import uuid
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -44,6 +45,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
   _DEFAULT_OUTPUT_FORMAT = 'text'
   _SUPPORTED_OUTPUT_FORMATS = ['json', 'markdown', 'text']
+
+  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -106,7 +109,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     if storage_reader.HasExtractionWarnings():
       for warning in list(storage_reader.GetExtractionWarnings()):
-        extraction_warnings_by_path_spec[warning.path_spec.comparable] += 1
+        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+        extraction_warnings_by_path_spec[path_spec_string] += 1
         extraction_warnings_by_parser_chain[warning.parser_chain] += 1
 
     storage_counters['extraction_warnings_by_path_spec'] = (
@@ -124,7 +129,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     if storage_reader.HasRecoveryWarnings():
       for warning in list(storage_reader.GetRecoveryWarnings()):
-        recovery_warnings_by_path_spec[warning.path_spec.comparable] += 1
+        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+        recovery_warnings_by_path_spec[path_spec_string] += 1
         recovery_warnings_by_parser_chain[warning.parser_chain] += 1
 
     storage_counters['recovery_warnings_by_path_spec'] = (
@@ -286,6 +293,25 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     return stores_are_identical
 
+  def _GetPathSpecificationString(self, path_spec):
+    """Retrieves a printable string representation of the path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: printable string representation of the path specification.
+    """
+    path_spec_string = path_spec.comparable
+
+    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
+      path_spec_string = path_spec_string.encode(
+          'utf-8', errors='surrogateescape')
+      path_spec_string = path_spec_string.decode(
+          'utf-8', errors='backslashreplace')
+
+    return path_spec_string
+
   def _PrintAnalysisReportCounter(
       self, analysis_reports_counter, session_identifier=None):
     """Prints the analysis reports counter.
@@ -414,8 +440,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       table_view.AddRow(['Message', warning.message])
       table_view.AddRow(['Parser chain', warning.parser_chain])
 
-      path_specification = warning.path_spec.comparable
-      for path_index, line in enumerate(path_specification.split('\n')):
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+      for path_index, line in enumerate(path_spec_string.split('\n')):
         if not line:
           continue
 
@@ -537,8 +564,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       table_view.AddRow(['Message', warning.message])
       table_view.AddRow(['Parser chain', warning.parser_chain])
 
-      path_specification = warning.path_spec.comparable
-      for path_index, line in enumerate(path_specification.split('\n')):
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+      for path_index, line in enumerate(path_spec_string.split('\n')):
         if not line:
           continue
 
@@ -866,7 +894,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
       elif self._output_format in ('markdown', 'text'):
         if self._verbose or 'sources' in self._sections:
-          path_spec_string = source.path_spec.comparable
+          path_spec_string = self._GetPathSpecificationString(source.path_spec)
+
           for path_index, line in enumerate(path_spec_string.split('\n')):
             if not line:
               continue

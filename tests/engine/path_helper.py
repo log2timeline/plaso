@@ -374,6 +374,18 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         ntfs_path_spec, text_prepend='C:')
     self.assertEqual(display_name, expected_display_name)
 
+    # Test a path specification with a location with Unicode surrogates.
+    tar_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TAR,
+        location='/ustar/umlauts-\udcc4\udcd6\udcdc\udce4\udcf6\udcfc\udcdf',
+        parent=os_path_spec)
+
+    expected_display_name = (
+        'TAR:/ustar/umlauts-\\xc4\\xd6\\xdc\\xe4\\xf6\\xfc\\xdf')
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+        tar_path_spec)
+    self.assertEqual(display_name, expected_display_name)
+
     # Test without path specification.
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(None)
     self.assertIsNone(display_name)
