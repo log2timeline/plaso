@@ -70,28 +70,16 @@ class PsortEventHeap(object):
             be grouped.
         str: identifier of the event content.
     """
-    attributes = []
-
-    attribute_string = 'data_type: {0:s}'.format(event_data.data_type)
-    attributes.append(attribute_string)
-
     event_attributes = list(event_data.GetAttributes())
     if event_data_stream:
       event_data_stream_attributes = event_data_stream.GetAttributes()
       event_attributes.extend(event_data_stream_attributes)
 
+    attributes = ['data_type: {0:s}'.format(event_data.data_type)]
+
     for attribute_name, attribute_value in sorted(event_attributes):
-      # The filestat parser operates on file entry level and has no event data
-      # stream with a path specification. Therefore we need filename and inode
-      # to make sure events of different file entries are considered unique.
-      if event_data.data_type == 'fs:stat' and attribute_name in (
-          'filename', 'inode'):
-        pass
-
-      elif attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES:
-        continue
-
-      if not attribute_value:
+      if (attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES or
+          attribute_value is None):
         continue
 
       # Note that support for event_data.pathspec is kept for backwards
@@ -116,10 +104,7 @@ class PsortEventHeap(object):
             attribute_name))
       attributes.append(attribute_string)
 
-    # The 'atime', 'ctime', 'crtime', 'mtime' are included for backwards
-    # compatibility with the filestat parser.
     if event.timestamp_desc in (
-        'atime', 'ctime', 'crtime', 'mtime',
         definitions.TIME_DESCRIPTION_LAST_ACCESS,
         definitions.TIME_DESCRIPTION_CHANGE,
         definitions.TIME_DESCRIPTION_CREATION,

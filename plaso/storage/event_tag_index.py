@@ -37,7 +37,7 @@ class EventTagIndex(object):
     Returns:
       EventTag: event tag or None if the event has no event tag.
     """
-    if not self._index:
+    if self._index is None:
       self._Build(storage_file)
 
     lookup_key = event_identifier.CopyToString()

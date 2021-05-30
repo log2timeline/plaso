@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """SQLite-based storage."""
 
+import collections
 import os
 import sqlite3
 import zlib
@@ -60,6 +61,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   # a flush to disk (64 MiB).
   _MAXIMUM_BUFFER_SIZE = 64 * 1024 * 1024
 
+  # The maximum number of cached attribute containers
+  _MAXIMUM_CACHED_CONTAINERS = 32 * 1024
+
   def __init__(
       self, maximum_buffer_size=0,
       storage_type=definitions.STORAGE_TYPE_SESSION):
@@ -82,6 +86,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
 
     super(SQLiteStorageFile, self).__init__()
+    self._attribute_container_cache = collections.OrderedDict()
     self._connection = None
     self._cursor = None
     self._maximum_buffer_size = maximum_buffer_size
@@ -154,6 +159,28 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     if self._serialized_event_heap.data_size > self._maximum_buffer_size:
       self._WriteSerializedAttributeContainerList(self._CONTAINER_TYPE_EVENT)
+
+  def _CacheAttributeContainer(self, attribute_container, index):
+    """Caches a specific attribute container.
+
+    Args:
+      attribute_container (AttributeContainer): attribute container.
+      index (int): attribute container index.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
+    # Do not cache event tags since this causes GetEventTagByIdentifier to fail.
+    if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+      return
+
+    if len(self._attribute_container_cache) >= self._MAXIMUM_CACHED_CONTAINERS:
+      self._attribute_container_cache.popitem(last=True)
+
+    lookup_key = '{0:s}.{1:d}'.format(attribute_container.CONTAINER_TYPE, index)
+    self._attribute_container_cache[lookup_key] = attribute_container
+    self._attribute_container_cache.move_to_end(lookup_key, last=False)
 
   @classmethod
   def _CheckStorageMetadata(cls, metadata_values, check_readable_only=False):
@@ -296,6 +323,11 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
+    attribute_container = self._GetCachedAttributeContainer(
+        container_type, index)
+    if attribute_container:
+      return attribute_container
+
     sequence_number = index + 1
     query = 'SELECT _data FROM {0:s} WHERE rowid = {1:d}'.format(
         container_type, sequence_number)
@@ -333,6 +365,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
       attribute_container.SetIdentifier(identifier)
+
+      self._CacheAttributeContainer(attribute_container, index)
       return attribute_container
 
     count = self._GetNumberOfAttributeContainers(container_type)
@@ -347,6 +381,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       identifier = identifiers.SQLTableIdentifier(
           container_type, sequence_number)
       attribute_container.SetIdentifier(identifier)
+
+      self._CacheAttributeContainer(attribute_container, index)
+
     return attribute_container
 
   # TODO: determine if this method should account for non-stored attribute
@@ -414,6 +451,30 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       yield attribute_container
 
       row = cursor.fetchone()
+
+  def _GetCachedAttributeContainer(self, container_type, index):
+    """Retrieves a specific cached attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      index (int): attribute container index.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
+    # Do not cache event tags since this causes GetEventTagByIdentifier to fail.
+    if container_type == self._CONTAINER_TYPE_EVENT_TAG:
+      return None
+
+    lookup_key = '{0:s}.{1:d}'.format(container_type, index)
+    attribute_container = self._attribute_container_cache.get(lookup_key, None)
+    if attribute_container:
+      self._attribute_container_cache.move_to_end(lookup_key, last=False)
+    return attribute_container
 
   # TODO: determine if this method should account for non-stored attribute
   # containers or that it is better to rename the method to
