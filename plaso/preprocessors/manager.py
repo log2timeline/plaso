@@ -299,8 +299,7 @@ class PreprocessPluginsManager(object):
       cls.RegisterPlugin(plugin_class)
 
   @classmethod
-  def RunPlugins(
-      cls, artifacts_registry, file_system, mount_point, knowledge_base):
+  def RunPlugins(cls, artifacts_registry, file_system, mount_point, mediator):
     """Runs the preprocessing plugins.
 
     Args:
@@ -309,19 +308,20 @@ class PreprocessPluginsManager(object):
       file_system (dfvfs.FileSystem): file system to be preprocessed.
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
     """
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
     cls.CollectFromFileSystem(
-        artifacts_registry, knowledge_base, searcher, file_system)
+        artifacts_registry, mediator.knowledge_base, searcher, file_system)
 
     # Run the Registry plugins separately so we do not have to open
     # Registry files for every preprocess plugin.
 
     environment_variables = None
-    if knowledge_base:
-      environment_variables = knowledge_base.GetEnvironmentVariables()
+    if mediator.knowledge_base:
+      environment_variables = mediator.knowledge_base.GetEnvironmentVariables()
 
     registry_file_reader = FileSystemWinRegistryFileReader(
         file_system, mount_point, environment_variables=environment_variables)
@@ -331,9 +331,9 @@ class PreprocessPluginsManager(object):
     searcher = registry_searcher.WinRegistrySearcher(win_registry)
 
     cls.CollectFromWindowsRegistry(
-        artifacts_registry, knowledge_base, searcher)
+        artifacts_registry, mediator.knowledge_base, searcher)
 
-    cls.CollectFromKnowledgeBase(knowledge_base)
+    cls.CollectFromKnowledgeBase(mediator.knowledge_base)
 
-    if not knowledge_base.HasUserAccounts():
+    if not mediator.knowledge_base.HasUserAccounts():
       logger.warning('Unable to find any user accounts on the system.')

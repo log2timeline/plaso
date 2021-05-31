@@ -37,7 +37,6 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine = single_process.SingleProcessEngine()
     resolver_context = context.Context()
-    session = sessions.Session()
 
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
@@ -45,9 +44,10 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
-    test_engine.PreprocessSources(registry, [source_path_spec])
-
+    session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
+
+    test_engine.PreprocessSources(registry, [source_path_spec], storage_writer)
 
     configuration = configurations.ProcessingConfiguration()
     configuration.parser_filter_expression = 'filestat'

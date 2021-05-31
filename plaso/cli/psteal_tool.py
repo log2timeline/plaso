@@ -312,7 +312,7 @@ class PstealTool(
     # If the source is a directory or a storage media image
     # run pre-processing.
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      self._PreprocessSources(extraction_engine)
+      self._PreprocessSources(extraction_engine, storage_writer)
 
     configuration = self._CreateProcessingConfiguration(
         extraction_engine.knowledge_base)

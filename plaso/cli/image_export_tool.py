@@ -474,8 +474,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     try:
       artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
           self._artifact_definitions_path, self._custom_artifacts_path)
+      # Setting storage writer to None here since we do not want to store
+      # preprocessing information.
       extraction_engine.PreprocessSources(
-          artifacts_registry, self._source_path_specs,
+          artifacts_registry, self._source_path_specs, None,
           resolver_context=self._resolver_context)
 
     except IOError as exception:

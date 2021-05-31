@@ -448,7 +448,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # If the source is a storage media image or device, or directory
     # run pre-processing.
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      self._PreprocessSources(extraction_engine)
+      self._PreprocessSources(extraction_engine, storage_writer)
 
     configuration = self._CreateProcessingConfiguration(
         extraction_engine.knowledge_base)

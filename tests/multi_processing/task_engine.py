@@ -43,8 +43,6 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
-    test_engine.PreprocessSources(registry, [source_path_spec])
-
     session = sessions.Session()
 
     configuration = configurations.ProcessingConfiguration()
@@ -55,6 +53,8 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = sqlite_writer.SQLiteStorageFileWriter(session, temp_file)
 
+      test_engine.PreprocessSources(
+          registry, [source_path_spec], storage_writer)
       test_engine.ProcessSources(
           session, [source_path_spec], storage_writer, configuration)
 

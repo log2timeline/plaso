@@ -42,6 +42,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._events = []
     self._extraction_warnings = []
     self._is_open = False
+    self._preprocessing_warnings = []
     self._recovery_warnings = []
     self._task_storage_writers = {}
     self.analysis_reports = []
@@ -237,6 +238,27 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._extraction_warnings.append(extraction_warning)
     self.number_of_extraction_warnings += 1
+
+  def AddPreprocessingWarning(
+      self, preprocessing_warning, serialized_data=None):
+    """Adds a preprocessing warning.
+
+    Args:
+      preprocessing_warning (PreprocessingWarning): preprocessing warning.
+      serialized_data (Optional[bytes]): serialized form of the preprocessing
+          warning.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    preprocessing_warning = self._PrepareAttributeContainer(
+        preprocessing_warning)
+
+    self._preprocessing_warnings.append(preprocessing_warning)
+    self.number_of_preprocessing_warnings += 1
 
   def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
     """Adds a recovery warning.

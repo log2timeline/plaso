@@ -14,9 +14,11 @@ from dfvfs.path import path_spec
 from dfvfs.resolver import context
 from dfvfs.vfs import file_system as dfvfs_file_system
 
+from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.lib import definitions
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 
@@ -156,12 +158,15 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
-    test_engine.PreprocessSources(registry, [source_path_spec])
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+
+    test_engine.PreprocessSources(registry, [source_path_spec], storage_writer)
 
     operating_system = test_engine.knowledge_base.GetValue('operating_system')
     self.assertEqual(operating_system, 'Windows NT')
 
-    test_engine.PreprocessSources(registry, [None])
+    test_engine.PreprocessSources(registry, [None], storage_writer)
 
 
 if __name__ == '__main__':
