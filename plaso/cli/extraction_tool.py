@@ -345,12 +345,13 @@ class ExtractionTool(
 
         self._preferred_time_zone = time_zone_string
 
-  def _PreprocessSources(self, extraction_engine):
+  def _PreprocessSources(self, extraction_engine, storage_writer):
     """Preprocesses the sources.
 
     Args:
       extraction_engine (BaseEngine): extraction engine to preprocess
           the sources.
+      storage_writer (StorageWriter): storage writer.
     """
     logger.debug('Starting preprocessing.')
 
@@ -358,7 +359,7 @@ class ExtractionTool(
       artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
           self._artifact_definitions_path, self._custom_artifacts_path)
       extraction_engine.PreprocessSources(
-          artifacts_registry, self._source_path_specs,
+          artifacts_registry, self._source_path_specs, storage_writer,
           resolver_context=self._resolver_context)
 
     except IOError as exception:

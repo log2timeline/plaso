@@ -725,6 +725,25 @@ class StorageFileWriter(interface.StorageWriter):
         extraction_warning, serialized_data=serialized_data)
     self.number_of_extraction_warnings += 1
 
+  def AddPreprocessingWarning(
+      self, preprocessing_warning, serialized_data=None):
+    """Adds a preprocessing warning.
+
+    Args:
+      preprocessing_warning (PreprocessingWarning): preprocessing warning.
+      serialized_data (Optional[bytes]): serialized form of the preprocessing
+          warning.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    self._storage_file.AddPreprocessingWarning(
+        preprocessing_warning, serialized_data=serialized_data)
+    self.number_of_preprocessing_warnings += 1
+
   def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
     """Adds a recovery warning.
 

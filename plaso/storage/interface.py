@@ -1229,6 +1229,7 @@ class StorageWriter(object):
     self.number_of_event_tags = 0
     self.number_of_events = 0
     self.number_of_extraction_warnings = 0
+    self.number_of_preprocessing_warnings = 0
     self.number_of_recovery_warnings = 0
 
   @property
@@ -1308,6 +1309,17 @@ class StorageWriter(object):
     Args:
       extraction_warning (ExtractionWarning): an extraction warning.
       serialized_data (Optional[bytes]): serialized form of the extraction
+          warning.
+    """
+
+  @abc.abstractmethod
+  def AddPreprocessingWarning(
+      self, preprocessing_warning, serialized_data=None):
+    """Adds a preprocessing warning.
+
+    Args:
+      preprocessing_warning (PreprocessingWarning): preprocessing warning.
+      serialized_data (Optional[bytes]): serialized form of the preprocessing
           warning.
     """
 
