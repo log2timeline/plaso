@@ -10,6 +10,7 @@ import pytz
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 
+from plaso.containers import events
 from plaso.lib import errors
 from plaso.output import logger
 
@@ -53,9 +54,21 @@ class FieldFormattingHelper(object):
     Args:
       output_mediator (OutputMediator): output mediator.
     """
+    event_data_stream = events.EventDataStream()
+
     super(FieldFormattingHelper, self).__init__()
+    self._callback_functions = {}
+    self._event_data_stream_field_names = event_data_stream.GetAttributeNames()
+    self._event_tag_field_names = []
     self._output_mediator = output_mediator
     self._source_mappings = {}
+
+    for field_name, callback_name in self._FIELD_FORMAT_CALLBACKS.items():
+      if callback_name == '_FormatTag':
+        self._event_tag_field_names.append(field_name)
+      else:
+        self._callback_functions[field_name] = getattr(
+            self, callback_name, None)
 
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.
@@ -574,17 +587,13 @@ class FieldFormattingHelper(object):
     Returns:
       str: value of the field.
     """
-    callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
-    if callback_name == '_FormatTag':
+    if field_name in self._event_tag_field_names:
       return self._FormatTag(event_tag)
 
-    callback_function = None
-    if callback_name:
-      callback_function = getattr(self, callback_name, None)
-
+    callback_function = self._callback_functions.get(field_name, None)
     if callback_function:
       output_value = callback_function(event, event_data, event_data_stream)
-    elif hasattr(event_data_stream, field_name):
+    elif field_name in self._event_data_stream_field_names:
       output_value = getattr(event_data_stream, field_name, None)
     else:
       output_value = getattr(event_data, field_name, None)

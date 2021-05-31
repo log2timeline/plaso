@@ -15,6 +15,12 @@ from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
+class TestFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
+  """Field formatter helper for testing purposes."""
+
+  _FIELD_FORMAT_CALLBACKS = {'zone': '_FormatTimeZone'}
+
+
 class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   """Test the output module field formatting helper."""
 
@@ -300,8 +306,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testGetFormattedField(self):
     """Tests the GetFormattedField function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
-    test_helper._FIELD_FORMAT_CALLBACKS = {'zone': '_FormatTimeZone'}
+    test_helper = TestFieldFormattingHelper(output_mediator)
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
