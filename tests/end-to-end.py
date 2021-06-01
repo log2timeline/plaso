@@ -1715,6 +1715,9 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, 'source')
 
+    test_definition.source_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'source_options', default=[], split_string=True)
+
     return True
 
   def Run(self, test_definition):
@@ -1735,6 +1738,12 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
       return False
 
     with TempDirectory() as temp_directory:
+      if 'backup' in test_definition.source_options:
+        temp_source_path = os.path.join(
+            temp_directory, os.path.basename(source_path))
+        shutil.copyfile(source_path, temp_source_path)
+        source_path = temp_source_path
+
       # Run psort with both analysis and output options.
       if not self._RunPsort(
           test_definition, temp_directory, source_path,
