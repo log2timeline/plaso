@@ -48,6 +48,7 @@ class ParserMediator(object):
     """
     super(ParserMediator, self).__init__()
     self._abort = False
+    self._cached_parser_chain = None
     self._cpu_time_profiler = None
     self._event_data_stream_identifier = None
     self._file_entry = None
@@ -173,10 +174,12 @@ class ParserMediator(object):
     Args:
       plugin_or_parser (BaseParser): parser or parser plugin.
     """
+    self._cached_parser_chain = None
     self._parser_chain_components.append(plugin_or_parser.NAME)
 
   def ClearParserChain(self):
     """Clears the parser chain."""
+    self._cached_parser_chain = None
     self._parser_chain_components = []
 
   def GetDisplayName(self, file_entry=None):
@@ -308,7 +311,9 @@ class ParserMediator(object):
     Returns:
       str: parser chain.
     """
-    return '/'.join(self._parser_chain_components)
+    if not self._cached_parser_chain:
+      self._cached_parser_chain = '/'.join(self._parser_chain_components)
+    return self._cached_parser_chain
 
   def GetRelativePath(self):
     """Retrieves the relative path of the current file entry.
@@ -339,6 +344,7 @@ class ParserMediator(object):
 
   def PopFromParserChain(self):
     """Removes the last added parser or parser plugin from the parser chain."""
+    self._cached_parser_chain = None
     self._parser_chain_components.pop()
 
   def ProduceEventDataStream(self, event_data_stream):
@@ -392,24 +398,36 @@ class ParserMediator(object):
       event_data (EventData): event data.
 
     Raises:
-      InvalidEvent: if the event timestamp value is not set or out of bounds or
-          if the event data (attribute container) values cannot be hashed.
+      InvalidEvent: if the event date_time or timestamp value is not set, or
+          the timestamp value is out of bounds, or if the event data (attribute
+          container) values cannot be hashed.
     """
+    parser_chain = self.GetParserChain()
+
+    if event.date_time is None:
+      raise errors.InvalidEvent(
+          'Date time value not set in event produced by: {0:s}.'.format(
+              parser_chain))
+
     if event.timestamp is None:
-      raise errors.InvalidEvent('Event timestamp value not set.')
+      raise errors.InvalidEvent(
+          'Timestamp value not set in event produced by: {0:s}.'.format(
+              parser_chain))
 
     if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
-      raise errors.InvalidEvent('Event timestamp value out of bounds.')
+      raise errors.InvalidEvent(
+          'Timestamp value out of bounds in event produced by: {0:s}.'.format(
+              parser_chain))
 
     # TODO: rename this to event_data.parser_chain or equivalent.
-    event_data.parser = self.GetParserChain()
+    event_data.parser = parser_chain
 
     try:
       event_data_hash = event_data.GetAttributeValuesHash()
     except TypeError as exception:
-      raise errors.InvalidEvent(
-          'Unable to hash event data values with error: {0!s}'.format(
-              exception))
+      raise errors.InvalidEvent((
+          'Unable to hash event data values produced by: {0:s} with error: '
+          '{1!s}').format(parser_chain, exception))
 
     if event_data_hash != self._last_event_data_hash:
       if self._event_data_stream_identifier:
