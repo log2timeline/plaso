@@ -484,6 +484,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     super(StorageFileWriter, self).__init__(
         session, storage_type=storage_type, task=task)
+    self._event_data_parser_mappings = {}
     self._merge_task_storage_path = ''
     self._output_file = output_file
     self._processed_task_storage_path = ''
@@ -556,21 +557,6 @@ class StorageFileWriter(interface.StorageWriter):
     filename = '{0:s}.plaso'.format(task.identifier)
     return os.path.join(self._task_storage_path, filename)
 
-  def _UpdateCounters(self, event):
-    """Updates the counters.
-
-    Args:
-      event (EventObject): event.
-    """
-    self._session.parsers_counter['total'] += 1
-
-    # Here we want the name of the parser or plugin not the parser chain.
-    if event.parser:
-      _, _, parser_name = event.parser.rpartition('/')
-    else:
-      parser_name = 'N/A'
-    self._session.parsers_counter[parser_name] += 1
-
   def _RaiseIfNotWritable(self):
     """Raises if the storage writer is not writable.
 
@@ -636,7 +622,13 @@ class StorageFileWriter(interface.StorageWriter):
     self._storage_file.AddEvent(event)
     self.number_of_events += 1
 
-    self._UpdateCounters(event)
+    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
+      event_data_identifier = event.GetEventDataIdentifier()
+      lookup_key = event_data_identifier.CopyToString()
+
+      parser_name = self._event_data_parser_mappings.get(lookup_key, 'N/A')
+      self._session.parsers_counter[parser_name] += 1
+      self._session.parsers_counter['total'] += 1
 
   def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
@@ -652,6 +644,12 @@ class StorageFileWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     self._storage_file.AddEventData(event_data, serialized_data=serialized_data)
+
+    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
+      identifier = event_data.GetIdentifier()
+      lookup_key = identifier.CopyToString()
+      parser = event_data.parser.split('/')[-1]
+      self._event_data_parser_mappings[lookup_key] = parser
 
   def AddEventDataStream(self, event_data_stream, serialized_data=None):
     """Adds an event data stream.
