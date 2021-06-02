@@ -40,6 +40,8 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     """
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
+
     test_knowledge_base = knowledge_base.KnowledgeBase()
     return mediator.PreprocessMediator(storage_writer, test_knowledge_base)
 
