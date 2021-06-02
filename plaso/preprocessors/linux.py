@@ -21,11 +21,12 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'LinuxHostnameFile'
 
-  def _ParseFileData(self, knowledge_base, file_object):
+  def _ParseFileData(self, mediator, file_object):
     """Parses file content (data) for a hostname preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -34,12 +35,12 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
     """
     text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
 
-    if not knowledge_base.GetHostname():
+    if not mediator.knowledge_base.GetHostname():
       hostname = text_file_object.readline()
       hostname = hostname.strip()
       if hostname:
         hostname_artifact = artifacts.HostnameArtifact(name=hostname)
-        knowledge_base.SetHostname(hostname_artifact)
+        mediator.knowledge_base.SetHostname(hostname_artifact)
 
 
 class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
@@ -47,11 +48,12 @@ class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'LinuxDistributionRelease'
 
-  def _ParseFileData(self, knowledge_base, file_object):
+  def _ParseFileData(self, mediator, file_object):
     """Parses file content (data) for system product preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -63,9 +65,10 @@ class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
     system_product = text_file_object.readline()
     system_product = system_product.strip()
 
-    if not knowledge_base.GetValue('operating_system_product'):
+    if not mediator.knowledge_base.GetValue('operating_system_product'):
       if system_product:
-        knowledge_base.SetValue('operating_system_product', system_product)
+        mediator.knowledge_base.SetValue(
+            'operating_system_product', system_product)
 
 
 class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
@@ -73,11 +76,12 @@ class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'LinuxIssueFile'
 
-  def _ParseFileData(self, knowledge_base, file_object):
+  def _ParseFileData(self, mediator, file_object):
     """Parses file content (data) for system product preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -96,9 +100,10 @@ class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
     else:
       system_product = None
 
-    if not knowledge_base.GetValue('operating_system_product'):
+    if not mediator.knowledge_base.GetValue('operating_system_product'):
       if system_product:
-        knowledge_base.SetValue('operating_system_product', system_product)
+        mediator.knowledge_base.SetValue(
+            'operating_system_product', system_product)
 
 
 class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
@@ -106,11 +111,12 @@ class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'LinuxLSBRelease'
 
-  def _ParseFileData(self, knowledge_base, file_object):
+  def _ParseFileData(self, mediator, file_object):
     """Parses file content (data) for system product preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -129,10 +135,11 @@ class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
       value = value.strip().strip('"')
       product_values[key] = value
 
-    if not knowledge_base.GetValue('operating_system_product'):
+    if not mediator.knowledge_base.GetValue('operating_system_product'):
       system_product = product_values.get('DISTRIB_DESCRIPTION', None)
       if system_product:
-        knowledge_base.SetValue('operating_system_product', system_product)
+        mediator.knowledge_base.SetValue(
+            'operating_system_product', system_product)
 
 
 class LinuxSystemdOperatingSystemPlugin(
@@ -141,11 +148,12 @@ class LinuxSystemdOperatingSystemPlugin(
 
   ARTIFACT_DEFINITION_NAME = 'LinuxSystemdOSRelease'
 
-  def _ParseFileData(self, knowledge_base, file_object):
+  def _ParseFileData(self, mediator, file_object):
     """Parses file content (data) for system product preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -167,10 +175,11 @@ class LinuxSystemdOperatingSystemPlugin(
       value = value.strip('"')
       product_values[key] = value
 
-    if not knowledge_base.GetValue('operating_system_product'):
+    if not mediator.knowledge_base.GetValue('operating_system_product'):
       system_product = product_values.get('PRETTY_NAME', None)
       if system_product:
-        knowledge_base.SetValue('operating_system_product', system_product)
+        mediator.knowledge_base.SetValue(
+            'operating_system_product', system_product)
 
 
 class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
@@ -178,11 +187,12 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'LinuxLocalTime'
 
-  def _ParseFileEntry(self, knowledge_base, file_entry):
+  def _ParseFileEntry(self, mediator, file_entry):
     """Parses artifact file system data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
@@ -210,7 +220,7 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
     # TODO: check if time zone is set in knowledge base.
     if time_zone:
       try:
-        knowledge_base.SetTimeZone(time_zone)
+        mediator.knowledge_base.SetTimeZone(time_zone)
       except ValueError:
         # TODO: add and store preprocessing errors.
         logger.error('Unable to set time zone in knowledge base.')
@@ -221,11 +231,12 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'LinuxPasswdFile'
 
-  def _ParseFileData(self, knowledge_base, file_object):
+  def _ParseFileData(self, mediator, file_object):
     """Parses file content (data) for user account preprocessing attributes.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -300,7 +311,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
       user_account.shell = shell
 
       try:
-        knowledge_base.AddUserAccount(user_account)
+        mediator.knowledge_base.AddUserAccount(user_account)
       except KeyError:
         # TODO: add and store preprocessing errors.
         pass

@@ -25,10 +25,11 @@ class LinuxHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxHostnamePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    self.assertEqual(knowledge_base.hostname, 'plaso.kiddaland.net')
+    self.assertEqual(
+        test_mediator.knowledge_base.hostname, 'plaso.kiddaland.net')
 
 
 class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
@@ -44,10 +45,11 @@ class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxDistributionPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    system_product = knowledge_base.GetValue('operating_system_product')
+    system_product = test_mediator.knowledge_base.GetValue(
+        'operating_system_product')
     self.assertEqual(system_product, 'Fedora release 26 (Twenty Six)')
 
 
@@ -67,10 +69,11 @@ Debian GNU/Linux 5.0 \\n \\l
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxIssueFilePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    system_product = knowledge_base.GetValue('operating_system_product')
+    system_product = test_mediator.knowledge_base.GetValue(
+        'operating_system_product')
     self.assertEqual(system_product, 'Debian GNU/Linux 5.0')
 
 
@@ -92,10 +95,11 @@ DISTRIB_RELEASE=14.04"""
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxStandardBaseReleasePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    system_product = knowledge_base.GetValue('operating_system_product')
+    system_product = test_mediator.knowledge_base.GetValue(
+        'operating_system_product')
     self.assertEqual(system_product, 'Ubuntu 14.04 LTS')
 
 
@@ -129,10 +133,11 @@ VARIANT_ID=workstation"""
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxSystemdOperatingSystemPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    system_product = knowledge_base.GetValue('operating_system_product')
+    system_product = test_mediator.knowledge_base.GetValue(
+        'operating_system_product')
     self.assertEqual(system_product, 'Fedora 26 (Workstation Edition)')
 
 
@@ -148,10 +153,11 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxTimeZonePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    self.assertEqual(knowledge_base.timezone.zone, 'Europe/Zurich')
+    self.assertEqual(
+        test_mediator.knowledge_base.timezone.zone, 'Europe/Zurich')
 
   def testParseFileEntryWithTZif(self):
     """Tests the _ParseFileEntry function on a timezone information file."""
@@ -164,10 +170,10 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxTimeZonePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    self.assertEqual(knowledge_base.timezone.zone, 'CET')
+    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'CET')
 
   def testParseFileEntryWithBogusTZif(self):
     """Tests the _ParseFileEntry function on a bogus TZif file."""
@@ -180,10 +186,10 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxTimeZonePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    self.assertEqual(knowledge_base.timezone.zone, 'UTC')
+    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
 
 class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
@@ -212,11 +218,11 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxUserAccountsPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
     users = sorted(
-        knowledge_base.user_accounts,
+        test_mediator.knowledge_base.user_accounts,
         key=lambda user_account: user_account.identifier)
     self.assertEqual(len(users), 13)
 

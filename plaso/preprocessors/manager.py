@@ -129,13 +129,14 @@ class PreprocessPluginsManager(object):
 
   @classmethod
   def CollectFromFileSystem(
-      cls, artifacts_registry, knowledge_base, searcher, file_system):
+      cls, artifacts_registry, mediator, searcher, file_system):
     """Collects values from Windows Registry values.
 
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifacts
           definitions registry.
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -152,7 +153,7 @@ class PreprocessPluginsManager(object):
           preprocess_plugin.ARTIFACT_DEFINITION_NAME))
       try:
         preprocess_plugin.Collect(
-            knowledge_base, artifact_definition, searcher, file_system)
+            mediator, artifact_definition, searcher, file_system)
       except (IOError, errors.PreProcessFail) as exception:
         logger.warning((
             'Unable to collect value from artifact definition: {0:s} '
@@ -160,31 +161,32 @@ class PreprocessPluginsManager(object):
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
 
   @classmethod
-  def CollectFromKnowledgeBase(cls, knowledge_base):
+  def CollectFromKnowledgeBase(cls, mediator):
     """Collects values from knowledge base values.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
     """
     for preprocess_plugin in cls._knowledge_base_plugins.values():
       logger.debug('Running knowledge base preprocessor plugin: {0:s}'.format(
           preprocess_plugin.__class__.__name__))
       try:
-        preprocess_plugin.Collect(knowledge_base)
+        preprocess_plugin.Collect(mediator)
       except errors.PreProcessFail as exception:
         logger.warning(
             'Unable to collect knowledge base value with error: {0!s}'.format(
                 exception))
 
   @classmethod
-  def CollectFromWindowsRegistry(
-      cls, artifacts_registry, knowledge_base, searcher):
+  def CollectFromWindowsRegistry(cls, artifacts_registry, mediator, searcher):
     """Collects values from Windows Registry values.
 
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifacts
           definitions registry.
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       searcher (dfwinreg.WinRegistrySearcher): Windows Registry searcher to
           preprocess the Windows Registry.
     """
@@ -199,7 +201,7 @@ class PreprocessPluginsManager(object):
       logger.debug('Running Windows Registry preprocessor plugin: {0:s}'.format(
           preprocess_plugin.ARTIFACT_DEFINITION_NAME))
       try:
-        preprocess_plugin.Collect(knowledge_base, artifact_definition, searcher)
+        preprocess_plugin.Collect(mediator, artifact_definition, searcher)
       except (IOError, errors.PreProcessFail) as exception:
         logger.warning((
             'Unable to collect value from artifact definition: {0:s} '
@@ -314,7 +316,7 @@ class PreprocessPluginsManager(object):
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
     cls.CollectFromFileSystem(
-        artifacts_registry, mediator.knowledge_base, searcher, file_system)
+        artifacts_registry, mediator, searcher, file_system)
 
     # Run the Registry plugins separately so we do not have to open
     # Registry files for every preprocess plugin.
@@ -330,10 +332,9 @@ class PreprocessPluginsManager(object):
 
     searcher = registry_searcher.WinRegistrySearcher(win_registry)
 
-    cls.CollectFromWindowsRegistry(
-        artifacts_registry, mediator.knowledge_base, searcher)
+    cls.CollectFromWindowsRegistry(artifacts_registry, mediator, searcher)
 
-    cls.CollectFromKnowledgeBase(mediator.knowledge_base)
+    cls.CollectFromKnowledgeBase(mediator)
 
     if not mediator.knowledge_base.HasUserAccounts():
       logger.warning('Unable to find any user accounts on the system.')
