@@ -7,6 +7,7 @@ import tempfile
 
 from dfvfs.path import factory as dfvfs_factory
 
+from plaso.containers import events
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -361,6 +362,44 @@ class SQLiteParser(interface.FileEntryParser):
 
     return database_wal, wal_file_entry
 
+  def _ParseFileEntryWithPlugin(
+      self, parser_mediator, plugin, database, display_name, cache):
+    """Parses a SQLite database file entry with a specific plugin.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      plugin (SQLitePlugin): SQLite parser plugin.
+      database (SQLiteDatabase): database.
+      display_name (str): display name.
+      cache (SQLiteCache): cache.
+    """
+    required_tables_and_column_exist = plugin.CheckRequiredTablesAndColumns(
+        database)
+
+    if not required_tables_and_column_exist:
+      logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
+          display_name, plugin.NAME))
+      return
+
+    logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+        display_name, plugin.NAME))
+
+    schema_match = plugin.CheckSchema(database)
+    if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
+      parser_mediator.ProduceExtractionWarning((
+          'plugin: {0:s} found required tables but not a matching '
+          'schema').format(plugin.NAME))
+      return
+
+    try:
+      plugin.UpdateChainAndProcess(
+          parser_mediator, cache=cache, database=database)
+
+    except Exception as exception:  # pylint: disable=broad-except
+      parser_mediator.ProduceExtractionWarning((
+          'plugin: {0:s} unable to parse SQLite database with error: '
+          '{1!s}').format(plugin.NAME, exception))
+
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification.
@@ -395,62 +434,44 @@ class SQLiteParser(interface.FileEntryParser):
           'unable to open SQLite database with error: {0!s}'.format(exception))
       return
 
+    # Create a cache in which the resulting tables are cached.
+    cache = SQLiteCache()
+
+    display_name = parser_mediator.GetDisplayName(file_entry)
+
+    try:
+      for plugin in self._plugins:
+        self._ParseFileEntryWithPlugin(
+            parser_mediator, plugin, database, display_name, cache)
+    finally:
+      database.Close()
+
     database_wal, wal_file_entry = self._OpenDatabaseWithWAL(
         parser_mediator, file_entry, file_object, filename)
 
+    if not database_wal:
+      return
+
+    # Note that SetFileEntry will reset the current event data stream in
+    # the parser mediator.
+    parser_mediator.SetFileEntry(wal_file_entry)
+
+    event_data_stream = events.EventDataStream()
+    event_data_stream.path_spec = wal_file_entry.path_spec
+
+    parser_mediator.ProduceEventDataStream(event_data_stream)
+
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
+
+    display_name = parser_mediator.GetDisplayName(wal_file_entry)
+
     try:
       for plugin in self._plugins:
-        required_tables_and_column_exist = plugin.CheckRequiredTablesAndColumns(
-            database)
-
-        display_name = parser_mediator.GetDisplayName(file_entry)
-
-        if not required_tables_and_column_exist:
-          logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-              display_name, plugin.NAME))
-          continue
-
-        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin.NAME))
-
-        schema_match = plugin.CheckSchema(database)
-        if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} found required tables but not a matching '
-              'schema').format(plugin.NAME))
-          continue
-
-        parser_mediator.SetFileEntry(file_entry)
-
-        try:
-          plugin.UpdateChainAndProcess(
-              parser_mediator, cache=cache, database=database,
-              database_wal=database_wal, wal_file_entry=wal_file_entry)
-
-        except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse SQLite database with error: '
-              '{1!s}').format(plugin.NAME, exception))
-
-        if not database_wal:
-          continue
-
-        parser_mediator.SetFileEntry(wal_file_entry)
-
-        try:
-          plugin.UpdateChainAndProcess(
-              parser_mediator, cache=cache, database=database,
-              database_wal=database_wal, wal_file_entry=wal_file_entry)
-
-        except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse SQLite database and WAL with '
-              'error: {1!s}').format(plugin.NAME, exception))
-
+        self._ParseFileEntryWithPlugin(
+            parser_mediator, plugin, database_wal, display_name, cache)
     finally:
-      database.Close()
+      database_wal.Close()
 
 
 manager.ParsersManager.RegisterParser(SQLiteParser)
