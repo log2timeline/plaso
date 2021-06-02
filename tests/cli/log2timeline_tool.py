@@ -262,6 +262,39 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  def testExtractEventsFromSourcesOnCompressedDMGImage(self):
+    """Tests the ExtractEventsFromSources function on a compressed DMG image."""
+    test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ExtractEventsFromSources()
+
+      expected_output = [
+          '',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: storage media image',
+          'Processing time\t\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
+
+      output = output_writer.ReadOutput()
+      self._CheckOutput(output, expected_output)
+
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on single partition image."""
     test_file_path = self._GetTestFilePath(['ímynd.dd'])
