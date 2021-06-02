@@ -41,11 +41,12 @@ class PlistFileArtifactPreprocessorPlugin(
       if isinstance(subkey, dict):
         self._FindKeys(subkey, names, matches)
 
-  def _ParseFileData(self, knowledge_base, file_object):
+  def _ParseFileData(self, mediator, file_object):
     """Parses file content (data) for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -87,14 +88,15 @@ class PlistFileArtifactPreprocessorPlugin(
           '{1:s}.').format(
               self.ARTIFACT_DEFINITION_NAME, ', '.join(self._PLIST_KEYS)))
 
-    self._ParsePlistKeyValue(knowledge_base, name, value)
+    self._ParsePlistKeyValue(mediator, name, value)
 
   @abc.abstractmethod
-  def _ParsePlistKeyValue(self, knowledge_base, name, value):
+  def _ParsePlistKeyValue(self, mediator, name, value):
     """Parses a plist key value.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
@@ -107,18 +109,19 @@ class MacOSHostnamePlugin(PlistFileArtifactPreprocessorPlugin):
 
   _PLIST_KEYS = ['ComputerName', 'LocalHostName']
 
-  def _ParsePlistKeyValue(self, knowledge_base, name, value):
+  def _ParsePlistKeyValue(self, mediator, name, value):
     """Parses a plist key value.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if not knowledge_base.GetHostname():
+    if not mediator.knowledge_base.GetHostname():
       if name in self._PLIST_KEYS:
         hostname_artifact = artifacts.HostnameArtifact(name=value)
-        knowledge_base.SetHostname(hostname_artifact)
+        mediator.knowledge_base.SetHostname(hostname_artifact)
 
 
 class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
@@ -128,22 +131,23 @@ class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
 
   _PLIST_KEYS = ['AppleCurrentKeyboardLayoutInputSourceID']
 
-  def _ParsePlistKeyValue(self, knowledge_base, name, value):
+  def _ParsePlistKeyValue(self, mediator, name, value):
     """Parses a plist key value.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if not knowledge_base.GetValue('keyboard_layout'):
+    if not mediator.knowledge_base.GetValue('keyboard_layout'):
       if name in self._PLIST_KEYS:
         if isinstance(value, (list, tuple)):
           value = value[0]
 
         _, _, keyboard_layout = value.rpartition('.')
 
-        knowledge_base.SetValue('keyboard_layout', keyboard_layout)
+        mediator.knowledge_base.SetValue('keyboard_layout', keyboard_layout)
 
 
 class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
@@ -153,17 +157,18 @@ class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
 
   _PLIST_KEYS = ['ProductUserVisibleVersion']
 
-  def _ParsePlistKeyValue(self, knowledge_base, name, value):
+  def _ParsePlistKeyValue(self, mediator, name, value):
     """Parses a plist key value.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if not knowledge_base.GetValue('operating_system_version'):
+    if not mediator.knowledge_base.GetValue('operating_system_version'):
       if name in self._PLIST_KEYS:
-        knowledge_base.SetValue('operating_system_version', value)
+        mediator.knowledge_base.SetValue('operating_system_version', value)
 
 
 class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
@@ -171,11 +176,12 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'MacOSLocalTime'
 
-  def _ParseFileEntry(self, knowledge_base, file_entry):
+  def _ParseFileEntry(self, mediator, file_entry):
     """Parses artifact file system data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
@@ -191,7 +197,7 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
     # TODO: check if time zone is set in knowledge base.
     if time_zone:
       try:
-        knowledge_base.SetTimeZone(time_zone)
+        mediator.knowledge_base.SetTimeZone(time_zone)
       except ValueError:
         # TODO: add and store preprocessing errors.
         pass
@@ -249,11 +255,12 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
     return plist_file.root_key
 
-  def _ParseFileEntry(self, knowledge_base, file_entry):
+  def _ParseFileEntry(self, mediator, file_entry):
     """Parses artifact file system data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
@@ -290,7 +297,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     user_account.user_directory = match.get('home', [None])[0]
 
     try:
-      knowledge_base.AddUserAccount(user_account)
+      mediator.knowledge_base.AddUserAccount(user_account)
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass

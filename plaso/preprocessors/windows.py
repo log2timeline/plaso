@@ -15,11 +15,12 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
 
   _NAME = None
 
-  def _ParseValueData(self, knowledge_base, value_data):
+  def _ParseValueData(self, mediator, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -37,7 +38,7 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
     try:
       logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
           self._NAME, value_data))
-      knowledge_base.AddEnvironmentVariable(environment_variable)
+      mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
@@ -50,12 +51,13 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
   _NAME = None
 
   def _ParsePathSpecification(
-      self, knowledge_base, searcher, file_system, path_specification,
+      self, mediator, searcher, file_system, path_specification,
       path_separator):
     """Parses artifact file system data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -83,7 +85,7 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
     try:
       logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
           self._NAME, relative_path))
-      knowledge_base.AddEnvironmentVariable(environment_variable)
+      mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
@@ -97,20 +99,22 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
   %%environ_allusersappdata%% in artifact definitions.
   """
 
-  def Collect(self, knowledge_base):
+  def Collect(self, mediator):
     """Collects values from the knowledge base.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
-    environment_variable = knowledge_base.GetEnvironmentVariable('programdata')
+    environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
+        'programdata')
     allusersappdata = getattr(environment_variable, 'value', None)
 
     if not allusersappdata:
-      environment_variable = knowledge_base.GetEnvironmentVariable(
+      environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
           'allusersprofile')
       allusersdata = getattr(environment_variable, 'value', None)
 
@@ -124,7 +128,7 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
       try:
         logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
             'allusersappdata', allusersappdata))
-        knowledge_base.AddEnvironmentVariable(environment_variable)
+        mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
       except KeyError:
         # TODO: add and store preprocessing errors.
         pass
@@ -150,21 +154,22 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
   that do not define %AllUsersProfile%.
   """
 
-  def Collect(self, knowledge_base):
+  def Collect(self, mediator):
     """Collects values from the knowledge base.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
-    environment_variable = knowledge_base.GetEnvironmentVariable(
+    environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
         'allusersprofile')
     allusersprofile = getattr(environment_variable, 'value', None)
 
     if not allusersprofile:
-      environment_variable = knowledge_base.GetEnvironmentVariable(
+      environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
           'programdata')
       allusersprofile = getattr(environment_variable, 'value', None)
 
@@ -175,7 +180,7 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
         try:
           logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
               'allusersprofile', allusersprofile))
-          knowledge_base.AddEnvironmentVariable(environment_variable)
+          mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
         except KeyError:
           # TODO: add and store preprocessing errors.
           pass
@@ -187,11 +192,12 @@ class WindowsAvailableTimeZonesPlugin(
 
   ARTIFACT_DEFINITION_NAME = 'WindowsAvailableTimeZones'
 
-  def _ParseKey(self, knowledge_base, registry_key, value_name):
+  def _ParseKey(self, mediator, registry_key, value_name):
     """Parses a Windows Registry key for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value.
 
@@ -201,7 +207,7 @@ class WindowsAvailableTimeZonesPlugin(
     time_zone_artifact = artifacts.TimeZoneArtifact(name=registry_key.name)
 
     try:
-      knowledge_base.AddAvailableTimeZone(time_zone_artifact)
+      mediator.knowledge_base.AddAvailableTimeZone(time_zone_artifact)
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
@@ -213,11 +219,12 @@ class WindowsCodepagePlugin(
 
   ARTIFACT_DEFINITION_NAME = 'WindowsCodePage'
 
-  def _ParseValueData(self, knowledge_base, value_data):
+  def _ParseValueData(self, mediator, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -232,9 +239,9 @@ class WindowsCodepagePlugin(
     # Map the Windows code page name to a Python equivalent name.
     codepage = 'cp{0:s}'.format(value_data)
 
-    if not knowledge_base.codepage:
+    if not mediator.knowledge_base.codepage:
       try:
-        knowledge_base.SetCodepage(codepage)
+        mediator.knowledge_base.SetCodepage(codepage)
       except ValueError:
         # TODO: add and store preprocessing errors.
         pass
@@ -246,11 +253,12 @@ class WindowsHostnamePlugin(
 
   ARTIFACT_DEFINITION_NAME = 'WindowsComputerName'
 
-  def _ParseValueData(self, knowledge_base, value_data):
+  def _ParseValueData(self, mediator, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -266,9 +274,9 @@ class WindowsHostnamePlugin(
       # If the value data is a multi string only use the first string.
       value_data = value_data[0]
 
-    if not knowledge_base.GetHostname():
+    if not mediator.knowledge_base.GetHostname():
       hostname_artifact = artifacts.HostnameArtifact(name=value_data)
-      knowledge_base.SetHostname(hostname_artifact)
+      mediator.knowledge_base.SetHostname(hostname_artifact)
 
 
 class WindowsProgramDataEnvironmentVariablePlugin(
@@ -291,21 +299,22 @@ class WindowsProgramDataKnowledgeBasePlugin(
   that do not define %ProgramData%.
   """
 
-  def Collect(self, knowledge_base):
+  def Collect(self, mediator):
     """Collects values from the knowledge base.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
-    environment_variable = knowledge_base.GetEnvironmentVariable(
+    environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
         'programdata')
     allusersprofile = getattr(environment_variable, 'value', None)
 
     if not allusersprofile:
-      environment_variable = knowledge_base.GetEnvironmentVariable(
+      environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
           'allusersprofile')
       allusersprofile = getattr(environment_variable, 'value', None)
 
@@ -316,7 +325,7 @@ class WindowsProgramDataKnowledgeBasePlugin(
         try:
           logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
               'programdata', allusersprofile))
-          knowledge_base.AddEnvironmentVariable(environment_variable)
+          mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
         except KeyError:
           # TODO: add and store preprocessing errors.
           pass
@@ -346,11 +355,12 @@ class WindowsSystemProductPlugin(
 
   ARTIFACT_DEFINITION_NAME = 'WindowsProductName'
 
-  def _ParseValueData(self, knowledge_base, value_data):
+  def _ParseValueData(self, mediator, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -362,8 +372,8 @@ class WindowsSystemProductPlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    if not knowledge_base.GetValue('operating_system_product'):
-      knowledge_base.SetValue('operating_system_product', value_data)
+    if not mediator.knowledge_base.GetValue('operating_system_product'):
+      mediator.knowledge_base.SetValue('operating_system_product', value_data)
 
 
 class WindowsSystemRootEnvironmentVariablePlugin(
@@ -381,11 +391,12 @@ class WindowsSystemVersionPlugin(
 
   ARTIFACT_DEFINITION_NAME = 'WindowsCurrentVersion'
 
-  def _ParseValueData(self, knowledge_base, value_data):
+  def _ParseValueData(self, mediator, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -397,8 +408,8 @@ class WindowsSystemVersionPlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    if not knowledge_base.GetValue('operating_system_version'):
-      knowledge_base.SetValue('operating_system_version', value_data)
+    if not mediator.knowledge_base.GetValue('operating_system_version'):
+      mediator.knowledge_base.SetValue('operating_system_version', value_data)
 
 
 class WindowsTimeZonePlugin(
@@ -407,11 +418,12 @@ class WindowsTimeZonePlugin(
 
   ARTIFACT_DEFINITION_NAME = 'WindowsTimezone'
 
-  def _ParseValueData(self, knowledge_base, value_data):
+  def _ParseValueData(self, mediator, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -431,7 +443,7 @@ class WindowsTimeZonePlugin(
     if time_zone:
       try:
         # Catch and warn about unsupported preprocessor plugin.
-        knowledge_base.SetTimeZone(time_zone)
+        mediator.knowledge_base.SetTimeZone(time_zone)
       except ValueError:
         # TODO: add and store preprocessing errors.
         time_zone = value_data
@@ -464,11 +476,12 @@ class WindowsUserAccountsPlugin(
       _, _, path = path.rpartition('\\')
     return path
 
-  def _ParseKey(self, knowledge_base, registry_key, value_name):
+  def _ParseKey(self, mediator, registry_key, value_name):
     """Parses a Windows Registry key for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value.
 
@@ -487,7 +500,7 @@ class WindowsUserAccountsPlugin(
       user_account.username = username or None
 
     try:
-      knowledge_base.AddUserAccount(user_account)
+      mediator.knowledge_base.AddUserAccount(user_account)
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass

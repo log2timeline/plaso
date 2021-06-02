@@ -53,10 +53,10 @@ class MacOSHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = macos.MacOSHostnamePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    self.assertEqual(knowledge_base.hostname, 'Plaso\'s Mac mini')
+    self.assertEqual(test_mediator.knowledge_base.hostname, 'Plaso\'s Mac mini')
 
 
 class MacOSKeyboardLayoutPluginTest(
@@ -75,10 +75,10 @@ class MacOSKeyboardLayoutPluginTest(
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = macos.MacOSKeyboardLayoutPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    keyboard_layout = knowledge_base.GetValue('keyboard_layout')
+    keyboard_layout = test_mediator.knowledge_base.GetValue('keyboard_layout')
     self.assertEqual(keyboard_layout, 'US')
 
 
@@ -114,10 +114,10 @@ class MacOSSystemVersionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = macos.MacOSSystemVersionPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    build = knowledge_base.GetValue('operating_system_version')
+    build = test_mediator.knowledge_base.GetValue('operating_system_version')
     self.assertEqual(build, '10.9.2')
 
 
@@ -133,10 +133,11 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = macos.MacOSTimeZonePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    self.assertEqual(knowledge_base.timezone.zone, 'Europe/Amsterdam')
+    self.assertEqual(
+        test_mediator.knowledge_base.timezone.zone, 'Europe/Amsterdam')
 
 
 class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
@@ -157,11 +158,11 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = macos.MacOSUserAccountsPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
     users = sorted(
-        knowledge_base.user_accounts,
+        test_mediator.knowledge_base.user_accounts,
         key=lambda user_account: user_account.identifier)
     self.assertEqual(len(users), 1)
 
