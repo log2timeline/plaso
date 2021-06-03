@@ -38,31 +38,42 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     Returns:
       PreprocessMediator: preprocess mediator.
     """
-    session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
-    storage_writer.Open()
-
+    storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     return mediator.PreprocessMediator(storage_writer, test_knowledge_base)
 
+  def _CreateTestStorageWriter(self):
+    """Creates a storage writer for testing purposes.
+
+    Returns:
+      StorageWriter: storage writer.
+    """
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
+    return storage_writer
+
   def _RunPreprocessorPluginOnFileSystem(
-      self, file_system, mount_point, plugin):
+      self, file_system, mount_point, storage_writer, plugin):
     """Runs a preprocessor plugin on a file system.
 
     Args:
       file_system (dfvfs.FileSystem): file system to be preprocessed.
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
+      storage_writer (StorageWriter): storage writer.
       plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
 
     Return:
-      KnowledgeBase: knowledge base filled with preprocessing information.
+      PreprocessMediator: preprocess mediator.
     """
     artifact_definition = self._artifacts_registry.GetDefinitionByName(
         plugin.ARTIFACT_DEFINITION_NAME)
     self.assertIsNotNone(artifact_definition)
 
-    test_mediator = self._CreateTestPreprocessMediator()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
