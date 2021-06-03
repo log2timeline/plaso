@@ -54,7 +54,7 @@ class MacOSHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     plugin = macos.MacOSHostnamePlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, None, plugin)
 
     self.assertEqual(test_mediator.knowledge_base.hostname, 'Plaso\'s Mac mini')
 
@@ -76,7 +76,7 @@ class MacOSKeyboardLayoutPluginTest(
 
     plugin = macos.MacOSKeyboardLayoutPlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, None, plugin)
 
     keyboard_layout = test_mediator.knowledge_base.GetValue('keyboard_layout')
     self.assertEqual(keyboard_layout, 'US')
@@ -115,7 +115,7 @@ class MacOSSystemVersionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     plugin = macos.MacOSSystemVersionPlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, None, plugin)
 
     build = test_mediator.knowledge_base.GetValue('operating_system_version')
     self.assertEqual(build, '10.9.2')
@@ -134,7 +134,7 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     plugin = macos.MacOSTimeZonePlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, None, plugin)
 
     self.assertEqual(
         test_mediator.knowledge_base.timezone.zone, 'Europe/Amsterdam')
@@ -159,7 +159,7 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     plugin = macos.MacOSUserAccountsPlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, None, plugin)
 
     users = sorted(
         test_mediator.knowledge_base.user_accounts,

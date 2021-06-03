@@ -324,7 +324,7 @@ class WindowsSystemRootEnvironmentVariablePluginTest(
 
     plugin = windows.WindowsSystemRootEnvironmentVariablePlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, None, plugin)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'SystemRoot')
@@ -429,7 +429,7 @@ class WindowsWinDirEnvironmentVariablePluginTest(
 
     plugin = windows.WindowsWinDirEnvironmentVariablePlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, None, plugin)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'WinDir')
