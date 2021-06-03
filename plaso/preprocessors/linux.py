@@ -12,7 +12,6 @@ from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.lib import line_reader_file
 from plaso.preprocessors import interface
-from plaso.preprocessors import logger
 from plaso.preprocessors import manager
 
 
@@ -214,16 +213,18 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
         time_zone = time_zone_file.tzname(date_time)
 
       except ValueError:
-        # TODO: add and store preprocessing errors.
-        logger.error('Unable to read time zone information file.')
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME,
+            'Unable to read time zone information file.')
 
     # TODO: check if time zone is set in knowledge base.
     if time_zone:
       try:
         mediator.knowledge_base.SetTimeZone(time_zone)
       except ValueError:
-        # TODO: add and store preprocessing errors.
-        logger.error('Unable to set time zone in knowledge base.')
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME,
+            'Unable to set time zone in knowledge base.')
 
 
 class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
@@ -252,23 +253,25 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
           'Unable to read: {0:s} with error: {1!s}'.format(
               self.ARTIFACT_DEFINITION_NAME, exception))
 
-    for row in reader:
+    for line_number, row in enumerate(reader):
       if len(row) < 7 or not row[0] or not row[2]:
-        # TODO: add and store preprocessing errors.
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME,
+            'Unsupported number of values in line: {0:d}.'.format(line_number))
         continue
 
       try:
         username = row[0].decode('utf-8')
       except UnicodeDecodeError:
-        # TODO: add and store preprocessing errors.
-        logger.error('Unable to decode username.')
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME, 'Unable to decode username.')
         continue
 
       try:
         identifier = row[2].decode('utf-8')
       except UnicodeDecodeError:
-        # TODO: add and store preprocessing errors.
-        logger.error('Unable to decode identifier.')
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME, 'Unable to decode user identifier.')
         continue
 
       group_identifier = None
@@ -276,32 +279,33 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
         try:
           group_identifier = row[3].decode('utf-8')
         except UnicodeDecodeError:
-          # TODO: add and store preprocessing errors.
-          logger.error('Unable to decode group identifier.')
+          mediator.ProducePreprocessingWarning(
+              self.ARTIFACT_DEFINITION_NAME,
+              'Unable to decode group identifier.')
 
       full_name = None
       if row[4]:
         try:
           full_name = row[4].decode('utf-8')
         except UnicodeDecodeError:
-          # TODO: add and store preprocessing errors.
-          logger.error('Unable to decode full name.')
+          mediator.ProducePreprocessingWarning(
+              self.ARTIFACT_DEFINITION_NAME, 'Unable to decode full name.')
 
       user_directory = None
       if row[5]:
         try:
           user_directory = row[5].decode('utf-8')
         except UnicodeDecodeError:
-          # TODO: add and store preprocessing errors.
-          logger.error('Unable to decode user directory.')
+          mediator.ProducePreprocessingWarning(
+              self.ARTIFACT_DEFINITION_NAME, 'Unable to decode user directory.')
 
       shell = None
       if row[6]:
         try:
           shell = row[6].decode('utf-8')
         except UnicodeDecodeError:
-          # TODO: add and store preprocessing errors.
-          logger.error('Unable to decode shell.')
+          mediator.ProducePreprocessingWarning(
+              self.ARTIFACT_DEFINITION_NAME, 'Unable to decode shell.')
 
       user_account = artifacts.UserAccountArtifact(
           identifier=identifier, username=username)
@@ -312,9 +316,10 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
 
       try:
         mediator.knowledge_base.AddUserAccount(user_account)
-      except KeyError:
-        # TODO: add and store preprocessing errors.
-        pass
+      except KeyError as exception:
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME,
+            'Unable to add user account with error: {0!s}'.format(exception))
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([

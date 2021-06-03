@@ -4,8 +4,6 @@
 
 import unittest
 
-from dfvfs.path import fake_path_spec
-
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.preprocessors import mediator
@@ -27,9 +25,7 @@ class PreprocessMediatorTest(shared_test_lib.BaseTestCase):
 
     storage_writer.Open()
 
-    path_spec = fake_path_spec.FakePathSpec(location='/')
-    parser_mediator.ProducePreprocessingWarning(
-        'test_plugin', path_spec, 'test message')
+    parser_mediator.ProducePreprocessingWarning('test_plugin', 'test message')
 
 
 if __name__ == '__main__':

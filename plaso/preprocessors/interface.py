@@ -132,6 +132,7 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
           '{1!s}').format(relative_path, exception))
 
     if file_entry:
+      mediator.SetFileEntry(file_entry)
       self._ParseFileEntry(mediator, file_entry)
 
 
