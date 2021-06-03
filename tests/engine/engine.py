@@ -160,6 +160,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
 
     test_engine.PreprocessSources(registry, [source_path_spec], storage_writer)
 
