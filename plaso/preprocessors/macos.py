@@ -199,8 +199,9 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       try:
         mediator.knowledge_base.SetTimeZone(time_zone)
       except ValueError:
-        # TODO: add and store preprocessing errors.
-        pass
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME,
+            'Unable to set time zone in knowledge base.')
 
 
 class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
@@ -286,7 +287,9 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     uid = match.get('uid', [None])[0]
 
     if not name or not uid:
-      # TODO: add and store preprocessing errors.
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Missing name or user identifier')
       return
 
     user_account = artifacts.UserAccountArtifact(
@@ -299,8 +302,9 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     try:
       mediator.knowledge_base.AddUserAccount(user_account)
     except KeyError:
-      # TODO: add and store preprocessing errors.
-      pass
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to add user account: {0:s} to knowledge base.'.format(name))
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
