@@ -40,8 +40,10 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
           self._NAME, value_data))
       mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
     except KeyError:
-      # TODO: add and store preprocessing errors.
-      pass
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to set environment variable: {0:s} in knowledge base.'.format(
+              self._NAME))
 
 
 class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
@@ -87,8 +89,10 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
           self._NAME, relative_path))
       mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
     except KeyError:
-      # TODO: add and store preprocessing errors.
-      pass
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to set environment variable: {0:s} in knowledge base.'.format(
+              self._NAME))
 
 
 class WindowsAllUsersAppDataKnowledgeBasePlugin(
@@ -130,8 +134,10 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
             'allusersappdata', allusersappdata))
         mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
       except KeyError:
-        # TODO: add and store preprocessing errors.
-        pass
+        mediator.ProducePreprocessingWarning(
+            self.__class__.__name__,
+            ('Unable to set environment variable: %AllUsersAppData% in '
+             'knowledge base.'))
 
 
 class WindowsAllUsersProfileEnvironmentVariablePlugin(
@@ -182,8 +188,10 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
               'allusersprofile', allusersprofile))
           mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
         except KeyError:
-          # TODO: add and store preprocessing errors.
-          pass
+          mediator.ProducePreprocessingWarning(
+              self.__class__.__name__,
+              ('Unable to set environment variable: %AllUsersProfile% in '
+               'knowledge base.'))
 
 
 class WindowsAvailableTimeZonesPlugin(
@@ -209,8 +217,9 @@ class WindowsAvailableTimeZonesPlugin(
     try:
       mediator.knowledge_base.AddAvailableTimeZone(time_zone_artifact)
     except KeyError:
-      # TODO: add and store preprocessing errors.
-      pass
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to set time zone in knowledge base.')
 
 
 class WindowsCodepagePlugin(
@@ -243,8 +252,9 @@ class WindowsCodepagePlugin(
       try:
         mediator.knowledge_base.SetCodepage(codepage)
       except ValueError:
-        # TODO: add and store preprocessing errors.
-        pass
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME,
+            'Unable to set codepage in knowledge base.')
 
 
 class WindowsHostnamePlugin(
@@ -327,8 +337,10 @@ class WindowsProgramDataKnowledgeBasePlugin(
               'programdata', allusersprofile))
           mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
         except KeyError:
-          # TODO: add and store preprocessing errors.
-          pass
+          mediator.ProducePreprocessingWarning(
+              self.__class__.__name__,
+              ('Unable to set environment variable: %ProgramData% in '
+               'knowledge base.'))
 
 
 class WindowsProgramFilesEnvironmentVariablePlugin(
@@ -445,10 +457,9 @@ class WindowsTimeZonePlugin(
         # Catch and warn about unsupported preprocessor plugin.
         mediator.knowledge_base.SetTimeZone(time_zone)
       except ValueError:
-        # TODO: add and store preprocessing errors.
-        time_zone = value_data
-        logger.warning('Unable to map: "{0:s}" to time zone'.format(
-            value_data))
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME,
+            'Unable to map: "{0:s}" to time zone'.format(value_data))
 
 
 class WindowsUserAccountsPlugin(
@@ -502,8 +513,10 @@ class WindowsUserAccountsPlugin(
     try:
       mediator.knowledge_base.AddUserAccount(user_account)
     except KeyError:
-      # TODO: add and store preprocessing errors.
-      pass
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          ('Unable to add user account: "{0!s}" to knowledge '
+           'base').format(username))
 
 
 class WindowsWinDirEnvironmentVariablePlugin(
