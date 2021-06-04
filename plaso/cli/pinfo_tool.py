@@ -550,6 +550,33 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
           table_view.Write(self._output_writer)
 
+  def _PrintPreprocessingWarningsDetails(self, storage_reader):
+    """Prints the details of the preprocessing warnings.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    for index, warning in enumerate(storage_reader.GetPreprocessingWarnings()):
+      title = 'Preprocessing warning: {0:d}'.format(index)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow(['Message', warning.message])
+      table_view.AddRow(['Parser chain', warning.parser_chain])
+
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+      for path_index, line in enumerate(path_spec_string.split('\n')):
+        if not line:
+          continue
+
+        if path_index == 0:
+          table_view.AddRow(['Path specification', line])
+        else:
+          table_view.AddRow(['', line])
+
+      table_view.Write(self._output_writer)
+
   def _PrintRecoveryWarningsDetails(self, storage_reader):
     """Prints the details of the recovery warnings.
 
@@ -1021,6 +1048,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     """
     if (self._output_format == 'text' and
         not storage_reader.HasExtractionWarnings() and
+        not storage_reader.HasPreprocessingWarnings() and
         not storage_reader.HasRecoveryWarnings()):
       self._output_writer.Write('\nNo warnings stored.\n')
 
@@ -1045,6 +1073,15 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           'recovery_warnings_by_path_spec', collections.Counter())
       warnings_by_parser_chain = storage_counters.get(
           'recovery_warnings_by_parser_chain', collections.Counter())
+
+      # TODO: print preprocessing warnings as part of JSON output format.
+
+      if self._output_format in ('markdown', 'text'):
+        self._PrintWarningCountersTable(
+            'preprocessing', warnings_by_path_spec, warnings_by_parser_chain)
+
+        if self._verbose or 'warnings' in self._sections:
+          self._PrintPreprocessingWarningsDetails(storage_reader)
 
       # TODO: print recovery warnings as part of JSON output format.
 
