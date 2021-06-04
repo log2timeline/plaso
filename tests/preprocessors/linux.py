@@ -152,12 +152,34 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = linux.LinuxTimeZonePlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, None, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     self.assertEqual(
         test_mediator.knowledge_base.timezone.zone, 'Europe/Zurich')
+
+  def testParseFileEntryWithBogusLink(self):
+    """Tests the _ParseFileEntry function on a bogus symbolic link."""
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddSymbolicLink(
+        '/etc/localtime', '/usr/share/zoneinfo/Bogus')
+
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxTimeZonePlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
   def testParseFileEntryWithTZif(self):
     """Tests the _ParseFileEntry function on a timezone information file."""
@@ -169,9 +191,13 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = linux.LinuxTimeZonePlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, None, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'CET')
 
@@ -185,9 +211,13 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = linux.LinuxTimeZonePlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, None, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
 
     self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
