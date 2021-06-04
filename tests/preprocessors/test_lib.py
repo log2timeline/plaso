@@ -32,16 +32,6 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     reader = artifacts_reader.YamlArtifactsReader()
     cls._artifacts_registry.ReadFromDirectory(reader, artifacts_path)
 
-  def _CreateTestPreprocessMediator(self):
-    """Creates a preprocess mediator for testing purposes.
-
-    Returns:
-      PreprocessMediator: preprocess mediator.
-    """
-    storage_writer = self._CreateTestStorageWriter()
-    test_knowledge_base = knowledge_base.KnowledgeBase()
-    return mediator.PreprocessMediator(storage_writer, test_knowledge_base)
-
   def _CreateTestStorageWriter(self):
     """Creates a storage writer for testing purposes.
 
@@ -82,13 +72,14 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     return test_mediator
 
   def _RunPreprocessorPluginOnWindowsRegistryValue(
-      self, file_system, mount_point, plugin):
+      self, file_system, mount_point, storage_writer, plugin):
     """Runs a preprocessor plugin on a Windows Registry value.
 
     Args:
       file_system (dfvfs.FileSystem): file system to be preprocessed.
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
+      storage_writer (StorageWriter): storage writer.
       plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
 
     Return:
@@ -106,7 +97,10 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
-    test_mediator = self._CreateTestPreprocessMediator()
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     searcher = registry_searcher.WinRegistrySearcher(win_registry)
 
@@ -114,10 +108,12 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
 
     return test_mediator
 
-  def _RunPreprocessorPluginOnWindowsRegistryValueSoftware(self, plugin):
+  def _RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+      self, storage_writer, plugin):
     """Runs a preprocessor plugin on a Windows Registry value in SOFTWARE.
 
     Args:
+      storage_writer (StorageWriter): storage writer.
       plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
 
     Return:
@@ -132,12 +128,14 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
     return self._RunPreprocessorPluginOnWindowsRegistryValue(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-  def _RunPreprocessorPluginOnWindowsRegistryValueSystem(self, plugin):
+  def _RunPreprocessorPluginOnWindowsRegistryValueSystem(
+      self, storage_writer, plugin):
     """Runs a preprocessor plugin on a Windows Registry value in SYSTEM.
 
     Args:
+      storage_writer (StorageWriter): storage writer.
       plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
 
     Return:
@@ -152,4 +150,4 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
     return self._RunPreprocessorPluginOnWindowsRegistryValue(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
