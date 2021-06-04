@@ -124,20 +124,42 @@ class MacOSSystemVersionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the MacOS time zone plugin."""
 
-  def testParseFileEntry(self):
-    """Tests the _ParseFileEntry function."""
+  def testParseFileEntryWithLink(self):
+    """Tests the _ParseFileEntry function on a symbolic link."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddSymbolicLink(
         '/private/etc/localtime', '/usr/share/zoneinfo/Europe/Amsterdam')
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = macos.MacOSTimeZonePlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, None, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     self.assertEqual(
         test_mediator.knowledge_base.timezone.zone, 'Europe/Amsterdam')
+
+  def testParseFileEntryWithBogusLink(self):
+    """Tests the _ParseFileEntry function a bogus symbolic link."""
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddSymbolicLink(
+        '/private/etc/localtime', '/usr/share/zoneinfo/Bogus')
+
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = macos.MacOSTimeZonePlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
 
 class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
@@ -157,9 +179,13 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = macos.MacOSUserAccountsPlugin()
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, None, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     users = sorted(
         test_mediator.knowledge_base.user_accounts,
@@ -172,6 +198,26 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     self.assertEqual(user_account.full_name, 'Unprivileged User')
     self.assertEqual(user_account.user_directory, '/var/empty')
     self.assertEqual(user_account.username, 'nobody')
+
+  def testRunWithTruncatedFile(self):
+    """Tests the Run function on a truncated plist file."""
+    test_file_path = self._GetTestFilePath(['truncated.plist'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFileReadData(
+        '/private/var/db/dslocal/nodes/Default/users/nobody.plist',
+        test_file_path)
+
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = macos.MacOSUserAccountsPlugin()
+    self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
 
 
 if __name__ == '__main__':

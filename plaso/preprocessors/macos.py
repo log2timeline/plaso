@@ -2,6 +2,7 @@
 """This file contains preprocessors for MacOS."""
 
 import abc
+import plistlib
 
 from plaso.containers import artifacts
 from plaso.lib import errors
@@ -230,32 +231,6 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
     return match
 
-  def _GetPlistRootKey(self, file_entry):
-    """Retrieves the root key of a plist file.
-
-    Args:
-      file_entry (dfvfs.FileEntry): file entry of the plist.
-
-    Returns:
-      dict[str, object]: plist root key.
-
-    Raises:
-      errors.PreProcessFail: if the preprocessing fails.
-    """
-    file_object = file_entry.GetFileObject()
-
-    try:
-      plist_file = plist.PlistFile()
-      plist_file.Read(file_object)
-
-    except IOError as exception:
-      location = getattr(file_entry.path_spec, 'location', '')
-      raise errors.PreProcessFail(
-          'Unable to read plist file: {0:s} with error: {1!s}'.format(
-              location, exception))
-
-    return plist_file.root_key
-
   def _ParseFileEntry(self, mediator, file_entry):
     """Parses artifact file system data for a preprocessing attribute.
 
@@ -268,28 +243,25 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    root_key = self._GetPlistRootKey(file_entry)
-    if not root_key:
-      location = getattr(file_entry.path_spec, 'location', '')
-      raise errors.PreProcessFail((
-          'Unable to read: {0:s} plist: {1:s} with error: missing root '
-          'key.').format(self.ARTIFACT_DEFINITION_NAME, location))
+    file_object = file_entry.GetFileObject()
 
     try:
-      match = self._GetTopLevelKeys(root_key, self._KEYS)
-    except KeyError as exception:
-      location = getattr(file_entry.path_spec, 'location', '')
-      raise errors.PreProcessFail(
-          'Unable to read: {0:s} plist: {1:s} with error: {2!s}'.format(
-              self.ARTIFACT_DEFINITION_NAME, location, exception))
+      plist_file = plist.PlistFile()
+      plist_file.Read(file_object)
+      match = self._GetTopLevelKeys(plist_file.root_key, self._KEYS)
+
+    except (IOError, plistlib.InvalidFileException) as exception:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to read plist with error: {0!s}.'.format(exception))
+      return
 
     name = match.get('name', [None])[0]
     uid = match.get('uid', [None])[0]
 
     if not name or not uid:
       mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          'Missing name or user identifier')
+          self.ARTIFACT_DEFINITION_NAME, 'Missing name or user identifier')
       return
 
     user_account = artifacts.UserAccountArtifact(
