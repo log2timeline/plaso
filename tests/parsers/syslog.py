@@ -12,6 +12,23 @@ from tests.parsers import test_lib
 class SyslogParserTest(test_lib.ParserTestCase):
   """Tests for the syslog parser."""
 
+  # pylint: disable=protected-access
+
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser = syslog.SyslogParser()
+
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    self.assertEqual(len(parser._plugins), number_of_plugins)
+
+    parser.EnablePlugins(['cron'])
+    self.assertEqual(len(parser._plugins), 1)
+
   def testParseRsyslog(self):
     """Tests the Parse function on a rsyslog file."""
     parser = syslog.SyslogParser()

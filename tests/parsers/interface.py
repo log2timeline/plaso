@@ -14,6 +14,16 @@ class BaseParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser = interface.BaseParser()
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    self.assertEqual(len(parser._plugins), 0)
+
   def testInitialize(self):
     """Tests the initialization."""
     parser = interface.BaseParser()

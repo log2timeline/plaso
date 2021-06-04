@@ -13,6 +13,23 @@ from tests.parsers import test_lib
 class ESEDBParserTest(test_lib.ParserTestCase):
   """Tests for the Extensible Storage Engine database (ESEDB) file parser."""
 
+  # pylint: disable=protected-access
+
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser = esedb.ESEDBParser()
+
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    self.assertEqual(len(parser._plugins), number_of_plugins)
+
+    parser.EnablePlugins(['file_history'])
+    self.assertEqual(len(parser._plugins), 1)
+
   def testParse(self):
     """Tests the Parse function."""
     parser = esedb.ESEDBParser()

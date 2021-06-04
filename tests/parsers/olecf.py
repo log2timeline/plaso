@@ -14,6 +14,24 @@ from tests.parsers import test_lib
 class OLECFParserTest(test_lib.ParserTestCase):
   """Tests for the OLE Compound Files (OLECF) parser."""
 
+  # pylint: disable=protected-access
+
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser = olecf.OLECFParser()
+
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    # Extract 1 for the default plugin.
+    self.assertEqual(len(parser._plugins), number_of_plugins - 1)
+
+    parser.EnablePlugins(['olecf_document_summary'])
+    self.assertEqual(len(parser._plugins), 1)
+
   def testParse(self):
     """Tests the Parse function."""
     parser = olecf.OLECFParser()

@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.parsers import bencode_parser
-# Register all plugins.
 from plaso.parsers import bencode_plugins  # pylint: disable=unused-import
 
 from tests.parsers import test_lib
@@ -19,11 +18,16 @@ class BencodeTest(test_lib.ParserTestCase):
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = bencode_parser.BencodeParser()
-    parser.EnablePlugins(['bencode_transmission'])
 
-    self.assertIsNotNone(parser)
-    self.assertIsNone(parser._default_plugin)
-    self.assertNotEqual(parser._plugins, [])
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    self.assertEqual(len(parser._plugins), number_of_plugins)
+
+    parser.EnablePlugins(['bencode_transmission'])
     self.assertEqual(len(parser._plugins), 1)
 
 
