@@ -108,6 +108,15 @@ Note that you can abort with Ctrl^C.
 Select a credential to unlock the volume:
 ```
 
+Note that there are various options that can be used to prevent
+log2timeline.py from prompting the user to select VSS stores or
+partitions.
+
+ + **--partitions PARTITION_NUMBERS**: Preselects the partition number to use, eg: ```---partitions 2``` will pick the second partition on the disk.
+ + **--vss_stores**: Selects the VSS stores to include, eg: ```---vss_stores all``` will select all available VSS stores, or ```--vss_stores 1,4,5``` (only first, fourth and fifth), or ```--vss_stores 1..3``` (first three stores).
+ + **--no_vss**: Skip all VSS parsing
+ + **--unattended**: log2timeline.py will error instead of prompting the user.
+
 After finding a partition to process log2timeline.py will start the
 pre-processing stage, where it collects information from the storage media.
 That is evident by the entries like:
@@ -146,15 +155,6 @@ $ log2timeline.py --info
                             webhist
 ...
 ```
-
-Note that there are various options that can be used to prevent
-log2timeline.py from prompting the user to select VSS stores or
-partitions.
-
- + **--partitions PARTITION_NUMBERS**: Preselects the partition number to use, eg: ```---partitions 2``` will pick the second partition on the disk.
- + **--vss_stores**: Selects the VSS stores to include, eg: ```---vss_stores all``` will select all available VSS stores, or ```--vss_stores 1,4,5``` (only first, fourth and fifth), or ```--vss_stores 1..3``` (first three stores).
- + **--no_vss**: Skip all VSS parsing
- + **--unattended**: log2timeline.py will error instead of prompting the user.
 
 ## The logfile option
 
