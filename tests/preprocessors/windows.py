@@ -9,6 +9,8 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import artifacts
+from plaso.engine import knowledge_base
+from plaso.preprocessors import mediator
 from plaso.preprocessors import windows
 
 from tests.preprocessors import test_lib
@@ -21,9 +23,15 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
   def testCollect(self):
     """Tests the Collect function."""
     plugin = windows.WindowsAllUsersAppDataKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersappdata')
@@ -32,7 +40,11 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
   def testCollectWithAllUsersProfile(self):
     """Tests the Collect function with the %AllUsersProfile% variable."""
     plugin = windows.WindowsAllUsersAppDataKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='allusersprofile',
@@ -41,6 +53,8 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
     test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersappdata')
@@ -52,7 +66,11 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
   def testCollectWithProgramData(self):
     """Tests the Collect function with the %ProgramData% variable."""
     plugin = windows.WindowsAllUsersAppDataKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='programdata',
@@ -61,6 +79,8 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
     test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersappdata')
@@ -77,9 +97,13 @@ class WindowsAllUsersProfileEnvironmentVariablePluginTest(
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsAllUsersProfileEnvironmentVariablePlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'AllUsersProfile')
@@ -93,9 +117,15 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
   def testCollect(self):
     """Tests the Collect function."""
     plugin = windows.WindowsAllUsersAppProfileKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersprofile')
@@ -104,7 +134,11 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
   def testCollectWithAllUsersProfile(self):
     """Tests the Collect function with the %AllUsersProfile% variable."""
     plugin = windows.WindowsAllUsersAppProfileKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='allusersprofile',
@@ -113,6 +147,8 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
     test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersprofile')
@@ -123,7 +159,11 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
   def testCollectWithProgramData(self):
     """Tests the Collect function with the %ProgramData% variable."""
     plugin = windows.WindowsAllUsersAppProfileKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='programdata',
@@ -132,6 +172,8 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
     test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersprofile')
@@ -148,9 +190,13 @@ class WindowsAvailableTimeZonesPluginTest(
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsAvailableTimeZonesPlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     available_time_zones = sorted(
         test_mediator.knowledge_base.available_time_zones,
@@ -169,9 +215,13 @@ class WindowsCodepagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
     test_file_path = self._GetTestFilePath(['SYSTEM'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsCodepagePlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     self.assertEqual(test_mediator.knowledge_base.codepage, 'cp1252')
 
@@ -186,9 +236,13 @@ class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_file_path = self._GetTestFilePath(['SYSTEM'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsHostnamePlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     self.assertEqual(test_mediator.knowledge_base.hostname, 'WKS-WIN732BITA')
 
@@ -205,9 +259,13 @@ class WindowsProgramDataEnvironmentVariablePluginTest(
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsProgramDataEnvironmentVariablePlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'ProgramData')
@@ -222,9 +280,15 @@ class WindowsProgramDataKnowledgeBasePluginTest(
   def testCollect(self):
     """Tests the Collect function."""
     plugin = windows.WindowsProgramDataKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'programdata')
@@ -233,7 +297,11 @@ class WindowsProgramDataKnowledgeBasePluginTest(
   def testCollectWithAllUsersProfile(self):
     """Tests the Collect function with the %AllUsersProfile% variable."""
     plugin = windows.WindowsProgramDataKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='allusersprofile',
@@ -242,6 +310,8 @@ class WindowsProgramDataKnowledgeBasePluginTest(
     test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'programdata')
@@ -252,7 +322,11 @@ class WindowsProgramDataKnowledgeBasePluginTest(
   def testCollectWithProgramData(self):
     """Tests the Collect function with the %ProgramData% variable."""
     plugin = windows.WindowsProgramDataKnowledgeBasePlugin()
-    test_mediator = self._CreateTestPreprocessMediator()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='programdata',
@@ -261,6 +335,8 @@ class WindowsProgramDataKnowledgeBasePluginTest(
     test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'programdata')
@@ -277,9 +353,13 @@ class WindowsProgramFilesEnvironmentVariablePluginTest(
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsProgramFilesEnvironmentVariablePlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'ProgramFiles')
@@ -296,9 +376,13 @@ class WindowsProgramFilesX86EnvironmentVariablePluginTest(
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsProgramFilesX86EnvironmentVariablePlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'ProgramFilesX86')
@@ -341,9 +425,13 @@ class WindowsSystemProductPluginTest(
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsSystemProductPlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     system_product = test_mediator.knowledge_base.GetValue(
         'operating_system_product')
@@ -359,9 +447,13 @@ class WindowsSystemVersionPluginTest(
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsSystemVersionPlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     system_version = test_mediator.knowledge_base.GetValue(
         'operating_system_version')
@@ -376,9 +468,13 @@ class WindowsTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_file_path = self._GetTestFilePath(['SYSTEM'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsTimeZonePlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'EST5EDT')
 
@@ -394,9 +490,13 @@ class WindowsUserAccountsPluginTest(
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = windows.WindowsUserAccountsPlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        plugin)
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     user_accounts = sorted(
         test_mediator.knowledge_base.user_accounts,
