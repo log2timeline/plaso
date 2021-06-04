@@ -431,6 +431,14 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.HasExtractionWarnings()
 
+  def HasPreprocessingWarnings(self):
+    """Determines if a store contains preprocessing warnings.
+
+    Returns:
+      bool: True if the store contains preprocessing warnings.
+    """
+    return self._storage_file.HasPreprocessingWarnings()
+
   def HasRecoveryWarnings(self):
     """Determines if a store contains recovery warnings.
 

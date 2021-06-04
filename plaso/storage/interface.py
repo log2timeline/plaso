@@ -1156,6 +1156,14 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def HasPreprocessingWarnings(self):
+    """Determines if a store contains preprocessing warnings.
+
+    Returns:
+      bool: True if the store contains preprocessing warnings.
+    """
+
+  @abc.abstractmethod
   def HasRecoveryWarnings(self):
     """Determines if a store contains recovery warnings.
 

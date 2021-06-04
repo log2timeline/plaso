@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Redis reader."""
+
 from plaso.lib import definitions
 from plaso.storage.redis import redis_store
 from plaso.storage import interface
@@ -141,6 +142,14 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.GetNumberOfEventSources()
 
+  def GetPreprocessingWarnings(self):
+    """Retrieves the preprocessing warnings.
+
+    Returns:
+      generator(RecoveryWarning): preprocessing warning generator.
+    """
+    return self._store.GetPreprocessingWarnings()
+
   def GetRecoveryWarnings(self):
     """Retrieves the recovery warnings.
 
@@ -195,6 +204,14 @@ class RedisStorageReader(interface.StorageReader):
       bool: True if the store contains extraction warnings.
     """
     return self._store.HasExtractionWarnings()
+
+  def HasPreprocessingWarnings(self):
+    """Determines if a store contains preprocessing warnings.
+
+    Returns:
+      bool: True if the store contains preprocessing warnings.
+    """
+    return self._store.HasPreprocessingWarnings()
 
   def HasRecoveryWarnings(self):
     """Determines if a store contains recovery warnings.
