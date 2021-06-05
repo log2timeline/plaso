@@ -4,19 +4,39 @@
 
 import unittest
 
-from plaso.parsers import amcache
+from dfwinreg import regf as dfwinreg_regf
 
-from tests.parsers import test_lib
+from plaso.parsers.winreg_plugins import amcache
+
+from tests.parsers.winreg_plugins import test_lib
 
 
-class AMCacheParserTest(test_lib.ParserTestCase):
-  """Tests for the AMCache Registry plugin."""
+class AMCachePluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the AMCache.hve Windows Registry plugin."""
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = amcache.AMCacheParser()
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = amcache.AMCachePlugin()
 
-    storage_writer = self._ParseFile(['Amcache.hve'], parser)
+    self._AssertFiltersOnKeyPath(plugin, '\\Root')
+    self._AssertNotFiltersOnKeyPath(plugin, '\\Root\\File')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
+  def testProcess(self):
+    """Tests the Process function."""
+    test_file_entry = self._GetTestFileEntry(['Amcache.hve'])
+
+    file_object = test_file_entry.GetFileObject()
+
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(
+        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file.Open(file_object)
+
+    registry_key = registry_file.GetKeyByPath('\\Root')
+
+    plugin = amcache.AMCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin, file_entry=test_file_entry)
 
     # 1178 windows:registry:amcache events
     # 2105 last written time events
@@ -53,16 +73,6 @@ class AMCacheParserTest(test_lib.ParserTestCase):
             'CurrentVersion\\Uninstall\\FileInsight']}
 
     self.CheckEventValues(storage_writer, events[1285], expected_event_values)
-
-  def testParseWithSystem(self):
-    """Tests the Parse function with a SYSTEM Registry file."""
-    parser = amcache.AMCacheParser()
-
-    storage_writer = self._ParseFile(['SYSTEM'], parser)
-
-    self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
 
 if __name__ == '__main__':
