@@ -20,11 +20,17 @@ class PlistParserTest(test_lib.ParserTestCase):
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = plist.PlistParser()
-    parser.EnablePlugins(['airport'])
 
-    self.assertIsNotNone(parser)
-    self.assertIsNotNone(parser._default_plugin)
-    self.assertNotEqual(parser._plugins, [])
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    # Extract 1 for the default plugin.
+    self.assertEqual(len(parser._plugins), number_of_plugins - 1)
+
+    parser.EnablePlugins(['airport'])
     self.assertEqual(len(parser._plugins), 1)
 
   def testParse(self):

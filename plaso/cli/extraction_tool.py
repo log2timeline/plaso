@@ -144,10 +144,7 @@ class ExtractionTool(
           'parser filter expression: {1:s}'.format(
               invalid_parser_names_string, parser_filter_expression))
 
-    if not parser_filter_expression:
-      parser_filter_expression = ','.join(sorted(parser_elements))
-
-    self._expanded_parser_filter_expression = parser_filter_expression
+    self._expanded_parser_filter_expression = ','.join(sorted(parser_elements))
 
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()

@@ -66,6 +66,8 @@ class BaseParser(object):
   # List of filters that should match for the parser to be applied.
   FILTERS = frozenset()
 
+  ALL_PLUGINS = set(['*'])
+
   # Every derived parser class that implements plugins should define
   # its own _plugin_classes dict:
   # _plugin_classes = {}
@@ -87,7 +89,7 @@ class BaseParser(object):
     super(BaseParser, self).__init__()
     self._default_plugin = None
     self._plugins = None
-    self.EnablePlugins([])
+    self.EnablePlugins(self.ALL_PLUGINS)
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
@@ -113,8 +115,8 @@ class BaseParser(object):
     """Enables parser plugins.
 
     Args:
-      plugin_includes (list[str]): names of the plugins to enable, where None
-          or an empty list represents all plugins. Note the default plugin, if
+      plugin_includes (set[str]): names of the plugins to enable, where
+          set(['*']) represents all plugins. Note the default plugin, if
           it exists, is always enabled and cannot be disabled.
     """
     self._plugins = []
@@ -127,7 +129,8 @@ class BaseParser(object):
         self._default_plugin = plugin_class()
         continue
 
-      if plugin_includes and plugin_name not in plugin_includes:
+      if (plugin_includes != self.ALL_PLUGINS and
+          plugin_name not in plugin_includes):
         continue
 
       plugin_object = plugin_class()

@@ -6,7 +6,6 @@ import unittest
 
 from plaso.lib import errors
 from plaso.parsers import czip
-# Register all plugins.
 from plaso.parsers import czip_plugins  # pylint: disable=unused-import
 
 from tests.parsers import test_lib
@@ -20,11 +19,16 @@ class CompoundZIPTest(test_lib.ParserTestCase):
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = czip.CompoundZIPParser()
-    parser.EnablePlugins(['oxml'])
 
-    self.assertIsNotNone(parser)
-    self.assertIsNone(parser._default_plugin)
-    self.assertNotEqual(parser._plugins, [])
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    self.assertEqual(len(parser._plugins), number_of_plugins)
+
+    parser.EnablePlugins(['oxml'])
     self.assertEqual(len(parser._plugins), 1)
 
   def testParse(self):

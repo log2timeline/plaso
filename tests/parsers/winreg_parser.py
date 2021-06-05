@@ -50,14 +50,22 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     """
     return 'winreg/{0:s}'.format(plugin_name)
 
+  # pylint: disable=protected-access
+
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = winreg_parser.WinRegistryParser()
-    parser.EnablePlugins(['appcompatcache'])
 
-    self.assertIsNotNone(parser)
-    self.assertIsNotNone(parser._default_plugin)
-    self.assertNotEqual(parser._plugins, [])
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    # Extract 1 for the default plugin.
+    self.assertEqual(len(parser._plugins), number_of_plugins - 1)
+
+    parser.EnablePlugins(['appcompatcache'])
     self.assertEqual(len(parser._plugins), 1)
 
   def testParse(self):

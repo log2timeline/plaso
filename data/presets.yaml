@@ -110,7 +110,6 @@ description: Preset for generic Windows, intended as template for other Windows 
 parsers:
 - bencode
 - czip/oxml
-- esedb
 - filestat
 - gdrive_synclog
 - lnk
@@ -147,6 +146,7 @@ parsers:
 name: win7_slow
 description: Preset for Windows 7 and later including parsers that require more processing time.
 parsers:
+- esedb
 - mft
 - win7
 ---
@@ -165,5 +165,6 @@ parsers:
 name: winxp_slow
 description: Preset for Windows XP and 2003 including parsers that require more processing time.
 parsers:
+- esedb
 - mft
 - winxp

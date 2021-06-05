@@ -10,7 +10,44 @@ from plaso.lib import specification
 class ParsersManager(object):
   """The parsers and plugins manager."""
 
+  ALL_PLUGINS = set(['*'])
+
   _parser_classes = {}
+
+  @classmethod
+  def _GetParsers(cls, parser_filter_expression=None):
+    """Retrieves the registered parsers and plugins.
+
+    Args:
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
+
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
+
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
+
+    Yields:
+      tuple: containing:
+
+      * str: name of the parser:
+      * type: parser class (subclass of BaseParser).
+    """
+    parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
+    excludes, includes = parser_filter_helper.SplitExpression(
+        parser_filter_expression)
+
+    for parser_name, parser_class in cls._parser_classes.items():
+      # If there are no includes all parsers are included by default.
+      if not includes and parser_name in excludes:
+        continue
+
+      if includes and parser_name not in includes:
+        continue
+
+      yield parser_name, parser_class
 
   @classmethod
   def CreateSignatureScanner(cls, specification_store):
@@ -88,16 +125,18 @@ class ParsersManager(object):
           unknown_parser_elements.add(element)
           continue
 
-        if not plugin_name:
-          known_parser_elements.add(element)
-          continue
-
         if parser_class.SupportsPlugins():
           plugins = dict(parser_class.GetPlugins())
-          if plugin_name in plugins:
+          if not plugin_name:
+            for plugin in plugins:
+              known_parser_elements.add('/'.join([parser_name, plugin]))
+          elif plugin_name in plugins:
             known_parser_elements.add(element)
           else:
             unknown_parser_elements.add(element)
+
+        elif not plugin_name:
+          known_parser_elements.add(element)
 
     return known_parser_elements, unknown_parser_elements
 
@@ -266,47 +305,12 @@ class ParsersManager(object):
 
       parser_object = parser_class()
       if parser_class.SupportsPlugins():
-        plugin_includes = includes.get(parser_name, None)
+        plugin_includes = includes.get(parser_name, cls.ALL_PLUGINS)
         parser_object.EnablePlugins(plugin_includes)
 
       parser_objects[parser_name] = parser_object
 
     return parser_objects
-
-  @classmethod
-  def _GetParsers(cls, parser_filter_expression=None):
-    """Retrieves the registered parsers and plugins.
-
-    Args:
-      parser_filter_expression (Optional[str]): parser filter expression,
-          where None represents all parsers and plugins.
-
-          A parser filter expression is a comma separated value string that
-          denotes which parsers and plugins should be used. See
-          filters/parser_filter.py for details of the expression syntax.
-
-          This function does not support presets, and requires a parser
-          filter expression where presets have been expanded.
-
-    Yields:
-      tuple: containing:
-
-      * str: name of the parser:
-      * type: parser class (subclass of BaseParser).
-    """
-    parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
-    excludes, includes = parser_filter_helper.SplitExpression(
-        parser_filter_expression)
-
-    for parser_name, parser_class in cls._parser_classes.items():
-      # If there are no includes all parsers are included by default.
-      if not includes and parser_name in excludes:
-        continue
-
-      if includes and parser_name not in includes:
-        continue
-
-      yield parser_name, parser_class
 
   @classmethod
   def GetParsersInformation(cls):
