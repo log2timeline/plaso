@@ -215,13 +215,15 @@ class ESEDBPlugin(plugins.BasePlugin):
     return record.get_value_data(value_entry)
 
   def _GetRecordValues(
-      self, parser_mediator, table_name, record, value_mappings=None):
+      self, parser_mediator, table_name, record_index, record,
+      value_mappings=None):
     """Retrieves the values from the record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       table_name (str): name of the table.
+      record_index (int): ESE record index.
       record (pyesedb.record): ESE record.
       value_mappings (Optional[dict[str, str]): value mappings, which map
           the column name to a callback method.
@@ -237,7 +239,7 @@ class ESEDBPlugin(plugins.BasePlugin):
 
       column_name = record.get_column_name(value_entry)
       if column_name in record_values:
-        logger.warning(
+        parser_mediator.ProduceExtractionWarning(
             '[{0:s}] duplicate column: {1:s} in table: {2:s}'.format(
                 self.NAME, column_name, table_name))
         continue
@@ -262,17 +264,20 @@ class ESEDBPlugin(plugins.BasePlugin):
           logger.error(exception)
           value = None
           parser_mediator.ProduceExtractionWarning((
-              'unable to parse value: {0:s} with callback: {1:s} with error: '
-              '{2!s}').format(column_name, value_callback_method, exception))
+              'unable to parse value: {0:s} in record: {1:d} with callback: '
+              '{2:s} in table: {3:s} with error: {4!s}').format(
+                  column_name, record_index, value_callback_method, table_name,
+                  exception))
 
       else:
         try:
           value = self._GetRecordValue(record, value_entry)
         except ValueError as exception:
           value = None
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse value: {0:s} with error: {1!s}'.format(
-                  column_name, exception))
+          parser_mediator.ProduceExtractionWarning((
+              'unable to parse value: {0:s}  in record: {1:d} in table: {2:s} '
+              'with error: {3!s}').format(
+                  column_name, record_index, table_name, exception))
 
       record_values[column_name] = value
 
@@ -284,7 +289,7 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (Optional[ESEDBCache]): cache.
       database (Optional[ESEDatabase]): ESE database.
 
@@ -402,7 +407,7 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (Optional[ESEDBCache]): cache.
       database (Optional[ESEDatabase]): ESE database.
 

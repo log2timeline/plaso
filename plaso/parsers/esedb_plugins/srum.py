@@ -310,12 +310,12 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     identifier_mappings = self._GetIdentifierMappings(
         parser_mediator, cache, database)
 
-    for esedb_record in esedb_table.records:
+    for record_index, esedb_record in enumerate(esedb_table.records):
       if parser_mediator.abort:
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, esedb_table.name, esedb_record,
+          parser_mediator, esedb_table.name, record_index, esedb_record,
           value_mappings=self._GUID_TABLE_VALUE_MAPPINGS)
 
       event_data = event_data_class()
@@ -351,21 +351,22 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseIdentifierMappingRecord(
-      self, parser_mediator, table_name, esedb_record):
+      self, parser_mediator, table_name, record_index, esedb_record):
     """Extracts an identifier mapping from a SruDbIdMapTable record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       table_name (str): name of the table the record is stored in.
-      esedb_record (pyesedb.record): record.
+      record_index (int): ESE record index.
+      esedb_record (pyesedb.record): ESE record.
 
     Returns:
       tuple[int, str]: numeric identifier and its string representation or
           None, None if no identifier mapping can be retrieved from the record.
     """
     record_values = self._GetRecordValues(
-        parser_mediator, table_name, esedb_record)
+        parser_mediator, table_name, record_index, esedb_record)
 
     identifier = record_values.get('IdIndex', None)
     if identifier is None:
@@ -420,12 +421,12 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     """
     identifier_mappings = {}
 
-    for esedb_record in esedb_table.records:
+    for record_index, esedb_record in enumerate(esedb_table.records):
       if parser_mediator.abort:
         break
 
       identifier, mapped_value = self._ParseIdentifierMappingRecord(
-          parser_mediator, esedb_table.name, esedb_record)
+          parser_mediator, esedb_table.name, record_index, esedb_record)
       if identifier is None or mapped_value is None:
         continue
 

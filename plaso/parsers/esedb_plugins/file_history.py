@@ -106,12 +106,12 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       strings = self._GetDictFromStringsTable(parser_mediator, esedb_table)
       cache.StoreDictInCache('strings', strings)
 
-    for esedb_record in table.records:
+    for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, table.name, esedb_record)
+          parser_mediator, table.name, record_index, esedb_record)
 
       event_data = FileHistoryNamespaceEventData()
       event_data.file_attribute = record_values.get('fileAttrib', None)

@@ -567,10 +567,10 @@ class FieldFormattingHelper(object):
     display_name = getattr(event_data, 'display_name', None) or 'N/A'
     parser_chain = getattr(event_data, 'parser', None) or 'N/A'
     error_message = (
-        'Event: {0!s} data type: {1:s} display name: {2:s} '
-        'parser chain: {3:s} with error: {4:s}').format(
-            event_identifier_string, event_data.data_type, display_name,
-            parser_chain, error_message)
+        'Event: {0!s} description: {1:s} data type: {2:s} display name: {3:s} '
+        'parser chain: {4:s} with error: {5:s}').format(
+            event_identifier_string, event.timestamp_desc, event_data.data_type,
+            display_name, parser_chain, error_message)
     logger.error(error_message)
 
   def GetFormattedField(

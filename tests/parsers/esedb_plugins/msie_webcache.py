@@ -39,7 +39,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     plugin = msie_webcache.MsieWebCacheESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(['WebCacheV01.dat'], plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 1354)
+    self.assertEqual(storage_writer.number_of_events, 1372)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
@@ -58,7 +58,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'set_identifier': 0,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    self.CheckEventValues(storage_writer, events[567], expected_event_values)
+    self.CheckEventValues(storage_writer, events[573], expected_event_values)
 
   def testProcessOnDatabaseWithPartitionsExTable(self):
     """Tests the Process function on database with a PartitionsEx table."""
@@ -66,7 +66,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(
         ['PartitionsEx-WebCacheV01.dat'], plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 4014)
+    self.assertEqual(storage_writer.number_of_events, 4200)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 3)
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
