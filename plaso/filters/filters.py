@@ -3,12 +3,12 @@
 
 import abc
 import codecs
-import logging
 import re
 
 from dfdatetime import interface as dfdatetime_interface
 
 from plaso.containers import artifacts
+from plaso.filters import logger
 from plaso.filters import value_types
 from plaso.lib import errors
 
@@ -28,7 +28,7 @@ class Filter(object):
     Args:
       arguments (Optional[object]): arguments.
     """
-    logging.debug('Adding {0!s}'.format(arguments))
+    logger.debug('Adding {0!s}'.format(arguments))
 
     super(Filter, self).__init__()
     self.args = arguments or []
@@ -246,7 +246,7 @@ class GenericBinaryOperator(BinaryOperator):
       object: attribute value or None if not available.
     """
     if attribute_name in self._DEPRECATED_ATTRIBUTE_NAMES:
-      logging.warning(
+      logger.warning(
           'Expansion of {0:s} in event filter no longer supported'.format(
               attribute_name))
 
@@ -274,7 +274,7 @@ class GenericBinaryOperator(BinaryOperator):
 
   def FlipBool(self):
     """Negates the internal boolean value attribute."""
-    logging.debug('Negative matching.')
+    logger.debug('Negative matching.')
     self._bool_value = not self._bool_value
 
   def Matches(self, event, event_data, event_data_stream, event_tag):
@@ -480,7 +480,7 @@ class Regexp(GenericBinaryOperator):
     super(Regexp, self).__init__(arguments=arguments, **kwargs)
 
     # Note that right_operand is not necessarily a string.
-    logging.debug('Compiled: {0!s}'.format(self.right_operand))
+    logger.debug('Compiled: {0!s}'.format(self.right_operand))
 
     try:
       expression = self._CopyValueToString(self.right_operand)
@@ -529,7 +529,7 @@ class RegexpInsensitive(Regexp):
     super(RegexpInsensitive, self).__init__(arguments=arguments, **kwargs)
 
     # Note that right_operand is not necessarily a string.
-    logging.debug('Compiled: {0!s}'.format(self.right_operand))
+    logger.debug('Compiled: {0!s}'.format(self.right_operand))
 
     try:
       expression = self._CopyValueToString(self.right_operand)

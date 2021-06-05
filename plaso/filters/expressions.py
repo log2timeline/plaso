@@ -2,13 +2,13 @@
 """The event filter expression parser expression classes."""
 
 import abc
-import logging
 
 from dfdatetime import interface as dfdatetime_interface
 
-from plaso.lib import errors
 from plaso.filters import filters
+from plaso.filters import logger
 from plaso.filters import value_types
+from plaso.lib import errors
 
 
 class Expression(object):
@@ -198,7 +198,7 @@ class EventExpression(Expression):
       ParseError: if the operator is missing or unknown.
     """
     if self.attribute in self._DEPRECATED_EVENT_FILTER_ALIAS:
-      logging.warning(
+      logger.warning(
           'Event filter alias: "{0:s}" no longer supported'.format(
               self.attribute))
 
@@ -221,7 +221,7 @@ class EventExpression(Expression):
           date_time = argument
 
         else:
-          logging.warning(
+          logger.warning(
               'Implicit event filter date and time conversion is deprecated '
               'use the DATETIME() value type indicator instead')
 
