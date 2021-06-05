@@ -278,6 +278,52 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     return record_values
 
+  def _ParseESEDatabase(
+      self, parser_mediator, cache=None, database=None, **kwargs):
+    """Extracts event objects from the database.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      cache (Optional[ESEDBCache]): cache.
+      database (Optional[ESEDatabase]): ESE database.
+
+    Raises:
+      ValueError: If the database attribute is not valid.
+    """
+    if database is None:
+      raise ValueError('Invalid database.')
+
+    for table_name, callback_method in sorted(self._tables.items()):
+      if parser_mediator.abort:
+        break
+
+      if not callback_method:
+        # Table names without a callback method are allowed to improve
+        # the detection of a database based on its table names.
+        continue
+
+      callback = getattr(self, callback_method, None)
+      if callback is None:
+        logger.warning(
+            '[{0:s}] missing callback method: {1:s} for table: {2:s}'.format(
+                self.NAME, callback_method, table_name))
+        continue
+
+      esedb_table = database.GetTableByName(table_name)
+      if not esedb_table:
+        if table_name not in self.OPTIONAL_TABLES:
+          logger.warning('[{0:s}] missing table: {1:s}'.format(
+              self.NAME, table_name))
+        continue
+
+      # The database is passed in case the database contains table names
+      # that are assigned dynamically and cannot be defined by
+      # the table name-callback mechanism.
+      callback(
+          parser_mediator, cache=cache, database=database, table=esedb_table,
+          **kwargs)
+
   def _ReadDefinitionFile(self, filename):
     """Reads a dtFabric definition file.
 
@@ -350,51 +396,6 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     return set(self.REQUIRED_TABLES.keys()).issubset(database.tables)
 
-  def GetEntries(self, parser_mediator, cache=None, database=None, **kwargs):
-    """Extracts event objects from the database.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      cache (Optional[ESEDBCache]): cache.
-      database (Optional[ESEDatabase]): ESE database.
-
-    Raises:
-      ValueError: If the database attribute is not valid.
-    """
-    if database is None:
-      raise ValueError('Invalid database.')
-
-    for table_name, callback_method in sorted(self._tables.items()):
-      if parser_mediator.abort:
-        break
-
-      if not callback_method:
-        # Table names without a callback method are allowed to improve
-        # the detection of a database based on its table names.
-        continue
-
-      callback = getattr(self, callback_method, None)
-      if callback is None:
-        logger.warning(
-            '[{0:s}] missing callback method: {1:s} for table: {2:s}'.format(
-                self.NAME, callback_method, table_name))
-        continue
-
-      esedb_table = database.GetTableByName(table_name)
-      if not esedb_table:
-        if table_name not in self.OPTIONAL_TABLES:
-          logger.warning('[{0:s}] missing table: {1:s}'.format(
-              self.NAME, table_name))
-        continue
-
-      # The database is passed in case the database contains table names
-      # that are assigned dynamically and cannot be defined by
-      # the table name-callback mechanism.
-      callback(
-          parser_mediator, cache=cache, database=database, table=esedb_table,
-          **kwargs)
-
   # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cache=None, database=None, **kwargs):
     """Extracts events from an ESE database.
@@ -414,5 +415,5 @@ class ESEDBPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(ESEDBPlugin, self).Process(parser_mediator)
 
-    self.GetEntries(
+    self._ParseESEDatabase(
         parser_mediator, cache=cache, database=database, **kwargs)

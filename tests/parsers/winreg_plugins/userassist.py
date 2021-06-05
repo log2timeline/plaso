@@ -65,7 +65,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         'number_of_executions': 14,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'value_name': 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'}
 
@@ -99,7 +99,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         'number_of_executions': 14,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'value_name': 'Microsoft.Windows.GettingStarted'}
 

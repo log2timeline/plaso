@@ -89,8 +89,9 @@ class SQLitePlugin(plugins.BasePlugin):
 
     return hash(' '.join(values))
 
-  def _ParseQuery(self, parser_mediator, database, query, callback, cache):
-    """Queries a database and parses the results.
+  def _ParseSQLiteDatabase(
+      self, parser_mediator, database, query, callback, cache):
+    """Extracts events from a SQLite database.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -211,4 +212,5 @@ class SQLitePlugin(plugins.BasePlugin):
                 self.NAME, callback_method, query))
         continue
 
-      self._ParseQuery(parser_mediator, database, query, callback, cache)
+      self._ParseSQLiteDatabase(
+          parser_mediator, database, query, callback, cache)

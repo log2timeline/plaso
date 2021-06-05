@@ -111,7 +111,7 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
       ('failed_connection', _FAILED_CONNECTION_GRAMMAR),
       ('opened_connection', _OPENED_CONNECTION_GRAMMAR),]
 
-  def ParseMessage(self, parser_mediator, key, date_time, tokens):
+  def _ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Produces an event from a syslog body that matched one of the grammars.
 
     Args:

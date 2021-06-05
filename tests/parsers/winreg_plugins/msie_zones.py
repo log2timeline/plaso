@@ -76,7 +76,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'settings': expected_settings}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -123,7 +123,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'settings': expected_settings}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -247,7 +247,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'settings': expected_settings}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -375,7 +375,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'settings': expected_settings}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)

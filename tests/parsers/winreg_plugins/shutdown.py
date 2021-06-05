@@ -46,7 +46,7 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_SHUTDOWN,
         'value_name': 'ShutdownTime'}
 

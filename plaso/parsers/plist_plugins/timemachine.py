@@ -37,7 +37,7 @@ class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
   _DEFINITION_FILE = 'timemachine.yaml'
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant TimeMachine entries.
 
     Args:

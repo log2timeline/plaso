@@ -52,7 +52,7 @@ class CronSyslogPlugin(interface.SyslogPlugin):
 
   MESSAGE_GRAMMARS = [('task_run', _TASK_RUN_GRAMMAR)]
 
-  def ParseMessage(self, parser_mediator, key, date_time, tokens):
+  def _ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Parses a syslog body that matched one of defined grammars.
 
     Args:

@@ -38,7 +38,7 @@ class BluetoothPlugin(interface.PlistPlugin):
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant BT entries.
 
     Args:

@@ -54,7 +54,7 @@ class MacUserPlugin(interface.PlistPlugin):
   _ROOT = '/'
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant user timestamp entries.
 
     Args:

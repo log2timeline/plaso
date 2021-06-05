@@ -49,7 +49,7 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'task_name': 'SynchronizeTime',
         'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}'}
 
@@ -61,7 +61,7 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'task_name': 'SynchronizeTime',
         'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}'}
 

@@ -51,7 +51,7 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
         'name': '##controller#home#nfury',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'server_name': 'controller',
         'share_name': '\\home\\nfury',
         'type': 'Remote Drive'}

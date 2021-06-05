@@ -72,7 +72,7 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
             'Index: 1 [MRU Value 0]: Shell item path: <My Computer>'),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

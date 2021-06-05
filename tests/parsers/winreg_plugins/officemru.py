@@ -97,7 +97,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
             'C:\\Users\\nfury\\Documents\\ADAMANTIUM-Background.docx'),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)

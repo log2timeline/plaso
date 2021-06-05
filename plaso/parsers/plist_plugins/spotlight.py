@@ -36,7 +36,7 @@ class SpotlightPlugin(interface.PlistPlugin):
   PLIST_KEYS = frozenset(['UserShortcuts'])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Spotlight entries.
 
     Args:

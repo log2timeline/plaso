@@ -15,8 +15,9 @@ class TestCookiePlugin(interface.BaseCookiePlugin):
   DATA_FORMAT = 'Test cookie file'
 
   # pylint: disable=unused-argument
-  def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extract and return EventObjects from the data structure.
+  def _ParseCookieData(
+      self, parser_mediator, cookie_data=None, url=None, **kwargs):
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

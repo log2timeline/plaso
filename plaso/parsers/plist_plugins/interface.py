@@ -78,9 +78,6 @@ class PlistPlugin(plugins.BasePlugin):
   processing define PLIST_KEY as ['foo', 'bar']. If 'opt' is only optionally
   defined it can still be accessed by manually processing self.top_level from
   the plugin.
-
-  Methods:
-  GetEntries() - extract and format info from keys and yields event.PlistEvent.
   """
 
   NAME = 'plist_plugin'
@@ -93,12 +90,6 @@ class PlistPlugin(plugins.BasePlugin):
   # This is expected to be overridden by the processing plugin.
   # Ex. frozenset(['DeviceCache', 'PairedDevices'])
   PLIST_KEYS = frozenset(['any'])
-
-  # This is expected to be overridden by the processing plugin.
-  # URLS should contain a list of URLs with additional information about
-  # this key or value, for example:
-  # ['https://forensicswiki.xyz/wiki/index.php?title=Property_list_(plist)']
-  URLS = []
 
   def _GetKeys(self, top_level, keys, depth=1):
     """Helper function to return keys nested in a plist dict.
@@ -204,7 +195,7 @@ class PlistPlugin(plugins.BasePlugin):
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod
-  def GetEntries(
+  def _ParsePlist(
       self, parser_mediator, match=None, top_level=None, **unused_kwargs):
     """Extracts events from the values of entries within a plist.
 
@@ -224,20 +215,11 @@ class PlistPlugin(plugins.BasePlugin):
         PLIST_KEYS = frozenset(['DeviceCache']).
 
     When a file with this key is encountered during processing self.matched is
-    populated and the plugin's GetEntries() is called. The plugin would have
+    populated and the plugin's _ParsePlist() is called. The plugin would have
     self.matched = {'DeviceCache': [{'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}, 'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}'...}]} and needs to implement logic here to extract
     values, format, and produce the data as a event.PlistEvent.
-
-    The attributes for a PlistEvent should include the following:
-      root = Root key this event was extracted from. E.g. DeviceCache/
-      key = Key the value resided in. E.g. 'DE:AD:BE:EF:01'
-      time = Date this artifact was created in number of micro seconds
-             (usec) since January 1, 1970, 00:00:00 UTC.
-      desc = Short description. E.g. 'Device LastInquiryUpdated'
-
-    See plist/bluetooth.py for the implemented example plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -247,15 +229,7 @@ class PlistPlugin(plugins.BasePlugin):
     """
 
   def Process(self, parser_mediator, top_level=None, **kwargs):
-    """Determine if this is the correct plugin; if so proceed with processing.
-
-    Process() checks if the current plist being processed is a match for a
-    plugin by comparing the PATH and KEY requirements defined by a plugin.
-
-    This function also extracts the required keys as defined in self.PLIST_KEYS
-    from the plist and stores the result in self.match[key] and calls
-    self.GetEntries() which holds the processing logic implemented by the
-    plugin.
+    """Extracts events from a plist file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -266,4 +240,4 @@ class PlistPlugin(plugins.BasePlugin):
     super(PlistPlugin, self).Process(parser_mediator)
 
     match = self._GetKeys(top_level, self.PLIST_KEYS)
-    self.GetEntries(parser_mediator, match=match, top_level=top_level)
+    self._ParsePlist(parser_mediator, match=match, top_level=top_level)

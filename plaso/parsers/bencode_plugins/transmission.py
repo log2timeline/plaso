@@ -42,7 +42,7 @@ class TransmissionBencodePlugin(interface.BencodePlugin):
       'seeding-time-seconds'])
 
   def Process(self, parser_mediator, bencode_file=None, **kwargs):
-    """Extracts events from Transmission's resume folder files.
+    """Extracts events from a Transmission's resume folder file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

@@ -48,7 +48,11 @@ class FirefoxCookieEventData(events.EventData):
 
 
 class FirefoxCookiePlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for Mozilla Firefox cookies database files."""
+  """SQLite parser plugin for Mozilla Firefox cookies database files.
+
+  Also see:
+    https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h
+  """
 
   NAME = 'firefox_cookies'
   DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file'
@@ -71,11 +75,6 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
           'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
           'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
           'path, appId, inBrowserElement))')}]
-
-  # Point to few sources for URL information.
-  URLS = [
-      ('https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/'
-       'cookie/nsCookie.h')]
 
   def __init__(self):
     """Initializes a Firefox Cookies database SQLite parser plugin."""

@@ -188,14 +188,6 @@ plaso.cli.helpers.status\_view module
    :undoc-members:
    :show-inheritance:
 
-plaso.cli.helpers.storage\_file module
---------------------------------------
-
-.. automodule:: plaso.cli.helpers.storage_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.cli.helpers.storage\_format module
 ----------------------------------------
 

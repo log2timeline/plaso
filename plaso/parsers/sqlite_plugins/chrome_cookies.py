@@ -49,15 +49,7 @@ class ChromeCookieEventData(events.EventData):
 class BaseChromeCookiePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Google Chrome cookies database files."""
 
-  # Point to few sources for URL information.
-  URLS = [
-      'http://src.chromium.org/svn/trunk/src/net/cookies/',
-      ('http://www.dfinews.com/articles/2012/02/'
-       'google-analytics-cookies-and-forensic-implications')]
-
   # Google Analytics __utmz variable translation.
-  # Taken from:
-  #   http://www.dfinews.com/sites/dfinews.com/files/u739/Tab2Cookies020312.jpg
   GA_UTMZ_TRANSLATION = {
       'utmcsr': 'Last source used to access.',
       'utmccn': 'Ad campaign information.',

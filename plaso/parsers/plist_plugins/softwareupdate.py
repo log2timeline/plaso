@@ -32,7 +32,7 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
       'LastRecommendedUpdatesAvailable', 'RecommendedUpdates'])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant MacOS update entries.
 
     Args:

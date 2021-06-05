@@ -48,7 +48,7 @@ class LaunchdPlugin(interface.PlistPlugin):
   ])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts launchd information from the plist.
 
     Args:

@@ -24,7 +24,7 @@ class MockPlugin(interface.PlistPlugin):
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, **unused_kwargs):
     """Extracts entries for testing.
 
     Args:

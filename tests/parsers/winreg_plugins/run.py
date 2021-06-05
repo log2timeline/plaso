@@ -80,7 +80,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
             'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -111,7 +111,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
             'mctadmin: C:\\Windows\\System32\\mctadmin.exe'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -147,7 +147,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
              'VMwareUser.exe"')],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -178,7 +178,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
             '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq'],
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

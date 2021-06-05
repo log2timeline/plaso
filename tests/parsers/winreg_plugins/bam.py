@@ -106,7 +106,7 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     plugin = bam.BackgroundActivityModeratorWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -122,7 +122,7 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
         'data_type': 'windows:registry:bam',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'user_sid': 'S-1-5-21-321011808-3761883066-353627080-1000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

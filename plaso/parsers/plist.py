@@ -14,18 +14,7 @@ from plaso.parsers import manager
 
 
 class PlistParser(interface.FileObjectParser):
-  """Parser for binary and text Property List (plist) files.
-
-  The Plaso engine calls parsers by their Parse() method. This parser's
-  Parse() deserializes plist files using the plistlib library and calls
-  plugins (PlistPlugin) registered through the interface by their Process()
-  to produce event objects.
-
-  Plugins are how this parser understands the content inside a plist file,
-  each plugin holds logic specific to a particular plist file. See the
-  interface and plist_plugins/ directory for examples of how plist plugins are
-  implemented.
-  """
+  """Parser for binary and text Property List (plist) files."""
 
   NAME = 'plist'
   DATA_FORMAT = 'Property list (plist) file'
