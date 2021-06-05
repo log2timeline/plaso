@@ -3,7 +3,6 @@
 
 import binascii
 import codecs
-import logging
 import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -11,6 +10,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import artifacts
 from plaso.filters import expressions
+from plaso.filters import logger
 from plaso.lib import errors
 
 
@@ -183,7 +183,7 @@ class EventFilterExpressionParser(object):
     Raises:
       ParseError: if the operator does not support negation.
     """
-    logging.debug('Storing argument: {0!s}'.format(value))
+    logger.debug('Storing argument: {0!s}'.format(value))
 
     if self._have_negate_keyword:
       operator = self._current_expression.operator
@@ -479,7 +479,7 @@ class EventFilterExpressionParser(object):
 
     self._have_negate_keyword = True
 
-    logging.debug('Negating expression')
+    logger.debug('Negating expression')
     self._current_expression.Negate()
 
   def _NoOperation(self, **kwarg):
@@ -487,7 +487,7 @@ class EventFilterExpressionParser(object):
 
     Note that this function is used as a callback by _GetNextToken.
     """
-    logging.debug('Default handler: {0!s}'.format(kwarg))
+    logger.debug('Default handler: {0!s}'.format(kwarg))
 
   def _PopState(self, **unused_kwargs):
     """Pops the previous state from the stack.
@@ -507,7 +507,7 @@ class EventFilterExpressionParser(object):
               len(self._processed_buffer), self._processed_buffer,
               self._buffer))
 
-    logging.debug('Returned state to {0:s}'.format(self._state))
+    logger.debug('Returned state to {0:s}'.format(self._state))
     return self._state
 
   def _PushBack(self, string='', **unused_kwargs):
@@ -534,7 +534,7 @@ class EventFilterExpressionParser(object):
     Returns:
       str: next state, which is None.
     """
-    logging.debug('Storing state {0:s}'.format(repr(self._state)))
+    logger.debug('Storing state {0:s}'.format(repr(self._state)))
     self._state_stack.append(self._state)
 
     return None
@@ -602,7 +602,7 @@ class EventFilterExpressionParser(object):
     Returns:
       str: next state, which is the operator state.
     """
-    logging.debug('Storing attribute {0:s}'.format(repr(string)))
+    logger.debug('Storing attribute {0:s}'.format(repr(string)))
 
     self._current_expression.SetAttribute(string)
 
@@ -643,7 +643,7 @@ class EventFilterExpressionParser(object):
     Returns:
       str: next state, which is None.
     """
-    logging.debug('Storing operator {0:s}'.format(repr(string)))
+    logger.debug('Storing operator {0:s}'.format(repr(string)))
     self._current_expression.SetOperator(string)
 
     return None
@@ -735,7 +735,7 @@ class EventFilterExpressionParser(object):
     Raises:
       ParseError: if the string is not hex escaped.
     """
-    logging.debug('HexEscape matched {0:s}.'.format(string))
+    logger.debug('HexEscape matched {0:s}.'.format(string))
     hex_string = match.group(1)
     try:
       hex_string = binascii.unhexlify(hex_string)

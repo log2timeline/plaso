@@ -3,11 +3,12 @@
 
 import abc
 import collections
-import logging
 
 import pysigscan
 
 from dfdatetime import time_elements
+
+from plaso.filters import logger
 
 
 class FileEntryFilter(object):
@@ -328,7 +329,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     except IOError as exception:
       # TODO: replace location by display name.
       location = getattr(file_entry.path_spec, 'location', '')
-      logging.error((
+      logger.error((
           '[skipping] unable to scan file: {0:s} for signatures '
           'with error: {1!s}').format(location, exception))
       return False
