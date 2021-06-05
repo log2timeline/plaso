@@ -25,12 +25,12 @@ class SyslogPlugin(plugins.BasePlugin):
   # defined. This is so that each plugin can handle multiple types of message.
   # The tuple should have two entries, a key and a grammar. This is done to
   # keep the structures in an order of priority/preference.
-  # The key is a comment or an identification that is passed to the ParseMessage
-  # method so that the plugin can identify which grammar matched.
+  # The key is a comment or an identification that is passed to the
+  # _ParseMessage method so that the plugin can identify which grammar matched.
   MESSAGE_GRAMMARS = []
 
   @abc.abstractmethod
-  def ParseMessage(self, parser_mediator, key, date_time, tokens):
+  def _ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Parses a syslog body that matched one of the grammars the plugin defined.
 
     Args:
@@ -67,7 +67,7 @@ class SyslogPlugin(plugins.BasePlugin):
       try:
         tokens = grammar.parseString(body)
         syslog_tokens.update(tokens.asDict())
-        self.ParseMessage(parser_mediator, key, date_time, syslog_tokens)
+        self._ParseMessage(parser_mediator, key, date_time, syslog_tokens)
         return
 
       except pyparsing.ParseException:

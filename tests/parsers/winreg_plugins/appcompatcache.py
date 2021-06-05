@@ -296,7 +296,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 2)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -321,7 +321,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -349,7 +349,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -380,7 +380,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 330)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -394,7 +394,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'entry_index': 10,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'path': '\\??\\C:\\Windows\\PSEXESVC.EXE'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
@@ -409,7 +409,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -434,7 +434,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -459,7 +459,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -484,7 +484,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)

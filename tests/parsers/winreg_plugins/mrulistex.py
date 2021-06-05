@@ -122,7 +122,7 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -182,7 +182,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'key_path': '{0:s}\\exe'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[40], expected_event_values)
 
@@ -286,7 +286,7 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -360,7 +360,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[30], expected_event_values)
 

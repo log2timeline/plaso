@@ -46,7 +46,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -99,7 +99,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'timestamp': '2013-07-13 08:03:14.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

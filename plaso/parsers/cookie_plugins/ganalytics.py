@@ -71,13 +71,9 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
 
   COOKIE_NAME = '__utma'
 
-  URLS = [(
-      'http://www.dfinews.com/articles/2012/02/'
-      'google-analytics-cookies-and-forensic-implications')]
-
-  def GetEntries(
+  def _ParseCookieData(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts event objects from the cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -192,13 +188,9 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
 
   COOKIE_NAME = '__utmb'
 
-  URLS = [(
-      'http://www.dfinews.com/articles/2012/02/'
-      'google-analytics-cookies-and-forensic-implications')]
-
-  def GetEntries(
+  def _ParseCookieData(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts event objects from the cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -275,9 +267,9 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
 
   COOKIE_NAME = '__utmt'
 
-  def GetEntries(
+  def _ParseCookieData(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts event objects from the cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -337,13 +329,9 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
 
   COOKIE_NAME = '__utmz'
 
-  URLS = [(
-      'http://www.dfinews.com/articles/2012/02/'
-      'google-analytics-cookies-and-forensic-implications')]
-
-  def GetEntries(
+  def _ParseCookieData(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts event objects from the cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.

@@ -152,7 +152,7 @@ class DtFabricBasePlistPlugin(interface.PlistPlugin):
           '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
   @abc.abstractmethod
-  def GetEntries(
+  def _ParsePlist(
       self, parser_mediator, match=None, top_level=None, **unused_kwargs):
     """Extracts event objects from the values of entries within a plist.
 
@@ -172,7 +172,7 @@ class DtFabricBasePlistPlugin(interface.PlistPlugin):
         PLIST_KEYS = frozenset(['DeviceCache']).
 
     When a file with this key is encountered during processing self.matched is
-    populated and the plugin's GetEntries() is called. The plugin would have
+    populated and the plugin's _ParsePlist() is called. The plugin would have
     self.matched = {'DeviceCache': [{'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}, 'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}'...}]} and needs to implement logic here to extract

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for bencoded files."""
 
-import re
 import os
+import re
 
 import bencode
 
@@ -126,18 +126,7 @@ class BencodeFile(object):
 
 
 class BencodeParser(interface.FileObjectParser):
-  """Parser for bencoded files.
-
-  The Plaso engine calls parsers by their Parse() method. The Parse() function
-  deserializes bencoded files using the BitTorrent-bencode library and calls
-  plugins (BencodePlugin) registered through the interface by their Process()
-  to produce event objects.
-
-  Plugins are how this parser understands the content inside a bencoded file,
-  each plugin holds logic specific to a particular bencoded file. See the
-  bencode_plugins / directory for examples of how bencode plugins are
-  implemented.
-  """
+  """Parser for bencoded files."""
 
   # Regex match for a bencode dictionary followed by a field size.
   _BENCODE_RE = re.compile(b'd[0-9]')

@@ -44,6 +44,14 @@ plaso.preprocessors.manager module
    :undoc-members:
    :show-inheritance:
 
+plaso.preprocessors.mediator module
+-----------------------------------
+
+.. automodule:: plaso.preprocessors.mediator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.preprocessors.windows module
 ----------------------------------
 

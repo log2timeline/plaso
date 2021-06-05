@@ -228,7 +228,7 @@ class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
   REQUIRED_ITEMS = frozenset(['\005DocumentSummaryInformation'])
 
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses a document summary information OLECF item.
+    """Extracts events from a document summary information OLECF item.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -287,7 +287,7 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
   }
 
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses a summary information OLECF item.
+    """Extracts events from a summary information OLECF item.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

@@ -58,7 +58,7 @@ class OLECFPlugin(plugins.BasePlugin):
   # pylint: disable=arguments-differ
   @abc.abstractmethod
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses an OLECF file.
+    """Extracts events from an OLECF file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

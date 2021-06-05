@@ -120,7 +120,7 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'value': 'autocheck autochk *'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -205,7 +205,7 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

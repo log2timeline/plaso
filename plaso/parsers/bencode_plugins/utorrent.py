@@ -50,7 +50,7 @@ class UTorrentBencodePlugin(interface.BencodePlugin):
   _BENCODE_KEYS = frozenset(['.fileguard'])
 
   def Process(self, parser_mediator, bencode_file=None, **kwargs):
-    """Extracts events from uTorrent active torrent files.
+    """Extracts events from an uTorrent active torrent file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

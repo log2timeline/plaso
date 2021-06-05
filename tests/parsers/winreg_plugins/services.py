@@ -115,7 +115,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'service_type': 2,
         'start_type': 2,
         'values': expected_values}
@@ -155,7 +155,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:service',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'service_dll': '%SystemRoot%\\System32\\qmgr.dll',
         'service_type': 0x20,
         'start_type': 3}

@@ -70,7 +70,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -108,7 +108,7 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

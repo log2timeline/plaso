@@ -112,7 +112,7 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
             'Index: 3 [MRU Value b]: c:/evil.exe'),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -201,7 +201,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
             'C:\\Winnt\\Profiles\\Administrator\\Desktop'),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name}
+        'parser': plugin.NAME}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 

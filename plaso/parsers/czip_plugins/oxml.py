@@ -68,6 +68,7 @@ class OpenXMLEventData(events.EventData):
     self.template = None
     self.total_time = None
 
+
 class OpenXMLPlugin(interface.CompoundZIPPlugin):
   """Parse metadata from OXML files."""
 
@@ -186,43 +187,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
 
     return property_files
 
-  def _ProduceEvent(
-      self, parser_mediator, event_data, properties, property_name,
-      timestamp_description, error_description):
-    """Produces an event.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      event_data (OpenXMLEventData): event data.
-      properties (dict[str, object]): properties.
-      property_name (str): name of the date and time property.
-      timestamp_description (str): description of the meaning of the timestamp
-          value.
-      error_description (str): description of the meaning of the timestamp
-          value for error reporting purposes.
-    """
-    time_string = properties.get(property_name, None)
-    if not time_string:
-      return
-
-    # Date and time strings are in ISO 8601 format either with 1 second
-    # or 100th nano second precision. For example:
-    # 2012-11-07T23:29:00Z
-    # 2012-03-05T20:40:00.0000000Z
-    date_time = dfdatetime_time_elements.TimeElements()
-
-    try:
-      date_time.CopyFromStringISO8601(time_string)
-
-      event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-    except ValueError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported {0:s}: {1:s} with error: {2!s}'.format(
-              error_description, time_string, exception))
-
-  def InspectZipFile(self, parser_mediator, zip_file):
+  def _ParseZIPFile(self, parser_mediator, zip_file):
     """Parses an OXML file-like object.
 
     Args:
@@ -313,6 +278,42 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
     self._ProduceEvent(
         parser_mediator, event_data, metadata, 'last_printed',
         definitions.TIME_DESCRIPTION_LAST_PRINTED, 'last printed time')
+
+  def _ProduceEvent(
+      self, parser_mediator, event_data, properties, property_name,
+      timestamp_description, error_description):
+    """Produces an event.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      event_data (OpenXMLEventData): event data.
+      properties (dict[str, object]): properties.
+      property_name (str): name of the date and time property.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      error_description (str): description of the meaning of the timestamp
+          value for error reporting purposes.
+    """
+    time_string = properties.get(property_name, None)
+    if not time_string:
+      return
+
+    # Date and time strings are in ISO 8601 format either with 1 second
+    # or 100th nano second precision. For example:
+    # 2012-11-07T23:29:00Z
+    # 2012-03-05T20:40:00.0000000Z
+    date_time = dfdatetime_time_elements.TimeElements()
+
+    try:
+      date_time.CopyFromStringISO8601(time_string)
+
+      event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+    except ValueError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'unsupported {0:s}: {1:s} with error: {2!s}'.format(
+              error_description, time_string, exception))
 
 
 czip.CompoundZIPParser.RegisterPlugin(OpenXMLPlugin)

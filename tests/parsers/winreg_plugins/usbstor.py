@@ -48,7 +48,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.plugin_name,
+        'parser': plugin.NAME,
         'product': 'Prod_v100w',
         'revision': 'Rev_1024',
         'serial': 'AA951D0000007252&0',

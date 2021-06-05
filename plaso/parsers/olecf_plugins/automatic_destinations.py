@@ -204,7 +204,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
       entry_offset += entry_data_size
 
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses an OLECF file.
+    """Extracts events from an OLECF file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
