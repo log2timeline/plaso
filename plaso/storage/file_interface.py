@@ -376,6 +376,14 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.GetNumberOfEventSources()
 
+  def GetPreprocessingWarnings(self):
+    """Retrieves the preprocessing warnings.
+
+    Returns:
+      generator(PreprocessingWarning): preprocessing warning generator.
+    """
+    return self._storage_file.GetPreprocessingWarnings()
+
   def GetRecoveryWarnings(self):
     """Retrieves the recovery warnings.
 
