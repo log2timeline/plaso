@@ -127,7 +127,6 @@ description: Preset for generic Windows, intended for Windows Vista and later.
 operating_systems:
 - {family: Windows NT}
 parsers:
-- amcache
 - custom_destinations
 - esedb/file_history
 - olecf/olecf_automatic_destinations

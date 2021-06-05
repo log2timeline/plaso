@@ -22,6 +22,13 @@ class WinRegistryParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
+  _ARTIFACTS_FILTER_HELPER = (
+      artifact_filters.ArtifactDefinitionsFiltersHelper)
+
+  _AMCACHE_ROOT_KEY_NAMES = frozenset([
+      '{11517b7c-e79d-4e20-961b-75a811715add}',
+      '{356c48f6-2fee-e7ef-2a64-39f59ec3be22}'])
+
   _CONTROL_SET_PREFIX = (
       'HKEY_LOCAL_MACHINE\\System\\ControlSet').lower()
 
@@ -207,9 +214,11 @@ class WinRegistryParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): parser mediator.
       file_object (dfvfs.FileIO): a file-like object.
     """
-    # TODO: set codepage from mediator.
+    registry_find_specs = getattr(
+        parser_mediator.collection_filters_helper, 'registry_find_specs', None)
+
     registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage='cp1252', emulate_virtual_keys=False)
+        ascii_codepage=parser_mediator.codepage, emulate_virtual_keys=False)
 
     try:
       registry_file.Open(file_object)
@@ -226,27 +235,27 @@ class WinRegistryParser(interface.FileObjectParser):
       registry_file.SetKeyPathPrefix(key_path_prefix)
       root_key = registry_file.GetRootKey()
       if root_key:
-        registry_find_specs = getattr(
-            parser_mediator.collection_filters_helper, 'registry_find_specs',
-            None)
-
-        if not registry_find_specs:
+        # For now treat AMCache.hve seperately.
+        if root_key.name.lower() in self._AMCACHE_ROOT_KEY_NAMES:
           self._ParseRecurseKeys(parser_mediator, root_key)
-        else:
-          artifacts_filters_helper = (
-              artifact_filters.ArtifactDefinitionsFiltersHelper)
-          if not artifacts_filters_helper.CheckKeyCompatibility(
-              key_path_prefix):
-            logger.warning((
-                'Artifacts filters are not supported for Windows Registry file '
-                'with key path prefix: "{0:s}".').format(key_path_prefix))
-          else:
-            win_registry.MapFile(key_path_prefix, registry_file)
-            # Note that win_registry will close the mapped registry_file.
-            registry_file = None
 
-            self._ParseKeysFromFindSpecs(
-                parser_mediator, win_registry, registry_find_specs)
+        elif not registry_find_specs:
+          self._ParseRecurseKeys(parser_mediator, root_key)
+
+        elif not self._ARTIFACTS_FILTER_HELPER.CheckKeyCompatibility(
+            key_path_prefix):
+          logger.warning((
+              'Artifacts filters are not supported for Windows Registry '
+              'file with key path prefix: "{0:s}".').format(
+                  key_path_prefix))
+
+        else:
+          win_registry.MapFile(key_path_prefix, registry_file)
+          # Note that win_registry will close the mapped registry_file.
+          registry_file = None
+
+          self._ParseKeysFromFindSpecs(
+              parser_mediator, win_registry, registry_find_specs)
 
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
