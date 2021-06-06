@@ -13,7 +13,7 @@ There are multiple ways to install the dependencies:
 
 ### Fedora
 
-**Note that these instructions assume you are running on Fedora 32 or 33.
+**Note that these instructions assume you are running on Fedora 33 or 34.
 Installing packages from the copr on other versions and/or distributions
 is not recommended.**
 
