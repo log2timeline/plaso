@@ -6,6 +6,7 @@ import unittest
 
 from dfwinreg import regf as dfwinreg_regf
 
+from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import amcache
 
 from tests.parsers.winreg_plugins import test_lib
@@ -54,7 +55,8 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:amcache',
         'date_time': '1992-06-19 22:22:17',
         'full_path': expected_full_path,
-        'sha1': '82274eef0911a948f91425f5e5b0e730517fe75e'}
+        'sha1': '82274eef0911a948f91425f5e5b0e730517fe75e',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LINK_TIME}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -68,11 +70,42 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
             'c:\\program files (x86)\\fileinsight'],
         'name': 'FileInsight - File analysis tool',
         'publisher': 'McAfee Inc.',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_INSTALLATION,
         'uninstall_key': [
             'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\Microsoft\\Windows\\'
             'CurrentVersion\\Uninstall\\FileInsight']}
 
     self.CheckEventValues(storage_writer, events[1285], expected_event_values)
+
+  def testProcessWindows101(self):
+    """Tests the Process function on a Windows 10 1807 AMCache.hve file."""
+    test_file_entry = self._GetTestFileEntry(['win10-Amcache.hve'])
+
+    file_object = test_file_entry.GetFileObject()
+
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(
+        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file.Open(file_object)
+
+    registry_key = registry_file.GetKeyByPath('\\Root')
+
+    plugin = amcache.AMCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin, file_entry=test_file_entry)
+
+    self.assertEqual(storage_writer.number_of_events, 236)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    events = list(storage_writer.GetSortedEvents())
+
+    expected_event_values = {
+        'data_type': 'windows:registry:amcache',
+        'date_time': '1997-01-10 22:26:24',
+        'full_path': 'c:\\windows\\system32\\svchost.exe',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LINK_TIME}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':
