@@ -15,18 +15,23 @@ class SessionizeAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [
       {'data_type': 'test:event',
+       'parser': 'test',
        'timestamp': '2015-05-01 00:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
+       'parser': 'test',
        'timestamp': '2015-05-01 00:09:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
+       'parser': 'test',
        'timestamp': '2015-05-01 00:18:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
+       'parser': 'test',
        'timestamp': '2015-05-01 01:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
+       'parser': 'test',
        'timestamp': '2015-05-01 01:09:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 

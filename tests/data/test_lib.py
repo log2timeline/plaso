@@ -54,6 +54,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     if not attribute_values_per_name:
       event_data = event_data_class()
+      event_data.parser = 'test'
       storage_writer = self._TagEvent(event, event_data, None)
 
       self.assertEqual(
@@ -71,6 +72,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
         # Create the test event data and set the attributes to one of
         # the test values.
         event_data = event_data_class()
+        event_data.parser = 'test'
         for attribute_name, attribute_values in (
             attribute_values_per_name.items()):
           attribute_value_index = min(test_index, len(attribute_values) - 1)
@@ -89,6 +91,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
         # Create the test event data and set the attributes to one of
         # the test values.
         event_data = event_data_class()
+        event_data.parser = 'test'
         for attribute_name, attribute_values in (
             attribute_values_per_name.items()):
           if attribute_name == test_attribute_name:
@@ -123,9 +126,16 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
+
     if event_data_stream:
       storage_writer.AddEventDataStream(event_data_stream)
+      event_data_stream_identifier = event_data_stream.GetIdentifier()
+      event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
     storage_writer.AddEventData(event_data)
+    event_data_identifier = event_data.GetIdentifier()
+    event.SetEventDataIdentifier(event_data_identifier)
+
     storage_writer.AddEvent(event)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()

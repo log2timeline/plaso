@@ -129,18 +129,16 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    # TODO: change to no longer allow event_data_identifier is None
-    # after refactoring every parser to generate event data.
     event_data_identifier = event.GetEventDataIdentifier()
-    if event_data_identifier:
-      if not isinstance(event_data_identifier, identifiers.FakeIdentifier):
-        raise IOError('Unsupported event data identifier type: {0!s}'.format(
-            type(event_data_identifier)))
+    if not isinstance(event_data_identifier, identifiers.FakeIdentifier):
+      raise IOError('Unsupported event data identifier type: {0!s}'.format(
+          type(event_data_identifier)))
 
     event = self._PrepareAttributeContainer(event)
-
     self._events.append(event)
-    self.number_of_events += 1
+
+    super(FakeStorageWriter, self).AddEvent(
+        event, serialized_data=serialized_data)
 
   def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
@@ -160,6 +158,9 @@ class FakeStorageWriter(interface.StorageWriter):
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
     self._event_data[lookup_key] = event_data
+
+    super(FakeStorageWriter, self).AddEventData(
+        event_data, serialized_data=serialized_data)
 
   def AddEventDataStream(self, event_data_stream, serialized_data=None):
     """Adds an event data stream.

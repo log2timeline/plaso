@@ -131,6 +131,9 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddEvent(event, serialized_data=serialized_data)
 
+    super(RedisStorageWriter, self).AddEvent(
+        event, serialized_data=serialized_data)
+
   def AddEventData(self, event_data, serialized_data=None):
     """Adds an event data.
 
@@ -139,6 +142,9 @@ class RedisStorageWriter(interface.StorageWriter):
       serialized_data (Optional[bytes]): serialized form of the event data.
     """
     self._store.AddEventData(event_data, serialized_data=serialized_data)
+
+    super(RedisStorageWriter, self).AddEventData(
+        event_data, serialized_data=serialized_data)
 
   def AddEventDataStream(self, event_data_stream, serialized_data=None):
     """Adds an event data stream.

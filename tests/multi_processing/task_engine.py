@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests the multi-process processing engine."""
 
+import collections
 import os
 import unittest
 
@@ -58,9 +59,15 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       test_engine.ProcessSources(
           session, [source_path_spec], storage_writer, configuration)
 
-    # TODO: implement a way to obtain the results without relying
-    # on multi-process primitives e.g. by writing to a file.
-    # self.assertEqual(storage_writer.number_of_events, 15)
+    self.assertEqual(storage_writer.number_of_events, 15)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    expected_parsers_counter = collections.Counter({
+        'filestat': 15,
+        'total': 15
+    })
+    self.assertEqual(session.parsers_counter, expected_parsers_counter)
 
 
 if __name__ == '__main__':

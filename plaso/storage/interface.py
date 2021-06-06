@@ -1224,6 +1224,7 @@ class StorageWriter(object):
       task(Optional[Task]): task.
     """
     super(StorageWriter, self).__init__()
+    self._event_data_parser_mappings = {}
     self._first_written_event_source_index = 0
     self._serializers_profiler = None
     self._session = session
@@ -1264,23 +1265,35 @@ class StorageWriter(object):
           warning.
     """
 
-  @abc.abstractmethod
-  def AddEvent(self, event, serialized_data=None):
+  def AddEvent(self, event, serialized_data=None):  # pylint: disable=unused-argument
     """Adds an event.
 
     Args:
       event(EventObject): an event.
       serialized_data (Optional[bytes]): serialized form of the event.
     """
+    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
+      event_data_identifier = event.GetEventDataIdentifier()
+      lookup_key = event_data_identifier.CopyToString()
 
-  @abc.abstractmethod
-  def AddEventData(self, event_data, serialized_data=None):
+      parser_name = self._event_data_parser_mappings.get(lookup_key, 'N/A')
+      self._session.parsers_counter[parser_name] += 1
+      self._session.parsers_counter['total'] += 1
+
+    self.number_of_events += 1
+
+  def AddEventData(self, event_data, serialized_data=None):  # pylint: disable=unused-argument
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
       serialized_data (Optional[bytes]): serialized form of the event data.
     """
+    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
+      identifier = event_data.GetIdentifier()
+      lookup_key = identifier.CopyToString()
+      parser_name = event_data.parser.split('/')[-1]
+      self._event_data_parser_mappings[lookup_key] = parser_name
 
   @abc.abstractmethod
   def AddEventDataStream(self, event_data_stream, serialized_data=None):
