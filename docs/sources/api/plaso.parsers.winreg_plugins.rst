@@ -4,6 +4,14 @@ plaso.parsers.winreg\_plugins package
 Submodules
 ----------
 
+plaso.parsers.winreg\_plugins.amcache module
+--------------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.amcache
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.winreg\_plugins.appcompatcache module
 ---------------------------------------------------
 
