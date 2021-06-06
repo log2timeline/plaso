@@ -56,6 +56,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   _MACOS_TEST_EVENTS = [
       {'data_type': 'fs:stat',
        'filename': path,
+       'parser': 'filestat',
        'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
       for path in _MACOS_PATHS]
@@ -81,6 +82,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   _WINDOWS_TEST_EVENTS = [
       {'data_type': 'fs:stat',
        'filename': path,
+       'parser': 'filestat',
        'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
       for path in _WINDOWS_PATHS]

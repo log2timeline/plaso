@@ -118,6 +118,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = mrulist.MRUListEventData()
     event_data.entries = 'Index: 0 [MRU Value a]: file.txt'
+    event_data.parser = 'winreg/mrulist'
 
     # Set timestamp to 0 otherwise document_open rule triggers.
     event.timestamp = 0
@@ -139,6 +140,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     #       entries contains '.exe'
     event_data = mrulistex.MRUListExEventData()
     event_data.entries = 'Index: 0 [MRU Value 1]: file.txt'
+    event_data.parser = 'winreg/mrulistex'
 
     # Set timestamp to 0 otherwise document_open rule triggers.
     event.timestamp = 0
@@ -221,6 +223,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = mrulist.MRUListEventData()
     event_data.entries = 'Index: 0 [MRU Value a]: file.txt'
+    event_data.parser = 'winreg/mrulist'
 
     event.timestamp = 0
 
@@ -244,6 +247,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = mrulistex.MRUListExEventData()
     event_data.entries = 'Index: 0 [MRU Value 1]: file.txt'
+    event_data.parser = 'winreg/mrulistex'
 
     event.timestamp = 0
 
@@ -576,6 +580,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
     event_data = utorrent.UTorrentEventData()
+    event_data.parser = 'bencode/utorrent'
 
     storage_writer = self._TagEvent(event, event_data, None)
 
@@ -599,6 +604,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     summary_information = summary.OLECFSummaryInformation(None)
     event_data = summary_information.GetEventData()
+    event_data.parser = 'olecf/olecf_summary'
 
     storage_writer = self._TagEvent(event, event_data, None)
 
