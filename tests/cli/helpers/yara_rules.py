@@ -22,10 +22,10 @@ usage: cli_helper.py [--yara_rules PATH]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --yara_rules PATH, --yara-rules PATH
                         Path to a file containing Yara rules definitions.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -25,24 +25,24 @@ usage: tool_test.py [-h] [--troubles] [-V]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --troubles     Show troubleshooting information.
   -V, --version  Show the version information.
   -h, --help     Show this help message and exit.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_INFORMATIONAL_OPTIONS = """\
 usage: tool_test.py [-d] [-q] [-u]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   -d, --debug       Enable debug output.
   -q, --quiet       Disable informational output.
   -u, --unattended  Enable unattended mode and do not ask the user for
                     additional input when needed, but terminate with an error
                     instead.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_SEPARATOR_LINE = """\
 --------------------------------------------------------------------------------

@@ -23,7 +23,7 @@ usage: cli_helper.py [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
@@ -39,7 +39,7 @@ optional arguments:
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -24,10 +24,10 @@ usage: cli_helper.py [--tagging-file TAGGING_FILE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE
                         Specify a file to read tagging criteria from.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

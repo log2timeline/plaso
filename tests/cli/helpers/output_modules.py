@@ -23,7 +23,7 @@ usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
                         Defines extra fields to be included in the output, in
                         addition to the default fields, which are datetime,
@@ -35,7 +35,7 @@ optional arguments:
                         available output formats.
   -w OUTPUT_FILE, --write OUTPUT_FILE
                         Output filename.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

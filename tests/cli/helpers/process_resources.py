@@ -22,7 +22,7 @@ usage: cli_helper.py [--process_memory_limit SIZE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --process_memory_limit SIZE, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -31,7 +31,7 @@ optional arguments:
                         worker processes. This limit is enforced by the
                         operating system and will supersede the worker memory
                         limit (--worker_memory_limit).
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

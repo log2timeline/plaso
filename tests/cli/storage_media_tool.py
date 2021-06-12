@@ -1164,7 +1164,7 @@ usage: storage_media_tool_test.py [--credential TYPE:DATA]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --credential TYPE:DATA
                         Define a credentials that can be used to unlock
                         encrypted volumes e.g. BitLocker. The credential is
@@ -1175,7 +1175,7 @@ optional arguments:
                         (hexadecimal). WARNING credentials passed via command
                         line arguments can end up in logs, so use this option
                         with care.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
 usage: storage_media_tool_test.py [--partitions PARTITIONS]
@@ -1183,7 +1183,7 @@ usage: storage_media_tool_test.py [--partitions PARTITIONS]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --partitions PARTITIONS, --partition PARTITIONS
                         Define partitions to be processed. A range of
                         partitions can be defined as: "3..5". Multiple
@@ -1197,7 +1197,7 @@ optional arguments:
                         as: "1,3,5" (a list of comma separated values). Ranges
                         and lists can also be combined as: "1,3..5". The first
                         volume is 1. All volumes can be specified with: "all".
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = """\
 usage: storage_media_tool_test.py [--no_vss] [--vss_only]
@@ -1205,7 +1205,7 @@ usage: storage_media_tool_test.py [--no_vss] [--vss_only]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots (VSS). This
                         means that Volume Shadow Snapshots (VSS) are not
                         processed.
@@ -1219,7 +1219,7 @@ optional arguments:
                         (a list of comma separated values). Ranges and lists
                         can also be combined as: "1,3..5". The first store is
                         1. All stores can be defined as: "all".
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   def _GetTestScanNode(self, scan_context):
     """Retrieves the scan node for testing.

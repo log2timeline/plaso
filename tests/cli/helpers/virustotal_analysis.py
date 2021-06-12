@@ -37,7 +37,7 @@ usage: cli_helper.py [--virustotal-api-key API_KEY]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --virustotal-api-key API_KEY, --virustotal_api_key API_KEY
                         Specify the API key for use with VirusTotal.
   --virustotal-free-rate-limit, --virustotal_free_rate_limit
@@ -47,7 +47,7 @@ optional arguments:
   --virustotal-hash HASH, --virustotal_hash HASH
                         Type of hash to query VirusTotal, the default is:
                         sha256
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

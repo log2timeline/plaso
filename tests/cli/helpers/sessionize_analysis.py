@@ -24,11 +24,11 @@ usage: cli_helper.py [--maximum-pause MINUTES]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --maximum-pause MINUTES, --maximum_pause MINUTES
                         Specify the maximum delay in minutes between events in
                         the session.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
