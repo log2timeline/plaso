@@ -8,11 +8,11 @@ from plaso.containers import tasks
 from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.multi_processing import base_process
+from plaso.multi_processing import task_process
 from plaso.multi_processing import logger
 
 
-class AnalysisProcess(base_process.MultiProcessBaseProcess):
+class AnalysisProcess(task_process.MultiProcessTaskProcess):
   """Multi-processing analysis process."""
 
   # Number of seconds to wait for the completion status to be queried
@@ -50,6 +50,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._foreman_status_wait_event = None
     self._knowledge_base = knowledge_base
     self._number_of_consumed_events = 0
+    self._session = None
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
@@ -130,23 +131,24 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     self._task = task
 
-    storage_writer = self._storage_writer.CreateTaskStorage(
-        task, definitions.STORAGE_FORMAT_SQLITE)
+    task_storage_writer = self._CreateTaskStorageWriter(
+        definitions.STORAGE_FORMAT_SQLITE, self._session, task)
 
     if self._serializers_profiler:
-      storage_writer.SetSerializersProfiler(self._serializers_profiler)
+      task_storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
     if self._storage_profiler:
-      storage_writer.SetStorageProfiler(self._storage_profiler)
+      task_storage_writer.SetStorageProfiler(self._storage_profiler)
 
-    storage_writer.Open()
+    task_storage_writer.Open()
 
     self._analysis_mediator = analysis_mediator.AnalysisMediator(
-        storage_writer, self._knowledge_base, data_location=self._data_location)
+        task_storage_writer, self._knowledge_base,
+        data_location=self._data_location)
 
     # TODO: set event_filter_expression in mediator.
 
-    storage_writer.WriteTaskStart()
+    task_storage_writer.WriteTaskStart()
 
     try:
       logger.debug(
@@ -190,18 +192,19 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       self._abort = True
 
     finally:
-      storage_writer.WriteTaskCompletion(aborted=self._abort)
+      task_storage_writer.WriteTaskCompletion(aborted=self._abort)
 
-      storage_writer.Close()
+      task_storage_writer.Close()
 
       if self._serializers_profiler:
-        storage_writer.SetSerializersProfiler(None)
+        task_storage_writer.SetSerializersProfiler(None)
 
       if self._storage_profiler:
-        storage_writer.SetStorageProfiler(None)
+        task_storage_writer.SetStorageProfiler(None)
 
     try:
-      self._storage_writer.FinalizeTaskStorage(task)
+      self._FinalizeTaskStorageWriter(
+          definitions.STORAGE_FORMAT_SQLITE, task)
     except IOError as exception:
       logger.warning('Unable to finalize task storage with error: {0!s}'.format(
           exception))

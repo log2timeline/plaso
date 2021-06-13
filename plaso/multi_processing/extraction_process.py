@@ -10,12 +10,12 @@ from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.multi_processing import base_process
+from plaso.multi_processing import task_process
 from plaso.multi_processing import logger
 from plaso.parsers import mediator as parsers_mediator
 
 
-class ExtractionWorkerProcess(base_process.MultiProcessBaseProcess):
+class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
   """Multi-processing extraction worker process."""
 
   # Maximum number of dfVFS file system objects to cache in the worker
@@ -24,7 +24,7 @@ class ExtractionWorkerProcess(base_process.MultiProcessBaseProcess):
 
   def __init__(
       self, task_queue, storage_writer, collection_filters_helper,
-      knowledge_base, session_identifier, processing_configuration, **kwargs):
+      knowledge_base, session, processing_configuration, **kwargs):
     """Initializes a worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -37,7 +37,7 @@ class ExtractionWorkerProcess(base_process.MultiProcessBaseProcess):
           helper.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
-      session_identifier (str): identifier of the session.
+      session (Session): session.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
       kwargs: keyword arguments to pass to multiprocessing.Process.
@@ -55,7 +55,7 @@ class ExtractionWorkerProcess(base_process.MultiProcessBaseProcess):
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
     self._resolver_context = None
-    self._session_identifier = session_identifier
+    self._session = session
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
@@ -316,8 +316,8 @@ class ExtractionWorkerProcess(base_process.MultiProcessBaseProcess):
 
     self._task = task
 
-    task_storage_writer = self._storage_writer.CreateTaskStorage(
-        task, self._processing_configuration.task_storage_format)
+    task_storage_writer = self._CreateTaskStorageWriter(
+        self._processing_configuration.task_storage_format, self._session, task)
 
     if self._serializers_profiler:
       task_storage_writer.SetSerializersProfiler(self._serializers_profiler)
@@ -342,7 +342,8 @@ class ExtractionWorkerProcess(base_process.MultiProcessBaseProcess):
       task_storage_writer.Close()
 
     try:
-      self._storage_writer.FinalizeTaskStorage(task)
+      self._FinalizeTaskStorageWriter(
+          self._processing_configuration.task_storage_format, task)
     except IOError:
       pass
 

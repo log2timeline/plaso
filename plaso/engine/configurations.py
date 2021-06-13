@@ -188,6 +188,8 @@ class ProcessingConfiguration(interface.AttributeContainer):
         time values.
     profiling (ProfilingConfiguration): profiling configuration.
     task_storage_format (str): format to use for storing task results.
+    task_storage_path (str): path of the directory containing SQLite task
+        storage files.
     temporary_directory (str): path of the directory for temporary files.
   """
   CONTAINER_TYPE = 'processing_configuration'
@@ -207,4 +209,5 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.preferred_year = None
     self.profiling = ProfilingConfiguration()
     self.task_storage_format = None
+    self.task_storage_path = None
     self.temporary_directory = None

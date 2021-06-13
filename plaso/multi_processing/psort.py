@@ -14,7 +14,7 @@ from plaso.lib import bufferlib
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import analysis_process
-from plaso.multi_processing import engine as multi_process_engine
+from plaso.multi_processing import task_engine
 from plaso.multi_processing import logger
 from plaso.storage import event_tag_index
 from plaso.storage import time_range as storage_time_range
@@ -184,7 +184,7 @@ class PsortEventHeap(object):
     heapq.heappush(self._heap, heap_values)
 
 
-class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
+class PsortMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   """Psort multi-processing engine."""
 
   _PROCESS_JOIN_TIMEOUT = 5.0
@@ -226,18 +226,18 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._memory_profiler = None
     self._merge_task = None
     self._number_of_consumed_analysis_warnings = 0
-    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_analysis_warnings = 0
-    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
-    self._processing_configuration = None
     self._processing_profiler = None
     self._serializers_profiler = None
+    self._session = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
     self._worker_memory_limit = worker_memory_limit
@@ -331,9 +331,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         task.storage_format = definitions.STORAGE_FORMAT_SQLITE
         task.identifier = plugin_name
 
-        merge_ready = storage_writer.CheckTaskReadyForMerge(task)
+        merge_ready = self._CheckTaskReadyForMerge(
+            definitions.STORAGE_FORMAT_SQLITE, task)
         if merge_ready:
-          storage_writer.PrepareMergeTaskStorage(task)
+          self._PrepareMergeTaskStorage(
+              definitions.STORAGE_FORMAT_SQLITE, self._session.identifier, task)
           self._status = definitions.STATUS_INDICATOR_MERGING
 
           event_queue = self._event_queues[plugin_name]
@@ -341,7 +343,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
           event_queue.Close()
 
-          storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
+          storage_merge_reader = self._StartMergeTaskStorage(
+              storage_writer, definitions.STORAGE_FORMAT_SQLITE, task)
 
           storage_merge_reader.MergeAttributeContainers(
               callback=self._MergeEventTag)
@@ -356,7 +359,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
               storage_writer.number_of_analysis_reports)
 
     try:
-      storage_writer.StopTaskStorage(abort=self._abort)
+      self._StopTaskStorage(
+          definitions.STORAGE_FORMAT_SQLITE, abort=self._abort)
     except (IOError, OSError) as exception:
       logger.error('Unable to stop task storage with error: {0!s}'.format(
           exception))
@@ -877,13 +881,16 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._RegisterProcess(process)
     return process
 
+  # pylint: disable=too-many-arguments
   def AnalyzeEvents(
-      self, knowledge_base_object, storage_writer, data_location,
+      self, session, knowledge_base_object, storage_writer, data_location,
       analysis_plugins, processing_configuration, event_filter=None,
-      event_filter_expression=None, status_update_callback=None):
+      event_filter_expression=None, status_update_callback=None,
+      storage_file_path=None):
     """Analyzes events in a plaso storage.
 
     Args:
+      session (Session): session in which the sources are processed.
       knowledge_base_object (KnowledgeBase): contains information from
           the source data needed for processing.
       storage_writer (StorageWriter): storage writer.
@@ -897,6 +904,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      storage_file_path (Optional[str]): path to the session storage file.
 
     Raises:
       KeyboardInterrupt: if a keyboard interrupt was raised.
@@ -913,13 +921,15 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._event_filter_expression = event_filter_expression
     self._events_status = processing_status.EventsStatus()
     self._knowledge_base = knowledge_base_object
-    self._status_update_callback = status_update_callback
     self._processing_configuration = processing_configuration
+    self._session = session
+    self._status_update_callback = status_update_callback
+    self._storage_file_path = storage_file_path
 
     self._StartProfiling(self._processing_configuration.profiling)
 
     # Set up the storage writer before the analysis processes.
-    storage_writer.StartTaskStorage()
+    self._StartTaskStorage(definitions.STORAGE_FORMAT_SQLITE)
 
     self._StartAnalysisProcesses(storage_writer, analysis_plugins)
 
@@ -991,7 +1001,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._event_filter_expression = None
     self._knowledge_base = None
     self._processing_configuration = None
+    self._session = None
     self._status_update_callback = None
+    self._storage_file_path = None
 
     if keyboard_interrupt:
       raise KeyboardInterrupt

@@ -97,3 +97,27 @@ class StorageFactory(object):
       return sqlite_writer.SQLiteStorageFileWriter(session, path)
 
     return None
+
+  @classmethod
+  def CreateTaskStorageWriter(cls, storage_format, session, task, path):
+    """Creates a task storage writer.
+
+    Args:
+      storage_format (str): storage format.
+      session (Session): session the storage changes are part of.
+      task (Task): task the storage changes are part of.
+      path (str): path to the storage file.
+
+    Returns:
+      StorageWriter: a storage writer or None if the storage file cannot be
+          opened or the storage format is not supported.
+    """
+    if storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      return sqlite_writer.SQLiteStorageFileWriter(
+          session, path, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+
+    if storage_format == definitions.STORAGE_FORMAT_REDIS:
+      return redis_writer.RedisStorageWriter(
+          session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+
+    return None
