@@ -20,9 +20,9 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import engine
+from plaso.multi_processing import extraction_process
 from plaso.multi_processing import logger
 from plaso.multi_processing import task_manager
-from plaso.multi_processing import worker_process
 from plaso.storage.redis import redis_store
 
 
@@ -555,7 +555,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         port=self._task_queue_port,
         timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
 
-    process = worker_process.WorkerProcess(
+    process = extraction_process.ExtractionWorkerProcess(
         task_queue, storage_writer, self.collection_filters_helper,
         self.knowledge_base, self._session_identifier,
         self._processing_configuration,
@@ -815,8 +815,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     for worker_number in range(self._number_of_worker_processes):
       # First argument to _StartWorkerProcess is not used.
-      extraction_process = self._StartWorkerProcess('', storage_writer)
-      if not extraction_process:
+      worker_process = self._StartWorkerProcess('', storage_writer)
+      if not worker_process:
         logger.error('Unable to create worker process: {0:d}'.format(
             worker_number))
 

@@ -13,7 +13,7 @@ from plaso.engine import configurations
 from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.engine import zeromq_queue
-from plaso.multi_processing import worker_process
+from plaso.multi_processing import extraction_process
 
 from tests import test_lib as shared_test_lib
 from tests.multi_processing import test_lib
@@ -56,8 +56,8 @@ class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
     raise dfvfs_errors.CacheFullError()
 
 
-class WorkerProcessTest(test_lib.MultiProcessingTestCase):
-  """Tests the multi-processing worker process."""
+class ExtractionWorkerProcessTest(test_lib.MultiProcessingTestCase):
+  """Tests the multi-processing extraction worker process."""
 
   # pylint: disable=protected-access
 
@@ -65,13 +65,13 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    test_process = worker_process.WorkerProcess(
+    test_process = extraction_process.ExtractionWorkerProcess(
         None, None, None, None, None, None, name='TestWorker')
     self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
     """Tests the _GetStatus function."""
-    test_process = worker_process.WorkerProcess(
+    test_process = extraction_process.ExtractionWorkerProcess(
         None, None, None, None, None, None, name='TestWorker')
     status_attributes = test_process._GetStatus()
 
@@ -107,7 +107,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
     configuration = configurations.ProcessingConfiguration()
 
-    test_process = worker_process.WorkerProcess(
+    test_process = extraction_process.ExtractionWorkerProcess(
         input_task_queue, None, None, None, None, configuration,
         name='TestWorker')
 
@@ -120,7 +120,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     """Tests the _ProcessPathSpec function."""
     configuration = configurations.ProcessingConfiguration()
 
-    test_process = worker_process.WorkerProcess(
+    test_process = extraction_process.ExtractionWorkerProcess(
         None, None, None, None, None, configuration, name='TestWorker')
 
     session = sessions.Session()
@@ -149,7 +149,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     knowledge_base = self._CreateKnowledgeBase()
     configuration = configurations.ProcessingConfiguration()
 
-    test_process = worker_process.WorkerProcess(
+    test_process = extraction_process.ExtractionWorkerProcess(
         None, storage_writer, None, knowledge_base, session.identifier,
         configuration, name='TestWorker')
     test_process._extraction_worker = TestEventExtractionWorker()
@@ -168,7 +168,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
           'memory', 'parsers', 'processing', 'serializers', 'storage',
           'task_queue'])
 
-      test_process = worker_process.WorkerProcess(
+      test_process = extraction_process.ExtractionWorkerProcess(
           None, None, None, None, None, configuration, name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
 
@@ -179,7 +179,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
-    test_process = worker_process.WorkerProcess(
+    test_process = extraction_process.ExtractionWorkerProcess(
         None, None, None, None, None, None, name='TestWorker')
     test_process.SignalAbort()
 
