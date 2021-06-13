@@ -14,13 +14,13 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.engine import configurations
-from plaso.multi_processing import task_engine
+from plaso.multi_processing import extraction_engine
 from plaso.storage.sqlite import writer as sqlite_writer
 
 from tests import test_lib as shared_test_lib
 
 
-class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
+class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the task multi-process engine."""
 
   def testProcessSources(self):
@@ -32,7 +32,7 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     reader = artifacts_reader.YamlArtifactsReader()
     registry.ReadFromDirectory(reader, artifacts_path)
 
-    test_engine = task_engine.TaskMultiProcessEngine(
+    test_engine = extraction_engine.ExtractionMultiProcessEngine(
         maximum_number_of_tasks=100)
 
     test_file_path = self._GetTestFilePath(['ímynd.dd'])
