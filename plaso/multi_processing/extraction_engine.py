@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The task multi-process processing engine."""
+"""The task-based multi-process processing extraction engine."""
 
 import heapq
 import logging
@@ -78,8 +78,8 @@ class _EventSourceHeap(object):
     heapq.heappush(self._heap, heap_values)
 
 
-class TaskMultiProcessEngine(engine.MultiProcessEngine):
-  """Class that defines the task multi-process engine.
+class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
+  """Task-based multi-process extraction engine.
 
   This class contains functionality to:
   * monitor and manage extraction tasks;
@@ -149,7 +149,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if not worker_timeout:
       worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
 
-    super(TaskMultiProcessEngine, self).__init__()
+    super(ExtractionMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks

@@ -26,7 +26,7 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import psort
-from plaso.multi_processing import task_engine as multi_process_engine
+from plaso.multi_processing import extraction_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import factory as storage_factory
 
@@ -304,7 +304,7 @@ class PstealTool(
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
     else:
-      extraction_engine = multi_process_engine.TaskMultiProcessEngine(
+      extraction_engine = multi_process_engine.ExtractionMultiProcessEngine(
           number_of_worker_processes=self._number_of_extraction_workers,
           worker_memory_limit=self._worker_memory_limit,
           worker_timeout=self._worker_timeout)
