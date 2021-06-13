@@ -25,6 +25,7 @@ from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.lib import loggers
+from plaso.multi_processing import analysis_engine as multi_analysis_engine
 from plaso.multi_processing import psort
 from plaso.storage import factory as storage_factory
 
@@ -518,8 +519,8 @@ class PsortTool(
       if not storage_writer:
         raise RuntimeError('Unable to create storage writer.')
 
-      # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
+      # TODO: add single process analysis engine support.
+      analysis_engine = multi_analysis_engine.AnalysisMultiProcessEngine(
           worker_memory_limit=self._worker_memory_limit,
           worker_timeout=self._worker_timeout)
 
@@ -540,12 +541,12 @@ class PsortTool(
           storage_factory.StorageFactory.CreateStorageReaderForFile(
               self._storage_file_path))
 
-      # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
+      # TODO: add single process output and formatting engine support.
+      output_engine = psort.PsortMultiProcessEngine(
           worker_memory_limit=self._worker_memory_limit,
           worker_timeout=self._worker_timeout)
 
-      analysis_engine.ExportEvents(
+      output_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
           configuration, deduplicate_events=self._deduplicate_events,
           event_filter=self._event_filter,
