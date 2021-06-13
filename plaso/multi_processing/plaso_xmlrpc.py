@@ -89,6 +89,7 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
     """Closes the RPC communication channel for clients."""
     if self._xmlrpc_server:
       self._xmlrpc_server.shutdown()
+      self._xmlrpc_server.server_close()
       self._xmlrpc_server = None
 
   def _Open(self, hostname, port):
