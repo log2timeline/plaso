@@ -86,7 +86,7 @@ class BaseStore(object):
   @abc.abstractmethod
   def _AddAttributeContainer(
       self, container_type, container, serialized_data=None):
-    """Adds an attribute container.
+    """Adds a new attribute container.
 
     Args:
       container_type (str): attribute container type.
@@ -123,21 +123,14 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def _RaiseIfNotWritable(self):
-    """Raises if the store is not writable.
+  def _GetNumberOfAttributeContainers(self, container_type):
+    """Determines the number of containers of a type in the store.
 
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
+    Args:
+      container_type (str): attribute container type.
 
-  @abc.abstractmethod
-  def _RaiseIfNotReadable(self):
-    """Raises if the store is not readable.
-
-     Raises:
-       OSError: if the store cannot be read from.
-       IOError: if the store cannot be read from.
+    Returns:
+      int: the number of containers in the store of the specified type.
     """
 
   @abc.abstractmethod
@@ -153,14 +146,21 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def _GetNumberOfAttributeContainers(self, container_type):
-    """Determines the number of containers of a type in the store.
+  def _RaiseIfNotWritable(self):
+    """Raises if the store is not writable.
 
-    Args:
-      container_type (str): attribute container type.
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
+    """
 
-    Returns:
-      int: the number of containers in the store of the specified type.
+  @abc.abstractmethod
+  def _RaiseIfNotReadable(self):
+    """Raises if the store is not readable.
+
+     Raises:
+       OSError: if the store cannot be read from.
+       IOError: if the store cannot be read from.
     """
 
   @abc.abstractmethod
@@ -1246,12 +1246,11 @@ class StorageWriter(object):
     """int: number of extraction warnings written."""
     return self.number_of_extraction_warnings
 
-  def AddAnalysisReport(self, analysis_report, serialized_data=None):  # pylint: disable=unused-argument
-    """Adds an analysis report.
+  def _UpdateAnalysisReportSessionCounter(self, analysis_report):
+    """Updates the analysis report session counter.
 
     Args:
       analysis_report (AnalysisReport): a report.
-      serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
     if self._storage_type == definitions.STORAGE_TYPE_SESSION:
       report_identifier = analysis_report.plugin_name
@@ -1260,22 +1259,36 @@ class StorageWriter(object):
 
     self.number_of_analysis_reports += 1
 
-  @abc.abstractmethod
-  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
-    """Adds an analysis warning.
+  def _UpdateEventLabelsSessionCounter(self, event_tag):
+    """Updates the event labels session counter.
 
     Args:
-      analysis_warning (AnalysisWarning): an analysis warning.
-      serialized_data (Optional[bytes]): serialized form of the analysis
-          warning.
+      event_tag (EventTag): an event tag.
     """
+    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
+      self._session.event_labels_counter['total'] += 1
+      for label in event_tag.labels:
+        self._session.event_labels_counter[label] += 1
 
-  def AddEvent(self, event, serialized_data=None):  # pylint: disable=unused-argument
-    """Adds an event.
+    self.number_of_event_tags += 1
+
+  def _UpdateEventDataParsersMappings(self, event_data):
+    """Updates the event data parsers mappings.
 
     Args:
-      event(EventObject): an event.
-      serialized_data (Optional[bytes]): serialized form of the event.
+      event_data (EventData): event data.
+    """
+    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
+      identifier = event_data.GetIdentifier()
+      lookup_key = identifier.CopyToString()
+      parser_name = event_data.parser.split('/')[-1]
+      self._event_data_parser_mappings[lookup_key] = parser_name
+
+  def _UpdateEventParsersSessionCounter(self, event):
+    """Updates the event parsers session counter.
+
+    Args:
+      event (EventObject): an event.
     """
     if self._storage_type == definitions.STORAGE_TYPE_SESSION:
       event_data_identifier = event.GetEventDataIdentifier()
@@ -1287,18 +1300,42 @@ class StorageWriter(object):
 
     self.number_of_events += 1
 
-  def AddEventData(self, event_data, serialized_data=None):  # pylint: disable=unused-argument
+  @abc.abstractmethod
+  def AddAnalysisReport(self, analysis_report, serialized_data=None):
+    """Adds an analysis report.
+
+    Args:
+      analysis_report (AnalysisReport): a report.
+      serialized_data (Optional[bytes]): serialized form of the analysis report.
+    """
+
+  @abc.abstractmethod
+  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+    """Adds an analysis warning.
+
+    Args:
+      analysis_warning (AnalysisWarning): an analysis warning.
+      serialized_data (Optional[bytes]): serialized form of the analysis
+          warning.
+    """
+
+  @abc.abstractmethod
+  def AddEvent(self, event, serialized_data=None):
+    """Adds an event.
+
+    Args:
+      event (EventObject): an event.
+      serialized_data (Optional[bytes]): serialized form of the event.
+    """
+
+  @abc.abstractmethod
+  def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
       serialized_data (Optional[bytes]): serialized form of the event data.
     """
-    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
-      identifier = event_data.GetIdentifier()
-      lookup_key = identifier.CopyToString()
-      parser_name = event_data.parser.split('/')[-1]
-      self._event_data_parser_mappings[lookup_key] = parser_name
 
   @abc.abstractmethod
   def AddEventDataStream(self, event_data_stream, serialized_data=None):
@@ -1319,19 +1356,14 @@ class StorageWriter(object):
       serialized_data (Optional[bytes]): serialized form of the event source.
     """
 
-  def AddEventTag(self, event_tag, serialized_data=None):  # pylint: disable=unused-argument
+  @abc.abstractmethod
+  def AddEventTag(self, event_tag, serialized_data=None):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): an event tag.
       serialized_data (Optional[bytes]): serialized form of the event tag.
     """
-    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
-      self._session.event_labels_counter['total'] += 1
-      for label in event_tag.labels:
-        self._session.event_labels_counter[label] += 1
-
-    self.number_of_event_tags += 1
 
   @abc.abstractmethod
   def AddExtractionWarning(self, extraction_warning, serialized_data=None):

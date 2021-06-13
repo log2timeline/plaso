@@ -61,6 +61,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     Returns:
       dict[str, object]: status attributes, indexed by name.
     """
+    logger.debug('Status update requested')
+
     if self._analysis_mediator:
       number_of_produced_event_tags = (
           self._analysis_mediator.number_of_produced_event_tags)
@@ -102,6 +104,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     if self._status in (
         definitions.STATUS_INDICATOR_ABORTED,
         definitions.STATUS_INDICATOR_COMPLETED):
+      logger.debug('Set foreman status wait event')
       self._foreman_status_wait_event.set()
 
     return status
@@ -214,6 +217,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     else:
       self._status = definitions.STATUS_INDICATOR_COMPLETED
 
+    logger.debug('Wait for foreman status wait event')
+    self._foreman_status_wait_event.clear()
     self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
 
     logger.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
@@ -260,7 +265,10 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
   def SignalAbort(self):
     """Signals the process to abort."""
     self._abort = True
+
     if self._foreman_status_wait_event:
+      logger.debug('Abort foreman status wait event')
       self._foreman_status_wait_event.set()
+
     if self._analysis_mediator:
       self._analysis_mediator.SignalAbort()

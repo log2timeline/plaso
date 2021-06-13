@@ -533,8 +533,7 @@ class StorageFileWriter(interface.StorageWriter):
     self._storage_file.AddAnalysisReport(
         analysis_report, serialized_data=serialized_data)
 
-    super(StorageFileWriter, self).AddAnalysisReport(
-        analysis_report, serialized_data=serialized_data)
+    self._UpdateAnalysisReportSessionCounter(analysis_report)
 
   def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
     """Adds an analysis warning.
@@ -569,8 +568,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._storage_file.AddEvent(event)
 
-    super(StorageFileWriter, self).AddEvent(
-        event, serialized_data=serialized_data)
+    self._UpdateEventParsersSessionCounter(event)
 
   def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
@@ -587,8 +585,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._storage_file.AddEventData(event_data, serialized_data=serialized_data)
 
-    super(StorageFileWriter, self).AddEventData(
-        event_data, serialized_data=serialized_data)
+    self._UpdateEventDataParsersMappings(event_data)
 
   def AddEventDataStream(self, event_data_stream, serialized_data=None):
     """Adds an event data stream.
@@ -639,8 +636,7 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._storage_file.AddEventTag(event_tag, serialized_data=serialized_data)
 
-    super(StorageFileWriter, self).AddEventTag(
-        event_tag, serialized_data=serialized_data)
+    self._UpdateEventLabelsSessionCounter(event_tag)
 
   def AddExtractionWarning(self, extraction_warning, serialized_data=None):
     """Adds an extraction warning.

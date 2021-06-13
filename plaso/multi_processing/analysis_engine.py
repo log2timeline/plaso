@@ -56,15 +56,15 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._knowledge_base = None
     self._memory_profiler = None
     self._merge_task = None
+    self._number_of_consumed_analysis_reports = 0
     self._number_of_consumed_analysis_warnings = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_event_tags = 0
-    self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
+    self._number_of_produced_analysis_reports = 0
     self._number_of_produced_analysis_warnings = 0
     self._number_of_produced_events = 0
     self._number_of_produced_event_tags = 0
-    self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._processing_profiler = None
     self._serializers_profiler = None
@@ -91,13 +91,15 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       RuntimeError: if a non-recoverable situation is encountered.
     """
     self._status = definitions.STATUS_INDICATOR_RUNNING
+    self._number_of_consumed_analysis_reports = 0
     self._number_of_consumed_analysis_warnings = 0
     self._number_of_consumed_events = 0
-    self._number_of_consumed_reports = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_sources = 0
+    self._number_of_produced_analysis_reports = 0
     self._number_of_produced_analysis_warnings = 0
     self._number_of_produced_events = 0
-    self._number_of_produced_reports = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_sources = 0
 
     number_of_filtered_events = 0
@@ -186,7 +188,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
           self._number_of_produced_event_tags = (
               storage_writer.number_of_event_tags)
-          self._number_of_produced_reports = (
+          self._number_of_produced_analysis_reports = (
               storage_writer.number_of_analysis_reports)
 
     try:
@@ -390,16 +392,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
     while self._status_update_active:
-      # Make a local copy of the PIDs in case the dict is changed by
-      # the main thread.
-      for pid in list(self._process_information_per_pid.keys()):
-        self._CheckStatusAnalysisProcess(pid)
-
-      self._UpdateForemanProcessStatus()
-
-      if self._status_update_callback:
-        self._status_update_callback(self._processing_status)
-
+      self._UpdateStatus()
       time.sleep(self._STATUS_UPDATE_INTERVAL)
 
   def _StopAnalysisProcesses(self, abort=False):
@@ -448,9 +441,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_consumed_events, self._number_of_produced_events,
         self._number_of_consumed_event_tags,
         self._number_of_produced_event_tags,
+        self._number_of_consumed_analysis_reports,
+        self._number_of_produced_analysis_reports,
         self._number_of_consumed_analysis_warnings,
-        self._number_of_produced_analysis_warnings,
-        self._number_of_consumed_reports, self._number_of_produced_reports)
+        self._number_of_produced_analysis_warnings)
 
     self._processing_status.UpdateEventsStatus(self._events_status)
 
@@ -526,6 +520,18 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         number_of_consumed_reports, number_of_produced_reports,
         number_of_consumed_analysis_warnings,
         number_of_produced_analysis_warnings)
+
+  def _UpdateStatus(self):
+    """Update the status."""
+    # Make a local copy of the PIDs in case the dict is changed by
+    # the main thread.
+    for pid in list(self._process_information_per_pid.keys()):
+      self._CheckStatusAnalysisProcess(pid)
+
+    self._UpdateForemanProcessStatus()
+
+    if self._status_update_callback:
+      self._status_update_callback(self._processing_status)
 
   # pylint: disable=too-many-arguments
   def AnalyzeEvents(
@@ -609,8 +615,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       finally:
         if self._abort:
           self._processing_status.aborted = True
-          if self._status_update_callback:
-            self._status_update_callback(self._processing_status)
 
         storage_writer.WriteSessionCompletion(aborted=self._abort)
 
@@ -620,6 +624,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       # Stop the status update thread after close of the storage writer
       # so we include the storage sync to disk in the status updates.
       self._StopStatusUpdateThread()
+
+    # Update the status view one last time before the analysis processses are
+    # stopped.
+    self._UpdateStatus()
 
     if queue_full:
       # TODO: handle abort on queue full more elegant.

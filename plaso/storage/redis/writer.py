@@ -73,8 +73,7 @@ class RedisStorageWriter(interface.StorageWriter):
     self._store.AddAnalysisReport(
         analysis_report, serialized_data=serialized_data)
 
-    super(RedisStorageWriter, self).AddAnalysisReport(
-        analysis_report, serialized_data=serialized_data)
+    self._UpdateAnalysisReportSessionCounter(analysis_report)
 
   def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
     """Adds an analysis warning.
@@ -96,8 +95,7 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddEvent(event, serialized_data=serialized_data)
 
-    super(RedisStorageWriter, self).AddEvent(
-        event, serialized_data=serialized_data)
+    self._UpdateEventParsersSessionCounter(event)
 
   def AddEventData(self, event_data, serialized_data=None):
     """Adds an event data.
@@ -108,8 +106,7 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddEventData(event_data, serialized_data=serialized_data)
 
-    super(RedisStorageWriter, self).AddEventData(
-        event_data, serialized_data=serialized_data)
+    self._UpdateEventDataParsersMappings(event_data)
 
   def AddEventDataStream(self, event_data_stream, serialized_data=None):
     """Adds an event data stream.
@@ -139,8 +136,7 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddEventTag(event_tag, serialized_data=serialized_data)
 
-    super(RedisStorageWriter, self).AddEventTag(
-        event_tag, serialized_data=serialized_data)
+    self._UpdateEventLabelsSessionCounter(event_tag)
 
   def AddExtractionWarning(self, extraction_warning, serialized_data=None):
     """Adds an extraction warning.

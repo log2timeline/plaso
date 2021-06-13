@@ -492,7 +492,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.Open(path=temp_file)
 
       test_event_tags = list(storage_file.GetEventTags())
-      self.assertEqual(len(test_event_tags), 4)
+      # The 2nd and 4th event tags are flattened/merged.
+      self.assertEqual(len(test_event_tags), 3)
 
       storage_file.Close()
 

@@ -38,7 +38,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._event_data = {}
     self._event_data_streams = {}
     self._event_sources = []
-    self._event_tags = []
+    self._event_tags = {}
     self._events = []
     self._extraction_warnings = []
     self._is_open = False
@@ -95,6 +95,8 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self.analysis_reports.append(analysis_report)
 
+    self._UpdateAnalysisReportSessionCounter(analysis_report)
+
   def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
     """Adds an analysis warning.
 
@@ -136,8 +138,7 @@ class FakeStorageWriter(interface.StorageWriter):
     event = self._PrepareAttributeContainer(event)
     self._events.append(event)
 
-    super(FakeStorageWriter, self).AddEvent(
-        event, serialized_data=serialized_data)
+    self._UpdateEventParsersSessionCounter(event)
 
   def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
@@ -158,8 +159,7 @@ class FakeStorageWriter(interface.StorageWriter):
     lookup_key = identifier.CopyToString()
     self._event_data[lookup_key] = event_data
 
-    super(FakeStorageWriter, self).AddEventData(
-        event_data, serialized_data=serialized_data)
+    self._UpdateEventDataParsersMappings(event_data)
 
   def AddEventDataStream(self, event_data_stream, serialized_data=None):
     """Adds an event data stream.
@@ -207,6 +207,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      KeyError: if the corresponding event already has an event tag.
       OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
@@ -216,10 +217,15 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Unsupported event identifier type: {0!s}'.format(
           type(event_identifier)))
 
-    event_tag = self._PrepareAttributeContainer(event_tag)
+    lookup_key = event_identifier.CopyToString()
+    existing_event_tag = self._event_tags.get(lookup_key, None)
+    if existing_event_tag:
+      existing_event_tag.AddLabels(event_tag.labels)
+    else:
+      event_tag = self._PrepareAttributeContainer(event_tag)
+      self._event_tags[lookup_key] = event_tag
 
-    self._event_tags.append(event_tag)
-    self.number_of_event_tags += 1
+    self._UpdateEventLabelsSessionCounter(event_tag)
 
   def AddExtractionWarning(self, extraction_warning, serialized_data=None):
     """Adds an extraction warning.
@@ -343,7 +349,7 @@ class FakeStorageWriter(interface.StorageWriter):
     Returns:
       generator(EventTags): event tag generator.
     """
-    return iter(self._event_tags)
+    return iter(self._event_tags.values())
 
   def GetExtractionWarnings(self):
     """Retrieves the extraction warnings.
