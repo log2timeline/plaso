@@ -26,7 +26,7 @@ from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import analysis_engine as multi_analysis_engine
-from plaso.multi_processing import psort
+from plaso.multi_processing import output_engine as multi_output_engine
 from plaso.storage import factory as storage_factory
 
 
@@ -542,9 +542,8 @@ class PsortTool(
               self._storage_file_path))
 
       # TODO: add single process output and formatting engine support.
-      output_engine = psort.PsortMultiProcessEngine(
-          worker_memory_limit=self._worker_memory_limit,
-          worker_timeout=self._worker_timeout)
+      output_engine = (
+          multi_output_engine.OutputAndFormattingMultiProcessEngine())
 
       output_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,

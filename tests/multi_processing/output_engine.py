@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the psort multi-processing engine."""
+"""Tests for the output and formatting multi-processing engine."""
 
 import io
 import os
@@ -9,7 +9,7 @@ import unittest
 from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.lib import definitions
-from plaso.multi_processing import psort
+from plaso.multi_processing import output_engine
 from plaso.output import dynamic
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
@@ -99,12 +99,12 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
   def testNumberOfEvents(self):
     """Tests the number_of_events property."""
-    event_heap = psort.PsortEventHeap()
+    event_heap = output_engine.PsortEventHeap()
     self.assertEqual(event_heap.number_of_events, 0)
 
   def testGetEventIdentifiers(self):
     """Tests the _GetEventIdentifiers function."""
-    event_heap = psort.PsortEventHeap()
+    event_heap = output_engine.PsortEventHeap()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -119,7 +119,7 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
   def testPopEvent(self):
     """Tests the PopEvent function."""
-    event_heap = psort.PsortEventHeap()
+    event_heap = output_engine.PsortEventHeap()
 
     self.assertEqual(len(event_heap._heap), 0)
 
@@ -139,7 +139,7 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
   def testPopEvents(self):
     """Tests the PopEvents function."""
-    event_heap = psort.PsortEventHeap()
+    event_heap = output_engine.PsortEventHeap()
 
     self.assertEqual(len(event_heap._heap), 0)
 
@@ -159,7 +159,7 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
 
   def testPushEvent(self):
     """Tests the PushEvent function."""
-    event_heap = psort.PsortEventHeap()
+    event_heap = output_engine.PsortEventHeap()
 
     self.assertEqual(len(event_heap._heap), 0)
 
@@ -170,7 +170,8 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     self.assertEqual(len(event_heap._heap), 1)
 
 
-class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
+class OutputAndFormattingMultiProcessEngineTest(
+    test_lib.MultiProcessingTestCase):
   """Tests for the multi-processing engine."""
 
   # pylint: disable=protected-access
@@ -294,7 +295,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     output_module = TestOutputModule(output_mediator_object)
 
-    test_engine = psort.PsortMultiProcessEngine()
+    test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
@@ -324,7 +325,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
     output_module = TestOutputModule(output_mediator_object)
 
-    test_engine = psort.PsortMultiProcessEngine()
+    test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
@@ -368,7 +369,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         test_file_path)
 
-    test_engine = psort.PsortMultiProcessEngine()
+    test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
 
     test_engine.ExportEvents(
         knowledge_base_object, storage_reader, output_module, configuration)
