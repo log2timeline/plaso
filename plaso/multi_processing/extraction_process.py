@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The multi-process worker process."""
+"""The multi-process extraction worker process."""
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
@@ -15,8 +15,8 @@ from plaso.multi_processing import logger
 from plaso.parsers import mediator as parsers_mediator
 
 
-class WorkerProcess(base_process.MultiProcessBaseProcess):
-  """Multi-processing worker process."""
+class ExtractionWorkerProcess(base_process.MultiProcessBaseProcess):
+  """Multi-processing extraction worker process."""
 
   # Maximum number of dfVFS file system objects to cache in the worker
   # process.
@@ -42,7 +42,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           configuration.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
-    super(WorkerProcess, self).__init__(processing_configuration, **kwargs)
+    super(ExtractionWorkerProcess, self).__init__(
+        processing_configuration, **kwargs)
     self._abort = False
     self._collection_filters_helper = collection_filters_helper
     self._buffer_size = 0
