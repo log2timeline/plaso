@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The output and formatting multi-processing engine."""
 
+import collections
 import heapq
 import time
 
@@ -23,15 +24,80 @@ class PsortEventHeap(object):
       'timestamp',
       'timestamp_desc'])
 
+  _MAXIMUM_CACHED_IDENTIFIERS = 500000
+
   def __init__(self):
     """Initializes a psort events heap."""
     super(PsortEventHeap, self).__init__()
+    self._event_data_content_identifier_cache = collections.OrderedDict()
     self._heap = []
 
   @property
   def number_of_events(self):
     """int: number of events on the heap."""
     return len(self._heap)
+
+  def _GetEventDataContentIdentifier(self, event_data, event_data_stream):
+    """Retrieves the event data content identifier.
+
+    Args:
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: identifier of the event data content.
+    """
+    event_data_identifier = event_data.GetIdentifier()
+    lookup_key = event_data_identifier.CopyToString()
+
+    content_identifier = self._event_data_content_identifier_cache.get(
+        lookup_key, None)
+    if not content_identifier:
+      event_attributes = list(event_data.GetAttributes())
+      if event_data_stream:
+        event_data_stream_attributes = event_data_stream.GetAttributes()
+        event_attributes.extend(event_data_stream_attributes)
+
+      attributes = ['data_type: {0:s}'.format(event_data.data_type)]
+
+      for attribute_name, attribute_value in sorted(event_attributes):
+        if (attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES or
+            attribute_value is None):
+          continue
+
+        # Note that support for event_data.pathspec is kept for backwards
+        # compatibility. The current value is event_data_stream.path_spec.
+        if attribute_name in ('path_spec', 'pathspec'):
+          attribute_value = attribute_value.comparable
+
+        elif isinstance(attribute_value, dict):
+          attribute_value = sorted(attribute_value.items())
+
+        elif isinstance(attribute_value, set):
+          attribute_value = sorted(list(attribute_value))
+
+        elif isinstance(attribute_value, bytes):
+          attribute_value = repr(attribute_value)
+
+        try:
+          attribute_string = '{0:s}: {1!s}'.format(
+              attribute_name, attribute_value)
+        except UnicodeDecodeError:
+          logger.error('Failed to decode attribute {0:s}'.format(
+              attribute_name))
+        attributes.append(attribute_string)
+
+      content_identifier = ', '.join(attributes)
+
+      if len(self._event_data_content_identifier_cache) >= (
+          self._MAXIMUM_CACHED_IDENTIFIERS):
+        self._event_data_content_identifier_cache.popitem(last=True)
+
+      self._event_data_content_identifier_cache[lookup_key] = content_identifier
+
+    self._event_data_content_identifier_cache.move_to_end(
+        lookup_key, last=False)
+    return content_identifier
 
   def _GetEventIdentifiers(self, event, event_data, event_data_stream):
     """Retrieves different identifiers of the event.
@@ -63,46 +129,15 @@ class PsortEventHeap(object):
             be grouped.
         str: identifier of the event content.
     """
-    event_attributes = list(event_data.GetAttributes())
-    if event_data_stream:
-      event_data_stream_attributes = event_data_stream.GetAttributes()
-      event_attributes.extend(event_data_stream_attributes)
-
-    attributes = ['data_type: {0:s}'.format(event_data.data_type)]
-
-    for attribute_name, attribute_value in sorted(event_attributes):
-      if (attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES or
-          attribute_value is None):
-        continue
-
-      # Note that support for event_data.pathspec is kept for backwards
-      # compatibility. The current value is event_data_stream.path_spec.
-      if attribute_name in ('path_spec', 'pathspec'):
-        attribute_value = attribute_value.comparable
-
-      elif isinstance(attribute_value, dict):
-        attribute_value = sorted(attribute_value.items())
-
-      elif isinstance(attribute_value, set):
-        attribute_value = sorted(list(attribute_value))
-
-      elif isinstance(attribute_value, bytes):
-        attribute_value = repr(attribute_value)
-
-      try:
-        attribute_string = '{0:s}: {1!s}'.format(
-            attribute_name, attribute_value)
-      except UnicodeDecodeError:
-        logger.error('Failed to decode attribute {0:s}'.format(
-            attribute_name))
-      attributes.append(attribute_string)
+    content_identifier = self._GetEventDataContentIdentifier(
+        event_data, event_data_stream)
 
     if event.timestamp_desc in (
         definitions.TIME_DESCRIPTION_LAST_ACCESS,
         definitions.TIME_DESCRIPTION_CHANGE,
         definitions.TIME_DESCRIPTION_CREATION,
         definitions.TIME_DESCRIPTION_MODIFICATION):
-      macb_group_identifier = ', '.join(attributes)
+      macb_group_identifier = content_identifier
     else:
       macb_group_identifier = None
 
@@ -111,8 +146,7 @@ class PsortEventHeap(object):
       logger.warning('Missing timestamp_desc attribute')
       timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
-    attributes.insert(0, timestamp_desc)
-    content_identifier = ', '.join(attributes)
+    content_identifier = ', '.join([timestamp_desc, content_identifier])
 
     return macb_group_identifier, content_identifier
 
@@ -388,11 +422,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
     while self._status_update_active:
-      self._UpdateForemanProcessStatus()
-
-      if self._status_update_callback:
-        self._status_update_callback(self._processing_status)
-
+      self._UpdateStatus()
       time.sleep(self._STATUS_UPDATE_INTERVAL)
 
   def _UpdateForemanProcessStatus(self):
@@ -404,6 +434,13 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         0, 0, self._number_of_consumed_events, 0, 0, 0, 0, 0, 0, 0)
 
     self._processing_status.UpdateEventsStatus(self._events_status)
+
+  def _UpdateStatus(self):
+    """Update the status."""
+    self._UpdateForemanProcessStatus()
+
+    if self._status_update_callback:
+      self._status_update_callback(self._processing_status)
 
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
@@ -451,6 +488,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           event_filter=event_filter, time_slice=time_slice,
           use_time_slicer=use_time_slicer)
 
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
+
     finally:
       # Stop the status update thread after close of the storage writer
       # so we include the storage sync to disk in the status updates.
@@ -458,12 +497,10 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     output_module.WriteFooter()
 
+    # Update the status view one last time.
+    self._UpdateStatus()
+
     self._StopProfiling()
-
-    self._UpdateForemanProcessStatus()
-
-    if self._status_update_callback:
-      self._status_update_callback(self._processing_status)
 
     # Reset values.
     self._status_update_callback = None
