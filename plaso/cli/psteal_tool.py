@@ -25,8 +25,8 @@ from plaso.engine import single_process as single_extraction_engine
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.multi_processing import psort
 from plaso.multi_processing import extraction_engine as multi_extraction_engine
+from plaso.multi_processing import output_engine as multi_output_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import factory as storage_factory
 
@@ -207,12 +207,11 @@ class PstealTool(
           storage_factory.StorageFactory.CreateStorageReaderForFile(
               self._storage_file_path))
 
-      # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine(
-          worker_memory_limit=self._worker_memory_limit,
-          worker_timeout=self._worker_timeout)
+      # TODO: add single process output and formatting engine support.
+      output_engine = (
+          multi_output_engine.OutputAndFormattingMultiProcessEngine())
 
-      analysis_engine.ExportEvents(
+      output_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
           configuration, deduplicate_events=self._deduplicate_events,
           status_update_callback=status_update_callback,

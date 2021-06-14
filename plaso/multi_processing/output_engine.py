@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-"""The psort multi-processing engine."""
+"""The output and formatting multi-processing engine."""
 
 import heapq
+import time
 
 from plaso.engine import processing_status
 from plaso.lib import bufferlib
 from plaso.lib import definitions
-from plaso.multi_processing import analysis_engine
+from plaso.multi_processing import engine
 from plaso.multi_processing import logger
+from plaso.storage import event_tag_index
 from plaso.storage import time_range as storage_time_range
 
 
@@ -175,28 +177,28 @@ class PsortEventHeap(object):
     heapq.heappush(self._heap, heap_values)
 
 
-class PsortMultiProcessEngine(analysis_engine.AnalysisMultiProcessEngine):
-  """Psort multi-processing engine."""
+class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
+  """Output and formatting multi-processing engine."""
+
+  # TODO: move this to a single process engine.
+  # pylint: disable=abstract-method
 
   _HEAP_MAXIMUM_EVENTS = 100000
 
-  def __init__(self, worker_memory_limit=None, worker_timeout=None):
-    """Initializes a psort multi-processing engine.
-
-    Args:
-      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
-          allowed to consume, where None represents the default memory limit
-          and 0 represents no limit.
-      worker_timeout (Optional[float]): number of minutes before a worker
-          process that is not providing status updates is considered inactive,
-          where None or 0.0 represents the default timeout.
-    """
-    super(PsortMultiProcessEngine, self).__init__(
-        worker_memory_limit=worker_memory_limit, worker_timeout=worker_timeout)
+  def __init__(self):
+    """Initializes an output and formatting multi-processing engine."""
+    super(OutputAndFormattingMultiProcessEngine, self).__init__()
     # The export event heap is used to make sure the events are sorted in
     # a deterministic way.
+    self._event_tag_index = event_tag_index.EventTagIndex()
+    self._events_status = processing_status.EventsStatus()
     self._export_event_heap = PsortEventHeap()
     self._export_event_timestamp = 0
+    self._knowledge_base = None
+    self._number_of_consumed_events = 0
+    self._processing_configuration = None
+    self._status = definitions.STATUS_INDICATOR_IDLE
+    self._status_update_callback = None
 
   def _ExportEvent(
       self, storage_reader, output_module, event, event_data, event_data_stream,
@@ -382,6 +384,26 @@ class PsortMultiProcessEngine(analysis_engine.AnalysisMultiProcessEngine):
 
     if macb_group:
       output_module.WriteEventMACBGroup(macb_group)
+
+  def _StatusUpdateThreadMain(self):
+    """Main function of the status update thread."""
+    while self._status_update_active:
+      self._UpdateForemanProcessStatus()
+
+      if self._status_update_callback:
+        self._status_update_callback(self._processing_status)
+
+      time.sleep(self._STATUS_UPDATE_INTERVAL)
+
+  def _UpdateForemanProcessStatus(self):
+    """Update the foreman process status."""
+    used_memory = self._process_information.GetUsedMemory() or 0
+
+    self._processing_status.UpdateForemanStatus(
+        self._name, self._status, self._pid, used_memory, '',
+        0, 0, self._number_of_consumed_events, 0, 0, 0, 0, 0, 0, 0)
+
+    self._processing_status.UpdateEventsStatus(self._events_status)
 
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
