@@ -82,7 +82,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
   This class contains functionality to:
   * monitor and manage extraction tasks;
-  * merge results returned by extraction workers.
+  * merge results returned by extraction worker processes.
   """
 
   # Maximum number of attribute containers to merge per loop.
