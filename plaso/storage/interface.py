@@ -1246,14 +1246,19 @@ class StorageWriter(object):
     """int: number of extraction warnings written."""
     return self.number_of_extraction_warnings
 
-  @abc.abstractmethod
-  def AddAnalysisReport(self, analysis_report, serialized_data=None):
+  def AddAnalysisReport(self, analysis_report, serialized_data=None):  # pylint: disable=unused-argument
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): a report.
       serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
+    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
+      report_identifier = analysis_report.plugin_name
+      self._session.analysis_reports_counter['total'] += 1
+      self._session.analysis_reports_counter[report_identifier] += 1
+
+    self.number_of_analysis_reports += 1
 
   @abc.abstractmethod
   def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
@@ -1314,14 +1319,19 @@ class StorageWriter(object):
       serialized_data (Optional[bytes]): serialized form of the event source.
     """
 
-  @abc.abstractmethod
-  def AddEventTag(self, event_tag, serialized_data=None):
+  def AddEventTag(self, event_tag, serialized_data=None):  # pylint: disable=unused-argument
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): an event tag.
       serialized_data (Optional[bytes]): serialized form of the event tag.
     """
+    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
+      self._session.event_labels_counter['total'] += 1
+      for label in event_tag.labels:
+        self._session.event_labels_counter[label] += 1
+
+    self.number_of_event_tags += 1
 
   @abc.abstractmethod
   def AddExtractionWarning(self, extraction_warning, serialized_data=None):
@@ -1357,33 +1367,6 @@ class StorageWriter(object):
   @abc.abstractmethod
   def Close(self):
     """Closes the storage writer."""
-
-  @abc.abstractmethod
-  def CheckTaskReadyForMerge(self, task):
-    """Checks if a task is ready for merging into the store.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      bool: True if the task is ready to be merged.
-    """
-
-  # pylint: disable=unused-argument
-  def CreateTaskStorage(self, task, task_storage_format):
-    """Creates a task store.
-
-    Args:
-      task (Task): task.
-      task_storage_format (str): storage format to store task results.
-
-    Returns:
-      StorageWriter: storage writer for the task store.
-
-    Raises:
-      NotImplementedError: since there is no implementation.
-    """
-    raise NotImplementedError()
 
   @abc.abstractmethod
   def GetEventDataByIdentifier(self, identifier):
@@ -1449,45 +1432,9 @@ class StorageWriter(object):
       EventObject: event.
     """
 
-  # pylint: disable=unused-argument
-  def FinalizeTaskStorage(self, task):
-    """Finalizes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      NotImplementedError: since there is no implementation.
-    """
-    raise NotImplementedError()
-
   @abc.abstractmethod
   def Open(self, **kwargs):
     """Opens the storage writer."""
-
-  # pylint: disable=unused-argument
-  def PrepareMergeTaskStorage(self, task):
-    """Prepares a task storage for merging.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      NotImplementedError: since there is no implementation.
-    """
-    raise NotImplementedError()
-
-  # pylint: disable=unused-argument
-  def RemoveProcessedTaskStorage(self, task):
-    """Removes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      NotImplementedError: since there is no implementation.
-    """
-    raise NotImplementedError()
 
   @abc.abstractmethod
   def SetSerializersProfiler(self, serializers_profiler):

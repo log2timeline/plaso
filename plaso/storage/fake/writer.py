@@ -44,7 +44,6 @@ class FakeStorageWriter(interface.StorageWriter):
     self._is_open = False
     self._preprocessing_warnings = []
     self._recovery_warnings = []
-    self._task_storage_writers = {}
     self.analysis_reports = []
     self.session_completion = None
     self.session_configuration = None
@@ -279,54 +278,6 @@ class FakeStorageWriter(interface.StorageWriter):
     self._recovery_warnings.append(recovery_warning)
     self.number_of_recovery_warnings += 1
 
-  def CheckTaskReadyForMerge(self, task):
-    """Checks if a task is ready for merging into the session store.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      bool: True if the task is ready to be merged.
-
-    Raises:
-      IOError: if the task storage type is not supported or the storage writer
-          for the task does not exist.
-      OSError: if the task storage type is not supported or the storage writer
-          for the task does not exist.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
-    # For the fake storage tasks are always ready to be merged.
-    return True
-
-  def CreateTaskStorage(self, task, task_storage_format):
-    """Creates a task storage.
-
-    Args:
-      task (Task): task.
-      task_storage_format (str): storage format to store task results.
-
-    Returns:
-      FakeStorageWriter: storage writer.
-
-    Raises:
-      IOError: if the task storage already exists.
-      OSError: if the task storage already exists.
-    """
-    if task.identifier in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} already exists.'.format(
-          task.identifier))
-
-    storage_writer = FakeStorageWriter(
-        self._session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
-    self._task_storage_writers[task.identifier] = storage_writer
-    return storage_writer
-
   def Close(self):
     """Closes the storage writer.
 
@@ -485,20 +436,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
     return iter(event_heap.PopEvents())
 
-  def FinalizeTaskStorage(self, task):
-    """Finalizes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the task storage does not exist.
-      OSError: if the task storage does not exist.
-    """
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
   def Open(self, **unused_kwargs):
     """Opens the storage writer.
 
@@ -513,36 +450,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._first_written_event_source_index = len(self._event_sources)
     self._written_event_source_index = self._first_written_event_source_index
-
-  def PrepareMergeTaskStorage(self, task):
-    """Prepares a task storage for merging.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the task storage does not exist.
-      OSError: if the task storage does not exist.
-    """
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
-  def RemoveProcessedTaskStorage(self, task):
-    """Removes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the task storage does not exist.
-      OSError: if the task storage does not exist.
-    """
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
-    del self._task_storage_writers[task.identifier]
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.

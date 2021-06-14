@@ -19,11 +19,10 @@ from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.multi_processing import engine
 from plaso.multi_processing import extraction_process
 from plaso.multi_processing import logger
+from plaso.multi_processing import task_engine
 from plaso.multi_processing import task_manager
-from plaso.storage.redis import redis_store
 
 
 class _EventSourceHeap(object):
@@ -78,7 +77,7 @@ class _EventSourceHeap(object):
     heapq.heappush(self._heap, heap_values)
 
 
-class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
+class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   """Task-based multi-process extraction engine.
 
   This class contains functionality to:
@@ -155,28 +154,27 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
     self._merge_task_on_hold = None
-    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_extraction_warnings = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
-    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_extraction_warnings = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = number_of_worker_processes
     self._path_spec_extractor = extractors.PathSpecExtractor()
-    self._processing_configuration = None
-    self._redis_client = None
     self._resolver_context = context.Context()
-    self._session_identifier = None
+    self._session = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._storage_merge_reader = None
     self._storage_merge_reader_on_hold = None
+    self._task_manager = task_manager.TaskManager()
     self._task_queue = None
     self._task_queue_port = None
-    self._task_manager = task_manager.TaskManager()
+    self._task_storage_format = None
     self._worker_memory_limit = worker_memory_limit
     self._worker_timeout = worker_timeout
 
@@ -221,7 +219,7 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StopTiming('fill_event_source_heap')
 
-  def _MergeTaskStorage(self, storage_writer):
+  def _MergeTaskStorage(self, storage_writer, session_identifier):
     """Merges a task storage with the session storage.
 
     This function checks all task stores that are ready to merge and updates
@@ -231,20 +229,14 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
     Args:
       storage_writer (StorageWriter): storage writer for a session storage used
           to merge task storage.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('merge_check')
 
-    if (self._processing_configuration.task_storage_format ==
-        definitions.STORAGE_FORMAT_REDIS):
-
-      task_identifiers, redis_client = (
-          redis_store.RedisStore.ScanForProcessedTasks(
-              self._session_identifier, redis_client=self._redis_client))
-      self._redis_client = redis_client
-
-    else:
-      task_identifiers = storage_writer.GetProcessedTaskIdentifiers()
+    task_identifiers = self._GetProcessedTaskIdentifiers(
+        self._task_storage_format, session_identifier)
 
     for task_identifier in task_identifiers:
       try:
@@ -254,13 +246,14 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
 
         to_merge = self._task_manager.CheckTaskToMerge(task)
         if not to_merge:
-          storage_writer.RemoveProcessedTaskStorage(task)
+          self._RemoveProcessedTaskStorage(self._task_storage_format, task)
 
           self._task_manager.RemoveTask(task)
           self._task_manager.SampleTaskStatus(task, 'removed_processed')
 
         else:
-          storage_writer.PrepareMergeTaskStorage(task)
+          self._PrepareMergeTaskStorage(
+              self._task_storage_format, session_identifier, task)
           self._task_manager.UpdateTaskAsPendingMerge(task)
 
       except KeyError as exception:
@@ -294,8 +287,8 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
 
         self._merge_task = task
         try:
-          self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
-              task)
+          self._storage_merge_reader = self._StartMergeTaskStorage(
+              self._storage_writer, self._task_storage_format, task)
 
           self._task_manager.SampleTaskStatus(task, 'merge_started')
 
@@ -394,7 +387,7 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
 
-    self._ScheduleTasks(storage_writer)
+    self._ScheduleTasks(storage_writer, self._session.identifier)
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED
@@ -446,11 +439,13 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
 
     return is_scheduled
 
-  def _ScheduleTasks(self, storage_writer):
+  def _ScheduleTasks(self, storage_writer, session_identifier):
     """Schedules tasks.
 
     Args:
       storage_writer (StorageWriter): storage writer for a session storage.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
     """
     logger.debug('Task scheduler started')
 
@@ -479,8 +474,7 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
 
         if not task and event_source:
           task = self._task_manager.CreateTask(
-              self._session_identifier,
-              storage_format=self._processing_configuration.task_storage_format)
+              session_identifier, storage_format=self._task_storage_format)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
           event_source = None
@@ -501,7 +495,7 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
           else:
             self._task_manager.SampleTaskStatus(task, 'schedule_attempted')
 
-        self._MergeTaskStorage(storage_writer)
+        self._MergeTaskStorage(storage_writer, session_identifier)
 
         if not event_source_heap.IsFull():
           self._FillEventSourceHeap(storage_writer, event_source_heap)
@@ -557,8 +551,7 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
 
     process = extraction_process.ExtractionWorkerProcess(
         task_queue, storage_writer, self.collection_filters_helper,
-        self.knowledge_base, self._session_identifier,
-        self._processing_configuration,
+        self.knowledge_base, self._session, self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging
@@ -758,7 +751,7 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
   def ProcessSources(
       self, session, source_path_specs, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
-      status_update_callback=None):
+      status_update_callback=None, storage_file_path=None):
     """Processes the sources and extract events.
 
     Args:
@@ -772,6 +765,7 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
           should be enabled.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      storage_file_path (Optional[str]): path to the session storage file.
 
     Returns:
       ProcessingStatus: processing status.
@@ -783,9 +777,11 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
 
     self._debug_output = processing_configuration.debug_output
     self._log_filename = processing_configuration.log_filename
-    self._session_identifier = session.identifier
+    self._session = session
     self._status_update_callback = status_update_callback
+    self._storage_file_path = storage_file_path
     self._storage_writer = storage_writer
+    self._task_storage_format = processing_configuration.task_storage_format
 
     # Set up the task queue.
     task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
@@ -810,8 +806,8 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
     if self._storage_profiler:
       storage_writer.SetStorageProfiler(self._storage_profiler)
 
-    # Set up the storage writer before the worker processes.
-    storage_writer.StartTaskStorage()
+    # Set up the task storage before the worker processes.
+    self._StartTaskStorage(self._task_storage_format)
 
     for worker_number in range(self._number_of_worker_processes):
       # First argument to _StartWorkerProcess is not used.
@@ -877,7 +873,7 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
       task_storage_abort = self._abort
 
     try:
-      storage_writer.StopTaskStorage(abort=task_storage_abort)
+      self._StopTaskStorage(self._task_storage_format, abort=task_storage_abort)
     except (IOError, OSError) as exception:
       logger.error('Unable to stop task storage with error: {0!s}'.format(
           exception))
@@ -893,8 +889,10 @@ class ExtractionMultiProcessEngine(engine.MultiProcessEngine):
 
     self._processing_configuration = None
 
-    self._session_identifier = None
+    self._session = None
     self._status_update_callback = None
+    self._storage_file_path = None
     self._storage_writer = None
+    self._task_storage_format = None
 
     return self._processing_status

@@ -335,12 +335,11 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
-      storage_writer.StartTaskStorage()
-
       storage_writer.Open()
 
       # TODO: implement, this currently loops infinite.
-      # test_engine._AnalyzeEvents(storage_writer, [test_plugin])
+      # test_engine._AnalyzeEvents(
+      # storage_writer, [test_plugin], storage_file_path=temp_directory)
       storage_writer.Close()
 
     test_filter = filters_test_lib.TestEventFilter()
@@ -353,8 +352,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
-      storage_writer.StartTaskStorage()
-
       storage_writer.Open()
 
       # TODO: implement, this currently loops infinite.
@@ -362,7 +359,8 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       _ = test_plugin
       _ = test_filter
       # test_engine._AnalyzeEvents(
-      #    storage_writer, [test_plugin], event_filter=test_filter)
+      #    storage_writer, [test_plugin], event_filter=test_filter,
+      #    storage_file_path=temp_directory)
       storage_writer.Close()
 
   # TODO: add test for _CheckStatusAnalysisProcess.
@@ -460,7 +458,6 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     analysis_plugins = {'tagging': analysis_plugin}
 
     configuration = configurations.ProcessingConfiguration()
-
     test_engine = psort.PsortMultiProcessEngine()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -471,8 +468,9 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
       counter = test_engine.AnalyzeEvents(
-          knowledge_base_object, storage_writer, output_module, data_location,
-          analysis_plugins, configuration)
+          session, knowledge_base_object, storage_writer, output_module,
+          data_location, analysis_plugins, configuration,
+          storage_file_path=temp_directory)
 
     # TODO: assert if tests were successful.
     _ = counter
@@ -487,8 +485,9 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
       counter = test_engine.AnalyzeEvents(
-          knowledge_base_object, storage_writer, data_location,
-          analysis_plugins, configuration, event_filter=test_filter)
+          session, knowledge_base_object, storage_writer, data_location,
+          analysis_plugins, configuration, event_filter=test_filter,
+          storage_file_path=temp_directory)
 
     # TODO: assert if tests were successful.
     _ = counter

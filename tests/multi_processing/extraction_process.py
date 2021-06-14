@@ -13,6 +13,7 @@ from plaso.engine import configurations
 from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.engine import zeromq_queue
+from plaso.lib import definitions
 from plaso.multi_processing import extraction_process
 
 from tests import test_lib as shared_test_lib
@@ -56,8 +57,8 @@ class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
     raise dfvfs_errors.CacheFullError()
 
 
-class ExtractionWorkerProcessTest(test_lib.MultiProcessingTestCase):
-  """Tests the multi-processing extraction worker process."""
+class WorkerProcessTest(test_lib.MultiProcessingTestCase):
+  """Tests the multi-processing worker process."""
 
   # pylint: disable=protected-access
 
@@ -65,34 +66,42 @@ class ExtractionWorkerProcessTest(test_lib.MultiProcessingTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    test_process = extraction_process.ExtractionWorkerProcess(
-        None, None, None, None, None, None, name='TestWorker')
-    self.assertIsNotNone(test_process)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      configuration = configurations.ProcessingConfiguration()
+      configuration.task_storage_path = temp_directory
+
+      test_process = extraction_process.ExtractionWorkerProcess(
+          None, None, None, None, None, configuration, name='TestWorker')
+      self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
     """Tests the _GetStatus function."""
-    test_process = extraction_process.ExtractionWorkerProcess(
-        None, None, None, None, None, None, name='TestWorker')
-    status_attributes = test_process._GetStatus()
+    with shared_test_lib.TempDirectory() as temp_directory:
+      configuration = configurations.ProcessingConfiguration()
+      configuration.task_storage_path = temp_directory
 
-    self.assertIsNotNone(status_attributes)
-    self.assertEqual(status_attributes['identifier'], 'TestWorker')
-    self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
-    self.assertIsNone(
-        status_attributes['number_of_produced_extraction_warnings'])
+      test_process = extraction_process.ExtractionWorkerProcess(
+          None, None, None, None, None, configuration, name='TestWorker')
+      status_attributes = test_process._GetStatus()
 
-    session = sessions.Session()
-    storage_writer = self._CreateStorageWriter(session)
-    knowledge_base = self._CreateKnowledgeBase()
-    test_process._parser_mediator = self._CreateParserMediator(
-        storage_writer, knowledge_base)
-    status_attributes = test_process._GetStatus()
+      self.assertIsNotNone(status_attributes)
+      self.assertEqual(status_attributes['identifier'], 'TestWorker')
+      self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
+      self.assertIsNone(
+          status_attributes['number_of_produced_extraction_warnings'])
 
-    self.assertIsNotNone(status_attributes)
-    self.assertEqual(status_attributes['identifier'], 'TestWorker')
-    self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
-    self.assertEqual(
-        status_attributes['number_of_produced_extraction_warnings'], 0)
+      session = sessions.Session()
+      storage_writer = self._CreateStorageWriter(session)
+      knowledge_base = self._CreateKnowledgeBase()
+      test_process._parser_mediator = self._CreateParserMediator(
+          storage_writer, knowledge_base)
+      status_attributes = test_process._GetStatus()
+
+      self.assertIsNotNone(status_attributes)
+      self.assertEqual(status_attributes['identifier'], 'TestWorker')
+      self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
+      self.assertEqual(
+          status_attributes['number_of_produced_extraction_warnings'], 0)
 
   def testMain(self):
     """Tests the _Main function."""
@@ -105,59 +114,70 @@ class ExtractionWorkerProcessTest(test_lib.MultiProcessingTestCase):
         delay_open=True, linger_seconds=0, name='test input task queue',
         port=output_task_queue.port, timeout_seconds=self._QUEUE_TIMEOUT)
 
-    configuration = configurations.ProcessingConfiguration()
+    with shared_test_lib.TempDirectory() as temp_directory:
+      configuration = configurations.ProcessingConfiguration()
+      configuration.task_storage_path = temp_directory
 
-    test_process = extraction_process.ExtractionWorkerProcess(
-        input_task_queue, None, None, None, None, configuration,
-        name='TestWorker')
+      test_process = extraction_process.ExtractionWorkerProcess(
+          input_task_queue, None, None, None, None, configuration,
+          name='TestWorker')
 
-    test_process.start()
+      test_process.start()
 
-    output_task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
-    output_task_queue.Close(abort=True)
+      output_task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+      output_task_queue.Close(abort=True)
 
   def testProcessPathSpec(self):
     """Tests the _ProcessPathSpec function."""
-    configuration = configurations.ProcessingConfiguration()
+    with shared_test_lib.TempDirectory() as temp_directory:
+      configuration = configurations.ProcessingConfiguration()
+      configuration.task_storage_path = temp_directory
 
-    test_process = extraction_process.ExtractionWorkerProcess(
-        None, None, None, None, None, configuration, name='TestWorker')
+      test_process = extraction_process.ExtractionWorkerProcess(
+          None, None, None, None, None, configuration, name='TestWorker')
 
-    session = sessions.Session()
-    storage_writer = self._CreateStorageWriter(session)
-    knowledge_base = self._CreateKnowledgeBase()
-    parser_mediator = self._CreateParserMediator(storage_writer, knowledge_base)
+      session = sessions.Session()
+      storage_writer = self._CreateStorageWriter(session)
+      knowledge_base = self._CreateKnowledgeBase()
+      parser_mediator = self._CreateParserMediator(
+          storage_writer, knowledge_base)
 
-    path_spec = fake_path_spec.FakePathSpec(location='/test/file')
+      path_spec = fake_path_spec.FakePathSpec(location='/test/file')
 
-    extraction_worker = TestEventExtractionWorker()
-    test_process._ProcessPathSpec(extraction_worker, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_extraction_warnings, 0)
+      extraction_worker = TestEventExtractionWorker()
+      test_process._ProcessPathSpec(
+          extraction_worker, parser_mediator, path_spec)
+      self.assertEqual(parser_mediator._number_of_extraction_warnings, 0)
 
-    extraction_worker = TestFailureEventExtractionWorker()
-    test_process._ProcessPathSpec(extraction_worker, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_extraction_warnings, 0)
-    self.assertTrue(test_process._abort)
+      extraction_worker = TestFailureEventExtractionWorker()
+      test_process._ProcessPathSpec(
+          extraction_worker, parser_mediator, path_spec)
+      self.assertEqual(parser_mediator._number_of_extraction_warnings, 0)
+      self.assertTrue(test_process._abort)
 
-    test_process._ProcessPathSpec(None, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_extraction_warnings, 1)
+      test_process._ProcessPathSpec(None, parser_mediator, path_spec)
+      self.assertEqual(parser_mediator._number_of_extraction_warnings, 1)
 
   def testProcessTask(self):
     """Tests the _ProcessTask function."""
     session = sessions.Session()
     storage_writer = self._CreateStorageWriter(session)
     knowledge_base = self._CreateKnowledgeBase()
-    configuration = configurations.ProcessingConfiguration()
 
-    test_process = extraction_process.ExtractionWorkerProcess(
-        None, storage_writer, None, knowledge_base, session.identifier,
-        configuration, name='TestWorker')
-    test_process._extraction_worker = TestEventExtractionWorker()
-    test_process._parser_mediator = self._CreateParserMediator(
-        storage_writer, knowledge_base)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      configuration = configurations.ProcessingConfiguration()
+      configuration.task_storage_path = temp_directory
+      configuration.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
-    task = tasks.Task(session_identifier=session.identifier)
-    test_process._ProcessTask(task)
+      test_process = extraction_process.ExtractionWorkerProcess(
+          None, storage_writer, None, knowledge_base, session.identifier,
+          configuration, name='TestWorker')
+      test_process._extraction_worker = TestEventExtractionWorker()
+      test_process._parser_mediator = self._CreateParserMediator(
+          storage_writer, knowledge_base)
+
+      task = tasks.Task(session_identifier=session.identifier)
+      test_process._ProcessTask(task)
 
   def testStartAndStopProfiling(self):
     """Tests the _StartProfiling and _StopProfiling functions."""
@@ -167,6 +187,7 @@ class ExtractionWorkerProcessTest(test_lib.MultiProcessingTestCase):
       configuration.profiling.profilers = set([
           'memory', 'parsers', 'processing', 'serializers', 'storage',
           'task_queue'])
+      configuration.task_storage_path = temp_directory
 
       test_process = extraction_process.ExtractionWorkerProcess(
           None, None, None, None, None, configuration, name='TestWorker')
@@ -179,9 +200,13 @@ class ExtractionWorkerProcessTest(test_lib.MultiProcessingTestCase):
 
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
-    test_process = extraction_process.ExtractionWorkerProcess(
-        None, None, None, None, None, None, name='TestWorker')
-    test_process.SignalAbort()
+    with shared_test_lib.TempDirectory() as temp_directory:
+      configuration = configurations.ProcessingConfiguration()
+      configuration.task_storage_path = temp_directory
+
+      test_process = extraction_process.ExtractionWorkerProcess(
+          None, None, None, None, None, configuration, name='TestWorker')
+      test_process.SignalAbort()
 
 
 if __name__ == '__main__':

@@ -2,14 +2,10 @@
 """Storage interface classes for file-backed stores."""
 
 import abc
-import os
-import shutil
-import tempfile
 
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import interface
-from plaso.storage.redis import redis_store
 
 
 class SerializedAttributeContainerList(object):
@@ -500,11 +496,8 @@ class StorageFileWriter(interface.StorageWriter):
     """
     super(StorageFileWriter, self).__init__(
         session, storage_type=storage_type, task=task)
-    self._merge_task_storage_path = ''
     self._output_file = output_file
-    self._processed_task_storage_path = ''
     self._storage_file = None
-    self._task_storage_path = None
 
   @abc.abstractmethod
   def _CreateStorageFile(self):
@@ -513,64 +506,6 @@ class StorageFileWriter(interface.StorageWriter):
     Returns:
       BaseStorageFile: storage file.
     """
-
-  @abc.abstractmethod
-  def _CreateTaskStorageMergeReader(self, task):
-    """Creates a task storage merge reader.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      StorageMergeReader: storage merge reader.
-    """
-
-  @abc.abstractmethod
-  def _CreateTaskStorageWriter(self, task):
-    """Creates a task storage writer.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      StorageWriter: storage writer.
-    """
-
-  def _GetMergeTaskStorageFilePath(self, task):
-    """Retrieves the path of a task storage file in the merge directory.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      str: path of a task storage file file in the merge directory.
-    """
-    filename = '{0:s}.plaso'.format(task.identifier)
-    return os.path.join(self._merge_task_storage_path, filename)
-
-  def _GetProcessedStorageFilePath(self, task):
-    """Retrieves the path of a task storage file in the processed directory.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      str: path of a task storage file in the processed directory.
-    """
-    filename = '{0:s}.plaso'.format(task.identifier)
-    return os.path.join(self._processed_task_storage_path, filename)
-
-  def _GetTaskStorageFilePath(self, task):
-    """Retrieves the path of a task storage file in the temporary directory.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      str: path of a task storage file in the temporary directory.
-    """
-    filename = '{0:s}.plaso'.format(task.identifier)
-    return os.path.join(self._task_storage_path, filename)
 
   def _RaiseIfNotWritable(self):
     """Raises if the storage writer is not writable.
@@ -598,10 +533,8 @@ class StorageFileWriter(interface.StorageWriter):
     self._storage_file.AddAnalysisReport(
         analysis_report, serialized_data=serialized_data)
 
-    report_identifier = analysis_report.plugin_name
-    self._session.analysis_reports_counter['total'] += 1
-    self._session.analysis_reports_counter[report_identifier] += 1
-    self.number_of_analysis_reports += 1
+    super(StorageFileWriter, self).AddAnalysisReport(
+        analysis_report, serialized_data=serialized_data)
 
   def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
     """Adds an analysis warning.
@@ -706,10 +639,8 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._storage_file.AddEventTag(event_tag, serialized_data=serialized_data)
 
-    self._session.event_labels_counter['total'] += 1
-    for label in event_tag.labels:
-      self._session.event_labels_counter[label] += 1
-    self.number_of_event_tags += 1
+    super(StorageFileWriter, self).AddEventTag(
+        event_tag, serialized_data=serialized_data)
 
   def AddExtractionWarning(self, extraction_warning, serialized_data=None):
     """Adds an extraction warning.
@@ -874,28 +805,6 @@ class StorageFileWriter(interface.StorageWriter):
       self._written_event_source_index += 1
     return event_source
 
-  def GetProcessedTaskIdentifiers(self):
-    """Identifiers for tasks which have been processed.
-
-    Returns:
-      list[str]: task identifiers that are processed.
-
-    Raises:
-      IOError: if the storage type is not supported or
-          if the temporary path for the task storage does not exist.
-      OSError: if the storage type is not supported or
-          if the temporary path for the task storage does not exist.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if not self._processed_task_storage_path:
-      raise IOError('Missing processed task storage path.')
-
-    return [
-        path.replace('.plaso', '')
-        for path in os.listdir(self._processed_task_storage_path)]
-
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
@@ -917,39 +826,6 @@ class StorageFileWriter(interface.StorageWriter):
       raise IOError('Unable to read from closed storage writer.')
 
     return self._storage_file.GetSortedEvents(time_range=time_range)
-
-  def FinalizeTaskStorage(self, task):
-    """Finalizes a processed task storage.
-
-    Moves the task storage file from its temporary directory to the processed
-    directory.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the storage type or format is not supported or
-          if the storage file cannot be renamed.
-      OSError: if the storage type or format is not supported or
-          if the storage file cannot be renamed.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if not task.storage_format in definitions.SESSION_STORAGE_FORMATS:
-      raise IOError('Unsupported storage format')
-
-    # Note that Redis task stores do not need finalization.
-    if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      storage_file_path = self._GetTaskStorageFilePath(task)
-      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
-
-      try:
-        os.rename(storage_file_path, processed_storage_file_path)
-      except OSError as exception:
-        raise IOError((
-            'Unable to rename task storage file: {0:s} with error: '
-            '{1!s}').format(storage_file_path, exception))
 
   def Open(self, **unused_kwargs):
     """Opens the storage writer.
@@ -975,73 +851,6 @@ class StorageFileWriter(interface.StorageWriter):
         self._storage_file.GetNumberOfEventSources())
     self._written_event_source_index = self._first_written_event_source_index
 
-  def PrepareMergeTaskStorage(self, task):
-    """Prepares a task storage for merging.
-
-    Moves the task storage file from the processed directory to the merge
-    directory.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the storage type or format is not supported or
-          if the storage file cannot be renamed.
-      OSError: if the storage type or format is not supported or
-          if the storage file cannot be renamed.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if task.storage_format not in definitions.TASK_STORAGE_FORMATS:
-      raise IOError('Unsupported storage format.')
-
-    if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
-      task.storage_file_size = 1000
-      redis_store.RedisStore.MarkTaskAsMerging(
-          task.identifier, self._session.identifier)
-
-    elif task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
-      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
-
-      task.storage_file_size = os.path.getsize(processed_storage_file_path)
-
-      try:
-        os.rename(processed_storage_file_path, merge_storage_file_path)
-      except OSError as exception:
-        raise IOError((
-            'Unable to rename task storage file: {0:s} with error: '
-            '{1!s}').format(processed_storage_file_path, exception))
-
-  def RemoveProcessedTaskStorage(self, task):
-    """Removes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the storage type or format is not supported or
-          if the storage file cannot be removed.
-      OSError: if the storage type or format is not supported or
-          if the storage file cannot be removed.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if task.storage_format not in definitions.TASK_STORAGE_FORMATS:
-      raise IOError('Unsupported storage format.')
-
-    if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
-
-      try:
-        os.remove(processed_storage_file_path)
-      except OSError as exception:
-        raise IOError((
-            'Unable to remove task storage file: {0:s} with error: '
-            '{1!s}').format(processed_storage_file_path, exception))
-
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
 
@@ -1061,102 +870,6 @@ class StorageFileWriter(interface.StorageWriter):
     self._storage_profiler = storage_profiler
     if self._storage_file:
       self._storage_file.SetStorageProfiler(storage_profiler)
-
-  def StartMergeTaskStorage(self, task):
-    """Starts a merge of a task store with the session storage.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      StorageMergeReader: storage merge reader of the task storage.
-
-    Raises:
-      IOError: if the storage file cannot be opened or
-          if the storage type is not supported or
-          if the temporary path for the task storage does not exist or
-          if the temporary path for the task storage doe not refers to a file.
-      OSError: if the storage file cannot be opened or
-          if the storage type is not supported or
-          if the temporary path for the task storage does not exist or
-          if the temporary path for the task storage doe not refers to a file.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if not self._merge_task_storage_path:
-      raise IOError('Missing merge task storage path.')
-
-    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
-
-    if (task.storage_format == definitions.STORAGE_FORMAT_SQLITE and not
-        os.path.isfile(merge_storage_file_path)):
-      raise IOError('Merge task storage path is not a file.')
-
-    return self._CreateTaskStorageMergeReader(task)
-
-  def StartTaskStorage(self):
-    """Creates a temporary path for the task storage.
-
-    Raises:
-      IOError: if the storage type is not supported or
-          if the temporary path for the task storage already exists.
-      OSError: if the storage type is not supported or
-          if the temporary path for the task storage already exists.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if self._task_storage_path:
-      raise IOError('Task storage path already exists.')
-
-    output_directory = os.path.dirname(self._output_file)
-    self._task_storage_path = tempfile.mkdtemp(dir=output_directory)
-
-    self._merge_task_storage_path = os.path.join(
-        self._task_storage_path, 'merge')
-    os.mkdir(self._merge_task_storage_path)
-
-    self._processed_task_storage_path = os.path.join(
-        self._task_storage_path, 'processed')
-    os.mkdir(self._processed_task_storage_path)
-
-  def StopTaskStorage(self, abort=False):
-    """Removes the temporary path for the task storage.
-
-    The results of tasks will be lost on abort.
-
-    Args:
-      abort (bool): True to indicate the stop is issued on abort.
-
-    Raises:
-      IOError: if the storage type is not supported.
-      OSError: if the storage type is not supported.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if os.path.isdir(self._merge_task_storage_path):
-      if abort:
-        shutil.rmtree(self._merge_task_storage_path)
-      else:
-        os.rmdir(self._merge_task_storage_path)
-
-    if os.path.isdir(self._processed_task_storage_path):
-      if abort:
-        shutil.rmtree(self._processed_task_storage_path)
-      else:
-        os.rmdir(self._processed_task_storage_path)
-
-    if os.path.isdir(self._task_storage_path):
-      if abort:
-        shutil.rmtree(self._task_storage_path)
-      else:
-        os.rmdir(self._task_storage_path)
-
-    self._merge_task_storage_path = None
-    self._processed_task_storage_path = None
-    self._task_storage_path = None
 
   def WriteSessionCompletion(self, aborted=False):
     """Writes session completion information.

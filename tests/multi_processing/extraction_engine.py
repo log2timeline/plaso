@@ -21,7 +21,7 @@ from tests import test_lib as shared_test_lib
 
 
 class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
-  """Tests for the task multi-process engine."""
+  """Tests for the task-based multi-process extraction engine."""
 
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
@@ -57,7 +57,8 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       test_engine.PreprocessSources(
           registry, [source_path_spec], storage_writer)
       test_engine.ProcessSources(
-          session, [source_path_spec], storage_writer, configuration)
+          session, [source_path_spec], storage_writer, configuration,
+          storage_file_path=temp_directory)
 
     self.assertEqual(storage_writer.number_of_events, 15)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)

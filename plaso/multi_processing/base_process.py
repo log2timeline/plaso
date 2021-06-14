@@ -18,7 +18,7 @@ from plaso.multi_processing import plaso_xmlrpc
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
-  """Multi-processing process interface.
+  """Interface for multi-processing process.
 
   Attributes:
     rpc_port (int): port number of the process status RPC server.

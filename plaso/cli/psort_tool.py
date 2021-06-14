@@ -524,11 +524,12 @@ class PsortTool(
           worker_timeout=self._worker_timeout)
 
       analysis_engine.AnalyzeEvents(
-          self._knowledge_base, storage_writer, self._data_location,
+          session, self._knowledge_base, storage_writer, self._data_location,
           self._analysis_plugins, configuration,
           event_filter=self._event_filter,
           event_filter_expression=self._event_filter_expression,
-          status_update_callback=status_update_callback)
+          status_update_callback=status_update_callback,
+          storage_file_path=self._storage_file_path)
 
       analysis_counter = collections.Counter()
       for item, value in session.analysis_reports_counter.items():

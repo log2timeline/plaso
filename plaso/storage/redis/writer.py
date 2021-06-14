@@ -31,35 +31,6 @@ class RedisStorageWriter(interface.StorageWriter):
         task.session_identifier, task.identifier)
     self._store = None
 
-  def CreateTaskStorage(self, task, task_storage_format):
-    """Creates a task storage.
-
-    Args:
-      task (Task): task.
-      task_storage_format (str): storage format to store task results.
-
-    Raises:
-      IOError: always, as creating a task is not supported by the Redis store.
-      OSError: always, as creating a task is not supported by the Redis store.
-    """
-    raise IOError(
-        'Creating a task storage is not supported by the redis store.')
-
-  def FinalizeTaskStorage(self, task):
-    """Finalizes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: always, as creating a finalizing a task storage is not supported
-          by the Redis store.
-      OSError: always, as creating a finalizing a task storage is not supported
-          by the Redis store.
-    """
-    raise IOError(
-        'Finalizing a task storage is not supported by the redis store.')
-
   # pylint: disable=arguments-differ
   def Open(self, redis_client=None, **unused_kwargs):
     """Opens the storage writer.
@@ -91,15 +62,6 @@ class RedisStorageWriter(interface.StorageWriter):
     self._store.Finalize()
     self._store = None
 
-  def PrepareMergeTaskStorage(self, task):
-    """Prepares a task storage for merging.
-
-    Args:
-      task (Task): task.
-    """
-    # No preparations are necessary.
-    return
-
   def AddAnalysisReport(self, analysis_report, serialized_data=None):
     """Adds an analysis report.
 
@@ -109,6 +71,9 @@ class RedisStorageWriter(interface.StorageWriter):
           report.
     """
     self._store.AddAnalysisReport(
+        analysis_report, serialized_data=serialized_data)
+
+    super(RedisStorageWriter, self).AddAnalysisReport(
         analysis_report, serialized_data=serialized_data)
 
   def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
@@ -174,6 +139,9 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddEventTag(event_tag, serialized_data=serialized_data)
 
+    super(RedisStorageWriter, self).AddEventTag(
+        event_tag, serialized_data=serialized_data)
+
   def AddExtractionWarning(self, extraction_warning, serialized_data=None):
     """Adds an extraction warning.
 
@@ -207,17 +175,6 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddRecoveryWarning(
         recovery_warning, serialized_data=serialized_data)
-
-  def CheckTaskReadyForMerge(self, task):
-    """Checks if a task is ready for merging into the store.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      bool: True if the task is ready to be merged.
-    """
-    return self._store.IsFinalized()
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
@@ -323,21 +280,6 @@ class RedisStorageWriter(interface.StorageWriter):
           information.
     """
     raise IOError('Preprocessing information not supported by the redis store.')
-
-  def RemoveProcessedTaskStorage(self, task):
-    """Removes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: always, as the Redis store does not support removing a task
-          store.
-      OSError: always, as the Redis store does not support removing a task
-          store.
-    """
-    raise IOError(
-        'Removing a task store is not supported by the redis store.')
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
