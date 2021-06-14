@@ -22,7 +22,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     storage_type (str): storage type.
   """
 
-  _FORMAT_VERSION = 20210514
+  _FORMAT_VERSION = 20210606
+
+  _FLATTENED_EVENT_TAG_FORMAT_VERSION = 20210606
 
   # The earliest format version, stored in-file, that this class
   # is able to append (write).
@@ -48,10 +50,16 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       '_data {1:s});')
 
   _CREATE_EVENT_TABLE_QUERY = (
-      'CREATE TABLE {0:s} ('
+      'CREATE TABLE event ('
       '_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
       '_timestamp BIGINT,'
-      '_data {1:s});')
+      '_data {0:s});')
+
+  _CREATE_FLATTEND_EVENT_TAG_TABLE_QUERY = (
+      'CREATE TABLE event_tag ('
+      '_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
+      '_event_identifier INTEGER,'
+      '_data {0:s});')
 
   _HAS_TABLE_QUERY = (
       'SELECT name FROM sqlite_master '
@@ -94,6 +102,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     if storage_type == definitions.STORAGE_TYPE_SESSION:
       self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
+      self.compression_format = definitions.COMPRESSION_FORMAT_NONE
     else:
       self.compression_format = definitions.COMPRESSION_FORMAT_NONE
 
@@ -103,7 +112,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
   def _AddAttributeContainer(
       self, container_type, container, serialized_data=None):
-    """Adds an attribute container.
+    """Adds a new attribute container.
 
     Args:
       container_type (str): attribute container type.
@@ -251,8 +260,13 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       data_column_type = 'TEXT'
 
     if container_type == self._CONTAINER_TYPE_EVENT:
-      query = self._CREATE_EVENT_TABLE_QUERY.format(
-          container_type, data_column_type)
+      query = self._CREATE_EVENT_TABLE_QUERY.format(data_column_type)
+
+    elif (self.format_version >= self._FLATTENED_EVENT_TAG_FORMAT_VERSION and
+          container_type == self._CONTAINER_TYPE_EVENT_TAG):
+      query = self._CREATE_FLATTEND_EVENT_TAG_TABLE_QUERY.format(
+          data_column_type)
+
     else:
       query = self._CREATE_TABLE_QUERY.format(container_type, data_column_type)
 
@@ -661,10 +675,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     """
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       timestamp, serialized_data = self._serialized_event_heap.PopEvent()
-    else:
-      if not serialized_data:
-        serialized_data = self._SerializeAttributeContainer(
-            attribute_container)
+
+    elif not serialized_data:
+      serialized_data = self._SerializeAttributeContainer(attribute_container)
 
     if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
       compressed_data = zlib.compress(serialized_data)
@@ -675,6 +688,13 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
       values = (timestamp, serialized_data)
+
+    elif (self.format_version >= self._FLATTENED_EVENT_TAG_FORMAT_VERSION and
+          attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG):
+      event_identifier = attribute_container.GetEventIdentifier()
+      query = 'INSERT INTO event_tag (_event_identifier, _data) VALUES (?, ?)'
+      values = (event_identifier.row_identifier, serialized_data)
+
     else:
       query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(
           attribute_container.CONTAINER_TYPE)
@@ -844,10 +864,41 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     """
     self._RaiseIfNotWritable()
 
-    # The serialized data is not used, as this method modifies the attribute
-    # container.
-    self._UpdateEventIdentifierBeforeSerialize(event_tag)
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
+    if self.format_version < self._FLATTENED_EVENT_TAG_FORMAT_VERSION:
+      # Do not flatten the event tag and fall back to appending.
+
+      # The serialized data is not used, as this method modifies the attribute
+      # container.
+      self._UpdateEventIdentifierBeforeSerialize(event_tag)
+      self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT_TAG, event_tag)
+
+    else:
+      event_identifier = event_tag.GetEventIdentifier()
+      filter_expression = '_event_identifier = {0:d}'.format(
+          event_identifier.row_identifier)
+
+      existing_event_tags = list(self._GetAttributeContainers(
+          self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression))
+
+      if len(existing_event_tags) == 1:
+        existing_event_tags[0].AddLabels(event_tag.labels)
+
+        identifier = existing_event_tags[0].GetIdentifier()
+        serialized_data = self._SerializeAttributeContainer(
+            existing_event_tags[0])
+
+        if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+          compressed_data = zlib.compress(serialized_data)
+          serialized_data = sqlite3.Binary(compressed_data)
+
+        query = (
+            'UPDATE event_tag SET _data = ? '
+            'WHERE _identifier = {0:d}').format(identifier.row_identifier)
+        self._cursor.execute(query, (serialized_data, ))
+
+      else:
+        self._UpdateEventIdentifierBeforeSerialize(event_tag)
+        self._WriteAttributeContainer(event_tag)
 
   @classmethod
   def CheckSupportedFormat(cls, path, check_readable_only=False):
@@ -906,8 +957,11 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EVENT_DATA)
       self._WriteSerializedAttributeContainerList(self._CONTAINER_TYPE_EVENT)
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_EVENT_TAG)
+
+      if self.format_version < self._FLATTENED_EVENT_TAG_FORMAT_VERSION:
+        self._WriteSerializedAttributeContainerList(
+            self._CONTAINER_TYPE_EVENT_TAG)
+
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EXTRACTION_WARNING)
       self._WriteSerializedAttributeContainerList(

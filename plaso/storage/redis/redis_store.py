@@ -62,9 +62,9 @@ class RedisStore(interface.BaseStore):
 
   def _AddAttributeContainer(
       self, container_type, container, serialized_data=None):
-    """Adds an attribute container to the store.
+    """Adds a new attribute container.
 
-   Args:
+    Args:
       container_type (str): container type attribute of the container being
           added.
       container (AttributeContainer): unserialized attribute container.

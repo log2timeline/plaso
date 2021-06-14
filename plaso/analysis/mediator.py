@@ -105,8 +105,6 @@ class AnalysisMediator(object):
     self._storage_writer.AddAnalysisReport(analysis_report)
 
     self.number_of_produced_analysis_reports += 1
-    self.number_of_produced_event_tags = (
-        self._storage_writer.number_of_event_tags)
 
     self.last_activity_timestamp = time.time()
 
