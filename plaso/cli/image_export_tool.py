@@ -45,6 +45,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   EPILOG = 'And that is how you export files, plaso style.'
 
+  _COPY_BUFFER_SIZE = 32768
+
   _DIRTY_CHARACTERS = frozenset([
       '\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07',
       '\x08', '\x09', '\x0a', '\x0b', '\x0c', '\x0d', '\x0e', '\x0f',
@@ -53,7 +55,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       os.path.sep, '!', '$', '%', '&', '*', '+', ':', ';', '<', '>',
       '?', '@', '|', '~', '\x7f'])
 
-  _COPY_BUFFER_SIZE = 32768
+  _HASHES_FILENAME = 'hashes.json'
 
   _READ_BUFFER_SIZE = 4096
 
@@ -66,8 +68,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
 
   _SPECIFICATION_FILE_ENCODING = 'utf-8'
-
-  _HASHES_FILENAME = 'hashes.json'
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -344,8 +344,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           path_spec, resolver_context=self._resolver_context)
 
       if not file_entry:
-        logger.warning('Unable to open file entry for path spec: {0:s}'.format(
-            path_spec.comparable))
+        path_spec_string = self._GetPathSpecificationString(path_spec)
+        logger.warning(
+            'Unable to open file entry for path specfication: {0:s}'.format(
+                path_spec_string))
         continue
 
       skip_file_entry = False

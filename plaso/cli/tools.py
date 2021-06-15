@@ -5,6 +5,7 @@ import abc
 import codecs
 import datetime
 import locale
+import re
 import sys
 import time
 import textwrap
@@ -32,13 +33,16 @@ class CLITool(object):
     show_troubleshooting (bool): True if troubleshooting information should
         be shown.
   """
+
+  NAME = ''
+
   # The maximum number of characters of a line written to the output writer.
   _LINE_LENGTH = 80
 
   # The fall back preferred encoding.
   _PREFERRED_ENCODING = 'utf-8'
 
-  NAME = ''
+  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes a command line interface tool.
@@ -131,6 +135,25 @@ class CLITool(object):
         memory_limit = resource.RLIM_INFINITY
 
       resource.setrlimit(resource.RLIMIT_DATA, (memory_limit, memory_limit))
+
+  def _GetPathSpecificationString(self, path_spec):
+    """Retrieves a printable string representation of the path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: printable string representation of the path specification.
+    """
+    path_spec_string = path_spec.comparable
+
+    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
+      path_spec_string = path_spec_string.encode(
+          'utf-8', errors='surrogateescape')
+      path_spec_string = path_spec_string.decode(
+          'utf-8', errors='backslashreplace')
+
+    return path_spec_string
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.

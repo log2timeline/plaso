@@ -5,7 +5,6 @@ import argparse
 import collections
 import json
 import os
-import re
 import uuid
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -45,8 +44,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
   _DEFAULT_OUTPUT_FORMAT = 'text'
   _SUPPORTED_OUTPUT_FORMATS = ['json', 'markdown', 'text']
-
-  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -292,25 +289,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           title='Reports generated per plugin')
 
     return stores_are_identical
-
-  def _GetPathSpecificationString(self, path_spec):
-    """Retrieves a printable string representation of the path specification.
-
-    Args:
-      path_spec (dfvfs.PathSpec): path specification.
-
-    Returns:
-      str: printable string representation of the path specification.
-    """
-    path_spec_string = path_spec.comparable
-
-    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
-      path_spec_string = path_spec_string.encode(
-          'utf-8', errors='surrogateescape')
-      path_spec_string = path_spec_string.decode(
-          'utf-8', errors='backslashreplace')
-
-    return path_spec_string
 
   def _PrintAnalysisReportCounter(
       self, analysis_reports_counter, session_identifier=None):
