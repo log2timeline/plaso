@@ -271,17 +271,17 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
       parser_mediator (ParserMediator): parser mediator.
       path_spec (dfvfs.PathSpec): path specification.
     """
-    self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
-        path_spec)
-
-    self._CacheFileSystem(path_spec)
-
     excluded_find_specs = None
     if self._collection_filters_helper:
       excluded_find_specs = (
           self._collection_filters_helper.excluded_file_system_find_specs)
 
+    self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
+        path_spec)
+
     try:
+      self._CacheFileSystem(path_spec)
+
       extraction_worker.ProcessPathSpec(
           parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
 
