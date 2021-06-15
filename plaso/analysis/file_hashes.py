@@ -86,7 +86,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     lines_of_text = ['Listing file paths and hashes']
     for path_spec, hashes in sorted(
         self._paths_with_hashes.items(),
-        key=lambda tuple: tuple[0].comparable):
+        key=lambda path_spec_and_hash: path_spec_and_hash[0].comparable):
 
       path_string = self._GeneratePathString(mediator, path_spec, hashes)
       lines_of_text.append(path_string)

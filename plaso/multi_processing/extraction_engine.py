@@ -5,6 +5,7 @@ import heapq
 import logging
 import multiprocessing
 import os
+import re
 import time
 import traceback
 
@@ -95,6 +96,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   _WORKER_PROCESSES_MAXIMUM = 15
 
   _TASK_QUEUE_TIMEOUT_SECONDS = 2
+
+  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
@@ -218,6 +221,25 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('fill_event_source_heap')
+
+  def _GetPathSpecificationString(self, path_spec):
+    """Retrieves a printable string representation of the path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: printable string representation of the path specification.
+    """
+    path_spec_string = path_spec.comparable
+
+    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
+      path_spec_string = path_spec_string.encode(
+          'utf-8', errors='surrogateescape')
+      path_spec_string = path_spec_string.decode(
+          'utf-8', errors='backslashreplace')
+
+    return path_spec_string
 
   def _MergeTaskStorage(self, storage_writer, session_identifier):
     """Merges a task storage with the session storage.
@@ -483,10 +505,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         if task:
           if self._ScheduleTask(task):
-            task_path_spec_string = task.path_spec.comparable.replace('\n', ' ')
+            path_spec_string = self._GetPathSpecificationString(task.path_spec)
             logger.debug(
-                'Scheduled task {0:s} for path specification {1:s}'.format(
-                    task.identifier, task_path_spec_string))
+                'Scheduled task: {0:s} for path specification: {1:s}'.format(
+                    task.identifier, path_spec_string.replace('\n', ' ')))
 
             self._task_manager.SampleTaskStatus(task, 'scheduled')
 

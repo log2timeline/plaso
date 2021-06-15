@@ -5,6 +5,7 @@ An extractor is a class used to extract information from "raw" data.
 """
 
 import copy
+import re
 
 import pysigscan
 
@@ -348,6 +349,8 @@ class PathSpecExtractor(object):
 
   _MAXIMUM_DEPTH = 255
 
+  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
+
   def _ExtractPathSpecs(
       self, path_spec, find_specs=None, recurse_file_system=True,
       resolver_context=None):
@@ -375,13 +378,15 @@ class PathSpecExtractor(object):
           exception))
 
     if not file_entry:
-      logger.warning('Unable to open: {0:s}'.format(path_spec.comparable))
+      path_spec_string = self._GetPathSpecificationString(path_spec)
+      logger.warning('Unable to open: {0:s}'.format(path_spec_string))
 
     elif (not file_entry.IsDirectory() and not file_entry.IsFile() and
           not file_entry.IsDevice()):
+      path_spec_string = self._GetPathSpecificationString(path_spec)
       logger.warning((
           'Source path specification not a device, file or directory.\n'
-          '{0:s}').format(path_spec.comparable))
+          '{0:s}').format(path_spec_string))
 
     elif file_entry.IsFile():
       yield path_spec
@@ -419,10 +424,11 @@ class PathSpecExtractor(object):
         if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
           continue
       except dfvfs_errors.BackEndError as exception:
+        path_spec_string = self._GetPathSpecificationString(
+            sub_file_entry.path_spec)
         logger.warning(
             'Unable to process file: {0:s} with error: {1!s}'.format(
-                sub_file_entry.path_spec.comparable.replace(
-                    '\n', ';'), exception))
+                path_spec_string.replace('\n', ';'), exception))
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles
@@ -523,6 +529,25 @@ class PathSpecExtractor(object):
           dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
         logger.warning('{0!s}'.format(exception))
+
+  def _GetPathSpecificationString(self, path_spec):
+    """Retrieves a printable string representation of the path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: printable string representation of the path specification.
+    """
+    path_spec_string = path_spec.comparable
+
+    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
+      path_spec_string = path_spec_string.encode(
+          'utf-8', errors='surrogateescape')
+      path_spec_string = path_spec_string.decode(
+          'utf-8', errors='backslashreplace')
+
+    return path_spec_string
 
   def ExtractPathSpecs(
       self, path_specs, find_specs=None, recurse_file_system=True,
