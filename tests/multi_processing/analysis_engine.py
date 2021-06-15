@@ -250,6 +250,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     # TODO: assert if tests were successful.
     _ = counter
 
+    test_engine = analysis_engine.AnalysisMultiProcessEngine()
     test_filter = filters_test_lib.TestEventFilter()
 
     with shared_test_lib.TempDirectory() as temp_directory:
