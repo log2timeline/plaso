@@ -3,7 +3,6 @@
 
 from plaso.analysis import browser_search
 from plaso.analysis import chrome_extension
-from plaso.analysis import file_hashes
 from plaso.analysis import nsrlsvr
 from plaso.analysis import sessionize
 from plaso.analysis import tagging
