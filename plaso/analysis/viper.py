@@ -105,6 +105,7 @@ class ViperAnalyzer(hash_tagging.HTTPHashAnalyzer):
     Raises:
       ValueError: if the protocol is not supported.
     """
+    protocol = protocol.lower().strip()
     if protocol not in self.SUPPORTED_PROTOCOLS:
       raise ValueError('Unsupported protocol: {0!s}'.format(protocol))
 
@@ -140,7 +141,7 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     super(ViperAnalysisPlugin, self).__init__(ViperAnalyzer)
 
   def GenerateLabels(self, hash_information):
-    """Generates a list of strings that will be used in the event tag.
+    """Generates a list of labels that will be used in the event tag.
 
     Args:
       hash_information (dict[str, object]): JSON decoded contents of the result
@@ -166,18 +167,18 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
     if not projects:
       return ['viper_not_present']
-    strings = ['viper_present']
 
+    labels = ['viper_present']
     for project_name in projects:
       label = events.EventTag.CopyTextToLabel(
           project_name, prefix='viper_project_')
-      strings.append(label)
+      labels.append(label)
 
     for tag_name in tags:
       label = events.EventTag.CopyTextToLabel(tag_name, prefix='viper_tag_')
-      strings.append(label)
+      labels.append(label)
 
-    return strings
+    return labels
 
   def SetHost(self, host):
     """Sets the address or hostname of the server running Viper server.
@@ -202,11 +203,8 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
       protocol (str): protocol to use to query Viper. Either 'http' or 'https'.
 
     Raises:
-      ValueError: If an invalid protocol is selected.
+      ValueError: if the protocol is not supported.
     """
-    protocol = protocol.lower().strip()
-    if protocol not in ['http', 'https']:
-      raise ValueError('Invalid protocol specified for Viper lookup')
     self._analyzer.SetProtocol(protocol)
 
   def TestConnection(self):

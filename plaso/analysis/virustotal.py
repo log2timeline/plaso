@@ -8,15 +8,19 @@ from plaso.lib import errors
 
 
 class VirusTotalAnalyzer(hash_tagging.HTTPHashAnalyzer):
-  """Class that analyzes file hashes by consulting VirusTotal."""
+  """Class that analyzes file hashes by consulting VirusTotal.
 
-  _VIRUSTOTAL_API_REPORT_URL = (
-      'https://www.virustotal.com/vtapi/v2/file/report')
+  The API is documented here:
+  https://developers.virustotal.com/reference
+  """
+
+  SUPPORTED_HASHES = ['md5', 'sha1', 'sha256']
 
   _EICAR_SHA256 = (
       '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f')
 
-  SUPPORTED_HASHES = ['md5', 'sha1', 'sha256']
+  _VIRUSTOTAL_API_REPORT_URL = (
+      'https://www.virustotal.com/vtapi/v2/file/report')
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a VirusTotal analyzer.
@@ -29,7 +33,6 @@ class VirusTotalAnalyzer(hash_tagging.HTTPHashAnalyzer):
     super(VirusTotalAnalyzer, self).__init__(
         hash_queue, hash_analysis_queue, **kwargs)
     self._api_key = None
-    self._checked_for_old_python_version = False
 
   def _QueryHashes(self, digests):
     """Queries VirusTotal for a specific hashes.
@@ -54,9 +57,6 @@ class VirusTotalAnalyzer(hash_tagging.HTTPHashAnalyzer):
 
   def Analyze(self, hashes):
     """Looks up hashes in VirusTotal using the VirusTotal HTTP API.
-
-    The API is documented here:
-    https://developers.virustotal.com/reference
 
     Args:
       hashes (list[str]): hashes to look up.
@@ -119,7 +119,6 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   def __init__(self):
     """Initializes a VirusTotal analysis plugin."""
     super(VirusTotalAnalysisPlugin, self).__init__(VirusTotalAnalyzer)
-    self._api_key = None
 
   def EnableFreeAPIKeyRateLimit(self):
     """Configures Rate limiting for queries to VirusTotal.
