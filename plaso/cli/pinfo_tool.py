@@ -66,7 +66,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
     self._output_filename = None
-    self._output_format = None
+    self._output_format = 'text'
     self._preferred_hash_type = 'sha256'
     self._process_memory_limit = None
     self._report_type = None
@@ -1375,9 +1375,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Raises:
       BadConfigOption: if the storage file format is not supported.
     """
-    if self._output_format in 'markdown':
+    if self._output_format == 'markdown':
       self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
-    elif self._output_format in 'text':
+    elif self._output_format == 'text':
       self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
     storage_reader = self._GetStorageReader(self._storage_file_path)
