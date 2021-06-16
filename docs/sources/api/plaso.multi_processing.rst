@@ -4,6 +4,14 @@ plaso.multi\_processing package
 Submodules
 ----------
 
+plaso.multi\_processing.analysis\_engine module
+-----------------------------------------------
+
+.. automodule:: plaso.multi_processing.analysis_engine
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.multi\_processing.analysis\_process module
 ------------------------------------------------
 
@@ -28,6 +36,22 @@ plaso.multi\_processing.engine module
    :undoc-members:
    :show-inheritance:
 
+plaso.multi\_processing.extraction\_engine module
+-------------------------------------------------
+
+.. automodule:: plaso.multi_processing.extraction_engine
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.multi\_processing.extraction\_process module
+--------------------------------------------------
+
+.. automodule:: plaso.multi_processing.extraction_process
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.multi\_processing.logger module
 -------------------------------------
 
@@ -36,18 +60,18 @@ plaso.multi\_processing.logger module
    :undoc-members:
    :show-inheritance:
 
-plaso.multi\_processing.plaso\_xmlrpc module
---------------------------------------------
+plaso.multi\_processing.output\_engine module
+---------------------------------------------
 
-.. automodule:: plaso.multi_processing.plaso_xmlrpc
+.. automodule:: plaso.multi_processing.output_engine
    :members:
    :undoc-members:
    :show-inheritance:
 
-plaso.multi\_processing.psort module
-------------------------------------
+plaso.multi\_processing.plaso\_xmlrpc module
+--------------------------------------------
 
-.. automodule:: plaso.multi_processing.psort
+.. automodule:: plaso.multi_processing.plaso_xmlrpc
    :members:
    :undoc-members:
    :show-inheritance:
@@ -76,10 +100,10 @@ plaso.multi\_processing.task\_manager module
    :undoc-members:
    :show-inheritance:
 
-plaso.multi\_processing.worker\_process module
-----------------------------------------------
+plaso.multi\_processing.task\_process module
+--------------------------------------------
 
-.. automodule:: plaso.multi_processing.worker_process
+.. automodule:: plaso.multi_processing.task_process
    :members:
    :undoc-members:
    :show-inheritance:

@@ -28,14 +28,6 @@ plaso.analysis.definitions module
    :undoc-members:
    :show-inheritance:
 
-plaso.analysis.file\_hashes module
-----------------------------------
-
-.. automodule:: plaso.analysis.file_hashes
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.analysis.hash\_tagging module
 -----------------------------------
 

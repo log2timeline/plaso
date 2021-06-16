@@ -200,8 +200,6 @@ $ psort.py --analysis list
                    plugin]
 chrome_extension : Convert Chrome extension IDs into names, requires Internet
                    connection. [Summary/Report plugin]
-     file_hashes : A plugin for generating a list of file paths and
-                   corresponding hashes. [Summary/Report plugin]
          tagging : Analysis plugin that tags events according to rules in a
                    tag file. [Summary/Report plugin]
            viper : An analysis plugin for looking up SHA256 hashes in Viper.
