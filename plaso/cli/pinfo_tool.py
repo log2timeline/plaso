@@ -9,11 +9,11 @@ import uuid
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.engine import path_helper
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
@@ -27,13 +27,21 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
   Attributes:
     compare_storage_information (bool): True if the tool is used to compare
         stores.
-    list_sections (bool): True if the sections should be listed.
+    generate_report (bool): True if a predefined report type should be
+        generated.
+    list_reports (bool): True if the report types should be listed.
+    list_sections (bool): True if the section types should be listed.
   """
 
   NAME = 'pinfo'
   DESCRIPTION = (
       'Shows information about a Plaso storage file, for example how it was '
       'collected, what information was extracted from a source, etc.')
+
+  _REPORTS = {
+      'file_hashes': 'Report file hashes calculated during processing.'}
+
+  _REPORT_CHOICES = sorted(list(_REPORTS.keys()) + ['list', 'none'])
 
   _SECTIONS = {
       'events': 'Show information about events.',
@@ -43,7 +51,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       'warnings': 'Show information about warnings during processing.'}
 
   _DEFAULT_OUTPUT_FORMAT = 'text'
-  _SUPPORTED_OUTPUT_FORMATS = ['json', 'markdown', 'text']
+  _SUPPORTED_OUTPUT_FORMATS = ('json', 'markdown', 'text')
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -59,12 +67,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     self._compare_storage_file_path = None
     self._output_filename = None
     self._output_format = None
+    self._preferred_hash_type = 'sha256'
     self._process_memory_limit = None
+    self._report_type = None
     self._sections = None
     self._storage_file_path = None
     self._verbose = False
 
     self.compare_storage_information = False
+    self.generate_report = False
+    self.list_reports = False
     self.list_sections = False
 
   def _CalculateStorageCounters(self, storage_reader):
@@ -289,6 +301,82 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           title='Reports generated per plugin')
 
     return stores_are_identical
+
+  def _GenerateFileHashesReport(self, storage_reader):
+    """Generates a file hashes report.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write('{"file_hashes": [\n')
+
+    elif self._output_format == 'markdown':
+      self._output_writer.Write('{0:s} hash | Display name\n'.format(
+          self._preferred_hash_type.upper()))
+      self._output_writer.Write('--- | ---\n')
+
+    elif self._output_format == 'text':
+      self._output_writer.Write('{0:s} hash\tDisplay name\n'.format(
+          self._preferred_hash_type.upper()))
+
+    for event_data_stream_index, event_data_stream in enumerate(
+        storage_reader.GetEventDataStreams()):
+      if self._preferred_hash_type == 'md5':
+        hash_value = event_data_stream.md5_hash
+      elif self._preferred_hash_type == 'sha1':
+        hash_value = event_data_stream.sha1_hash
+      elif self._preferred_hash_type == 'sha256':
+        hash_value = event_data_stream.sha256_hash
+
+      if not hash_value:
+        hash_value = 'N/A'
+
+      if event_data_stream.path_spec:
+        display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+           event_data_stream.path_spec)
+      else:
+        display_name = 'N/A'
+
+      if self._output_format == 'json':
+        if event_data_stream_index > 0:
+          self._output_writer.Write(',\n')
+        display_name = display_name.replace('\\', '\\\\')
+        self._output_writer.Write(
+            '{{"{0:s}_hash": "{1:s}", "display_name": "{2:s}"}}'.format(
+                self._preferred_hash_type, hash_value, display_name))
+
+      elif self._output_format == 'markdown':
+        self._output_writer.Write('{0:s} | {1:s}\n'.format(
+            hash_value, display_name))
+
+      elif self._output_format == 'text':
+        self._output_writer.Write('{0:s}\t{1:s}\n'.format(
+            hash_value, display_name))
+
+    if self._output_format == 'json':
+      self._output_writer.Write('\n]}\n')
+
+  def _GetStorageReader(self, path):
+    """Retrieves a storage reader.
+
+    Args:
+      path (str): path of the storage file.
+
+    Returns:
+      StorageReader: storage reader or None if the storage file format
+          is not supported.
+
+    Raises:
+      BadConfigOption: if the storage file format is not supported.
+    """
+    storage_reader = (
+        storage_factory.StorageFactory.CreateStorageReaderForFile(path))
+    if not storage_reader:
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(path))
+
+    return storage_reader
 
   def _PrintAnalysisReportCounter(
       self, analysis_reports_counter, session_identifier=None):
@@ -1075,23 +1163,13 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     Returns:
       bool: True if the content of the stores is identical.
-    """
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        self._storage_file_path)
-    if not storage_reader:
-      logger.error(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
-      return False
 
-    compare_storage_reader = (
-        storage_factory.StorageFactory.CreateStorageReaderForFile(
-            self._compare_storage_file_path))
-    if not compare_storage_reader:
-      logger.error(
-          'Format of storage file: {0:s} not supported'.format(
-              self._compare_storage_file_path))
-      return False
+    Raises:
+      BadConfigOption: if the storage file format is not supported.
+    """
+    storage_reader = self._GetStorageReader(self._storage_file_path)
+    compare_storage_reader = self._GetStorageReader(
+        self._compare_storage_file_path)
 
     try:
       result = self._CompareStores(storage_reader, compare_storage_reader)
@@ -1106,6 +1184,30 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._output_writer.Write('Storage files are different.\n')
 
     return result
+
+  def GenerateReport(self):
+    """Generates a report.
+
+    Raises:
+      BadConfigOption: if the storage file format is not supported.
+    """
+    storage_reader = self._GetStorageReader(self._storage_file_path)
+
+    try:
+      if self._report_type == 'file_hashes':
+        self._GenerateFileHashesReport(storage_reader)
+    finally:
+      storage_reader.Close()
+
+  def ListReports(self):
+    """Lists information about the available report types."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Reports')
+
+    for name, description in sorted(self._REPORTS.items()):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ListSections(self):
     """Lists information about the available sections."""
@@ -1151,6 +1253,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             'Format of the output, the default is: {0:s}. Supported options: '
             '{1:s}.').format(self._DEFAULT_OUTPUT_FORMAT, ', '.join(
                 sorted(self._SUPPORTED_OUTPUT_FORMATS))))
+
+    argument_parser.add_argument(
+        '--report', dest='report', choices=self._REPORT_CHOICES, action='store',
+        metavar='TYPE', default='none', help=(
+            'Report on specific information. Supported options: {0:s}'.format(
+                ', '.join(self._REPORT_CHOICES))))
 
     argument_parser.add_argument(
         '--sections', dest='sections', type=str, action='store', default='all',
@@ -1206,13 +1314,22 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     self._verbose = getattr(options, 'verbose', False)
 
+    self._report_type = getattr(options, 'report', 'none')
     self._sections = getattr(options, 'sections', '')
 
+    self.list_reports = self._report_type == 'list'
     self.list_sections = self._sections == 'list'
 
     self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
-    if self.list_sections or self.show_troubleshooting:
+    if self.list_reports or self.list_sections or self.show_troubleshooting:
       return
+
+    if self._report_type != 'none':
+      if self._report_type not in self._REPORTS:
+        raise errors.BadConfigOption('Unsupported report type: {0:s}.'.format(
+            self._report_type))
+
+      self.generate_report = True
 
     if self._sections != 'all':
       self._sections = self._sections.split(',')
@@ -1253,18 +1370,17 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
   def PrintStorageInformation(self):
-    """Prints the storage information."""
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        self._storage_file_path)
-    if not storage_reader:
-      logger.error('Format of storage file: {0:s} not supported'.format(
-          self._storage_file_path))
-      return
+    """Prints the storage information.
 
+    Raises:
+      BadConfigOption: if the storage file format is not supported.
+    """
     if self._output_format in 'markdown':
       self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
     elif self._output_format in 'text':
       self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
+
+    storage_reader = self._GetStorageReader(self._storage_file_path)
 
     try:
       self._PrintStorageInformation(storage_reader)
