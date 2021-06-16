@@ -41,6 +41,10 @@ def Main():
     return False
 
   have_list_option = False
+  if tool.list_reports:
+    tool.ListReports()
+    have_list_option = True
+
   if tool.list_sections:
     tool.ListSections()
     have_list_option = True
@@ -52,6 +56,8 @@ def Main():
   try:
     if tool.compare_storage_information:
       result = tool.CompareStores()
+    elif tool.generate_report:
+      tool.GenerateReport()
     else:
       tool.PrintStorageInformation()
 
