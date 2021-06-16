@@ -913,6 +913,11 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     Returns:
       bool: True if the format is supported.
     """
+    # Check if the path is an existing file, to prevent sqlite3 creating
+    # an emtpy database file.
+    if not os.path.isfile(path):
+      return False
+
     try:
       connection = sqlite3.connect(
           path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)

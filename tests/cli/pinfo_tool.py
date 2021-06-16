@@ -16,6 +16,8 @@ from tests.cli import test_lib
 class PinfoToolTest(test_lib.CLIToolTestCase):
   """Tests for the pinfo CLI tool."""
 
+  # pylint: disable=protected-access
+
   _EXPECTED_OUTPUT_COMPARE_STORES = """\
 
 ************************* Events generated per parser **************************
@@ -30,6 +32,47 @@ Storage files are different.
 
   # TODO: add test for _CalculateStorageCounters.
   # TODO: add test for _CompareStores.
+
+  def testGenerateFileHashesReport(self):
+    """Tests the _GenerateFileHashesReport function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+    try:
+      test_tool._GenerateFileHashesReport(storage_reader)
+    finally:
+      storage_reader.Close()
+
+    output = output_writer.ReadOutput()
+    lines_of_output = output.split('\n')
+    self.assertEqual(len(lines_of_output), 4)
+
+    expected_line_of_output = (
+        '1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4'
+        '\tOS:/tmp/test/test_data/syslog')
+    self.assertEqual(lines_of_output[1], expected_line_of_output)
+
+  def testGetStorageReader(self):
+    """Tests the _GetStorageReader function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+    try:
+      self.assertIsNotNone(storage_reader)
+    finally:
+      storage_reader.Close()
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool._GetStorageReader('bogus.plaso')
+
   # TODO: add test for _PrintAnalysisReportCounter.
   # TODO: add test for _PrintAnalysisReportsDetails.
   # TODO: add test for _PrintExtractionWarningsDetails.
