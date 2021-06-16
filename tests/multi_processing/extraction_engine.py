@@ -53,12 +53,18 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = sqlite_writer.SQLiteStorageFileWriter(session, temp_file)
+      storage_writer.Open()
 
-      test_engine.PreprocessSources(
-          registry, [source_path_spec], storage_writer)
-      test_engine.ProcessSources(
-          session, [source_path_spec], storage_writer, configuration,
-          storage_file_path=temp_directory)
+      try:
+        test_engine.PreprocessSources(
+            registry, [source_path_spec], storage_writer)
+
+        test_engine.ProcessSources(
+            session, [source_path_spec], storage_writer, configuration,
+            storage_file_path=temp_directory)
+
+      finally:
+        storage_writer.Close()
 
     self.assertEqual(storage_writer.number_of_events, 15)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)

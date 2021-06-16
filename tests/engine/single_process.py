@@ -46,16 +46,23 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
         parent=os_path_spec)
 
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
-
-    test_engine.PreprocessSources(registry, [source_path_spec], storage_writer)
 
     configuration = configurations.ProcessingConfiguration()
     configuration.parser_filter_expression = 'filestat'
 
-    test_engine.ProcessSources(
-        session, [source_path_spec], storage_writer, resolver_context,
-        configuration)
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
+
+    try:
+      test_engine.PreprocessSources(
+          registry, [source_path_spec], storage_writer)
+
+      test_engine.ProcessSources(
+          session, [source_path_spec], storage_writer, resolver_context,
+          configuration)
+
+    finally:
+      storage_writer.Close()
 
     self.assertEqual(storage_writer.number_of_events, 15)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)

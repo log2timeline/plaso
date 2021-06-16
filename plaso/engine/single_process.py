@@ -305,7 +305,6 @@ class SingleProcessEngine(engine.BaseEngine):
     if self._storage_profiler:
       storage_writer.SetStorageProfiler(self._storage_profiler)
 
-    storage_writer.Open()
     storage_writer.WriteSessionStart()
 
     # TODO: decouple session and storage writer?
@@ -320,8 +319,6 @@ class SingleProcessEngine(engine.BaseEngine):
 
     finally:
       storage_writer.WriteSessionCompletion(aborted=self._abort)
-
-      storage_writer.Close()
 
       if self._analyzers_profiler:
         extraction_worker.SetAnalyzersProfiler(None)
