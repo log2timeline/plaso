@@ -33,11 +33,11 @@ class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
       hash_analysis_queue (Queue.queue): that the analyzer will append
           HashAnalysis objects this queue.
     """
+    kwargs.pop('hashes_per_batch', None)
     super(NsrlsvrAnalyzer, self).__init__(
-        hash_queue, hash_analysis_queue, **kwargs)
+        hash_queue, hash_analysis_queue, hashes_per_batch=100, **kwargs)
     self._host = None
     self._port = None
-    self.hashes_per_batch = 100
 
   def _GetSocket(self):
     """Establishes a connection to an nsrlsvr instance.
