@@ -44,7 +44,7 @@ def GetTestFilePath(path_segments):
   return os.path.join(TEST_DATA_PATH, *path_segments)
 
 
-def CopyTimestampFromSring(time_string):
+def CopyTimestampFromString(time_string):
   """Copies a date and time string to a Plaso timestamp.
 
   Args:

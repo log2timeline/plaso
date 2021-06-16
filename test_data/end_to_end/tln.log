@@ -15,7 +15,7 @@ Time|Source|Host|User|Description
 1416273343|LOG|:|-|2014-11-18T01:15:43+00:00; Content Modification Time; [---] last message repeated 5 times ---
 1416299420|LOG|-|-|2014-11-18T08:30:20+00:00; Content Modification Time; [kernel] [997.390602] sda2: rw=0, want=65, limit=2
 1416299480|LOG|victoria|-|2014-11-18T08:31:20+00:00; Content Modification Time; [kernel] [998.390602] sda2: rw=0, want=66, limit=2
-1618118132|FILE|-|-|2021-04-11T05:15:32.279701691+00:00; Content Modification Time; OS:/tmp/test/test_data/syslog Type: file
-1618118132|FILE|-|-|2021-04-11T05:15:32.279701691+00:00; Metadata Modification Time; OS:/tmp/test/test_data/syslog Type: file
-1618118134|FILE|-|-|2021-04-11T05:15:34.607703823+00:00; Last Access Time; OS:/tmp/test/test_data/syslog Type: file
-1618118137|FILE|-|-|2021-04-11T05:15:37.705706661+00:00; Last Access Time; OS:/tmp/test/test_data/syslog Type: file
+1623828350|FILE|-|-|2021-06-16T07:25:50.637274136+00:00; Content Modification Time; OS:/tmp/test/test_data/syslog Type: file
+1623828350|FILE|-|-|2021-06-16T07:25:50.637274136+00:00; Metadata Modification Time; OS:/tmp/test/test_data/syslog Type: file
+1623828352|FILE|-|-|2021-06-16T07:25:52.726275553+00:00; Last Access Time; OS:/tmp/test/test_data/syslog Type: file
+1623828355|FILE|-|-|2021-06-16T07:25:55.385277356+00:00; Last Access Time; OS:/tmp/test/test_data/syslog Type: file

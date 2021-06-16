@@ -27,7 +27,7 @@ def CreateEventFromValues(event_values):
     attribute_value = copy_of_event_values.pop(attribute_name, None)
     if attribute_value is not None:
       if attribute_name == 'timestamp' and isinstance(attribute_value, str):
-        attribute_value = shared_test_lib.CopyTimestampFromSring(
+        attribute_value = shared_test_lib.CopyTimestampFromString(
             attribute_value)
       setattr(event, attribute_name, attribute_value)
 
