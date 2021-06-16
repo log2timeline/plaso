@@ -2,6 +2,7 @@
 """The preprocess mediator."""
 
 from plaso.containers import warnings
+from plaso.preprocessors import logger
 
 
 class PreprocessMediator(object):
@@ -41,6 +42,8 @@ class PreprocessMediator(object):
       warning = warnings.PreprocessingWarning(
           message=message, path_spec=path_spec, plugin_name=plugin_name)
       self._storage_writer.AddPreprocessingWarning(warning)
+
+    logger.debug('[{0:s}] {1:s}'.format(plugin_name, message))
 
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.
