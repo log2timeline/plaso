@@ -17,7 +17,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
   _TAG_FILE = None
 
-  _TEST_TIMESTAMP = shared_test_lib.CopyTimestampFromSring(
+  _TEST_TIMESTAMP = shared_test_lib.CopyTimestampFromString(
       '2020-04-04 14:56:39')
 
   def _CheckLabels(self, storage_writer, expected_labels):

@@ -85,7 +85,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
 
     output_module.WriteEventBody(event, event_data, event_data_stream, None)
 
-    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
+    expected_timestamp = shared_test_lib.CopyTimestampFromString(
         '2012-06-27 18:17:01')
 
     if sys.platform.startswith('win'):

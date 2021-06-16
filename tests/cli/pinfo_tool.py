@@ -108,8 +108,8 @@ Storage files are different.
   def testPrintStorageInformationAsJSON(self):
     """Tests the PrintStorageInformation function with JSON output format."""
     test_filename = 'pinfo_test.plaso'
-    session_identifier = '682d148b-e77c-41de-85ea-a86b9b5c490b'
-    session_start_time = '2021-04-11 05:16:05.445583'
+    session_identifier = 'b8118c0f-c518-45d6-8732-3b1d069b06b8'
+    session_start_time = '2021-06-16 07:26:11.545990'
 
     test_file_path = self._GetTestFilePath([test_filename])
     self._SkipIfPathNotExists(test_file_path)
@@ -136,7 +136,7 @@ Storage files are different.
     self.assertEqual(
         first_session['identifier'], session_identifier.replace('-', ''))
 
-    expected_start_time = shared_test_lib.CopyTimestampFromSring(
+    expected_start_time = shared_test_lib.CopyTimestampFromString(
         session_start_time)
     self.assertEqual(first_session['start_time'], expected_start_time)
 
@@ -147,62 +147,63 @@ Storage files are different.
   def testPrintStorageInformationAsText(self):
     """Tests the PrintStorageInformation function with text output format."""
     test_filename = 'pinfo_test.plaso'
-    format_version = '20210105'
-    plaso_version = '20210408'
-    session_identifier = '682d148b-e77c-41de-85ea-a86b9b5c490b'
-    session_start_time = '2021-04-11T05:16:05.445583Z'
-    session_completion_time = '2021-04-11T05:16:07.970584Z'
+    format_version = '20210606'
+    plaso_version = '20210606'
+    session_identifier = 'b8118c0f-c518-45d6-8732-3b1d069b06b8'
+    session_start_time = '2021-06-16T07:26:11.545990Z'
+    session_completion_time = '2021-06-16T07:26:13.475732Z'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
-        'pinfo_test.plaso test_data/tsk_volume_system.raw')
+        '--storage-file pinfo_test.plaso test_data/tsk_volume_system.raw')
 
     enabled_parser_names = ', '.join([
-        'amcache', 'android_app_usage', 'apache_access', 'apt_history',
-        'asl_log', 'bash_history', 'bencode', 'bencode/bencode_transmission',
+        'android_app_usage', 'apache_access', 'apt_history', 'asl_log',
+        'bash_history', 'bencode', 'bencode/bencode_transmission',
         'bencode/bencode_utorrent', 'binary_cookies', 'bsm_log',
-        'chrome_cache', 'chrome_preferences', 'cups_ipp', 'custom_destinations',
-        'czip', 'czip/oxml', 'dockerjson', 'dpkg', 'esedb',
-        'esedb/file_history', 'esedb/msie_webcache', 'esedb/srum', 'filestat',
-        'firefox_cache', 'firefox_cache2', 'fseventsd', 'gdrive_synclog',
-        'googlelog', 'java_idx', 'lnk', 'mac_appfirewall_log', 'mac_keychain',
-        'mac_securityd', 'mactime', 'macwifi', 'mcafee_protection', 'mft',
-        'msiecf', 'networkminer_fileinfo', 'olecf',
-        'olecf/olecf_automatic_destinations', 'olecf/olecf_default',
-        'olecf/olecf_document_summary', 'olecf/olecf_summary', 'opera_global',
-        'opera_typed_history', 'pe', 'plist', 'plist/airport', 'plist/apple_id',
-        'plist/ipod_device', 'plist/launchd_plist',
-        'plist/macos_software_update', 'plist/macosx_bluetooth',
-        'plist/macosx_install_history', 'plist/macuser', 'plist/plist_default',
-        'plist/safari_history', 'plist/spotlight', 'plist/spotlight_volume',
-        'plist/time_machine', 'pls_recall', 'popularity_contest', 'prefetch',
-        'recycle_bin', 'recycle_bin_info2', 'rplog', 'santa', 'sccm', 'selinux',
-        'setupapi', 'skydrive_log', 'skydrive_log_old', 'sophos_av',
-        'spotlight_storedb', 'sqlite', 'sqlite/android_calls',
-        'sqlite/android_sms', 'sqlite/android_webview',
-        'sqlite/android_webviewcache', 'sqlite/appusage',
-        'sqlite/chrome_17_cookies', 'sqlite/chrome_27_history',
-        'sqlite/chrome_66_cookies', 'sqlite/chrome_8_history',
-        'sqlite/chrome_autofill', 'sqlite/chrome_extension_activity',
-        'sqlite/firefox_cookies', 'sqlite/firefox_downloads',
-        'sqlite/firefox_history', 'sqlite/google_drive',
-        'sqlite/hangouts_messages', 'sqlite/imessage', 'sqlite/kik_messenger',
-        'sqlite/kodi', 'sqlite/ls_quarantine', 'sqlite/mac_document_versions',
-        'sqlite/mac_knowledgec', 'sqlite/mac_notes',
-        'sqlite/mac_notificationcenter', 'sqlite/mackeeper_cache',
-        'sqlite/macostcc', 'sqlite/safari_historydb', 'sqlite/skype',
-        'sqlite/tango_android_profile',
+        'chrome_cache', 'chrome_preferences', 'cups_ipp',
+        'custom_destinations', 'czip', 'czip/oxml', 'dockerjson', 'dpkg',
+        'esedb', 'esedb/file_history', 'esedb/msie_webcache', 'esedb/srum',
+        'filestat', 'firefox_cache', 'firefox_cache2', 'fseventsd',
+        'gdrive_synclog', 'googlelog', 'java_idx', 'lnk',
+        'mac_appfirewall_log', 'mac_keychain', 'mac_securityd', 'mactime',
+        'macwifi', 'mcafee_protection', 'mft', 'msiecf',
+        'networkminer_fileinfo', 'olecf', 'olecf/olecf_automatic_destinations',
+        'olecf/olecf_default', 'olecf/olecf_document_summary',
+        'olecf/olecf_summary', 'opera_global', 'opera_typed_history', 'pe',
+        'plist', 'plist/airport', 'plist/apple_id', 'plist/ipod_device',
+        'plist/launchd_plist', 'plist/macos_software_update',
+        'plist/macosx_bluetooth', 'plist/macosx_install_history',
+        'plist/macuser', 'plist/plist_default', 'plist/safari_history',
+        'plist/spotlight', 'plist/spotlight_volume', 'plist/time_machine',
+        'pls_recall', 'popularity_contest', 'prefetch', 'recycle_bin',
+        'recycle_bin_info2', 'rplog', 'santa', 'sccm', 'selinux', 'setupapi',
+        'skydrive_log', 'skydrive_log_old', 'sophos_av', 'spotlight_storedb',
+        'sqlite', 'sqlite/android_calls', 'sqlite/android_sms',
+        'sqlite/android_webview', 'sqlite/android_webviewcache',
+        'sqlite/appusage', 'sqlite/chrome_17_cookies',
+        'sqlite/chrome_27_history', 'sqlite/chrome_66_cookies',
+        'sqlite/chrome_8_history', 'sqlite/chrome_autofill',
+        'sqlite/chrome_extension_activity', 'sqlite/firefox_cookies',
+        'sqlite/firefox_downloads', 'sqlite/firefox_history',
+        'sqlite/google_drive', 'sqlite/hangouts_messages', 'sqlite/imessage',
+        'sqlite/kik_messenger', 'sqlite/kodi', 'sqlite/ls_quarantine',
+        'sqlite/mac_document_versions', 'sqlite/mac_knowledgec',
+        'sqlite/mac_notes', 'sqlite/mac_notificationcenter',
+        'sqlite/mackeeper_cache', 'sqlite/macostcc', 'sqlite/safari_historydb',
+        'sqlite/skype', 'sqlite/tango_android_profile',
         'sqlite/tango_android_tc', 'sqlite/twitter_android',
         'sqlite/twitter_ios', 'sqlite/windows_timeline', 'sqlite/zeitgeist',
         'symantec_scanlog', 'syslog', 'syslog/cron', 'syslog/ssh',
-        'systemd_journal', 'trendmicro_url', 'trendmicro_vd', 'usnjrnl', 'utmp',
-        'utmpx', 'vsftpd', 'winevt', 'winevtx', 'winfirewall', 'winiis',
-        'winjob', 'winreg', 'winreg/appcompatcache', 'winreg/bagmru',
-        'winreg/bam', 'winreg/ccleaner', 'winreg/explorer_mountpoints2',
-        'winreg/explorer_programscache', 'winreg/microsoft_office_mru',
-        'winreg/microsoft_outlook_mru', 'winreg/mrulist_shell_item_list',
-        'winreg/mrulist_string', 'winreg/mrulistex_shell_item_list',
-        'winreg/mrulistex_string', 'winreg/mrulistex_string_and_shell_item',
+        'systemd_journal', 'trendmicro_url', 'trendmicro_vd', 'usnjrnl',
+        'utmp', 'utmpx', 'vsftpd', 'winevt', 'winevtx', 'winfirewall',
+        'winiis', 'winjob', 'winreg', 'winreg/amcache', 'winreg/appcompatcache',
+        'winreg/bagmru', 'winreg/bam', 'winreg/ccleaner',
+        'winreg/explorer_mountpoints2', 'winreg/explorer_programscache',
+        'winreg/microsoft_office_mru', 'winreg/microsoft_outlook_mru',
+        'winreg/mrulist_shell_item_list', 'winreg/mrulist_string',
+        'winreg/mrulistex_shell_item_list', 'winreg/mrulistex_string',
+        'winreg/mrulistex_string_and_shell_item',
         'winreg/mrulistex_string_and_shell_item_list', 'winreg/msie_zone',
         'winreg/mstsc_rdp', 'winreg/mstsc_rdp_mru', 'winreg/network_drives',
         'winreg/networks', 'winreg/userassist', 'winreg/windows_boot_execute',

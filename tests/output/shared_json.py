@@ -52,7 +52,7 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    expected_timestamp = shared_test_lib.CopyTimestampFromSring(
+    expected_timestamp = shared_test_lib.CopyTimestampFromString(
         '2012-06-27 18:17:01')
 
     if sys.platform.startswith('win'):

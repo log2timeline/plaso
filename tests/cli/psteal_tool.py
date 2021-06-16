@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the psteal CLI tool."""
 
-import io
 import os
 import unittest
 
@@ -407,11 +406,11 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ParseOptions(options)
       test_tool.AnalyzeEvents()
 
-      with io.open(
+      with open(
           expected_output_file_path, 'rt', encoding='utf-8') as file_object:
         expected_output = file_object.read()
 
-      with io.open(options.write, 'rt', encoding='utf-8') as file_object:
+      with open(options.write, 'rt', encoding='utf-8') as file_object:
         result_output = file_object.read()
 
       expected_output = sorted(expected_output.split('\n'))
