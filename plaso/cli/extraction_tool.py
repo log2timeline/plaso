@@ -25,7 +25,7 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.containers import artifacts
 from plaso.engine import configurations
 from plaso.engine import engine
-from plaso.engine import single_process as single_extraction_engine
+from plaso.single_process import extraction_engine as single_extraction_engine
 from plaso.filters import parser_filter
 from plaso.lib import definitions
 from plaso.lib import errors

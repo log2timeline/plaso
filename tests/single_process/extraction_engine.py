@@ -13,7 +13,7 @@ from dfvfs.resolver import context
 
 from plaso.containers import sessions
 from plaso.engine import configurations
-from plaso.engine import single_process
+from plaso.single_process import extraction_engine
 from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
@@ -36,7 +36,7 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     reader = artifacts_reader.YamlArtifactsReader()
     registry.ReadFromDirectory(reader, test_artifacts_path)
 
-    test_engine = single_process.SingleProcessEngine()
+    test_engine = extraction_engine.SingleProcessEngine()
     resolver_context = context.Context()
 
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
