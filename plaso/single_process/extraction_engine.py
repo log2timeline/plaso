@@ -3,6 +3,7 @@
 
 import os
 import pdb
+import threading
 import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -29,14 +30,19 @@ class SingleProcessEngine(engine.BaseEngine):
     """Initializes a single process engine."""
     super(SingleProcessEngine, self).__init__()
     self._current_display_name = ''
+    self._extraction_worker = None
     self._file_system_cache = []
-    self._last_status_update_timestamp = 0.0
+    self._number_of_consumed_sources = 0
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
     self._processing_configuration = None
     self._resolver_context = None
+    self._status = definitions.STATUS_INDICATOR_IDLE
+    self._status_update_active = False
     self._status_update_callback = None
+    self._status_update_thread = None
+    self._storage_writer = None
 
   def _CacheFileSystem(self, path_spec):
     """Caches a dfVFS file system object.
@@ -110,6 +116,8 @@ class SingleProcessEngine(engine.BaseEngine):
           '{0!s}').format(exception), path_spec=path_spec)
 
       if getattr(self._processing_configuration, 'debug_output', False):
+        self._StopStatusUpdateThread()
+
         logger.warning(
             'Unhandled exception while processing path spec: {0:s}.'.format(
                 self._current_display_name))
@@ -117,28 +125,23 @@ class SingleProcessEngine(engine.BaseEngine):
 
         pdb.post_mortem()
 
-  def _ProcessSources(
-      self, source_path_specs, extraction_worker, parser_mediator,
-      storage_writer):
+        self._StartStatusUpdateThread()
+
+  def _ProcessSources(self, source_path_specs, parser_mediator):
     """Processes the sources.
 
     Args:
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
-      extraction_worker (worker.ExtractionWorker): extraction worker.
       parser_mediator (ParserMediator): parser mediator.
-      storage_writer (StorageWriter): storage writer for a session storage.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
 
-    number_of_consumed_sources = 0
+    self._status = definitions.STATUS_INDICATOR_COLLECTING
+    self._current_display_name = ''
+    self._number_of_consumed_sources = 0
 
-    self._UpdateStatus(
-        definitions.STATUS_INDICATOR_COLLECTING, '',
-        number_of_consumed_sources, storage_writer)
-
-    display_name = ''
     find_specs = None
     if self.collection_filters_helper:
       find_specs = (
@@ -152,26 +155,21 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
-      display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
+      self._status = definitions.STATUS_INDICATOR_COLLECTING
+      self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
+          path_spec)
 
       # TODO: determine if event sources should be DataStream or FileEntry
       # or both.
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-      storage_writer.AddEventSource(event_source)
+      self._storage_writer.AddEventSource(event_source)
 
-      self._UpdateStatus(
-          definitions.STATUS_INDICATOR_COLLECTING, display_name,
-          number_of_consumed_sources, storage_writer)
-
-    # Force the status update here to make sure the status is up to date.
-    self._UpdateStatus(
-        definitions.STATUS_INDICATOR_RUNNING, display_name,
-        number_of_consumed_sources, storage_writer, force=True)
+    self._status = definitions.STATUS_INDICATOR_RUNNING
 
     if self._processing_profiler:
       self._processing_profiler.StartTiming('get_event_source')
 
-    event_source = storage_writer.GetFirstWrittenEventSource()
+    event_source = self._storage_writer.GetFirstWrittenEventSource()
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('get_event_source')
@@ -181,69 +179,71 @@ class SingleProcessEngine(engine.BaseEngine):
         break
 
       self._ProcessPathSpec(
-          extraction_worker, parser_mediator, event_source.path_spec)
-      number_of_consumed_sources += 1
+          self._extraction_worker, parser_mediator, event_source.path_spec)
 
-      self._UpdateStatus(
-          extraction_worker.processing_status, self._current_display_name,
-          number_of_consumed_sources, storage_writer)
+      self._number_of_consumed_sources += 1
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming('get_event_source')
 
-      event_source = storage_writer.GetNextWrittenEventSource()
+      event_source = self._storage_writer.GetNextWrittenEventSource()
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming('get_event_source')
 
     if self._abort:
-      status = definitions.STATUS_INDICATOR_ABORTED
+      self._status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      status = definitions.STATUS_INDICATOR_COMPLETED
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
 
-    # Force the status update here to make sure the status is up to date
-    # on exit.
-    self._UpdateStatus(
-        status, '', number_of_consumed_sources, storage_writer, force=True)
+    self._current_display_name = ''
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_sources')
 
-  def _UpdateStatus(
-      self, status, display_name, number_of_consumed_sources, storage_writer,
-      force=False):
-    """Updates the processing status.
+  def _StartStatusUpdateThread(self):
+    """Starts the status update thread."""
+    self._status_update_active = True
+    self._status_update_thread = threading.Thread(
+        name='Status update', target=self._StatusUpdateThreadMain)
+    self._status_update_thread.start()
 
-    Args:
-      status (str): human readable status indication such as "Hashing" or
-          "Idle".
-      display_name (str): human readable of the file entry currently being
-          processed.
-      number_of_consumed_sources (int): number of consumed sources.
-      storage_writer (StorageWriter): storage writer for a session storage.
-      force (Optional[bool]): True if the update should be forced ignoring
-          the last status update time.
-    """
-    current_timestamp = time.time()
-    if not force and current_timestamp < (
-        self._last_status_update_timestamp + self._STATUS_UPDATE_INTERVAL):
-      return
+  def _StatusUpdateThreadMain(self):
+    """Main function of the status update thread."""
+    while self._status_update_active:
+      self._UpdateStatus()
 
+      time.sleep(self._STATUS_UPDATE_INTERVAL)
+
+  def _StopStatusUpdateThread(self):
+    """Stops the status update thread."""
+    if self._status_update_thread:
+      self._status_update_active = False
+      if self._status_update_thread.is_alive():
+        self._status_update_thread.join()
+      self._status_update_thread = None
+
+  def _UpdateStatus(self):
+    """Updates the processing status."""
+    status = self._extraction_worker.processing_status
+    if status == definitions.STATUS_INDICATOR_IDLE:
+      status = self._status
     if status == definitions.STATUS_INDICATOR_IDLE:
       status = definitions.STATUS_INDICATOR_RUNNING
 
     used_memory = self._process_information.GetUsedMemory() or 0
 
     self._processing_status.UpdateForemanStatus(
-        self._name, status, self._pid, used_memory, display_name,
-        number_of_consumed_sources, storage_writer.number_of_event_sources, 0,
-        storage_writer.number_of_events, 0, 0, 0, 0, 0,
-        storage_writer.number_of_extraction_warnings)
+        self._name, status, self._pid, used_memory, self._current_display_name,
+        self._number_of_consumed_sources,
+        self._storage_writer.number_of_event_sources,
+        0, self._storage_writer.number_of_events,
+        0, 0,
+        0, 0,
+        0, self._storage_writer.number_of_extraction_warnings)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
-
-    self._last_status_update_timestamp = current_timestamp
 
   def ProcessSources(
       self, session, source_path_specs, storage_writer, resolver_context,
@@ -276,15 +276,16 @@ class SingleProcessEngine(engine.BaseEngine):
         resolver_context=resolver_context,
         temporary_directory=processing_configuration.temporary_directory)
 
-    extraction_worker = worker.EventExtractionWorker(
+    self._extraction_worker = worker.EventExtractionWorker(
         force_parser=force_parser, parser_filter_expression=(
             processing_configuration.parser_filter_expression))
 
-    extraction_worker.SetExtractionConfiguration(
+    self._extraction_worker.SetExtractionConfiguration(
         processing_configuration.extraction)
 
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
+    self._storage_writer = storage_writer
 
     logger.debug('Processing started.')
 
@@ -294,43 +295,50 @@ class SingleProcessEngine(engine.BaseEngine):
     self._StartProfiling(self._processing_configuration.profiling)
 
     if self._analyzers_profiler:
-      extraction_worker.SetAnalyzersProfiler(self._analyzers_profiler)
+      self._extraction_worker.SetAnalyzersProfiler(self._analyzers_profiler)
 
     if self._processing_profiler:
-      extraction_worker.SetProcessingProfiler(self._processing_profiler)
+      self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
     if self._serializers_profiler:
-      storage_writer.SetSerializersProfiler(self._serializers_profiler)
+      self._storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
     if self._storage_profiler:
-      storage_writer.SetStorageProfiler(self._storage_profiler)
+      self._storage_writer.SetStorageProfiler(self._storage_profiler)
 
-    storage_writer.WriteSessionStart()
+    self._StartStatusUpdateThread()
+
+    self._storage_writer.WriteSessionStart()
 
     # TODO: decouple session and storage writer?
     session.source_configurations = (
         self.knowledge_base.GetSourceConfigurationArtifacts())
 
     try:
-      storage_writer.WriteSessionConfiguration()
+      try:
+        self._storage_writer.WriteSessionConfiguration()
 
-      self._ProcessSources(
-          source_path_specs, extraction_worker, parser_mediator, storage_writer)
+        self._ProcessSources(source_path_specs, parser_mediator)
+
+      finally:
+        self._storage_writer.WriteSessionCompletion(aborted=self._abort)
 
     finally:
-      storage_writer.WriteSessionCompletion(aborted=self._abort)
+      # Stop the status update thread after close of the storage writer
+      # so we include the storage sync to disk in the status updates.
+      self._StopStatusUpdateThread()
 
       if self._analyzers_profiler:
-        extraction_worker.SetAnalyzersProfiler(None)
+        self._extraction_worker.SetAnalyzersProfiler(None)
 
       if self._processing_profiler:
-        extraction_worker.SetProcessingProfiler(None)
+        self._extraction_worker.SetProcessingProfiler(None)
 
       if self._serializers_profiler:
-        storage_writer.SetSerializersProfiler(None)
+        self._storage_writer.SetSerializersProfiler(None)
 
       if self._storage_profiler:
-        storage_writer.SetStorageProfiler(None)
+        self._storage_writer.SetStorageProfiler(None)
 
       self._StopProfiling()
       parser_mediator.StopProfiling()
@@ -341,9 +349,11 @@ class SingleProcessEngine(engine.BaseEngine):
     else:
       logger.debug('Processing completed.')
 
+    self._extraction_worker = None
     self._file_system_cache = []
     self._processing_configuration = None
     self._resolver_context = None
     self._status_update_callback = None
+    self._storage_writer = None
 
     return self._processing_status
