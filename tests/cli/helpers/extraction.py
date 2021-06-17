@@ -23,7 +23,7 @@ usage: cli_helper.py [--preferred_year YEAR] [--process_archives]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --preferred_year YEAR, --preferred-year YEAR
                         When a format\'s timestamp does not include a year,
                         e.g. syslog, use this as the initial year instead of
@@ -35,7 +35,7 @@ optional arguments:
   --skip_compressed_streams, --skip-compressed-streams
                         Skip processing file content within compressed
                         streams, such as syslog.gz and syslog.bz2.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -5,10 +5,17 @@ import argparse
 import io
 import operator
 import os
+import sys
 
 from plaso.cli import tools
 
 from tests import test_lib as shared_test_lib
+
+
+if sys.version_info >= (3, 10):
+  ARGPARSE_OPTIONS = 'options'
+else:
+  ARGPARSE_OPTIONS = 'optional arguments'
 
 
 class SortedArgumentsHelpFormatter(argparse.HelpFormatter):

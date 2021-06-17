@@ -22,14 +22,14 @@ usage: cli_helper.py [-f FILE_FILTER]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   -f FILE_FILTER, --filter-file FILE_FILTER, --filter_file FILE_FILTER, --file-filter FILE_FILTER, --file_filter FILE_FILTER
                         List of files to include for targeted collection of
                         files to parse, one line per file path, setup is
                         /path|file - where each element can contain either a
                         variable set in the preprocessing stage or a regular
                         expression.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

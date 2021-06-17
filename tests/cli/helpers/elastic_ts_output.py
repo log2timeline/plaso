@@ -31,7 +31,7 @@ usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
                         Defines extra fields to be included in the output, in
                         addition to the default fields, which are datetime,
@@ -63,7 +63,7 @@ optional arguments:
   --timeline_identifier IDENTIFIER, --timeline-identifier IDENTIFIER
                         The identifier of the timeline in Timesketch.
   --use_ssl, --use-ssl  Enforces use of SSL/TLS.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

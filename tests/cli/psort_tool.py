@@ -103,7 +103,7 @@ usage: psort_test.py [--temporary_directory DIRECTORY]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
@@ -119,7 +119,8 @@ optional arguments:
                         default timeout is 15.0 minutes. If a worker process
                         exceeds this timeout it is killed by the main
                         (foreman) process.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
+
   else:
     _EXPECTED_PROCESSING_OPTIONS = """\
 usage: psort_test.py [--process_memory_limit SIZE]
@@ -128,7 +129,7 @@ usage: psort_test.py [--process_memory_limit SIZE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --process_memory_limit SIZE, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -152,7 +153,7 @@ optional arguments:
                         default timeout is 15.0 minutes. If a worker process
                         exceeds this timeout it is killed by the main
                         (foreman) process.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   # TODO: add test for _CreateOutputModule.
   # TODO: add test for _FormatStatusTableRow.

@@ -22,14 +22,14 @@ usage: cli_helper.py [--language LANGUAGE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --language LANGUAGE  The preferred language identifier for Windows Event Log
                        message strings. Use "--language list" to see a list of
                        available language identifiers. Note that formatting
                        will fall back on en-US (LCID 0x0409) if the preferred
                        language is not available in the database of message
                        string templates.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

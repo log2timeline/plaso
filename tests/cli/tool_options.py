@@ -138,7 +138,7 @@ usage: tool_options.py [--dynamic_time] [--output_time_zone TIME_ZONE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --dynamic_time, --dynamic-time
                         Indicate that the output should use dynamic time.
   --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
@@ -146,7 +146,7 @@ optional arguments:
                         output, if supported by the output format. Output
                         formats that support this are: dynamic and l2t_csv.
                         Use "list" to see a list of available time zones.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   def testGetOutputModulesInformation(self):
     """Tests the _GetOutputModulesInformation function."""

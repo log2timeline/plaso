@@ -25,7 +25,7 @@ usage: cli_helper.py [--profilers PROFILERS_LIST]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --profilers PROFILERS_LIST
                         List of profilers to use by the tool. This is a comma
                         separated list where each entry is the name of a
@@ -38,7 +38,7 @@ optional arguments:
   --profiling_sample_rate SAMPLE_RATE, --profiling-sample-rate SAMPLE_RATE
                         Profiling sample rate (defaults to a sample every 1000
                         files).
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

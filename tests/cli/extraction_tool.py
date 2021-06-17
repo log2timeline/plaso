@@ -26,13 +26,13 @@ usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --buffer_size BUFFER_SIZE, --buffer-size BUFFER_SIZE, --bs BUFFER_SIZE
                         The buffer size for the output (defaults to 196MiB).
   --queue_size QUEUE_SIZE, --queue-size QUEUE_SIZE
                         The maximum number of queued items per worker
                         (defaults to 125000)
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   if resource is None:
     _EXPECTED_PROCESSING_OPTIONS = """\
@@ -44,7 +44,7 @@ usage: extraction_tool_test.py [--single_process]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --single_process, --single-process
                         Indicate that the tool should run in a single process.
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
@@ -68,7 +68,8 @@ optional arguments:
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
+
   else:
     _EXPECTED_PROCESSING_OPTIONS = """\
 usage: extraction_tool_test.py [--single_process]
@@ -80,7 +81,7 @@ usage: extraction_tool_test.py [--single_process]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --process_memory_limit SIZE, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -112,21 +113,21 @@ optional arguments:
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_TIME_ZONE_OPTION = """\
 usage: extraction_tool_test.py [-z TIME_ZONE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   -z TIME_ZONE, --zone TIME_ZONE, --timezone TIME_ZONE
                         preferred time zone of extracted date and time values
                         that are stored without a time zone indicator. The
                         time zone is determined based on the source data where
                         possible otherwise it will default to UTC. Use "list"
                         to see a list of available time zones.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
 

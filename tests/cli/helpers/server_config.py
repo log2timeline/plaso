@@ -46,10 +46,10 @@ usage: cli_helper.py [--server HOSTNAME] [--port PORT]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --port PORT        The port number of the server.
   --server HOSTNAME  The hostname or server IP address of the server.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

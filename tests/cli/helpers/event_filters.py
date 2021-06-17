@@ -30,7 +30,7 @@ positional arguments:
                         /plaso.readthedocs.io/en/latest/sources/user/Event-
                         filters.html
 
-optional arguments:
+{0:s}:
   --slice DATE_TIME     Date and time to create a time slice around. This
                         parameter, if defined, will display all events that
                         happened X minutes before and after the defined date,
@@ -50,7 +50,7 @@ optional arguments:
                         parameter, if defined will save all X events before
                         and after a filter match has been made. X is defined
                         by the --slice_size parameter.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

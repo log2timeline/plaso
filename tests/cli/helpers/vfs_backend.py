@@ -22,11 +22,11 @@ usage: cli_helper.py [--vfs_back_end TYPE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --vfs_back_end TYPE, --vfs-back-end TYPE
                         The preferred dfVFS back-end: "auto", "fsext",
                         "fshfs", "fsntfs", "tsk" or "vsgpt".
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

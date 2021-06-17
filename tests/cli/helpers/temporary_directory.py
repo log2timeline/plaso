@@ -22,11 +22,11 @@ usage: cli_helper.py [--temporary_directory DIRECTORY]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
