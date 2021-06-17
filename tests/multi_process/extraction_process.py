@@ -14,10 +14,10 @@ from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
-from plaso.multi_processing import extraction_process
+from plaso.multi_process import extraction_process
 
 from tests import test_lib as shared_test_lib
-from tests.multi_processing import test_lib
+from tests.multi_process import test_lib
 
 
 class TestEventExtractionWorker(worker.EventExtractionWorker):

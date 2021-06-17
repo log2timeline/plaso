@@ -12,13 +12,13 @@ from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.lib import definitions
-from plaso.multi_processing import analysis_engine
+from plaso.multi_process import analysis_engine
 from plaso.storage import factory as storage_factory
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.filters import test_lib as filters_test_lib
-from tests.multi_processing import test_lib
+from tests.multi_process import test_lib
 
 
 class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):

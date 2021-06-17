@@ -6,7 +6,7 @@ import shutil
 import tempfile
 
 from plaso.lib import definitions
-from plaso.multi_processing import engine
+from plaso.multi_process import engine
 from plaso.storage.redis import redis_store
 from plaso.storage.redis import merge_reader as redis_merge_reader
 from plaso.storage.sqlite import merge_reader as sqlite_merge_reader

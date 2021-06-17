@@ -9,7 +9,7 @@ import unittest
 from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.lib import definitions
-from plaso.multi_processing import output_engine
+from plaso.multi_process import output_engine
 from plaso.output import dynamic
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
@@ -17,7 +17,7 @@ from plaso.storage import factory as storage_factory
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
-from tests.multi_processing import test_lib
+from tests.multi_process import test_lib
 
 
 class TestOutputModule(output_interface.OutputModule):

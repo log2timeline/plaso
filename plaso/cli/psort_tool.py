@@ -25,8 +25,8 @@ from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.multi_processing import analysis_engine as multi_analysis_engine
-from plaso.multi_processing import output_engine as multi_output_engine
+from plaso.multi_process import analysis_engine as multi_analysis_engine
+from plaso.multi_process import output_engine as multi_output_engine
 from plaso.storage import factory as storage_factory
 
 

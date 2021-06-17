@@ -8,8 +8,8 @@ import time
 from plaso.engine import processing_status
 from plaso.lib import bufferlib
 from plaso.lib import definitions
-from plaso.multi_processing import engine
-from plaso.multi_processing import logger
+from plaso.multi_process import engine
+from plaso.multi_process import logger
 from plaso.storage import event_tag_index
 from plaso.storage import time_range as storage_time_range
 

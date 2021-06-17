@@ -20,10 +20,10 @@ from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.multi_processing import extraction_process
-from plaso.multi_processing import logger
-from plaso.multi_processing import task_engine
-from plaso.multi_processing import task_manager
+from plaso.multi_process import extraction_process
+from plaso.multi_process import logger
+from plaso.multi_process import task_engine
+from plaso.multi_process import task_manager
 
 
 class _EventSourceHeap(object):

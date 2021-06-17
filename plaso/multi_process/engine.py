@@ -12,8 +12,8 @@ import time
 from plaso.engine import engine
 from plaso.engine import process_info
 from plaso.lib import definitions
-from plaso.multi_processing import logger
-from plaso.multi_processing import plaso_xmlrpc
+from plaso.multi_process import logger
+from plaso.multi_process import plaso_xmlrpc
 
 
 class MultiProcessEngine(engine.BaseEngine):
