@@ -102,7 +102,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     if storage_type == definitions.STORAGE_TYPE_SESSION:
       self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
-      self.compression_format = definitions.COMPRESSION_FORMAT_NONE
     else:
       self.compression_format = definitions.COMPRESSION_FORMAT_NONE
 
@@ -952,9 +951,13 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     if not self._read_only:
       self._WriteSerializedAttributeContainerList(
+          self._CONTAINER_TYPE_PREPROCESSING_WARNING)
+
+      self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_ANALYSIS_REPORT)
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_ANALYSIS_WARNING)
+
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EVENT_SOURCE)
       self._WriteSerializedAttributeContainerList(

@@ -628,18 +628,20 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           self._views_format_type, title=title)
 
       table_view.AddRow(['Message', warning.message])
-      table_view.AddRow(['Parser chain', warning.parser_chain])
+      table_view.AddRow(['Plugin name', warning.plugin_name])
 
-      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+      if warning.path_spec:
+        # TODO: add helper method to format path spec as row.
+        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
 
-      for path_index, line in enumerate(path_spec_string.split('\n')):
-        if not line:
-          continue
+        for path_index, line in enumerate(path_spec_string.split('\n')):
+          if not line:
+            continue
 
-        if path_index == 0:
-          table_view.AddRow(['Path specification', line])
-        else:
-          table_view.AddRow(['', line])
+          if path_index == 0:
+            table_view.AddRow(['Path specification', line])
+          else:
+            table_view.AddRow(['', line])
 
       table_view.Write(self._output_writer)
 
