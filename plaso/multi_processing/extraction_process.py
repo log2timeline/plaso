@@ -23,8 +23,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
   _FILE_SYSTEM_CACHE_SIZE = 3
 
   def __init__(
-      self, task_queue, storage_writer, collection_filters_helper,
-      knowledge_base, session, processing_configuration, **kwargs):
+      self, task_queue, collection_filters_helper, knowledge_base, session,
+      processing_configuration, **kwargs):
     """Initializes a worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -32,7 +32,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     Args:
       task_queue (PlasoQueue): task queue.
-      storage_writer (StorageWriter): storage writer for a session store.
       collection_filters_helper (CollectionFiltersHelper): collection filters
           helper.
       knowledge_base (KnowledgeBase): knowledge base which contains
@@ -57,7 +56,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._resolver_context = None
     self._session = session
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
-    self._storage_writer = storage_writer
     self._task = None
     self._task_queue = task_queue
 
@@ -187,12 +185,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     if self._processing_profiler:
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
-    if self._serializers_profiler:
-      self._storage_writer.SetSerializersProfiler(self._serializers_profiler)
-
-    if self._storage_profiler:
-      self._storage_writer.SetStorageProfiler(self._storage_profiler)
-
     logger.debug('Worker: {0!s} (PID: {1:d}) started.'.format(
         self._name, self._pid))
 
@@ -235,12 +227,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     if self._processing_profiler:
       self._extraction_worker.SetProcessingProfiler(None)
 
-    if self._serializers_profiler:
-      self._storage_writer.SetSerializersProfiler(None)
-
-    if self._storage_profiler:
-      self._storage_writer.SetStorageProfiler(None)
-
     self._StopProfiling()
     self._parser_mediator.StopProfiling()
 
@@ -248,7 +234,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._file_system_cache = []
     self._parser_mediator = None
     self._resolver_context = None
-    self._storage_writer = None
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED
@@ -322,13 +307,16 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     if self._serializers_profiler:
       task_storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
-    task_storage_writer.Open()
+    if self._storage_profiler:
+      task_storage_writer.SetStorageProfiler(self._storage_profiler)
 
     self._parser_mediator.SetStorageWriter(task_storage_writer)
 
-    task_storage_writer.WriteTaskStart()
+    task_storage_writer.Open()
 
     try:
+      task_storage_writer.WriteTaskStart()
+
       # TODO: add support for more task types.
       self._ProcessPathSpec(
           self._extraction_worker, self._parser_mediator, task.path_spec)
@@ -337,9 +325,9 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     finally:
       task_storage_writer.WriteTaskCompletion(aborted=self._abort)
 
-      self._parser_mediator.SetStorageWriter(None)
-
       task_storage_writer.Close()
+
+    self._parser_mediator.SetStorageWriter(None)
 
     try:
       self._FinalizeTaskStorageWriter(

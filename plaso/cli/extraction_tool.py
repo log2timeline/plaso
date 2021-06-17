@@ -16,19 +16,23 @@ from plaso import analyzers  # pylint: disable=unused-import
 # The following import makes sure the parsers are registered.
 from plaso import parsers  # pylint: disable=unused-import
 
-from plaso.containers import artifacts
 from plaso.cli import logger
+from plaso.cli import status_view
 from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.containers import artifacts
 from plaso.engine import configurations
 from plaso.engine import engine
+from plaso.engine import single_process as single_extraction_engine
 from plaso.filters import parser_filter
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.multi_processing import extraction_engine as multi_extraction_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
+from plaso.storage import factory as storage_factory
 
 
 class ExtractionTool(
@@ -49,6 +53,11 @@ class ExtractionTool(
 
   _PRESETS_FILE_NAME = 'presets.yaml'
 
+  _SOURCE_TYPES_TO_PREPROCESS = frozenset([
+      dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
+      dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+      dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes an CLI tool.
 
@@ -62,7 +71,10 @@ class ExtractionTool(
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
     self._buffer_size = 0
+    self._command_line_arguments = None
+    self._enable_sigsegv_handler = False
     self._expanded_parser_filter_expression = None
+    self._number_of_extraction_workers = 0
     self._parser_filter_expression = None
     self._preferred_time_zone = None
     self._preferred_year = None
@@ -74,14 +86,16 @@ class ExtractionTool(
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
+    self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._storage_file_path = None
     self._storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._task_storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._temporary_directory = None
     self._text_prepend = None
-    self._yara_rules_string = None
     self._worker_memory_limit = None
     self._worker_timeout = None
+    self._yara_rules_string = None
 
     self.list_time_zones = False
 
@@ -364,6 +378,98 @@ class ExtractionTool(
 
     logger.debug('Preprocessing done.')
 
+  def _ProcessSources(self, session, storage_writer):
+    """Processes the sources and extract events.
+
+    Args:
+      session (Session): session in which the sources are processed.
+      storage_writer (StorageWriter): storage writer for a session storage.
+
+    Returns:
+      ProcessingStatus: processing status.
+
+    Raises:
+      BadConfigOption: if an invalid collection filter was specified.
+    """
+    is_archive = False
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+      is_archive = self._IsArchiveFile(self._source_path_specs[0])
+      if is_archive:
+        self._source_type = definitions.SOURCE_TYPE_ARCHIVE
+
+    single_process_mode = self._single_process_mode
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+      if not self._process_archives or not is_archive:
+        single_process_mode = True
+
+    if single_process_mode:
+      extraction_engine = single_extraction_engine.SingleProcessEngine()
+    else:
+      extraction_engine = multi_extraction_engine.ExtractionMultiProcessEngine(
+          number_of_worker_processes=self._number_of_extraction_workers,
+          worker_memory_limit=self._worker_memory_limit,
+          worker_timeout=self._worker_timeout)
+
+    # If the source is a directory or a storage media image
+    # run pre-processing.
+    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
+      self._PreprocessSources(extraction_engine, storage_writer)
+
+    configuration = self._CreateProcessingConfiguration(
+        extraction_engine.knowledge_base)
+
+    session.enabled_parser_names = (
+        configuration.parser_filter_expression.split(','))
+    session.parser_filter_expression = self._parser_filter_expression
+
+    self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
+
+    # TODO: set mount path in knowledge base with
+    # extraction_engine.knowledge_base.SetMountPath()
+    extraction_engine.knowledge_base.SetTextPrepend(self._text_prepend)
+
+    try:
+      extraction_engine.BuildCollectionFilters(
+          self._artifact_definitions_path, self._custom_artifacts_path,
+          extraction_engine.knowledge_base, self._artifact_filters,
+          self._filter_file)
+    except errors.InvalidFilter as exception:
+      raise errors.BadConfigOption(
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
+
+    status_update_callback = (
+        self._status_view.GetExtractionStatusUpdateCallback())
+    processing_status = None
+
+    if single_process_mode:
+      force_parser = False
+      number_of_parsers = len(configuration.parser_filter_expression.split(','))
+      if (self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE and
+          not is_archive and number_of_parsers == 1):
+        force_parser = True
+
+      logger.debug('Starting extraction in single process mode.')
+
+      processing_status = extraction_engine.ProcessSources(
+          session, self._source_path_specs, storage_writer,
+          self._resolver_context, configuration, force_parser=force_parser,
+          status_update_callback=status_update_callback)
+
+    else:
+      logger.debug('Starting extraction in multi process mode.')
+
+      # The following overrides are needed because pylint 2.6.0 gets confused
+      # about which ProcessSources to check against.
+      # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
+      processing_status = extraction_engine.ProcessSources(
+          session, self._source_path_specs, storage_writer, configuration,
+          enable_sigsegv_handler=self._enable_sigsegv_handler,
+          status_update_callback=status_update_callback,
+          storage_file_path=self._storage_file_path)
+
+    return processing_status
+
   def _ReadParserPresetsFromFile(self):
     """Reads the parser presets from the presets.yaml file.
 
@@ -451,6 +557,55 @@ class ExtractionTool(
             'stored without a time zone indicator. The time zone is determined '
             'based on the source data where possible otherwise it will default '
             'to UTC. Use "list" to see a list of available time zones.'))
+
+  def ExtractEventsFromSources(self):
+    """Processes the sources and extracts events.
+
+    Raises:
+      BadConfigOption: if the storage file path is invalid or the storage
+          format not supported.
+      SourceScannerError: if the source scanner could not find a supported
+          file system.
+      UserAbort: if the user initiated an abort.
+    """
+    self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
+
+    self.ScanSource(self._source_path)
+
+    self._status_view.SetMode(self._status_view_mode)
+    self._status_view.SetSourceInformation(
+        self._source_path, self._source_type,
+        artifact_filters=self._artifact_filters,
+        filter_file=self._filter_file)
+
+    self._output_writer.Write('\n')
+    self._status_view.PrintExtractionStatusHeader(None)
+    self._output_writer.Write('Processing started.\n')
+
+    session = engine.BaseEngine.CreateSession(
+        artifact_filter_names=self._artifact_filters,
+        command_line_arguments=self._command_line_arguments,
+        debug_mode=self._debug_mode,
+        filter_file_path=self._filter_file,
+        preferred_encoding=self.preferred_encoding,
+        preferred_time_zone=self._preferred_time_zone,
+        preferred_year=self._preferred_year,
+        text_prepend=self._text_prepend)
+
+    storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+        self._storage_format, session, self._storage_file_path)
+    if not storage_writer:
+      raise errors.BadConfigOption('Unsupported storage format: {0:s}'.format(
+          self._storage_format))
+
+    storage_writer.Open()
+
+    try:
+      processing_status = self._ProcessSources(session, storage_writer)
+    finally:
+      storage_writer.Close()
+
+    self._status_view.PrintExtractionSummary(processing_status)
 
   def ListParsersAndPlugins(self):
     """Lists information about the available parsers and plugins."""

@@ -572,8 +572,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
 
     process = extraction_process.ExtractionWorkerProcess(
-        task_queue, storage_writer, self.collection_filters_helper,
-        self.knowledge_base, self._session, self._processing_configuration,
+        task_queue, self.collection_filters_helper, self.knowledge_base,
+        self._session, self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging
@@ -848,7 +848,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       # Open the storage file after creating the worker processes otherwise
       # the ZIP storage file will remain locked as long as the worker processes
       # are alive.
-      storage_writer.Open()
       storage_writer.WriteSessionStart()
 
       try:
@@ -858,8 +857,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       finally:
         storage_writer.WriteSessionCompletion(aborted=self._abort)
-
-        storage_writer.Close()
 
     finally:
       # Stop the status update thread after close of the storage writer
