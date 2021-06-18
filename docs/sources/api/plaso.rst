@@ -15,11 +15,12 @@ Subpackages
    plaso.filters
    plaso.formatters
    plaso.lib
-   plaso.multi_processing
+   plaso.multi_process
    plaso.output
    plaso.parsers
    plaso.preprocessors
    plaso.serializer
+   plaso.single_process
    plaso.storage
    plaso.unix
    plaso.winnt

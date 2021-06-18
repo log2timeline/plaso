@@ -8,8 +8,8 @@ from xmlrpc import server as SimpleXMLRPCServer
 from xmlrpc import client as xmlrpclib
 from xml.parsers import expat
 
-from plaso.multi_processing import logger
-from plaso.multi_processing import rpc
+from plaso.multi_process import logger
+from plaso.multi_process import rpc
 
 
 class XMLRPCClient(rpc.RPCClient):

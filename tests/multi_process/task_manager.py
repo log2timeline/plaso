@@ -7,7 +7,7 @@ import unittest
 
 from plaso.containers import tasks
 from plaso.lib import definitions
-from plaso.multi_processing import task_manager
+from plaso.multi_process import task_manager
 
 from tests import test_lib as shared_test_lib
 

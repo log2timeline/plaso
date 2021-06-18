@@ -29,7 +29,7 @@ from plaso.single_process import extraction_engine as single_extraction_engine
 from plaso.filters import parser_filter
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.multi_processing import extraction_engine as multi_extraction_engine
+from plaso.multi_process import extraction_engine as multi_extraction_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
 from plaso.storage import factory as storage_factory

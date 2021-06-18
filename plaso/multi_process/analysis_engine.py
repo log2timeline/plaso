@@ -11,9 +11,9 @@ from plaso.engine import processing_status
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.multi_processing import analysis_process
-from plaso.multi_processing import logger
-from plaso.multi_processing import task_engine
+from plaso.multi_process import analysis_process
+from plaso.multi_process import logger
+from plaso.multi_process import task_engine
 from plaso.storage import event_tag_index
 
 

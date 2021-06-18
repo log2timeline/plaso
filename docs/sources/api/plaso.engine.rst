@@ -116,14 +116,6 @@ plaso.engine.profilers module
    :undoc-members:
    :show-inheritance:
 
-plaso.engine.single\_process module
------------------------------------
-
-.. automodule:: plaso.engine.single_process
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.engine.tagging\_file module
 ---------------------------------
 

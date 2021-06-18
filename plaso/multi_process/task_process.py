@@ -4,7 +4,7 @@
 import os
 
 from plaso.lib import definitions
-from plaso.multi_processing import base_process
+from plaso.multi_process import base_process
 from plaso.storage import factory as storage_factory
 
 

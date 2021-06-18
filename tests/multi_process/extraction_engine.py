@@ -14,7 +14,7 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.engine import configurations
-from plaso.multi_processing import extraction_engine
+from plaso.multi_process import extraction_engine
 from plaso.storage.sqlite import writer as sqlite_writer
 
 from tests import test_lib as shared_test_lib

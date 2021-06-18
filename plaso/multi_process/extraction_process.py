@@ -10,8 +10,8 @@ from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.multi_processing import task_process
-from plaso.multi_processing import logger
+from plaso.multi_process import task_process
+from plaso.multi_process import logger
 from plaso.parsers import mediator as parsers_mediator
 
 

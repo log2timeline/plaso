@@ -12,7 +12,7 @@ from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.engine import processing_status
 from plaso.engine import profilers
-from plaso.multi_processing import logger
+from plaso.multi_process import logger
 
 
 class _PendingMergeTaskHeap(object):

@@ -4,7 +4,7 @@
 import logging
 
 
-_logger = logging.getLogger('multi_processing')
+_logger = logging.getLogger('multi_process')
 
 # Mimic the logging module interface.
 critical = _logger.critical

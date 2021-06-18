@@ -13,8 +13,8 @@ import time
 from plaso.engine import process_info
 from plaso.engine import profilers
 from plaso.lib import loggers
-from plaso.multi_processing import logger
-from plaso.multi_processing import plaso_xmlrpc
+from plaso.multi_process import logger
+from plaso.multi_process import plaso_xmlrpc
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
