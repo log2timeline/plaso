@@ -5,15 +5,13 @@ import os
 
 import pyesedb
 
-from dtfabric import errors as dtfabric_errors
-from dtfabric.runtime import fabric as dtfabric_fabric
-
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import plugins
 
 
-class ESEDBPlugin(plugins.BasePlugin):
+class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
   """The ESE database plugin interface."""
 
   NAME = 'esedb_plugin'
@@ -56,8 +54,6 @@ class ESEDBPlugin(plugins.BasePlugin):
   def __init__(self):
     """Initializes the ESE database plugin."""
     super(ESEDBPlugin, self).__init__()
-    self._data_type_maps = {}
-    self._fabric = self._ReadDefinitionFile(self._DEFINITION_FILE)
     self._tables = {}
     self._tables.update(self.REQUIRED_TABLES)
     self._tables.update(self.OPTIONAL_TABLES)
@@ -141,25 +137,6 @@ class ESEDBPlugin(plugins.BasePlugin):
       raise errors.ParseError(
           'Unable to parse integer value with error: {0!s}'.format(
               exception))
-
-  def _GetDataTypeMap(self, name):
-    """Retrieves a data type map defined by the definition file.
-
-    The data type maps are cached for reuse.
-
-    Args:
-      name (str): name of the data type as defined by the definition file.
-
-    Returns:
-      dtfabric.DataTypeMap: data type map which contains a data type definition,
-          such as a structure, that can be mapped onto binary data.
-    """
-    data_type_map = self._data_type_maps.get(name, None)
-    if not data_type_map:
-      data_type_map = self._fabric.CreateDataTypeMap(name)
-      self._data_type_maps[name] = data_type_map
-
-    return data_type_map
 
   def _GetRecordValue(self, record, value_entry):
     """Retrieves a specific value from the record.
@@ -328,61 +305,6 @@ class ESEDBPlugin(plugins.BasePlugin):
       callback(
           parser_mediator, cache=cache, database=database, table=esedb_table,
           **kwargs)
-
-  def _ReadDefinitionFile(self, filename):
-    """Reads a dtFabric definition file.
-
-    Args:
-      filename (str): name of the dtFabric definition file.
-
-    Returns:
-      dtfabric.DataTypeFabric: data type fabric which contains the data format
-          data type maps of the data type definition, such as a structure, that
-          can be mapped onto binary data or None if no filename is provided.
-    """
-    if not filename:
-      return None
-
-    path = os.path.join(self._DEFINITION_FILES_PATH, filename)
-    with open(path, 'rb') as file_object:
-      definition = file_object.read()
-
-    return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
-
-  def _ReadStructureFromByteStream(
-      self, byte_stream, file_offset, data_type_map, context=None):
-    """Reads a structure from a byte stream.
-
-    Args:
-      byte_stream (bytes): byte stream.
-      file_offset (int): offset of the structure data relative to the start
-          of the file-like object.
-      data_type_map (dtfabric.DataTypeMap): data type map of the structure.
-      context (Optional[dtfabric.DataTypeMapContext]): data type map context.
-          The context is used within dtFabric to hold state about how to map
-          the data type definition onto the byte stream. In this class it is
-          used to determine the size of variable size data type definitions.
-
-    Returns:
-      object: structure values object.
-
-    Raises:
-      ParseError: if the structure cannot be read.
-      ValueError: if file-like object or data type map is missing.
-    """
-    if not byte_stream:
-      raise ValueError('Missing byte stream.')
-
-    if not data_type_map:
-      raise ValueError('Missing data type map.')
-
-    try:
-      return data_type_map.MapByteStream(byte_stream, context=context)
-    except (dtfabric_errors.ByteStreamTooSmallError,
-            dtfabric_errors.MappingError) as exception:
-      raise errors.ParseError((
-          'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-          '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
   def CheckRequiredTables(self, database):
     """Check if the database has the minimal structure required by the plugin.
