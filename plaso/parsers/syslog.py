@@ -91,9 +91,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       'INFO',
       'DEBUG']
 
-  _SYSLOG_NILVALUE = '-'
-  _PID_NOT_LOGGED_VALUE = -1
-
   # TODO: change pattern to allow only spaces as a field separator.
   _BODY_PATTERN = (
       r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|'
@@ -251,7 +248,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     _PYPARSING_COMPONENTS['rfc3339_datetime'].setResultsName('datetime') +
     _PYPARSING_COMPONENTS['hostname'] +
     _PYPARSING_COMPONENTS['reporter'] +
-    _PYPARSING_COMPONENTS['pid'] +
+    pyparsing.Or(
+        [pyparsing.Suppress('-'), _PYPARSING_COMPONENTS['pid']]) +
     _PYPARSING_COMPONENTS['msgid'] +
     _PYPARSING_COMPONENTS['structured-data'] +
     _PYPARSING_COMPONENTS['body'] +
@@ -406,19 +404,13 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       event_data = SyslogLineEventData()
       event_data.body = self._GetValueFromStructure(structure, 'body')
       event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-      event_data.pid = self._GetValueFromStructure(structure, 'pid')
       event_data.reporter = self._GetValueFromStructure(structure, 'reporter')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.severity = self._GetValueFromStructure(structure, 'severity')
+
       if key == 'rsyslog_protocol_23_line':
         event_data.severity = self._PriorityToSeverity(
-            self._GetValueFromStructure(structure, 'priority'))
-      else:
-        event_data.severity = self._GetValueFromStructure(
-            structure, 'severity')
-
-      if event_data.pid == self._SYSLOG_NILVALUE:
-        event_data.pid = self._PID_NOT_LOGGED_VALUE
-      else:
-        event_data.pid = int(event_data.pid)
+          self._GetValueFromStructure(structure, 'priority'))
 
       plugin = self._plugin_by_reporter.get(event_data.reporter, None)
       if plugin:
