@@ -111,6 +111,20 @@ class HashAnalyzer(threading.Thread):
       list[HashAnalysis]: list of results of analyzing the hashes.
     """
 
+  def SetLookupHash(self, lookup_hash):
+    """Sets the lookup hash to query.
+
+    Args:
+      lookup_hash (str): name of the hash attribute to look up.
+
+    Raises:
+      ValueError: if the lookup hash is not supported.
+    """
+    if lookup_hash not in self.SUPPORTED_HASHES:
+      raise ValueError('Unsupported lookup hash: {0!s}'.format(lookup_hash))
+
+    self.lookup_hash = lookup_hash
+
   # This method is part of the threading.Thread interface, hence its name does
   # not follow the style guide.
   def run(self):
@@ -134,20 +148,6 @@ class HashAnalyzer(threading.Thread):
         self._hash_queue.task_done()
 
       time.sleep(self.wait_after_analysis)
-
-  def SetLookupHash(self, lookup_hash):
-    """Sets the lookup hash to query.
-
-    Args:
-      lookup_hash (str): name of the hash attribute to look up.
-
-    Raises:
-      ValueError: if the lookup hash is not supported.
-    """
-    if lookup_hash not in self.SUPPORTED_HASHES:
-      raise ValueError('Unsupported lookup hash: {0!s}'.format(lookup_hash))
-
-    self.lookup_hash = lookup_hash
 
   def SignalAbort(self):
     """Instructs the hash analyzer to abort."""
@@ -449,12 +449,11 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     """Generates a list of strings to tag events with.
 
     Args:
-      hash_information (object): object that mediates the result of the
-          analysis of a hash, as returned by the Analyze() method of the
-          analyzer class associated with this plugin.
+      hash_information (bool): response from the hash tagging analyzer that
+          indicates that the file hash was present or not.
 
     Returns:
-      list[str]: list of labels to apply to events.
+      list[str]: list of labels to apply to event.
     """
 
   def SetLookupHash(self, lookup_hash):

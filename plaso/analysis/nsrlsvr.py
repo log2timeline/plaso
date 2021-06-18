@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Analysis plugin to look up files in nsrlsvr and tag events."""
+"""Analysis plugin to look up file hashes in nsrlsvr and tag events."""
 
 import socket
 
@@ -90,7 +90,7 @@ class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
     return response == b'OK 1'
 
   def Analyze(self, hashes):
-    """Looks up hashes in nsrlsvr.
+    """Looks up file hashes in nsrlsvr.
 
     Args:
       hashes (list[str]): hash values to look up.
@@ -109,11 +109,9 @@ class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
     hash_analyses = []
     for digest in hashes:
       response = self._QueryHash(nsrl_socket, digest)
-      if response is None:
-        continue
-
-      hash_analysis = hash_tagging.HashAnalysis(digest, response)
-      hash_analyses.append(hash_analysis)
+      if response is not None:
+        hash_analysis = hash_tagging.HashAnalysis(digest, response)
+        hash_analyses.append(hash_analysis)
 
     nsrl_socket.close()
 
@@ -165,22 +163,24 @@ class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   # so look up all files.
   DATA_TYPES = ['fs:stat', 'fs:stat:ntfs']
 
+  DEFAULT_LABEL = 'nsrl_present'
+
   NAME = 'nsrlsvr'
 
   def __init__(self):
     """Initializes an nsrlsvr analysis plugin."""
     super(NsrlsvrAnalysisPlugin, self).__init__(NsrlsvrAnalyzer)
-    self._label = None
+    self._label = self.DEFAULT_LABEL
 
   def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
-      hash_information (bool): whether the analyzer received a response from
-          nsrlsvr indicating that the hash was present in its loaded NSRL set.
+      hash_information (bool): response from the hash tagging analyzer that
+          indicates that the file hash was present or not.
 
     Returns:
-      list[str]: strings describing the results from nsrlsvr.
+      list[str]: list of labels to apply to event.
     """
     if hash_information:
       return [self._label]

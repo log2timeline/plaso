@@ -18,6 +18,8 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_HOST = 'localhost'
   _DEFAULT_PORT = 8080
   _DEFAULT_PROTOCOL = 'http'
+  _SUPPORTED_HASHES = viper.ViperAnalyzer.SUPPORTED_HASHES
+  _SUPPORTED_PROTOCOLS = viper.ViperAnalyzer.SUPPORTED_PROTOCOLS
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -32,12 +34,11 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         '--viper-hash', '--viper_hash', dest='viper_hash', type=str,
-        action='store', choices=viper.ViperAnalyzer.SUPPORTED_HASHES,
+        action='store', choices=cls._SUPPORTED_HASHES,
         default=cls._DEFAULT_HASH, metavar='HASH', help=(
             'Type of hash to use to query the Viper server, the default is: '
             '{0:s}. Supported options: {1:s}').format(
-                cls._DEFAULT_HASH, ', '.join(
-                    viper.ViperAnalyzer.SUPPORTED_HASHES)))
+                cls._DEFAULT_HASH, ', '.join(cls._SUPPORTED_HASHES)))
 
     argument_group.add_argument(
         '--viper-host', '--viper_host', dest='viper_host', type=str,
@@ -54,17 +55,14 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     argument_group.add_argument(
         '--viper-protocol', '--viper_protocol', dest='viper_protocol',
-        type=str, choices=viper.ViperAnalyzer.SUPPORTED_PROTOCOLS,
-        action='store', default=cls._DEFAULT_PROTOCOL, metavar='PROTOCOL',
-        help=(
+        type=str, choices=cls._SUPPORTED_PROTOCOLS, action='store',
+        default=cls._DEFAULT_PROTOCOL, metavar='PROTOCOL', help=(
             'Protocol to use to query Viper, the default is: {0:s}. '
             'Supported options: {1:s}').format(
-                cls._DEFAULT_PROTOCOL, ', '.join(
-                    viper.ViperAnalyzer.SUPPORTED_PROTOCOLS)))
+                cls._DEFAULT_PROTOCOL, ', '.join(cls._SUPPORTED_PROTOCOLS)))
 
   # pylint: disable=arguments-differ
   @classmethod
-  # pylint: disable=arguments-differ
   def ParseOptions(cls, options, analysis_plugin):
     """Parses and validates options.
 
