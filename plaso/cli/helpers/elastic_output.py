@@ -9,17 +9,9 @@ from uuid import uuid4
 
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
-from plaso.cli.helpers import server_config
 from plaso.cli import logger
 from plaso.lib import errors
 from plaso.output import shared_elastic
-
-
-class ElasticSearchServerArgumentsHelper(server_config.ServerArgumentsHelper):
-  """Elastic Search server CLI arguments helper."""
-
-  _DEFAULT_SERVER = '127.0.0.1'
-  _DEFAULT_PORT = 9200
 
 
 class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
@@ -29,13 +21,14 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = 'output'
   DESCRIPTION = 'Argument helper for the Elastic Search output modules.'
 
-  _DEFAULT_INDEX_NAME = uuid4().hex
-  _DEFAULT_FLUSH_INTERVAL = 1000
-  _DEFAULT_RAW_FIELDS = False
-
   _DEFAULT_FIELDS = [
       'datetime', 'display_name', 'message', 'source_long', 'source_short',
       'tag', 'timestamp', 'timestamp_desc']
+
+  _DEFAULT_FLUSH_INTERVAL = 1000
+  _DEFAULT_INDEX_NAME = uuid4().hex
+  _DEFAULT_PORT = 9200
+  _DEFAULT_SERVER = '127.0.0.1'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -66,22 +59,38 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
             'the default fields, which are {0:s}.'.format(default_fields)))
 
     argument_group.add_argument(
-        '--elastic_mappings', '--elastic-mappings', dest='elastic_mappings',
-        action='store', default=None, metavar='PATH', help=(
-            'Path to a file containing mappings for Elasticsearch indexing.'))
+        '--elastic-server', '--elastic_server', '--server', dest='server',
+        type=str, action='store', default=cls._DEFAULT_SERVER,
+        metavar='HOSTNAME', help=(
+            'Hostname or IP address of the Elasticsearch server.'))
 
     argument_group.add_argument(
-        '--elastic_user', '--elastic-user', dest='elastic_user', action='store',
+        '--elastic-port', '--elastic_port', '--port', dest='port', type=int,
+        action='store', default=cls._DEFAULT_PORT, metavar='PORT', help=(
+            'Port number of the Elasticsearch server.'))
+
+    argument_group.add_argument(
+        '--elastic-user', '--elastic_user', dest='elastic_user', action='store',
         default=None, metavar='USERNAME', help=(
             'Username to use for Elasticsearch authentication.'))
 
     argument_group.add_argument(
-        '--elastic_password', '--elastic-password', dest='elastic_password',
+        '--elastic-password', '--elastic_password', dest='elastic_password',
         action='store', default=None, metavar='PASSWORD', help=(
             'Password to use for Elasticsearch authentication. WARNING: use '
             'with caution since this can expose the password to other users '
             'on the system. The password can also be set with the environment '
-            'variable PLASO_ELASTIC_PASSWORD. '))
+            'variable PLASO_ELASTIC_PASSWORD.'))
+
+    argument_group.add_argument(
+        '--elastic-mappings', '--elastic_mappings', dest='elastic_mappings',
+        action='store', default=None, metavar='PATH', help=(
+            'Path to a file containing mappings for Elasticsearch indexing.'))
+
+    argument_group.add_argument(
+        '--elastic-url-prefix', '--elastic_url_prefix',
+        dest='elastic_url_prefix', type=str, action='store', default=None,
+        metavar='URL_PREFIX', help='URL prefix for Elasticsearch.')
 
     argument_group.add_argument(
         '--use_ssl', '--use-ssl', dest='use_ssl', action='store_true',
@@ -92,13 +101,6 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         dest='ca_certificates_file_path', action='store', type=str,
         default=None, metavar='PATH', help=(
             'Path to a file containing a list of root certificates to trust.'))
-
-    argument_group.add_argument(
-        '--elastic_url_prefix', '--elastic-url-prefix',
-        dest='elastic_url_prefix', type=str, action='store', default=None,
-        metavar='URL_PREFIX', help='URL prefix for elastic search.')
-
-    ElasticSearchServerArgumentsHelper.AddArguments(argument_group)
 
   # pylint: disable=arguments-differ
   @classmethod
@@ -150,7 +152,12 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     if elastic_user is not None and elastic_password is None:
       elastic_password = getpass.getpass('Enter your Elasticsearch password: ')
 
-    ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
+    server = cls._ParseStringOption(
+        options, 'server', default_value=cls._DEFAULT_SERVER)
+    port = cls._ParseNumericOption(
+        options, 'port', default_value=cls._DEFAULT_PORT)
+
+    output_module.SetServerInformation(server, port)
 
     output_module.SetIndexName(index_name)
     output_module.SetFlushInterval(flush_interval)
