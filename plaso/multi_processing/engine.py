@@ -390,10 +390,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def _StopStatusUpdateThread(self):
     """Stops the status update thread."""
-    self._status_update_active = False
-    if self._status_update_thread.is_alive():
-      self._status_update_thread.join()
-    self._status_update_thread = None
+    if self._status_update_thread:
+      self._status_update_active = False
+      if self._status_update_thread.is_alive():
+        self._status_update_thread.join()
+      self._status_update_thread = None
 
   def _TerminateProcessByPid(self, pid):
     """Terminate a process that's monitored by the engine.
