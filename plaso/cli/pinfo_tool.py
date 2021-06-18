@@ -38,9 +38,13 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       'Shows information about a Plaso storage file, for example how it was '
       'collected, what information was extracted from a source, etc.')
 
+  _DEFAULT_HASH_TYPE = 'sha256'
+  _HASH_CHOICES = ('md5', 'sha1', 'sha256')
+
   _REPORTS = {
       'file_hashes': 'Report file hashes calculated during processing.'}
 
+  _DEFAULT_REPORT_TYPE = 'none'
   _REPORT_CHOICES = sorted(list(_REPORTS.keys()) + ['list', 'none'])
 
   _SECTIONS = {
@@ -67,9 +71,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     self._compare_storage_file_path = None
     self._output_filename = None
     self._output_format = 'text'
-    self._preferred_hash_type = 'sha256'
+    self._hash_type = self._DEFAULT_HASH_TYPE
     self._process_memory_limit = None
-    self._report_type = None
+    self._report_type = self._DEFAULT_REPORT_TYPE
     self._sections = None
     self._storage_file_path = None
     self._verbose = False
@@ -313,20 +317,20 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     elif self._output_format == 'markdown':
       self._output_writer.Write('{0:s} hash | Display name\n'.format(
-          self._preferred_hash_type.upper()))
+          self._hash_type.upper()))
       self._output_writer.Write('--- | ---\n')
 
     elif self._output_format == 'text':
       self._output_writer.Write('{0:s} hash\tDisplay name\n'.format(
-          self._preferred_hash_type.upper()))
+          self._hash_type.upper()))
 
     for event_data_stream_index, event_data_stream in enumerate(
         storage_reader.GetEventDataStreams()):
-      if self._preferred_hash_type == 'md5':
+      if self._hash_type == 'md5':
         hash_value = event_data_stream.md5_hash
-      elif self._preferred_hash_type == 'sha1':
+      elif self._hash_type == 'sha1':
         hash_value = event_data_stream.sha1_hash
-      elif self._preferred_hash_type == 'sha256':
+      elif self._hash_type == 'sha256':
         hash_value = event_data_stream.sha256_hash
 
       if not hash_value:
@@ -344,7 +348,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         display_name = display_name.replace('\\', '\\\\')
         self._output_writer.Write(
             '{{"{0:s}_hash": "{1:s}", "display_name": "{2:s}"}}'.format(
-                self._preferred_hash_type, hash_value, display_name))
+                self._hash_type, hash_value, display_name))
 
       elif self._output_format == 'markdown':
         self._output_writer.Write('{0:s} | {1:s}\n'.format(
@@ -1257,8 +1261,14 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 sorted(self._SUPPORTED_OUTPUT_FORMATS))))
 
     argument_parser.add_argument(
+        '--hash', dest='hash', choices=self._HASH_CHOICES, action='store',
+        metavar='TYPE', default=self._DEFAULT_HASH_TYPE, help=(
+            'Type of hash to output in file_hashes report. Supported options: '
+            '{0:s}').format(', '.join(self._HASH_CHOICES)))
+
+    argument_parser.add_argument(
         '--report', dest='report', choices=self._REPORT_CHOICES, action='store',
-        metavar='TYPE', default='none', help=(
+        metavar='TYPE', default=self._DEFAULT_REPORT_TYPE, help=(
             'Report on specific information. Supported options: {0:s}'.format(
                 ', '.join(self._REPORT_CHOICES))))
 
@@ -1316,7 +1326,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     self._verbose = getattr(options, 'verbose', False)
 
-    self._report_type = getattr(options, 'report', 'none')
+    self._report_type = getattr(
+        options, 'report', self._DEFAULT_REPORT_TYPE)
     self._sections = getattr(options, 'sections', '')
 
     self.list_reports = self._report_type == 'list'
@@ -1336,6 +1347,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     if self._sections != 'all':
       self._sections = self._sections.split(',')
 
+    self._hash_type = getattr(options, 'hash', self._DEFAULT_HASH_TYPE)
     self._output_filename = getattr(options, 'write', None)
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
