@@ -4,14 +4,12 @@
 import abc
 import os
 
-from dtfabric import errors as dtfabric_errors
-from dtfabric.runtime import fabric as dtfabric_fabric
-
-from plaso.lib import errors
+from plaso.lib import dtfabric_helper
 from plaso.parsers.winreg_plugins import interface
 
 
-class DtFabricBaseWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
+class DtFabricBaseWindowsRegistryPlugin(
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Shared functionality for dtFabric-based data format Registry plugins.
 
   A dtFabric-based data format Windows Registry parser plugin defines its
@@ -71,86 +69,6 @@ class DtFabricBaseWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
   # Preserve the absolute path value of __file__ in case it is changed
   # at run-time.
   _DEFINITION_FILES_PATH = os.path.dirname(__file__)
-
-  def __init__(self):
-    """Initializes a dtFabric-based data format Registry plugin."""
-    super(DtFabricBaseWindowsRegistryPlugin, self).__init__()
-    self._data_type_maps = {}
-    self._fabric = self._ReadDefinitionFile(self._DEFINITION_FILE)
-
-  def _GetDataTypeMap(self, name):
-    """Retrieves a data type map defined by the definition file.
-
-    The data type maps are cached for reuse.
-
-    Args:
-      name (str): name of the data type as defined by the definition file.
-
-    Returns:
-      dtfabric.DataTypeMap: data type map which contains a data type definition,
-          such as a structure, that can be mapped onto binary data.
-    """
-    data_type_map = self._data_type_maps.get(name, None)
-    if not data_type_map:
-      data_type_map = self._fabric.CreateDataTypeMap(name)
-      self._data_type_maps[name] = data_type_map
-
-    return data_type_map
-
-  def _ReadDefinitionFile(self, filename):
-    """Reads a dtFabric definition file.
-
-    Args:
-      filename (str): name of the dtFabric definition file.
-
-    Returns:
-      dtfabric.DataTypeFabric: data type fabric which contains the data format
-          data type maps of the data type definition, such as a structure, that
-          can be mapped onto binary data or None if no filename is provided.
-    """
-    if not filename:
-      return None
-
-    path = os.path.join(self._DEFINITION_FILES_PATH, filename)
-    with open(path, 'rb') as file_object:
-      definition = file_object.read()
-
-    return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
-
-  def _ReadStructureFromByteStream(
-      self, byte_stream, file_offset, data_type_map, context=None):
-    """Reads a structure from a byte stream.
-
-    Args:
-      byte_stream (bytes): byte stream.
-      file_offset (int): offset of the structure data relative to the start
-          of the file-like object.
-      data_type_map (dtfabric.DataTypeMap): data type map of the structure.
-      context (Optional[dtfabric.DataTypeMapContext]): data type map context.
-          The context is used within dtFabric to hold state about how to map
-          the data type definition onto the byte stream. In this class it is
-          used to determine the size of variable size data type definitions.
-
-    Returns:
-      object: structure values object.
-
-    Raises:
-      ParseError: if the structure cannot be read.
-      ValueError: if file-like object or data type map is missing.
-    """
-    if not byte_stream:
-      raise ValueError('Missing byte stream.')
-
-    if not data_type_map:
-      raise ValueError('Missing data type map.')
-
-    try:
-      return data_type_map.MapByteStream(byte_stream, context=context)
-    except (dtfabric_errors.ByteStreamTooSmallError,
-            dtfabric_errors.MappingError) as exception:
-      raise errors.ParseError((
-          'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-          '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
   @abc.abstractmethod
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
