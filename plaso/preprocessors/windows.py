@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file contains preprocessors for Windows."""
 
+import os
+
 from plaso.containers import artifacts
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.preprocessors import interface
 from plaso.preprocessors import logger
@@ -195,10 +198,17 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
 
 
 class WindowsAvailableTimeZonesPlugin(
-    interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
+    interface.WindowsRegistryKeyArtifactPreprocessorPlugin,
+    dtfabric_helper.DtFabricHelper):
   """The Windows available time zones plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'WindowsAvailableTimeZones'
+
+  _DEFINITION_FILE = 'time_zone_information.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def _ParseKey(self, mediator, registry_key, value_name):
     """Parses a Windows Registry key for a preprocessing attribute.
@@ -212,14 +222,53 @@ class WindowsAvailableTimeZonesPlugin(
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
+    tzi_value = registry_key.GetValueByName('TZI')
+    if not tzi_value:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'TZI value missing from Windows Registry key: {0:s}'.format(
+              registry_key.key_path))
+      return
+
     time_zone_artifact = artifacts.TimeZoneArtifact(name=registry_key.name)
+    try:
+      self._ParseTZIValue(tzi_value.data, time_zone_artifact)
+
+    except (ValueError, errors.ParseError) as exception:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to parse TZI record value in Windows Registry key: {0:s} '
+          'with error: {2!s}'.format(
+              registry_key.key_path, exception))
+      return
 
     try:
       mediator.knowledge_base.AddAvailableTimeZone(time_zone_artifact)
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set time zone in knowledge base.')
+          'Unable to set add time zone: {0:s} to knowledge base.'.format(
+              registry_key.name))
+
+  def _ParseTZIValue(self, value_data, time_zone_artifact):
+    """Parses the time zone information (TZI) value data.
+
+    Args:
+      value_data (bytes): time zone information (TZI) value data.
+      time_zone_artifact (TimeZoneArtifact): time zone artifact.
+
+    Raises:
+      ParseError: if the value data could not be parsed.
+    """
+    data_type_map = self._GetDataTypeMap('tzi_record')
+
+    tzi_record = self._ReadStructureFromByteStream(
+        value_data, 0, data_type_map)
+
+    if tzi_record.standard_bias:
+      time_zone_artifact.offset = tzi_record.standard_bias
+    else:
+      time_zone_artifact.offset = tzi_record.bias
 
 
 class WindowsCodepagePlugin(

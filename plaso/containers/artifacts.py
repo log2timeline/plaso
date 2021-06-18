@@ -463,18 +463,21 @@ class TimeZoneArtifact(ArtifactAttributeContainer):
   Attributes:
     name (str): name describing the time zone for example Greenwich Standard
         Time.
+    offset (int): time zone offset in number of minutes from UTC.
   """
   CONTAINER_TYPE = 'time_zone'
 
-  def __init__(self, name=None):
+  def __init__(self, name=None, offset=None):
     """Initializes a time zone artifact.
 
     Args:
       name (Optional[str]): name describing the time zone for example Greenwich
           Standard Time.
+      offset (Optional[int]): time zone offset in number of minutes from UTC.
     """
     super(TimeZoneArtifact, self).__init__()
     self.name = name
+    self.offset = offset
 
 
 class UserAccountArtifact(ArtifactAttributeContainer):

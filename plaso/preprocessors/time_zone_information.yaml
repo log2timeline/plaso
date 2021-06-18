@@ -1,0 +1,60 @@
+name: time_zone_information
+type: format
+description: Time Zone Information (TZI) format
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: int32
+type: integer
+attributes:
+  format: signed
+  size: 4
+  units: bytes
+---
+name: system_time
+type: structure
+members:
+- name: year
+  data_type: uint16
+- name: month
+  data_type: uint16
+- name: weekday
+  data_type: uint16
+- name: day_of_month
+  data_type: uint16
+- name: hours
+  data_type: uint16
+- name: minutes
+  data_type: uint16
+- name: seconds
+  data_type: uint16
+- name: milliseconds
+  data_type: uint16
+---
+name: tzi_record
+type: structure
+description: Time Zone Information (TZI)
+aliases: ['TIME_ZONE_INFORMATION', '_REG_TZI_FORMAT']
+attributes:
+  byte_order: little-endian
+members:
+- name: bias
+  aliases: ['Bias']
+  data_type: int32
+- name: standard_bias
+  aliases: ['StandardBias']
+  data_type: int32
+- name: daylight_bias
+  aliases: ['DaylightBias']
+  data_type: int32
+- name: standard_date
+  aliases: ['StandardDate']
+  data_type: system_time
+- name: daylight_date
+  aliases: ['DaylightDate']
+  data_type: system_time

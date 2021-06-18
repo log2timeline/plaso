@@ -862,10 +862,18 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
-        column_names=['Name', ''], title=title)
+        column_names=['Name', 'Offset from UTC'], title=title)
 
     for time_zone in system_configuration.available_time_zones:
-      table_view.AddRow([time_zone.name, ''])
+      hours_from_utc, minutes_from_utc = divmod(time_zone.offset, 60)
+      if hours_from_utc < 0:
+        sign = '+'
+        hours_from_utc *= -1
+      else:
+        sign = '-'
+      time_zone_offset = '{0:s}{1:02d}:{2:02d}'.format(
+          sign, hours_from_utc, minutes_from_utc)
+      table_view.AddRow([time_zone.name, time_zone_offset])
 
     table_view.Write(self._output_writer)
 

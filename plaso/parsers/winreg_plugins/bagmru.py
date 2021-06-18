@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """This file contains BagMRU Windows Registry plugins (shellbags)."""
 
+import os
+
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers.shared import shell_items
 from plaso.parsers import winreg_parser
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -31,7 +33,7 @@ class BagMRUEventData(events.EventData):
 
 
 class BagMRUWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Class that defines a BagMRU Windows Registry plugin."""
 
   NAME = 'bagmru'
@@ -57,6 +59,10 @@ class BagMRUWindowsRegistryPlugin(
           'ShellNoRoam\\BagMRU')])
 
   _DEFINITION_FILE = 'mru.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_number, parent_path_segments,
