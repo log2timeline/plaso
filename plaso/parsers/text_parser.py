@@ -100,6 +100,8 @@ class PyparsingConstants(object):
 
   ONE_OR_TWO_DIGITS = pyparsing.Word(
       pyparsing.nums, min=1, max=2).setParseAction(PyParseIntCast)
+  ONE_TO_THREE_DIGITS = pyparsing.Word(
+      pyparsing.nums, min=1, max=3).setParseAction(PyParseIntCast)
   TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       PyParseIntCast)
   THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
@@ -134,8 +136,7 @@ class PyparsingConstants(object):
   COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
       pyparsing.LineEnd())
   # TODO: Add more commonly used structs that can be used by parsers.
-  PID = pyparsing.Word(
-      pyparsing.nums, min=1, max=5).setParseAction(PyParseIntCast)
+  PID = pyparsing.Word(pyparsing.nums+'-', min=1, max=5)
 
 
 class PyparsingSingleLineTextParser(interface.FileObjectParser):
