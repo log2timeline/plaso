@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Background Activity Moderator keys."""
 
+import os
+
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 
 
 class BackgroundActivityModeratorEventData(events.EventData):
@@ -32,7 +34,7 @@ class BackgroundActivityModeratorEventData(events.EventData):
 
 
 class BackgroundActivityModeratorWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Background Activity Moderator data Windows Registry plugin."""
 
   NAME = 'bam'
@@ -47,6 +49,10 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
           '\\State\\UserSettings')])
 
   _DEFINITION_FILE = 'filetime.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def _ParseValue(self, registry_value):
     """Parses the registry value.

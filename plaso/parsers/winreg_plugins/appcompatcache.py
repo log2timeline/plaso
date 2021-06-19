@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Application Compatibility Cache key."""
 
+import os
+
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -9,9 +11,9 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -65,7 +67,7 @@ class AppCompatCacheCachedEntry(object):
 
 
 class AppCompatCacheWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Application Compatibility Cache data Windows Registry plugin."""
 
   NAME = 'appcompatcache'
@@ -80,6 +82,10 @@ class AppCompatCacheWindowsRegistryPlugin(
           'Session Manager\\AppCompatCache')])
 
   _DEFINITION_FILE = 'appcompatcache.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _FORMAT_TYPE_2000 = 1
   _FORMAT_TYPE_XP = 2
