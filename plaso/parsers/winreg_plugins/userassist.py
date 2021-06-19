@@ -2,6 +2,7 @@
 """The UserAssist Windows Registry plugin."""
 
 import codecs
+import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -10,10 +11,10 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.engine import path_helper
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import winreg_parser
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import known_folder_ids
 
@@ -62,7 +63,8 @@ class UserAssistWindowsRegistryKeyPathFilter(
     super(UserAssistWindowsRegistryKeyPathFilter, self).__init__(key_path)
 
 
-class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+class UserAssistPlugin(
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Plugin that parses an UserAssist key."""
 
   NAME = 'userassist'
@@ -95,6 +97,10 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
           'BCB48336-4DDD-48FF-BB0B-D3190DACB3E2')])
 
   _DEFINITION_FILE = 'userassist.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.

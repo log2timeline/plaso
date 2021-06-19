@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Explorer ProgramsCache key."""
 
+import os
 import uuid
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
 from plaso.parsers.shared import shell_items
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -36,7 +37,7 @@ class ExplorerProgramsCacheEventData(events.EventData):
 
 
 class ExplorerProgramsCacheWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Class that parses the Explorer ProgramsCache Registry data."""
 
   NAME = 'explorer_programscache'
@@ -51,6 +52,10 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
           'Explorer\\StartPage2')])
 
   _DEFINITION_FILE = 'programscache.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def _ParseValueData(self, parser_mediator, registry_key, registry_value):
     """Extracts event objects from a Explorer ProgramsCache value data.

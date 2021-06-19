@@ -11,11 +11,12 @@ from dfdatetime import uuid_time as dfdatetime_uuid_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import errors
+from plaso.lib import dtfabric_helper
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import olecf
 from plaso.parsers import winlnk
-from plaso.parsers.olecf_plugins import dtfabric_plugin
+from plaso.parsers.olecf_plugins import interface
 
 
 class AutomaticDestinationsDestListEntryEventData(events.EventData):
@@ -50,7 +51,8 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
     self.pin_status = None
 
 
-class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
+class AutomaticDestinationsOLECFPlugin(
+    interface.OLECFPlugin, dtfabric_helper.DtFabricHelper):
   """Plugin that parses an .automaticDestinations-ms OLECF file."""
 
   NAME = 'olecf_automatic_destinations'
@@ -61,6 +63,10 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
   REQUIRED_ITEMS = frozenset(['DestList'])
 
   _DEFINITION_FILE = 'automatic_destinations.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _RE_LNK_ITEM_NAME = re.compile(r'^[1-9a-f][0-9a-f]*$')
 
