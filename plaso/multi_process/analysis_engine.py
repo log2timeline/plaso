@@ -191,18 +191,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           self._number_of_produced_analysis_reports = (
               storage_writer.number_of_analysis_reports)
 
-    try:
-      self._StopTaskStorage(
-          definitions.STORAGE_FORMAT_SQLITE, abort=self._abort)
-    except (IOError, OSError) as exception:
-      logger.error('Unable to stop task storage with error: {0!s}'.format(
-          exception))
-
-    if self._abort:
-      logger.debug('Processing aborted.')
-    else:
-      logger.debug('Processing completed.')
-
     events_counter = collections.Counter()
     events_counter['Events filtered'] = number_of_filtered_events
     events_counter['Events processed'] = self._number_of_consumed_events
@@ -314,11 +302,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._event_tag_index.SetEventTag(attribute_container)
 
-  def _StartAnalysisProcesses(self, storage_writer, analysis_plugins):
+  def _StartAnalysisProcesses(self, analysis_plugins):
     """Starts the analysis processes.
 
     Args:
-      storage_writer (StorageWriter): storage writer.
       analysis_plugins (dict[str, AnalysisPlugin]): analysis plugins that
           should be run and their names.
     """
@@ -327,20 +314,18 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     for analysis_plugin in analysis_plugins.values():
       self._analysis_plugins[analysis_plugin.NAME] = analysis_plugin
 
-      process = self._StartWorkerProcess(analysis_plugin.NAME, storage_writer)
+      process = self._StartWorkerProcess(analysis_plugin.NAME)
       if not process:
         logger.error('Unable to create analysis process: {0:s}'.format(
             analysis_plugin.NAME))
 
     logger.info('Analysis plugins running')
 
-  def _StartWorkerProcess(self, process_name, storage_writer):
+  def _StartWorkerProcess(self, process_name):
     """Creates, starts, monitors and registers a worker process.
 
     Args:
       process_name (str): process name.
-      storage_writer (StorageWriter): storage writer for a session storage used
-          to create task storage.
 
     Returns:
       MultiProcessWorkerProcess: extraction worker process or None on error.
@@ -577,12 +562,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
 
-    self._StartProfiling(self._processing_configuration.profiling)
-
     # Set up the storage writer before the analysis processes.
     self._StartTaskStorage(definitions.STORAGE_FORMAT_SQLITE)
 
-    self._StartAnalysisProcesses(storage_writer, analysis_plugins)
+    self._StartAnalysisProcesses(analysis_plugins)
+
+    self._StartProfiling(self._processing_configuration.profiling)
 
     # Start the status update thread after open of the storage writer
     # so we don't have to clean up the thread if the open fails.
@@ -618,6 +603,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       # so we include the storage sync to disk in the status updates.
       self._StopStatusUpdateThread()
 
+      self._StopProfiling()
+
     # Update the status view one last time before the analysis processses are
     # stopped.
     self._UpdateStatus()
@@ -640,7 +627,17 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       # due to incorrectly finalized IPC.
       self._KillProcess(os.getpid())
 
-    self._StopProfiling()
+    try:
+      self._StopTaskStorage(
+          definitions.STORAGE_FORMAT_SQLITE, abort=self._abort)
+    except (IOError, OSError) as exception:
+      logger.error('Unable to stop task storage with error: {0!s}'.format(
+          exception))
+
+    if self._abort:
+      logger.debug('Processing aborted.')
+    else:
+      logger.debug('Processing completed.')
 
     # Reset values.
     self._analysis_plugins = {}
@@ -651,9 +648,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._session = None
     self._status_update_callback = None
     self._storage_file_path = None
-
-    if keyboard_interrupt:
-      raise KeyboardInterrupt
 
     if keyboard_interrupt:
       raise KeyboardInterrupt

@@ -176,8 +176,7 @@ class MultiProcessEngine(engine.BaseEngine):
             'Attempt: {0:d} to start replacement worker process for '
             '{1:s}').format(replacement_process_attempt + 1, process.name))
 
-        replacement_process = self._StartWorkerProcess(
-            process.name, self._storage_writer)
+        replacement_process = self._StartWorkerProcess(process.name)
         if replacement_process:
           break
 
@@ -273,13 +272,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
   # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
-  def _StartWorkerProcess(self, process_name, storage_writer):
+  def _StartWorkerProcess(self, process_name):
     """Creates, starts, monitors and registers a worker process.
 
     Args:
       process_name (str): process name.
-      storage_writer (StorageWriter): storage writer for a session storage used
-          to create task storage.
 
     Returns:
       MultiProcessWorkerProcess: extraction worker process.
