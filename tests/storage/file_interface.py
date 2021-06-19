@@ -7,28 +7,17 @@ import unittest
 from plaso.storage import file_interface
 
 
-class SerializedAttributeContainerListTest(unittest.TestCase):
-  """Tests for the serialized attribute container list."""
+class BaseStorageFileTest(unittest.TestCase):
+  """Tests for the file-based stores interface."""
 
-  # pylint: disable=protected-access
+  def testInitialization(self):
+    """Tests the __init__ function."""
+    test_storage = file_interface.BaseStorageFile()
+    self.assertIsNotNone(test_storage)
 
-  # TODO: add tests for number_of_attribute_containers property
-
-  def testEmpty(self):
-    """Tests the Empty function."""
-    container_list = file_interface.SerializedAttributeContainerList()
-
-    container_list.Empty()
-    self.assertEqual(container_list._list, [])
-
-    # TODO: improve test coverage.
-
-  # TODO: add tests for GetAttributeContainerByIndex function
-  # TODO: add tests for PopAttributeContainer function
-  # TODO: add tests for PushAttributeContainer function
+  # TODO: add more tests.
 
 
-# TODO: add tests for BaseStorageFile
 # TODO: add tests for StorageFileMergeReader
 # TODO: add tests for StorageFileReader
 # TODO: add tests for StorageFileWriter

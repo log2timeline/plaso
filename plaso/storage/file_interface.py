@@ -1,89 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Storage interface classes for file-backed stores."""
+"""Storage interface classes for file-based stores."""
 
 import abc
+import collections
 
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import interface
-
-
-class SerializedAttributeContainerList(object):
-  """Serialized attribute container list.
-
-  The list is unsorted and pops attribute containers in the same order as
-  pushed to preserve order.
-
-  The GetAttributeContainerByIndex method should be used to read attribute
-  containers from the list while it being filled.
-
-  Attributes:
-    data_size (int): total data size of the serialized attribute containers
-        on the list.
-    next_sequence_number (int): next attribute container sequence number.
-  """
-
-  def __init__(self):
-    """Initializes a serialized attribute container list."""
-    super(SerializedAttributeContainerList, self).__init__()
-    self._list = []
-    self.data_size = 0
-    self.next_sequence_number = 0
-
-  @property
-  def number_of_attribute_containers(self):
-    """int: number of serialized attribute containers on the list."""
-    return len(self._list)
-
-  def Empty(self):
-    """Empties the list."""
-    self._list = []
-    self.data_size = 0
-
-  def GetAttributeContainerByIndex(self, index):
-    """Retrieves a specific serialized attribute container from the list.
-
-    Args:
-      index (int): attribute container index.
-
-    Returns:
-      bytes: serialized attribute container data or None if not available.
-
-    Raises:
-      IndexError: if the index is less than zero.
-    """
-    if index < 0:
-      raise IndexError(
-          'Unsupported negative index value: {0:d}.'.format(index))
-
-    if index < len(self._list):
-      return self._list[index]
-
-    return None
-
-  def PopAttributeContainer(self):
-    """Pops a serialized attribute container from the list.
-
-    Returns:
-      bytes: serialized attribute container data or None if the list is empty.
-    """
-    try:
-      serialized_data = self._list.pop(0)
-      self.data_size -= len(serialized_data)
-      return serialized_data
-
-    except IndexError:
-      return None
-
-  def PushAttributeContainer(self, serialized_data):
-    """Pushes a serialized attribute container onto the list.
-
-    Args:
-      serialized_data (bytes): serialized attribute container data.
-    """
-    self._list.append(serialized_data)
-    self.data_size += len(serialized_data)
-    self.next_sequence_number += 1
 
 
 class BaseStorageFile(interface.BaseStore):
@@ -94,52 +17,22 @@ class BaseStorageFile(interface.BaseStore):
   def __init__(self):
     """Initializes a file-based store."""
     super(BaseStorageFile, self).__init__()
+    self._attribute_container_sequence_numbers = collections.Counter()
     self._is_open = False
     self._read_only = True
-    self._serialized_attribute_containers = {}
     self._serializer = json_serializer.JSONAttributeContainerSerializer
 
-  def _GetNumberOfSerializedAttributeContainers(self, container_type):
-    """Retrieves the number of serialized attribute containers.
+  def _GetAttributeContainerNextSequenceNumber(self, container_type):
+    """Retrieves the next sequence number of an attribute container.
 
     Args:
       container_type (str): attribute container type.
 
     Returns:
-      int: number of serialized attribute containers.
+      int: next sequence number.
     """
-    container_list = self._GetSerializedAttributeContainerList(container_type)
-    return container_list.number_of_attribute_containers
-
-  def _GetSerializedAttributeContainerByIndex(self, container_type, index):
-    """Retrieves a specific serialized attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      index (int): attribute container index.
-
-    Returns:
-      bytes: serialized attribute container data or None if not available.
-    """
-    container_list = self._GetSerializedAttributeContainerList(container_type)
-    return container_list.GetAttributeContainerByIndex(index)
-
-  def _GetSerializedAttributeContainerList(self, container_type):
-    """Retrieves a serialized attribute container list.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      SerializedAttributeContainerList: serialized attribute container list.
-    """
-    container_list = self._serialized_attribute_containers.get(
-        container_type, None)
-    if not container_list:
-      container_list = SerializedAttributeContainerList()
-      self._serialized_attribute_containers[container_type] = container_list
-
-    return container_list
+    self._attribute_container_sequence_numbers[container_type] += 1
+    return self._attribute_container_sequence_numbers[container_type]
 
   def _SerializeAttributeContainer(self, attribute_container):
     """Serializes an attribute container.
@@ -174,6 +67,17 @@ class BaseStorageFile(interface.BaseStore):
             attribute_container.CONTAINER_TYPE)
 
     return attribute_container_data
+
+  def _SetAttributeContainerNextSequenceNumber(
+      self, container_type, next_sequence_number):
+    """Sets the next sequence number of an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      next_sequence_number (int): next sequence number.
+    """
+    self._attribute_container_sequence_numbers[
+        container_type] = next_sequence_number
 
   def _RaiseIfNotReadable(self):
     """Raises if the storage file is not readable.
