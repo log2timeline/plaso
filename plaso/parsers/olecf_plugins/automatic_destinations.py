@@ -62,11 +62,8 @@ class AutomaticDestinationsOLECFPlugin(
 
   REQUIRED_ITEMS = frozenset(['DestList'])
 
-  _DEFINITION_FILE = 'automatic_destinations.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'automatic_destinations.yaml')
 
   _RE_LNK_ITEM_NAME = re.compile(r'^[1-9a-f][0-9a-f]*$')
 

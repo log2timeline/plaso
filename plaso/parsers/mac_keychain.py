@@ -119,11 +119,8 @@ class KeychainParser(
   NAME = 'mac_keychain'
   DATA_FORMAT = 'MacOS keychain database file'
 
-  _DEFINITION_FILE = 'mac_keychain.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'mac_keychain.yaml')
 
   _MAJOR_VERSION = 1
   _MINOR_VERSION = 0

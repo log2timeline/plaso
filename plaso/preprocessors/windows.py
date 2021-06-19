@@ -204,11 +204,8 @@ class WindowsAvailableTimeZonesPlugin(
 
   ARTIFACT_DEFINITION_NAME = 'WindowsAvailableTimeZones'
 
-  _DEFINITION_FILE = 'time_zone_information.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'time_zone_information.yaml')
 
   def _ParseKey(self, mediator, registry_key, value_name):
     """Parses a Windows Registry key for a preprocessing attribute.

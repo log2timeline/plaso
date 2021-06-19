@@ -96,11 +96,8 @@ class UserAssistPlugin(
       UserAssistWindowsRegistryKeyPathFilter(
           'BCB48336-4DDD-48FF-BB0B-D3190DACB3E2')])
 
-  _DEFINITION_FILE = 'userassist.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'userassist.yaml')
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.

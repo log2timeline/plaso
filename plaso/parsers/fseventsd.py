@@ -57,11 +57,8 @@ class FseventsdParser(
   # The version 2 format was introduced in MacOS High Sierra (10.13).
   _DLS_V2_SIGNATURE = b'2SLD'
 
-  _DEFINITION_FILE = 'fseventsd.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'fseventsd.yaml')
 
   @classmethod
   def GetFormatSpecification(cls):

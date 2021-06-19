@@ -49,11 +49,8 @@ class WinRecycleBinParser(
   NAME = 'recycle_bin'
   DATA_FORMAT = 'Windows $Recycle.Bin $I file'
 
-  _DEFINITION_FILE = 'recycler.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'recycler.yaml')
 
   _SUPPORTED_FORMAT_VERSIONS = (1, 2)
 
@@ -154,11 +151,8 @@ class WinRecyclerInfo2Parser(
   NAME = 'recycle_bin_info2'
   DATA_FORMAT = 'Windows Recycler INFO2 file'
 
-  _DEFINITION_FILE = 'recycler.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'recycler.yaml')
 
   _RECORD_INDEX_OFFSET = 0x104
   _UNICODE_FILENAME_OFFSET = 0x118

@@ -81,11 +81,8 @@ class AppCompatCacheWindowsRegistryPlugin(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
           'Session Manager\\AppCompatCache')])
 
-  _DEFINITION_FILE = 'appcompatcache.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'appcompatcache.yaml')
 
   _FORMAT_TYPE_2000 = 1
   _FORMAT_TYPE_XP = 2

@@ -46,11 +46,8 @@ class RestorePointLogParser(
   FILTERS = frozenset([
       interface.FileNameFileEntryFilter('rp.log')])
 
-  _DEFINITION_FILE = 'winrestore.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'winrestore.yaml')
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Restore Point (rp.log) log file-like object.

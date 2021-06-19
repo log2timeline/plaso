@@ -78,11 +78,8 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   NAME = 'cups_ipp'
   DATA_FORMAT = 'CUPS IPP file'
 
-  _DEFINITION_FILE = 'cups_ipp.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'cups_ipp.yaml')
 
   _SUPPORTED_FORMAT_VERSIONS = ('1.0', '1.1', '2.0')
 

@@ -49,11 +49,8 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   NAME = 'utmpx'
   DATA_FORMAT = 'Mac OS X 10.5 utmpx file'
 
-  _DEFINITION_FILE = 'utmp.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'utmp.yaml')
 
   _SUPPORTED_TYPES = frozenset(range(0, 12))
 

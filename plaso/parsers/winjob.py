@@ -47,11 +47,8 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   NAME = 'winjob'
   DATA_FORMAT = 'Windows Scheduled Task job (or at-job) file'
 
-  _DEFINITION_FILE = 'winjob.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'winjob.yaml')
 
   _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
 

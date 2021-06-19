@@ -380,13 +380,10 @@ class NTFSUsnJrnlParser(
   DATA_FORMAT = (
       'NTFS USN change journal ($UsnJrnl:$J) file system metadata file')
 
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'ntfs.yaml')
+
   _INITIAL_FILE_OFFSET = None
-
-  _DEFINITION_FILE = 'ntfs.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   # TODO: add support for USN_RECORD_V3 and USN_RECORD_V4 when actually
   # seen to be used.

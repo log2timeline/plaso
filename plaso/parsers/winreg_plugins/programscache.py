@@ -51,11 +51,8 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\StartPage2')])
 
-  _DEFINITION_FILE = 'programscache.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'programscache.yaml')
 
   def _ParseValueData(self, parser_mediator, registry_key, registry_value):
     """Extracts event objects from a Explorer ProgramsCache value data.

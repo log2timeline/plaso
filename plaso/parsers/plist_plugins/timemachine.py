@@ -37,11 +37,8 @@ class TimeMachinePlugin(
 
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
 
-  _DEFINITION_FILE = 'timemachine.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'timemachine.yaml')
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):

@@ -110,11 +110,8 @@ class ChromeCacheIndexFileParser(
         the index file.
   """
 
-  _DEFINITION_FILE = 'chrome_cache.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'chrome_cache.yaml')
 
   def __init__(self):
     """Initializes an index file."""
@@ -205,11 +202,8 @@ class ChromeCacheDataBlockFileParser(
     interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Chrome cache data block file parser."""
 
-  _DEFINITION_FILE = 'chrome_cache.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'chrome_cache.yaml')
 
   def _ParseFileHeader(self, file_object):
     """Parses the file header.
