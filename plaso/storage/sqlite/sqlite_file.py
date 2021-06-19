@@ -217,6 +217,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     Args:
       container_type (str): attribute container type.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
     """
     if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
       data_column_type = 'BLOB'
@@ -234,7 +238,11 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     else:
       query = self._CREATE_TABLE_QUERY.format(container_type, data_column_type)
 
-    self._cursor.execute(query)
+    try:
+      self._cursor.execute(query)
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
   def _GetNumberOfAttributeContainers(self, container_type):
     """Counts the number of attribute containers of the given type.
@@ -246,7 +254,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       int: number of attribute containers of the given type.
 
     Raises:
-      ValueError: if an unsupported container_type is provided.
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+      ValueError: if an unsupported container type is provided.
     """
     if not container_type in self._CONTAINER_TYPES:
       raise ValueError('Attribute container type {0:s} is not supported'.format(
@@ -259,7 +269,13 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     # there are DELETE commands run on the table. The Plaso SQLite storage
     # implementation does not run any DELETE commands.
     query = 'SELECT MAX(_ROWID_) FROM {0:s} LIMIT 1'.format(container_type)
-    self._cursor.execute(query)
+
+    try:
+      self._cursor.execute(query)
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
+
     row = self._cursor.fetchone()
     if not row:
       return 0
@@ -463,10 +479,19 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     Returns:
       bool: True if the table exists, false otherwise.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
     """
     query = self._HAS_TABLE_QUERY.format(table_name)
 
-    self._cursor.execute(query)
+    try:
+      self._cursor.execute(query)
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
+
     return bool(self._cursor.fetchone())
 
   def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
@@ -476,9 +501,18 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       check_readable_only (Optional[bool]): whether the store should only be
           checked to see if it can be read. If False, the store will be checked
           to see if it can be read and written to.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
     """
     query = 'SELECT key, value FROM metadata'
-    self._cursor.execute(query)
+
+    try:
+      self._cursor.execute(query)
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
     metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
 
@@ -605,11 +639,21 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     setattr(event_tag, '_event_row_identifier', event_identifier.row_identifier)
 
   def _UpdateStorageMetadataFormatVersion(self):
-    """Updates the storage metadata format version."""
+    """Updates the storage metadata format version.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
     query = (
         'UPDATE metadata SET value = {0:d} '
         'WHERE key = "format_version"').format(self._FORMAT_VERSION)
-    self._cursor.execute(query)
+
+    try:
+      self._cursor.execute(query)
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
@@ -618,6 +662,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     Args:
       attribute_container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
     """
     serialized_data = self._SerializeAttributeContainer(attribute_container)
 
@@ -648,6 +696,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     try:
       self._cursor.execute(query, values)
 
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
+
     finally:
       if self._storage_profiler:
         self._storage_profiler.StopTiming('write_container')
@@ -660,26 +712,55 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     attribute_container.SetIdentifier(identifier)
 
   def _WriteStorageMetadata(self):
-    """Writes the storage metadata."""
-    self._cursor.execute(self._CREATE_METADATA_TABLE_QUERY)
+    """Writes the storage metadata.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
+    try:
+      self._cursor.execute(self._CREATE_METADATA_TABLE_QUERY)
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
     query = 'INSERT INTO metadata (key, value) VALUES (?, ?)'
 
     key = 'format_version'
     value = '{0:d}'.format(self._FORMAT_VERSION)
-    self._cursor.execute(query, (key, value))
+
+    try:
+      self._cursor.execute(query, (key, value))
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
     key = 'compression_format'
     value = self.compression_format
-    self._cursor.execute(query, (key, value))
+
+    try:
+      self._cursor.execute(query, (key, value))
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
     key = 'serialization_format'
     value = self.serialization_format
-    self._cursor.execute(query, (key, value))
+
+    try:
+      self._cursor.execute(query, (key, value))
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
     key = 'storage_type'
     value = self.storage_type
-    self._cursor.execute(query, (key, value))
+
+    try:
+      self._cursor.execute(query, (key, value))
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
   def AddEvent(self, event, serialized_data=None):
     """Adds an event.
@@ -725,8 +806,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       serialized_data (Optional[bytes]): serialized form of the event tag.
 
     Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
+      IOError: when the storage file is closed or read-only or when there is
+          an error querying the storage file.
+      OSError: when the storage file is closed or read-only or when there is
+          an error querying the storage file.
     """
     self._RaiseIfNotWritable()
 
@@ -760,7 +843,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         query = (
             'UPDATE event_tag SET _data = ? '
             'WHERE _identifier = {0:d}').format(identifier.row_identifier)
-        self._cursor.execute(query, (serialized_data, ))
+
+        try:
+          self._cursor.execute(query, (serialized_data, ))
+        except sqlite3.OperationalError as exception:
+          raise IOError('Unable to query storage file with error: {0!s}'.format(
+              exception))
 
       else:
         self._UpdateEventIdentifierBeforeSerialize(event_tag)
