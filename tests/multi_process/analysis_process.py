@@ -94,7 +94,6 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
         timeout_seconds=self._QUEUE_TIMEOUT)
 
     session = sessions.Session()
-    storage_writer = self._CreateStorageWriter(session)
     analysis_plugin = TestAnalysisPlugin()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -106,8 +105,8 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = analysis_process.AnalysisProcess(
-          input_event_queue, storage_writer, None, analysis_plugin,
-          configuration, name='TestAnalysis')
+          input_event_queue, None, session, analysis_plugin, configuration,
+          name='TestAnalysis')
       test_process._FOREMAN_STATUS_WAIT = 1
 
       test_process.start()

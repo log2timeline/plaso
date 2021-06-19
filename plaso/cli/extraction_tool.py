@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The extraction CLI tool."""
+"""Shared functionality for an extraction CLI tool."""
 
 import datetime
 import os
