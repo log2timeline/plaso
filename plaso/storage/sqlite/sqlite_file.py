@@ -1102,8 +1102,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     else:
       # self._cursor.execute('PRAGMA journal_mode=MEMORY')
 
-      # Turn off insert transaction integrity since we want to do bulk insert.
-      self._cursor.execute('PRAGMA synchronous=OFF')
+      try:
+        # Turn off insert transaction integrity since we want to do bulk insert.
+        self._cursor.execute('PRAGMA synchronous=OFF')
+      except sqlite3.OperationalError as exception:
+        raise IOError('Unable to query storage file with error: {0!s}'.format(
+            exception))
 
       if not self._HasTable('metadata'):
         self._WriteStorageMetadata()

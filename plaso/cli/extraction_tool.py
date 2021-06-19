@@ -438,6 +438,12 @@ class ExtractionTool(
           'Unable to build collection filters with error: {0!s}'.format(
               exception))
 
+    # TODO: decouple session and storage writer?
+    session.source_configurations = (
+        extraction_engine.knowledge_base.GetSourceConfigurationArtifacts())
+
+    storage_writer.WriteSessionConfiguration()
+
     status_update_callback = (
         self._status_view.GetExtractionStatusUpdateCallback())
     processing_status = None
@@ -562,8 +568,11 @@ class ExtractionTool(
     """Processes the sources and extracts events.
 
     Raises:
-      BadConfigOption: if the storage file path is invalid or the storage
-          format not supported.
+      BadConfigOption: if the storage file path is invalid, or the storage
+          format not supported, or there was a failure to writing to the
+          storage.
+      IOError: if the extraction engine could not write to the storage.
+      OSError: if the extraction engine could not write to the storage.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -598,10 +607,26 @@ class ExtractionTool(
       raise errors.BadConfigOption('Unsupported storage format: {0:s}'.format(
           self._storage_format))
 
-    storage_writer.Open()
+    try:
+      storage_writer.Open()
+    except IOError as exception:
+      raise IOError('Unable to open storage with error: {0!s}'.format(
+          exception))
 
     try:
-      processing_status = self._ProcessSources(session, storage_writer)
+      storage_writer.WriteSessionStart()
+
+      try:
+        processing_status = self._ProcessSources(session, storage_writer)
+
+      finally:
+        aborted = getattr(processing_status, 'aborted', True)
+        storage_writer.WriteSessionCompletion(aborted=aborted)
+
+    except IOError as exception:
+      raise IOError('Unable to write to storage with error: {0!s}'.format(
+          exception))
+
     finally:
       storage_writer.Close()
 

@@ -840,23 +840,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._StartStatusUpdateThread()
 
-    # TODO: decouple session and storage writer?
-    session.source_configurations = (
-        self.knowledge_base.GetSourceConfigurationArtifacts())
-
     try:
-      # Open the storage file after creating the worker processes otherwise
-      # the ZIP storage file will remain locked as long as the worker processes
-      # are alive.
-      storage_writer.WriteSessionStart()
-
-      try:
-        storage_writer.WriteSessionConfiguration()
-
-        self._ProcessSources(source_path_specs, storage_writer)
-
-      finally:
-        storage_writer.WriteSessionCompletion(aborted=self._abort)
+      self._ProcessSources(source_path_specs, storage_writer)
 
     finally:
       # Stop the status update thread after close of the storage writer
