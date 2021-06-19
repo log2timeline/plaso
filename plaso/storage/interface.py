@@ -165,7 +165,7 @@ class BaseStore(object):
 
   @abc.abstractmethod
   def _WriteAttributeContainer(self, attribute_container):
-    """Writes an attribute container to the store.
+    """Writes an attribute container.
 
     Args:
       attribute_container (AttributeContainer): attribute container.
@@ -177,6 +177,10 @@ class BaseStore(object):
     Args:
       analysis_report (AnalysisReport): analysis report.
       serialized_data (Optional[bytes]): serialized form of the analysis report.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -191,6 +195,10 @@ class BaseStore(object):
       analysis_warning (AnalysisWarning): analysis warning.
       serialized_data (Optional[bytes]): serialized form of the analysis
           warning.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -204,6 +212,10 @@ class BaseStore(object):
     Args:
       event (EventObject): event.
       serialized_data (Optional[bytes]): serialized form of the event.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -216,6 +228,10 @@ class BaseStore(object):
     Args:
       event_data (EventData): event data.
       serialized_data (Optional[bytes]): serialized form of the event data.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -230,6 +246,10 @@ class BaseStore(object):
       event_data_stream (EventDataStream): event data stream.
       serialized_data (Optional[bytes]): serialized form of the event data
           stream.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -243,6 +263,10 @@ class BaseStore(object):
     Args:
       event_source (EventSource): event source.
       serialized_data (Optional[bytes]): serialized form of the event source.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -256,6 +280,10 @@ class BaseStore(object):
     Args:
       event_tag (EventTag): event tag.
       serialized_data (Optional[bytes]): serialized form of the event tag.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -270,6 +298,10 @@ class BaseStore(object):
       extraction_warning (ExtractionWarning): extraction warning.
       serialized_data (Optional[bytes]): serialized form of the extraction
           warning.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -285,6 +317,10 @@ class BaseStore(object):
       preprocessing_warning (PreprocessingWarning): preprocessing warning.
       serialized_data (Optional[bytes]): serialized form of the preprocessing
           warning.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -299,6 +335,10 @@ class BaseStore(object):
       recovery_warning (RecoveryWarning): recovery warning.
       serialized_data (Optional[bytes]): serialized form of the recovery
           warning.
+
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -622,9 +662,9 @@ class BaseStore(object):
 
     Raises:
       IOError: if the storage type does not support writing a session
-          completion or the storage file is closed or read-only.
+          completion or if the store cannot be written to.
       OSError: if the storage type does not support writing a session
-          completion or the storage file is closed or read-only.
+          completion or if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -640,9 +680,9 @@ class BaseStore(object):
       session_configuration (SessionConfiguration): session configuration
           information.
 
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
+     Raises:
+       OSError: if the store cannot be written to.
+       IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -658,9 +698,9 @@ class BaseStore(object):
 
     Raises:
       IOError: if the storage type does not support writing a session
-          start or the storage file is closed or read-only.
+          start or if the store cannot be written to.
       OSError: if the storage type does not support writing a session
-          start or the storage file is closed or read-only.
+          start or if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -677,9 +717,9 @@ class BaseStore(object):
 
     Raises:
       IOError: if the storage type does not support writing a task
-          completion or the storage file is closed or read-only.
+          completion or if the store cannot be written to.
       OSError: if the storage type does not support writing a task
-          completion or the storage file is closed or read-only.
+          completion or if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 
@@ -696,9 +736,9 @@ class BaseStore(object):
 
     Raises:
       IOError: if the storage type does not support writing a task
-          start or the storage file is closed or read-only.
+          start or if the store cannot be written to.
       OSError: if the storage type does not support writing a task
-          start or the storage file is closed or read-only.
+          start or if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
 

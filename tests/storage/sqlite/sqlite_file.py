@@ -54,19 +54,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testAddSerializedEvent(self):
-    """Tests the _AddSerializedEvent function."""
-    event = events.EventObject()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      storage_file._AddSerializedEvent(event)
-
-      storage_file.Close()
-
   def testGetNumberOfAttributeContainers(self):
     """Tests the _GetNumberOfAttributeContainers function."""
     event_data = events.EventData()
@@ -82,8 +69,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file._AddAttributeContainer(
           storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
-      storage_file._WriteSerializedAttributeContainerList(
-          storage_file._CONTAINER_TYPE_EVENT_DATA)
 
       number_of_containers = storage_file._GetNumberOfAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
@@ -118,8 +103,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file._AddAttributeContainer(
           storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
-      storage_file._WriteSerializedAttributeContainerList(
-          storage_file._CONTAINER_TYPE_EVENT_DATA)
 
       container = storage_file._GetAttributeContainerByIndex(
           storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
@@ -145,8 +128,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file._AddAttributeContainer(
           storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
-      storage_file._WriteSerializedAttributeContainerList(
-          storage_file._CONTAINER_TYPE_EVENT_DATA)
 
       containers = list(storage_file._GetAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA))
@@ -172,8 +153,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file._AddAttributeContainer(
           storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
-      storage_file._WriteSerializedAttributeContainerList(
-          storage_file._CONTAINER_TYPE_EVENT_DATA)
 
       result = storage_file._HasAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
@@ -211,36 +190,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file._WriteAttributeContainer(event_data)
-
-      storage_file.Close()
-
-  def testWriteSerializedAttributeContainerList(self):
-    """Tests the _WriteSerializedAttributeContainerList function."""
-    event_data = events.EventData()
-    event = events.EventObject()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      storage_file._AddAttributeContainer(
-          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
-      storage_file._WriteSerializedAttributeContainerList(
-          storage_file._CONTAINER_TYPE_EVENT_DATA)
-
-      event.timestamp = 0x7fffffffffffffff
-
-      storage_file._AddSerializedEvent(event)
-      storage_file._WriteSerializedAttributeContainerList(
-          storage_file._CONTAINER_TYPE_EVENT)
-
-      event.timestamp = 0x8000000000000000
-
-      storage_file._AddSerializedEvent(event)
-      with self.assertRaises(OverflowError):
-        storage_file._WriteSerializedAttributeContainerList(
-            storage_file._CONTAINER_TYPE_EVENT)
 
       storage_file.Close()
 

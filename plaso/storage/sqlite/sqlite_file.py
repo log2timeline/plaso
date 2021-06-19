@@ -7,7 +7,6 @@ import sqlite3
 import zlib
 
 from plaso.lib import definitions
-from plaso.storage import event_heaps
 from plaso.storage import file_interface
 from plaso.storage import identifiers
 from plaso.storage import logger
@@ -98,7 +97,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self._connection = None
     self._cursor = None
     self._maximum_buffer_size = maximum_buffer_size
-    self._serialized_event_heap = event_heaps.SerializedEventHeap()
 
     if storage_type == definitions.STORAGE_TYPE_SESSION:
       self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
@@ -122,51 +120,18 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       IOError: if the attribute container cannot be serialized.
       OSError: if the attribute container cannot be serialized.
     """
-    container_list = self._GetSerializedAttributeContainerList(container_type)
+    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+        container_type)
 
     identifier = identifiers.SQLTableIdentifier(
-        container_type, container_list.next_sequence_number + 1)
+        container_type, next_sequence_number)
 
     # This modifies the container, but the identifier is explicitly not to be
     # serialized, so it's safe to still used the already serialized form of
     # the container.
     container.SetIdentifier(identifier)
 
-    if not serialized_data:
-      serialized_data = self._SerializeAttributeContainer(container)
-
-    container_list.PushAttributeContainer(serialized_data)
-
-    if container_list.data_size > self._maximum_buffer_size:
-      self._WriteSerializedAttributeContainerList(container_type)
-
-  def _AddSerializedEvent(self, event, serialized_data=None):
-    """Adds an serialized event.
-
-    Args:
-      event (EventObject): event.
-      serialized_data (bytes): serialized form of the event.
-
-    Raises:
-      IOError: if the event cannot be serialized.
-      OSError: if the event cannot be serialized.
-    """
-    identifier = identifiers.SQLTableIdentifier(
-        self._CONTAINER_TYPE_EVENT,
-        self._serialized_event_heap.number_of_events + 1)
-
-    # This modifies the event, but the identifier is explicitly not to be
-    # serialized, so it's safe to still used the already serialized form of
-    # the container.
-    event.SetIdentifier(identifier)
-
-    if not serialized_data:
-      serialized_data = self._SerializeAttributeContainer(event)
-
-    self._serialized_event_heap.PushEvent(event.timestamp, serialized_data)
-
-    if self._serialized_event_heap.data_size > self._maximum_buffer_size:
-      self._WriteSerializedAttributeContainerList(self._CONTAINER_TYPE_EVENT)
+    self._WriteAttributeContainer(container)
 
   def _CacheAttributeContainer(self, attribute_container, index):
     """Caches a specific attribute container.
@@ -361,42 +326,27 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       if self._storage_profiler:
         self._storage_profiler.StopTiming('get_container_by_index')
 
-    if row:
-      identifier = identifiers.SQLTableIdentifier(
-          container_type, sequence_number)
+    if not row:
+      return None
 
-      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-        serialized_data = zlib.decompress(row[0])
-      else:
-        serialized_data = row[0]
+    identifier = identifiers.SQLTableIdentifier(
+        container_type, sequence_number)
 
-      if self._storage_profiler:
-        self._storage_profiler.Sample(
-            'get_container_by_index', 'read', container_type,
-            len(serialized_data), len(row[0]))
+    if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+      serialized_data = zlib.decompress(row[0])
+    else:
+      serialized_data = row[0]
 
-      attribute_container = self._DeserializeAttributeContainer(
-          container_type, serialized_data)
-      attribute_container.SetIdentifier(identifier)
+    if self._storage_profiler:
+      self._storage_profiler.Sample(
+          'get_container_by_index', 'read', container_type,
+          len(serialized_data), len(row[0]))
 
-      self._CacheAttributeContainer(attribute_container, index)
-      return attribute_container
-
-    count = self._GetNumberOfAttributeContainers(container_type)
-    index -= count
-
-    serialized_data = self._GetSerializedAttributeContainerByIndex(
-        container_type, index)
     attribute_container = self._DeserializeAttributeContainer(
         container_type, serialized_data)
+    attribute_container.SetIdentifier(identifier)
 
-    if attribute_container:
-      identifier = identifiers.SQLTableIdentifier(
-          container_type, sequence_number)
-      attribute_container.SetIdentifier(identifier)
-
-      self._CacheAttributeContainer(attribute_container, index)
-
+    self._CacheAttributeContainer(attribute_container, index)
     return attribute_container
 
   # TODO: determine if this method should account for non-stored attribute
@@ -661,22 +611,15 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         'WHERE key = "format_version"').format(self._FORMAT_VERSION)
     self._cursor.execute(query)
 
-  def _WriteAttributeContainer(
-      self, attribute_container, serialized_data=None):
+  def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
 
     The table for the container type must exist.
 
     Args:
       attribute_container (AttributeContainer): attribute container.
-      serialized_data (Optional[bytes]): serialized form of the attribute
-          container.
     """
-    if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      timestamp, serialized_data = self._serialized_event_heap.PopEvent()
-
-    elif not serialized_data:
-      serialized_data = self._SerializeAttributeContainer(attribute_container)
+    serialized_data = self._SerializeAttributeContainer(attribute_container)
 
     if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
       compressed_data = zlib.compress(serialized_data)
@@ -686,7 +629,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
-      values = (timestamp, serialized_data)
+      values = (attribute_container.timestamp, serialized_data)
 
     elif (self.format_version >= self._FLATTENED_EVENT_TAG_FORMAT_VERSION and
           attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG):
@@ -715,82 +658,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     identifier = identifiers.SQLTableIdentifier(
         attribute_container.CONTAINER_TYPE, self._cursor.lastrowid)
     attribute_container.SetIdentifier(identifier)
-
-  def _WriteSerializedAttributeContainerList(self, container_type):
-    """Writes a serialized attribute container list.
-
-    Args:
-      container_type (str): attribute container type.
-    """
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      if not self._serialized_event_heap.data_size:
-        return
-
-      number_of_attribute_containers = (
-          self._serialized_event_heap.number_of_events)
-
-    else:
-      container_list = self._GetSerializedAttributeContainerList(container_type)
-      if not container_list.data_size:
-        return
-
-      number_of_attribute_containers = (
-          container_list.number_of_attribute_containers)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming('write')
-
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
-    else:
-      query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(container_type)
-
-    total_compressed_data_size = 0
-    total_serialized_data_size = 0
-
-    # TODO: directly use container_list instead of values_tuple_list.
-    values_tuple_list = []
-    for _ in range(number_of_attribute_containers):
-      if container_type == self._CONTAINER_TYPE_EVENT:
-        timestamp, serialized_data = self._serialized_event_heap.PopEvent()
-      else:
-        serialized_data = container_list.PopAttributeContainer()
-
-      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-        compressed_data = zlib.compress(serialized_data)
-        serialized_data = sqlite3.Binary(compressed_data)
-      else:
-        compressed_data = ''
-
-      if self._storage_profiler:
-        total_compressed_data_size += len(compressed_data)
-        total_serialized_data_size += len(serialized_data)
-
-      if container_type == self._CONTAINER_TYPE_EVENT:
-        values_tuple_list.append((timestamp, serialized_data))
-      else:
-        values_tuple_list.append((serialized_data, ))
-
-    if self._storage_profiler:
-      self._storage_profiler.StartTiming('write_containers_list')
-
-    try:
-      self._cursor.executemany(query, values_tuple_list)
-
-    finally:
-      if self._storage_profiler:
-        self._storage_profiler.StopTiming('write_containers_list')
-        self._storage_profiler.Sample(
-            'write_containers_list', 'write', container_type,
-            total_serialized_data_size, total_compressed_data_size)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming('write')
-
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      self._serialized_event_heap.Empty()
-    else:
-      container_list.Empty()
 
   def _WriteStorageMetadata(self):
     """Writes the storage metadata."""
@@ -830,7 +697,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     # The serialized data is not used, as this method modifies the attribute
     # container.
     self._UpdateEventDataIdentifierBeforeSerialize(event)
-    self._AddSerializedEvent(event)
+    self._AddAttributeContainer(self._CONTAINER_TYPE_EVENT, event)
 
   def AddEventData(self, event_data, serialized_data=None):
     """Adds event data.
@@ -949,32 +816,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     if not self._is_open:
       raise IOError('Storage file already closed.')
 
-    if not self._read_only:
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_PREPROCESSING_WARNING)
-
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_ANALYSIS_REPORT)
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_ANALYSIS_WARNING)
-
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_EVENT_SOURCE)
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_EVENT_DATA_STREAM)
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_EVENT_DATA)
-      self._WriteSerializedAttributeContainerList(self._CONTAINER_TYPE_EVENT)
-
-      if self.format_version < self._FLATTENED_EVENT_TAG_FORMAT_VERSION:
-        self._WriteSerializedAttributeContainerList(
-            self._CONTAINER_TYPE_EVENT_TAG)
-
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_EXTRACTION_WARNING)
-      self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_RECOVERY_WARNING)
-
     if self._connection:
       # We need to run commit or not all data is stored in the database.
       self._connection.commit()
@@ -1083,12 +924,8 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     Returns:
       int: number of event sources.
     """
-    number_of_event_sources = self._GetNumberOfAttributeContainers(
+    return self._GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
-
-    number_of_event_sources += self._GetNumberOfSerializedAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_SOURCE)
-    return number_of_event_sources
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
@@ -1198,9 +1035,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     # Initialize next_sequence_number based on the file contents so that
     # SQLTableIdentifier points to the correct attribute container.
     for container_type in self._REFERENCED_CONTAINER_TYPES:
-      container_list = self._GetSerializedAttributeContainerList(container_type)
-      container_list.next_sequence_number = (
-          self._GetNumberOfAttributeContainers(container_type))
+      next_sequence_number = self._GetNumberOfAttributeContainers(
+          container_type)
+      self._SetAttributeContainerNextSequenceNumber(
+          container_type, next_sequence_number)
 
     # TODO: handle open sessions.
     if last_session_start != last_session_completion:

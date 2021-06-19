@@ -220,8 +220,8 @@ class RedisStore(interface.BaseStore):
     Args:
       attribute_container (AttributeContainer): attribute container.
     """
-    container_type = attribute_container.CONTAINER_TYPE
-    self._AddAttributeContainer(container_type, attribute_container)
+    self._AddAttributeContainer(
+        attribute_container.CONTAINER_TYPE, attribute_container)
 
   def _WriteStorageMetadata(self):
     """Writes the storage metadata."""
