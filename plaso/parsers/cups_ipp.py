@@ -26,9 +26,10 @@ from dfdatetime import rfc2579_date_time as dfdatetime_rfc2579_date_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
 
@@ -71,13 +72,17 @@ class CupsIppEventData(events.EventData):
     self.user = None
 
 
-class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
+class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for CUPS IPP files."""
 
   NAME = 'cups_ipp'
   DATA_FORMAT = 'CUPS IPP file'
 
   _DEFINITION_FILE = 'cups_ipp.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _SUPPORTED_FORMAT_VERSIONS = ('1.0', '1.1', '2.0')
 

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Scheduled Task job files."""
 
+import os
+
 from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import systemtime as dfdatetime_systemtime
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -38,13 +41,17 @@ class WinJobEventData(events.EventData):
     self.working_directory = None
 
 
-class WinJobParser(dtfabric_parser.DtFabricBaseParser):
+class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parse Windows Scheduled Task files for job events."""
 
   NAME = 'winjob'
   DATA_FORMAT = 'Windows Scheduled Task job (or at-job) file'
 
   _DEFINITION_FILE = 'winjob.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
 
