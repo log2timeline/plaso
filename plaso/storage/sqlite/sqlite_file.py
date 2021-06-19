@@ -3,6 +3,7 @@
 
 import collections
 import os
+import pathlib
 import sqlite3
 import zlib
 
@@ -1071,8 +1072,21 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     path = os.path.abspath(path)
 
-    connection = sqlite3.connect(
-        path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+    try:
+      path_uri = pathlib.Path(path).as_uri()
+      if read_only:
+        path_uri = '{0:s}?mode=ro'.format(path_uri)
+
+    except ValueError:
+      path_uri = None
+
+    detect_types = sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES
+
+    if path_uri:
+      connection = sqlite3.connect(
+          path_uri, detect_types=detect_types, uri=True)
+    else:
+      connection = sqlite3.connect(path, detect_types=detect_types)
 
     cursor = connection.cursor()
     if not cursor:
