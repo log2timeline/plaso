@@ -5,37 +5,29 @@ import argparse
 import collections
 import os
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
 
 # The following import makes sure the output modules are registered.
 from plaso import output   # pylint: disable=unused-import
 
-from plaso.analysis import manager as analysis_manager
+from plaso.cli import analysis_tool
 from plaso.cli import logger
 from plaso.cli import status_view
 from plaso.cli import tool_options
-from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
-from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.multi_process import analysis_engine as multi_analysis_engine
 from plaso.multi_process import output_engine as multi_output_engine
 from plaso.storage import factory as storage_factory
 
 
 class PsortTool(
-    tools.CLITool,
-    tool_options.AnalysisPluginOptions,
-    tool_options.OutputModuleOptions,
-    tool_options.ProfilingOptions,
-    tool_options.StorageFileOptions):
+    analysis_tool.AnalysisTool,
+    tool_options.OutputModuleOptions):
   """Psort CLI tool.
 
   Attributes:
@@ -64,29 +56,15 @@ class PsortTool(
     """
     super(PsortTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._analysis_manager = analysis_manager.AnalysisPluginManager
-    self._analysis_plugins = None
-    self._analysis_plugins_output_format = None
     self._command_line_arguments = None
     self._deduplicate_events = True
-    self._event_filter_expression = None
-    self._event_filter = None
-    self._knowledge_base = knowledge_base.KnowledgeBase()
-    self._number_of_analysis_reports = 0
     self._preferred_language = 'en-US'
     self._process_memory_limit = None
     self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
-    self._stdout_output_writer = isinstance(
-        self._output_writer, tools.StdoutOutputWriter)
-    self._storage_file_path = None
-    self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
-    self._worker_memory_limit = None
-    self._worker_timeout = None
 
-    self.list_analysis_plugins = False
     self.list_language_identifiers = False
     self.list_output_modules = False
     self.list_profilers = False
@@ -225,40 +203,6 @@ class PsortTool(
 
     self._worker_memory_limit = worker_memory_limit
     self._worker_timeout = worker_timeout
-
-  def _PrintAnalysisReportsDetails(self, storage_reader):
-    """Prints the details of the analysis reports.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    for index, analysis_report in enumerate(
-        storage_reader.GetAnalysisReports()):
-      if index + 1 <= self._number_of_analysis_reports:
-        continue
-
-      date_time_string = None
-      if analysis_report.time_compiled is not None:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=analysis_report.time_compiled)
-        date_time_string = date_time.CopyToDateTimeStringISO8601()
-
-      title = 'Analysis report: {0:d}'.format(index)
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title=title)
-
-      table_view.AddRow(['Name plugin', analysis_report.plugin_name or 'N/A'])
-      table_view.AddRow(['Date and time', date_time_string or 'N/A'])
-      table_view.AddRow(['Event filter', analysis_report.event_filter or 'N/A'])
-
-      if not analysis_report.analysis_counter:
-        table_view.AddRow(['Text', analysis_report.text or ''])
-      else:
-        table_view.AddRow(['Results', ''])
-        for key, value in sorted(analysis_report.analysis_counter.items()):
-          table_view.AddRow([key, value])
-
-      table_view.Write(self._output_writer)
 
   def AddProcessingOptions(self, argument_group):
     """Adds processing options to the argument group
@@ -513,24 +457,8 @@ class PsortTool(
 
     analysis_counter = None
     if self._analysis_plugins:
-      storage_writer = (
-          storage_factory.StorageFactory.CreateStorageWriterForFile(
-              session, self._storage_file_path))
-      if not storage_writer:
-        raise RuntimeError('Unable to create storage writer.')
-
-      # TODO: add single process analysis engine support.
-      analysis_engine = multi_analysis_engine.AnalysisMultiProcessEngine(
-          worker_memory_limit=self._worker_memory_limit,
-          worker_timeout=self._worker_timeout)
-
-      analysis_engine.AnalyzeEvents(
-          session, self._knowledge_base, storage_writer, self._data_location,
-          self._analysis_plugins, configuration,
-          event_filter=self._event_filter,
-          event_filter_expression=self._event_filter_expression,
-          status_update_callback=status_update_callback,
-          storage_file_path=self._storage_file_path)
+      self._AnalyzeEvents(
+          session, configuration, status_update_callback=status_update_callback)
 
       analysis_counter = collections.Counter()
       for item, value in session.analysis_reports_counter.items():

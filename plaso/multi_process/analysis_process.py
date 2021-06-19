@@ -20,7 +20,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
   _FOREMAN_STATUS_WAIT = 5 * 60
 
   def __init__(
-      self, event_queue, storage_writer, knowledge_base, analysis_plugin,
+      self, event_queue, knowledge_base, session, analysis_plugin,
       processing_configuration, data_location=None,
       event_filter_expression=None, **kwargs):
     """Initializes an analysis process.
@@ -30,9 +30,9 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
     Args:
       event_queue (plaso_queue.Queue): event queue.
-      storage_writer (StorageWriter): storage writer for a session storage.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for analysis.
+      session (Session): session.
       analysis_plugin (AnalysisPlugin): plugin running in the process.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
@@ -50,9 +50,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     self._foreman_status_wait_event = None
     self._knowledge_base = knowledge_base
     self._number_of_consumed_events = 0
-    self._session = None
+    self._session = session
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
-    self._storage_writer = storage_writer
     self._task = None
 
   def _GetStatus(self):
@@ -112,12 +111,6 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
   def _Main(self):
     """The main loop."""
     self._StartProfiling(self._processing_configuration.profiling)
-
-    if self._serializers_profiler:
-      self._storage_writer.SetSerializersProfiler(self._serializers_profiler)
-
-    if self._storage_profiler:
-      self._storage_writer.SetStorageProfiler(self._storage_profiler)
 
     logger.debug('Analysis plugin: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
@@ -224,17 +217,10 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     logger.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    if self._serializers_profiler:
-      self._storage_writer.SetSerializersProfiler(None)
-
-    if self._storage_profiler:
-      self._storage_writer.SetStorageProfiler(None)
-
     self._StopProfiling()
 
     self._analysis_mediator = None
     self._foreman_status_wait_event = None
-    self._storage_writer = None
     self._task = None
 
     try:

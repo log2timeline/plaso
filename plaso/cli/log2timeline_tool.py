@@ -14,7 +14,6 @@ from plaso import output  # pylint: disable=unused-import
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import extraction_tool
 from plaso.cli import logger
-from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import definitions
@@ -76,8 +75,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
-    self._stdout_output_writer = isinstance(
-        self._output_writer, tools.StdoutOutputWriter)
 
     self.dependencies_check = True
     self.list_hashers = False

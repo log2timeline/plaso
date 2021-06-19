@@ -243,9 +243,15 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
-      counter = test_engine.AnalyzeEvents(
-          session, knowledge_base_object, storage_writer, data_location,
-          analysis_plugins, configuration, storage_file_path=temp_directory)
+      storage_writer.Open()
+
+      try:
+        counter = test_engine.AnalyzeEvents(
+            session, knowledge_base_object, storage_writer, data_location,
+            analysis_plugins, configuration, storage_file_path=temp_directory)
+
+      finally:
+        storage_writer.Close()
 
     # TODO: assert if tests were successful.
     _ = counter
@@ -260,10 +266,16 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
-      counter = test_engine.AnalyzeEvents(
-          session, knowledge_base_object, storage_writer, data_location,
-          analysis_plugins, configuration, event_filter=test_filter,
-          storage_file_path=temp_directory)
+      storage_writer.Open()
+
+      try:
+        counter = test_engine.AnalyzeEvents(
+            session, knowledge_base_object, storage_writer, data_location,
+            analysis_plugins, configuration, event_filter=test_filter,
+            storage_file_path=temp_directory)
+
+      finally:
+        storage_writer.Close()
 
     # TODO: assert if tests were successful.
     _ = counter

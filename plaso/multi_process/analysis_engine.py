@@ -75,7 +75,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._worker_timeout = worker_timeout or definitions.DEFAULT_WORKER_TIMEOUT
 
   def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
-    """Analyzes events in a plaso storage.
+    """Analyzes events in a Plaso storage.
 
     Args:
       storage_writer (StorageWriter): storage writer.
@@ -365,9 +365,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         timeout_seconds=self._QUEUE_TIMEOUT)
 
     process = analysis_process.AnalysisProcess(
-        input_event_queue, storage_writer, self._knowledge_base,
-        analysis_plugin, self._processing_configuration,
-        data_location=self._data_location,
+        input_event_queue, self._knowledge_base, self._session, analysis_plugin,
+        self._processing_configuration, data_location=self._data_location,
         event_filter_expression=self._event_filter_expression,
         name=process_name)
 
@@ -539,10 +538,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       analysis_plugins, processing_configuration, event_filter=None,
       event_filter_expression=None, status_update_callback=None,
       storage_file_path=None):
-    """Analyzes events in a plaso storage.
+    """Analyzes events in a Plaso storage.
 
     Args:
-      session (Session): session in which the sources are processed.
+      session (Session): session in which the events are analyzed.
       knowledge_base_object (KnowledgeBase): contains information from
           the source data needed for processing.
       storage_writer (StorageWriter): storage writer.
@@ -590,10 +589,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._StartStatusUpdateThread()
 
     try:
-      # Open the storage file after creating the worker processes otherwise
-      # the session store will remain locked as long as the worker processes
-      # are alive.
-      storage_writer.Open()
       storage_writer.WriteSessionStart()
 
       try:
@@ -617,8 +612,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           self._processing_status.aborted = True
 
         storage_writer.WriteSessionCompletion(aborted=self._abort)
-
-        storage_writer.Close()
 
     finally:
       # Stop the status update thread after close of the storage writer
