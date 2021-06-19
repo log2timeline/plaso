@@ -6,6 +6,7 @@ import threading
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import tasks
 from plaso.engine import plaso_queue
+from plaso.filters import event_filter
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_process import task_process
@@ -62,6 +63,10 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
       dict[str, object]: status attributes, indexed by name.
     """
     logger.debug('Status update requested')
+    number_of_consumed_events = 0
+    if self._analysis_plugin:
+      number_of_consumed_events = (
+          self._analysis_plugin.number_of_consumed_events)
 
     if self._analysis_mediator:
       number_of_produced_event_tags = (
@@ -89,7 +94,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
         'identifier': self._name,
         'number_of_consumed_analysis_warnings': None,
         'number_of_consumed_event_tags': None,
-        'number_of_consumed_events': self._number_of_consumed_events,
+        'number_of_consumed_events': number_of_consumed_events,
         'number_of_consumed_reports': None,
         'number_of_consumed_sources': None,
         'number_of_produced_analysis_warnings': None,
@@ -154,30 +159,14 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     task_storage_writer.WriteTaskStart()
 
     try:
-      logger.debug(
-          '{0!s} (PID: {1:d}) started monitoring event queue.'.format(
-              self._name, self._pid))
+      filter_object = None
+      if self._event_filter_expression:
+        filter_object = event_filter.EventObjectFilter()
+        filter_object.CompileFilter(self._event_filter_expression)
 
-      while not self._abort:
-        try:
-          queued_object = self._event_queue.PopItem()
-
-        except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logger.debug('ConsumeItems exiting with exception {0!s}.'.format(
-              type(exception)))
-          break
-
-        if isinstance(queued_object, plaso_queue.QueueAbort):
-          logger.debug('ConsumeItems exiting, dequeued QueueAbort object.')
-          break
-
-        self._ProcessEvent(self._analysis_mediator, *queued_object)
-
-        self._number_of_consumed_events += 1
-
-      logger.debug(
-          '{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
-              self._name, self._pid))
+      with self._storage_writer.CreateStorageReader() as storage_reader:
+        self._analysis_plugin.ProcessEventStore(
+            self._analysis_mediator, storage_reader, event_filter=filter_object)
 
       if not self._abort:
         self._status = definitions.STATUS_INDICATOR_REPORTING
@@ -187,6 +176,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
+      # TODO: write analysis error and change logger to debug only.
       logger.warning(
           'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
               self._name, self._pid))
@@ -212,18 +202,6 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
       logger.warning('Unable to finalize task storage with error: {0!s}'.format(
           exception))
 
-    if self._abort:
-      self._status = definitions.STATUS_INDICATOR_ABORTED
-    else:
-      self._status = definitions.STATUS_INDICATOR_COMPLETED
-
-    logger.debug('Wait for foreman status wait event')
-    self._foreman_status_wait_event.clear()
-    self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
-
-    logger.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
-        self._name, self._pid))
-
     if self._serializers_profiler:
       self._storage_writer.SetSerializersProfiler(None)
 
@@ -231,6 +209,31 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
       self._storage_writer.SetStorageProfiler(None)
 
     self._StopProfiling()
+
+    if self._abort:
+      self._status = definitions.STATUS_INDICATOR_ABORTED
+    else:
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
+
+    while not self._abort:
+      try:
+        queued_object = self._event_queue.PopItem()
+
+      except (errors.QueueClose, errors.QueueEmpty) as exception:
+        logger.debug('ConsumeItems exiting with exception {0!s}.'.format(
+            type(exception)))
+        break
+
+      if isinstance(queued_object, plaso_queue.QueueAbort):
+        logger.debug('ConsumeItems exiting, dequeued QueueAbort object.')
+        break
+
+    logger.debug('Wait for foreman status wait event')
+    self._foreman_status_wait_event.clear()
+    self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
+
+    logger.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
+        self._name, self._pid))
 
     self._analysis_mediator = None
     self._foreman_status_wait_event = None
@@ -241,26 +244,6 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
       self._event_queue.Close(abort=self._abort)
     except errors.QueueAlreadyClosed:
       logger.error('Queue for {0:s} was already closed.'.format(self.name))
-
-  def _ProcessEvent(self, mediator, event, event_data, event_data_stream):
-    """Processes an event.
-
-    Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-    """
-    try:
-      self._analysis_plugin.ExamineEvent(
-          mediator, event, event_data, event_data_stream)
-
-    except Exception as exception:  # pylint: disable=broad-except
-      # TODO: write analysis error and change logger to debug only.
-
-      logger.warning('Unhandled exception while processing event object.')
-      logger.exception(exception)
 
   def SignalAbort(self):
     """Signals the process to abort."""

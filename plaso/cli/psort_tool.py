@@ -69,8 +69,8 @@ class PsortTool(
     self._analysis_plugins_output_format = None
     self._command_line_arguments = None
     self._deduplicate_events = True
-    self._event_filter_expression = None
     self._event_filter = None
+    self._event_filter_expression = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._preferred_language = 'en-US'
@@ -527,7 +527,6 @@ class PsortTool(
       analysis_engine.AnalyzeEvents(
           session, self._knowledge_base, storage_writer, self._data_location,
           self._analysis_plugins, configuration,
-          event_filter=self._event_filter,
           event_filter_expression=self._event_filter_expression,
           status_update_callback=status_update_callback,
           storage_file_path=self._storage_file_path)
