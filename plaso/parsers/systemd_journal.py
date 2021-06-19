@@ -2,17 +2,19 @@
 """Parser for Systemd journal files."""
 
 import lzma
-
-from lz4 import block as lz4_block
+import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
+
+from lz4 import block as lz4_block
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -37,13 +39,18 @@ class SystemdJournalEventData(events.EventData):
     self.reporter = None
 
 
-class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
+class SystemdJournalParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses Systemd Journal files."""
 
   NAME = 'systemd_journal'
   DATA_FORMAT = 'Systemd journal file'
 
   _DEFINITION_FILE = 'systemd_journal.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _OBJECT_COMPRESSED_FLAG_XZ = 1
   _OBJECT_COMPRESSED_FLAG_LZ4 = 2

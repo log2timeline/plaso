@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """Parser for PL/SQL Developer Recall files."""
 
+import os
+
 from dfdatetime import delphi_date_time as dfdatetime_delphi_date_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -35,7 +38,8 @@ class PlsRecallEventData(events.EventData):
     self.username = None
 
 
-class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
+class PlsRecallParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parse PL/SQL Recall files.
 
   This parser is based on the Delphi definition of the data type:
@@ -56,6 +60,10 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
   DATA_FORMATE = 'PL SQL cache file (PL-SQL developer recall file)'
 
   _DEFINITION_FILE = 'pls_recall.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _PLS_KEYWORD = frozenset([
       'begin', 'commit', 'create', 'declare', 'drop', 'end', 'exception',

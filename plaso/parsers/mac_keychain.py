@@ -3,6 +3,7 @@
 
 import codecs
 import collections
+import os
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -10,10 +11,11 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
 from plaso.containers import time_events
+from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -110,13 +112,18 @@ class KeychainDatabaseTable(object):
     self.relation_name = None
 
 
-class KeychainParser(dtfabric_parser.DtFabricBaseParser):
+class KeychainParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for MacOS keychain database files."""
 
   NAME = 'mac_keychain'
   DATA_FORMAT = 'MacOS keychain database file'
 
   _DEFINITION_FILE = 'mac_keychain.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _MAJOR_VERSION = 1
   _MINOR_VERSION = 0

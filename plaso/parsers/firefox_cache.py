@@ -9,9 +9,10 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
 
@@ -49,7 +50,7 @@ class FirefoxCacheEventData(events.EventData):
     self.version = None
 
 
-class BaseFirefoxCacheParser(dtfabric_parser.DtFabricBaseParser):
+class BaseFirefoxCacheParser(interface.FileObjectParser):
   """Parses Firefox cache files."""
 
   # pylint: disable=abstract-method
@@ -129,13 +130,18 @@ class BaseFirefoxCacheParser(dtfabric_parser.DtFabricBaseParser):
     return request_method, response_code
 
 
-class FirefoxCacheParser(BaseFirefoxCacheParser):
+class FirefoxCacheParser(
+    BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper):
   """Parses Firefox cache version 1 files (Firefox 31 or earlier)."""
 
   NAME = 'firefox_cache'
   DATA_FORMAT = 'Mozilla Firefox Cache version 1 file (version 31 or earlier)'
 
   _DEFINITION_FILE = 'firefox_cache.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   # Initial size of Firefox 4 and later cache files.
   _INITIAL_CACHE_FILE_SIZE = 4 * 1024 * 1024
@@ -360,13 +366,18 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
             '{2:d}.').format(self.NAME, display_name, file_offset))
 
 
-class FirefoxCache2Parser(BaseFirefoxCacheParser):
+class FirefoxCache2Parser(
+    BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper):
   """Parses Firefox cache version 2 files (Firefox 32 or later)."""
 
   NAME = 'firefox_cache2'
   DATA_FORMAT = 'Mozilla Firefox Cache version 2 file (version 32 or later)'
 
   _DEFINITION_FILE = 'firefox_cache.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _CACHE_VERSION = 2
 
