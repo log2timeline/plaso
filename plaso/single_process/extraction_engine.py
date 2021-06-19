@@ -38,6 +38,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._process_information = process_info.ProcessInfo(self._pid)
     self._processing_configuration = None
     self._resolver_context = None
+    self._session = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_active = False
     self._status_update_callback = None
@@ -268,6 +269,7 @@ class SingleProcessEngine(engine.BaseEngine):
       ProcessingStatus: processing status.
     """
     self._resolver_context = resolver_context
+    self._session = session
 
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, self.knowledge_base,
@@ -308,20 +310,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._StartStatusUpdateThread()
 
-    self._storage_writer.WriteSessionStart()
-
-    # TODO: decouple session and storage writer?
-    session.source_configurations = (
-        self.knowledge_base.GetSourceConfigurationArtifacts())
-
     try:
-      try:
-        self._storage_writer.WriteSessionConfiguration()
-
-        self._ProcessSources(source_path_specs, parser_mediator)
-
-      finally:
-        self._storage_writer.WriteSessionCompletion(aborted=self._abort)
+      self._ProcessSources(source_path_specs, parser_mediator)
 
     finally:
       # Stop the status update thread after close of the storage writer
@@ -353,6 +343,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._file_system_cache = []
     self._processing_configuration = None
     self._resolver_context = None
+    self._session = None
     self._status_update_callback = None
     self._storage_writer = None
 
