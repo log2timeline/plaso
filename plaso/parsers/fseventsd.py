@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parsers for MacOS fseventsd files."""
 
+import os
+
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -8,9 +10,10 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -36,7 +39,8 @@ class FseventsdEventData(events.EventData):
     self.path = None
 
 
-class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
+class FseventsdParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for fseventsd files.
 
   This parser supports both version 1 and version 2 fseventsd files.
@@ -54,6 +58,10 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
   _DLS_V2_SIGNATURE = b'2SLD'
 
   _DEFINITION_FILE = 'fseventsd.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   @classmethod
   def GetFormatSpecification(cls):

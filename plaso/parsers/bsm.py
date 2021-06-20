@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """Basic Security Module (BSM) event auditing file parser."""
 
+import os
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -36,13 +39,17 @@ class BSMEventData(events.EventData):
     self.return_value = None
 
 
-class BSMParser(dtfabric_parser.DtFabricBaseParser):
+class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Basic Security Module (BSM) event auditing files."""
 
   NAME = 'bsm_log'
   DATA_FORMAT = 'Basic Security Module (BSM) event auditing file'
 
   _DEFINITION_FILE = 'bsm.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _TOKEN_TYPE_AUT_TRAILER = 0x13
   _TOKEN_TYPE_AUT_HEADER32 = 0x14

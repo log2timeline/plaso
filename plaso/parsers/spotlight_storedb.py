@@ -3,9 +3,8 @@
 
 from collections import abc as collections
 
+import os
 import zlib
-
-import lz4.block
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -13,12 +12,15 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dtfabric import errors as dtfabric_errors
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
+import lz4.block
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -93,13 +95,18 @@ class SpotlightStoreMetadataItem(object):
     self.parent_identifier = 0
 
 
-class SpotlightStoreDatabaseParser(dtfabric_parser.DtFabricBaseParser):
+class SpotlightStoreDatabaseParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Apple Spotlight store database (store.db) files."""
 
   NAME = 'spotlight_storedb'
   DATA_FORMAT = 'Apple Spotlight store database (store.db) file'
 
   _DEFINITION_FILE = 'spotlight_storedb.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   # Names of metadata attributes that contain date and time values.
   _DATE_TIME_METADATA_ATTRIBUTES = [

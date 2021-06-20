@@ -9,9 +9,9 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -99,7 +99,8 @@ class CacheEntry(object):
     self.rankings_node = None
 
 
-class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
+class ChromeCacheIndexFileParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Chrome cache index file parser.
 
   Attributes:
@@ -110,6 +111,10 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
   """
 
   _DEFINITION_FILE = 'chrome_cache.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def __init__(self):
     """Initializes an index file."""
@@ -196,10 +201,15 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
     self._ParseIndexTable(file_object)
 
 
-class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
+class ChromeCacheDataBlockFileParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Chrome cache data block file parser."""
 
   _DEFINITION_FILE = 'chrome_cache.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def _ParseFileHeader(self, file_object):
     """Parses the file header.

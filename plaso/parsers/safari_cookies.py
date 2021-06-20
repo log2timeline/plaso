@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Safari Binary Cookie files."""
 
+import os
+
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -8,12 +10,15 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.lib import specification
-# Need to register cookie plugins.
+
+# Register the cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
-from plaso.parsers import dtfabric_parser
+
+from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 
@@ -41,13 +46,18 @@ class SafariBinaryCookieEventData(events.EventData):
     self.url = None
 
 
-class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
+class BinaryCookieParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
   DATA_FORMAT = 'Safari Binary Cookie file'
 
   _DEFINITION_FILE = 'safari_cookies.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def __init__(self):
     """Initializes a parser."""

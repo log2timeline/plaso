@@ -7,15 +7,18 @@
 #    This needs to be researched further, as that field may not always
 #    be present. 6.02 files will currently return 'Unknown'.
 
+import os
+
 from dfdatetime import java_time as dfdatetime_java_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -38,7 +41,7 @@ class JavaIDXEventData(events.EventData):
     self.url = None
 
 
-class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
+class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Java WebStart Cache IDX files.
 
   There are five structures defined. 6.02 files had one generic section
@@ -57,6 +60,10 @@ class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
   _INITIAL_FILE_OFFSET = None
 
   _DEFINITION_FILE = 'java_idx.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _SUPPORTED_FORMAT_VERSIONS = (602, 603, 604, 605)
 

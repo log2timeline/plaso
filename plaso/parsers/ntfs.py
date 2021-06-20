@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 """Parser for NTFS metadata files."""
 
+import os
 import uuid
-
-import pyfsntfs  # pylint: disable=wrong-import-order
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import uuid_time as dfdatetime_uuid_time
 
+import pyfsntfs
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -371,7 +372,8 @@ class NTFSMFTParser(interface.FileObjectParser):
     mft_metadata_file.close()
 
 
-class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
+class NTFSUsnJrnlParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses a NTFS USN change journal."""
 
   NAME = 'usnjrnl'
@@ -381,6 +383,10 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
   _INITIAL_FILE_OFFSET = None
 
   _DEFINITION_FILE = 'ntfs.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   # TODO: add support for USN_RECORD_V3 and USN_RECORD_V4 when actually
   # seen to be used.
