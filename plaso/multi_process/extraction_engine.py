@@ -550,19 +550,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     else:
       logger.debug('Task scheduler stopped')
 
-  def _StartWorkerProcess(self, process_name, storage_writer):
+  def _StartWorkerProcess(self, process_name):
     """Creates, starts, monitors and registers a worker process.
 
     Args:
       process_name (str): process name.
-      storage_writer (StorageWriter): storage writer for a session storage used
-          to create task storage.
 
     Returns:
       MultiProcessWorkerProcess: extraction worker process or None if the
           process could not be started.
     """
-    process_name = 'Worker_{0:02d}'.format(self._last_worker_number)
     logger.debug('Starting worker process {0:s}'.format(process_name))
 
     queue_name = '{0:s} task queue'.format(process_name)
@@ -818,6 +815,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._task_queue.Open()
     self._task_queue_port = self._task_queue.port
 
+    # Set up the task storage before the worker processes.
+    self._StartTaskStorage(self._task_storage_format)
+
+    for worker_number in range(self._number_of_worker_processes):
+      process_name = 'Worker_{0:02d}'.format(self._last_worker_number)
+      worker_process = self._StartWorkerProcess(process_name)
+      if not worker_process:
+        logger.error('Unable to create worker process: {0:d}'.format(
+            worker_number))
+
     self._StartProfiling(self._processing_configuration.profiling)
     self._task_manager.StartProfiling(
         self._processing_configuration.profiling, self._name)
@@ -827,16 +834,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     if self._storage_profiler:
       storage_writer.SetStorageProfiler(self._storage_profiler)
-
-    # Set up the task storage before the worker processes.
-    self._StartTaskStorage(self._task_storage_format)
-
-    for worker_number in range(self._number_of_worker_processes):
-      # First argument to _StartWorkerProcess is not used.
-      worker_process = self._StartWorkerProcess('', storage_writer)
-      if not worker_process:
-        logger.error('Unable to create worker process: {0:d}'.format(
-            worker_number))
 
     self._StartStatusUpdateThread()
 
