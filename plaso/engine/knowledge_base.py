@@ -3,7 +3,7 @@
 
 The knowledge base is filled by user provided input and the pre-processing
 phase. It is intended to provide successive phases, like the parsing and
-analysis phases, with essential information like the timezone and codepage
+analysis phases, with essential information like the time zone and codepage
 of the source data.
 """
 
@@ -13,6 +13,7 @@ import pytz
 
 from plaso.containers import artifacts
 from plaso.engine import logger
+from plaso.winnt import time_zones
 
 
 class KnowledgeBase(object):
@@ -55,7 +56,7 @@ class KnowledgeBase(object):
 
   @property
   def timezone(self):
-    """datetime.tzinfo: timezone of the current session."""
+    """datetime.tzinfo: time zone of the current session."""
     return self._time_zone
 
   @property
@@ -362,6 +363,12 @@ class KnowledgeBase(object):
         'operating_system_version',
         system_configuration.operating_system_version)
 
+    # Set the available time zones before the system time zone so that localized
+    # time zone names can be mapped to their corresponding Python time zone.
+    self._available_time_zones[session_identifier] = {
+        time_zone.name: time_zone
+        for time_zone in system_configuration.available_time_zones}
+
     if system_configuration.time_zone:
       try:
         self.SetTimeZone(system_configuration.time_zone)
@@ -369,10 +376,6 @@ class KnowledgeBase(object):
         logger.warning(
             'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 system_configuration.time_zone, self.timezone.zone))
-
-    self._available_time_zones[session_identifier] = {
-        time_zone.name: time_zone
-        for time_zone in system_configuration.available_time_zones}
 
     self._user_accounts[session_identifier] = {
         user_account.identifier: user_account
@@ -454,12 +457,23 @@ class KnowledgeBase(object):
       time_zone (str): time zone.
 
     Raises:
-      ValueError: if the timezone is not supported.
+      ValueError: if the time zone is not supported.
     """
+    localized_time_zones = {
+        time_zone_artifact.localized_name: time_zone_artifact.name
+        for time_zone_artifact in self.available_time_zones}
+
+    # Get the "normalized" name of a Windows time zone name.
+    time_zone = localized_time_zones.get(time_zone, time_zone)
+
+    # Map a Windows time zone name to a Python time zone name.
+    lookup_key = time_zone.replace(' ', '')
+    time_zone = time_zones.WINDOWS_TIME_ZONES.get(lookup_key, time_zone)
+
     try:
       self._time_zone = pytz.timezone(time_zone)
     except (AttributeError, pytz.UnknownTimeZoneError):
-      raise ValueError('Unsupported timezone: {0!s}'.format(time_zone))
+      raise ValueError('Unsupported time zone: {0!s}'.format(time_zone))
 
   def SetValue(self, identifier, value):
     """Sets a value by identifier.

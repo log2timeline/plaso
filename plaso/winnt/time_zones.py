@@ -10,7 +10,7 @@ HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones
 # Dictionary to map Windows time zone names to Python equivalents.
 # Note that spaces have been stripped from the Windows time zone names.
 
-TIME_ZONES = {
+WINDOWS_TIME_ZONES = {
     'AlaskanStandardTime': 'US/Alaska',
     'Arabic Standard Time': 'Asia/Baghdad',
     'AtlanticStandardTime': 'Canada/Atlantic',
