@@ -50,11 +50,8 @@ class SAMUsersWindowsRegistryPlugin(
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users')])
 
-  _DEFINITION_FILE = 'sam_users.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'sam_users.yaml')
 
   _V_VALUE_STRINGS_OFFSET = 0xcc
 

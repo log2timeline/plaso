@@ -25,11 +25,8 @@ class CustomDestinationsParser(
 
   _INITIAL_FILE_OFFSET = None
 
-  _DEFINITION_FILE = 'custom_destinations.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'custom_destinations.yaml')
 
   # We cannot use the parser registry here since winlnk could be disabled.
   # TODO: see if there is a more elegant solution for this.

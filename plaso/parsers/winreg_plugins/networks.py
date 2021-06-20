@@ -50,11 +50,8 @@ class NetworksWindowsRegistryPlugin(
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion'
           '\\NetworkList')])
 
-  _DEFINITION_FILE = 'systemtime.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'systemtime.yaml')
 
   _CONNECTION_TYPE = {
       0x06: 'Wired',

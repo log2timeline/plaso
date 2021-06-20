@@ -44,11 +44,8 @@ class ShutdownWindowsRegistryPlugin(
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows')])
 
-  _DEFINITION_FILE = 'filetime.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'filetime.yaml')
 
   def _ParseFiletime(self, byte_stream):
     """Parses a FILETIME date and time value from a byte stream.

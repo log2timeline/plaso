@@ -81,11 +81,8 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   NAME = 'asl_log'
   DATA_FORMAT = 'Apple System Log (ASL) file'
 
-  _DEFINITION_FILE = 'asl.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'asl.yaml')
 
   # Most significant bit of a 64-bit string offset.
   _STRING_OFFSET_MSB = 1 << 63

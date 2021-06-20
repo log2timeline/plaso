@@ -53,11 +53,8 @@ class BinaryCookieParser(
   NAME = 'binary_cookies'
   DATA_FORMAT = 'Safari Binary Cookie file'
 
-  _DEFINITION_FILE = 'safari_cookies.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'safari_cookies.yaml')
 
   def __init__(self):
     """Initializes a parser."""

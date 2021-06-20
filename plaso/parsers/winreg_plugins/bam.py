@@ -48,11 +48,8 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\bam'
           '\\State\\UserSettings')])
 
-  _DEFINITION_FILE = 'filetime.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'filetime.yaml')
 
   def _ParseValue(self, registry_value):
     """Parses the registry value.

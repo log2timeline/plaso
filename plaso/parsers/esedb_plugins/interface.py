@@ -45,11 +45,8 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
   OPTIONAL_TABLES = {}
 
   # The dtFabric definition file.
-  _DEFINITION_FILE = 'types.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'types.yaml')
 
   def __init__(self):
     """Initializes the ESE database plugin."""

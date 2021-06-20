@@ -52,11 +52,8 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   NAME = 'utmp'
   DATA_FORMAT = 'Linux libc6 utmp file'
 
-  _DEFINITION_FILE = 'utmp.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'utmp.yaml')
 
   _EMPTY_IP_ADDRESS = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 

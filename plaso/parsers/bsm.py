@@ -45,11 +45,8 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   NAME = 'bsm_log'
   DATA_FORMAT = 'Basic Security Module (BSM) event auditing file'
 
-  _DEFINITION_FILE = 'bsm.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'bsm.yaml')
 
   _TOKEN_TYPE_AUT_TRAILER = 0x13
   _TOKEN_TYPE_AUT_HEADER32 = 0x14

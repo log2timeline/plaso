@@ -55,9 +55,6 @@ class DtFabricHelper(object):
   # The dtFabric definition file, which must be overwritten by a subclass.
   _DEFINITION_FILE = None
 
-  # The dtFabric definition files path, which must be overwritten by a subclass.
-  _DEFINITION_FILES_PATH = None
-
   def __init__(self):
     """Initializes the ESE database plugin."""
     super(DtFabricHelper, self).__init__()
@@ -151,21 +148,20 @@ class DtFabricHelper(object):
 
     return data
 
-  def _ReadDefinitionFile(self, filename):
+  def _ReadDefinitionFile(self, path):
     """Reads a dtFabric definition file.
 
     Args:
-      filename (str): name of the dtFabric definition file.
+      path (str): path of the dtFabric definition file.
 
     Returns:
       dtfabric.DataTypeFabric: data type fabric which contains the data format
           data type maps of the data type definition, such as a structure, that
-          can be mapped onto binary data or None if no filename is provided.
+          can be mapped onto binary data or None if no path is provided.
     """
-    if not filename:
+    if not path:
       return None
 
-    path = os.path.join(self._DEFINITION_FILES_PATH, filename)
     with open(path, 'rb') as file_object:
       definition = file_object.read()
 

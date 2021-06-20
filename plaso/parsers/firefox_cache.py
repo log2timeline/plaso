@@ -137,11 +137,8 @@ class FirefoxCacheParser(
   NAME = 'firefox_cache'
   DATA_FORMAT = 'Mozilla Firefox Cache version 1 file (version 31 or earlier)'
 
-  _DEFINITION_FILE = 'firefox_cache.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'firefox_cache.yaml')
 
   # Initial size of Firefox 4 and later cache files.
   _INITIAL_CACHE_FILE_SIZE = 4 * 1024 * 1024
@@ -373,11 +370,8 @@ class FirefoxCache2Parser(
   NAME = 'firefox_cache2'
   DATA_FORMAT = 'Mozilla Firefox Cache version 2 file (version 32 or later)'
 
-  _DEFINITION_FILE = 'firefox_cache.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'firefox_cache.yaml')
 
   _CACHE_VERSION = 2
 

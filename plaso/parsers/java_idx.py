@@ -59,11 +59,8 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
   _INITIAL_FILE_OFFSET = None
 
-  _DEFINITION_FILE = 'java_idx.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'java_idx.yaml')
 
   _SUPPORTED_FORMAT_VERSIONS = (602, 603, 604, 605)
 

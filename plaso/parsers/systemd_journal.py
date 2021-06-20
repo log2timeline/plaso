@@ -46,11 +46,8 @@ class SystemdJournalParser(
   NAME = 'systemd_journal'
   DATA_FORMAT = 'Systemd journal file'
 
-  _DEFINITION_FILE = 'systemd_journal.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'systemd_journal.yaml')
 
   _OBJECT_COMPRESSED_FLAG_XZ = 1
   _OBJECT_COMPRESSED_FLAG_LZ4 = 2

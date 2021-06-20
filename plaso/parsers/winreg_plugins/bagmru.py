@@ -58,11 +58,8 @@ class BagMRUWindowsRegistryPlugin(
           'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
           'ShellNoRoam\\BagMRU')])
 
-  _DEFINITION_FILE = 'mru.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'mru.yaml')
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_number, parent_path_segments,

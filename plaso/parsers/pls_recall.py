@@ -59,11 +59,8 @@ class PlsRecallParser(
   NAME = 'pls_recall'
   DATA_FORMATE = 'PL SQL cache file (PL-SQL developer recall file)'
 
-  _DEFINITION_FILE = 'pls_recall.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'pls_recall.yaml')
 
   _PLS_KEYWORD = frozenset([
       'begin', 'commit', 'create', 'declare', 'drop', 'end', 'exception',

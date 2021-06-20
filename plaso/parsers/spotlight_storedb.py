@@ -102,11 +102,8 @@ class SpotlightStoreDatabaseParser(
   NAME = 'spotlight_storedb'
   DATA_FORMAT = 'Apple Spotlight store database (store.db) file'
 
-  _DEFINITION_FILE = 'spotlight_storedb.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'spotlight_storedb.yaml')
 
   # Names of metadata attributes that contain date and time values.
   _DATE_TIME_METADATA_ATTRIBUTES = [
