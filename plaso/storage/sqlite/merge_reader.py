@@ -190,15 +190,6 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
         self._path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     self._cursor = self._connection.cursor()
 
-  def _ReadStorageMetadata(self):
-    """Reads the task storage metadata."""
-    query = 'SELECT key, value FROM metadata'
-    self._cursor.execute(query)
-
-    metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
-
-    self._compression_format = metadata_values['compression_format']
-
   def _PrepareForNextContainerType(self):
     """Prepares for the next container type.
 
@@ -216,6 +207,15 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     self._cursor.execute(query)
 
     self._active_cursor = self._cursor
+
+  def _ReadStorageMetadata(self):
+    """Reads the task storage metadata."""
+    query = 'SELECT key, value FROM metadata'
+    self._cursor.execute(query)
+
+    metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
+
+    self._compression_format = metadata_values['compression_format']
 
   def MergeAttributeContainers(
       self, callback=None, maximum_number_of_containers=0):
