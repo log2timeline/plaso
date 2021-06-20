@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """"Windows Registry plugin for SAM Users Account information."""
 
+import os
+
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -38,7 +40,7 @@ class SAMUsersWindowsRegistryEventData(events.EventData):
 
 
 class SAMUsersWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Windows Registry plugin for SAM Users Account information."""
 
   NAME = 'windows_sam_users'
@@ -49,6 +51,10 @@ class SAMUsersWindowsRegistryPlugin(
           'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users')])
 
   _DEFINITION_FILE = 'sam_users.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _V_VALUE_STRINGS_OFFSET = 0xcc
 

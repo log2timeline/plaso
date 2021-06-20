@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for TimeMachine plist files."""
 
+import os
+
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import plist
-from plaso.parsers.plist_plugins import dtfabric_plugin
 from plaso.parsers.plist_plugins import interface
 
 
-class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
+class TimeMachinePlugin(
+    interface.PlistPlugin, dtfabric_helper.DtFabricHelper):
   """Plist parser plugin for TimeMachine plist files.
 
   Further details about the extracted fields:
@@ -35,6 +38,10 @@ class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
 
   _DEFINITION_FILE = 'timemachine.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):

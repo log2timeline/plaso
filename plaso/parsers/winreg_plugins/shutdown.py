@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin for parsing the last shutdown time of a system."""
 
+import os
+
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -32,7 +34,7 @@ class ShutdownWindowsRegistryEventData(events.EventData):
 
 
 class ShutdownWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Windows Registry plugin for parsing the last shutdown time of a system."""
 
   NAME = 'windows_shutdown'
@@ -43,6 +45,10 @@ class ShutdownWindowsRegistryPlugin(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows')])
 
   _DEFINITION_FILE = 'filetime.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def _ParseFiletime(self, byte_stream):
     """Parses a FILETIME date and time value from a byte stream.

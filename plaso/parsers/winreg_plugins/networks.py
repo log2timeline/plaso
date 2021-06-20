@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """This file contains the NetworkList Registry plugin."""
 
+import os
+
 from dfdatetime import systemtime as dfdatetime_systemtime
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -37,7 +39,7 @@ class WindowsRegistryNetworkListEventData(events.EventData):
 
 
 class NetworksWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Windows Registry plugin for parsing the NetworkList key."""
 
   NAME = 'networks'
@@ -49,6 +51,10 @@ class NetworksWindowsRegistryPlugin(
           '\\NetworkList')])
 
   _DEFINITION_FILE = 'systemtime.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _CONNECTION_TYPE = {
       0x06: 'Wired',

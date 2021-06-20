@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """This file contains the Task Scheduler Registry keys plugins."""
 
+import os
+
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -32,7 +34,7 @@ class TaskCacheEventData(events.EventData):
 
 
 class TaskCacheWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Plugin that parses a Task Cache key."""
 
   NAME = 'windows_task_cache'
@@ -44,6 +46,10 @@ class TaskCacheWindowsRegistryPlugin(
           'CurrentVersion\\Schedule\\TaskCache')])
 
   _DEFINITION_FILE = 'task_scheduler.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def _GetIdValue(self, registry_key):
     """Retrieves the Id value from Task Cache Tree key.
