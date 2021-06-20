@@ -708,9 +708,17 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
             'write_container', 'write', attribute_container.CONTAINER_TYPE,
             len(serialized_data), len(compressed_data))
 
+    row_identifier = self._cursor.lastrowid
     identifier = identifiers.SQLTableIdentifier(
-        attribute_container.CONTAINER_TYPE, self._cursor.lastrowid)
+        attribute_container.CONTAINER_TYPE, row_identifier)
     attribute_container.SetIdentifier(identifier)
+
+    if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
+        attribute_container.CONTAINER_TYPE == (
+            self._CONTAINER_TYPE_EVENT_SOURCE)):
+      # Cache the event source for a session store since it will be accessed
+      # after write.
+      self._CacheAttributeContainer(attribute_container, row_identifier - 1)
 
   def _WriteStorageMetadata(self):
     """Writes the storage metadata.

@@ -208,7 +208,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     while event_source:
       event_source_heap.PushEventSource(event_source)
       if event_source_heap.IsFull():
-        logger.debug('Source heap is full.')
+        logger.debug('Event source heap is full.')
         break
 
       if self._processing_profiler:
