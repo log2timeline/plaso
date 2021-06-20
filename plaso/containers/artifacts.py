@@ -463,24 +463,30 @@ class TimeZoneArtifact(ArtifactAttributeContainer):
   Attributes:
     localized_name (str): name describing the time zone in localized language
         for example "Greenwich (standaardtijd)".
+    mui_form (str): MUI form of the name describing the time zone for example
+        "@tzres.dll,-112".
     name (str): name describing the time zone for example "Greenwich Standard
         Time".
     offset (int): time zone offset in number of minutes from UTC.
   """
   CONTAINER_TYPE = 'time_zone'
 
-  def __init__(self, localized_name=None, name=None, offset=None):
+  def __init__(
+      self, localized_name=None, mui_form=None, name=None, offset=None):
     """Initializes a time zone artifact.
 
     Args:
       localized_name (Optional[str]): name describing the time zone in localized
           language for example "Greenwich (standaardtijd)".
+      mui_form (Optional[str]): MUI form of the name describing the time zone
+          for example "@tzres.dll,-112".
       name (Optional[str]): name describing the time zone for example "Greenwich
           Standard Time".
       offset (Optional[int]): time zone offset in number of minutes from UTC.
     """
     super(TimeZoneArtifact, self).__init__()
     self.localized_name = localized_name
+    self.mui_form = mui_form
     self.name = name
     self.offset = offset
 

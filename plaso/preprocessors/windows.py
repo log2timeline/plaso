@@ -224,6 +224,12 @@ class WindowsAvailableTimeZonesPlugin(
     else:
       localized_name = registry_key.name
 
+    mui_std_value = registry_key.GetValueByName('MUI_Std')
+    if mui_std_value:
+      mui_form = std_value.GetDataAsObject()
+    else:
+      mui_form = None
+
     tzi_value = registry_key.GetValueByName('TZI')
     if not tzi_value:
       mediator.ProducePreprocessingWarning(
@@ -233,7 +239,8 @@ class WindowsAvailableTimeZonesPlugin(
       return
 
     time_zone_artifact = artifacts.TimeZoneArtifact(
-        localized_name=localized_name, name=registry_key.name)
+        localized_name=localized_name, mui_form=mui_form,
+        name=registry_key.name)
 
     try:
       self._ParseTZIValue(tzi_value.data, time_zone_artifact)
