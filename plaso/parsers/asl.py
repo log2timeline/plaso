@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """The Apple System Log (ASL) file parser."""
 
+import os
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -72,13 +75,17 @@ class ASLFileEventData(events.EventData):
     self.is_dirty = None
 
 
-class ASLParser(dtfabric_parser.DtFabricBaseParser):
+class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Apple System Log (ASL) files."""
 
   NAME = 'asl_log'
   DATA_FORMAT = 'Apple System Log (ASL) file'
 
   _DEFINITION_FILE = 'asl.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   # Most significant bit of a 64-bit string offset.
   _STRING_OFFSET_MSB = 1 << 63

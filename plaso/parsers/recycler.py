@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Recycle files, INFO2 and $I/$R pairs."""
 
+import os
+
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -39,13 +42,18 @@ class WinRecycleBinEventData(events.EventData):
     self.short_filename = None
 
 
-class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
+class WinRecycleBinParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = 'recycle_bin'
   DATA_FORMAT = 'Windows $Recycle.Bin $I file'
 
   _DEFINITION_FILE = 'recycler.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _SUPPORTED_FORMAT_VERSIONS = (1, 2)
 
@@ -139,13 +147,18 @@ class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
+class WinRecyclerInfo2Parser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses the Windows Recycler INFO2 file."""
 
   NAME = 'recycle_bin_info2'
   DATA_FORMAT = 'Windows Recycler INFO2 file'
 
   _DEFINITION_FILE = 'recycler.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _RECORD_INDEX_OFFSET = 0x104
   _UNICODE_FILENAME_OFFSET = 0x118

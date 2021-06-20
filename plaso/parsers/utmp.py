@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """Parser for Linux utmp files."""
 
+import os
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -43,13 +46,17 @@ class UtmpEventData(events.EventData):
     self.username = None
 
 
-class UtmpParser(dtfabric_parser.DtFabricBaseParser):
+class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Linux libc6 utmp files."""
 
   NAME = 'utmp'
   DATA_FORMAT = 'Linux libc6 utmp file'
 
   _DEFINITION_FILE = 'utmp.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   _EMPTY_IP_ADDRESS = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 

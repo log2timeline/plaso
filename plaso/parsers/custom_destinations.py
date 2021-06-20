@@ -8,14 +8,16 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver
 
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers import winlnk
 
 
-class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
+class CustomDestinationsParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses custom destinations jump list (.customDestinations-ms) files."""
 
   NAME = 'custom_destinations'
@@ -24,6 +26,10 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
   _INITIAL_FILE_OFFSET = None
 
   _DEFINITION_FILE = 'custom_destinations.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   # We cannot use the parser registry here since winlnk could be disabled.
   # TODO: see if there is a more elegant solution for this.

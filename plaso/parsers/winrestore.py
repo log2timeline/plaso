@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Restore Point (rp.log) files."""
 
+import os
+
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -34,7 +36,8 @@ class RestorePointEventData(events.EventData):
     self.sequence_number = None
 
 
-class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
+class RestorePointLogParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """A parser for Windows Restore Point (rp.log) files."""
 
   NAME = 'rplog'
@@ -44,6 +47,10 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
       interface.FileNameFileEntryFilter('rp.log')])
 
   _DEFINITION_FILE = 'winrestore.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Restore Point (rp.log) log file-like object.
