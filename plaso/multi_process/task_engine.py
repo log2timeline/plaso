@@ -7,9 +7,8 @@ import tempfile
 
 from plaso.lib import definitions
 from plaso.multi_process import engine
+from plaso.storage import factory as storage_factory
 from plaso.storage.redis import redis_store
-from plaso.storage.redis import merge_reader as redis_merge_reader
-from plaso.storage.sqlite import merge_reader as sqlite_merge_reader
 
 
 class TaskMultiProcessEngine(engine.MultiProcessEngine):
@@ -72,14 +71,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     Returns:
       StorageMergeReader: storage merge reader.
     """
-    # TODO: move into storage factory.
-    if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      task_merge_reader = redis_merge_reader.RedisMergeReader(
-          storage_writer, task)
-    else:
-      path = self._GetMergeTaskStorageFilePath(task_storage_format, task)
-      task_merge_reader = sqlite_merge_reader.SQLiteStorageMergeReader(
-          storage_writer, path)
+    path = self._GetMergeTaskStorageFilePath(task_storage_format, task)
+    task_merge_reader = (
+        storage_factory.StorageFactory.CreateTaskStorageMergeReader(
+            task_storage_format, storage_writer, task, path))
 
     task_merge_reader.SetStorageProfiler(self._storage_profiler)
     return task_merge_reader

@@ -18,7 +18,6 @@ class BaseStorageFileTest(unittest.TestCase):
   # TODO: add more tests.
 
 
-# TODO: add tests for StorageFileMergeReader
 # TODO: add tests for StorageFileReader
 # TODO: add tests for StorageFileWriter
 

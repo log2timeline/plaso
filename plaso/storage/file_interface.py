@@ -34,6 +34,29 @@ class BaseStorageFile(interface.BaseStore):
     self._attribute_container_sequence_numbers[container_type] += 1
     return self._attribute_container_sequence_numbers[container_type]
 
+  def _RaiseIfNotReadable(self):
+    """Raises if the storage file is not readable.
+
+     Raises:
+      IOError: when the storage file is closed.
+      OSError: when the storage file is closed.
+    """
+    if not self._is_open:
+      raise IOError('Unable to read from closed storage file.')
+
+  def _RaiseIfNotWritable(self):
+    """Raises if the storage file is not writable.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError('Unable to write to closed storage file.')
+
+    if self._read_only:
+      raise IOError('Unable to write to read-only storage file.')
+
   def _SerializeAttributeContainer(self, attribute_container):
     """Serializes an attribute container.
 
@@ -79,45 +102,6 @@ class BaseStorageFile(interface.BaseStore):
     self._attribute_container_sequence_numbers[
         container_type] = next_sequence_number
 
-  def _RaiseIfNotReadable(self):
-    """Raises if the storage file is not readable.
-
-     Raises:
-      IOError: when the storage file is closed.
-      OSError: when the storage file is closed.
-    """
-    if not self._is_open:
-      raise IOError('Unable to read from closed storage file.')
-
-  def _RaiseIfNotWritable(self):
-    """Raises if the storage file is not writable.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      OSError: when the storage file is closed or read-only.
-    """
-    if not self._is_open:
-      raise IOError('Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError('Unable to write to read-only storage file.')
-
-
-class StorageFileMergeReader(interface.StorageMergeReader):
-  """Storage reader interface for merging file-based stores."""
-
-  # pylint: disable=abstract-method
-
-  def __init__(self, storage_writer):
-    """Initializes a storage merge reader.
-
-    Args:
-      storage_writer (StorageWriter): storage writer.
-    """
-    super(StorageFileMergeReader, self).__init__(storage_writer)
-    self._serializer = json_serializer.JSONAttributeContainerSerializer
-    self._serializers_profiler = None
-
 
 class StorageFileReader(interface.StorageReader):
   """File-based storage reader interface."""
@@ -131,39 +115,6 @@ class StorageFileReader(interface.StorageReader):
     super(StorageFileReader, self).__init__()
     self._path = path
     self._storage_file = None
-
-  def GetFormatVersion(self):
-    """Retrieves the format version of the underlying storage file.
-
-    Returns:
-      int: the format version, or None if not available.
-    """
-    if self._storage_file:
-      return self._storage_file.format_version
-
-    return None
-
-  def GetSerializationFormat(self):
-    """Retrieves the serialization format of the underlying storage file.
-
-    Returns:
-      str: the serialization format, or None if not available.
-    """
-    if self._storage_file:
-      return self._storage_file.serialization_format
-
-    return None
-
-  def GetStorageType(self):
-    """Retrieves the storage type of the underlying storage file.
-
-    Returns:
-      str: the storage type, or None if not available.
-    """
-    if self._storage_file:
-      return self._storage_file.storage_type
-
-    return None
 
   def Close(self):
     """Closes the storage reader."""
@@ -260,6 +211,17 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.GetExtractionWarnings()
 
+  def GetFormatVersion(self):
+    """Retrieves the format version of the underlying storage file.
+
+    Returns:
+      int: the format version, or None if not available.
+    """
+    if self._storage_file:
+      return self._storage_file.format_version
+
+    return None
+
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.
 
@@ -292,6 +254,17 @@ class StorageFileReader(interface.StorageReader):
     """
     return self._storage_file.GetRecoveryWarnings()
 
+  def GetSerializationFormat(self):
+    """Retrieves the serialization format of the underlying storage file.
+
+    Returns:
+      str: the serialization format, or None if not available.
+    """
+    if self._storage_file:
+      return self._storage_file.serialization_format
+
+    return None
+
   def GetSessions(self):
     """Retrieves the sessions.
 
@@ -314,6 +287,17 @@ class StorageFileReader(interface.StorageReader):
       generator(EventObject): event generator.
     """
     return self._storage_file.GetSortedEvents(time_range=time_range)
+
+  def GetStorageType(self):
+    """Retrieves the storage type of the underlying storage file.
+
+    Returns:
+      str: the storage type, or None if not available.
+    """
+    if self._storage_file:
+      return self._storage_file.storage_type
+
+    return None
 
   def HasAnalysisReports(self):
     """Determines if a store contains analysis reports.

@@ -118,39 +118,6 @@ class RedisMergeReader(interface.StorageMergeReader):
     identifier = event_data_stream.GetIdentifier()
     self._event_data_stream_identifier_mappings[lookup_key] = identifier
 
-  def _PrepareForNextContainerType(self):
-    """Prepares for the next container type.
-
-    This method prepares the task storage for merging the next container type.
-    It sets the active container type, its add method and active cursor
-    accordingly.
-    """
-    self._active_container_type = self._container_types.pop(0)
-
-    self._add_active_container_method = self._add_container_type_methods.get(
-        self._active_container_type)
-
-    self._active_cursor = 0
-
-  def _GetContainerTypes(self):
-    """Retrieves the container types to merge.
-
-    Container types not defined in _CONTAINER_TYPES are ignored and not merged.
-
-    Specific container types reference other container types, such
-    as event referencing event data. The names are ordered to ensure the
-    attribute containers are merged in the correct order.
-
-    Returns:
-      list[str]: names of the container types to merge.
-    """
-    container_types = []
-    for container_type in self._CONTAINER_TYPES:
-      # pylint: disable=protected-access
-      if self._store._HasAttributeContainers(container_type):
-        container_types.append(container_type)
-    return container_types
-
   def _GetAttributeContainers(
       self, container_type, callback=None, cursor=0, maximum_number_of_items=0):
     """Retrieves attribute containers of the specified type.
@@ -197,6 +164,39 @@ class RedisMergeReader(interface.StorageMergeReader):
       self._active_extra_containers = containers[maximum_number_of_items:]
 
     return containers[:maximum_number_of_items]
+
+  def _GetContainerTypes(self):
+    """Retrieves the container types to merge.
+
+    Container types not defined in _CONTAINER_TYPES are ignored and not merged.
+
+    Specific container types reference other container types, such
+    as event referencing event data. The names are ordered to ensure the
+    attribute containers are merged in the correct order.
+
+    Returns:
+      list[str]: names of the container types to merge.
+    """
+    container_types = []
+    for container_type in self._CONTAINER_TYPES:
+      # pylint: disable=protected-access
+      if self._store._HasAttributeContainers(container_type):
+        container_types.append(container_type)
+    return container_types
+
+  def _PrepareForNextContainerType(self):
+    """Prepares for the next container type.
+
+    This method prepares the task storage for merging the next container type.
+    It sets the active container type, its add method and active cursor
+    accordingly.
+    """
+    self._active_container_type = self._container_types.pop(0)
+
+    self._add_active_container_method = self._add_container_type_methods.get(
+        self._active_container_type)
+
+    self._active_cursor = 0
 
   def MergeAttributeContainers(
       self, callback=None, maximum_number_of_containers=0):
