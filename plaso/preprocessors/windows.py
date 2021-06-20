@@ -9,7 +9,6 @@ from plaso.lib import errors
 from plaso.preprocessors import interface
 from plaso.preprocessors import logger
 from plaso.preprocessors import manager
-from plaso.winnt import time_zones
 
 
 class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
@@ -222,6 +221,12 @@ class WindowsAvailableTimeZonesPlugin(
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
+    std_value = registry_key.GetValueByName('Std')
+    if std_value:
+      localized_name = std_value.GetDataAsObject()
+    else:
+      localized_name = registry_key.name
+
     tzi_value = registry_key.GetValueByName('TZI')
     if not tzi_value:
       mediator.ProducePreprocessingWarning(
@@ -230,7 +235,9 @@ class WindowsAvailableTimeZonesPlugin(
               registry_key.key_path))
       return
 
-    time_zone_artifact = artifacts.TimeZoneArtifact(name=registry_key.name)
+    time_zone_artifact = artifacts.TimeZoneArtifact(
+        localized_name=localized_name, name=registry_key.name)
+
     try:
       self._ParseTZIValue(tzi_value.data, time_zone_artifact)
 
@@ -496,19 +503,14 @@ class WindowsTimeZonePlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    # Map the Windows time zone name to a Python equivalent name.
-    lookup_key = value_data.replace(' ', '')
-
-    time_zone = time_zones.TIME_ZONES.get(lookup_key, value_data)
     # TODO: check if time zone is set in knowledge base.
-    if time_zone:
-      try:
-        # Catch and warn about unsupported preprocessor plugin.
-        mediator.knowledge_base.SetTimeZone(time_zone)
-      except ValueError:
-        mediator.ProducePreprocessingWarning(
-            self.ARTIFACT_DEFINITION_NAME,
-            'Unable to map: "{0:s}" to time zone'.format(value_data))
+    try:
+      mediator.knowledge_base.SetTimeZone(value_data)
+    except ValueError as execption:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to map: "{0:s}" to time zone with error: {1!s}'.format(
+              value_data, execption))
 
 
 class WindowsUserAccountsPlugin(

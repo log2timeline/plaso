@@ -190,7 +190,10 @@ class PreprocessPluginsManager(object):
       searcher (dfwinreg.WinRegistrySearcher): Windows Registry searcher to
           preprocess the Windows Registry.
     """
-    for preprocess_plugin in cls._windows_registry_plugins.values():
+    # TODO: define preprocessing plugin dependency and sort preprocess_plugins
+    # for now sort alphabetically to ensure WindowsAvailableTimeZones is run
+    # before WindowsTimezone.
+    for _, preprocess_plugin in sorted(cls._windows_registry_plugins.items()):
       artifact_definition = artifacts_registry.GetDefinitionByName(
           preprocess_plugin.ARTIFACT_DEFINITION_NAME)
       if not artifact_definition:
