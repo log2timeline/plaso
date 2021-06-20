@@ -467,8 +467,7 @@ class KnowledgeBase(object):
     time_zone = localized_time_zones.get(time_zone, time_zone)
 
     # Map a Windows time zone name to a Python time zone name.
-    lookup_key = time_zone.replace(' ', '')
-    time_zone = time_zones.WINDOWS_TIME_ZONES.get(lookup_key, time_zone)
+    time_zone = time_zones.WINDOWS_TIME_ZONES.get(time_zone, time_zone)
 
     try:
       self._time_zone = pytz.timezone(time_zone)
