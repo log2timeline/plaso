@@ -254,12 +254,12 @@ class WindowsAvailableTimeZonesPlugin(
       return
 
     try:
-      mediator.knowledge_base.AddAvailableTimeZone(time_zone_artifact)
+      mediator.AddTimeZoneInformation(time_zone_artifact)
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set add time zone: {0:s} to knowledge base.'.format(
-              registry_key.name))
+          ('Unable to add time zone information: {0:s} to knowledge '
+           'base.').format(registry_key.name))
 
   def _ParseTZIValue(self, value_data, time_zone_artifact):
     """Parses the time zone information (TZI) value data.
@@ -315,6 +315,60 @@ class WindowsCodepagePlugin(
         mediator.ProducePreprocessingWarning(
             self.ARTIFACT_DEFINITION_NAME,
             'Unable to set codepage in knowledge base.')
+
+
+class WindowsEventLogProvidersPlugin(
+    interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
+  """The Windows Event Log providers plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'WindowsEventLogProviders'
+
+  def _ParseKey(self, mediator, registry_key, value_name):
+    """Parses a Windows Registry key for a preprocessing attribute.
+
+    Args:
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the Windows Registry value.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    category_message_files = None
+    registry_value = registry_key.GetValueByName('CategoryMessageFile')
+    if registry_value:
+      category_message_files = registry_value.GetDataAsObject()
+      category_message_files = category_message_files.split(';')
+
+    event_message_files = None
+    registry_value = registry_key.GetValueByName('EventMessageFile')
+    if registry_value:
+      event_message_files = registry_value.GetDataAsObject()
+      event_message_files = event_message_files.split(';')
+
+    parameter_message_files = None
+    registry_value = registry_key.GetValueByName('ParameterMessageFile')
+    if registry_value:
+      parameter_message_files = registry_value.GetDataAsObject()
+      parameter_message_files = parameter_message_files.split(';')
+
+    key_path_segments = registry_key.path.split('\\')
+    log_source = key_path_segments[-1]
+    log_type = key_path_segments[-2]
+
+    windows_event_log_provider = artifacts.WindowsEventLogProviderArtifact(
+        category_message_files=category_message_files,
+        event_message_files=event_message_files, log_source=log_source,
+        log_type=log_type, parameter_message_files=parameter_message_files)
+
+    try:
+      mediator.AddWindowsEventLogProvider(windows_event_log_provider)
+    except KeyError:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          ('Unable to set add Windows Event Log provider: {0:s}/{1:s} to '
+           'knowledge base.').format(log_type, log_source))
 
 
 class WindowsHostnamePlugin(
@@ -566,7 +620,7 @@ class WindowsUserAccountsPlugin(
       user_account.username = username or None
 
     try:
-      mediator.knowledge_base.AddUserAccount(user_account)
+      mediator.AddUserAccount(user_account)
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
@@ -588,8 +642,8 @@ manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsAllUsersProfileEnvironmentVariablePlugin,
     WindowsAllUsersAppProfileKnowledgeBasePlugin,
     WindowsAvailableTimeZonesPlugin,
-    WindowsCodepagePlugin, WindowsHostnamePlugin,
-    WindowsProgramDataEnvironmentVariablePlugin,
+    WindowsCodepagePlugin, WindowsEventLogProvidersPlugin,
+    WindowsHostnamePlugin, WindowsProgramDataEnvironmentVariablePlugin,
     WindowsProgramDataKnowledgeBasePlugin,
     WindowsProgramFilesEnvironmentVariablePlugin,
     WindowsProgramFilesX86EnvironmentVariablePlugin,

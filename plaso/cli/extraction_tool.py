@@ -446,7 +446,6 @@ class ExtractionTool(
 
     status_update_callback = (
         self._status_view.GetExtractionStatusUpdateCallback())
-    processing_status = None
 
     if single_process_mode:
       force_parser = False
@@ -612,6 +611,8 @@ class ExtractionTool(
     except IOError as exception:
       raise IOError('Unable to open storage with error: {0!s}'.format(
           exception))
+
+    processing_status = None
 
     try:
       storage_writer.WriteSessionStart()

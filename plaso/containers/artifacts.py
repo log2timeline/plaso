@@ -435,6 +435,8 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
         "10.9.2" or "8.1".
     time_zone (str): system time zone.
     user_accounts (list[UserAccountArtifact]): user accounts.
+    windows_eventlog_providers (list[WindowsEventLogProviderArtifact]): Windows
+        Event Log providers.
   """
   CONTAINER_TYPE = 'system_configuration'
 
@@ -455,6 +457,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     self.operating_system_version = None
     self.time_zone = time_zone
     self.user_accounts = []
+    self.windows_eventlog_providers = []
 
 
 class TimeZoneArtifact(ArtifactAttributeContainer):
@@ -542,7 +545,43 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     return self.user_directory.split(self._path_separator)
 
 
+class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
+  """Windows Event Log provider artifact attribute container.
+
+  Attributes:
+    category_message_files (list[str]): filenames of the category message files.
+    event_message_files (list[str]): filenames of the event message files.
+    log_source (str): Windows Event Log source.
+    log_type (str): Windows Event Log type.
+    parameter_message_files (list[str]): filenames of the parameter message
+        files.
+  """
+  CONTAINER_TYPE = 'windows_eventlog_provider'
+
+  def __init__(
+      self, category_message_files=None, event_message_files=None,
+      log_source=None, log_type=None, parameter_message_files=None):
+    """Initializes a Windows Even tLog provider artifact.
+
+    Args:
+      category_message_files (Optional[list[str]]): filenames of the category
+          message files.
+      event_message_files (Optional[list[str]]): filenames of the event message
+          files.
+      log_source (Optional[str]): Windows Event Log source.
+      log_type (Optional[str]): Windows Event Log type.
+      parameter_message_files (Optional[list[str]]): filenames of the parameter
+          message files.
+    """
+    super(WindowsEventLogProviderArtifact, self).__init__()
+    self.category_message_files = category_message_files
+    self.event_message_files = event_message_files
+    self.log_source = log_source
+    self.log_type = log_type
+    self.parameter_message_files = parameter_message_files
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
     EnvironmentVariableArtifact, HostnameArtifact, OperatingSystemArtifact,
     PathArtifact, SourceConfigurationArtifact, SystemConfigurationArtifact,
-    TimeZoneArtifact, UserAccountArtifact])
+    TimeZoneArtifact, UserAccountArtifact, WindowsEventLogProviderArtifact])

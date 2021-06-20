@@ -315,7 +315,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
       user_account.shell = shell
 
       try:
-        mediator.knowledge_base.AddUserAccount(user_account)
+        mediator.AddUserAccount(user_account)
       except KeyError as exception:
         mediator.ProducePreprocessingWarning(
             self.ARTIFACT_DEFINITION_NAME,

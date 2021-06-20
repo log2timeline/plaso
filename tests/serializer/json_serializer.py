@@ -519,6 +519,5 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(expected_task_start_dict.items()))
 
 
-
 if __name__ == '__main__':
   unittest.main()

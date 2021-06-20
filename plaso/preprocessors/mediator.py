@@ -27,6 +27,40 @@ class PreprocessMediator(object):
     """KnowledgeBase: knowledge base."""
     return self._knowledge_base
 
+  def AddTimeZoneInformation(self, time_zone_artifact):
+    """Adds a time zone defined by the operating system.
+
+    Args:
+      time_zone_artifact (TimeZoneArtifact): time zone artifact.
+
+    Raises:
+      KeyError: if the time zone already exists.
+    """
+    self._knowledge_base.AddAvailableTimeZone(time_zone_artifact)
+
+  def AddUserAccount(self, user_account):
+    """Adds an user account.
+
+    Args:
+      user_account (UserAccountArtifact): user account artifact.
+
+    Raises:
+      KeyError: if the user account already exists.
+    """
+    self._knowledge_base.AddUserAccount(user_account)
+
+  def AddWindowsEventLogProvider(self, windows_eventlog_provider):
+    """Adds a Windows Event Log provider.
+
+    Args:
+      windows_eventlog_provider (WindowsEventLogProviderArtifact): Windows
+          Event Log provider.
+
+    Raises:
+      KeyError: if the Windows Event Log provider already exists.
+    """
+    self._knowledge_base.AddWindowsEventLogProvider(windows_eventlog_provider)
+
   def ProducePreprocessingWarning(self, plugin_name, message):
     """Produces a preprocessing warning.
 
