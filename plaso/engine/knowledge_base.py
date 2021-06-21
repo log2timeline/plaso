@@ -459,12 +459,19 @@ class KnowledgeBase(object):
     Raises:
       ValueError: if the time zone is not supported.
     """
-    localized_time_zones = {
-        time_zone_artifact.localized_name: time_zone_artifact.name
-        for time_zone_artifact in self.available_time_zones}
-
     # Get the "normalized" name of a Windows time zone name.
-    time_zone = localized_time_zones.get(time_zone, time_zone)
+    if time_zone.startswith('@tzres.dll,'):
+      mui_form_time_zones = {
+          time_zone_artifact.mui_form: time_zone_artifact.name
+          for time_zone_artifact in self.available_time_zones}
+
+      time_zone = mui_form_time_zones.get(time_zone, time_zone)
+    else:
+      localized_time_zones = {
+          time_zone_artifact.localized_name: time_zone_artifact.name
+          for time_zone_artifact in self.available_time_zones}
+
+      time_zone = localized_time_zones.get(time_zone, time_zone)
 
     # Map a Windows time zone name to a Python time zone name.
     time_zone = time_zones.WINDOWS_TIME_ZONES.get(time_zone, time_zone)
