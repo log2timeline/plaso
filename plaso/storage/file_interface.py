@@ -405,12 +405,11 @@ class StorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError('Unable to write to closed storage writer.')
 
-  def AddAnalysisReport(self, analysis_report, serialized_data=None):
+  def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
-      serialized_data (Optional[bytes]): serialized form of the analysis report.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -418,18 +417,15 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddAnalysisReport(
-        analysis_report, serialized_data=serialized_data)
+    self._storage_file.AddAnalysisReport(analysis_report)
 
     self._UpdateAnalysisReportSessionCounter(analysis_report)
 
-  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+  def AddAnalysisWarning(self, analysis_warning):
     """Adds an analysis warning.
 
     Args:
       analysis_warning (AnalysisWarning): an analysis warning.
-      serialized_data (Optional[bytes]): serialized form of the analysis
-          warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -437,16 +433,14 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddAnalysisWarning(
-        analysis_warning, serialized_data=serialized_data)
+    self._storage_file.AddAnalysisWarning(analysis_warning)
     self.number_of_analysis_warnings += 1
 
-  def AddEvent(self, event, serialized_data=None):
+  def AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): an event.
-      serialized_data (Optional[bytes]): serialized form of the event.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -458,12 +452,11 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._UpdateEventParsersSessionCounter(event)
 
-  def AddEventData(self, event_data, serialized_data=None):
+  def AddEventData(self, event_data):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
-      serialized_data (Optional[bytes]): serialized form of the event data.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -471,17 +464,15 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventData(event_data, serialized_data=serialized_data)
+    self._storage_file.AddEventData(event_data)
 
     self._UpdateEventDataParsersMappings(event_data)
 
-  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+  def AddEventDataStream(self, event_data_stream):
     """Adds an event data stream.
 
     Args:
       event_data_stream (EventDataStream): event data stream.
-      serialized_data (Optional[bytes]): serialized form of the event data
-          stream.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -489,15 +480,13 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventDataStream(
-        event_data_stream, serialized_data=serialized_data)
+    self._storage_file.AddEventDataStream(event_data_stream)
 
-  def AddEventSource(self, event_source, serialized_data=None):
+  def AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): an event source.
-      serialized_data (Optional[bytes]): serialized form of the event source.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -505,16 +494,14 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventSource(
-        event_source, serialized_data=serialized_data)
+    self._storage_file.AddEventSource(event_source)
     self.number_of_event_sources += 1
 
-  def AddEventTag(self, event_tag, serialized_data=None):
+  def AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): an event tag.
-      serialized_data (Optional[bytes]): serialized form of the event tag.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -522,17 +509,15 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventTag(event_tag, serialized_data=serialized_data)
+    self._storage_file.AddEventTag(event_tag)
 
     self._UpdateEventLabelsSessionCounter(event_tag)
 
-  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+  def AddExtractionWarning(self, extraction_warning):
     """Adds an extraction warning.
 
     Args:
       extraction_warning (ExtractionWarning): an extraction warning.
-      serialized_data (Optional[bytes]): serialized form of the extraction
-          warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -540,18 +525,14 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddExtractionWarning(
-        extraction_warning, serialized_data=serialized_data)
+    self._storage_file.AddExtractionWarning(extraction_warning)
     self.number_of_extraction_warnings += 1
 
-  def AddPreprocessingWarning(
-      self, preprocessing_warning, serialized_data=None):
+  def AddPreprocessingWarning(self, preprocessing_warning):
     """Adds a preprocessing warning.
 
     Args:
       preprocessing_warning (PreprocessingWarning): preprocessing warning.
-      serialized_data (Optional[bytes]): serialized form of the preprocessing
-          warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -559,17 +540,14 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddPreprocessingWarning(
-        preprocessing_warning, serialized_data=serialized_data)
+    self._storage_file.AddPreprocessingWarning(preprocessing_warning)
     self.number_of_preprocessing_warnings += 1
 
-  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+  def AddRecoveryWarning(self, recovery_warning):
     """Adds a recovery warning.
 
     Args:
       recovery_warning (RecoveryWarning): an recovery warning.
-      serialized_data (Optional[bytes]): serialized form of the recovery
-          warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -577,8 +555,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddRecoveryWarning(
-        recovery_warning, serialized_data=serialized_data)
+    self._storage_file.AddRecoveryWarning(recovery_warning)
     self.number_of_recovery_warnings += 1
 
   def Close(self):

@@ -522,7 +522,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         if not event_source_heap.IsFull():
           self._FillEventSourceHeap(storage_writer, event_source_heap)
         else:
-          logger.debug('Source heap is full.')
+          logger.debug('Event source heap is full.')
 
         if not task and not event_source:
           event_source = event_source_heap.PopEventSource()

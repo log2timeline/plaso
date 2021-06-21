@@ -62,12 +62,11 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
   # The serialized form of the event is not used, as this method modifies the
   # event.
   # pylint: disable=unused-argument
-  def _AddEvent(self, event, serialized_data=None):
+  def _AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): event.
-      serialized_data (Optional[bytes]): serialized form of the event.
     """
     row_identifier = getattr(event, '_event_data_row_identifier', None)
     # TODO: error if row_identifier is None
@@ -102,12 +101,11 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     self._storage_writer.AddEvent(event)
 
-  def _AddEventData(self, event_data, serialized_data=None):
+  def _AddEventData(self, event_data):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
-      serialized_data (bytes): serialized form of the event data.
     """
     row_identifier = getattr(
         event_data, '_event_data_stream_row_identifier', None)
@@ -137,24 +135,21 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
     identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
-    self._storage_writer.AddEventData(
-        event_data, serialized_data=serialized_data)
+    self._storage_writer.AddEventData(event_data)
 
     last_write_identifier = event_data.GetIdentifier()
     self._event_data_identifier_mappings[lookup_key] = last_write_identifier
 
-  def _AddEventDataStream(self, event_data_stream, serialized_data=None):
+  def _AddEventDataStream(self, event_data_stream):
     """Adds an event data stream.
 
     Args:
       event_data_stream (EventDataStream): event data stream.
-      serialized_data (bytes): serialized form of the event data stream.
     """
     identifier = event_data_stream.GetIdentifier()
     lookup_key = identifier.CopyToString()
 
-    self._storage_writer.AddEventDataStream(
-        event_data_stream, serialized_data=serialized_data)
+    self._storage_writer.AddEventDataStream(event_data_stream)
 
     identifier = event_data_stream.GetIdentifier()
     self._event_data_stream_identifier_mappings[lookup_key] = identifier
@@ -316,8 +311,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
         if callback:
           callback(self._storage_writer, attribute_container)
 
-        self._add_active_container_method(
-            attribute_container, serialized_data=serialized_data)
+        self._add_active_container_method(attribute_container)
 
         number_of_containers += 1
 

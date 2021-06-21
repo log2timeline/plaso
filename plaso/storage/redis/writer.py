@@ -62,115 +62,93 @@ class RedisStorageWriter(interface.StorageWriter):
     self._store.Finalize()
     self._store = None
 
-  def AddAnalysisReport(self, analysis_report, serialized_data=None):
+  def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): a report.
-      serialized_data (Optional[bytes]): serialized form of the analysis
-          report.
     """
-    self._store.AddAnalysisReport(
-        analysis_report, serialized_data=serialized_data)
+    self._store.AddAnalysisReport(analysis_report)
 
     self._UpdateAnalysisReportSessionCounter(analysis_report)
 
-  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+  def AddAnalysisWarning(self, analysis_warning):
     """Adds an analysis warning.
 
     Args:
       analysis_warning (AnalysisWarning): an analysis warning.
-      serialized_data (Optional[bytes]): serialized form of the analysis
-          warning.
     """
-    self._store.AddAnalysisWarning(
-        analysis_warning, serialized_data=serialized_data)
+    self._store.AddAnalysisWarning(analysis_warning)
 
-  def AddEvent(self, event, serialized_data=None):
+  def AddEvent(self, event):
     """Adds an event.
 
     Args:
       event(EventObject): an event.
-      serialized_data (Optional[bytes]): serialized form of the event.
     """
-    self._store.AddEvent(event, serialized_data=serialized_data)
+    self._store.AddEvent(event)
 
     self._UpdateEventParsersSessionCounter(event)
 
-  def AddEventData(self, event_data, serialized_data=None):
+  def AddEventData(self, event_data):
     """Adds an event data.
 
     Args:
       event_data(EventData): an event.
-      serialized_data (Optional[bytes]): serialized form of the event data.
     """
-    self._store.AddEventData(event_data, serialized_data=serialized_data)
+    self._store.AddEventData(event_data)
 
     self._UpdateEventDataParsersMappings(event_data)
 
-  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+  def AddEventDataStream(self, event_data_stream):
     """Adds an event data stream.
 
     Args:
       event_data_stream (EventDataStream): event data stream.
-      serialized_data (Optional[bytes]): serialized form of the event data
-          stream.
     """
-    self._store.AddEventData(event_data_stream, serialized_data=serialized_data)
+    self._store.AddEventData(event_data_stream)
 
-  def AddEventSource(self, event_source, serialized_data=None):
+  def AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): an event source.
-      serialized_data (Optional[bytes]): serialized form of the event source.
     """
-    self._store.AddEventSource(event_source, serialized_data=serialized_data)
+    self._store.AddEventSource(event_source)
 
-  def AddEventTag(self, event_tag, serialized_data=None):
+  def AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): an event tag.
-      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
-    self._store.AddEventTag(event_tag, serialized_data=serialized_data)
+    self._store.AddEventTag(event_tag)
 
     self._UpdateEventLabelsSessionCounter(event_tag)
 
-  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+  def AddExtractionWarning(self, extraction_warning):
     """Adds an extraction warning.
 
     Args:
       extraction_warning (ExtractionWarning): an extraction warning.
-      serialized_data (Optional[bytes]): serialized form of the extraction
-          warning.
     """
-    self._store.AddExtractionWarning(
-        extraction_warning, serialized_data=serialized_data)
+    self._store.AddExtractionWarning(extraction_warning)
 
-  def AddPreprocessingWarning(
-      self, preprocessing_warning, serialized_data=None):
+  def AddPreprocessingWarning(self, preprocessing_warning):
     """Adds a preprocessing warning.
 
     Args:
       preprocessing_warning (PreprocessingWarning): preprocessing warning.
-      serialized_data (Optional[bytes]): serialized form of the preprocessing
-          warning.
     """
-    self._store.AddPreprocessingWarning(
-        preprocessing_warning, serialized_data=serialized_data)
+    self._store.AddPreprocessingWarning(preprocessing_warning)
 
-  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+  def AddRecoveryWarning(self, recovery_warning):
     """Adds a recovery warning.
 
     Args:
       recovery_warning (RecoveryWarning): a recovery warning.
-      serialized_data (Optional[bytes]): serialized form of the recovery
-          warning.
     """
-    self._store.AddRecoveryWarning(
-        recovery_warning, serialized_data=serialized_data)
+    self._store.AddRecoveryWarning(recovery_warning)
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.

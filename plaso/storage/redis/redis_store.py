@@ -60,25 +60,20 @@ class RedisStore(interface.BaseStore):
     self._redis_client = None
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
 
-  def _AddAttributeContainer(
-      self, container_type, container, serialized_data=None):
+  def _AddAttributeContainer(self, container):
     """Adds a new attribute container.
 
     Args:
-      container_type (str): container type attribute of the container being
-          added.
       container (AttributeContainer): unserialized attribute container.
-      serialized_data (Optional[bytes]): serialized form of the container.
     """
     self._RaiseIfNotWritable()
 
     identifier = identifiers.RedisKeyIdentifier()
     container.SetIdentifier(identifier)
 
-    if not serialized_data:
-      serialized_data = self._SerializeAttributeContainer(container)
+    serialized_data = self._SerializeAttributeContainer(container)
 
-    container_key = self._GenerateRedisKey(container_type)
+    container_key = self._GenerateRedisKey(container.CONTAINER_TYPE)
     string_identifier = identifier.CopyToString()
     self._redis_client.hset(container_key, string_identifier, serialized_data)
 
@@ -214,14 +209,13 @@ class RedisStore(interface.BaseStore):
           'Unable to set redis client name: {0:s} with error: {1!s}'.format(
               name, exception))
 
-  def _WriteAttributeContainer(self, attribute_container):
+  def _WriteAttributeContainer(self, container):
     """Writes an attribute container to the store.
 
     Args:
-      attribute_container (AttributeContainer): attribute container.
+      container (AttributeContainer): attribute container.
     """
-    self._AddAttributeContainer(
-        attribute_container.CONTAINER_TYPE, attribute_container)
+    self._AddAttributeContainer(container)
 
   def _WriteStorageMetadata(self):
     """Writes the storage metadata."""
@@ -234,14 +228,13 @@ class RedisStore(interface.BaseStore):
     for key, value in metadata.items():
       self._redis_client.hset(metadata_key, key, value)
 
-  def AddEvent(self, event, serialized_data=None):
+  def AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): event.
-      serialized_data (Optional[bytes]): serialized form of the event.
     """
-    super(RedisStore, self).AddEvent(event, serialized_data=serialized_data)
+    super(RedisStore, self).AddEvent(event)
     event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
     identifier = event.GetIdentifier()
     string_identifier = identifier.CopyToString()

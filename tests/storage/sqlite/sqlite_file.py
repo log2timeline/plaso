@@ -49,8 +49,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      storage_file._AddAttributeContainer(
-          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._AddAttributeContainer(event_data)
 
       storage_file.Close()
 
@@ -67,8 +66,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
           storage_file._CONTAINER_TYPE_EVENT_DATA)
       self.assertEqual(number_of_containers, 0)
 
-      storage_file._AddAttributeContainer(
-          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._AddAttributeContainer(event_data)
 
       number_of_containers = storage_file._GetNumberOfAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
@@ -101,8 +99,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
           storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
       self.assertIsNone(container)
 
-      storage_file._AddAttributeContainer(
-          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._AddAttributeContainer(event_data)
 
       container = storage_file._GetAttributeContainerByIndex(
           storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
@@ -126,8 +123,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
           storage_file._CONTAINER_TYPE_EVENT_DATA))
       self.assertEqual(len(containers), 0)
 
-      storage_file._AddAttributeContainer(
-          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._AddAttributeContainer(event_data)
 
       containers = list(storage_file._GetAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA))
@@ -151,8 +147,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
           storage_file._CONTAINER_TYPE_EVENT_DATA)
       self.assertFalse(result)
 
-      storage_file._AddAttributeContainer(
-          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._AddAttributeContainer(event_data)
 
       result = storage_file._HasAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
