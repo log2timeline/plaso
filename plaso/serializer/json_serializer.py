@@ -581,14 +581,25 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       TypeError: if the serialized dictionary does not contain an
           AttributeContainer.
     """
-    if json_dict:
-      json_object = cls._ConvertDictToObject(json_dict)
-      if not isinstance(json_object, containers_interface.AttributeContainer):
-        raise TypeError('{0!s} is not an attribute container type.'.format(
-            type(json_object)))
+    if not json_dict:
+      return None
+
+    if isinstance(json_dict, list):
+      return json_dict
+
+    json_object = cls._ConvertDictToObject(json_dict)
+
+    if isinstance(json_object, dfdatetime_interface.DateTimeValues):
       return json_object
 
-    return None
+    if isinstance(json_object, dfvfs_path_spec.PathSpec):
+      return json_object
+
+    if not isinstance(json_object, containers_interface.AttributeContainer):
+      raise TypeError('{0!s} is not an attribute container type.'.format(
+          type(json_object)))
+
+    return json_object
 
   @classmethod
   def WriteSerialized(cls, attribute_container):
@@ -613,4 +624,13 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     Returns:
       dict[str, object]: JSON serialized objects.
     """
+    if isinstance(attribute_container, list):
+      return attribute_container
+
+    if isinstance(attribute_container, dfdatetime_interface.DateTimeValues):
+      return cls._ConvertDateTimeValuesToDict(attribute_container)
+
+    if isinstance(attribute_container, dfvfs_path_spec.PathSpec):
+      return cls._ConvertPathSpecToDict(attribute_container)
+
     return cls._ConvertAttributeContainerToDict(attribute_container)
