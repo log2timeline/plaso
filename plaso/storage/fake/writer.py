@@ -78,12 +78,11 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to write to closed storage writer.')
 
-  def AddAnalysisReport(self, analysis_report, serialized_data=None):
+  def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
-      serialized_data (Optional[bytes]): serialized form of the analysis report.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -97,12 +96,11 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._UpdateAnalysisReportSessionCounter(analysis_report)
 
-  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+  def AddAnalysisWarning(self, analysis_warning):
     """Adds an analysis warning.
 
     Args:
       analysis_warning (AnalysisWarning): analysis warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -115,12 +113,11 @@ class FakeStorageWriter(interface.StorageWriter):
     self._analysis_warnings.append(analysis_warning)
     self.number_of_analysis_warnings += 1
 
-  def AddEvent(self, event, serialized_data=None):
+  def AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): event.
-      serialized_data (bytes): serialized form of the event.
 
     Raises:
       IOError: when the storage writer is closed or
@@ -140,12 +137,11 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._UpdateEventParsersSessionCounter(event)
 
-  def AddEventData(self, event_data, serialized_data=None):
+  def AddEventData(self, event_data):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
-      serialized_data (bytes): serialized form of the event data.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -161,12 +157,11 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._UpdateEventDataParsersMappings(event_data)
 
-  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+  def AddEventDataStream(self, event_data_stream):
     """Adds an event data stream.
 
     Args:
       event_data_stream (EventDataStream): event data stream.
-      serialized_data (bytes): serialized form of the event data stream.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -180,12 +175,11 @@ class FakeStorageWriter(interface.StorageWriter):
     lookup_key = identifier.CopyToString()
     self._event_data_streams[lookup_key] = event_data_stream
 
-  def AddEventSource(self, event_source, serialized_data=None):
+  def AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
-      serialized_data (Optional[bytes]): serialized form of the event source.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -198,12 +192,11 @@ class FakeStorageWriter(interface.StorageWriter):
     self._event_sources.append(event_source)
     self.number_of_event_sources += 1
 
-  def AddEventTag(self, event_tag, serialized_data=None):
+  def AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
-      serialized_data (Optional[bytes]): serialized form of the event tag.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -227,12 +220,11 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._UpdateEventLabelsSessionCounter(event_tag)
 
-  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+  def AddExtractionWarning(self, extraction_warning):
     """Adds an extraction warning.
 
     Args:
       extraction_warning (ExtractionWarning): extraction warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -245,14 +237,11 @@ class FakeStorageWriter(interface.StorageWriter):
     self._extraction_warnings.append(extraction_warning)
     self.number_of_extraction_warnings += 1
 
-  def AddPreprocessingWarning(
-      self, preprocessing_warning, serialized_data=None):
+  def AddPreprocessingWarning(self, preprocessing_warning):
     """Adds a preprocessing warning.
 
     Args:
       preprocessing_warning (PreprocessingWarning): preprocessing warning.
-      serialized_data (Optional[bytes]): serialized form of the preprocessing
-          warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -266,12 +255,11 @@ class FakeStorageWriter(interface.StorageWriter):
     self._preprocessing_warnings.append(preprocessing_warning)
     self.number_of_preprocessing_warnings += 1
 
-  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+  def AddRecoveryWarning(self, recovery_warning):
     """Adds a recovery warning.
 
     Args:
       recovery_warning (ExtractionWarning): recovery warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
 
     Raises:
       IOError: when the storage writer is closed.

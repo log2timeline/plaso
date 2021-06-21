@@ -79,20 +79,55 @@ class BaseStore(object):
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
     self._storage_profiler = None
+
     self.format_version = None
     self.serialization_format = None
     self.storage_type = None
 
   @abc.abstractmethod
-  def _AddAttributeContainer(
-      self, container_type, container, serialized_data=None):
+  def _AddAttributeContainer(self, container):
     """Adds a new attribute container.
 
     Args:
-      container_type (str): attribute container type.
       container (AttributeContainer): attribute container.
-      serialized_data (Optional[bytes]): serialized form of the container.
     """
+
+  def _DeserializeAttributeContainer(self, container_type, serialized_data):
+    """Deserializes an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      serialized_data (bytes): serialized attribute container data.
+
+    Returns:
+      AttributeContainer: attribute container or None.
+
+    Raises:
+      IOError: if the serialized data cannot be decoded.
+      OSError: if the serialized data cannot be decoded.
+    """
+    if not serialized_data:
+      return None
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(container_type)
+
+    try:
+      serialized_string = serialized_data.decode('utf-8')
+      attribute_container = self._serializer.ReadSerialized(serialized_string)
+
+    except UnicodeDecodeError as exception:
+      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
+
+    except (TypeError, ValueError) as exception:
+      # TODO: consider re-reading attribute container with error correction.
+      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
+
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(container_type)
+
+    return attribute_container
 
   @abc.abstractmethod
   def _GetAttributeContainers(self, container_type):
@@ -163,20 +198,51 @@ class BaseStore(object):
        IOError: if the store cannot be read from.
     """
 
-  @abc.abstractmethod
-  def _WriteAttributeContainer(self, attribute_container):
-    """Writes an attribute container.
+  def _SerializeAttributeContainer(self, attribute_container):
+    """Serializes an attribute container.
 
     Args:
       attribute_container (AttributeContainer): attribute container.
+
+    Returns:
+      bytes: serialized attribute container.
+
+    Raises:
+      IOError: if the attribute container cannot be serialized.
+      OSError: if the attribute container cannot be serialized.
+    """
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(
+          attribute_container.CONTAINER_TYPE)
+
+    try:
+      attribute_container_data = self._serializer.WriteSerialized(
+          attribute_container)
+      if not attribute_container_data:
+        raise IOError(
+            'Unable to serialize attribute container: {0:s}.'.format(
+                attribute_container.CONTAINER_TYPE))
+
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(
+            attribute_container.CONTAINER_TYPE)
+
+    return attribute_container_data
+
+  @abc.abstractmethod
+  def _WriteAttributeContainer(self, container):
+    """Writes an attribute container.
+
+    Args:
+      container (AttributeContainer): attribute container.
     """
 
-  def AddAnalysisReport(self, analysis_report, serialized_data=None):
+  def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
-      serialized_data (Optional[bytes]): serialized form of the analysis report.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -184,17 +250,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT, analysis_report,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(analysis_report)
 
-  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+  def AddAnalysisWarning(self, analysis_warning):
     """Adds an analysis warning.
 
     Args:
       analysis_warning (AnalysisWarning): analysis warning.
-      serialized_data (Optional[bytes]): serialized form of the analysis
-          warning.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -202,16 +264,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_ANALYSIS_WARNING, analysis_warning,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(analysis_warning)
 
-  def AddEvent(self, event, serialized_data=None):
+  def AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): event.
-      serialized_data (Optional[bytes]): serialized form of the event.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -219,15 +278,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EVENT, event, serialized_data=serialized_data)
+    self._AddAttributeContainer(event)
 
-  def AddEventData(self, event_data, serialized_data=None):
+  def AddEventData(self, event_data):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
-      serialized_data (Optional[bytes]): serialized form of the event data.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -235,17 +292,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EVENT_DATA, event_data,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(event_data)
 
-  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+  def AddEventDataStream(self, event_data_stream):
     """Adds an event data stream.
 
     Args:
       event_data_stream (EventDataStream): event data stream.
-      serialized_data (Optional[bytes]): serialized form of the event data
-          stream.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -253,16 +306,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM, event_data_stream,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(event_data_stream)
 
-  def AddEventSource(self, event_source, serialized_data=None):
+  def AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
-      serialized_data (Optional[bytes]): serialized form of the event source.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -270,16 +320,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EVENT_SOURCE, event_source,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(event_source)
 
-  def AddEventTag(self, event_tag, serialized_data=None):
+  def AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
-      serialized_data (Optional[bytes]): serialized form of the event tag.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -287,17 +334,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EVENT_TAG, event_tag,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(event_tag)
 
-  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+  def AddExtractionWarning(self, extraction_warning):
     """Adds an extraction warning.
 
     Args:
       extraction_warning (ExtractionWarning): extraction warning.
-      serialized_data (Optional[bytes]): serialized form of the extraction
-          warning.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -305,18 +348,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_EXTRACTION_WARNING, extraction_warning,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(extraction_warning)
 
-  def AddPreprocessingWarning(
-      self, preprocessing_warning, serialized_data=None):
+  def AddPreprocessingWarning(self, preprocessing_warning):
     """Adds a preprocessing warning.
 
     Args:
       preprocessing_warning (PreprocessingWarning): preprocessing warning.
-      serialized_data (Optional[bytes]): serialized form of the preprocessing
-          warning.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -324,17 +362,13 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_PREPROCESSING_WARNING, preprocessing_warning,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(preprocessing_warning)
 
-  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+  def AddRecoveryWarning(self, recovery_warning):
     """Adds a recovery warning.
 
     Args:
       recovery_warning (RecoveryWarning): recovery warning.
-      serialized_data (Optional[bytes]): serialized form of the recovery
-          warning.
 
      Raises:
        OSError: if the store cannot be written to.
@@ -342,9 +376,7 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(
-        self._CONTAINER_TYPE_RECOVERY_WARNING, recovery_warning,
-        serialized_data=serialized_data)
+    self._AddAttributeContainer(recovery_warning)
 
   @abc.abstractmethod
   def Close(self):
@@ -747,75 +779,6 @@ class BaseStore(object):
 
     self._WriteAttributeContainer(task_start)
 
-  def _DeserializeAttributeContainer(self, container_type, serialized_data):
-    """Deserializes an attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      serialized_data (bytes): serialized attribute container data.
-
-    Returns:
-      AttributeContainer: attribute container or None.
-
-    Raises:
-      IOError: if the serialized data cannot be decoded.
-      OSError: if the serialized data cannot be decoded.
-    """
-    if not serialized_data:
-      return None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(container_type)
-
-    try:
-      serialized_string = serialized_data.decode('utf-8')
-      attribute_container = self._serializer.ReadSerialized(serialized_string)
-
-    except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
-
-    except (TypeError, ValueError) as exception:
-      # TODO: consider re-reading attribute container with error correction.
-      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
-
-    finally:
-      if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(container_type)
-
-    return attribute_container
-
-  def _SerializeAttributeContainer(self, attribute_container):
-    """Serializes an attribute container.
-
-    Args:
-      attribute_container (AttributeContainer): attribute container.
-
-    Returns:
-      bytes: serialized attribute container.
-
-    Raises:
-      IOError: if the attribute container cannot be serialized.
-      OSError: if the attribute container cannot be serialized.
-    """
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(
-          attribute_container.CONTAINER_TYPE)
-
-    try:
-      attribute_container_data = self._serializer.WriteSerialized(
-          attribute_container)
-      if not attribute_container_data:
-        raise IOError(
-            'Unable to serialize attribute container: {0:s}.'.format(
-                attribute_container.CONTAINER_TYPE))
-
-    finally:
-      if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(
-            attribute_container.CONTAINER_TYPE)
-
-    return attribute_container_data
-
 
 class StorageMergeReader(object):
   """Storage reader interface for merging."""
@@ -869,93 +832,77 @@ class StorageMergeReader(object):
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
-  def _AddAnalysisReport(self, analysis_report, serialized_data=None):
+  def _AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
-      serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
-    self._storage_writer.AddAnalysisReport(
-        analysis_report, serialized_data=serialized_data)
+    self._storage_writer.AddAnalysisReport(analysis_report)
 
-  def _AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+  def _AddAnalysisWarning(self, analysis_warning):
     """Adds an analysis warning.
 
     Args:
       analysis_warning (AnalysisWarning): analysis warning.
-      serialized_data (Optional[bytes]): serialized form of the warning.
     """
-    self._storage_writer.AddAnalysisWarning(
-        analysis_warning, serialized_data=serialized_data)
+    self._storage_writer.AddAnalysisWarning(analysis_warning)
 
   @abc.abstractmethod
-  def _AddEvent(self, event, serialized_data=None):
+  def _AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): event.
-      serialized_data (Optional[bytes]): serialized form of the event.
     """
 
   @abc.abstractmethod
-  def _AddEventData(self, event_data, serialized_data=None):
+  def _AddEventData(self, event_data):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
-      serialized_data (bytes): serialized form of the event data.
     """
 
   @abc.abstractmethod
-  def _AddEventDataStream(self, event_data_stream, serialized_data=None):
+  def _AddEventDataStream(self, event_data_stream):
     """Adds an event data stream.
 
     Args:
       event_data_stream (EventDataStream): event data stream.
-      serialized_data (bytes): serialized form of the event data stream.
     """
 
-  def _AddEventSource(self, event_source, serialized_data=None):
+  def _AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
-      serialized_data (Optional[bytes]): serialized form of the event source.
     """
-    self._storage_writer.AddEventSource(
-        event_source, serialized_data=serialized_data)
+    self._storage_writer.AddEventSource(event_source)
 
-  def _AddEventTag(self, event_tag, serialized_data=None):
+  def _AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
-      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
-    self._storage_writer.AddEventTag(event_tag, serialized_data=serialized_data)
+    self._storage_writer.AddEventTag(event_tag)
 
-  def _AddExtractionWarning(self, extraction_warning, serialized_data=None):
+  def _AddExtractionWarning(self, extraction_warning):
     """Adds an extraction warning.
 
     Args:
       extraction_warning (ExtractionWarning): extraction warning.
-      serialized_data (Optional[bytes]): serialized form of the extraction
-          warning.
     """
-    self._storage_writer.AddExtractionWarning(
-        extraction_warning, serialized_data=serialized_data)
+    self._storage_writer.AddExtractionWarning(extraction_warning)
 
-  def _AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+  def _AddRecoveryWarning(self, recovery_warning):
     """Adds a recovery warning.
 
     Args:
       recovery_warning (RecoveryWarning): recovery warning.
-      serialized_data (Optional[bytes]): serialized form of the recovery
-          warning.
     """
-    self._storage_writer.AddRecoveryWarning(
-        recovery_warning, serialized_data=serialized_data)
+    self._storage_writer.AddRecoveryWarning(recovery_warning)
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -1341,99 +1288,84 @@ class StorageWriter(object):
     self.number_of_events += 1
 
   @abc.abstractmethod
-  def AddAnalysisReport(self, analysis_report, serialized_data=None):
+  def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): a report.
-      serialized_data (Optional[bytes]): serialized form of the analysis report.
     """
 
   @abc.abstractmethod
-  def AddAnalysisWarning(self, analysis_warning, serialized_data=None):
+  def AddAnalysisWarning(self, analysis_warning):
     """Adds an analysis warning.
 
     Args:
       analysis_warning (AnalysisWarning): an analysis warning.
-      serialized_data (Optional[bytes]): serialized form of the analysis
-          warning.
     """
 
   @abc.abstractmethod
-  def AddEvent(self, event, serialized_data=None):
+  def AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): an event.
-      serialized_data (Optional[bytes]): serialized form of the event.
     """
 
   @abc.abstractmethod
-  def AddEventData(self, event_data, serialized_data=None):
+  def AddEventData(self, event_data):
     """Adds event data.
 
     Args:
       event_data (EventData): event data.
-      serialized_data (Optional[bytes]): serialized form of the event data.
     """
 
   @abc.abstractmethod
-  def AddEventDataStream(self, event_data_stream, serialized_data=None):
+  def AddEventDataStream(self, event_data_stream):
     """Adds an event data stream.
 
     Args:
       event_data_stream (EventDataStream): event data stream.
-      serialized_data (Optional[bytes]): serialized form of the event data
-          stream.
     """
 
   @abc.abstractmethod
-  def AddEventSource(self, event_source, serialized_data=None):
+  def AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): an event source.
-      serialized_data (Optional[bytes]): serialized form of the event source.
     """
 
   @abc.abstractmethod
-  def AddEventTag(self, event_tag, serialized_data=None):
+  def AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): an event tag.
-      serialized_data (Optional[bytes]): serialized form of the event tag.
     """
 
   @abc.abstractmethod
-  def AddExtractionWarning(self, extraction_warning, serialized_data=None):
+  def AddExtractionWarning(self, extraction_warning):
     """Adds an extraction warning.
 
     Args:
       extraction_warning (ExtractionWarning): an extraction warning.
-      serialized_data (Optional[bytes]): serialized form of the extraction
-          warning.
     """
 
   @abc.abstractmethod
   def AddPreprocessingWarning(
-      self, preprocessing_warning, serialized_data=None):
+      self, preprocessing_warning):
     """Adds a preprocessing warning.
 
     Args:
       preprocessing_warning (PreprocessingWarning): preprocessing warning.
-      serialized_data (Optional[bytes]): serialized form of the preprocessing
-          warning.
     """
 
   @abc.abstractmethod
-  def AddRecoveryWarning(self, recovery_warning, serialized_data=None):
+  def AddRecoveryWarning(self, recovery_warning):
     """Adds a recovery warning.
 
     Args:
       recovery_warning (RecoveryWarning): a recovery warning.
-      serialized_data (Optional[bytes]): serialized form of the recovery
-          warning.
     """
 
   @abc.abstractmethod
