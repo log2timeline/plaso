@@ -169,7 +169,8 @@ class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         'available_time_zones', 'code_page', 'hostname', 'keyboard_layout',
         'operating_system', 'operating_system_product',
-        'operating_system_version', 'time_zone', 'user_accounts']
+        'operating_system_version', 'time_zone', 'user_accounts',
+        'windows_eventlog_providers']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
     self.assertEqual(attribute_names, expected_attribute_names)
@@ -188,6 +189,15 @@ class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
     self.assertEqual(attribute_names, expected_attribute_names)
+
+
+class WindowsEventLogProviderArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows EventLog provider artifact."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    attribute_container = artifacts.WindowsEventLogProviderArtifact()
+    self.assertIsNotNone(attribute_container)
 
 
 if __name__ == '__main__':

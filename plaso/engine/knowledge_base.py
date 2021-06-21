@@ -34,6 +34,7 @@ class KnowledgeBase(object):
     self._time_zone = pytz.UTC
     self._user_accounts = {}
     self._values = {}
+    self._windows_eventlog_providers = {}
 
   @property
   def available_time_zones(self):
@@ -91,6 +92,23 @@ class KnowledgeBase(object):
 
     available_time_zones[time_zone.name] = time_zone
 
+  def AddEnvironmentVariable(self, environment_variable):
+    """Adds an environment variable.
+
+    Args:
+      environment_variable (EnvironmentVariableArtifact): environment variable
+          artifact.
+
+    Raises:
+      KeyError: if the environment variable already exists.
+    """
+    name = environment_variable.name.upper()
+    if name in self._environment_variables:
+      raise KeyError('Environment variable: {0:s} already exists.'.format(
+          environment_variable.name))
+
+    self._environment_variables[name] = environment_variable
+
   def AddUserAccount(self, user_account, session_identifier=None):
     """Adds an user account.
 
@@ -114,22 +132,32 @@ class KnowledgeBase(object):
 
     user_accounts[user_account.identifier] = user_account
 
-  def AddEnvironmentVariable(self, environment_variable):
-    """Adds an environment variable.
+  def AddWindowsEventLogProvider(
+      self, windows_eventlog_provider, session_identifier=None):
+    """Adds a Windows Event Log provider.
 
     Args:
-      environment_variable (EnvironmentVariableArtifact): environment variable
-          artifact.
+      windows_eventlog_provider (WindowsEventLogProviderArtifact): Windows
+          Event Log provider.
+      session_identifier (Optional[str])): session identifier, where
+          None represents the active session.
 
     Raises:
-      KeyError: if the environment variable already exists.
+      KeyError: if the Windows Event Log provider already exists.
     """
-    name = environment_variable.name.upper()
-    if name in self._environment_variables:
-      raise KeyError('Environment variable: {0:s} already exists.'.format(
-          environment_variable.name))
+    session_identifier = session_identifier or self._active_session
 
-    self._environment_variables[name] = environment_variable
+    if session_identifier not in self._windows_eventlog_providers:
+      self._windows_eventlog_providers[session_identifier] = {}
+
+    windows_eventlog_providers = self._windows_eventlog_providers[
+        session_identifier]
+    if windows_eventlog_provider.log_source in windows_eventlog_providers:
+      raise KeyError('Windows Event Log provider: {0:s} already exists.'.format(
+          windows_eventlog_provider.log_source))
+
+    windows_eventlog_providers[windows_eventlog_provider.log_source] = (
+        windows_eventlog_provider)
 
   def GetEnvironmentVariable(self, name):
     """Retrieves an environment variable.
@@ -244,6 +272,13 @@ class KnowledgeBase(object):
     # In Python 3 dict.values() returns a type dict_values, which will cause
     # the JSON serializer to raise a TypeError.
     system_configuration.user_accounts = list(user_accounts.values())
+
+    windows_eventlog_providers = self._windows_eventlog_providers.get(
+        session_identifier, {})
+    # In Python 3 dict.values() returns a type dict_values, which will cause
+    # the JSON serializer to raise a TypeError.
+    system_configuration.windows_eventlog_providers = list(
+        windows_eventlog_providers.values())
 
     return system_configuration
 
@@ -380,6 +415,10 @@ class KnowledgeBase(object):
     self._user_accounts[session_identifier] = {
         user_account.identifier: user_account
         for user_account in system_configuration.user_accounts}
+
+    self._windows_eventlog_providers[session_identifier] = {
+        time_zone.name: time_zone
+        for time_zone in system_configuration.windows_eventlog_providers}
 
   def SetActiveSession(self, session_identifier):
     """Sets the active session.

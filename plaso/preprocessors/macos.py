@@ -272,7 +272,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     user_account.user_directory = match.get('home', [None])[0]
 
     try:
-      mediator.knowledge_base.AddUserAccount(user_account)
+      mediator.AddUserAccount(user_account)
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
