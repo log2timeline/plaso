@@ -417,8 +417,8 @@ class KnowledgeBase(object):
         for user_account in system_configuration.user_accounts}
 
     self._windows_eventlog_providers[session_identifier] = {
-        time_zone.name: time_zone
-        for time_zone in system_configuration.windows_eventlog_providers}
+        provider.log_source: provider
+        for provider in system_configuration.windows_eventlog_providers}
 
   def SetActiveSession(self, session_identifier):
     """Sets the active session.
