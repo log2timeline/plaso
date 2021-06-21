@@ -476,7 +476,8 @@ class WindowsTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
-    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'EST5EDT')
+    self.assertEqual(
+        test_mediator.knowledge_base.timezone.zone, 'America/New_York')
 
 
 class WindowsUserAccountsPluginTest(

@@ -288,10 +288,13 @@ supported_os: [Windows]
 urls: ['http://msdn.microsoft.com/en-us/library/windows/desktop/bb776892(v=vs.85).aspx']
 ---
 name: WindowsTimezone
-doc: The timezone of the system in Olson format.
+doc: The time zone of the system as a Windows time zone name or in MUI form.
 sources:
 - type: REGISTRY_VALUE
-  attributes: {key_value_pairs: [{key: '%%current_control_set%%\Control\TimeZoneInformation', value: 'StandardName'}]}
+  attributes:
+    key_value_pairs:
+    - {key: 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation', value: 'StandardName'}
+    - {key: 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation', value: 'TimeZoneKeyName'}
 provides: [time_zone]
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/Time%20zone%20keys.asciidoc']
+urls: ['https://winreg-kb.readthedocs.io/en/latest/sources/system-keys/Time-zones.html']
