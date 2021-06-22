@@ -100,6 +100,8 @@ class PyparsingConstants(object):
 
   ONE_OR_TWO_DIGITS = pyparsing.Word(
       pyparsing.nums, min=1, max=2).setParseAction(PyParseIntCast)
+  ONE_TO_THREE_DIGITS = pyparsing.Word(
+      pyparsing.nums, min=1, max=3).setParseAction(PyParseIntCast)
   TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       PyParseIntCast)
   THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(

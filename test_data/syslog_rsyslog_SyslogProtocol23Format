@@ -1,0 +1,10 @@
+<15>1 2021-03-06T04:07:38.251122+00:00 hostname log_tag - - -  this is debug
+<14>1 2021-03-06T04:07:38.251280+00:00 hostname log_tag - - -  this is info
+with another line
+<14>1 2021-03-06T04:07:38.251318+00:00 hostname log_tag - - -  !@#$%^&*()-_=+[]{}\|;:'",./<>?
+<10>1 2021-03-06T04:07:38.251352+00:00 hostname log_tag - - -  this is critical
+<30>1 2021-03-06T04:07:38.263426+00:00 hostname systemd 1 - -  Stopping Regular background program processing daemon...
+<30>1 2021-03-06T04:07:38.265164+00:00 hostname systemd 1 - -  Stopped Regular background program processing daemon.
+<30>1 2021-03-06T04:07:38.265422+00:00 hostname systemd 1 - -  Started Regular background program processing daemon.
+<78>1 2021-03-06T04:07:38.268395+00:00 hostname cron 18898 - -  (CRON) INFO (pidfile fd = 3)
+<78>1 2021-03-06T04:07:38.269077+00:00 hostname cron 18898 - -  (CRON) INFO (Skipping @reboot jobs -- not system startup)

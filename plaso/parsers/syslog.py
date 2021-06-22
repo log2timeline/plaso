@@ -93,9 +93,10 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
   # TODO: change pattern to allow only spaces as a field separator.
   _BODY_PATTERN = (
-      r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|' \
-      r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}' \
-      r'[\+|-]\d{2}:\d{2}\s))')
+      r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|'
+      r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}:\d{2}\s)|'
+      r'($|\n<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}'
+      r':\d{2}\s))')
 
   # The rsyslog file format (RSYSLOG_FileFormat) consists of:
   # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
@@ -129,10 +130,22 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       r'\d{6}[\+|-]\d{2}:\d{2}\s'
       r'(EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)' + _BODY_PATTERN)
 
+  # The rsyslog protocol 23 format (RSYSLOG_SyslogProtocol23Format)
+  # consists of:
+  # %PRI%1 %TIMESTAMP% %HOSTNAME% %APP-NAME% %PROCID% %MSGID% %STRUCTURED-DATA%
+  #   %msg%
+  #
+  # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
+  # 2020-05-31T00:00:45.698463+00:00
+  _RSYSLOG_PROTOCOL_23_VERIFICATION_PATTERN = (
+      r'^<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}:'
+      r'\d{2}\s' + _BODY_PATTERN)
+
   # Bundle all verification patterns into a single regular expression.
   _VERIFICATION_REGEX = re.compile('({0:s})'.format('|'.join([
       _CHROMEOS_VERIFICATION_PATTERN, _RSYSLOG_VERIFICATION_PATTERN,
-      _RSYSLOG_TRADITIONAL_VERIFICATION_PATTERN])))
+      _RSYSLOG_TRADITIONAL_VERIFICATION_PATTERN,
+      _RSYSLOG_PROTOCOL_23_VERIFICATION_PATTERN])))
 
   _PYPARSING_COMPONENTS = {
       'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
@@ -160,7 +173,14 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           'facility'),
       'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity'),
       'body': pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body'),
-      'comment_body': pyparsing.SkipTo(' ---').setResultsName('body')
+      'comment_body': pyparsing.SkipTo(' ---').setResultsName('body'),
+      'priority': (
+          text_parser.PyparsingConstants.ONE_TO_THREE_DIGITS.setResultsName(
+              'priority')),
+      'message_identifier': pyparsing.Word(pyparsing.printables).setResultsName(
+          'message_identifier'),
+      'structured_data': pyparsing.Word(pyparsing.printables).setResultsName(
+          'structured_data'),
   }
 
   _PYPARSING_COMPONENTS['date'] = (
@@ -221,6 +241,22 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Optional(pyparsing.Suppress(':')) +
       _PYPARSING_COMPONENTS['body'] + pyparsing.lineEnd())
 
+  # TODO: Add proper support for %STRUCTURED-DATA%:
+  # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
+  _RSYSLOG_PROTOCOL_23_LINE = (
+      pyparsing.Suppress('<') + _PYPARSING_COMPONENTS['priority'] +
+      pyparsing.Suppress('>') + pyparsing.Suppress(
+          pyparsing.Word(pyparsing.nums, max=1)) +
+      _PYPARSING_COMPONENTS['rfc3339_datetime'].setResultsName('datetime') +
+      _PYPARSING_COMPONENTS['hostname'] +
+      _PYPARSING_COMPONENTS['reporter'] +
+      pyparsing.Or(
+          [pyparsing.Suppress('-'), _PYPARSING_COMPONENTS['pid']]) +
+      _PYPARSING_COMPONENTS['message_identifier'] +
+      _PYPARSING_COMPONENTS['structured_data'] +
+      _PYPARSING_COMPONENTS['body'] +
+      pyparsing.lineEnd())
+
   _SYSLOG_COMMENT = (
       _PYPARSING_COMPONENTS['date'] + pyparsing.Suppress(':') +
       pyparsing.Suppress('---') + _PYPARSING_COMPONENTS['comment_body'] +
@@ -237,6 +273,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       ('kernel_syslog_line', _KERNEL_SYSLOG_LINE),
       ('rsyslog_line', _RSYSLOG_LINE),
       ('rsyslog_traditional_line', _RSYSLOG_TRADITIONAL_LINE),
+      ('rsyslog_protocol_23_line', _RSYSLOG_PROTOCOL_23_LINE),
       ('syslog_comment', _SYSLOG_COMMENT)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
@@ -274,6 +311,19 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
         self._year_use += 1
     self._last_month = month
 
+  def _PriorityToSeverity(self, priority):
+    """Converts a syslog protocol 23 priority value to severity,
+    see https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23
+
+    Args:
+      priority (int): a syslog protocol 23 priority value.
+
+    Returns:
+      str: the value from _SYSLOG_SEVERITY corresponding to severity value.
+    """
+    severity = self._SYSLOG_SEVERITY[priority % 8]
+    return severity
+
   def EnablePlugins(self, plugin_includes):
     """Enables parser plugins.
 
@@ -304,7 +354,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key in ('chromeos_syslog_line', 'rsyslog_line'):
+    if key in (
+        'chromeos_syslog_line', 'rsyslog_line', 'rsyslog_protocol_23_line'):
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       iso8601_string = self._GetValueFromStructure(structure, 'datetime')
 
@@ -355,9 +406,13 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       event_data = SyslogLineEventData()
       event_data.body = self._GetValueFromStructure(structure, 'body')
       event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-      event_data.pid = self._GetValueFromStructure(structure, 'pid')
       event_data.reporter = self._GetValueFromStructure(structure, 'reporter')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
       event_data.severity = self._GetValueFromStructure(structure, 'severity')
+
+      if key == 'rsyslog_protocol_23_line':
+        event_data.severity = self._PriorityToSeverity(
+            self._GetValueFromStructure(structure, 'priority'))
 
       plugin = self._plugin_by_reporter.get(event_data.reporter, None)
       if plugin:
