@@ -63,6 +63,52 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
+  def testParseRsyslogProtocol23(self):
+    """Tests the Parse function on a protocol 23 rsyslog file."""
+    parser = syslog.SyslogParser()
+    knowledge_base_values = {'year': 2021}
+    storage_writer = self._ParseFile(
+        ['syslog_rsyslog_SyslogProtocol23Format'], parser,
+        knowledge_base_values=knowledge_base_values)
+
+    self.assertEqual(storage_writer.number_of_events, 9)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    events = list(storage_writer.GetSortedEvents())
+
+    expected_event_values = {
+        'date_time': '2021-03-06 04:07:38.251122',
+        'data_type': 'syslog:line',
+        'hostname': 'hostname',
+        'reporter': 'log_tag',
+        'severity': 'DEBUG'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
+  def testParseRsyslogSysklogd(self):
+    """Tests the Parse function on a syslogkd format rsyslog file."""
+    parser = syslog.SyslogParser()
+    knowledge_base_values = {'year': 2021}
+    storage_writer = self._ParseFile(
+        ['syslog_rsyslog_SysklogdFileFormat'], parser,
+        knowledge_base_values=knowledge_base_values)
+
+    self.assertEqual(storage_writer.number_of_events, 9)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    events = list(storage_writer.GetSortedEvents())
+
+    expected_event_values = {
+        'date_time': '2021-03-06 04:07:28',
+        'data_type': 'syslog:line',
+        'hostname': 'hostname',
+        'reporter': 'log_tag',
+        'severity': None}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
   def testParseDarwin(self):
     """Tests the Parse function on an Darwin-style syslog file."""
     parser = syslog.SyslogParser()
