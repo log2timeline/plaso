@@ -174,8 +174,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity'),
       'body': pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body'),
       'comment_body': pyparsing.SkipTo(' ---').setResultsName('body'),
-      'priority': text_parser.PyparsingConstants.ONE_TO_THREE_DIGITS.\
-          setResultsName('priority'),
+      'priority': (
+          text_parser.PyparsingConstants.ONE_TO_THREE_DIGITS.setResultsName(
+              'priority')),
       'msgid': pyparsing.Word(pyparsing.printables).setResultsName('msgid'),
       'structured-data': pyparsing.Word(pyparsing.printables).setResultsName(
           'structured-data'),
