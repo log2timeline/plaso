@@ -412,7 +412,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
       if key == 'rsyslog_protocol_23_line':
         event_data.severity = self._PriorityToSeverity(
-          self._GetValueFromStructure(structure, 'priority'))
+            self._GetValueFromStructure(structure, 'priority'))
 
       plugin = self._plugin_by_reporter.get(event_data.reporter, None)
       if plugin:
