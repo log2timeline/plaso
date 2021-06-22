@@ -354,8 +354,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key in ('chromeos_syslog_line', 'rsyslog_line',
-        'rsyslog_protocol_23_line'):
+    if key in (
+        'chromeos_syslog_line', 'rsyslog_line', 'rsyslog_protocol_23_line'):
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       iso8601_string = self._GetValueFromStructure(structure, 'datetime')
 
