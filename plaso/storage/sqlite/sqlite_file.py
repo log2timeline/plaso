@@ -7,6 +7,7 @@ import pathlib
 import sqlite3
 import zlib
 
+from plaso.containers import manager as containers_manager
 from plaso.lib import definitions
 from plaso.storage import file_interface
 from plaso.storage import identifiers
@@ -17,6 +18,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   """SQLite-based storage file.
 
   Attributes:
+    compression_format (str): compression format.
     format_version (int): storage format version.
     serialization_format (str): serialization format.
     storage_type (str): storage type.
@@ -24,11 +26,15 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
   _FORMAT_VERSION = 20210621
 
-  _FLATTENED_EVENT_TAG_FORMAT_VERSION = 20210606
+  _WITH_SCHEMA_FORMAT_VERSION = 20210621
 
   # The earliest format version, stored in-file, that this class
   # is able to append (write).
   _APPEND_COMPATIBLE_FORMAT_VERSION = 20190309
+
+  # The earliest format version, stored in-file, that this class
+  # is able to upgrade (write new format features).
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20210621
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
@@ -41,25 +47,64 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT_DATA_STREAM,
       file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT_SOURCE)
 
+  _CONTAINERS_MANAGER = containers_manager.AttributeContainersManager
+
+  # TODO: analysis_report, event_data, session_completion,
+  # session_configuration, session_start, system_configuration
+  _CONTAINER_SCHEMA_VERSION = 20210621
+
+  _CONTAINER_SCHEMAS = {
+      'analysis_warning': {
+          'message': 'str',
+          'plugin_name': 'str'},
+
+      'event': {
+          '_event_data_row_identifier': 'int',
+          'date_time': 'dfdatetime.DateTimeValues',
+          'timestamp': 'int',
+          'timestamp_desc': 'str'},
+
+      'event_data_stream': {
+          'file_entropy': 'str',
+          'md5_hash': 'str',
+          'path_spec': 'dfvfs.PathSpec',
+          'sha1_hash': 'str',
+          'sha256_hash': 'str',
+          'yara_match': 'str'},
+
+      'event_source': {
+          'data_type': 'str',
+          'file_entry_type': 'str',
+          'path_spec': 'dfvfs.PathSpec'},
+
+      'event_tag': {
+          '_event_row_identifier': 'int',
+          'labels': 'List[str]'},
+
+      'extraction_warning': {
+          'message': 'str',
+          'parser_chain': 'str',
+          'path_spec': 'dfvfs.PathSpec'},
+
+      'preprocessing_warning': {
+          'message': 'str',
+          'path_spec': 'dfvfs.PathSpec',
+          'plugin_name': 'str'},
+
+      'recovery_warning': {
+          'message': 'str',
+          'parser_chain': 'str',
+          'path_spec': 'dfvfs.PathSpec'},
+  }
+
+  _CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS = {
+      'bool': 'INTEGER',
+      'int': 'INTEGER',
+      'str': 'TEXT',
+      'timestamp': 'BIGINT'}
+
   _CREATE_METADATA_TABLE_QUERY = (
       'CREATE TABLE metadata (key TEXT, value TEXT);')
-
-  _CREATE_TABLE_QUERY = (
-      'CREATE TABLE {0:s} ('
-      '_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
-      '_data {1:s});')
-
-  _CREATE_EVENT_TABLE_QUERY = (
-      'CREATE TABLE event ('
-      '_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
-      '_timestamp BIGINT,'
-      '_data {0:s});')
-
-  _CREATE_FLATTEND_EVENT_TAG_TABLE_QUERY = (
-      'CREATE TABLE event_tag ('
-      '_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
-      '_event_identifier INTEGER,'
-      '_data {0:s});')
 
   _HAS_TABLE_QUERY = (
       'SELECT name FROM sqlite_master '
@@ -93,17 +138,19 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     if not maximum_buffer_size:
       maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
 
+    if storage_type == definitions.STORAGE_TYPE_SESSION:
+      compression_format = definitions.COMPRESSION_FORMAT_ZLIB
+    else:
+      compression_format = definitions.COMPRESSION_FORMAT_NONE
+
     super(SQLiteStorageFile, self).__init__()
     self._attribute_container_cache = collections.OrderedDict()
     self._connection = None
     self._cursor = None
     self._maximum_buffer_size = maximum_buffer_size
+    self._use_schema = bool(storage_type == definitions.STORAGE_TYPE_SESSION)
 
-    if storage_type == definitions.STORAGE_TYPE_SESSION:
-      self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
-    else:
-      self.compression_format = definitions.COMPRESSION_FORMAT_NONE
-
+    self.compression_format = compression_format
     self.format_version = self._FORMAT_VERSION
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
     self.storage_type = storage_type
@@ -220,27 +267,94 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-      data_column_type = 'BLOB'
+    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+
+    if self._use_schema and schema:
+      data_types = {
+          name: self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS.get(
+              attribute_type, 'TEXT')
+          for name, attribute_type in schema.items()}
+
+      column_definitions = ', '.join([
+          '{0:s} {1:s}'.format(name, data_type)
+          for name, data_type in sorted(data_types.items())])
+
     else:
-      data_column_type = 'TEXT'
+      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+        data_column_type = 'BLOB'
+      else:
+        data_column_type = 'TEXT'
 
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      query = self._CREATE_EVENT_TABLE_QUERY.format(data_column_type)
+      if container_type == self._CONTAINER_TYPE_EVENT:
+        column_definitions = (
+            '_timestamp BIGINT, '
+            '_data {0:s}').format(data_column_type)
 
-    elif (self.format_version >= self._FLATTENED_EVENT_TAG_FORMAT_VERSION and
-          container_type == self._CONTAINER_TYPE_EVENT_TAG):
-      query = self._CREATE_FLATTEND_EVENT_TAG_TABLE_QUERY.format(
-          data_column_type)
+      else:
+        column_definitions = '_data {0:s}'.format(data_column_type)
 
-    else:
-      query = self._CREATE_TABLE_QUERY.format(container_type, data_column_type)
+    query = (
+        'CREATE TABLE {0:s} ('
+        '_identifier INTEGER PRIMARY KEY AUTOINCREMENT, '
+        '{1:s});').format(container_type, column_definitions)
 
     try:
       self._cursor.execute(query)
     except sqlite3.OperationalError as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
+
+  def _CreatetAttributeContainerFromRow(
+      self, container_type, column_names, row, first_column_index):
+    """Creates an attribute container of a row in the database.
+
+    Args:
+      container_type (str): attribute container type.
+      column_names (list[str]): names of the columns selected.
+      row (sqlite.Row): row as a result from a SELECT query.
+      first_column_index (int): index of the first column in row.
+
+    Returns:
+      AttributeContainer: attribute container.
+    """
+    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+
+    if column_names != ['_data']:
+      container = self._CONTAINERS_MANAGER.CreateAttributeContainer(
+          container_type)
+
+      for column_index, column_name in enumerate(column_names):
+        attribute_type = schema[column_name]
+        attribute_value = row[first_column_index + column_index]
+
+        if attribute_value is not None:
+          if attribute_type == 'bool':
+            attribute_value = bool(attribute_value)
+
+          # TODO: add compression support
+          elif attribute_type not in (
+              self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS):
+            attribute_value = self._serializer.ReadSerialized(attribute_value)
+
+        setattr(container, column_name, attribute_value)
+
+    else:
+      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+        compressed_data = row[first_column_index]
+        serialized_data = zlib.decompress(compressed_data)
+      else:
+        compressed_data = b''
+        serialized_data = row[first_column_index]
+
+      if self._storage_profiler:
+        self._storage_profiler.Sample(
+            'get_container_by_index', 'read', container_type,
+            len(serialized_data), len(compressed_data))
+
+      container = self._DeserializeAttributeContainer(
+          container_type, serialized_data)
+
+    return container
 
   def _GetNumberOfAttributeContainers(self, container_type):
     """Counts the number of attribute containers of the given type.
@@ -315,14 +429,20 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    attribute_container = self._GetCachedAttributeContainer(
-        container_type, index)
-    if attribute_container:
-      return attribute_container
+    container = self._GetCachedAttributeContainer(container_type, index)
+    if container:
+      return container
+
+    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+
+    if self._use_schema and schema:
+      column_names = sorted(schema.keys())
+    else:
+      column_names = ['_data']
 
     sequence_number = index + 1
-    query = 'SELECT _data FROM {0:s} WHERE rowid = {1:d}'.format(
-        container_type, sequence_number)
+    query = 'SELECT {0:s} FROM {1:s} WHERE rowid = {2:d}'.format(
+        ', '.join(column_names), container_type, sequence_number)
 
     try:
       self._cursor.execute(query)
@@ -343,25 +463,15 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     if not row:
       return None
 
+    container = self._CreatetAttributeContainerFromRow(
+        container_type, column_names, row, 0)
+
     identifier = identifiers.SQLTableIdentifier(
         container_type, sequence_number)
+    container.SetIdentifier(identifier)
 
-    if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-      serialized_data = zlib.decompress(row[0])
-    else:
-      serialized_data = row[0]
-
-    if self._storage_profiler:
-      self._storage_profiler.Sample(
-          'get_container_by_index', 'read', container_type,
-          len(serialized_data), len(row[0]))
-
-    attribute_container = self._DeserializeAttributeContainer(
-        container_type, serialized_data)
-    attribute_container.SetIdentifier(identifier)
-
-    self._CacheAttributeContainer(attribute_container, index)
-    return attribute_container
+    self._CacheAttributeContainer(container, index)
+    return container
 
   # TODO: determine if this method should account for non-stored attribute
   # containers or that it is better to rename the method to
@@ -384,11 +494,19 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    query = 'SELECT _identifier, _data FROM {0:s}'.format(container_type)
+    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+
+    if self._use_schema and schema:
+      column_names = sorted(schema.keys())
+    else:
+      column_names = ['_data']
+
+    query = 'SELECT _identifier, {0:s} FROM {1:s}'.format(
+        ', '.join(column_names), container_type)
     if filter_expression:
-      query = '{0:s} WHERE {1:s}'.format(query, filter_expression)
+      query = ' WHERE '.join([query, filter_expression])
     if order_by:
-      query = '{0:s} ORDER BY {1:s}'.format(query, order_by)
+      query = ' ORDER BY '.join([query, order_by])
 
     # Use a local cursor to prevent another query interrupting the generator.
     cursor = self._connection.cursor()
@@ -396,8 +514,9 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     try:
       cursor.execute(query)
     except sqlite3.OperationalError as exception:
-      raise IOError('Unable to query storage file with error: {0!s}'.format(
-          exception))
+      raise IOError((
+          'Unable to query storage file for attribute container: {0:s} with '
+          'error: {1!s}').format(container_type, exception))
 
     if self._storage_profiler:
       self._storage_profiler.StartTiming('get_containers')
@@ -410,21 +529,12 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
         self._storage_profiler.StopTiming('get_containers')
 
     while row:
+      attribute_container = self._CreatetAttributeContainerFromRow(
+          container_type, column_names, row, 1)
+
       identifier = identifiers.SQLTableIdentifier(container_type, row[0])
-
-      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-        serialized_data = zlib.decompress(row[1])
-      else:
-        serialized_data = row[1]
-
-      if self._storage_profiler:
-        self._storage_profiler.Sample(
-            'get_containers', 'read', container_type, len(serialized_data),
-            len(row[1]))
-
-      attribute_container = self._DeserializeAttributeContainer(
-          container_type, serialized_data)
       attribute_container.SetIdentifier(identifier)
+
       yield attribute_container
 
       row = cursor.fetchone()
@@ -521,6 +631,59 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self.compression_format = metadata_values['compression_format']
     self.serialization_format = metadata_values['serialization_format']
     self.storage_type = metadata_values['storage_type']
+
+    self._use_schema = bool(
+        self.storage_type == definitions.STORAGE_TYPE_SESSION and
+        self.format_version >= self._WITH_SCHEMA_FORMAT_VERSION)
+
+  def _UpdateAttributeContainer(self, container):
+    """Updates an attribute container.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
+    schema = self._CONTAINER_SCHEMAS.get(container.CONTAINER_TYPE, {})
+
+    column_names = []
+    values = []
+    for name, attribute_type in sorted(schema.items()):
+      attribute_value = getattr(container, name, None)
+
+      if attribute_value is not None:
+        if attribute_type == 'bool':
+          attribute_value = int(attribute_value)
+
+        # TODO: add compression support
+        elif attribute_type not in (
+            self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS):
+          attribute_value = self._serializer.WriteSerialized(attribute_value)
+
+      column_names.append('{0:s} = ?'.format(name))
+      values.append(attribute_value)
+
+    identifier = container.GetIdentifier()
+
+    query = 'UPDATE {0:s} SET {1:s} WHERE _identifier = {2:d}'.format(
+        container.CONTAINER_TYPE, ', '.join(column_names),
+        identifier.row_identifier)
+
+    if self._storage_profiler:
+      self._storage_profiler.StartTiming('update_container')
+
+    try:
+      self._cursor.execute(query, values)
+
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
+
+    finally:
+      if self._storage_profiler:
+        self._storage_profiler.StopTiming('update_container')
 
   def _UpdateEventDataIdentifierAfterDeserialize(self, event):
     """Updates the event data identifier after deserialization.
@@ -643,15 +806,16 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    query = (
-        'UPDATE metadata SET value = {0:d} '
-        'WHERE key = "format_version"').format(self._FORMAT_VERSION)
+    if self.format_version >= self._UPGRADE_COMPATIBLE_FORMAT_VERSION:
+      query = (
+          'UPDATE metadata SET value = {0:d} '
+          'WHERE key = "format_version"').format(self._FORMAT_VERSION)
 
-    try:
-      self._cursor.execute(query)
-    except sqlite3.OperationalError as exception:
-      raise IOError('Unable to query storage file with error: {0!s}'.format(
-          exception))
+      try:
+        self._cursor.execute(query)
+      except sqlite3.OperationalError as exception:
+        raise IOError('Unable to query storage file with error: {0!s}'.format(
+            exception))
 
   def _WriteAttributeContainer(self, container):
     """Writes an attribute container.
@@ -665,28 +829,51 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    serialized_data = self._SerializeAttributeContainer(container)
+    schema = self._CONTAINER_SCHEMAS.get(container.CONTAINER_TYPE, {})
 
-    if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-      compressed_data = zlib.compress(serialized_data)
-      serialized_data = sqlite3.Binary(compressed_data)
+    if self._use_schema and schema:
+      column_names = []
+      values = []
+      for name, attribute_type in sorted(schema.items()):
+        attribute_value = getattr(container, name, None)
+
+        if attribute_value is not None:
+          if attribute_type == 'bool':
+            attribute_value = int(attribute_value)
+
+          # TODO: add compression support
+          elif attribute_type not in (
+              self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS):
+            attribute_value = self._serializer.WriteSerialized(attribute_value)
+
+        column_names.append(name)
+        values.append(attribute_value)
+
     else:
-      compressed_data = ''
+      serialized_data = self._SerializeAttributeContainer(container)
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
-      values = (container.timestamp, serialized_data)
+      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+        compressed_data = zlib.compress(serialized_data)
+        serialized_data = sqlite3.Binary(compressed_data)
+      else:
+        compressed_data = ''
 
-    elif (self.format_version >= self._FLATTENED_EVENT_TAG_FORMAT_VERSION and
-          container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG):
-      event_identifier = container.GetEventIdentifier()
-      query = 'INSERT INTO event_tag (_event_identifier, _data) VALUES (?, ?)'
-      values = (event_identifier.row_identifier, serialized_data)
+      if self._storage_profiler:
+        self._storage_profiler.Sample(
+            'write_container', 'write', container.CONTAINER_TYPE,
+            len(serialized_data), len(compressed_data))
 
-    else:
-      query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(
-          container.CONTAINER_TYPE)
-      values = (serialized_data, )
+      if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+        column_names = ['_timestamp', '_data']
+        values = [container.timestamp, serialized_data]
+
+      else:
+        column_names = ['_data']
+        values = [serialized_data]
+
+    query = 'INSERT INTO {0:s} ({1:s}) VALUES ({2:s})'.format(
+        container.CONTAINER_TYPE, ', '.join(column_names),
+        ','.join(['?'] * len(column_names)))
 
     if self._storage_profiler:
       self._storage_profiler.StartTiming('write_container')
@@ -701,9 +888,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     finally:
       if self._storage_profiler:
         self._storage_profiler.StopTiming('write_container')
-        self._storage_profiler.Sample(
-            'write_container', 'write', container.CONTAINER_TYPE,
-            len(serialized_data), len(compressed_data))
 
     row_identifier = self._cursor.lastrowid
     identifier = identifiers.SQLTableIdentifier(
@@ -815,17 +999,10 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     """
     self._RaiseIfNotWritable()
 
-    if self.format_version < self._FLATTENED_EVENT_TAG_FORMAT_VERSION:
-      # Do not flatten the event tag and fall back to appending.
-
-      # The serialized data is not used, as this method modifies the attribute
-      # container.
-      self._UpdateEventIdentifierBeforeSerialize(event_tag)
-      self._AddAttributeContainer(event_tag)
-
-    else:
+    schema = self._CONTAINER_SCHEMAS.get(self._CONTAINER_TYPE_EVENT_TAG, {})
+    if self._use_schema and schema:
       event_identifier = event_tag.GetEventIdentifier()
-      filter_expression = '_event_identifier = {0:d}'.format(
+      filter_expression = '_event_row_identifier = {0:d}'.format(
           event_identifier.row_identifier)
 
       existing_event_tags = list(self._GetAttributeContainers(
@@ -833,28 +1010,19 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
       if len(existing_event_tags) == 1:
         existing_event_tags[0].AddLabels(event_tag.labels)
-
-        identifier = existing_event_tags[0].GetIdentifier()
-        serialized_data = self._SerializeAttributeContainer(
-            existing_event_tags[0])
-
-        if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-          compressed_data = zlib.compress(serialized_data)
-          serialized_data = sqlite3.Binary(compressed_data)
-
-        query = (
-            'UPDATE event_tag SET _data = ? '
-            'WHERE _identifier = {0:d}').format(identifier.row_identifier)
-
-        try:
-          self._cursor.execute(query, (serialized_data, ))
-        except sqlite3.OperationalError as exception:
-          raise IOError('Unable to query storage file with error: {0!s}'.format(
-              exception))
+        self._UpdateAttributeContainer(existing_event_tags[0])
 
       else:
         self._UpdateEventIdentifierBeforeSerialize(event_tag)
         self._WriteAttributeContainer(event_tag)
+
+    else:
+      # Do not flatten the event tag and fall back to appending.
+
+      # The serialized data is not used, as this method modifies the attribute
+      # container.
+      self._UpdateEventIdentifierBeforeSerialize(event_tag)
+      self._AddAttributeContainer(event_tag)
 
   @classmethod
   def CheckSupportedFormat(cls, path, check_readable_only=False):
@@ -1027,23 +1195,29 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     Yield:
       EventObject: event.
     """
+    schema = self._CONTAINER_SCHEMAS.get(self._CONTAINER_TYPE_EVENT, {})
+    if self._use_schema and schema:
+      column_name = 'timestamp'
+    else:
+      column_name = '_timestamp'
+
     filter_expression = None
     if time_range:
       filter_expression = []
 
       if time_range.start_timestamp:
         filter_expression.append(
-            '_timestamp >= {0:d}'.format(time_range.start_timestamp))
+            '{0:s} >= {1:d}'.format(column_name, time_range.start_timestamp))
 
       if time_range.end_timestamp:
         filter_expression.append(
-            '_timestamp <= {0:d}'.format(time_range.end_timestamp))
+            '{0:s} <= {1:d}'.format(column_name, time_range.end_timestamp))
 
       filter_expression = ' AND '.join(filter_expression)
 
     event_generator = self._GetAttributeContainers(
         self._CONTAINER_TYPE_EVENT, filter_expression=filter_expression,
-        order_by='_timestamp')
+        order_by=column_name)
 
     for event in event_generator:
       self._UpdateEventDataIdentifierAfterDeserialize(event)
