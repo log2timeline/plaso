@@ -84,14 +84,6 @@ class BaseStore(object):
     self.serialization_format = None
     self.storage_type = None
 
-  @abc.abstractmethod
-  def _AddAttributeContainer(self, container):
-    """Adds a new attribute container.
-
-    Args:
-      container (AttributeContainer): attribute container.
-    """
-
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
 
@@ -129,6 +121,7 @@ class BaseStore(object):
 
     return attribute_container
 
+  # TODO: is protected method still needed? remove?
   @abc.abstractmethod
   def _GetAttributeContainers(self, container_type):
     """Yields attribute containers
@@ -142,42 +135,12 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def _GetAttributeContainerByIdentifier(self, container_type, identifier):
-    """Retrieves the container with a specific identifier.
+  def _RaiseIfNotReadable(self):
+    """Raises if the store is not readable.
 
-    Args:
-      container_type (str): container type.
-      identifier (AttributeContainerIdentifier): event data identifier.
-
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-
-    Raises:
-      OSError: if an invalid identifier is provided.
-      IOError: if an invalid identifier is provided.
-    """
-
-  @abc.abstractmethod
-  def _GetNumberOfAttributeContainers(self, container_type):
-    """Determines the number of containers of a type in the store.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      int: the number of containers in the store of the specified type.
-    """
-
-  @abc.abstractmethod
-  def _HasAttributeContainers(self, container_type):
-    """Determines if a store contains a specific type of attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      bool: True if the store contains the specified type of attribute
-          containers.
+     Raises:
+       OSError: if the store cannot be read from.
+       IOError: if the store cannot be read from.
     """
 
   @abc.abstractmethod
@@ -187,15 +150,6 @@ class BaseStore(object):
      Raises:
        OSError: if the store cannot be written to.
        IOError: if the store cannot be written to.
-    """
-
-  @abc.abstractmethod
-  def _RaiseIfNotReadable(self):
-    """Raises if the store is not readable.
-
-     Raises:
-       OSError: if the store cannot be read from.
-       IOError: if the store cannot be read from.
     """
 
   def _SerializeAttributeContainer(self, attribute_container):
@@ -231,295 +185,73 @@ class BaseStore(object):
     return attribute_container_data
 
   @abc.abstractmethod
-  def _WriteAttributeContainer(self, container):
-    """Writes an attribute container.
+  def _WriteNewAttributeContainer(self, container):
+    """Writes a new attribute container to the store.
 
     Args:
       container (AttributeContainer): attribute container.
     """
 
-  def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report.
+  def AddAttributeContainer(self, container):
+    """Adds an attribute container.
 
     Args:
-      analysis_report (AnalysisReport): analysis report.
+      container (AttributeContainer): attribute container.
 
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
+    Raises:
+      OSError: if the store cannot be written to.
+      IOError: if the store cannot be written to.
     """
     self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(analysis_report)
-
-  def AddAnalysisWarning(self, analysis_warning):
-    """Adds an analysis warning.
-
-    Args:
-      analysis_warning (AnalysisWarning): analysis warning.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(analysis_warning)
-
-  def AddEvent(self, event):
-    """Adds an event.
-
-    Args:
-      event (EventObject): event.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(event)
-
-  def AddEventData(self, event_data):
-    """Adds event data.
-
-    Args:
-      event_data (EventData): event data.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(event_data)
-
-  def AddEventDataStream(self, event_data_stream):
-    """Adds an event data stream.
-
-    Args:
-      event_data_stream (EventDataStream): event data stream.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(event_data_stream)
-
-  def AddEventSource(self, event_source):
-    """Adds an event source.
-
-    Args:
-      event_source (EventSource): event source.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(event_source)
-
-  def AddEventTag(self, event_tag):
-    """Adds an event tag.
-
-    Args:
-      event_tag (EventTag): event tag.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(event_tag)
-
-  def AddExtractionWarning(self, extraction_warning):
-    """Adds an extraction warning.
-
-    Args:
-      extraction_warning (ExtractionWarning): extraction warning.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(extraction_warning)
-
-  def AddPreprocessingWarning(self, preprocessing_warning):
-    """Adds a preprocessing warning.
-
-    Args:
-      preprocessing_warning (PreprocessingWarning): preprocessing warning.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(preprocessing_warning)
-
-  def AddRecoveryWarning(self, recovery_warning):
-    """Adds a recovery warning.
-
-    Args:
-      recovery_warning (RecoveryWarning): recovery warning.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    self._AddAttributeContainer(recovery_warning)
+    self._WriteNewAttributeContainer(container)
 
   @abc.abstractmethod
   def Close(self):
     """Closes the store."""
 
-  def GetAnalysisReports(self):
-    """Retrieves the analysis reports.
-
-    Returns:
-      generator(AnalysisReport): analysis report generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
-  def GetAnalysisWarnings(self):
-    """Retrieves the analysis warnings.
-
-    Returns:
-      generator(AnalysisWarning): analysis warning generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_WARNING)
-
-  def GetEventData(self):
-    """Retrieves the event data.
-
-    Returns:
-      generator(EventData): event data generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA)
-
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
+  @abc.abstractmethod
+  def GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves a specific type of container with a specific identifier.
 
     Args:
-      identifier (AttributeContainerIdentifier): event data identifier.
+      container_type (str): container type.
+      identifier (AttributeContainerIdentifier): attribute container identifier.
 
     Returns:
-      EventData: event data or None if not available.
-    """
-    return self._GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA, identifier)
-
-  def GetEventDataStreams(self):
-    """Retrieves the event data streams.
-
-    Returns:
-      generator(EventDataStream): event data stream generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA_STREAM)
-
-  def GetEventDataStreamByIdentifier(self, identifier):
-    """Retrieves a specific event data stream.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data stream identifier.
-
-    Returns:
-      EventDataStream: event data stream or None if not available.
-    """
-    return self._GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
-
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(Event): event generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
-
-  def GetEventSources(self):
-    """Retrieves the event sources.
-
-    Returns:
-      generator(EventSource): event source generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_SOURCE)
-
-  def GetEventTagByIdentifier(self, identifier):
-    """Retrieves a specific event tag.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event tag identifier.
-
-    Returns:
-      EventTag: event tag or None if not available.
+      AttributeContainer: attribute container or None if not available.
 
     Raises:
-      OSError: if an invalid identifier is provided.
-      IOError: if an invalid identifier is provided.
+      IOError: when the store is closed or if an unsupported identifier is
+          provided.
+      OSError: when the store is closed or if an unsupported identifier is
+          provided.
     """
-    return self._GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_TAG, identifier)
 
-  def GetEventTags(self):
-    """Retrieves the event tags.
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
 
     Returns:
-      generator(EventTag): event tag generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
+      generator(AttributeContainers): attribute container generator.
 
-  def GetExtractionWarnings(self):
-    """Retrieves the extraction warnings.
+    Raises:
+      IOError: when the store is closed.
+      OSError: when the store is closed.
+    """
+    return self._GetAttributeContainers(container_type)
+
+  @abc.abstractmethod
+  def GetNumberOfAttributeContainers(self, container_type):
+    """Retrieves the number of a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
 
     Returns:
-      generator(ExtractionWarning): extraction warning generator.
+      int: the number of containers of a specified type.
     """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
-  def GetNumberOfAnalysisReports(self):
-    """Retrieves the number analysis reports.
-
-    Returns:
-      int: number of analysis reports.
-    """
-    return self._GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
-  def GetNumberOfEventSources(self):
-    """Retrieves the number event sources.
-
-    Returns:
-      int: number of event sources.
-    """
-    return self._GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_SOURCE)
-
-  def GetPreprocessingWarnings(self):
-    """Retrieves the preprocessing warnings.
-
-    Returns:
-      generator(PreprocessingWarning): preprocessing warning generator.
-    """
-    return self._GetAttributeContainers(
-        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
-
-  def GetRecoveryWarnings(self):
-    """Retrieves the recovery warnings.
-
-    Returns:
-      generator(RecoveryWarning): recovery warning generator.
-    """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   def GetSessions(self):
     """Retrieves the sessions.
@@ -538,7 +270,7 @@ class BaseStore(object):
     session_completion_generator = self._GetAttributeContainers(
         self._CONTAINER_TYPE_SESSION_COMPLETION)
 
-    if self._HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
+    if self.HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
       session_configuration_generator = self._GetAttributeContainers(
           self._CONTAINER_TYPE_SESSION_CONFIGURATION)
     else:
@@ -599,54 +331,17 @@ class BaseStore(object):
       EventObject: event.
     """
 
-  def HasAnalysisReports(self):
-    """Determines if a store contains analysis reports.
+  @abc.abstractmethod
+  def HasAttributeContainers(self, container_type):
+    """Determines if a store contains a specific type of attribute container.
+
+    Args:
+      container_type (str): attribute container type.
 
     Returns:
-      bool: True if the store contains analysis reports.
+      bool: True if the store contains the specified type of attribute
+          containers.
     """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
-  def HasAnalysisWarnings(self):
-    """Determines if a store contains analysis warnings.
-
-    Returns:
-      bool: True if the store contains analysis warnings.
-    """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_WARNING)
-
-  def HasExtractionWarnings(self):
-    """Determines if a store contains extraction warnings.
-
-    Returns:
-      bool: True if the store contains extraction warnings.
-    """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
-  def HasEventTags(self):
-    """Determines if a store contains event tags.
-
-    Returns:
-      bool: True if the store contains event tags.
-    """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
-
-  def HasPreprocessingWarnings(self):
-    """Determines if a store contains preprocessing warnings.
-
-    Returns:
-      bool: True if the store contains preprocessing warnings.
-    """
-    return self._HasAttributeContainers(
-        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
-
-  def HasRecoveryWarnings(self):
-    """Determines if a store contains recovery warnings.
-
-    Returns:
-      bool: True if the store contains recovery warnings.
-    """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   @abc.abstractmethod
   def Open(self, **kwargs):
@@ -664,7 +359,7 @@ class BaseStore(object):
     """
     # Backwards compatibility for older session storage files that do not
     # store system configuration as part of the session configuration.
-    if self._HasAttributeContainers(self._CONTAINER_TYPE_SYSTEM_CONFIGURATION):
+    if self.HasAttributeContainers(self._CONTAINER_TYPE_SYSTEM_CONFIGURATION):
       generator = self._GetAttributeContainers(
           self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
       for system_configuration in generator:
@@ -703,7 +398,7 @@ class BaseStore(object):
     if self.storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Session completion not supported by storage type.')
 
-    self._WriteAttributeContainer(session_completion)
+    self._WriteNewAttributeContainer(session_completion)
 
   def WriteSessionConfiguration(self, session_configuration):
     """Writes session configuration information.
@@ -718,9 +413,9 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
 
-    if not self._HasAttributeContainers(
+    if not self.HasAttributeContainers(
         self._CONTAINER_TYPE_SYSTEM_CONFIGURATION):
-      self._WriteAttributeContainer(session_configuration)
+      self._WriteNewAttributeContainer(session_configuration)
 
   def WriteSessionStart(self, session_start):
     """Writes session start information.
@@ -739,7 +434,7 @@ class BaseStore(object):
     if self.storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Session start not supported by storage type.')
 
-    self._WriteAttributeContainer(session_start)
+    self._WriteNewAttributeContainer(session_start)
 
   def WriteTaskCompletion(self, task_completion):
     """Writes task completion information.
@@ -758,7 +453,7 @@ class BaseStore(object):
     if self.storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError('Task start not supported by storage type.')
 
-    self._WriteAttributeContainer(task_completion)
+    self._WriteNewAttributeContainer(task_completion)
 
   def WriteTaskStart(self, task_start):
     """Writes task start information.
@@ -777,7 +472,7 @@ class BaseStore(object):
     if self.storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError('Task completion not supported by storage type.')
 
-    self._WriteAttributeContainer(task_start)
+    self._WriteNewAttributeContainer(task_start)
 
 
 class StorageMergeReader(object):
@@ -791,6 +486,8 @@ class StorageMergeReader(object):
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
   _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
+      warnings.PreprocessingWarning.CONTAINER_TYPE)
   _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
@@ -968,6 +665,20 @@ class StorageMergeReader(object):
 # pylint: disable=redundant-returns-doc,redundant-yields-doc
 class StorageReader(object):
   """Storage reader interface."""
+
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
+      warnings.PreprocessingWarning.CONTAINER_TYPE)
+  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
   def __enter__(self):
     """Make usable with "with" statement."""
@@ -1201,6 +912,20 @@ class StorageWriter(object):
     number_of_recovery_warnings (int): number of recovery warnings written.
   """
 
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
+      warnings.PreprocessingWarning.CONTAINER_TYPE)
+  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
+
   def __init__(
       self, session, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer.
@@ -1301,6 +1026,14 @@ class StorageWriter(object):
 
     Args:
       analysis_warning (AnalysisWarning): an analysis warning.
+    """
+
+  @abc.abstractmethod
+  def AddAttributeContainer(self, container):
+    """Adds an attribute container.
+
+    Args:
+      container (AttributeContainer): attribute container.
     """
 
   @abc.abstractmethod

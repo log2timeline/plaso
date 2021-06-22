@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The event tag index."""
 
+from plaso.containers import events
+
 
 class EventTagIndex(object):
   """Event tag index.
@@ -11,26 +13,28 @@ class EventTagIndex(object):
   stored event tags cannot be altered.
   """
 
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+
   def __init__(self):
     """Initializes an event tag index."""
     super(EventTagIndex, self).__init__()
     self._index = None
 
-  def _Build(self, storage_file):
+  def _Build(self, storage_reader):
     """Builds the event tag index.
 
     Args:
-      storage_file (BaseStorageFile): storage file.
+      storage_reader (StorageReader): storage reader.
     """
     self._index = {}
-    for event_tag in storage_file.GetEventTags():
+    for event_tag in storage_reader.GetEventTags():
       self.SetEventTag(event_tag)
 
-  def GetEventTagByIdentifier(self, storage_file, event_identifier):
+  def GetEventTagByIdentifier(self, storage_reader, event_identifier):
     """Retrieves the most recently updated event tag for an event.
 
     Args:
-      storage_file (BaseStorageFile): storage file.
+      storage_reader (StorageReader): storage reader.
       event_identifier (AttributeContainerIdentifier): event attribute
           container identifier.
 
@@ -38,14 +42,14 @@ class EventTagIndex(object):
       EventTag: event tag or None if the event has no event tag.
     """
     if self._index is None:
-      self._Build(storage_file)
+      self._Build(storage_reader)
 
     lookup_key = event_identifier.CopyToString()
     event_tag_identifier = self._index.get(lookup_key, None)
     if not event_tag_identifier:
       return None
 
-    return storage_file.GetEventTagByIdentifier(event_tag_identifier)
+    return storage_reader.GetEventTagByIdentifier(event_tag_identifier)
 
   def SetEventTag(self, event_tag):
     """Sets an event tag in the index.

@@ -7,6 +7,7 @@ import os
 import platform
 import unittest
 
+from plaso.containers import events
 from plaso.cli import log2timeline_tool
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -94,7 +95,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     event_counters = collections.Counter()
     for event in storage_file.GetSortedEvents():
       event_data_identifier = event.GetEventDataIdentifier()
-      event_data = storage_file.GetEventDataByIdentifier(event_data_identifier)
+      event_data = storage_file.GetAttributeContainerByIdentifier(
+          events.EventData.CONTAINER_TYPE, event_data_identifier)
 
       event_counters[event_data.data_type] += 1
 

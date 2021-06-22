@@ -68,7 +68,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       analysis_report (AnalysisReport): a report.
     """
-    self._store.AddAnalysisReport(analysis_report)
+    self._store.AddAttributeContainer(analysis_report)
 
     self._UpdateAnalysisReportSessionCounter(analysis_report)
 
@@ -78,7 +78,15 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       analysis_warning (AnalysisWarning): an analysis warning.
     """
-    self._store.AddAnalysisWarning(analysis_warning)
+    self._store.AddAttributeContainer(analysis_warning)
+
+  def AddAttributeContainer(self, container):
+    """Adds an attribute container.
+
+    Args:
+      container (AttributeContainer): attribute container.
+    """
+    self._store.AddAttributeContainer(container)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -86,6 +94,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       event(EventObject): an event.
     """
+    # TODO: refactor to use AddAttributeContainer
     self._store.AddEvent(event)
 
     self._UpdateEventParsersSessionCounter(event)
@@ -96,7 +105,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       event_data(EventData): an event.
     """
-    self._store.AddEventData(event_data)
+    self._store.AddAttributeContainer(event_data)
 
     self._UpdateEventDataParsersMappings(event_data)
 
@@ -106,7 +115,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       event_data_stream (EventDataStream): event data stream.
     """
-    self._store.AddEventData(event_data_stream)
+    self._store.AddAttributeContainer(event_data_stream)
 
   def AddEventSource(self, event_source):
     """Adds an event source.
@@ -114,7 +123,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       event_source (EventSource): an event source.
     """
-    self._store.AddEventSource(event_source)
+    self._store.AddAttributeContainer(event_source)
 
   def AddEventTag(self, event_tag):
     """Adds an event tag.
@@ -122,7 +131,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       event_tag (EventTag): an event tag.
     """
-    self._store.AddEventTag(event_tag)
+    self._store.AddAttributeContainer(event_tag)
 
     self._UpdateEventLabelsSessionCounter(event_tag)
 
@@ -132,7 +141,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       extraction_warning (ExtractionWarning): an extraction warning.
     """
-    self._store.AddExtractionWarning(extraction_warning)
+    self._store.AddAttributeContainer(extraction_warning)
 
   def AddPreprocessingWarning(self, preprocessing_warning):
     """Adds a preprocessing warning.
@@ -140,7 +149,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       preprocessing_warning (PreprocessingWarning): preprocessing warning.
     """
-    self._store.AddPreprocessingWarning(preprocessing_warning)
+    self._store.AddAttributeContainer(preprocessing_warning)
 
   def AddRecoveryWarning(self, recovery_warning):
     """Adds a recovery warning.
@@ -148,7 +157,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Args:
       recovery_warning (RecoveryWarning): a recovery warning.
     """
-    self._store.AddRecoveryWarning(recovery_warning)
+    self._store.AddAttributeContainer(recovery_warning)
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
@@ -159,7 +168,8 @@ class RedisStorageWriter(interface.StorageWriter):
     Returns:
       EventData: event data or None if not available.
     """
-    return self._store.GetEventDataByIdentifier(identifier)
+    return self._store.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA, identifier)
 
   def GetEventDataStreamByIdentifier(self, identifier):
     """Retrieves a specific event data stream.
@@ -170,7 +180,8 @@ class RedisStorageWriter(interface.StorageWriter):
     Returns:
       EventDataStream: event data stream or None if not available.
     """
-    return self._store.GetEventDataStreamByIdentifier(identifier)
+    return self._store.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
 
   def GetEvents(self):
     """Retrieves the events.
@@ -178,7 +189,7 @@ class RedisStorageWriter(interface.StorageWriter):
     Returns:
       generator(EventObject): event generator.
     """
-    return self._store.GetEvents()
+    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
 
   # pylint: disable=redundant-returns-doc,useless-return
   def GetFirstWrittenEventSource(self):
