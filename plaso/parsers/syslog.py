@@ -244,18 +244,18 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   # TODO: Add proper support for %STRUCTURED-DATA%:
   # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
   _RSYSLOG_PROTOCOL_23_LINE = (
-    pyparsing.Suppress('<') + _PYPARSING_COMPONENTS['priority'] +
-    pyparsing.Suppress('>') + pyparsing.Suppress(
-        pyparsing.Word(pyparsing.nums, max=1)) +
-    _PYPARSING_COMPONENTS['rfc3339_datetime'].setResultsName('datetime') +
-    _PYPARSING_COMPONENTS['hostname'] +
-    _PYPARSING_COMPONENTS['reporter'] +
-    pyparsing.Or(
-        [pyparsing.Suppress('-'), _PYPARSING_COMPONENTS['pid']]) +
-    _PYPARSING_COMPONENTS['message_identifier'] +
-    _PYPARSING_COMPONENTS['structured_data'] +
-    _PYPARSING_COMPONENTS['body'] +
-    pyparsing.lineEnd())
+      pyparsing.Suppress('<') + _PYPARSING_COMPONENTS['priority'] +
+      pyparsing.Suppress('>') + pyparsing.Suppress(
+          pyparsing.Word(pyparsing.nums, max=1)) +
+      _PYPARSING_COMPONENTS['rfc3339_datetime'].setResultsName('datetime') +
+      _PYPARSING_COMPONENTS['hostname'] +
+      _PYPARSING_COMPONENTS['reporter'] +
+      pyparsing.Or(
+          [pyparsing.Suppress('-'), _PYPARSING_COMPONENTS['pid']]) +
+      _PYPARSING_COMPONENTS['message_identifier'] +
+      _PYPARSING_COMPONENTS['structured_data'] +
+      _PYPARSING_COMPONENTS['body'] +
+      pyparsing.lineEnd())
 
   _SYSLOG_COMMENT = (
       _PYPARSING_COMPONENTS['date'] + pyparsing.Suppress(':') +
