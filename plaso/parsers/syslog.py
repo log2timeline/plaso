@@ -177,9 +177,10 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       'priority': (
           text_parser.PyparsingConstants.ONE_TO_THREE_DIGITS.setResultsName(
               'priority')),
-      'msgid': pyparsing.Word(pyparsing.printables).setResultsName('msgid'),
-      'structured-data': pyparsing.Word(pyparsing.printables).setResultsName(
-          'structured-data'),
+      'message_identifier': pyparsing.Word(pyparsing.printables).setResultsName(
+          'message_identifier'),
+      'structured_data': pyparsing.Word(pyparsing.printables).setResultsName(
+          'structured_data'),
   }
 
   _PYPARSING_COMPONENTS['date'] = (
@@ -240,7 +241,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Optional(pyparsing.Suppress(':')) +
       _PYPARSING_COMPONENTS['body'] + pyparsing.lineEnd())
 
-  # TODO: Add proper support for structured-data:
+  # TODO: Add proper support for %STRUCTURED-DATA%:
   # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
   _RSYSLOG_PROTOCOL_23_LINE = (
     pyparsing.Suppress('<') + _PYPARSING_COMPONENTS['priority'] +
@@ -251,8 +252,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     _PYPARSING_COMPONENTS['reporter'] +
     pyparsing.Or(
         [pyparsing.Suppress('-'), _PYPARSING_COMPONENTS['pid']]) +
-    _PYPARSING_COMPONENTS['msgid'] +
-    _PYPARSING_COMPONENTS['structured-data'] +
+    _PYPARSING_COMPONENTS['message_identifier'] +
+    _PYPARSING_COMPONENTS['structured_data'] +
     _PYPARSING_COMPONENTS['body'] +
     pyparsing.lineEnd())
 
