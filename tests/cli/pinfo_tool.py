@@ -151,8 +151,8 @@ Storage files are different.
   def testPrintStorageInformationAsJSON(self):
     """Tests the PrintStorageInformation function with JSON output format."""
     test_filename = 'pinfo_test.plaso'
-    session_identifier = 'b8118c0f-c518-45d6-8732-3b1d069b06b8'
-    session_start_time = '2021-06-16 07:26:11.545990'
+    session_identifier = '678d3612-feac-4de7-b929-0bd3260a9365'
+    session_start_time = '2021-06-23 07:42:30.094310'
 
     test_file_path = self._GetTestFilePath([test_filename])
     self._SkipIfPathNotExists(test_file_path)
@@ -190,11 +190,11 @@ Storage files are different.
   def testPrintStorageInformationAsText(self):
     """Tests the PrintStorageInformation function with text output format."""
     test_filename = 'pinfo_test.plaso'
-    format_version = '20210606'
+    format_version = '20210621'
     plaso_version = '20210606'
-    session_identifier = 'b8118c0f-c518-45d6-8732-3b1d069b06b8'
-    session_start_time = '2021-06-16T07:26:11.545990Z'
-    session_completion_time = '2021-06-16T07:26:13.475732Z'
+    session_identifier = '678d3612-feac-4de7-b929-0bd3260a9365'
+    session_start_time = '2021-06-23T07:42:30.094310Z'
+    session_completion_time = '2021-06-23T07:42:39.183687Z'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
