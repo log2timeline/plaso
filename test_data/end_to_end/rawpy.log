@@ -343,7 +343,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2021-06-16T07:25:50.637274Z
+  2021-06-23T07:42:06.799585Z
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -352,7 +352,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 30744
+  {inode} 54503
   {parser} filestat
 
 [Additional attributes]:
@@ -364,7 +364,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2021-06-16T07:25:50.637274Z
+  2021-06-23T07:42:06.799585Z
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -373,7 +373,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 30744
+  {inode} 54503
   {parser} filestat
 
 [Additional attributes]:
@@ -385,7 +385,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2021-06-16T07:25:52.726276Z
+  2021-06-23T07:42:09.168591Z
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -394,7 +394,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 30744
+  {inode} 54503
   {parser} filestat
 
 [Additional attributes]:
@@ -406,7 +406,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2021-06-16T07:25:55.385277Z
+  2021-06-23T07:42:12.549599Z
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -415,7 +415,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 30744
+  {inode} 54503
   {parser} filestat
 
 [Additional attributes]:

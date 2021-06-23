@@ -275,7 +275,7 @@ Test argument parser.
     self.assertEqual(TestOutputModuleMissingParameters.parameters, 'foobar')
 
     expected_line = (
-        '2021-06-16T07:25:52.726275553+00:00,Last Access Time,FILE,File stat,'
+        '2021-06-23T07:42:09.168590698+00:00,Last Access Time,FILE,File stat,'
         'OS:/tmp/test/test_data/syslog Type: file,filestat,'
         'OS:/tmp/test/test_data/syslog,-')
     self.assertIn(expected_line, lines)
