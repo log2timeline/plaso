@@ -174,8 +174,8 @@ class RedisMergeReader(interface.StorageMergeReader):
     """
     container_types = []
     for container_type in self._CONTAINER_TYPES:
-      # pylint: disable=protected-access
-      if self._store._HasAttributeContainers(container_type):
+      # TODO: consider creating attribute container table if not exists.
+      if self._store.HasAttributeContainers(container_type):
         container_types.append(container_type)
     return container_types
 

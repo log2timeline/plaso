@@ -21,18 +21,6 @@ class RedisStorageReader(interface.StorageReader):
         session_identifier=task.session_identifier,
         task_identifier=task.identifier)
 
-  def IsFinalized(self):
-    """Checks if the store has been finalized.
-
-    Returns:
-      bool: True if the store has been finalized.
-    """
-    return self._store.IsFinalized()
-
-  def Open(self):
-    """Opens the storage reader."""
-    self._store.Open()
-
   def Close(self):
     """Closes the storage reader."""
     self._store.Close()
@@ -43,7 +31,19 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(AnalysisReport): analysis report generator.
     """
-    return self._store.GetAnalysisReports()
+    return self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
+
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      generator(AttributeContainers): attribute container generator.
+    """
+    return self._store.GetAttributeContainers(container_type)
 
   def GetEventData(self):
     """Retrieves the event data.
@@ -51,7 +51,7 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(EventData): event data generator.
     """
-    return self._store.GetEventData()
+    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA)
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
@@ -62,7 +62,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       EventData: event data or None if not available.
     """
-    return self._store.GetEventDataByIdentifier(identifier)
+    return self._store.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA, identifier)
 
   def GetEventDataStreams(self):
     """Retrieves the event data streams.
@@ -70,7 +71,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(EventDataStream): event data stream generator.
     """
-    return self._store.GetEventDataStreams()
+    return self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM)
 
   def GetEventDataStreamByIdentifier(self, identifier):
     """Retrieves a specific event data stream.
@@ -81,7 +83,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       EventDataStream: event data stream or None if not available.
     """
-    return self._store.GetEventDataStreamByIdentifier(identifier)
+    return self._store.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
 
   def GetEvents(self):
     """Retrieves the events.
@@ -89,7 +92,7 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(EventObject): event generator.
     """
-    return self._store.GetEvents()
+    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
 
   def GetEventSources(self):
     """Retrieves event sources.
@@ -97,7 +100,7 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(EventSource): event source generator.
     """
-    return self._store.GetEventSources()
+    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_SOURCE)
 
   def GetEventTagByIdentifier(self, identifier):
     """Retrieves a specific event tag.
@@ -108,7 +111,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       EventTag: event tag or None if not available.
     """
-    return self._store.GetEventTagByIdentifier(identifier)
+    return self._store.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_TAG, identifier)
 
   def GetEventTags(self):
     """Retrieves the event tags.
@@ -116,7 +120,7 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(EventSource): event tag generator.
     """
-    return self._store.GetEventTags()
+    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
 
   def GetExtractionWarnings(self):
     """Retrieves the extraction warnings.
@@ -124,7 +128,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(ExtractionWarning): extraction warning generator.
     """
-    return self._store.GetExtractionWarnings()
+    return self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.
@@ -132,7 +137,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       int: number of analysis reports.
     """
-    return self._store.GetNumberOfAnalysisReports()
+    return self._store.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
   def GetNumberOfEventSources(self):
     """Retrieves the number of event sources.
@@ -140,7 +146,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       int: number of event sources.
     """
-    return self._store.GetNumberOfEventSources()
+    return self._store.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_SOURCE)
 
   def GetPreprocessingWarnings(self):
     """Retrieves the preprocessing warnings.
@@ -148,7 +155,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(RecoveryWarning): preprocessing warning generator.
     """
-    return self._store.GetPreprocessingWarnings()
+    return self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
 
   def GetRecoveryWarnings(self):
     """Retrieves the recovery warnings.
@@ -156,7 +164,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       generator(RecoveryWarning): recovery warning generator.
     """
-    return self._store.GetRecoveryWarnings()
+    return self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
@@ -187,7 +196,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       bool: True if the store contains analysis reports.
     """
-    return self._store.HasAnalysisReports()
+    return self._store.HasAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
   def HasEventTags(self):
     """Determines if a store contains event tags.
@@ -195,7 +205,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       bool: True if the store contains event tags.
     """
-    return self._store.HasEventTags()
+    return self._store.HasAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_TAG)
 
   def HasExtractionWarnings(self):
     """Determines if a store contains extraction warnings.
@@ -203,7 +214,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       bool: True if the store contains extraction warnings.
     """
-    return self._store.HasExtractionWarnings()
+    return self._store.HasAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def HasPreprocessingWarnings(self):
     """Determines if a store contains preprocessing warnings.
@@ -211,7 +223,8 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       bool: True if the store contains preprocessing warnings.
     """
-    return self._store.HasPreprocessingWarnings()
+    return self._store.HasAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
 
   def HasRecoveryWarnings(self):
     """Determines if a store contains recovery warnings.
@@ -219,7 +232,20 @@ class RedisStorageReader(interface.StorageReader):
     Returns:
       bool: True if the store contains recovery warnings.
     """
-    return self._store.HasRecoveryWarnings()
+    return self._store.HasAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING)
+
+  def IsFinalized(self):
+    """Checks if the store has been finalized.
+
+    Returns:
+      bool: True if the store has been finalized.
+    """
+    return self._store.IsFinalized()
+
+  def Open(self):
+    """Opens the storage reader."""
+    self._store.Open()
 
   # pylint: disable=unused-argument
   def ReadSystemConfiguration(self, knowledge_base):

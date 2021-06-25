@@ -246,13 +246,13 @@ class OutputAndFormattingMultiProcessEngineTest(
 
     for event, event_data, event_data_stream in (
         containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
-      storage_file.AddEventDataStream(event_data_stream)
+      storage_file.AddAttributeContainer(event_data_stream)
 
       event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
-      storage_file.AddEventData(event_data)
+      storage_file.AddAttributeContainer(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_file.AddEvent(event)
+      storage_file.AddAttributeContainer(event)
 
     storage_file.Close()
 

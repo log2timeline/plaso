@@ -127,16 +127,41 @@ class StorageFileReader(interface.StorageReader):
 
     Returns:
       generator(AnalysisReport): analysis report generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetAnalysisReports()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
+
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      generator(AttributeContainers): attribute container generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    return self._storage_file.GetAttributeContainers(container_type)
 
   def GetEventData(self):
     """Retrieves the event data.
 
     Returns:
       generator(EventData): event data generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetEventData()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_DATA)
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
@@ -147,15 +172,21 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       EventData: event data or None if not available.
     """
-    return self._storage_file.GetEventDataByIdentifier(identifier)
+    return self._storage_file.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA, identifier)
 
   def GetEventDataStreams(self):
     """Retrieves the event data streams.
 
     Returns:
       generator(EventDataStream): event data stream generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetEventDataStreams()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM)
 
   def GetEventDataStreamByIdentifier(self, identifier):
     """Retrieves a specific event data stream.
@@ -166,23 +197,34 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       EventDataStream: event data stream or None if not available.
     """
-    return self._storage_file.GetEventDataStreamByIdentifier(identifier)
+    return self._storage_file.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
 
   def GetEvents(self):
     """Retrieves the events.
 
     Returns:
       generator(EventObject): event generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetEvents()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT)
 
   def GetEventSources(self):
     """Retrieves the event sources.
 
     Returns:
       generator(EventSource): event source generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetEventSources()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_SOURCE)
 
   def GetEventTagByIdentifier(self, identifier):
     """Retrieves a specific event tag.
@@ -193,23 +235,34 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       EventTag: event tag or None if not available.
     """
-    return self._storage_file.GetEventTagByIdentifier(identifier)
+    return self._storage_file.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_TAG, identifier)
 
   def GetEventTags(self):
     """Retrieves the event tags.
 
     Returns:
       generator(EventTag): event tag generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetEventTags()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_TAG)
 
   def GetExtractionWarnings(self):
     """Retrieves the extraction warnings.
 
     Returns:
       generator(ExtractionWarning): extraction warning generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetExtractionWarnings()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def GetFormatVersion(self):
     """Retrieves the format version of the underlying storage file.
@@ -228,7 +281,8 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       int: number of analysis reports.
     """
-    return self._storage_file.GetNumberOfAnalysisReports()
+    return self._storage_file.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
   def GetNumberOfEventSources(self):
     """Retrieves the number of event sources.
@@ -236,23 +290,34 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       int: number of event sources.
     """
-    return self._storage_file.GetNumberOfEventSources()
+    return self._storage_file.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_SOURCE)
 
   def GetPreprocessingWarnings(self):
     """Retrieves the preprocessing warnings.
 
     Returns:
       generator(PreprocessingWarning): preprocessing warning generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetPreprocessingWarnings()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
 
   def GetRecoveryWarnings(self):
     """Retrieves the recovery warnings.
 
     Returns:
       generator(RecoveryWarning): recovery warning generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetRecoveryWarnings()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   def GetSerializationFormat(self):
     """Retrieves the serialization format of the underlying storage file.
@@ -305,7 +370,8 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       bool: True if the store contains analysis reports.
     """
-    return self._storage_file.HasAnalysisReports()
+    return self._storage_file.HasAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
   def HasEventTags(self):
     """Determines if a store contains event tags.
@@ -313,7 +379,8 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       bool: True if the store contains event tags.
     """
-    return self._storage_file.HasEventTags()
+    return self._storage_file.HasAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_TAG)
 
   def HasExtractionWarnings(self):
     """Determines if a store contains extraction warnings.
@@ -321,7 +388,8 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       bool: True if the store contains extraction warnings.
     """
-    return self._storage_file.HasExtractionWarnings()
+    return self._storage_file.HasAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def HasPreprocessingWarnings(self):
     """Determines if a store contains preprocessing warnings.
@@ -329,7 +397,8 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       bool: True if the store contains preprocessing warnings.
     """
-    return self._storage_file.HasPreprocessingWarnings()
+    return self._storage_file.HasAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
 
   def HasRecoveryWarnings(self):
     """Determines if a store contains recovery warnings.
@@ -337,7 +406,8 @@ class StorageFileReader(interface.StorageReader):
     Returns:
       bool: True if the store contains recovery warnings.
     """
-    return self._storage_file.HasRecoveryWarnings()
+    return self._storage_file.HasAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   # TODO: remove, this method is kept for backwards compatibility reasons.
   def ReadSystemConfiguration(self, knowledge_base):
@@ -417,7 +487,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddAnalysisReport(analysis_report)
+    self._storage_file.AddAttributeContainer(analysis_report)
 
     self._UpdateAnalysisReportSessionCounter(analysis_report)
 
@@ -433,8 +503,22 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddAnalysisWarning(analysis_warning)
+    self._storage_file.AddAttributeContainer(analysis_warning)
     self.number_of_analysis_warnings += 1
+
+  def AddAttributeContainer(self, container):
+    """Adds an attribute container.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    self._storage_file.AddAttributeContainer(container)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -448,7 +532,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEvent(event)
+    self._storage_file.AddAttributeContainer(event)
 
     self._UpdateEventParsersSessionCounter(event)
 
@@ -464,7 +548,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventData(event_data)
+    self._storage_file.AddAttributeContainer(event_data)
 
     self._UpdateEventDataParsersMappings(event_data)
 
@@ -480,7 +564,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventDataStream(event_data_stream)
+    self._storage_file.AddAttributeContainer(event_data_stream)
 
   def AddEventSource(self, event_source):
     """Adds an event source.
@@ -494,7 +578,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddEventSource(event_source)
+    self._storage_file.AddAttributeContainer(event_source)
     self.number_of_event_sources += 1
 
   def AddEventTag(self, event_tag):
@@ -509,6 +593,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
+    # TODO: refactor to use AddOrUpdateAttributeContainer
     self._storage_file.AddEventTag(event_tag)
 
     self._UpdateEventLabelsSessionCounter(event_tag)
@@ -525,7 +610,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddExtractionWarning(extraction_warning)
+    self._storage_file.AddAttributeContainer(extraction_warning)
     self.number_of_extraction_warnings += 1
 
   def AddPreprocessingWarning(self, preprocessing_warning):
@@ -540,7 +625,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddPreprocessingWarning(preprocessing_warning)
+    self._storage_file.AddAttributeContainer(preprocessing_warning)
     self.number_of_preprocessing_warnings += 1
 
   def AddRecoveryWarning(self, recovery_warning):
@@ -555,7 +640,7 @@ class StorageFileWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddRecoveryWarning(recovery_warning)
+    self._storage_file.AddAttributeContainer(recovery_warning)
     self.number_of_recovery_warnings += 1
 
   def Close(self):
@@ -579,7 +664,8 @@ class StorageFileWriter(interface.StorageWriter):
     Returns:
       EventData: event data or None if not available.
     """
-    return self._storage_file.GetEventDataByIdentifier(identifier)
+    return self._storage_file.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA, identifier)
 
   def GetEventDataStreamByIdentifier(self, identifier):
     """Retrieves a specific event data stream.
@@ -590,7 +676,8 @@ class StorageFileWriter(interface.StorageWriter):
     Returns:
       EventDataStream: event data stream or None if not available.
     """
-    return self._storage_file.GetEventDataStreamByIdentifier(identifier)
+    return self._storage_file.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
 
   def GetEvents(self):
     """Retrieves the events.
@@ -602,7 +689,8 @@ class StorageFileWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetEvents()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT)
 
   def GetEventTagByIdentifier(self, identifier):
     """Retrieves a specific event tag.
@@ -613,15 +701,21 @@ class StorageFileWriter(interface.StorageWriter):
     Returns:
       EventTag: event tag or None if not available.
     """
-    return self._storage_file.GetEventTagByIdentifier(identifier)
+    return self._storage_file.GetAttributeContainerByIdentifier(
+        self._CONTAINER_TYPE_EVENT_TAG, identifier)
 
   def GetEventTags(self):
     """Retrieves the event tags.
 
     Returns:
       generator(EventTag): event tag generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
-    return self._storage_file.GetEventTags()
+    return self._storage_file.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_TAG)
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
@@ -639,7 +733,8 @@ class StorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError('Unable to read from closed storage writer.')
 
-    event_source = self._storage_file.GetEventSourceByIndex(
+    event_source = self._storage_file.GetAttributeContainerByIndex(
+        self._CONTAINER_TYPE_EVENT_SOURCE,
         self._first_written_event_source_index)
 
     if event_source:
@@ -660,8 +755,8 @@ class StorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError('Unable to read from closed storage writer.')
 
-    event_source = self._storage_file.GetEventSourceByIndex(
-        self._written_event_source_index)
+    event_source = self._storage_file.GetAttributeContainerByIndex(
+        self._CONTAINER_TYPE_EVENT_SOURCE, self._written_event_source_index)
     if event_source:
       self._written_event_source_index += 1
     return event_source
@@ -708,8 +803,9 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._storage_file.Open(path=self._output_file, read_only=False)
 
-    self._first_written_event_source_index = (
-        self._storage_file.GetNumberOfEventSources())
+    number_of_event_sources = self._storage_file.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_SOURCE)
+    self._first_written_event_source_index = number_of_event_sources
     self._written_event_source_index = self._first_written_event_source_index
 
   def SetSerializersProfiler(self, serializers_profiler):

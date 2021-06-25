@@ -113,6 +113,20 @@ class FakeStorageWriter(interface.StorageWriter):
     self._analysis_warnings.append(analysis_warning)
     self.number_of_analysis_warnings += 1
 
+  def AddAttributeContainer(self, container):
+    """Adds a new attribute container.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    # TODO: implement
+
   def AddEvent(self, event):
     """Adds an event.
 
