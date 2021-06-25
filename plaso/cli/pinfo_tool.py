@@ -13,6 +13,10 @@ from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.containers import events
+from plaso.containers import event_sources
+from plaso.containers import reports
+from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -56,6 +60,14 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
   _DEFAULT_OUTPUT_FORMAT = 'text'
   _SUPPORTED_OUTPUT_FORMATS = ('json', 'markdown', 'text')
+
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
+      warnings.PreprocessingWarning.CONTAINER_TYPE)
+  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -120,12 +132,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     extraction_warnings_by_path_spec = collections.Counter()
     extraction_warnings_by_parser_chain = collections.Counter()
 
-    if storage_reader.HasExtractionWarnings():
-      for warning in list(storage_reader.GetExtractionWarnings()):
-        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+    for warning in storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING):
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
 
-        extraction_warnings_by_path_spec[path_spec_string] += 1
-        extraction_warnings_by_parser_chain[warning.parser_chain] += 1
+      extraction_warnings_by_path_spec[path_spec_string] += 1
+      extraction_warnings_by_parser_chain[warning.parser_chain] += 1
 
     storage_counters['extraction_warnings_by_path_spec'] = (
         extraction_warnings_by_path_spec)
@@ -140,12 +152,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     recovery_warnings_by_path_spec = collections.Counter()
     recovery_warnings_by_parser_chain = collections.Counter()
 
-    if storage_reader.HasRecoveryWarnings():
-      for warning in list(storage_reader.GetRecoveryWarnings()):
-        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+    for warning in storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING):
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
 
-        recovery_warnings_by_path_spec[path_spec_string] += 1
-        recovery_warnings_by_parser_chain[warning.parser_chain] += 1
+      recovery_warnings_by_path_spec[path_spec_string] += 1
+      recovery_warnings_by_parser_chain[warning.parser_chain] += 1
 
     storage_counters['recovery_warnings_by_path_spec'] = (
         recovery_warnings_by_path_spec)
@@ -324,8 +336,10 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._output_writer.Write('{0:s} hash\tDisplay name\n'.format(
           self._hash_type.upper()))
 
-    for event_data_stream_index, event_data_stream in enumerate(
-        storage_reader.GetEventDataStreams()):
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM)
+
+    for event_data_stream_index, event_data_stream in enumerate(generator):
       if self._hash_type == 'md5':
         hash_value = event_data_stream.md5_hash
       elif self._hash_type == 'sha1':
@@ -426,13 +440,17 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    if (self._output_format == 'text' and
-        not storage_reader.HasAnalysisReports()):
+    has_analysis_reports = storage_reader.HasAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
+
+    if self._output_format == 'text' and not has_analysis_reports:
       self._output_writer.Write('\nNo analysis reports stored.\n')
 
     else:
-      for index, analysis_report in enumerate(
-          storage_reader.GetAnalysisReports()):
+      generator = storage_reader.GetAttributeContainers(
+          self._CONTAINER_TYPE_ANALYSIS_REPORT)
+
+      for index, analysis_report in enumerate(generator):
         date_time_string = None
         if analysis_report.time_compiled is not None:
           date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
@@ -502,7 +520,10 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    for index, warning in enumerate(storage_reader.GetExtractionWarnings()):
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING)
+
+    for index, warning in enumerate(generator):
       title = 'Extraction warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -626,7 +647,10 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    for index, warning in enumerate(storage_reader.GetPreprocessingWarnings()):
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
+
+    for index, warning in enumerate(generator):
       title = 'Preprocessing warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -655,7 +679,10 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    for index, warning in enumerate(storage_reader.GetRecoveryWarnings()):
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING)
+
+    for index, warning in enumerate(generator):
       title = 'Recovery warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -988,8 +1015,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title='Event sources', title_level=2)
 
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_SOURCE)
+
     number_of_event_sources = 0
-    for source_index, source in enumerate(storage_reader.GetEventSources()):
+    for source_index, source in enumerate(generator):
       if self._output_format == 'json':
         if source_index != 0:
           self._output_writer.Write(', ')
@@ -1126,10 +1156,17 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       storage_reader (StorageReader): storage reader.
       storage_counters (dict[str, collections.Counter]): storage counters.
     """
-    if (self._output_format == 'text' and
-        not storage_reader.HasExtractionWarnings() and
-        not storage_reader.HasPreprocessingWarnings() and
-        not storage_reader.HasRecoveryWarnings()):
+    has_extraction_warnings = storage_reader.HasAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING)
+
+    has_preprocessing_warnings = storage_reader.HasAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
+
+    has_recovery_warnings = storage_reader.HasAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING)
+
+    if (self._output_format == 'text' and not has_extraction_warnings and
+        not has_preprocessing_warnings and not has_recovery_warnings):
       self._output_writer.Write('\nNo warnings stored.\n')
 
     else:

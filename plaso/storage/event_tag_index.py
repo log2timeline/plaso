@@ -27,7 +27,8 @@ class EventTagIndex(object):
       storage_reader (StorageReader): storage reader.
     """
     self._index = {}
-    for event_tag in storage_reader.GetEventTags():
+    for event_tag in storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_TAG):
       self.SetEventTag(event_tag)
 
   def GetEventTagByIdentifier(self, storage_reader, event_identifier):

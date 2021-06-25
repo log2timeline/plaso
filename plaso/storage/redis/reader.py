@@ -25,15 +25,6 @@ class RedisStorageReader(interface.StorageReader):
     """Closes the storage reader."""
     self._store.Close()
 
-  def GetAnalysisReports(self):
-    """Retrieves the analysis reports.
-
-    Returns:
-      generator(AnalysisReport): analysis report generator.
-    """
-    return self._store.GetAttributeContainers(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
   def GetAttributeContainers(self, container_type):
     """Retrieves a specific type of attribute containers.
 
@@ -44,14 +35,6 @@ class RedisStorageReader(interface.StorageReader):
       generator(AttributeContainers): attribute container generator.
     """
     return self._store.GetAttributeContainers(container_type)
-
-  def GetEventData(self):
-    """Retrieves the event data.
-
-    Returns:
-      generator(EventData): event data generator.
-    """
-    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA)
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
@@ -65,15 +48,6 @@ class RedisStorageReader(interface.StorageReader):
     return self._store.GetAttributeContainerByIdentifier(
         self._CONTAINER_TYPE_EVENT_DATA, identifier)
 
-  def GetEventDataStreams(self):
-    """Retrieves the event data streams.
-
-    Returns:
-      generator(EventDataStream): event data stream generator.
-    """
-    return self._store.GetAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM)
-
   def GetEventDataStreamByIdentifier(self, identifier):
     """Retrieves a specific event data stream.
 
@@ -86,22 +60,6 @@ class RedisStorageReader(interface.StorageReader):
     return self._store.GetAttributeContainerByIdentifier(
         self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
 
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
-
-  def GetEventSources(self):
-    """Retrieves event sources.
-
-    Returns:
-      generator(EventSource): event source generator.
-    """
-    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_SOURCE)
-
   def GetEventTagByIdentifier(self, identifier):
     """Retrieves a specific event tag.
 
@@ -113,23 +71,6 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.GetAttributeContainerByIdentifier(
         self._CONTAINER_TYPE_EVENT_TAG, identifier)
-
-  def GetEventTags(self):
-    """Retrieves the event tags.
-
-    Returns:
-      generator(EventSource): event tag generator.
-    """
-    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
-
-  def GetExtractionWarnings(self):
-    """Retrieves the extraction warnings.
-
-    Returns:
-      generator(ExtractionWarning): extraction warning generator.
-    """
-    return self._store.GetAttributeContainers(
-        self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.
@@ -148,24 +89,6 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
-
-  def GetPreprocessingWarnings(self):
-    """Retrieves the preprocessing warnings.
-
-    Returns:
-      generator(RecoveryWarning): preprocessing warning generator.
-    """
-    return self._store.GetAttributeContainers(
-        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
-
-  def GetRecoveryWarnings(self):
-    """Retrieves the recovery warnings.
-
-    Returns:
-      generator(RecoveryWarning): recovery warning generator.
-    """
-    return self._store.GetAttributeContainers(
-        self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
@@ -190,50 +113,17 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.GetSessions()
 
-  def HasAnalysisReports(self):
-    """Determines if a store contains analysis reports.
+  def HasAttributeContainers(self, container_type):
+    """Determines if a store contains a specific type of attribute container.
+
+    Args:
+      container_type (str): attribute container type.
 
     Returns:
-      bool: True if the store contains analysis reports.
+      bool: True if the store contains the specified type of attribute
+          containers.
     """
-    return self._store.HasAttributeContainers(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
-  def HasEventTags(self):
-    """Determines if a store contains event tags.
-
-    Returns:
-      bool: True if the store contains event tags.
-    """
-    return self._store.HasAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_TAG)
-
-  def HasExtractionWarnings(self):
-    """Determines if a store contains extraction warnings.
-
-    Returns:
-      bool: True if the store contains extraction warnings.
-    """
-    return self._store.HasAttributeContainers(
-        self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
-  def HasPreprocessingWarnings(self):
-    """Determines if a store contains preprocessing warnings.
-
-    Returns:
-      bool: True if the store contains preprocessing warnings.
-    """
-    return self._store.HasAttributeContainers(
-        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
-
-  def HasRecoveryWarnings(self):
-    """Determines if a store contains recovery warnings.
-
-    Returns:
-      bool: True if the store contains recovery warnings.
-    """
-    return self._store.HasAttributeContainers(
-        self._CONTAINER_TYPE_RECOVERY_WARNING)
+    return self._store.HasAttributeContainers(container_type)
 
   def IsFinalized(self):
     """Checks if the store has been finalized.

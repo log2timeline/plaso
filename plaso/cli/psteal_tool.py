@@ -15,6 +15,7 @@ from plaso.cli import extraction_tool
 from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.containers import reports
 from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.lib import errors
@@ -76,6 +77,8 @@ class PstealTool(
       'And that is how you build a timeline using psteal...',
       '']))
 
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -112,8 +115,10 @@ class PstealTool(
       storage_reader (StorageReader): storage reader.
       number_of_analysis_reports (int): number of analysis reports.
     """
-    for index, analysis_report in enumerate(
-        storage_reader.GetAnalysisReports()):
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
+
+    for index, analysis_report in enumerate(generator):
       if index + 1 <= number_of_analysis_reports:
         continue
 

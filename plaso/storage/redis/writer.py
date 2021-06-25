@@ -31,37 +31,6 @@ class RedisStorageWriter(interface.StorageWriter):
         task.session_identifier, task.identifier)
     self._store = None
 
-  # pylint: disable=arguments-differ
-  def Open(self, redis_client=None, **unused_kwargs):
-    """Opens the storage writer.
-
-    Raises:
-      IOError: if the storage writer is already opened.
-      OSError: if the storage writer is already opened.
-    """
-    if self._store:
-      raise IOError('Storage writer already opened.')
-
-    self._store = redis_store.RedisStore(
-        storage_type=self._storage_type,
-        session_identifier=self._task.session_identifier,
-        task_identifier=self._task.identifier)
-
-    self._store.Open(redis_client=redis_client)
-
-  def Close(self):
-    """Closes the storage writer.
-
-    Raises:
-      IOError: if the storage writer is closed.
-      OSError: if the storage writer is closed.
-    """
-    if not self._store:
-      raise IOError('Storage writer is not open.')
-
-    self._store.Finalize()
-    self._store = None
-
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
@@ -159,6 +128,30 @@ class RedisStorageWriter(interface.StorageWriter):
     """
     self._store.AddAttributeContainer(recovery_warning)
 
+  def Close(self):
+    """Closes the storage writer.
+
+    Raises:
+      IOError: if the storage writer is closed.
+      OSError: if the storage writer is closed.
+    """
+    if not self._store:
+      raise IOError('Storage writer is not open.')
+
+    self._store.Finalize()
+    self._store = None
+
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      generator(AttributeContainers): attribute container generator.
+    """
+    return self._store.GetAttributeContainers(container_type)
+
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
 
@@ -247,6 +240,24 @@ class RedisStorageWriter(interface.StorageWriter):
       raise IOError('Unable to read from closed storage writer.')
 
     return self._store.GetSortedEvents(time_range=time_range)
+
+  # pylint: disable=arguments-differ
+  def Open(self, redis_client=None, **unused_kwargs):
+    """Opens the storage writer.
+
+    Raises:
+      IOError: if the storage writer is already opened.
+      OSError: if the storage writer is already opened.
+    """
+    if self._store:
+      raise IOError('Storage writer already opened.')
+
+    self._store = redis_store.RedisStore(
+        storage_type=self._storage_type,
+        session_identifier=self._task.session_identifier,
+        task_identifier=self._task.identifier)
+
+    self._store.Open(redis_client=redis_client)
 
   def ReadSystemConfiguration(self, knowledge_base):
     """Reads system configuration information.
