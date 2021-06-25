@@ -297,6 +297,17 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      generator(AttributeContainers): attribute container generator.
+    """
+    # TODO: implement
+
   def GetEvents(self):
     """Retrieves the events.
 

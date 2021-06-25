@@ -7,6 +7,7 @@ from plaso.analysis import manager as analysis_manager
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
+from plaso.containers import reports
 from plaso.engine import knowledge_base
 from plaso.multi_process import analysis_engine as multi_analysis_engine
 from plaso.storage import factory as storage_factory
@@ -23,6 +24,8 @@ class AnalysisTool(
     list_analysis_plugins (bool): True if information about the analysis
         plugins should be shown.
   """
+
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -90,8 +93,10 @@ class AnalysisTool(
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    for index, analysis_report in enumerate(
-        storage_reader.GetAnalysisReports()):
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
+
+    for index, analysis_report in enumerate(generator):
       if index + 1 <= self._number_of_analysis_reports:
         continue
 

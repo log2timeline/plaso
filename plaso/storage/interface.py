@@ -694,19 +694,14 @@ class StorageReader(object):
     """Closes the storage reader."""
 
   @abc.abstractmethod
-  def GetAnalysisReports(self):
-    """Retrieves the analysis reports.
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of attribute containers.
 
-    Yields:
-      AnalysisReport: analysis report.
-    """
+    Args:
+      container_type (str): attribute container type.
 
-  @abc.abstractmethod
-  def GetEventData(self):
-    """Retrieves the event data.
-
-    Yields:
-      EventData: event data.
+    Returns:
+      generator(AttributeContainers): attribute container generator.
     """
 
   @abc.abstractmethod
@@ -721,14 +716,6 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def GetEventDataStreams(self):
-    """Retrieves the event data streams.
-
-    Yields:
-      EventDataStream: event data stream.
-    """
-
-  @abc.abstractmethod
   def GetEventDataStreamByIdentifier(self, identifier):
     """Retrieves a specific event data stream.
 
@@ -740,22 +727,6 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Yields:
-      EventObject: event.
-    """
-
-  @abc.abstractmethod
-  def GetEventSources(self):
-    """Retrieves event sources.
-
-    Yields:
-      EventSourceObject: event source.
-    """
-
-  @abc.abstractmethod
   def GetEventTagByIdentifier(self, identifier):
     """Retrieves a specific event tag.
 
@@ -764,22 +735,6 @@ class StorageReader(object):
 
     Returns:
       EventTag: event tag or None if not available.
-    """
-
-  @abc.abstractmethod
-  def GetEventTags(self):
-    """Retrieves the event tags.
-
-    Yields:
-      EventTag: event tag.
-    """
-
-  @abc.abstractmethod
-  def GetExtractionWarnings(self):
-    """Retrieves the extraction warnings.
-
-    Yields:
-      ExtractionWarning: extraction warning.
     """
 
   @abc.abstractmethod
@@ -796,14 +751,6 @@ class StorageReader(object):
 
     Returns:
       int: number of event sources.
-    """
-
-  @abc.abstractmethod
-  def GetRecoveryWarnings(self):
-    """Retrieves the recovery warnings.
-
-    Yields:
-      RecoveryWarning: recovery warning.
     """
 
   @abc.abstractmethod
@@ -830,43 +777,15 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def HasAnalysisReports(self):
-    """Determines if a store contains analysis reports.
+  def HasAttributeContainers(self, container_type):
+    """Determines if a store contains a specific type of attribute container.
+
+    Args:
+      container_type (str): attribute container type.
 
     Returns:
-      bool: True if the store contains analysis reports.
-    """
-
-  @abc.abstractmethod
-  def HasEventTags(self):
-    """Determines if a store contains event tags.
-
-    Returns:
-      bool: True if the store contains event tags.
-    """
-
-  @abc.abstractmethod
-  def HasExtractionWarnings(self):
-    """Determines if a store contains extraction warnings.
-
-    Returns:
-      bool: True if the store contains extraction warnings.
-    """
-
-  @abc.abstractmethod
-  def HasPreprocessingWarnings(self):
-    """Determines if a store contains preprocessing warnings.
-
-    Returns:
-      bool: True if the store contains preprocessing warnings.
-    """
-
-  @abc.abstractmethod
-  def HasRecoveryWarnings(self):
-    """Determines if a store contains recovery warnings.
-
-    Returns:
-      bool: True if the store contains recovery warnings.
+      bool: True if the store contains the specified type of attribute
+          containers.
     """
 
   # TODO: remove, this method is kept for backwards compatibility reasons.
@@ -1104,6 +1023,17 @@ class StorageWriter(object):
   @abc.abstractmethod
   def Close(self):
     """Closes the storage writer."""
+
+  @abc.abstractmethod
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      generator(AttributeContainers): attribute container generator.
+    """
 
   @abc.abstractmethod
   def GetEventDataByIdentifier(self, identifier):
