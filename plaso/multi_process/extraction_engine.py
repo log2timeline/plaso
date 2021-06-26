@@ -86,9 +86,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   * merge results returned by extraction worker processes.
   """
 
-  # Maximum number of attribute containers to merge per loop.
-  _MAXIMUM_NUMBER_OF_CONTAINERS = 50
-
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
@@ -154,6 +151,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     super(ExtractionMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
     self._last_worker_number = 0
+    self._maximum_number_of_containers = 50
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
     self._merge_task_on_hold = None
@@ -241,7 +239,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     return path_spec_string
 
-  def _MergeTaskStorage(self, storage_writer, session_identifier):
+  def _MergeTaskStorage(
+      self, storage_writer, session_identifier, maximum_number_of_containers=0):
     """Merges a task storage with the session storage.
 
     This function checks all task stores that are ready to merge and updates
@@ -253,6 +252,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           to merge task storage.
       session_identifier (str): the identifier of the session the tasks are
           part of.
+      maximum_number_of_containers (Optional[int]): maximum number of
+          containers to merge, where 0 represent no limit.
+
+    Returns:
+      int: number of containers merged.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('merge_check')
@@ -287,12 +291,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StopTiming('merge_check')
 
+    number_of_containers = 0
+
     task = None
     if not self._storage_merge_reader_on_hold:
       task = self._task_manager.GetTaskPendingMerge(self._merge_task)
 
-    # Limit the number of attribute containers from a single task-based
-    # storage file that are merged per loop to keep tasks flowing.
     if task or self._storage_merge_reader:
       self._status = definitions.STATUS_INDICATOR_MERGING
 
@@ -322,7 +326,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       if self._storage_merge_reader:
         fully_merged = self._storage_merge_reader.MergeAttributeContainers(
-            maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
+            maximum_number_of_containers=maximum_number_of_containers)
+
+        number_of_containers = self._storage_merge_reader.number_of_containers
+
       else:
         # TODO: Do something more sensible when this happens, perhaps
         # retrying the task once that is implemented. For now, we mark the task
@@ -356,14 +363,15 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           self._merge_task_on_hold = None
           self._storage_merge_reader_on_hold = None
 
-          self._task_manager.SampleTaskStatus(
-              self._merge_task, 'merge_resumed')
+          self._task_manager.SampleTaskStatus(self._merge_task, 'merge_resumed')
 
       self._status = definitions.STATUS_INDICATOR_RUNNING
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
       self._number_of_produced_extraction_warnings = (
           storage_writer.number_of_extraction_warnings)
+
+    return number_of_containers
 
   def _ProcessSources(self, source_path_specs, storage_writer):
     """Processes the sources.
@@ -491,7 +499,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     event_source = event_source_heap.PopEventSource()
 
     task = None
-    while event_source or self._task_manager.HasPendingTasks():
+    has_pending_tasks = True
+
+    while event_source or has_pending_tasks:
       if self._abort:
         break
 
@@ -509,7 +519,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           self._number_of_consumed_sources += 1
 
         if task:
-          if self._ScheduleTask(task):
+          if not self._ScheduleTask(task):
+            self._task_manager.SampleTaskStatus(task, 'schedule_attempted')
+
+          else:
             path_spec_string = self._GetPathSpecificationString(task.path_spec)
             logger.debug(
                 'Scheduled task: {0:s} for path specification: {1:s}'.format(
@@ -519,10 +532,19 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
             task = None
 
-          else:
-            self._task_manager.SampleTaskStatus(task, 'schedule_attempted')
+        # Limit the number of attribute containers from a single task-based
+        # storage file that are merged per loop to keep tasks flowing.
+        merge_duration = time.time()
 
-        self._MergeTaskStorage(storage_writer, session_identifier)
+        number_of_containers = self._MergeTaskStorage(
+            storage_writer, session_identifier,
+            maximum_number_of_containers=self._maximum_number_of_containers)
+
+        merge_duration = time.time() - merge_duration
+
+        if merge_duration > 0.0 and number_of_containers > 0:
+          containers_per_second = number_of_containers / merge_duration
+          self._maximum_number_of_containers = int(0.5 * containers_per_second)
 
         if not event_source_heap.IsFull():
           self._FillEventSourceHeap(storage_writer, event_source_heap)
@@ -531,6 +553,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         if not task and not event_source:
           event_source = event_source_heap.PopEventSource()
+
+        has_pending_tasks = self._task_manager.HasPendingTasks()
 
       except KeyboardInterrupt:
         if self._debug_output:
