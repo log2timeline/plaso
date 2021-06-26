@@ -10,7 +10,12 @@ from plaso.storage import logger
 
 
 class StorageMergeReader(object):
-  """Storage reader for merging."""
+  """Storage reader for merging.
+
+  Attributes:
+    number_of_containers (int): number of containers merged in last call to
+        MergeAttributeContainers.
+  """
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
   _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
@@ -55,6 +60,8 @@ class StorageMergeReader(object):
     self._event_data_stream_identifier_mappings = {}
     self._storage_writer = storage_writer
     self._task_storage_reader = task_storage_reader
+
+    self.number_of_containers = 0
 
   def Close(self):
     """Closes the merge reader."""
@@ -146,7 +153,7 @@ class StorageMergeReader(object):
       logger.debug('Continuing merge of: {0:s}'.format(
           self._active_container_type))
 
-    number_of_containers = 0
+    self.number_of_containers = 0
 
     while self._active_generator or self._container_types:
       if not self._active_generator:
@@ -157,7 +164,7 @@ class StorageMergeReader(object):
 
       try:
         container = next(self._active_generator)
-        number_of_containers += 1
+        self.number_of_containers += 1
       except StopIteration:
         container = None
         self._active_generator = None
@@ -165,11 +172,11 @@ class StorageMergeReader(object):
       if container:
         self.AddAttributeContainer(container)
 
-      if 0 < maximum_number_of_containers <= number_of_containers:
+      if 0 < maximum_number_of_containers <= self.number_of_containers:
         break
 
     merge_completed = not self._active_generator and not self._container_types
 
-    logger.debug('Merged {0:d} containers'.format(number_of_containers))
+    logger.debug('Merged {0:d} containers'.format(self.number_of_containers))
 
     return merge_completed
