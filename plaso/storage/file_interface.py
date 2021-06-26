@@ -366,6 +366,23 @@ class StorageFileWriter(interface.StorageWriter):
 
     self._storage_file.AddAttributeContainer(container)
 
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_REPORT:
+      self._UpdateAnalysisReportSessionCounter(container)
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_WARNING:
+      self.number_of_analysis_warnings += 1
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      self._UpdateEventParsersSessionCounter(container)
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      self._UpdateEventDataParsersMappings(container)
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE:
+      self.number_of_event_sources += 1
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+      self._UpdateEventLabelsSessionCounter(container)
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EXTRACTION_WARNING:
+      self.number_of_extraction_warnings += 1
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_PREPROCESSING_WARNING:
+      self.number_of_preprocessing_warnings += 1
+
   def AddEvent(self, event):
     """Adds an event.
 
