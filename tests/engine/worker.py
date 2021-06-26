@@ -147,7 +147,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       if isinstance(expected_event_count, list):
         self.assertIn(event_count, expected_event_count)
       else:
-        self.assertEqual(event_count, expected_event_count)
+        error_message = (
+            'data type: "{0:s}" does not match expected value').format(
+                data_type)
+        self.assertEqual(event_count, expected_event_count, error_message)
 
     # Ensure there are no events left unaccounted for.
     self.assertEqual(event_counters, collections.Counter())
