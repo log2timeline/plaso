@@ -8,6 +8,7 @@ import tempfile
 from plaso.lib import definitions
 from plaso.multi_process import engine
 from plaso.storage import factory as storage_factory
+from plaso.storage import merge_reader
 from plaso.storage.redis import redis_store
 
 
@@ -58,26 +59,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return True
 
     return False
-
-  def _CreateTaskStorageMergeReader(
-      self, storage_writer, task_storage_format, task):
-    """Creates a task storage merge reader.
-
-    Args:
-      storage_writer (StorageWriter): storage writer for a session storage.
-      task_storage_format (str): storage format used to store task results.
-      task (Task): task the storage changes are part of.
-
-    Returns:
-      StorageMergeReader: storage merge reader.
-    """
-    path = self._GetMergeTaskStorageFilePath(task_storage_format, task)
-    task_merge_reader = (
-        storage_factory.StorageFactory.CreateTaskStorageMergeReader(
-            task_storage_format, storage_writer, task, path))
-
-    task_merge_reader.SetStorageProfiler(self._storage_profiler)
-    return task_merge_reader
 
   def _GetMergeTaskStorageFilePath(self, task_storage_format, task):
     """Retrieves the path of a task storage file in the merge directory.
@@ -182,6 +163,28 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
             'Unable to rename task storage file: {0:s} with error: '
             '{1!s}').format(processed_storage_file_path, exception))
 
+  def _RemoveMergeTaskStorage(self, task_storage_format, task):
+    """Removes a merge task storage.
+
+    Args:
+      task_storage_format (str): storage format used to store task results.
+      task (Task): task the storage changes are part of.
+
+    Raises:
+      IOError: if a SQLite task storage file cannot be removed.
+      OSError: if a SQLite task storage file cannot be removed.
+    """
+    if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      merge_storage_file_path = self._GetMergeTaskStorageFilePath(
+          task_storage_format, task)
+
+      try:
+        os.remove(merge_storage_file_path)
+      except OSError as exception:
+        raise IOError((
+            'Unable to remove merge task storage file: {0:s} with error: '
+            '{1!s}').format(merge_storage_file_path, exception))
+
   def _RemoveProcessedTaskStorage(self, task_storage_format, task):
     """Removes a processed task storage.
 
@@ -201,7 +204,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         os.remove(processed_storage_file_path)
       except OSError as exception:
         raise IOError((
-            'Unable to remove task storage file: {0:s} with error: '
+            'Unable to remove processed task storage file: {0:s} with error: '
             '{1!s}').format(processed_storage_file_path, exception))
 
   def _StartMergeTaskStorage(self, storage_writer, task_storage_format, task):
@@ -231,8 +234,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if not os.path.isfile(merge_storage_file_path):
         raise IOError('Merge task storage path is not a file.')
 
-    return self._CreateTaskStorageMergeReader(
-        storage_writer, task_storage_format, task)
+    path = self._GetMergeTaskStorageFilePath(task_storage_format, task)
+    task_storage_reader = (
+        storage_factory.StorageFactory.CreateTaskStorageReader(
+            task_storage_format, task, path))
+    task_storage_reader.SetStorageProfiler(self._storage_profiler)
+
+    return merge_reader.StorageMergeReader(storage_writer, task_storage_reader)
 
   def _StartTaskStorage(self, task_storage_format):
     """Starts the task storage.

@@ -179,10 +179,14 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           storage_merge_reader = self._StartMergeTaskStorage(
               storage_writer, definitions.STORAGE_FORMAT_SQLITE, task)
 
-          storage_merge_reader.MergeAttributeContainers(
-              callback=self._MergeEventTag)
+          storage_merge_reader.MergeAttributeContainers()
           # TODO: temporary solution.
           plugin_names.remove(plugin_name)
+
+          storage_merge_reader.Close()
+
+          self._RemoveMergeTaskStorage(
+              definitions.STORAGE_FORMAT_SQLITE, task)
 
           self._status = definitions.STATUS_INDICATOR_RUNNING
 
@@ -274,33 +278,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
               process.name, pid, status_indicator))
 
       self._TerminateProcessByPid(pid)
-
-  def _MergeEventTag(self, storage_writer, attribute_container):
-    """Merges an event tag with the last stored event tag.
-
-    If there is an existing event the provided event tag is updated with
-    the contents of the existing one. After which the event tag index is
-    updated.
-
-    Args:
-      storage_writer (StorageWriter): storage writer.
-      attribute_container (AttributeContainer): container.
-    """
-    if attribute_container.CONTAINER_TYPE != 'event_tag':
-      return
-
-    event_identifier = attribute_container.GetEventIdentifier()
-    if not event_identifier:
-      return
-
-    # Check if the event has already been tagged on a previous occasion,
-    # we need to append the event tag to the last stored one.
-    stored_event_tag = self._event_tag_index.GetEventTagByIdentifier(
-        storage_writer, event_identifier)
-    if stored_event_tag:
-      attribute_container.AddLabels(stored_event_tag.labels)
-
-    self._event_tag_index.SetEventTag(attribute_container)
 
   def _StartAnalysisProcesses(self, analysis_plugins):
     """Starts the analysis processes.

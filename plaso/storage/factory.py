@@ -2,9 +2,8 @@
 """This file contains the storage factory class."""
 
 from plaso.lib import definitions
-from plaso.storage.redis import merge_reader as redis_merge_reader
+from plaso.storage.redis import reader as redis_reader
 from plaso.storage.redis import writer as redis_writer
-from plaso.storage.sqlite import merge_reader as sqlite_merge_reader
 from plaso.storage.sqlite import reader as sqlite_reader
 from plaso.storage.sqlite import sqlite_file
 from plaso.storage.sqlite import writer as sqlite_writer
@@ -101,25 +100,23 @@ class StorageFactory(object):
     return None
 
   @classmethod
-  def CreateTaskStorageMergeReader(
-        cls, storage_format, storage_writer, task, path):
-    """Creates a task storage merge reader.
+  def CreateTaskStorageReader(cls, storage_format, task, path):
+    """Creates a task storage reader.
 
     Args:
       storage_format (str): storage format.
-      storage_writer (StorageWriter): storage writer for a session storage.
       task (Task): task the storage changes are part of.
       path (str): path to the storage file.
 
     Returns:
-      StorageWriter: a storage writer or None if the storage file cannot be
+      StorageReader: a storage reader or None if the storage file cannot be
           opened or the storage format is not supported.
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      return sqlite_merge_reader.SQLiteStorageMergeReader(storage_writer, path)
+      return sqlite_reader.SQLiteStorageFileReader(path)
 
     if storage_format == definitions.STORAGE_FORMAT_REDIS:
-      return redis_merge_reader.RedisMergeReader(storage_writer, task)
+      return redis_reader.RedisStorageReader(task)
 
     return None
 
