@@ -39,10 +39,10 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     test_events = []
     for event, event_data, event_data_stream in (
         containers_test_lib.CreateEventsFromValues(event_values_list)):
-      storage_writer.AddEventDataStream(event_data_stream)
+      storage_writer.AddAttributeContainer(event_data_stream)
 
       event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
-      storage_writer.AddEventData(event_data)
+      storage_writer.AddAttributeContainer(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
@@ -56,7 +56,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
 
     analysis_report = plugin.CompileReport(mediator)
-    storage_writer.AddAnalysisReport(analysis_report)
+    storage_writer.AddAttributeContainer(analysis_report)
 
     return storage_writer
 
@@ -90,20 +90,21 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       event_data = None
       event_data_identifier = event.GetEventDataIdentifier()
       if event_data_identifier:
-        event_data = storage_writer.GetEventDataByIdentifier(
-            event_data_identifier)
+        event_data = storage_writer.GetAttributeContainerByIdentifier(
+            events.EventData.CONTAINER_TYPE, event_data_identifier)
 
       event_data_stream = None
       if event_data:
         event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
         if event_data_stream_identifier:
-          event_data_stream = storage_writer.GetEventDataStreamByIdentifier(
+          event_data_stream = storage_writer.GetAttributeContainerByIdentifier(
+              events.EventDataStream.CONTAINER_TYPE,
               event_data_stream_identifier)
 
       plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
 
     analysis_report = plugin.CompileReport(mediator)
-    storage_writer.AddAnalysisReport(analysis_report)
+    storage_writer.AddAttributeContainer(analysis_report)
 
     return storage_writer
 

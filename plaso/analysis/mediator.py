@@ -102,7 +102,7 @@ class AnalysisMediator(object):
 
     analysis_report.event_filter = self._event_filter_expression
 
-    self._storage_writer.AddAnalysisReport(analysis_report)
+    self._storage_writer.AddAttributeContainer(analysis_report)
 
     self.number_of_produced_analysis_reports += 1
 
@@ -117,7 +117,7 @@ class AnalysisMediator(object):
           applies.
     """
     warning = warnings.AnalysisWarning(message=message, plugin_name=plugin_name)
-    self._storage_writer.AddAnalysisWarning(warning)
+    self._storage_writer.AddAttributeContainer(warning)
     self._number_of_warnings += 1
 
     self.last_activity_timestamp = time.time()

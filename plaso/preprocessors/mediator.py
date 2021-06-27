@@ -75,7 +75,7 @@ class PreprocessMediator(object):
 
       warning = warnings.PreprocessingWarning(
           message=message, path_spec=path_spec, plugin_name=plugin_name)
-      self._storage_writer.AddPreprocessingWarning(warning)
+      self._storage_writer.AddAttributeContainer(warning)
 
     logger.debug('[{0:s}] {1:s}'.format(plugin_name, message))
 

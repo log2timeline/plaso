@@ -37,7 +37,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       EventData: event data corresponding to the event.
     """
     event_data_identifier = event.GetEventDataIdentifier()
-    return storage_writer.GetEventDataByIdentifier(event_data_identifier)
+    return storage_writer.GetAttributeContainerByIdentifier(
+        events.EventData.CONTAINER_TYPE, event_data_identifier)
 
   def _GetEventDataStreamOfEventData(self, storage_writer, event_data):
     """Retrieves the event data stream of event data.
@@ -50,8 +51,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       EventDataStream: event data stream corresponding to the event data.
     """
     event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
-    return storage_writer.GetEventDataStreamByIdentifier(
-        event_data_stream_identifier)
+    return storage_writer.GetAttributeContainerByIdentifier(
+        events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier)
 
   def _GetTestFilePathSpec(self, path_segments):
     """Retrieves a path specification of a test file in the test data directory.
@@ -137,8 +138,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     event_counters = collections.Counter()
     for event in storage_writer.GetSortedEvents():
       event_data_identifier = event.GetEventDataIdentifier()
-      event_data = storage_writer.GetEventDataByIdentifier(
-          event_data_identifier)
+      event_data = storage_writer.GetAttributeContainerByIdentifier(
+          events.EventData.CONTAINER_TYPE, event_data_identifier)
 
       event_counters[event_data.data_type] += 1
 

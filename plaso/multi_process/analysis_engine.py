@@ -5,6 +5,7 @@ import collections
 import os
 import time
 
+from plaso.containers import events
 from plaso.containers import tasks
 from plaso.engine import plaso_queue
 from plaso.engine import processing_status
@@ -110,13 +111,13 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     for event in storage_writer.GetSortedEvents():
       event_data_identifier = event.GetEventDataIdentifier()
-      event_data = storage_writer.GetEventDataByIdentifier(
-          event_data_identifier)
+      event_data = storage_writer.GetAttributeContainerByIdentifier(
+          events.EventData.CONTAINER_TYPE, event_data_identifier)
 
       event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
       if event_data_stream_identifier:
-        event_data_stream = storage_writer.GetEventDataStreamByIdentifier(
-            event_data_stream_identifier)
+        event_data_stream = storage_writer.GetAttributeContainerByIdentifier(
+            events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier)
       else:
         event_data_stream = None
 

@@ -367,7 +367,7 @@ class ParserMediator(object):
         event_data_stream.path_spec = getattr(
             self._file_entry, 'path_spec', None)
 
-      self._storage_writer.AddEventDataStream(event_data_stream)
+      self._storage_writer.AddAttributeContainer(event_data_stream)
 
       self._event_data_stream_identifier = event_data_stream.GetIdentifier()
 
@@ -385,7 +385,7 @@ class ParserMediator(object):
     if not self._storage_writer:
       raise RuntimeError('Storage writer not set.')
 
-    self._storage_writer.AddEventSource(event_source)
+    self._storage_writer.AddAttributeContainer(event_source)
     self._number_of_event_sources += 1
 
     self.last_activity_timestamp = time.time()
@@ -434,7 +434,7 @@ class ParserMediator(object):
         event_data.SetEventDataStreamIdentifier(
             self._event_data_stream_identifier)
 
-      self._storage_writer.AddEventData(event_data)
+      self._storage_writer.AddAttributeContainer(event_data)
 
       self._last_event_data_hash = event_data_hash
       self._last_event_data_identifier = event_data.GetIdentifier()
@@ -468,7 +468,7 @@ class ParserMediator(object):
     parser_chain = self.GetParserChain()
     warning = warnings.ExtractionWarning(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
-    self._storage_writer.AddExtractionWarning(warning)
+    self._storage_writer.AddAttributeContainer(warning)
     self._number_of_extraction_warnings += 1
 
     self.last_activity_timestamp = time.time()
@@ -494,7 +494,7 @@ class ParserMediator(object):
     parser_chain = self.GetParserChain()
     warning = warnings.RecoveryWarning(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
-    self._storage_writer.AddRecoveryWarning(warning)
+    self._storage_writer.AddAttributeContainer(warning)
     self._number_of_recovery_warnings += 1
 
     self.last_activity_timestamp = time.time()

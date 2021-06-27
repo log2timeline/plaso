@@ -92,34 +92,6 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to write to closed storage writer.')
 
-  def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report.
-
-    Args:
-      analysis_report (AnalysisReport): analysis report.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(analysis_report)
-
-  def AddAnalysisWarning(self, analysis_warning):
-    """Adds an analysis warning.
-
-    Args:
-      analysis_warning (AnalysisWarning): analysis warning.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(analysis_warning)
-
   def AddAttributeContainer(self, container):
     """Adds a new attribute container.
 
@@ -192,48 +164,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self.AddAttributeContainer(event)
 
-  def AddEventData(self, event_data):
-    """Adds event data.
-
-    Args:
-      event_data (EventData): event data.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(event_data)
-
-  def AddEventDataStream(self, event_data_stream):
-    """Adds an event data stream.
-
-    Args:
-      event_data_stream (EventDataStream): event data stream.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(event_data_stream)
-
-  def AddEventSource(self, event_source):
-    """Adds an event source.
-
-    Args:
-      event_source (EventSource): event source.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(event_source)
-
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
@@ -248,48 +178,6 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     self.AddAttributeContainer(event_tag)
-
-  def AddExtractionWarning(self, extraction_warning):
-    """Adds an extraction warning.
-
-    Args:
-      extraction_warning (ExtractionWarning): extraction warning.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(extraction_warning)
-
-  def AddPreprocessingWarning(self, preprocessing_warning):
-    """Adds a preprocessing warning.
-
-    Args:
-      preprocessing_warning (PreprocessingWarning): preprocessing warning.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(preprocessing_warning)
-
-  def AddRecoveryWarning(self, recovery_warning):
-    """Adds a recovery warning.
-
-    Args:
-      recovery_warning (ExtractionWarning): recovery warning.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(recovery_warning)
 
   def Close(self):
     """Closes the storage writer.
