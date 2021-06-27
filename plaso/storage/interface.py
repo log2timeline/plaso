@@ -192,8 +192,10 @@ class BaseStore(object):
       container (AttributeContainer): attribute container.
     """
 
+  # TODO: add _WriteExistingAttributeContainer
+
   def AddAttributeContainer(self, container):
-    """Adds an attribute container.
+    """Adds a new attribute container.
 
     Args:
       container (AttributeContainer): attribute container.
@@ -507,6 +509,18 @@ class StorageReader(object):
     """Closes the storage reader."""
 
   @abc.abstractmethod
+  def GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves a specific type of container with a specific identifier.
+
+    Args:
+      container_type (str): container type.
+      identifier (AttributeContainerIdentifier): attribute container identifier.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+    """
+
+  @abc.abstractmethod
   def GetAttributeContainers(self, container_type):
     """Retrieves a specific type of attribute containers.
 
@@ -515,39 +529,6 @@ class StorageReader(object):
 
     Returns:
       generator(AttributeContainers): attribute container generator.
-    """
-
-  @abc.abstractmethod
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data identifier.
-
-    Returns:
-      EventData: event data or None if not available.
-    """
-
-  @abc.abstractmethod
-  def GetEventDataStreamByIdentifier(self, identifier):
-    """Retrieves a specific event data stream.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data stream identifier.
-
-    Returns:
-      EventDataStream: event data stream or None if not available.
-    """
-
-  @abc.abstractmethod
-  def GetEventTagByIdentifier(self, identifier):
-    """Retrieves a specific event tag.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event tag identifier.
-
-    Returns:
-      EventTag: event tag or None if not available.
     """
 
   @abc.abstractmethod
@@ -745,22 +726,6 @@ class StorageWriter(object):
     self.number_of_events += 1
 
   @abc.abstractmethod
-  def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report.
-
-    Args:
-      analysis_report (AnalysisReport): a report.
-    """
-
-  @abc.abstractmethod
-  def AddAnalysisWarning(self, analysis_warning):
-    """Adds an analysis warning.
-
-    Args:
-      analysis_warning (AnalysisWarning): an analysis warning.
-    """
-
-  @abc.abstractmethod
   def AddAttributeContainer(self, container):
     """Adds an attribute container.
 
@@ -777,30 +742,6 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
-  def AddEventData(self, event_data):
-    """Adds event data.
-
-    Args:
-      event_data (EventData): event data.
-    """
-
-  @abc.abstractmethod
-  def AddEventDataStream(self, event_data_stream):
-    """Adds an event data stream.
-
-    Args:
-      event_data_stream (EventDataStream): event data stream.
-    """
-
-  @abc.abstractmethod
-  def AddEventSource(self, event_source):
-    """Adds an event source.
-
-    Args:
-      event_source (EventSource): an event source.
-    """
-
-  @abc.abstractmethod
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
@@ -809,33 +750,20 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
-  def AddExtractionWarning(self, extraction_warning):
-    """Adds an extraction warning.
-
-    Args:
-      extraction_warning (ExtractionWarning): an extraction warning.
-    """
-
-  @abc.abstractmethod
-  def AddPreprocessingWarning(
-      self, preprocessing_warning):
-    """Adds a preprocessing warning.
-
-    Args:
-      preprocessing_warning (PreprocessingWarning): preprocessing warning.
-    """
-
-  @abc.abstractmethod
-  def AddRecoveryWarning(self, recovery_warning):
-    """Adds a recovery warning.
-
-    Args:
-      recovery_warning (RecoveryWarning): a recovery warning.
-    """
-
-  @abc.abstractmethod
   def Close(self):
     """Closes the storage writer."""
+
+  @abc.abstractmethod
+  def GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves a specific type of container with a specific identifier.
+
+    Args:
+      container_type (str): container type.
+      identifier (AttributeContainerIdentifier): attribute container identifier.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+    """
 
   @abc.abstractmethod
   def GetAttributeContainers(self, container_type):
@@ -846,28 +774,6 @@ class StorageWriter(object):
 
     Returns:
       generator(AttributeContainers): attribute container generator.
-    """
-
-  @abc.abstractmethod
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data identifier.
-
-    Returns:
-      EventData: event data or None if not available.
-    """
-
-  @abc.abstractmethod
-  def GetEventDataStreamByIdentifier(self, identifier):
-    """Retrieves a specific event data stream.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data stream identifier.
-
-    Returns:
-      EventDataStream: event data stream or None if not available.
     """
 
   @abc.abstractmethod

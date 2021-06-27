@@ -5,6 +5,7 @@ import collections
 import heapq
 import time
 
+from plaso.containers import events
 from plaso.engine import processing_status
 from plaso.lib import bufferlib
 from plaso.lib import definitions
@@ -294,13 +295,13 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     for event in storage_reader.GetSortedEvents(time_range=time_slice_range):
       event_data_identifier = event.GetEventDataIdentifier()
-      event_data = storage_reader.GetEventDataByIdentifier(
-          event_data_identifier)
+      event_data = storage_reader.GetAttributeContainerByIdentifier(
+          events.EventData.CONTAINER_TYPE, event_data_identifier)
 
       event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
       if event_data_stream_identifier:
-        event_data_stream = storage_reader.GetEventDataStreamByIdentifier(
-            event_data_stream_identifier)
+        event_data_stream = storage_reader.GetAttributeContainerByIdentifier(
+            events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier)
       else:
         event_data_stream = None
 

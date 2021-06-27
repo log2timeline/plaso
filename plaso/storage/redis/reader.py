@@ -25,6 +25,19 @@ class RedisStorageReader(interface.StorageReader):
     """Closes the storage reader."""
     self._store.Close()
 
+  def GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves a specific type of container with a specific identifier.
+
+    Args:
+      container_type (str): container type.
+      identifier (AttributeContainerIdentifier): attribute container identifier.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+    """
+    return self._store.GetAttributeContainerByIdentifier(
+        container_type, identifier)
+
   def GetAttributeContainers(self, container_type):
     """Retrieves a specific type of attribute containers.
 
@@ -35,42 +48,6 @@ class RedisStorageReader(interface.StorageReader):
       generator(AttributeContainers): attribute container generator.
     """
     return self._store.GetAttributeContainers(container_type)
-
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data identifier.
-
-    Returns:
-      EventData: event data or None if not available.
-    """
-    return self._store.GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA, identifier)
-
-  def GetEventDataStreamByIdentifier(self, identifier):
-    """Retrieves a specific event data stream.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data stream identifier.
-
-    Returns:
-      EventDataStream: event data stream or None if not available.
-    """
-    return self._store.GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
-
-  def GetEventTagByIdentifier(self, identifier):
-    """Retrieves a specific event tag.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event tag identifier.
-
-    Returns:
-      EventTag: event tag or None if not available.
-    """
-    return self._store.GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_TAG, identifier)
 
   def GetNumberOfAnalysisReports(self):
     """Retrieves the number analysis reports.

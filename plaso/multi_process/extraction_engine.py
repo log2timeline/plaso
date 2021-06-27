@@ -412,7 +412,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       # TODO: determine if event sources should be DataStream or FileEntry
       # or both.
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-      storage_writer.AddEventSource(event_source)
+      storage_writer.AddAttributeContainer(event_source)
 
       self._number_of_produced_sources = storage_writer.number_of_event_sources
 
@@ -569,7 +569,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       warning = warnings.ExtractionWarning(
           message='Worker failed to process path specification',
           path_spec=task.path_spec)
-      self._storage_writer.AddExtractionWarning(warning)
+      self._storage_writer.AddAttributeContainer(warning)
       self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.STATUS_INDICATOR_IDLE

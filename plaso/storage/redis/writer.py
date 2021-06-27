@@ -31,24 +31,6 @@ class RedisStorageWriter(interface.StorageWriter):
         task.session_identifier, task.identifier)
     self._store = None
 
-  def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report.
-
-    Args:
-      analysis_report (AnalysisReport): a report.
-    """
-    self._store.AddAttributeContainer(analysis_report)
-
-    self._UpdateAnalysisReportSessionCounter(analysis_report)
-
-  def AddAnalysisWarning(self, analysis_warning):
-    """Adds an analysis warning.
-
-    Args:
-      analysis_warning (AnalysisWarning): an analysis warning.
-    """
-    self._store.AddAttributeContainer(analysis_warning)
-
   def AddAttributeContainer(self, container):
     """Adds an attribute container.
 
@@ -56,6 +38,18 @@ class RedisStorageWriter(interface.StorageWriter):
       container (AttributeContainer): attribute container.
     """
     self._store.AddAttributeContainer(container)
+
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_REPORT:
+      self._UpdateAnalysisReportSessionCounter(container)
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_WARNING:
+      self.number_of_analysis_warnings += 1
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      self._UpdateEventParsersSessionCounter(container)
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      self._UpdateEventDataParsersMappings(container)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -68,32 +62,6 @@ class RedisStorageWriter(interface.StorageWriter):
 
     self._UpdateEventParsersSessionCounter(event)
 
-  def AddEventData(self, event_data):
-    """Adds an event data.
-
-    Args:
-      event_data(EventData): an event.
-    """
-    self._store.AddAttributeContainer(event_data)
-
-    self._UpdateEventDataParsersMappings(event_data)
-
-  def AddEventDataStream(self, event_data_stream):
-    """Adds an event data stream.
-
-    Args:
-      event_data_stream (EventDataStream): event data stream.
-    """
-    self._store.AddAttributeContainer(event_data_stream)
-
-  def AddEventSource(self, event_source):
-    """Adds an event source.
-
-    Args:
-      event_source (EventSource): an event source.
-    """
-    self._store.AddAttributeContainer(event_source)
-
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
@@ -103,30 +71,6 @@ class RedisStorageWriter(interface.StorageWriter):
     self._store.AddAttributeContainer(event_tag)
 
     self._UpdateEventLabelsSessionCounter(event_tag)
-
-  def AddExtractionWarning(self, extraction_warning):
-    """Adds an extraction warning.
-
-    Args:
-      extraction_warning (ExtractionWarning): an extraction warning.
-    """
-    self._store.AddAttributeContainer(extraction_warning)
-
-  def AddPreprocessingWarning(self, preprocessing_warning):
-    """Adds a preprocessing warning.
-
-    Args:
-      preprocessing_warning (PreprocessingWarning): preprocessing warning.
-    """
-    self._store.AddAttributeContainer(preprocessing_warning)
-
-  def AddRecoveryWarning(self, recovery_warning):
-    """Adds a recovery warning.
-
-    Args:
-      recovery_warning (RecoveryWarning): a recovery warning.
-    """
-    self._store.AddAttributeContainer(recovery_warning)
 
   def Close(self):
     """Closes the storage writer.
@@ -141,6 +85,19 @@ class RedisStorageWriter(interface.StorageWriter):
     self._store.Finalize()
     self._store = None
 
+  def GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves a specific type of container with a specific identifier.
+
+    Args:
+      container_type (str): container type.
+      identifier (AttributeContainerIdentifier): attribute container identifier.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+    """
+    return self._store.GetAttributeContainerByIdentifier(
+        container_type, identifier)
+
   def GetAttributeContainers(self, container_type):
     """Retrieves a specific type of attribute containers.
 
@@ -151,30 +108,6 @@ class RedisStorageWriter(interface.StorageWriter):
       generator(AttributeContainers): attribute container generator.
     """
     return self._store.GetAttributeContainers(container_type)
-
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data identifier.
-
-    Returns:
-      EventData: event data or None if not available.
-    """
-    return self._store.GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA, identifier)
-
-  def GetEventDataStreamByIdentifier(self, identifier):
-    """Retrieves a specific event data stream.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data stream identifier.
-
-    Returns:
-      EventDataStream: event data stream or None if not available.
-    """
-    return self._store.GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
 
   def GetEvents(self):
     """Retrieves the events.

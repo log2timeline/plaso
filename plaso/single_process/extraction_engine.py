@@ -163,7 +163,7 @@ class SingleProcessEngine(engine.BaseEngine):
       # TODO: determine if event sources should be DataStream or FileEntry
       # or both.
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-      self._storage_writer.AddEventSource(event_source)
+      self._storage_writer.AddAttributeContainer(event_source)
 
     self._status = definitions.STATUS_INDICATOR_RUNNING
 

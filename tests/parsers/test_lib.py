@@ -10,6 +10,7 @@ from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.parsers import interface
@@ -102,7 +103,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       EventData: event data corresponding to the event.
     """
     event_data_identifier = event.GetEventDataIdentifier()
-    return storage_writer.GetEventDataByIdentifier(event_data_identifier)
+    return storage_writer.GetAttributeContainerByIdentifier(
+        events.EventData.CONTAINER_TYPE, event_data_identifier)
 
   def _ParseFile(
       self, path_segments, parser, collection_filters_helper=None,

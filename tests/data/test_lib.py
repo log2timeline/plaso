@@ -128,11 +128,11 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     if event_data_stream:
-      storage_writer.AddEventDataStream(event_data_stream)
+      storage_writer.AddAttributeContainer(event_data_stream)
       event_data_stream_identifier = event_data_stream.GetIdentifier()
       event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
-    storage_writer.AddEventData(event_data)
+    storage_writer.AddAttributeContainer(event_data)
     event_data_identifier = event_data.GetIdentifier()
     event.SetEventDataIdentifier(event_data_identifier)
 
@@ -148,6 +148,6 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
     plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
 
     analysis_report = plugin.CompileReport(mediator)
-    storage_writer.AddAnalysisReport(analysis_report)
+    storage_writer.AddAttributeContainer(analysis_report)
 
     return storage_writer

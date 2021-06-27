@@ -50,7 +50,8 @@ class EventTagIndex(object):
     if not event_tag_identifier:
       return None
 
-    return storage_reader.GetEventTagByIdentifier(event_tag_identifier)
+    return storage_reader.GetAttributeContainerByIdentifier(
+        events.EventTag.CONTAINER_TYPE, event_tag_identifier)
 
   def SetEventTag(self, event_tag):
     """Sets an event tag in the index.
