@@ -45,7 +45,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       storage_writer.AddAttributeContainer(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_writer.AddEvent(event)
+      storage_writer.AddAttributeContainer(event)
 
       test_events.append((event, event_data, event_data_stream))
 

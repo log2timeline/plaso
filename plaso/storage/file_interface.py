@@ -339,22 +339,7 @@ class StorageFileWriter(interface.StorageWriter):
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_RECOVERY_WARNING:
       self.number_of_recovery_warnings += 1
 
-  def AddEvent(self, event):
-    """Adds an event.
-
-    Args:
-      event (EventObject): an event.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self._storage_file.AddAttributeContainer(event)
-
-    self._UpdateEventParsersSessionCounter(event)
-
+  # TODO: remove after refactoctoring.
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
@@ -407,44 +392,6 @@ class StorageFileWriter(interface.StorageWriter):
       generator(AttributeContainers): attribute container generator.
     """
     return self._storage_file.GetAttributeContainers(container_type)
-
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(EventObject): event generator.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    return self._storage_file.GetAttributeContainers(
-        self._CONTAINER_TYPE_EVENT)
-
-  def GetEventTagByIdentifier(self, identifier):
-    """Retrieves a specific event tag.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event tag identifier.
-
-    Returns:
-      EventTag: event tag or None if not available.
-    """
-    return self._storage_file.GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_TAG, identifier)
-
-  def GetEventTags(self):
-    """Retrieves the event tags.
-
-    Returns:
-      generator(EventTag): event tag generator.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    return self._storage_file.GetAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_TAG)
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.

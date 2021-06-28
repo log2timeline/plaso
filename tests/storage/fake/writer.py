@@ -32,30 +32,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.AddAttributeContainer(event_source)
 
-  def testAddEvent(self):
-    """Tests the AddEvent function."""
-    session = sessions.Session()
-
-    storage_writer = fake_writer.FakeStorageWriter(session)
-    storage_writer.Open()
-
-    event = None
-    for event, event_data, event_data_stream in (
-        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
-      storage_writer.AddAttributeContainer(event_data_stream)
-
-      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
-      storage_writer.AddAttributeContainer(event_data)
-
-      event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_writer.AddEvent(event)
-
-    storage_writer.Close()
-
-    # Test writing an event twice.
-    with self.assertRaises(IOError):
-      storage_writer.AddEvent(event)
-
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
     session = sessions.Session()
@@ -72,7 +48,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
       storage_writer.AddAttributeContainer(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_writer.AddEvent(event)
+      storage_writer.AddAttributeContainer(event)
 
       test_events.append(event)
 
@@ -112,30 +88,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.Close()
 
-  def testGetEvents(self):
-    """Tests the GetEvents function."""
-    session = sessions.Session()
-
-    storage_writer = fake_writer.FakeStorageWriter(session)
-    storage_writer.Open()
-
-    for event, event_data, event_data_stream in (
-        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
-      storage_writer.AddAttributeContainer(event_data_stream)
-
-      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
-      storage_writer.AddAttributeContainer(event_data)
-
-      event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_writer.AddEvent(event)
-
-    test_events = list(storage_writer.GetEvents())
-    self.assertEqual(len(test_events), 4)
-
-    storage_writer.Close()
-
-  # TODO: add tests for GetEventSources.
-  # TODO: add tests for GetEventTags.
   # TODO: add tests for GetFirstWrittenEventSource and
   # GetNextWrittenEventSource.
 
@@ -154,7 +106,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
       storage_writer.AddAttributeContainer(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_writer.AddEvent(event)
+      storage_writer.AddAttributeContainer(event)
 
     test_events = list(storage_writer.GetSortedEvents())
     self.assertEqual(len(test_events), 4)

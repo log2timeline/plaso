@@ -442,7 +442,7 @@ class ParserMediator(object):
     if self._last_event_data_identifier:
       event.SetEventDataIdentifier(self._last_event_data_identifier)
 
-    self._storage_writer.AddEvent(event)
+    self._storage_writer.AddAttributeContainer(event)
     self._number_of_events += 1
 
     self.last_activity_timestamp = time.time()

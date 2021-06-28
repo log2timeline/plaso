@@ -148,22 +148,7 @@ class FakeStorageWriter(interface.StorageWriter):
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_RECOVERY_WARNING:
       self.number_of_recovery_warnings += 1
 
-  def AddEvent(self, event):
-    """Adds an event.
-
-    Args:
-      event (EventObject): event.
-
-    Raises:
-      IOError: when the storage writer is closed or
-          if the event data identifier type is not supported.
-      OSError: when the storage writer is closed or
-          if the event data identifier type is not supported.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(event)
-
+  # TODO: remove after refactoctoring.
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
@@ -217,70 +202,6 @@ class FakeStorageWriter(interface.StorageWriter):
     containers = self._attribute_containers.get(container_type, {})
     return iter(containers.values())
 
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
-
-  def GetEventData(self):
-    """Retrieves the event data.
-
-    Returns:
-      generator(EventData): event data generator.
-    """
-    return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA)
-
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data identifier.
-
-    Returns:
-      EventData: event data or None if not available.
-    """
-    return self.GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA, identifier)
-
-  def GetEventDataStreamByIdentifier(self, identifier):
-    """Retrieves a specific event data stream.
-
-    Args:
-      identifier (AttributeContainerIdentifier): event data stream identifier.
-
-    Returns:
-      EventDataStream: event data stream or None if not available.
-    """
-    return self.GetAttributeContainerByIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
-
-  def GetEventSources(self):
-    """Retrieves the event sources.
-
-    Returns:
-      generator(EventSource): event source generator.
-    """
-    return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_SOURCE)
-
-  def GetEventTags(self):
-    """Retrieves the event tags.
-
-    Returns:
-      generator(EventTags): event tag generator.
-    """
-    return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
-
-  def GetExtractionWarnings(self):
-    """Retrieves the extraction warnings.
-
-    Returns:
-      generator(ExtractionWarning): extraction warning generator.
-    """
-    return self.GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
-
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 
@@ -321,14 +242,6 @@ class FakeStorageWriter(interface.StorageWriter):
         self._CONTAINER_TYPE_EVENT_SOURCE, self._written_event_source_index)
     self._written_event_source_index += 1
     return event_source
-
-  def GetRecoveryWarnings(self):
-    """Retrieves the recovery warnings.
-
-    Returns:
-      generator(RecoveryWarning): recovery warning generator.
-    """
-    return self.GetAttributeContainers(self._CONTAINER_TYPE_RECOVERY_WARNING)
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.

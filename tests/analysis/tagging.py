@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.analysis import tagging
+from plaso.containers import events
 from plaso.lib import definitions
 
 from tests.analysis import test_lib
@@ -67,7 +68,8 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(report.analysis_counter['text_contains'], 1)
 
     labels = []
-    for event_tag in storage_writer.GetEventTags():
+    for event_tag in storage_writer.GetAttributeContainers(
+        events.EventTag.CONTAINER_TYPE):
       labels.extend(event_tag.labels)
 
     self.assertEqual(len(labels), 5)

@@ -733,14 +733,7 @@ class StorageWriter(object):
       container (AttributeContainer): attribute container.
     """
 
-  @abc.abstractmethod
-  def AddEvent(self, event):
-    """Adds an event.
-
-    Args:
-      event (EventObject): an event.
-    """
-
+  # TODO: remove after refactoctoring.
   @abc.abstractmethod
   def AddEventTag(self, event_tag):
     """Adds an event tag.
@@ -776,13 +769,23 @@ class StorageWriter(object):
       generator(AttributeContainers): attribute container generator.
     """
 
-  @abc.abstractmethod
+  # TODO: remove this helper method, currently only used by parser tests.
   def GetEvents(self):
     """Retrieves the events.
 
-    Yields:
-      EventObject: event.
+    Returns:
+      generator(EventObject): event generator.
     """
+    return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
+
+  # TODO: remove this helper method, currently only used by parser tests.
+  def GetExtractionWarnings(self):
+    """Retrieves the events.
+
+    Returns:
+      generator(ExtractionWarning): extraction warning generator.
+    """
+    return self.GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   @abc.abstractmethod
   def GetFirstWrittenEventSource(self):

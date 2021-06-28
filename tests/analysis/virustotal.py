@@ -12,6 +12,7 @@ except ImportError:
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import virustotal
+from plaso.containers import events
 from plaso.lib import definitions
 
 from tests.analysis import test_lib
@@ -103,7 +104,8 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(report.text, expected_text)
 
     labels = []
-    for event_tag in storage_writer.GetEventTags():
+    for event_tag in storage_writer.GetAttributeContainers(
+        events.EventTag.CONTAINER_TYPE):
       labels.extend(event_tag.labels)
     self.assertEqual(len(labels), 1)
 

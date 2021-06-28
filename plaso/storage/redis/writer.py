@@ -51,17 +51,7 @@ class RedisStorageWriter(interface.StorageWriter):
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       self._UpdateEventDataParsersMappings(container)
 
-  def AddEvent(self, event):
-    """Adds an event.
-
-    Args:
-      event(EventObject): an event.
-    """
-    # TODO: refactor to use AddAttributeContainer
-    self._store.AddEvent(event)
-
-    self._UpdateEventParsersSessionCounter(event)
-
+  # TODO: remove after refactoctoring.
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
@@ -108,14 +98,6 @@ class RedisStorageWriter(interface.StorageWriter):
       generator(AttributeContainers): attribute container generator.
     """
     return self._store.GetAttributeContainers(container_type)
-
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return self._store.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
 
   # pylint: disable=redundant-returns-doc,useless-return
   def GetFirstWrittenEventSource(self):
