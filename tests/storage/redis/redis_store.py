@@ -116,25 +116,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   # TODO: add tests for _WriteStorageMetadata
 
-  def testAddEvent(self):
-    """Tests the _AddEvent method."""
-    event, _, _ = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-
-    store = redis_store.RedisStore()
-    redis_client = self._GetRedisClient()
-    store.Open(redis_client=redis_client)
-
-    self.assertEqual(
-        store.GetNumberOfAttributeContainers(event.CONTAINER_TYPE), 0)
-
-    store.AddEvent(event)
-
-    self.assertEqual(
-        store.GetNumberOfAttributeContainers(event.CONTAINER_TYPE), 1)
-
-    store.Close()
-
   # TODO: add tests for Finalize
 
   def testFinalization(self):
@@ -181,7 +162,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     for event, _, _ in containers_test_lib.CreateEventsFromValues(
         self._TEST_EVENTS):
-      store.AddEvent(event)
+      store.AddAttributeContainer(event)
 
     retrieved_events = list(store.GetSortedEvents())
     self.assertEqual(len(retrieved_events), 4)

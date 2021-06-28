@@ -28,7 +28,8 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
       expected_labels (list[str]): expected labels.
     """
     labels = []
-    for event_tag in storage_writer.GetEventTags():
+    for event_tag in storage_writer.GetAttributeContainers(
+        events.EventTag.CONTAINER_TYPE):
       labels.extend(event_tag.labels)
 
     labels = set(labels)
@@ -136,7 +137,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
     event_data_identifier = event_data.GetIdentifier()
     event.SetEventDataIdentifier(event_data_identifier)
 
-    storage_writer.AddEvent(event)
+    storage_writer.AddAttributeContainer(event)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
 

@@ -3,6 +3,7 @@
 
 Only supports task storage at the moment.
 """
+
 import uuid
 
 import redis
@@ -171,6 +172,11 @@ class RedisStore(interface.BaseStore):
 
     self._redis_client.hset(container_key, string_identifier, serialized_data)
 
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
+      self._redis_client.zincrby(
+          index_name, container.timestamp, string_identifier)
+
   def _WriteStorageMetadata(self):
     """Writes the storage metadata."""
     metadata = {
@@ -181,26 +187,6 @@ class RedisStore(interface.BaseStore):
 
     for key, value in metadata.items():
       self._redis_client.hset(metadata_key, key, value)
-
-  # TODO: refactor
-  def AddEvent(self, event):
-    """Adds an event.
-
-    Args:
-      event (EventObject): event.
-
-    Raises:
-      OSError: if the store cannot be written to.
-      IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-    self._WriteNewAttributeContainer(event)
-
-    event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
-    identifier = event.GetIdentifier()
-    string_identifier = identifier.CopyToString()
-    self._redis_client.zincrby(
-        event_index_name, event.timestamp, string_identifier)
 
   def Close(self):
     """Closes the store."""

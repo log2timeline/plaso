@@ -40,22 +40,22 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
     """
     task = tasks.Task(session_identifier=session.identifier)
 
-    storage_file = sqlite_writer.SQLiteStorageFileWriter(
+    storage_writer = sqlite_writer.SQLiteStorageFileWriter(
         session, path, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
-    storage_file.Open()
+    storage_writer.Open()
 
     for event, event_data, event_data_stream in (
         containers_test_lib.CreateEventsFromValues(event_values_list)):
-      storage_file.AddAttributeContainer(event_data_stream)
+      storage_writer.AddAttributeContainer(event_data_stream)
 
       event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
-      storage_file.AddAttributeContainer(event_data)
+      storage_writer.AddAttributeContainer(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_file.AddEvent(event)
+      storage_writer.AddAttributeContainer(event)
 
-    storage_file.Close()
+    storage_writer.Close()
 
   def testMergeAttributeContainers(self):
     """Tests the MergeAttributeContainers function."""
