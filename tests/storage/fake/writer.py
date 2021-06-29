@@ -32,37 +32,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.AddAttributeContainer(event_source)
 
-  def testAddEventTag(self):
-    """Tests the AddEventTag function."""
-    session = sessions.Session()
-
-    storage_writer = fake_writer.FakeStorageWriter(session)
-    storage_writer.Open()
-
-    test_events = []
-    for event, event_data, event_data_stream in (
-        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
-      storage_writer.AddAttributeContainer(event_data_stream)
-
-      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
-      storage_writer.AddAttributeContainer(event_data)
-
-      event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_writer.AddAttributeContainer(event)
-
-      test_events.append(event)
-
-    event_tag = None
-    test_event_tags = self._CreateTestEventTags(test_events)
-    for event_tag in test_event_tags:
-      storage_writer.AddEventTag(event_tag)
-
-    storage_writer.Close()
-
-    # Test writing an event tag twice.
-    with self.assertRaises(IOError):
-      storage_writer.AddEventTag(event_tag)
-
   def testOpenClose(self):
     """Tests the Open and Close functions."""
     session = sessions.Session()

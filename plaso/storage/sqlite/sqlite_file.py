@@ -315,12 +315,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
     return container
 
-  # TODO: determine if this method should account for non-stored attribute
-  # containers or that it is better to rename the method to
-  # _GetStoredAttributeContainers.
-  # This method has sqlite-specific arguments for filtering and sorting.
-  # pylint: disable=arguments-differ
-  def _GetAttributeContainers(
+  def _GetAttributeContainersWithFilter(
       self, container_type, filter_expression=None, order_by=None):
     """Retrieves a specific type of stored attribute containers.
 
@@ -381,7 +376,15 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
       yield container
 
-      row = cursor.fetchone()
+      if self._storage_profiler:
+        self._storage_profiler.StartTiming('get_containers')
+
+      try:
+        row = cursor.fetchone()
+
+      finally:
+        if self._storage_profiler:
+          self._storage_profiler.StopTiming('get_containers')
 
   def _GetCachedAttributeContainer(self, container_type, index):
     """Retrieves a specific cached attribute container.
@@ -811,24 +814,14 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     """
     self._RaiseIfNotWritable()
 
-    schema = self._CONTAINER_SCHEMAS.get(self._CONTAINER_TYPE_EVENT_TAG, {})
-    if self._use_schema and schema:
-      event_identifier = event_tag.GetEventIdentifier()
-      filter_expression = '_event_row_identifier = {0:d}'.format(
-          event_identifier.row_identifier)
+    event_identifier = event_tag.GetEventIdentifier()
+    existing_event_tag = self.GetEventTagByEventIdentifier(event_identifier)
 
-      existing_event_tags = list(self._GetAttributeContainers(
-          self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression))
-
-      if len(existing_event_tags) == 1:
-        existing_event_tags[0].AddLabels(event_tag.labels)
-        self._WriteExistingAttributeContainer(existing_event_tags[0])
-
-      else:
-        self._WriteNewAttributeContainer(event_tag)
+    if existing_event_tag:
+      existing_event_tag.AddLabels(event_tag.labels)
+      self._WriteExistingAttributeContainer(existing_event_tag)
 
     else:
-      # Do not flatten the event tag and fall back to appending.
       self._WriteNewAttributeContainer(event_tag)
 
   @classmethod
@@ -890,6 +883,29 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
       self._cursor = None
 
     self._is_open = False
+
+  def GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves a specific type of container with a specific identifier.
+
+    Args:
+      container_type (str): container type.
+      identifier (SQLTableIdentifier): attribute container identifier.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      IOError: when the store is closed or if an unsupported identifier is
+          provided.
+      OSError: when the store is closed or if an unsupported identifier is
+          provided.
+    """
+    if not isinstance(identifier, identifiers.SQLTableIdentifier):
+      raise IOError('Unsupported event data identifier type: {0!s}'.format(
+          type(identifier)))
+
+    return self.GetAttributeContainerByIndex(
+        container_type, identifier.row_identifier - 1)
 
   def GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
@@ -953,28 +969,51 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self._CacheAttributeContainerByIndex(container, index)
     return container
 
-  def GetAttributeContainerByIdentifier(self, container_type, identifier):
-    """Retrieves a specific type of container with a specific identifier.
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of stored attribute containers.
 
     Args:
-      container_type (str): container type.
-      identifier (SQLTableIdentifier): attribute container identifier.
+      container_type (str): attribute container type.
 
     Returns:
-      AttributeContainer: attribute container or None if not available.
+      generator(AttributeContainer): attribute container generator.
 
     Raises:
-      IOError: when the store is closed or if an unsupported identifier is
-          provided.
-      OSError: when the store is closed or if an unsupported identifier is
-          provided.
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
     """
-    if not isinstance(identifier, identifiers.SQLTableIdentifier):
-      raise IOError('Unsupported event data identifier type: {0!s}'.format(
-          type(identifier)))
+    return self._GetAttributeContainersWithFilter(container_type)
 
-    return self.GetAttributeContainerByIndex(
-        container_type, identifier.row_identifier - 1)
+  def GetEventTagByEventIdentifier(self, event_identifier):
+    """Retrieves the event tag related to a specific event identifier.
+
+    Args:
+      event_identifier (SQLTableIdentifier): event.
+
+    Returns:
+      EventTag: event tag or None if not available.
+
+    Raises:
+      IOError: when the store is closed or when there is an error querying
+          the storage file.
+      OSError: when the store is closed or when there is an error querying
+          the storage file.
+    """
+    schema = self._CONTAINER_SCHEMAS.get(self._CONTAINER_TYPE_EVENT_TAG, {})
+    if self._use_schema and schema:
+      return None
+
+    filter_expression = '_event_row_identifier = {0:d}'.format(
+        event_identifier.row_identifier)
+
+    generator = self._GetAttributeContainersWithFilter(
+        self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression)
+    existing_event_tags = list(generator)
+
+    if len(existing_event_tags) != 1:
+      return None
+
+    return existing_event_tags[0]
 
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.
@@ -1044,7 +1083,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
       filter_expression = ' AND '.join(filter_expression)
 
-    return self._GetAttributeContainers(
+    return self._GetAttributeContainersWithFilter(
         self._CONTAINER_TYPE_EVENT, filter_expression=filter_expression,
         order_by=column_name)
 

@@ -109,30 +109,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for _CreatetAttributeContainerFromRow
 
-  def testGetAttributeContainers(self):
-    """Tests the _GetAttributeContainers function."""
-    event_data = events.EventData()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      containers = list(storage_file._GetAttributeContainers(
-          storage_file._CONTAINER_TYPE_EVENT_DATA))
-      self.assertEqual(len(containers), 0)
-
-      storage_file.AddAttributeContainer(event_data)
-
-      containers = list(storage_file._GetAttributeContainers(
-          storage_file._CONTAINER_TYPE_EVENT_DATA))
-      self.assertEqual(len(containers), 1)
-
-      with self.assertRaises(IOError):
-        list(storage_file._GetAttributeContainers('bogus'))
-
-      storage_file.Close()
-
   def testGetCachedAttributeContainer(self):
     """Tests the _GetCachedAttributeContainer function."""
     event_data = events.EventData()
@@ -235,8 +211,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for CheckSupportedFormat
 
-  def testGetAttributeContainerByIndex(self):
-    """Tests the GetAttributeContainerByIndex function."""
+  def testGetAttributeContainers(self):
+    """Tests the GetAttributeContainers function."""
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -244,18 +220,18 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      container = storage_file.GetAttributeContainerByIndex(
-          storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
-      self.assertIsNone(container)
+      containers = list(storage_file.GetAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA))
+      self.assertEqual(len(containers), 0)
 
       storage_file.AddAttributeContainer(event_data)
 
-      container = storage_file.GetAttributeContainerByIndex(
-          storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
-      self.assertIsNotNone(container)
+      containers = list(storage_file.GetAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA))
+      self.assertEqual(len(containers), 1)
 
       with self.assertRaises(IOError):
-        storage_file.GetAttributeContainerByIndex('bogus', 0)
+        list(storage_file.GetAttributeContainers('bogus'))
 
       storage_file.Close()
 
@@ -280,6 +256,30 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       container = storage_file.GetAttributeContainerByIdentifier(
           storage_file._CONTAINER_TYPE_EVENT_DATA, identifier)
       self.assertIsNone(container)
+
+      storage_file.Close()
+
+  def testGetAttributeContainerByIndex(self):
+    """Tests the GetAttributeContainerByIndex function."""
+    event_data = events.EventData()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      container = storage_file.GetAttributeContainerByIndex(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
+      self.assertIsNone(container)
+
+      storage_file.AddAttributeContainer(event_data)
+
+      container = storage_file.GetAttributeContainerByIndex(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
+      self.assertIsNotNone(container)
+
+      with self.assertRaises(IOError):
+        storage_file.GetAttributeContainerByIndex('bogus', 0)
 
       storage_file.Close()
 
