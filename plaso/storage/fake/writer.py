@@ -138,6 +138,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
       self._UpdateEventLabelsSessionCounter(container)
+      # TODO: maintain a mapping of event identifier to tag.
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EXTRACTION_WARNING:
       self.number_of_extraction_warnings += 1
@@ -147,22 +148,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_RECOVERY_WARNING:
       self.number_of_recovery_warnings += 1
-
-  # TODO: remove after refactoctoring.
-  def AddEventTag(self, event_tag):
-    """Adds an event tag.
-
-    Args:
-      event_tag (EventTag): event tag.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      KeyError: if the corresponding event already has an event tag.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self.AddAttributeContainer(event_tag)
 
   def Close(self):
     """Closes the storage writer.

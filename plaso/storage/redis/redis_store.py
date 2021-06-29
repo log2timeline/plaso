@@ -77,27 +77,6 @@ class RedisStore(interface.BaseStore):
     return '{0:s}-{1:s}-{2:s}'.format(
         self._session_identifier, self._task_identifier, key_suffix)
 
-  def _GetAttributeContainers(self, container_type):
-    """Retrieves attribute containers
-
-    Args:
-      container_type (str): container type attribute of the container being
-          added.
-
-    Yields:
-      AttributeContainer: attribute container.
-    """
-    container_key = self._GenerateRedisKey(container_type)
-    for identifier, serialized_data in self._redis_client.hscan_iter(
-        container_key):
-      attribute_container = self._DeserializeAttributeContainer(
-          container_type, serialized_data)
-
-      identifier_string = identifier.decode('utf-8')
-      redis_identifier = identifiers.RedisKeyIdentifier(identifier_string)
-      attribute_container.SetIdentifier(redis_identifier)
-      yield attribute_container
-
   def _GetFinalizationKey(self):
     """Generates the finalized key for the store.
 
@@ -203,22 +182,6 @@ class RedisStore(interface.BaseStore):
     self._redis_client.hset(
         finalized_key, self._task_identifier, self._FINALIZED_BYTES)
 
-  # pylint: disable=redundant-returns-doc
-  def GetAttributeContainerByIndex(self, container_type, index):
-    """Retrieves a specific attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      index (int): attribute container index.
-
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-
-    Raises:
-      RuntimeError: since this method is not supported.
-    """
-    raise RuntimeError('Not supported')
-
   def GetAttributeContainerByIdentifier(self, container_type, identifier):
     """Retrieves a specific type of container with a specific identifier.
 
@@ -249,6 +212,43 @@ class RedisStore(interface.BaseStore):
 
     attribute_container.SetIdentifier(identifier)
     return attribute_container
+
+  # pylint: disable=redundant-returns-doc
+  def GetAttributeContainerByIndex(self, container_type, index):
+    """Retrieves a specific attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      index (int): attribute container index.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      RuntimeError: since this method is not supported.
+    """
+    raise RuntimeError('Not supported')
+
+  def GetAttributeContainers(self, container_type):
+    """Retrieves attribute containers
+
+    Args:
+      container_type (str): container type attribute of the container being
+          added.
+
+    Yields:
+      AttributeContainer: attribute container.
+    """
+    container_key = self._GenerateRedisKey(container_type)
+    for identifier, serialized_data in self._redis_client.hscan_iter(
+        container_key):
+      attribute_container = self._DeserializeAttributeContainer(
+          container_type, serialized_data)
+
+      identifier_string = identifier.decode('utf-8')
+      redis_identifier = identifiers.RedisKeyIdentifier(identifier_string)
+      attribute_container.SetIdentifier(redis_identifier)
+      yield attribute_container
 
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.

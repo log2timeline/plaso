@@ -121,19 +121,6 @@ class BaseStore(object):
 
     return attribute_container
 
-  # TODO: is protected method still needed? remove?
-  @abc.abstractmethod
-  def _GetAttributeContainers(self, container_type):
-    """Yields attribute containers
-
-    Args:
-      container_type (str): container type attribute of the container being
-        added.
-
-    Yields:
-      AttributeContainer: attribute container.
-    """
-
   @abc.abstractmethod
   def _RaiseIfNotReadable(self):
     """Raises if the store is not readable.
@@ -229,6 +216,7 @@ class BaseStore(object):
           provided.
     """
 
+  @abc.abstractmethod
   def GetAttributeContainers(self, container_type):
     """Retrieves a specific type of attribute containers.
 
@@ -242,7 +230,21 @@ class BaseStore(object):
       IOError: when the store is closed.
       OSError: when the store is closed.
     """
-    return self._GetAttributeContainers(container_type)
+
+  # @abc.abstractmethod
+  # def GetEventTagByEventIdentifier(self, event_identifier):
+  #   """Retrieves the event tag related to a specific event identifier.
+  #
+  #  Args:
+  #    event_identifier (AttributeContainerIdentifier): event.
+  #
+  #  Returns:
+  #    EventTag: event tag or None if not available.
+  #
+  #  Raises:
+  #    IOError: when the store is closed.
+  #    OSError: when the store is closed.
+  #  """
 
   @abc.abstractmethod
   def GetNumberOfAttributeContainers(self, container_type):
@@ -267,13 +269,13 @@ class BaseStore(object):
       OSError: if there is a mismatch in session identifiers between the
           session start and completion attribute containers.
     """
-    session_start_generator = self._GetAttributeContainers(
+    session_start_generator = self.GetAttributeContainers(
         self._CONTAINER_TYPE_SESSION_START)
-    session_completion_generator = self._GetAttributeContainers(
+    session_completion_generator = self.GetAttributeContainers(
         self._CONTAINER_TYPE_SESSION_COMPLETION)
 
     if self.HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
-      session_configuration_generator = self._GetAttributeContainers(
+      session_configuration_generator = self.GetAttributeContainers(
           self._CONTAINER_TYPE_SESSION_CONFIGURATION)
     else:
       session_configuration_generator = None
@@ -362,7 +364,7 @@ class BaseStore(object):
     # Backwards compatibility for older session storage files that do not
     # store system configuration as part of the session configuration.
     if self.HasAttributeContainers(self._CONTAINER_TYPE_SYSTEM_CONFIGURATION):
-      generator = self._GetAttributeContainers(
+      generator = self.GetAttributeContainers(
           self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
       for system_configuration in generator:
         knowledge_base.ReadSystemConfigurationArtifact(system_configuration)
@@ -733,14 +735,14 @@ class StorageWriter(object):
       container (AttributeContainer): attribute container.
     """
 
-  # TODO: remove after refactoctoring.
-  @abc.abstractmethod
+  # TODO: remove after refactoring.
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): an event tag.
     """
+    self.AddAttributeContainer(event_tag)
 
   @abc.abstractmethod
   def Close(self):

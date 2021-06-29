@@ -339,24 +339,6 @@ class StorageFileWriter(interface.StorageWriter):
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_RECOVERY_WARNING:
       self.number_of_recovery_warnings += 1
 
-  # TODO: remove after refactoctoring.
-  def AddEventTag(self, event_tag):
-    """Adds an event tag.
-
-    Args:
-      event_tag (EventTag): an event tag.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    # TODO: refactor to use AddOrUpdateAttributeContainer
-    self._storage_file.AddEventTag(event_tag)
-
-    self._UpdateEventLabelsSessionCounter(event_tag)
-
   def Close(self):
     """Closes the storage writer.
 
