@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Installation and deployment script."""
 
-from __future__ import print_function
-
 import glob
 import os
 import sys
@@ -29,9 +27,9 @@ except ImportError:
   from distutils.command.sdist import sdist
 
 version_tuple = (sys.version_info[0], sys.version_info[1])
-if version_tuple < (3, 5):
+if version_tuple < (3, 6):
   print((
-      'Unsupported Python version: {0:s}, version 3.5 or higher '
+      'Unsupported Python version: {0:s}, version 3.6 or higher '
       'required.').format(sys.version))
   sys.exit(1)
 
@@ -47,6 +45,7 @@ else:
   class BdistMSICommand(bdist_msi):
     """Custom handler for the bdist_msi command."""
 
+    # pylint: disable=invalid-name
     def run(self):
       """Builds an MSI."""
       # Command bdist_msi does not support the library version, neither a date
@@ -62,6 +61,7 @@ else:
   class BdistRPMCommand(bdist_rpm):
     """Custom handler for the bdist_rpm command."""
 
+    # pylint: disable=invalid-name
     def _make_spec_file(self):
       """Generates the text of an RPM spec file.
 
@@ -78,11 +78,15 @@ else:
 
       description = []
       requires = ''
+      summary = ''
       in_description = False
 
       python_spec_file = []
       for line in iter(spec_file):
-        if line.startswith('BuildRequires: '):
+        if line.startswith('Summary: '):
+          summary = line[9:]
+
+        elif line.startswith('BuildRequires: '):
           line = 'BuildRequires: {0:s}-setuptools, {0:s}-devel'.format(
               python_package)
 
@@ -139,7 +143,7 @@ else:
 
           python_spec_file.extend([
               '%package -n %{name}-data',
-              'Summary: Data files for plaso (log2timeline)',
+              'Summary: Data files for {0:s}'.format(summary),
               '',
               '%description -n %{name}-data'])
 
@@ -147,11 +151,12 @@ else:
 
           python_spec_file.append(
               '%package -n {0:s}-%{{name}}'.format(python_package))
+          python_summary = 'Python 3 module of {0:s}'.format(summary)
 
           python_spec_file.extend([
               'Requires: plaso-data >= %{{version}} {0:s}'.format(
                   requires),
-              'Summary: Python 3 module of plaso (log2timeline)',
+              'Summary: {0:s}'.format(python_summary),
               '',
               '%description -n {0:s}-%{{name}}'.format(python_package)])
 
@@ -161,7 +166,7 @@ else:
               '%package -n %{name}-tools',
               'Requires: {0:s}-plaso >= %{{version}}'.format(
                   python_package),
-              'Summary: Tools for plaso (log2timeline)',
+              'Summary: Tools for {0:s}'.format(summary),
               '',
               '%description -n %{name}-tools'])
 
@@ -185,7 +190,7 @@ else:
 
 
 plaso_description = (
-    'Super timeline all the things.')
+    'Plaso (log2timeline) - Super timeline all the things')
 
 plaso_long_description = (
     'Plaso (log2timeline) is a framework to create super timelines. Its '
@@ -228,7 +233,9 @@ setup(
     scripts=glob.glob(os.path.join('tools', '[a-z]*.py')),
     data_files=[
         ('share/plaso', glob.glob(
-            os.path.join('data', '*'))),
+            os.path.join('data', '*.*'))),
+        ('share/plaso/formatters', glob.glob(
+            os.path.join('data', 'formatters', '*.yaml'))),
         ('share/doc/plaso', [
             'ACKNOWLEDGEMENTS', 'AUTHORS', 'LICENSE', 'README']),
     ],

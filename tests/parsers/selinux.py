@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the selinux log file parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import selinux as _  # pylint: disable=unused-import
 from plaso.parsers import selinux
 
 from tests.parsers import test_lib
@@ -23,68 +20,52 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         ['selinux.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_warnings, 4)
     self.assertEqual(storage_writer.number_of_events, 7)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 4)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # Test case: normal entry.
-    event = events[0]
+    expected_event_values = {
+        'audit_type': 'LOGIN',
+        'body': (
+            'pid=25443 uid=0 old auid=4294967295 new auid=0 old ses=4294967295 '
+            'new ses=1165'),
+        'date_time': '2012-05-24 07:40:01.174000',
+        'data_type': 'selinux:line',
+        'pid': '25443'}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:01.174000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = (
-        '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
-        'auid=4294967295 new auid=0 old ses=4294967295 new ses=1165')
-    expected_short_message = (
-        '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
-        'auid=4294967295 new auid=...')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Test case: short date.
-    event = events[1]
+    expected_event_values = {
+        'audit_type': 'SHORTDATE',
+        'body': 'check rounding',
+        'date_time': '2012-05-24 07:40:01.000000',
+        'data_type': 'selinux:line'}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:01.000000')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    # Test case: no message.
+    expected_event_values = {
+        'audit_type': 'NOMSG',
+        'date_time': '2012-05-24 07:40:22.174000',
+        'data_type': 'selinux:line'}
 
-    expected_string = '[audit_type: SHORTDATE] check rounding'
-
-    self._TestGetMessageStrings(
-        event_data, expected_string, expected_string)
-
-    # Test case: no msg.
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:22.174000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_string = '[audit_type: NOMSG]'
-
-    self._TestGetMessageStrings(
-        event_data, expected_string, expected_string)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # Test case: under score.
-    event = events[3]
+    expected_event_values = {
+        'audit_type': 'UNDER_SCORE',
+        'body': (
+            'pid=25444 uid=0 old auid=4294967295 new auid=54321 old '
+            'ses=4294967295 new ses=1166'),
+        'date_time': '2012-05-24 07:47:46.174000',
+        'data_type': 'selinux:line',
+        'pid': '25444'}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-24 07:47:46.174000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = (
-        '[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
-        'auid=4294967295 new auid=54321 old ses=4294967295 new ses=1166')
-    expected_short_message = (
-        '[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
-        'auid=4294967295 new...')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
 
 if __name__ == '__main__':

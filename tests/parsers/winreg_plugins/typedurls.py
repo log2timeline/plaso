@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the MSIE typed URLs Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import typedurls
 
 from tests.parsers.winreg_plugins import test_lib
@@ -45,25 +42,13 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307750')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:typedurls')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
-
-    expected_message = (
-        '[{0:s}] '
+    expected_entries = (
         'url1: http://cnn.com/ '
         'url2: http://twitter.com/ '
         'url3: http://linkedin.com/ '
@@ -76,11 +61,18 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         'url10: http://www.adobe.com/ '
         'url11: http://www.google.com/ '
         'url12: http://www.firefox.com/ '
-        'url13: http://go.microsoft.com/fwlink/?LinkId=69157').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'url13: http://go.microsoft.com/fwlink/?LinkId=69157')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2012-03-12 21:23:53.3077499',
+        'data_type': 'windows:registry:typedurls',
+        'entries': expected_entries,
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
@@ -100,29 +92,25 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_entries = (
+        'url1: \\\\controller')
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 07:58:15.811625')
+    expected_event_values = {
+        'date_time': '2010-11-10 07:58:15.8116250',
+        'data_type': 'windows:registry:typedurls',
+        'entries': expected_entries,
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:typedurls')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
-
-    expected_message = (
-        '[{0:s}] '
-        'url1: \\\\controller').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

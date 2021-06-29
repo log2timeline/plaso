@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome Preferences file event formatter."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.formatters import chrome_preferences
@@ -11,33 +9,61 @@ from plaso.formatters import chrome_preferences
 from tests.formatters import test_lib
 
 
-class ChromeExtensionInstallationEventFormatterTest(
+class ChromePreferencesPrimaryURLFormatterHelperTest(
     test_lib.EventFormatterTestCase):
-  """Tests for the Chrome extension installation event formatter."""
+  """Tests for the Google Chrome preferences primary URL formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = (
-        chrome_preferences.ChromeExtensionInstallationEventFormatter())
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = (
+        chrome_preferences.ChromePreferencesPrimaryURLFormatterHelper())
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = (
-        chrome_preferences.ChromeExtensionInstallationEventFormatter())
+    event_values = {'primary_url': 'https://example.com'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['primary_url'], 'https://example.com')
 
-    expected_attribute_names = [
-        'extension_id', 'extension_name', 'path']
+    event_values = {'primary_url': ''}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['primary_url'], 'local file')
 
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+    event_values = {'primary_url': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['primary_url'])
 
 
-# TODO: add tests for ChromeExtensionsAutoupdaterEvent
-# TODO: add tests for ChromeExtensionInstallationEventFormatter
-# TODO: add tests for ChromeContentSettingsExceptionsFormatter
+class ChromePreferencesSecondaryURLFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Google Chrome preferences secondary URL formatter helper."""
+
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = (
+        chrome_preferences.ChromePreferencesSecondaryURLFormatterHelper())
+
+    event_values = {
+        'primary_url': 'https://example.com',
+        'secondary_url': 'https://anotherexample.com'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(
+        event_values['secondary_url'], 'https://anotherexample.com')
+
+    event_values = {
+        'primary_url': 'https://example.com',
+        'secondary_url': 'https://example.com'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['secondary_url'])
+
+    event_values = {
+        'primary_url': 'https://example.com',
+        'secondary_url': ''}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['secondary_url'], 'local file')
+
+    event_values = {
+        'primary_url': 'https://example.com',
+        'secondary_url': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['secondary_url'])
 
 
 if __name__ == '__main__':

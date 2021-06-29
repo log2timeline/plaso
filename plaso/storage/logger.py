@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The storage sub module logger."""
 
-from __future__ import unicode_literals
-
 import logging
 
 

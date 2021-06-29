@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Application Compatibility Cache key."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -11,10 +11,10 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 
 
 class AppCompatCacheEventData(events.EventData):
@@ -23,6 +23,9 @@ class AppCompatCacheEventData(events.EventData):
   Attributes:
     entry_index (int): cache entry index number for the record.
     key_path (str): Windows Registry key path.
+    offset (int): offset of the Application Compatibility Cache entry relative
+        to the start of the Windows Registry value data, from which the event
+        data was extracted.
     path (str): full path to the executable.
   """
 
@@ -33,6 +36,7 @@ class AppCompatCacheEventData(events.EventData):
     super(AppCompatCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_index = None
     self.key_path = None
+    self.offset = None
     self.path = None
 
 
@@ -63,11 +67,11 @@ class AppCompatCacheCachedEntry(object):
 
 
 class AppCompatCacheWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Application Compatibility Cache data Windows Registry plugin."""
 
   NAME = 'appcompatcache'
-  DESCRIPTION = 'Parser for Application Compatibility Cache Registry data.'
+  DATA_FORMAT = 'Application Compatibility Cache Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -77,7 +81,8 @@ class AppCompatCacheWindowsRegistryPlugin(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
           'Session Manager\\AppCompatCache')])
 
-  _DEFINITION_FILE = 'appcompatcache.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'appcompatcache.yaml')
 
   _FORMAT_TYPE_2000 = 1
   _FORMAT_TYPE_XP = 2
@@ -673,7 +678,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
       if cached_entry_object.last_modification_time is not None:
         if not cached_entry_object.last_modification_time:
-          date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+          date_time = dfdatetime_semantic_time.NotSet()
         else:
           date_time = dfdatetime_filetime.Filetime(
               timestamp=cached_entry_object.last_modification_time)
@@ -685,7 +690,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
       if cached_entry_object.last_update_time is not None:
         if not cached_entry_object.last_update_time:
-          date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+          date_time = dfdatetime_semantic_time.NotSet()
         else:
           date_time = dfdatetime_filetime.Filetime(
               timestamp=cached_entry_object.last_update_time)
@@ -703,4 +708,5 @@ class AppCompatCacheWindowsRegistryPlugin(
         break
 
 
-winreg.WinRegistryParser.RegisterPlugin(AppCompatCacheWindowsRegistryPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(
+    AppCompatCacheWindowsRegistryPlugin)

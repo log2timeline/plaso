@@ -6,10 +6,10 @@
 
 ## Usage
 
-To get a full list of parameters that can be passed to the tool use the ``-h`` or ``--help`` switch. The only required argument is ``IMAGE``, which should point to your source data. 
+To get a full list of parameters that can be passed to the tool use the ``-h`` or ``--help`` switch. The only required argument is ``IMAGE``, which should point to your source data.
 
 ```
-image_export.py IMAGE 
+image_export.py IMAGE
 ```
 
 Command above will extract all unique allocated files and generate hashes.json file to ``export/`` directory, which is relative to the folder where you run ``image_export.py`` from. File ``hashes.json`` will contain list of unique hashes of extracted files. In case there are any duplicates, the file will contain paths to all duplicate files.
@@ -19,7 +19,7 @@ There are several ways to define how you want to limit the amount files to extra
  + Based on time range
  + Based on format signature
 
-### Format signatures 
+### Format signatures
 In order to extract files based on their signature, use flag ``--signatures``. To list all available file signatures run :
 
 ```
@@ -42,7 +42,7 @@ image_export.py --names .bash_history [IMAGE]
 Flag ``--names`` accept comma separated strings.
 
 ### Extension
-You can extract files based on their extension. To extract all docx files run the command below: 
+You can extract files based on their extension. To extract all docx files run the command below:
 
 
 ```
@@ -61,20 +61,20 @@ image_export.py --date-filter "crtime,2019-09-01,2019-09-30" [IMAGE]
 Command above will extract all files created in September, 2019.
 
 
-For more details on date time filtering run ``image_export.py -h``. 
+For more details on date time filtering run ``image_export.py -h``.
 
-### Output folder 
-In order to specify custom output folder, where all the files will be extracted, provide ``-w`` flag: 
+### Output folder
+In order to specify custom output folder, where all the files will be extracted, provide ``-w`` flag:
 
 ```
 image_export.py -w ~/image_export_output [IMAGE]
 ```
 
-### Duplicate handling 
-By default image_export.py will not extract duplicate files, however paths to all duplicate files will be stored in hashes.json file. If you'd like to extract duplicate files add `` --include_duplicates`` flag. 
+### Duplicate handling
+By default image_export.py will not extract duplicate files, however paths to all duplicate files will be stored in hashes.json file. If you'd like to extract duplicate files add `` --include_duplicates`` flag.
 
 
-### Collection filters 
+### Collection filters
 More details: [collection filters](Collection-Filters.md)
 
 
@@ -82,7 +82,7 @@ More details: [collection filters](Collection-Filters.md)
 
 Talk about:
 ```
---data 
+--data
 --no_vss
 --vss_stores VSS_STORES
 ```

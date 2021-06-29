@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """The output modules CLI arguments helper."""
 
-from __future__ import unicode_literals
-
-import os
 import sys
 
 from plaso.cli import tools
@@ -72,6 +69,8 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the output format is not supported or the output
+          is not provided or already exists.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
@@ -84,16 +83,6 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
       if not output_manager.OutputManager.HasOutputClass(output_format):
         raise errors.BadConfigOption(
             'Unsupported output format: {0:s}.'.format(output_format))
-
-    if output_manager.OutputManager.IsLinearOutputModule(output_format):
-      if not output_filename:
-        raise errors.BadConfigOption((
-            'Output format: {0:s} requires an output file').format(
-                output_format))
-
-      if os.path.exists(output_filename):
-        raise errors.BadConfigOption(
-            'Output file already exists: {0:s}.'.format(output_filename))
 
     setattr(configuration_object, '_output_format', output_format)
     setattr(configuration_object, '_output_filename', output_filename)

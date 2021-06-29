@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Spotlight searched terms plist plugin."""
+"""Plist parser plugin for Spotlight searched terms plist files."""
 
-from __future__ import unicode_literals
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
@@ -11,7 +11,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class SpotlightPlugin(interface.PlistPlugin):
-  """Basic plugin to extract information from Spotlight plist file.
+  """Plist parser plugin for Spotlight searched terms plist files.
 
   Further information about extracted fields:
     name of the item:
@@ -28,13 +28,15 @@ class SpotlightPlugin(interface.PlistPlugin):
   """
 
   NAME = 'spotlight'
-  DESCRIPTION = 'Parser for Spotlight plist files.'
+  DATA_FORMAT = 'Spotlight plist file'
 
-  PLIST_PATH = 'com.apple.spotlight.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.spotlight.plist')])
+
   PLIST_KEYS = frozenset(['UserShortcuts'])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Spotlight entries.
 
     Args:
@@ -43,7 +45,7 @@ class SpotlightPlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     shortcuts = match.get('UserShortcuts', {})
-    for search_text, data in iter(shortcuts.items()):
+    for search_text, data in shortcuts.items():
       datetime_value = data.get('LAST_USED', None)
       if not datetime_value:
         continue
@@ -58,8 +60,11 @@ class SpotlightPlugin(interface.PlistPlugin):
       event_data.key = search_text
       event_data.root = '/UserShortcuts'
 
-      event = time_events.PythonDatetimeEvent(
-          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromDatetime(datetime_value)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the status view CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -25,11 +23,11 @@ usage: cli_helper.py [--status_view TYPE]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --status_view TYPE, --status-view TYPE
                         The processing status view mode: "linear", "none" or
                         "window".
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

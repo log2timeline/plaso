@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for compound ZIP files."""
 
-from __future__ import unicode_literals
-
-import struct
 import zipfile
 
 from plaso.lib import errors
@@ -13,14 +10,14 @@ from plaso.parsers import manager
 
 
 class CompoundZIPParser(interface.FileObjectParser):
-  """Shared functionality for parsing compound zip files.
+  """Shared functionality for parsing compound ZIP files.
 
-  Compound zip files are zip files used as containers to create another file
+  Compound ZIP files are ZIP files used as containers to create another file
   format, as opposed to archives of unrelated files.
   """
 
   NAME = 'czip'
-  DESCRIPTION = 'Parser for compound ZIP files.'
+  DATA_FORMAT = 'Compound ZIP file'
 
   _plugin_classes = {}
 
@@ -44,33 +41,39 @@ class CompoundZIPParser(interface.FileObjectParser):
 
     try:
       zip_file = zipfile.ZipFile(file_object, 'r', allowZip64=True)
-      self._ProcessZipFileWithPlugins(parser_mediator, zip_file)
-      zip_file.close()
 
-    # Some non-ZIP files return true for is_zipfile but will fail with a
-    # negative seek (IOError) or another error.
-    except (zipfile.BadZipfile, struct.error) as exception:
+    # Some non-ZIP files return true for is_zipfile but will fail with another
+    # error like a negative seek (IOError). Note that this function can raise
+    # many different exceptions.
+    except Exception as exception:  # pylint: disable=broad-except
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
 
-  def _ProcessZipFileWithPlugins(self, parser_mediator, zip_file):
-    """Processes a zip file using all compound zip files.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      zip_file (zipfile.ZipFile): the zip file. It should not be closed in
-          this method, but will be closed in ParseFileObject().
-    """
-    archive_members = zip_file.namelist()
     for plugin in self._plugins:
+      if parser_mediator.abort:
+        break
+
+      file_entry = parser_mediator.GetFileEntry()
+      display_name = parser_mediator.GetDisplayName(file_entry)
+
+      if not plugin.CheckRequiredPaths(zip_file):
+        logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
+            display_name, plugin.NAME))
+        continue
+
+      logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+          display_name, plugin.NAME))
+
       try:
-        plugin.UpdateChainAndProcess(
-            parser_mediator, zip_file=zip_file, archive_members=archive_members)
-      except errors.WrongCompoundZIPPlugin as exception:
-        logger.debug('[{0:s}] wrong plugin: {1!s}'.format(
-            self.NAME, exception))
+        plugin.UpdateChainAndProcess(parser_mediator, zip_file=zip_file)
+
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionWarning((
+            'plugin: {0:s} unable to parse ZIP file: {1:s} with error: '
+            '{2!s}').format(plugin.NAME, display_name, exception))
+
+    zip_file.close()
 
 
 manager.ParsersManager.RegisterParser(CompoundZIPParser)

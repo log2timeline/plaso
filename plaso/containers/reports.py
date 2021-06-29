@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """Report related attribute container definitions."""
 
-from __future__ import unicode_literals
-
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.containers import interface
 from plaso.containers import manager
 
@@ -13,9 +9,12 @@ class AnalysisReport(interface.AttributeContainer):
   """Analysis report attribute container.
 
   Attributes:
-    filter_string (str): event filter expression.
+    analysis_counter (collections.Counter): counter of analysis results, for
+         example number of events analyzed and tagged.
+    event_filter (str): event filter expression that was used when the analysis
+        plugin was run.
+    filter_string (str): deprecated variant of event_filter.
     plugin_name (str): name of the analysis plugin that generated the report.
-    report_array (array[str]): ???
     report_dict (dict[str]): ???
     text (str): report text.
     time_compiled (int): timestamp of the date and time the report was compiled.
@@ -31,9 +30,11 @@ class AnalysisReport(interface.AttributeContainer):
       text (Optional[str]): report text.
     """
     super(AnalysisReport, self).__init__()
+    self.analysis_counter = None
+    self.event_filter = None
+    # TODO: filter_string is deprecated remove at some point.
     self.filter_string = None
     self.plugin_name = plugin_name
-    self.report_array = None
     self.report_dict = None
     # TODO: rename text to body?
     self.text = text
@@ -53,32 +54,6 @@ class AnalysisReport(interface.AttributeContainer):
       dictionary[attribute_name] = attribute_value
 
     return dictionary
-
-  def GetString(self):
-    """Retrieves a string representation of the report.
-
-    Returns:
-      str: string representation of the report.
-    """
-    string_list = []
-    string_list.append('Report generated from: {0:s}'.format(self.plugin_name))
-
-    time_compiled = getattr(self, 'time_compiled', None)
-    if time_compiled is not None:
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=time_compiled)
-      date_time_string = date_time.CopyToDateTimeStringISO8601()
-      string_list.append('Generated on: {0:s}'.format(date_time_string))
-
-    filter_string = getattr(self, 'filter_string', '')
-    if filter_string:
-      string_list.append('Filter String: {0:s}'.format(filter_string))
-
-    string_list.append('')
-    string_list.append('Report text:')
-    string_list.append(self.text)
-
-    return '\n'.join(string_list)
 
 
 manager.AttributeContainersManager.RegisterAttributeContainer(AnalysisReport)

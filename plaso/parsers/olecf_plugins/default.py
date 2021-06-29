@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The default plugin for parsing OLE Compound Files (OLECF)."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -34,7 +32,7 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
   """Class to define the default OLECF file plugin."""
 
   NAME = 'olecf_default'
-  DESCRIPTION = 'Parser for a generic OLECF item.'
+  DATA_FORMAT = 'Generic OLE compound item'
 
   def _ParseItem(self, parser_mediator, olecf_item):
     """Parses an OLECF item.
@@ -51,7 +49,6 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
 
     event_data = OLECFItemEventData()
     event_data.name = olecf_item.name
-    event_data.offset = 0
     event_data.size = olecf_item.size
 
     creation_time, modification_time = self._GetTimestamps(olecf_item)
@@ -76,7 +73,7 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
     return result
 
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses an OLECF file.
+    """Extracts events from an OLECF file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -95,11 +92,10 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
     if not self._ParseItem(parser_mediator, root_item):
       event_data = OLECFItemEventData()
       event_data.name = root_item.name
-      event_data.offset = 0
       event_data.size = root_item.size
 
       # If no event was produced, produce at least one for the root item.
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)

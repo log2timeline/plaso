@@ -1,25 +1,17 @@
 # -*- coding: utf-8 -*-
 """This file contains a plugin for parsing Google Analytics cookies."""
 
-from __future__ import unicode_literals
+from urllib import parse as urlparse
 
-import codecs
-
-# pylint: disable=wrong-import-position
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers.cookie_plugins import interface
 from plaso.parsers.cookie_plugins import manager
 
-if py2to3.PY_2:
-  import urllib as urlparse
-else:
-  from urllib import parse as urlparse  # pylint: disable=no-name-in-module
 
 # TODO: determine if __utmc always 0?
 
@@ -75,17 +67,13 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
   """
 
   NAME = 'google_analytics_utma'
-  DESCRIPTION = 'Google Analytics utma cookie parser'
+  DATA_FORMAT = 'Google Analytics __utma cookie'
 
   COOKIE_NAME = '__utma'
 
-  URLS = [(
-      'http://www.dfinews.com/articles/2012/02/'
-      'google-analytics-cookies-and-forensic-implications')]
-
-  def GetEntries(
+  def _ParseCookieData(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts event objects from the cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -169,7 +157,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
     elif first_visit_posix_time is None and previous_visit_posix_time is None:
       # If both creation_time and written_time are None produce an event
       # object without a timestamp.
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
     if date_time is not None:
@@ -196,17 +184,13 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
   """
 
   NAME = 'google_analytics_utmb'
-  DESCRIPTION = 'Google Analytics utmb cookie parser'
+  DATA_FORMAT = 'Google Analytics __utmb cookie'
 
   COOKIE_NAME = '__utmb'
 
-  URLS = [(
-      'http://www.dfinews.com/articles/2012/02/'
-      'google-analytics-cookies-and-forensic-implications')]
-
-  def GetEntries(
+  def _ParseCookieData(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts event objects from the cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -255,7 +239,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
           timestamp=last_visit_posix_time)
       timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
     event_data = GoogleAnalyticsEventData('utmb')
@@ -279,13 +263,13 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
   """
 
   NAME = 'google_analytics_utmt'
-  DESCRIPTION = 'Google Analytics utmt cookie parser'
+  DATA_FORMAT = 'Google Analytics __utmt cookie'
 
   COOKIE_NAME = '__utmt'
 
-  def GetEntries(
+  def _ParseCookieData(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts event objects from the cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -312,7 +296,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
           timestamp=last_visit_posix_time)
       timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
     event_data = GoogleAnalyticsEventData('utmt')
@@ -341,17 +325,13 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
   """
 
   NAME = 'google_analytics_utmz'
-  DESCRIPTION = 'Google Analytics utmz cookie parser'
+  DATA_FORMAT = 'Google Analytics __utmz cookie'
 
   COOKIE_NAME = '__utmz'
 
-  URLS = [(
-      'http://www.dfinews.com/articles/2012/02/'
-      'google-analytics-cookies-and-forensic-implications')]
-
-  def GetEntries(
+  def _ParseCookieData(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts event objects from the cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -409,38 +389,14 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       extra_attributes = {}
       for variable in extra_variables:
         key, _, value = variable.partition('=')
-
-        # Urllib2 in Python 2 requires a 'str' argument, not 'unicode'. We thus
-        # need to convert the value argument to 'str" and back again, but only
-        # in Python 2.
-        if isinstance(value, py2to3.UNICODE_TYPE) and py2to3.PY_2:
-          try:
-            value = codecs.decode(value, 'ascii')
-          except UnicodeEncodeError:
-            value = codecs.decode(value, 'ascii', errors='replace')
-            parser_mediator.ProduceExtractionWarning(
-                'Cookie contains non 7-bit ASCII characters, which have been '
-                'replaced with a "?".')
-
-        value = urlparse.unquote(value)
-
-        if py2to3.PY_2:
-          try:
-            value = codecs.encode(value, 'utf-8')
-          except UnicodeDecodeError:
-            value = codecs.encode(value, 'utf-8', errors='replace')
-            parser_mediator.ProduceExtractionWarning(
-                'Cookie value did not contain a Unicode string. Non UTF-8 '
-                'characters have been replaced.')
-
-        extra_attributes[key] = value
+        extra_attributes[key] = urlparse.unquote(value)
 
     if last_visit_posix_time is not None:
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=last_visit_posix_time)
       timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
     event_data = GoogleAnalyticsEventData('utmz')
@@ -450,7 +406,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
     event_data.sources = number_of_sources
     event_data.url = url
 
-    for key, value in iter(extra_attributes.items()):
+    for key, value in extra_attributes.items():
       setattr(event_data, key, value)
 
     event = time_events.DateTimeValuesEvent(date_time, timestamp_description)

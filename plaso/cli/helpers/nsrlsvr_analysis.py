@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The nsrlsvr analysis plugin CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import nsrlsvr
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -18,8 +16,9 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
   _DEFAULT_HASH = 'md5'
   _DEFAULT_HOST = 'localhost'
-  _DEFAULT_LABEL = 'nsrl_present'
+  _DEFAULT_LABEL = nsrlsvr.NsrlsvrAnalysisPlugin.DEFAULT_LABEL
   _DEFAULT_PORT = 9120
+  _SUPPORTED_HASHES = nsrlsvr.NsrlsvrAnalyzer.SUPPORTED_HASHES
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -34,12 +33,11 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         '--nsrlsvr-hash', '--nsrlsvr_hash', dest='nsrlsvr_hash', type=str,
-        action='store', choices=nsrlsvr.NsrlsvrAnalyzer.SUPPORTED_HASHES,
+        action='store', choices=cls._SUPPORTED_HASHES,
         default=cls._DEFAULT_HASH, metavar='HASH', help=(
             'Type of hash to use to query nsrlsvr instance, the default is: '
             '{0:s}. Supported options: {1:s}'.format(
-                cls._DEFAULT_HASH, ', '.join(
-                    nsrlsvr.NsrlsvrAnalyzer.SUPPORTED_HASHES))))
+                cls._DEFAULT_HASH, ', '.join(cls._SUPPORTED_HASHES))))
 
     argument_group.add_argument(
         '--nsrlsvr-host', '--nsrlsvr_host', dest='nsrlsvr_host', type=str,
@@ -51,8 +49,8 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         '--nsrlsvr-label', '--nsrlsvr_label', dest='nsrlsvr_label', type=str,
         action='store', default=cls._DEFAULT_LABEL, metavar='LABEL', help=(
-            'Label to apply to events, the default is: '
-            '{0:s}.').format(cls._DEFAULT_LABEL))
+            'Label to apply to events, the default is: {0:s}.').format(
+                cls._DEFAULT_LABEL))
 
     argument_group.add_argument(
         '--nsrlsvr-port', '--nsrlsvr_port', dest='nsrlsvr_port', type=int,
@@ -62,7 +60,6 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
   # pylint: disable=arguments-differ
   @classmethod
-  # pylint: disable=arguments-differ
   def ParseOptions(cls, options, analysis_plugin):
     """Parses and validates options.
 

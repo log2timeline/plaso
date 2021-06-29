@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the spotlight plist plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import spotlight
 
 from tests.parsers.plist_plugins import test_lib
@@ -23,8 +20,9 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
@@ -38,21 +36,15 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(timestamps, expected_timestamps)
 
-    event = events[6]
+    expected_event_values = {
+        'data_type': 'plist:key',
+        'desc': (
+            'Spotlight term searched "gr" associate to Grab '
+            '(/Applications/Utilities/Grab.app)'),
+        'key': 'gr',
+        'root': '/UserShortcuts'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.key, 'gr')
-    self.assertEqual(event_data.root, '/UserShortcuts')
-
-    expected_description = (
-        'Spotlight term searched "gr" associate to Grab '
-        '(/Applications/Utilities/Grab.app)')
-    self.assertEqual(event_data.desc, expected_description)
-
-    expected_message = '/UserShortcuts/gr {0:s}'.format(expected_description)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
 
 if __name__ == '__main__':

@@ -1,8 +1,6 @@
 # -*_ coding: utf-8 -*-
 """Parser for SCCM Logs."""
 
-from __future__ import unicode_literals
-
 import re
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -38,7 +36,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for Windows System Center Configuration Manager (SCCM) logs."""
 
   NAME = 'sccm'
-  DESCRIPTION = 'Parser for SCCM logs files.'
+  DATA_FORMAT = 'System Center Configuration Manager (SCCM) client log file'
 
   _ENCODING = 'utf-8-sig'
 
@@ -233,8 +231,6 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
 
     event_data = SCCMLogEventData()
     event_data.component = self._GetValueFromStructure(structure, 'component')
-    # TODO: pass line number to offset or remove.
-    event_data.offset = 0
     event_data.text = self._GetValueFromStructure(structure, 'text')
 
     event = time_events.DateTimeValuesEvent(

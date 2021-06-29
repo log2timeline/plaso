@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the nsrlsvr analysis plugin CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -27,7 +25,7 @@ usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --nsrlsvr-hash HASH, --nsrlsvr_hash HASH
                         Type of hash to use to query nsrlsvr instance, the
                         default is: md5. Supported options: md5, sha1
@@ -40,7 +38,7 @@ optional arguments:
   --nsrlsvr-port PORT, --nsrlsvr_port PORT
                         Port number of the nsrlsvr instance to query, the
                         default is: 9120.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

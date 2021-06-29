@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the typed URLs key."""
 
-from __future__ import unicode_literals
-
 import re
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -33,7 +31,7 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
   """A Windows Registry plugin for typed URLs history."""
 
   NAME = 'windows_typed_urls'
-  DESCRIPTION = 'Parser for Explorer typed URLs Registry data.'
+  DATA_FORMAT = 'Windows Explorer typed URLs Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -77,4 +75,4 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(TypedURLsPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(TypedURLsPlugin)

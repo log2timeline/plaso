@@ -2,18 +2,13 @@
 # -*- coding: utf-8 -*-
 """Tests for the XLSX output module."""
 
-from __future__ import unicode_literals
-
 import os
 import unittest
 import zipfile
 
 from defusedxml import ElementTree
 
-from plaso.formatters import interface as formatters_interface
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import xlsx
 
 from tests import test_lib as shared_test_lib
@@ -21,18 +16,10 @@ from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
-class TestEventFormatter(formatters_interface.EventFormatter):
-  """Event object formatter used for testing."""
-
-  DATA_TYPE = 'test:xlsx'
-  FORMAT_STRING = '{text}'
-
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Syslog'
-
-
 class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
   """Test the XLSX output module."""
+
+  # pylint: disable=protected-access
 
   _SHARED_STRINGS = 'xl/sharedStrings.xml'
   _SHEET1 = 'xl/worksheets/sheet1.xml'
@@ -45,13 +32,13 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
   _VALUE_STRING_TAG = '}v'
 
   _TEST_EVENTS = [
-      {'data_type': 'test:xlsx',
+      {'data_type': 'test:event',
        'hostname': 'ubuntu',
        'filename': 'log/syslog.1',
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root) Invalid character -> \ud801'),
-       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
 
   def _GetSheetRows(self, filename):
@@ -111,30 +98,24 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteHeader function."""
-    formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
+    output_mediator = self._CreateOutputMediator()
 
-    expected_header = [
-        'datetime', 'timestamp_desc', 'source', 'source_long',
-        'message', 'parser', 'display_name', 'tag']
-    expected_event_body = [
-        '41087.76181712963', 'Metadata Modification Time', 'LOG', 'Syslog',
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        'closed for user root) Invalid character -> \ufffd',
-        '-', '-', '-']
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
+    output_module = xlsx.XLSXOutputModule(output_mediator)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      output_mediator = self._CreateOutputMediator()
-      output_module = xlsx.XLSXOutputModule(output_mediator)
-
       xslx_file = os.path.join(temp_directory, 'xlsx.out')
-      output_module.SetFilename(xslx_file)
 
-      output_module.Open()
+      output_module.Open(path=xslx_file)
       output_module.WriteHeader()
 
-      event, event_data = containers_test_lib.CreateEventFromValues(
-          self._TEST_EVENTS[0])
-      output_module.WriteEvent(event, event_data, None)
+      event, event_data, event_data_stream = (
+          containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+      output_module.WriteEvent(event, event_data, event_data_stream, None)
 
       output_module.WriteFooter()
       output_module.Close()
@@ -143,6 +124,16 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
         rows = self._GetSheetRows(xslx_file)
       except ValueError as exception:
         self.fail(exception)
+
+      expected_header = [
+          'datetime', 'timestamp_desc', 'source', 'source_long',
+          'message', 'parser', 'display_name', 'tag']
+      expected_event_body = [
+          '41087.76181712963', 'Metadata Modification Time', 'FILE',
+          'Test log file',
+          'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+          'closed for user root) Invalid character -> \ufffd',
+          '-', '-', '-']
 
       self.assertEqual(expected_header, rows[0])
       self.assertEqual(len(expected_event_body), len(rows[1]))
@@ -159,9 +150,8 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       output_module = xlsx.XLSXOutputModule(output_mediator)
 
       xlsx_file = os.path.join(temp_directory, 'xlsx.out')
-      output_module.SetFilename(xlsx_file)
 
-      output_module.Open()
+      output_module.Open(path=xlsx_file)
       output_module.WriteHeader()
       output_module.WriteFooter()
       output_module.Close()

@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
 """Event attribute containers."""
 
-from __future__ import unicode_literals
-
 import re
 
 from plaso.containers import interface
 from plaso.containers import manager
-from plaso.lib import py2to3
 
 
 class EventData(interface.AttributeContainer):
   """Event data attribute container.
 
+  The event data attribute container represents the attributes of an entity,
+  such as a database record or log line.
+
   Attributes:
     data_type (str): event data type indicator.
-    offset (int): offset relative to the start of the data stream where
-        the event data is stored.
-    query (str): query that was used to obtain the event data.
+    parser (str): string identifying the parser that produced the event data.
   """
   CONTAINER_TYPE = 'event_data'
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_stream_row_identifier']
 
   def __init__(self, data_type=None):
     """Initializes an event data attribute container.
@@ -28,9 +28,91 @@ class EventData(interface.AttributeContainer):
       data_type (Optional[str]): event data type indicator.
     """
     super(EventData, self).__init__()
+    self._event_data_stream_identifier = None
+    self._event_data_stream_row_identifier = None
     self.data_type = data_type
-    self.offset = None
-    self.query = None
+    self.parser = None
+
+  def GetAttributeValuesString(self):
+    """Retrieves a comparable string of the attribute values.
+
+    Returns:
+      str: comparable string of the attribute values.
+
+    Raises:
+      TypeError: if the attribute value type is not supported.
+    """
+    attributes = []
+    for attribute_name, attribute_value in sorted(self.__dict__.items()):
+      # Not using startswith to improve performance.
+      if attribute_name[0] == '_' or attribute_value is None:
+        continue
+
+      if isinstance(attribute_value, bytes):
+        raise TypeError(
+            'Attribute: {0:s} value of type bytes not supported.'.format(
+                attribute_name))
+
+      if isinstance(attribute_value, dict):
+        raise TypeError(
+            'Attribute: {0:s} value of type dict not supported.'.format(
+                attribute_name))
+
+      attribute_string = '{0:s}: {1!s}'.format(attribute_name, attribute_value)
+      attributes.append(attribute_string)
+
+    return ', '.join(attributes)
+
+  def GetEventDataStreamIdentifier(self):
+    """Retrieves the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that should not
+    be serialized.
+
+    Returns:
+      AttributeContainerIdentifier: event data stream or None when not set.
+    """
+    return self._event_data_stream_identifier
+
+  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
+    """Sets the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that should not
+    be serialized.
+
+    Args:
+      event_data_stream_identifier (AttributeContainerIdentifier): event data
+          stream identifier.
+    """
+    self._event_data_stream_identifier = event_data_stream_identifier
+
+
+class EventDataStream(interface.AttributeContainer):
+  """Event data stream attribute container.
+
+  The event data stream attribute container represents the attributes of
+  a data stream, such as the content of a file or extended attribute.
+
+  Attributes:
+    file_entropy (str): byte entropy value of the data stream.
+    md5_hash (str): MD5 digest hash of the data stream.
+    path_spec (dfvfs.PathSpec): path specification of the data stream.
+    sha1_hash (str): SHA-1 digest hash of the data stream.
+    sha256_hash (str): SHA-256 digest hash of the data stream.
+    yara_match (list[str]): names of the Yara rules that matched the data
+        stream.
+  """
+  CONTAINER_TYPE = 'event_data_stream'
+
+  def __init__(self):
+    """Initializes an event data attribute container."""
+    super(EventDataStream, self).__init__()
+    self.file_entropy = None
+    self.md5_hash = None
+    self.path_spec = None
+    self.sha1_hash = None
+    self.sha256_hash = None
+    self.yara_match = None
 
 
 class EventObject(interface.AttributeContainer):
@@ -42,47 +124,24 @@ class EventObject(interface.AttributeContainer):
   attributes.
 
   Attributes:
-    data_type (str): event data type indicator.
-    display_name (str): display friendly version of the path specification.
-    filename (str): name of the file related to the event.
-    hostname (str): name of the host related to the event.
-    inode (int): inode of the file related to the event.
-    offset (int): offset of the event data.
-    pathspec (dfvfs.PathSpec): path specification of the file related to
-        the event.
-    tag (EventTag): event tag.
+    date_time (dfdatetime.DateTimeValues): date and time values.
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
     timestamp_desc (str): description of the meaning of the timestamp.
   """
   CONTAINER_TYPE = 'event'
-  # TODO: eventually move data type out of event since the event source
-  # has a data type not the event itself.
-  DATA_TYPE = None
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_row_identifier']
 
   def __init__(self):
     """Initializes an event attribute container."""
     super(EventObject, self).__init__()
     self._event_data_identifier = None
-    # TODO: move to event data
-    self.data_type = self.DATA_TYPE
-    # TODO: move to event data
-    self.display_name = None
-    # TODO: move to event data
-    self.filename = None
-    # TODO: move to event data
-    self.hostname = None
-    # TODO: move to event data
-    self.inode = None
-    # TODO: move to event data
-    self.offset = None
-    # TODO: move to event data
-    self.pathspec = None
-    self.tag = None
+    self._event_data_row_identifier = None
+    self.date_time = None
     self.timestamp = None
+    # TODO: rename timestamp_desc to timestamp_description
     self.timestamp_desc = None
-
-    # TODO: add a solution for event_data_row_identifier
 
   # This method is necessary for heap sort.
   def __lt__(self, other):
@@ -94,29 +153,31 @@ class EventObject(interface.AttributeContainer):
       other (EventObject): event attribute container to compare to.
 
     Returns:
-      bool: True if the event  attribute container is less than the other.
+      bool: True if the event attribute container is less than the other.
     """
-    return self.timestamp < other.timestamp
+    return (self.timestamp < other.timestamp or
+            self.timestamp_desc < other.timestamp_desc)
 
   def GetEventDataIdentifier(self):
-    """Retrieves the identifier of the event data associated with the event.
+    """Retrieves the identifier of the associated event data.
 
     The event data identifier is a storage specific value that should not
     be serialized.
 
     Returns:
-      AttributeContainerIdentifier: event identifier or None when not set.
+      AttributeContainerIdentifier: event data identifier or None when not set.
     """
     return self._event_data_identifier
 
   def SetEventDataIdentifier(self, event_data_identifier):
-    """Sets the identifier of the event data associated with the event.
+    """Sets the identifier of the associated event data.
 
     The event data identifier is a storage specific value that should not
     be serialized.
 
     Args:
-      event_data_identifier (AttributeContainerIdentifier): event identifier.
+      event_data_identifier (AttributeContainerIdentifier): event data
+          identifier.
     """
     self._event_data_identifier = event_data_identifier
 
@@ -125,48 +186,22 @@ class EventTag(interface.AttributeContainer):
   """Event tag attribute container.
 
   Attributes:
-    comment (str): comments.
-    event_entry_index (int): serialized data stream entry index of the event,
-        this attribute is used by the ZIP and GZIP storage files to
-        uniquely identify the event linked to the tag.
-    event_stream_number (int): number of the serialized event stream, this
-        attribute is used by the ZIP and GZIP storage files to uniquely
-        identify the event linked to the tag.
     labels (list[str]): labels, such as "malware", "application_execution".
   """
   CONTAINER_TYPE = 'event_tag'
 
   _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_row_identifier']
+
   _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 
-  def __init__(self, comment=None):
-    """Initializes an event tag attribute container.
-
-    Args:
-      comment (Optional[str]): comments.
-    """
+  def __init__(self):
+    """Initializes an event tag attribute container."""
     super(EventTag, self).__init__()
     self._event_identifier = None
-    self.comment = comment
-    self.event_entry_index = None
-    self.event_row_identifier = None
-    self.event_stream_number = None
+    self._event_row_identifier = None
     self.labels = []
-
-  def AddComment(self, comment):
-    """Adds a comment to the event tag.
-
-    Args:
-      comment (str): comment.
-    """
-    if not comment:
-      return
-
-    if not self.comment:
-      self.comment = comment
-    else:
-      self.comment = ''.join([self.comment, comment])
 
   def AddLabel(self, label):
     """Adds a label to the event tag.
@@ -178,9 +213,10 @@ class EventTag(interface.AttributeContainer):
       TypeError: if the label provided is not a string.
       ValueError: if a label is malformed.
     """
-    if not isinstance(label, py2to3.STRING_TYPES):
-      raise TypeError('label is not a string type. Is {0:s}'.format(
+    if not isinstance(label, str):
+      raise TypeError('label is not a string type. Is {0!s}'.format(
           type(label)))
+
     if not self._VALID_LABEL_REGEX.match(label):
       raise ValueError((
           'Unsupported label: "{0:s}". A label must only consist of '
@@ -199,9 +235,9 @@ class EventTag(interface.AttributeContainer):
       ValueError: if a label is malformed.
     """
     for label in labels:
-      if not self._VALID_LABEL_REGEX.match(label):
+      if not label or not self._VALID_LABEL_REGEX.match(label):
         raise ValueError((
-            'Unsupported label: "{0:s}". A label must only consist of '
+            'Unsupported label: "{0!s}". A label must only consist of '
             'alphanumeric characters or underscores.').format(label))
 
     for label in labels:
@@ -214,13 +250,7 @@ class EventTag(interface.AttributeContainer):
     Returns:
       dict[str, object]: event tag attributes.
     """
-    result_dict = {
-        'labels': self.labels
-    }
-    if self.comment:
-      result_dict['comment'] = self.comment
-
-    return result_dict
+    return {'labels': self.labels}
 
   @classmethod
   def CopyTextToLabel(cls, text, prefix=''):
@@ -240,7 +270,7 @@ class EventTag(interface.AttributeContainer):
     return cls._INVALID_LABEL_CHARACTERS_REGEX.sub('_', text)
 
   def GetEventIdentifier(self):
-    """Retrieves the identifier of the event associated with the event tag.
+    """Retrieves the identifier of the associated event.
 
     The event identifier is a storage specific value that should not
     be serialized.
@@ -251,7 +281,7 @@ class EventTag(interface.AttributeContainer):
     return self._event_identifier
 
   def SetEventIdentifier(self, event_identifier):
-    """Sets the identifier of the event associated with the event tag.
+    """Sets the identifier of the associated event.
 
     The event identifier is a storage specific value that should not
     be serialized.
@@ -263,4 +293,4 @@ class EventTag(interface.AttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EventData, EventObject, EventTag])
+    EventData, EventDataStream, EventObject, EventTag])

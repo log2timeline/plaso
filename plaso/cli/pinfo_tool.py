@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The pinfo CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import collections
 import json
@@ -11,12 +9,15 @@ import uuid
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.engine import knowledge_base
+from plaso.containers import events
+from plaso.containers import event_sources
+from plaso.containers import reports
+from plaso.containers import warnings
+from plaso.engine import path_helper
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
@@ -24,17 +25,49 @@ from plaso.serializer import json_serializer
 from plaso.storage import factory as storage_factory
 
 
-class PinfoTool(
-    tools.CLITool,
-    tool_options.StorageFileOptions):
-  """Pinfo CLI tool."""
+class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
+  """Pinfo CLI tool.
+
+  Attributes:
+    compare_storage_information (bool): True if the tool is used to compare
+        stores.
+    generate_report (bool): True if a predefined report type should be
+        generated.
+    list_reports (bool): True if the report types should be listed.
+    list_sections (bool): True if the section types should be listed.
+  """
 
   NAME = 'pinfo'
   DESCRIPTION = (
       'Shows information about a Plaso storage file, for example how it was '
       'collected, what information was extracted from a source, etc.')
 
-  _INDENTATION_LEVEL = 8
+  _DEFAULT_HASH_TYPE = 'sha256'
+  _HASH_CHOICES = ('md5', 'sha1', 'sha256')
+
+  _REPORTS = {
+      'file_hashes': 'Report file hashes calculated during processing.'}
+
+  _DEFAULT_REPORT_TYPE = 'none'
+  _REPORT_CHOICES = sorted(list(_REPORTS.keys()) + ['list', 'none'])
+
+  _SECTIONS = {
+      'events': 'Show information about events.',
+      'reports': 'Show information about analysis reports.',
+      'sessions': 'Show information about sessions.',
+      'sources': 'Show information about event sources.',
+      'warnings': 'Show information about warnings during processing.'}
+
+  _DEFAULT_OUTPUT_FORMAT = 'text'
+  _SUPPORTED_OUTPUT_FORMATS = ('json', 'markdown', 'text')
+
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
+      warnings.PreprocessingWarning.CONTAINER_TYPE)
+  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -49,12 +82,18 @@ class PinfoTool(
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
     self._output_filename = None
-    self._output_format = None
+    self._output_format = 'text'
+    self._hash_type = self._DEFAULT_HASH_TYPE
     self._process_memory_limit = None
+    self._report_type = self._DEFAULT_REPORT_TYPE
+    self._sections = None
     self._storage_file_path = None
     self._verbose = False
 
     self.compare_storage_information = False
+    self.generate_report = False
+    self.list_reports = False
+    self.list_sections = False
 
   def _CalculateStorageCounters(self, storage_reader):
     """Calculates the counters of the entire storage.
@@ -90,15 +129,40 @@ class PinfoTool(
 
     storage_counters = {}
 
-    warnings_by_path_spec = collections.Counter()
-    warnings_by_parser_chain = collections.Counter()
+    extraction_warnings_by_path_spec = collections.Counter()
+    extraction_warnings_by_parser_chain = collections.Counter()
 
-    for warning in list(storage_reader.GetWarnings()):
-      warnings_by_path_spec[warning.path_spec.comparable] += 1
-      warnings_by_parser_chain[warning.parser_chain] += 1
+    for warning in storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING):
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
 
-    storage_counters['warnings_by_path_spec'] = warnings_by_path_spec
-    storage_counters['warnings_by_parser_chain'] = warnings_by_parser_chain
+      extraction_warnings_by_path_spec[path_spec_string] += 1
+      extraction_warnings_by_parser_chain[warning.parser_chain] += 1
+
+    storage_counters['extraction_warnings_by_path_spec'] = (
+        extraction_warnings_by_path_spec)
+    storage_counters['extraction_warnings_by_parser_chain'] = (
+        extraction_warnings_by_parser_chain)
+
+    # TODO: kept for backwards compatibility.
+    storage_counters['warnings_by_path_spec'] = extraction_warnings_by_path_spec
+    storage_counters['warnings_by_parser_chain'] = (
+        extraction_warnings_by_parser_chain)
+
+    recovery_warnings_by_path_spec = collections.Counter()
+    recovery_warnings_by_parser_chain = collections.Counter()
+
+    for warning in storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING):
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+      recovery_warnings_by_path_spec[path_spec_string] += 1
+      recovery_warnings_by_parser_chain[warning.parser_chain] += 1
+
+    storage_counters['recovery_warnings_by_path_spec'] = (
+        recovery_warnings_by_path_spec)
+    storage_counters['recovery_warnings_by_parser_chain'] = (
+        recovery_warnings_by_parser_chain)
 
     if not analysis_reports_counter_error:
       storage_counters['analysis_reports'] = analysis_reports_counter
@@ -133,31 +197,6 @@ class PinfoTool(
 
     return differences
 
-  def _PrintCounterDifferences(
-      self, differences, column_names=None, reverse=False, title=None):
-    """Prints the counter differences.
-
-    Args:
-      differences (dict[str, tuple[int, int]]): mismatching results per key.
-      column_names (Optional[list[str]]): column names.
-      reverse (Optional[bool]): True if the key and values of differences
-          should be printed in reverse order.
-      title (Optional[str]): title.
-    """
-    # TODO: add support for 3 column table?
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=column_names, title=title)
-
-    for key, value in sorted(differences.items()):
-      value_string = '{0:d} ({1:d})'.format(value[0], value[1])
-      if reverse:
-        table_view.AddRow([value_string, key])
-      else:
-        table_view.AddRow([key, value_string])
-
-    table_view.Write(self._output_writer)
-    self._output_writer.Write('\n')
-
   def _CompareStores(self, storage_reader, compare_storage_reader):
     """Compares the contents of two stores.
 
@@ -188,11 +227,11 @@ class PinfoTool(
           column_names=['Parser (plugin) name', 'Number of events'],
           title='Events generated per parser')
 
-    # Compare warnings by parser chain.
+    # Compare extraction warnings by parser chain.
     warnings_counter = storage_counters.get(
-        'warnings_by_parser_chain', collections.Counter())
+        'extraction_warnings_by_parser_chain', collections.Counter())
     compare_warnings_counter = compare_storage_counters.get(
-        'warnings_by_parser_chain', collections.Counter())
+        'extraction_warnings_by_parser_chain', collections.Counter())
     differences = self._CompareCounter(
         warnings_counter, compare_warnings_counter)
 
@@ -202,13 +241,13 @@ class PinfoTool(
       self._PrintCounterDifferences(
           differences,
           column_names=['Parser (plugin) name', 'Number of warnings'],
-          title='Warnings generated per parser')
+          title='Extraction warnings generated per parser')
 
-    # Compare warnings by path specification
+    # Compare extraction warnings by path specification
     warnings_counter = storage_counters.get(
-        'warnings_by_path_spec', collections.Counter())
+        'extraction_warnings_by_path_spec', collections.Counter())
     compare_warnings_counter = compare_storage_counters.get(
-        'warnings_by_path_spec', collections.Counter())
+        'extraction_warnings_by_path_spec', collections.Counter())
     differences = self._CompareCounter(
         warnings_counter, compare_warnings_counter)
 
@@ -217,7 +256,38 @@ class PinfoTool(
 
       self._PrintCounterDifferences(
           differences, column_names=['Number of warnings', 'Pathspec'],
-          reverse=True, title='Pathspecs with most warnings')
+          reverse=True, title='Pathspecs with most extraction warnings')
+
+    # Compare recovery warnings by parser chain.
+    warnings_counter = storage_counters.get(
+        'recovery_warnings_by_parser_chain', collections.Counter())
+    compare_warnings_counter = compare_storage_counters.get(
+        'recovery_warnings_by_parser_chain', collections.Counter())
+    differences = self._CompareCounter(
+        warnings_counter, compare_warnings_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences,
+          column_names=['Parser (plugin) name', 'Number of warnings'],
+          title='Recovery warnings generated per parser')
+
+    # Compare recovery warnings by path specification
+    warnings_counter = storage_counters.get(
+        'recovery_warnings_by_path_spec', collections.Counter())
+    compare_warnings_counter = compare_storage_counters.get(
+        'recovery_warnings_by_path_spec', collections.Counter())
+    differences = self._CompareCounter(
+        warnings_counter, compare_warnings_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences, column_names=['Number of warnings', 'Pathspec'],
+          reverse=True, title='Pathspecs with most recovery warnings')
 
     # Compare event labels.
     labels_counter = storage_counters.get('event_labels', collections.Counter())
@@ -248,6 +318,84 @@ class PinfoTool(
 
     return stores_are_identical
 
+  def _GenerateFileHashesReport(self, storage_reader):
+    """Generates a file hashes report.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write('{"file_hashes": [\n')
+
+    elif self._output_format == 'markdown':
+      self._output_writer.Write('{0:s} hash | Display name\n'.format(
+          self._hash_type.upper()))
+      self._output_writer.Write('--- | ---\n')
+
+    elif self._output_format == 'text':
+      self._output_writer.Write('{0:s} hash\tDisplay name\n'.format(
+          self._hash_type.upper()))
+
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM)
+
+    for event_data_stream_index, event_data_stream in enumerate(generator):
+      if self._hash_type == 'md5':
+        hash_value = event_data_stream.md5_hash
+      elif self._hash_type == 'sha1':
+        hash_value = event_data_stream.sha1_hash
+      elif self._hash_type == 'sha256':
+        hash_value = event_data_stream.sha256_hash
+
+      if not hash_value:
+        hash_value = 'N/A'
+
+      if event_data_stream.path_spec:
+        display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+           event_data_stream.path_spec)
+      else:
+        display_name = 'N/A'
+
+      if self._output_format == 'json':
+        if event_data_stream_index > 0:
+          self._output_writer.Write(',\n')
+        display_name = display_name.replace('\\', '\\\\')
+        self._output_writer.Write(
+            '{{"{0:s}_hash": "{1:s}", "display_name": "{2:s}"}}'.format(
+                self._hash_type, hash_value, display_name))
+
+      elif self._output_format == 'markdown':
+        self._output_writer.Write('{0:s} | {1:s}\n'.format(
+            hash_value, display_name))
+
+      elif self._output_format == 'text':
+        self._output_writer.Write('{0:s}\t{1:s}\n'.format(
+            hash_value, display_name))
+
+    if self._output_format == 'json':
+      self._output_writer.Write('\n]}\n')
+
+  def _GetStorageReader(self, path):
+    """Retrieves a storage reader.
+
+    Args:
+      path (str): path of the storage file.
+
+    Returns:
+      StorageReader: storage reader or None if the storage file format
+          is not supported.
+
+    Raises:
+      BadConfigOption: if the storage file format is not supported.
+    """
+    storage_reader = (
+        storage_factory.StorageFactory.CreateStorageReaderForFile(path))
+    if not storage_reader:
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(path))
+
+    return storage_reader
+
   def _PrintAnalysisReportCounter(
       self, analysis_reports_counter, session_identifier=None):
     """Prints the analysis reports counter.
@@ -258,29 +406,33 @@ class PinfoTool(
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
     """
-    if not analysis_reports_counter:
-      return
+    if self._output_format == 'json':
+      json_string = json.dumps(analysis_reports_counter)
+      self._output_writer.Write(
+          ', "analysis_reports": {0:s}'.format(json_string))
 
-    title = 'Reports generated per plugin'
-    if session_identifier:
-      title = '{0:s}: {1:s}'.format(title, session_identifier)
+    elif (self._output_format in ('markdown', 'text') and
+          analysis_reports_counter):
+      title = 'Reports generated per plugin'
+      if session_identifier:
+        title = '{0:s}: {1:s}'.format(title, session_identifier)
 
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Plugin name', 'Number of reports'], title=title)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type,
+          column_names=['Plugin name', 'Number of reports'], title=title)
 
-    for key, value in sorted(analysis_reports_counter.items()):
-      if key != 'total':
-        table_view.AddRow([key, value])
+      for key, value in sorted(analysis_reports_counter.items()):
+        if key != 'total':
+          table_view.AddRow([key, value])
 
-    try:
-      total = analysis_reports_counter['total']
-    except KeyError:
-      total = 'N/A'
+      try:
+        total = analysis_reports_counter['total']
+      except KeyError:
+        total = 'N/A'
 
-    table_view.AddRow(['Total', total])
+      table_view.AddRow(['Total', total])
 
-    table_view.Write(self._output_writer)
+      table_view.Write(self._output_writer)
 
   def _PrintAnalysisReportsDetails(self, storage_reader):
     """Prints the details of the analysis reports.
@@ -288,80 +440,100 @@ class PinfoTool(
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    if not storage_reader.HasAnalysisReports():
-      self._output_writer.Write('No analysis reports stored.\n\n')
-      return
+    has_analysis_reports = storage_reader.HasAttributeContainers(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-    for index, analysis_report in enumerate(
-        storage_reader.GetAnalysisReports()):
-      title = 'Analysis report: {0:d}'.format(index)
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title=title)
+    if self._output_format == 'text' and not has_analysis_reports:
+      self._output_writer.Write('\nNo analysis reports stored.\n')
 
-      table_view.AddRow(['String', analysis_report.GetString()])
+    else:
+      generator = storage_reader.GetAttributeContainers(
+          self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-      table_view.Write(self._output_writer)
+      for index, analysis_report in enumerate(generator):
+        date_time_string = None
+        if analysis_report.time_compiled is not None:
+          date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+              timestamp=analysis_report.time_compiled)
+          date_time_string = date_time.CopyToDateTimeStringISO8601()
 
-  def _PrintWarningCounters(self, storage_counters):
-    """Prints a summary of the warnings.
+        title = 'Analysis report: {0:d}'.format(index)
+        table_view = views.ViewsFactory.GetTableView(
+            self._views_format_type, title=title)
 
-    Args:
-      storage_counters (dict): storage counters.
-    """
-    warnings_by_pathspec = storage_counters.get('warnings_by_path_spec', {})
-    warnings_by_parser_chain = storage_counters.get(
-        'warnings_by_parser_chain', {})
-    if not warnings_by_parser_chain:
-      self._output_writer.Write('No warnings stored.\n\n')
-      return
+        table_view.AddRow(['Name plugin', analysis_report.plugin_name or 'N/A'])
+        table_view.AddRow(['Date and time', date_time_string or 'N/A'])
+        table_view.AddRow([
+            'Event filter', analysis_report.event_filter or 'N/A'])
 
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Parser (plugin) name', 'Number of warnings'],
-        title='Warnings generated per parser')
-    for parser_chain, count in warnings_by_parser_chain.items():
-      parser_chain = parser_chain or '<No parser>'
-      table_view.AddRow([parser_chain, '{0:d}'.format(count)])
-    table_view.Write(self._output_writer)
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Number of warnings', 'Pathspec'],
-        title='Pathspecs with most warnings')
-
-    top_pathspecs = warnings_by_pathspec.most_common(10)
-    for pathspec, count in top_pathspecs:
-      for path_index, line in enumerate(pathspec.split('\n')):
-        if not line:
-          continue
-
-        if path_index == 0:
-          table_view.AddRow(['{0:d}'.format(count), line])
+        if not analysis_report.analysis_counter:
+          table_view.AddRow(['Text', analysis_report.text or ''])
         else:
-          table_view.AddRow(['', line])
+          table_view.AddRow(['Results', ''])
+          for key, value in sorted(analysis_report.analysis_counter.items()):
+            table_view.AddRow([key, value])
 
-    table_view.Write(self._output_writer)
+        table_view.Write(self._output_writer)
 
-  def _PrintWarningsDetails(self, storage):
-    """Prints the details of the warnings.
+  def _PrintAnalysisReportSection(
+      self, storage_reader, analysis_reports_counter):
+    """Prints the analysis reports section.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
+      analysis_reports_counter (collections.Counter): number of analysis
+          reports per analysis plugin.
     """
-    if not storage.HasWarnings():
-      self._output_writer.Write('No warnings stored.\n\n')
-      return
+    self._PrintAnalysisReportCounter(analysis_reports_counter)
 
-    for index, warning in enumerate(storage.GetWarnings()):
-      title = 'Warning: {0:d}'.format(index)
+    if self._output_format in ('markdown', 'text'):
+      self._PrintAnalysisReportsDetails(storage_reader)
+
+  def _PrintCounterDifferences(
+      self, differences, column_names=None, reverse=False, title=None):
+    """Prints the counter differences.
+
+    Args:
+      differences (dict[str, tuple[int, int]]): mismatching results per key.
+      column_names (Optional[list[str]]): column names.
+      reverse (Optional[bool]): True if the key and values of differences
+          should be printed in reverse order.
+      title (Optional[str]): title.
+    """
+    # TODO: add support for 3 column table?
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=column_names, title=title)
+
+    for key, value in sorted(differences.items()):
+      value_string = '{0:d} ({1:d})'.format(value[0], value[1])
+      if reverse:
+        table_view.AddRow([value_string, key])
+      else:
+        table_view.AddRow([key, value_string])
+
+    table_view.Write(self._output_writer)
+    self._output_writer.Write('\n')
+
+  def _PrintExtractionWarningsDetails(self, storage_reader):
+    """Prints the details of the extraction warnings.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING)
+
+    for index, warning in enumerate(generator):
+      title = 'Extraction warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
       table_view.AddRow(['Message', warning.message])
       table_view.AddRow(['Parser chain', warning.parser_chain])
 
-      path_specification = warning.path_spec.comparable
-      for path_index, line in enumerate(path_specification.split('\n')):
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+      for path_index, line in enumerate(path_spec_string.split('\n')):
         if not line:
           continue
 
@@ -382,29 +554,45 @@ class PinfoTool(
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
     """
-    if not event_labels_counter:
-      return
+    if self._output_format == 'json':
+      json_string = json.dumps(event_labels_counter)
+      self._output_writer.Write(', "event_labels": {0:s}'.format(json_string))
 
-    title = 'Event tags generated per label'
-    if session_identifier:
-      title = '{0:s}: {1:s}'.format(title, session_identifier)
+    elif self._output_format in ('markdown', 'text'):
+      if self._output_format == 'text' and not event_labels_counter:
+        if not session_identifier:
+          self._output_writer.Write('\nNo events labels stored.\n')
+      else:
+        title = 'Event tags generated per label'
 
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Label', 'Number of event tags'], title=title)
+        if session_identifier:
+          title = '{0:s}: {1:s}'.format(title, session_identifier)
+          title_level = 4
+        else:
+          title_level = 2
 
-    for key, value in sorted(event_labels_counter.items()):
-      if key != 'total':
-        table_view.AddRow([key, value])
+        if not event_labels_counter:
+          if not session_identifier:
+            self._output_writer.Write('{0:s} {1:s}\n\nN/A\n\n'.format(
+                '#' * title_level, title))
+        else:
+          table_view = views.ViewsFactory.GetTableView(
+              self._views_format_type,
+              column_names=['Label', 'Number of event tags'], title=title,
+              title_level=title_level)
 
-    try:
-      total = event_labels_counter['total']
-    except KeyError:
-      total = 'N/A'
+          for key, value in sorted(event_labels_counter.items()):
+            if key != 'total':
+              table_view.AddRow([key, value])
 
-    table_view.AddRow(['Total', total])
+          try:
+            total = event_labels_counter['total']
+          except KeyError:
+            total = 'N/A'
 
-    table_view.Write(self._output_writer)
+          table_view.AddRow(['Total', total])
+
+          table_view.Write(self._output_writer)
 
   def _PrintParsersCounter(self, parsers_counter, session_identifier=None):
     """Prints the parsers counter
@@ -415,48 +603,253 @@ class PinfoTool(
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
     """
-    if not parsers_counter:
-      self._output_writer.Write('No events stored.\n\n')
-      return
+    if self._output_format == 'json':
+      if session_identifier:
+        self._output_writer.Write(', ')
 
-    title = 'Events generated per parser'
-    if session_identifier:
-      title = '{0:s}: {1:s}'.format(title, session_identifier)
+      json_string = json.dumps(parsers_counter)
+      self._output_writer.Write('"parsers": {0:s}'.format(json_string))
 
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type,
-        column_names=['Parser (plugin) name', 'Number of events'],
-        title=title)
+    elif self._output_format in ('markdown', 'text'):
+      if self._output_format == 'text' and not parsers_counter:
+        if not session_identifier:
+          self._output_writer.Write('\nNo events stored.\n')
 
-    for key, value in sorted(parsers_counter.items()):
-      if key != 'total':
-        table_view.AddRow([key, value])
+      else:
+        title = 'Events generated per parser'
+        if session_identifier:
+          title = '{0:s}: {1:s}'.format(title, session_identifier)
+          title_level = 4
+        else:
+          title_level = 2
 
-    table_view.AddRow(['Total', parsers_counter['total']])
+        if not parsers_counter:
+          if not session_identifier:
+            self._output_writer.Write('{0:s} {1:s}\n\nN/A\n\n'.format(
+                '#' * title_level, title))
+        else:
+          table_view = views.ViewsFactory.GetTableView(
+              self._views_format_type,
+              column_names=['Parser (plugin) name', 'Number of events'],
+              title=title, title_level=title_level)
 
-    table_view.Write(self._output_writer)
+          for key, value in sorted(parsers_counter.items()):
+            if key != 'total':
+              table_view.AddRow([key, value])
 
-  def _PrintPreprocessingInformation(
-      self, storage_reader, session_identifier=None):
-    """Prints the details of the preprocessing information.
+          table_view.AddRow(['Total', parsers_counter['total']])
+
+          table_view.Write(self._output_writer)
+
+  def _PrintPreprocessingWarningsDetails(self, storage_reader):
+    """Prints the details of the preprocessing warnings.
 
     Args:
       storage_reader (StorageReader): storage reader.
+    """
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
+
+    for index, warning in enumerate(generator):
+      title = 'Preprocessing warning: {0:d}'.format(index)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow(['Message', warning.message])
+      table_view.AddRow(['Plugin name', warning.plugin_name])
+
+      if warning.path_spec:
+        # TODO: add helper method to format path spec as row.
+        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+        for path_index, line in enumerate(path_spec_string.split('\n')):
+          if not line:
+            continue
+
+          if path_index == 0:
+            table_view.AddRow(['Path specification', line])
+          else:
+            table_view.AddRow(['', line])
+
+      table_view.Write(self._output_writer)
+
+  def _PrintRecoveryWarningsDetails(self, storage_reader):
+    """Prints the details of the recovery warnings.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING)
+
+    for index, warning in enumerate(generator):
+      title = 'Recovery warning: {0:d}'.format(index)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow(['Message', warning.message])
+      table_view.AddRow(['Parser chain', warning.parser_chain])
+
+      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+      for path_index, line in enumerate(path_spec_string.split('\n')):
+        if not line:
+          continue
+
+        if path_index == 0:
+          table_view.AddRow(['Path specification', line])
+        else:
+          table_view.AddRow(['', line])
+
+      table_view.Write(self._output_writer)
+
+  def _PrintSessionDetailsAsJSON(self, session):
+    """Prints the details of a session as JSON.
+
+    Args:
+      session (Session): session.
+    """
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            session))
+    self._output_writer.Write('"session": {0:s}'.format(json_string))
+
+  def _PrintSessionDetailsAsTable(self, session, session_identifier):
+    """Prints the details of a session as a table.
+
+    Args:
+      session (Session): session.
+      session_identifier (str): session identifier, formatted as a UUID.
+    """
+    start_time = 'N/A'
+    if session.start_time is not None:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=session.start_time)
+      start_time = date_time.CopyToDateTimeStringISO8601()
+
+    completion_time = 'N/A'
+    if session.completion_time is not None:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=session.completion_time)
+      completion_time = date_time.CopyToDateTimeStringISO8601()
+
+    enabled_parser_names = 'N/A'
+    if session.enabled_parser_names:
+      enabled_parser_names = ', '.join(sorted(session.enabled_parser_names))
+
+    command_line_arguments = session.command_line_arguments or 'N/A'
+    parser_filter_expression = session.parser_filter_expression or 'N/A'
+    preferred_encoding = session.preferred_encoding or 'N/A'
+
+    if session.artifact_filters:
+      artifact_filters_string = ', '.join(session.artifact_filters)
+    else:
+      artifact_filters_string = 'N/A'
+    filter_file = session.filter_file or 'N/A'
+
+    title = 'Session: {0:s}'.format(session_identifier)
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title=title)
+
+    table_view.AddRow(['Start time', start_time])
+    table_view.AddRow(['Completion time', completion_time])
+    table_view.AddRow(['Product name', session.product_name])
+    table_view.AddRow(['Product version', session.product_version])
+    table_view.AddRow(['Command line arguments', command_line_arguments])
+    table_view.AddRow(['Parser filter expression', parser_filter_expression])
+    table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
+    table_view.AddRow(['Preferred encoding', preferred_encoding])
+    table_view.AddRow(['Debug mode', session.debug_mode])
+    table_view.AddRow(['Artifact filters', artifact_filters_string])
+    table_view.AddRow(['Filter file', filter_file])
+
+    table_view.Write(self._output_writer)
+
+  def _PrintSessionsDetails(self, storage_reader):
+    """Prints the details of the sessions.
+
+    Args:
+      storage_reader (BaseStore): storage.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write('"sessions": {')
+
+    for session_index, session in enumerate(storage_reader.GetSessions()):
+      session_identifier = uuid.UUID(hex=session.identifier)
+      session_identifier = '{0!s}'.format(session_identifier)
+
+      if self._output_format == 'json':
+        if session_index != 0:
+          self._output_writer.Write(', ')
+
+        self._PrintSessionDetailsAsJSON(session)
+
+      elif self._output_format in ('markdown', 'text'):
+        self._PrintSessionDetailsAsTable(session, session_identifier)
+
+      if self._verbose:
+        if session.source_configurations:
+          self._PrintSourceConfigurations(
+              session.source_configurations,
+              session_identifier=session_identifier)
+
+        self._PrintParsersCounter(
+            session.parsers_counter, session_identifier=session_identifier)
+
+        self._PrintAnalysisReportCounter(
+            session.analysis_reports_counter,
+            session_identifier=session_identifier)
+
+        self._PrintEventLabelsCounter(
+            session.event_labels_counter,
+            session_identifier=session_identifier)
+
+    if self._output_format == 'json':
+      self._output_writer.Write('}')
+
+  def _PrintSessionsOverview(self, storage_reader):
+    """Prints a sessions overview.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title='Sessions', title_level=2)
+
+    for session in storage_reader.GetSessions():
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=session.start_time)
+      start_time = date_time.CopyToDateTimeStringISO8601()
+
+      session_identifier = uuid.UUID(hex=session.identifier)
+      session_identifier = '{0!s}'.format(session_identifier)
+      table_view.AddRow([session_identifier, start_time])
+
+    table_view.Write(self._output_writer)
+
+  def _PrintSessionsSection(self, storage_reader):
+    """Prints the session section.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    if self._output_format in ('markdown', 'text'):
+      self._PrintSessionsOverview(storage_reader)
+
+    if (self._output_format == 'json' or self._verbose or
+        'sessions' in self._sections):
+      self._PrintSessionsDetails(storage_reader)
+
+  def _PrintSourceConfiguration(
+      self, source_configuration, session_identifier=None):
+    """Prints the details of a source configuration.
+
+    Args:
+      source_configuration (SourceConfiguration): source configuration.
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
     """
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    storage_reader.ReadPreprocessingInformation(knowledge_base_object)
-
-    lookup_identifier = session_identifier
-    if lookup_identifier:
-      # The knowledge base requires the session identifier to be formatted in
-      # hexadecimal representation.
-      lookup_identifier = lookup_identifier.replace('-', '')
-
-    system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
-        session_identifier=lookup_identifier)
+    system_configuration = source_configuration.system_configuration
     if not system_configuration:
       return
 
@@ -496,10 +889,18 @@ class PinfoTool(
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
-        column_names=['Name', ''], title=title)
+        column_names=['Name', 'Offset from UTC'], title=title)
 
     for time_zone in system_configuration.available_time_zones:
-      table_view.AddRow([time_zone.name, ''])
+      hours_from_utc, minutes_from_utc = divmod(time_zone.offset, 60)
+      if hours_from_utc < 0:
+        sign = '+'
+        hours_from_utc *= -1
+      else:
+        sign = '-'
+      time_zone_offset = '{0:s}{1:02d}:{2:02d}'.format(
+          sign, hours_from_utc, minutes_from_utc)
+      table_view.AddRow([time_zone.name, time_zone_offset])
 
     table_view.Write(self._output_writer)
 
@@ -517,169 +918,157 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def _PrintSessionsDetails(self, storage_reader):
-    """Prints the details of the sessions.
+  def _PrintSourceConfigurations(
+      self, source_configurations, session_identifier=None):
+    """Prints the details of source configurations.
 
     Args:
-      storage_reader (BaseStore): storage.
+      source_configurations (list[SourceConfiguration]): source configurations.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
     """
-    for session in storage_reader.GetSessions():
-      session_identifier = uuid.UUID(hex=session.identifier)
-      session_identifier = '{0!s}'.format(session_identifier)
+    if self._output_format == 'json':
+      self._output_writer.Write(', "system_configurations": {')
 
-      start_time = 'N/A'
-      if session.start_time is not None:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=session.start_time)
-        start_time = date_time.CopyToDateTimeStringISO8601()
+    for configuration_index, configuration in enumerate(source_configurations):
+      if self._output_format == 'json':
+        if configuration_index != 0:
+          self._output_writer.Write(', ')
 
-      completion_time = 'N/A'
-      if session.completion_time is not None:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=session.completion_time)
-        completion_time = date_time.CopyToDateTimeStringISO8601()
+        json_string = (
+            json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+                configuration.system_configuration))
+        self._output_writer.Write(
+            '"system_configuration": {0:s}'.format(json_string))
 
-      enabled_parser_names = 'N/A'
-      if session.enabled_parser_names:
-        enabled_parser_names = ', '.join(sorted(session.enabled_parser_names))
+      elif self._output_format in ('markdown', 'text'):
+        self._PrintSourceConfiguration(
+            configuration, session_identifier=session_identifier)
 
-      command_line_arguments = session.command_line_arguments or 'N/A'
-      parser_filter_expression = session.parser_filter_expression or 'N/A'
-      preferred_encoding = session.preferred_encoding or 'N/A'
+    if self._output_format == 'json':
+      self._output_writer.Write('}')
 
-      if session.artifact_filters:
-        artifact_filters_string = ', '.join(session.artifact_filters)
-      else:
-        artifact_filters_string = 'N/A'
-      filter_file = session.filter_file or 'N/A'
-      number_of_event_sources = storage_reader.GetNumberOfEventSources()
-
-      title = 'Session: {0:s}'.format(session_identifier)
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title=title)
-
-      table_view.AddRow(['Start time', start_time])
-      table_view.AddRow(['Completion time', completion_time])
-      table_view.AddRow(['Product name', session.product_name])
-      table_view.AddRow(['Product version', session.product_version])
-      table_view.AddRow(['Command line arguments', command_line_arguments])
-      table_view.AddRow(['Parser filter expression', parser_filter_expression])
-      table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
-      table_view.AddRow(['Preferred encoding', preferred_encoding])
-      table_view.AddRow(['Debug mode', session.debug_mode])
-      table_view.AddRow(['Artifact filters', artifact_filters_string])
-      table_view.AddRow(['Filter file', filter_file])
-      table_view.AddRow(['Number of event sources', number_of_event_sources])
-
-      table_view.Write(self._output_writer)
-
-      if self._verbose:
-        self._PrintPreprocessingInformation(
-            storage_reader, session_identifier=session_identifier)
-
-        self._PrintParsersCounter(
-            session.parsers_counter, session_identifier=session_identifier)
-
-        self._PrintAnalysisReportCounter(
-            session.analysis_reports_counter,
-            session_identifier=session_identifier)
-
-        self._PrintEventLabelsCounter(
-            session.event_labels_counter,
-            session_identifier=session_identifier)
-
-  def _PrintSessionsOverview(self, storage_reader):
-    """Prints a sessions overview.
+  def _PrintStorageInformation(self, storage_reader):
+    """Prints information about the store.
 
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Sessions')
+    if self._output_format == 'json':
+      self._output_writer.Write('{')
+    elif self._output_format in ('markdown', 'text'):
+      self._PrintStorageOverviewAsTable(storage_reader)
 
-    for session in storage_reader.GetSessions():
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=session.start_time)
-      start_time = date_time.CopyToDateTimeStringISO8601()
-
-      session_identifier = uuid.UUID(hex=session.identifier)
-      session_identifier = '{0!s}'.format(session_identifier)
-      table_view.AddRow([session_identifier, start_time])
-
-    table_view.Write(self._output_writer)
-
-  def _PrintStorageInformationAsText(self, storage_reader):
-    """Prints information about the store as human-readable text.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
     storage_type = storage_reader.GetStorageType()
-    serialization_format = storage_reader.GetSerializationFormat()
-    format_version = storage_reader.GetFormatVersion()
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Plaso Storage Information')
-    table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
-    table_view.AddRow(['Format version', format_version])
-    table_view.AddRow(['Serialization format', serialization_format])
-    table_view.Write(self._output_writer)
-
     if storage_type == definitions.STORAGE_TYPE_SESSION:
-      self._PrintSessionsOverview(storage_reader)
-      self._PrintSessionsDetails(storage_reader)
+      if self._sections == 'all' or 'sessions' in self._sections:
+        self._PrintSessionsSection(storage_reader)
+
+      if self._sections == 'all' or 'sources' in self._sections:
+        self._PrintSourcesOverview(storage_reader)
 
       storage_counters = self._CalculateStorageCounters(storage_reader)
 
-      if 'parsers' not in storage_counters:
-        self._output_writer.Write(
-            'Unable to determine number of events generated per parser.\n')
-      else:
-        self._PrintParsersCounter(storage_counters['parsers'])
+      if self._output_format == 'json':
+        self._output_writer.Write(', "storage_counters": {')
 
-      if 'analysis_reports' not in storage_counters:
-        self._output_writer.Write(
-            'Unable to determine number of reports generated per plugin.\n')
-      else:
-        self._PrintAnalysisReportCounter(storage_counters['analysis_reports'])
+      if self._sections == 'all' or 'events' in self._sections:
+        parsers = storage_counters.get('parsers', collections.Counter())
 
-      if 'event_labels' not in storage_counters:
-        self._output_writer.Write(
-            'Unable to determine number of event tags generated per label.\n')
-      else:
-        self._PrintEventLabelsCounter(storage_counters['event_labels'])
+        self._PrintParsersCounter(parsers)
 
-      self._PrintWarningCounters(storage_counters)
+        event_labels = storage_counters.get(
+            'event_labels', collections.Counter())
 
-      if self._verbose:
-        self._PrintWarningsDetails(storage_reader)
+        self._PrintEventLabelsCounter(event_labels)
 
-      self._PrintAnalysisReportsDetails(storage_reader)
+      if self._sections == 'all' or 'warnings' in self._sections:
+        self._PrintWarningsSection(storage_reader, storage_counters)
+
+      if self._sections == 'all' or 'reports' in self._sections:
+        analysis_reports = storage_counters.get(
+            'analysis_reports', collections.Counter())
+
+        self._PrintAnalysisReportSection(storage_reader, analysis_reports)
+
+      if self._output_format == 'json':
+        self._output_writer.Write('}')
 
     elif storage_type == definitions.STORAGE_TYPE_TASK:
       self._PrintTasksInformation(storage_reader)
 
-  def _PrintStorageInformationAsJSON(self, storage_reader):
-    """Writes a summary of sessions as machine-readable JSON.
+    if self._output_format == 'json':
+      self._output_writer.Write('}')
+    elif self._output_format in ('markdown', 'text'):
+      self._output_writer.Write('\n')
+
+  def _PrintSourcesOverview(self, storage_reader):
+    """Prints a sources overview.
 
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    serializer = json_serializer.JSONAttributeContainerSerializer
-    storage_counters = self._CalculateStorageCounters(storage_reader)
-    storage_counters_json = json.dumps(storage_counters)
-    self._output_writer.Write('{')
-    self._output_writer.Write('"storage_counters": {0:s}'.format(
-        storage_counters_json))
-    self._output_writer.Write(',\n')
-    self._output_writer.Write(' "sessions": {')
-    for index, session in enumerate(storage_reader.GetSessions()):
-      json_string = serializer.WriteSerialized(session)
-      if index != 0:
-        self._output_writer.Write(',\n')
-      self._output_writer.Write('"session_{0:s}": {1:s} '.format(
-          session.identifier, json_string))
-    self._output_writer.Write('}}')
+    if self._output_format == 'json':
+      self._output_writer.Write(', "event_sources": {')
+
+    elif self._output_format in ('markdown', 'text'):
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, title='Event sources', title_level=2)
+
+    generator = storage_reader.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_SOURCE)
+
+    number_of_event_sources = 0
+    for source_index, source in enumerate(generator):
+      if self._output_format == 'json':
+        if source_index != 0:
+          self._output_writer.Write(', ')
+
+        json_string = (
+            json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+                source))
+        self._output_writer.Write('"source": {0:s}'.format(json_string))
+
+      elif self._output_format in ('markdown', 'text'):
+        if self._verbose or 'sources' in self._sections:
+          path_spec_string = self._GetPathSpecificationString(source.path_spec)
+
+          for path_index, line in enumerate(path_spec_string.split('\n')):
+            if not line:
+              continue
+
+            if path_index == 0:
+              table_view.AddRow(['{0:d}'.format(source_index), line])
+            else:
+              table_view.AddRow(['', line])
+
+      number_of_event_sources += 1
+
+    if self._output_format == 'json':
+      self._output_writer.Write('}')
+    elif self._output_format in ('markdown', 'text'):
+      if not (self._verbose or 'sources' in self._sections):
+        table_view.AddRow(['Total', '{0:d}'.format(number_of_event_sources)])
+      table_view.Write(self._output_writer)
+
+  def _PrintStorageOverviewAsTable(self, storage_reader):
+    """Prints a storage overview as a table.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    format_version = storage_reader.GetFormatVersion()
+    serialization_format = storage_reader.GetSerializationFormat()
+    storage_type = storage_reader.GetStorageType()
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title='Plaso Storage Information',
+        title_level=1)
+    table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
+    table_view.AddRow(['Format version', format_version])
+    table_view.AddRow(['Storage type', storage_type])
+    table_view.AddRow(['Serialization format', serialization_format])
+    table_view.Write(self._output_writer)
 
   def _PrintTasksInformation(self, storage_reader):
     """Prints information about the tasks.
@@ -701,28 +1090,137 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
+  def _PrintWarningCountersJSON(
+      self, warnings_by_path_spec, warnings_by_parser_chain):
+    """Prints JSON containing a summary of the number of warnings.
+
+    Args:
+      warnings_by_path_spec (collections.Counter): number of warnings per
+          path specification.
+      warnings_by_parser_chain (collections.Counter): number of warnings per
+          parser chain.
+    """
+    json_string = json.dumps(warnings_by_parser_chain)
+    self._output_writer.Write(
+        ', "warnings_by_parser": {0:s}'.format(json_string))
+
+    json_string = json.dumps(warnings_by_path_spec)
+    self._output_writer.Write(
+        ', "warnings_by_path_spec": {0:s}'.format(json_string))
+
+  def _PrintWarningCountersTable(
+      self, description, warnings_by_path_spec, warnings_by_parser_chain):
+    """Prints a table containing a summary of the number of warnings.
+
+    Args:
+      description (str): description of the type of warning.
+      warnings_by_path_spec (collections.Counter): number of warnings per
+          path specification.
+      warnings_by_parser_chain (collections.Counter): number of warnings per
+          parser chain.
+    """
+    if warnings_by_parser_chain:
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type,
+          column_names=['Parser (plugin) name', 'Number of warnings'],
+          title='{0:s} warnings generated per parser'.format(
+              description.title()))
+      for parser_chain, count in warnings_by_parser_chain.items():
+        parser_chain = parser_chain or '<No parser>'
+        table_view.AddRow([parser_chain, '{0:d}'.format(count)])
+      table_view.Write(self._output_writer)
+
+    if warnings_by_path_spec:
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type,
+          column_names=['Number of warnings', 'Pathspec'],
+          title='Path specifications with most {0:s} warnings'.format(
+              description))
+
+      for path_spec, count in warnings_by_path_spec.most_common(10):
+        for path_index, line in enumerate(path_spec.split('\n')):
+          if not line:
+            continue
+
+          if path_index == 0:
+            table_view.AddRow(['{0:d}'.format(count), line])
+          else:
+            table_view.AddRow(['', line])
+
+      table_view.Write(self._output_writer)
+
+  def _PrintWarningsSection(self, storage_reader, storage_counters):
+    """Prints the warnings section.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      storage_counters (dict[str, collections.Counter]): storage counters.
+    """
+    has_extraction_warnings = storage_reader.HasAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING)
+
+    has_preprocessing_warnings = storage_reader.HasAttributeContainers(
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING)
+
+    has_recovery_warnings = storage_reader.HasAttributeContainers(
+        self._CONTAINER_TYPE_RECOVERY_WARNING)
+
+    if (self._output_format == 'text' and not has_extraction_warnings and
+        not has_preprocessing_warnings and not has_recovery_warnings):
+      self._output_writer.Write('\nNo warnings stored.\n')
+
+    else:
+      warnings_by_path_spec = storage_counters.get(
+          'extraction_warnings_by_path_spec', collections.Counter())
+      warnings_by_parser_chain = storage_counters.get(
+          'extraction_warnings_by_parser_chain', collections.Counter())
+
+      if self._output_format == 'json':
+        self._PrintWarningCountersJSON(
+            warnings_by_path_spec, warnings_by_parser_chain)
+
+      elif self._output_format in ('markdown', 'text'):
+        self._PrintWarningCountersTable(
+            'extraction', warnings_by_path_spec, warnings_by_parser_chain)
+
+        if self._verbose or 'warnings' in self._sections:
+          self._PrintExtractionWarningsDetails(storage_reader)
+
+      warnings_by_path_spec = storage_counters.get(
+          'recovery_warnings_by_path_spec', collections.Counter())
+      warnings_by_parser_chain = storage_counters.get(
+          'recovery_warnings_by_parser_chain', collections.Counter())
+
+      # TODO: print preprocessing warnings as part of JSON output format.
+
+      if self._output_format in ('markdown', 'text'):
+        self._PrintWarningCountersTable(
+            'preprocessing', warnings_by_path_spec, warnings_by_parser_chain)
+
+        if self._verbose or 'warnings' in self._sections:
+          self._PrintPreprocessingWarningsDetails(storage_reader)
+
+      # TODO: print recovery warnings as part of JSON output format.
+
+      if self._output_format in ('markdown', 'text'):
+        self._PrintWarningCountersTable(
+            'recovery', warnings_by_path_spec, warnings_by_parser_chain)
+
+        if self._verbose or 'warnings' in self._sections:
+          self._PrintRecoveryWarningsDetails(storage_reader)
+
   def CompareStores(self):
     """Compares the contents of two stores.
 
     Returns:
       bool: True if the content of the stores is identical.
-    """
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        self._storage_file_path)
-    if not storage_reader:
-      logger.error(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
-      return False
 
-    compare_storage_reader = (
-        storage_factory.StorageFactory.CreateStorageReaderForFile(
-            self._compare_storage_file_path))
-    if not compare_storage_reader:
-      logger.error(
-          'Format of storage file: {0:s} not supported'.format(
-              self._compare_storage_file_path))
-      return False
+    Raises:
+      BadConfigOption: if the storage file format is not supported.
+    """
+    storage_reader = self._GetStorageReader(self._storage_file_path)
+    compare_storage_reader = self._GetStorageReader(
+        self._compare_storage_file_path)
 
     try:
       result = self._CompareStores(storage_reader, compare_storage_reader)
@@ -737,6 +1235,40 @@ class PinfoTool(
       self._output_writer.Write('Storage files are different.\n')
 
     return result
+
+  def GenerateReport(self):
+    """Generates a report.
+
+    Raises:
+      BadConfigOption: if the storage file format is not supported.
+    """
+    storage_reader = self._GetStorageReader(self._storage_file_path)
+
+    try:
+      if self._report_type == 'file_hashes':
+        self._GenerateFileHashesReport(storage_reader)
+    finally:
+      storage_reader.Close()
+
+  def ListReports(self):
+    """Lists information about the available report types."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Reports')
+
+    for name, description in sorted(self._REPORTS.items()):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+  def ListSections(self):
+    """Lists information about the available sections."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Sections')
+
+    for name, description in sorted(self._SECTIONS.items()):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ParseArguments(self, arguments):
     """Parses the command line arguments.
@@ -754,12 +1286,11 @@ class PinfoTool(
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
+    self.AddStorageOptions(argument_parser)
 
-    argument_helper_names = ['storage_file']
     if self._CanEnforceProcessMemoryLimit():
-      argument_helper_names.append('process_resources')
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=argument_helper_names)
+      helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+          argument_parser, names=['process_resources'])
 
     argument_parser.add_argument(
         '--compare', dest='compare_storage_file', type=str,
@@ -768,10 +1299,31 @@ class PinfoTool(
 
     argument_parser.add_argument(
         '--output_format', '--output-format', dest='output_format', type=str,
-        choices=['text', 'json'], action='store', default='text',
-        metavar='FORMAT', help=(
-            'Format of the output, the default is: text. Supported options: '
-            'json, text.'))
+        choices=self._SUPPORTED_OUTPUT_FORMATS, action='store',
+        default=self._DEFAULT_OUTPUT_FORMAT, metavar='FORMAT', help=(
+            'Format of the output, the default is: {0:s}. Supported options: '
+            '{1:s}.').format(self._DEFAULT_OUTPUT_FORMAT, ', '.join(
+                sorted(self._SUPPORTED_OUTPUT_FORMATS))))
+
+    argument_parser.add_argument(
+        '--hash', dest='hash', choices=self._HASH_CHOICES, action='store',
+        metavar='TYPE', default=self._DEFAULT_HASH_TYPE, help=(
+            'Type of hash to output in file_hashes report. Supported options: '
+            '{0:s}').format(', '.join(self._HASH_CHOICES)))
+
+    argument_parser.add_argument(
+        '--report', dest='report', choices=self._REPORT_CHOICES, action='store',
+        metavar='TYPE', default=self._DEFAULT_REPORT_TYPE, help=(
+            'Report on specific information. Supported options: {0:s}'.format(
+                ', '.join(self._REPORT_CHOICES))))
+
+    argument_parser.add_argument(
+        '--sections', dest='sections', type=str, action='store', default='all',
+        metavar='SECTIONS_LIST', help=(
+            'List of sections to output. This is a comma separated list where '
+            'each entry is the name of a section. Use "--sections list" to '
+            'list the available sections and "--sections all" to show all '
+            'available sections.'))
 
     argument_parser.add_argument(
         '-v', '--verbose', dest='verbose', action='store_true',
@@ -798,6 +1350,8 @@ class PinfoTool(
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
+    self._WaitUserWarning()
+
     loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
         quiet_mode=self._quiet_mode)
@@ -817,17 +1371,35 @@ class PinfoTool(
 
     self._verbose = getattr(options, 'verbose', False)
 
+    self._report_type = getattr(
+        options, 'report', self._DEFAULT_REPORT_TYPE)
+    self._sections = getattr(options, 'sections', '')
+
+    self.list_reports = self._report_type == 'list'
+    self.list_sections = self._sections == 'list'
+
     self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
-    if self.show_troubleshooting:
+    if self.list_reports or self.list_sections or self.show_troubleshooting:
       return
 
+    if self._report_type != 'none':
+      if self._report_type not in self._REPORTS:
+        raise errors.BadConfigOption('Unsupported report type: {0:s}.'.format(
+            self._report_type))
+
+      self.generate_report = True
+
+    if self._sections != 'all':
+      self._sections = self._sections.split(',')
+
+    self._hash_type = getattr(options, 'hash', self._DEFAULT_HASH_TYPE)
     self._output_filename = getattr(options, 'write', None)
 
-    argument_helper_names = ['process_resources', 'storage_file']
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=argument_helper_names)
+        options, self, names=['process_resources'])
 
     # TODO: move check into _CheckStorageFile.
+    self._storage_file_path = self.ParseStringOption(options, 'storage_file')
     if not self._storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')
 
@@ -857,19 +1429,19 @@ class PinfoTool(
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
   def PrintStorageInformation(self):
-    """Prints the storage information."""
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        self._storage_file_path)
-    if not storage_reader:
-      logger.error(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
-      return
+    """Prints the storage information.
+
+    Raises:
+      BadConfigOption: if the storage file format is not supported.
+    """
+    if self._output_format == 'markdown':
+      self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
+    elif self._output_format == 'text':
+      self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
+
+    storage_reader = self._GetStorageReader(self._storage_file_path)
 
     try:
-      if self._output_format == 'json':
-        self._PrintStorageInformationAsJSON(storage_reader)
-      elif self._output_format == 'text':
-        self._PrintStorageInformationAsText(storage_reader)
+      self._PrintStorageInformation(storage_reader)
     finally:
       storage_reader.Close()

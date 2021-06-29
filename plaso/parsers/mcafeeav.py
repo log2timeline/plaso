@@ -4,15 +4,13 @@
 McAfee AV uses 4 logs to track when scans were run, when virus databases were
 updated, and when files match the virus database."""
 
-from __future__ import unicode_literals
-
-import codecs
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
@@ -23,6 +21,8 @@ class McafeeAVEventData(events.EventData):
   Attributes:
     action (str): action.
     filename (str): filename.
+    offset (int): offset of the line relative to the start of the file, from
+        which the event data was extracted.
     rule (str): rule.
     status (str): status.
     trigger_location (str): trigger location.
@@ -36,6 +36,7 @@ class McafeeAVEventData(events.EventData):
     super(McafeeAVEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.filename = None
+    self.offset = None
     self.rule = None
     self.status = None
     self.trigger_location = None
@@ -46,47 +47,77 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
   NAME = 'mcafee_protection'
-  DESCRIPTION = 'Parser for McAfee AV Access Protection log files.'
+  DATA_FORMAT = 'McAfee Anti-Virus access protection log file'
 
-  DELIMITER = b'\t'
+  DELIMITER = '\t'
   COLUMNS = [
       'date', 'time', 'status', 'username', 'filename',
       'trigger_location', 'rule', 'action']
 
-  def _ConvertToTimestamp(self, date, time, timezone):
-    """Converts date and time values into a timestamp.
+  _NUMBER_OF_COLUMNS = len(COLUMNS)
 
-    The date and time are made up of two strings, the date and the time,
-    separated by a tab. The time is in local time. The month and day can
-    be either 1 or 2 characters long, for example: "7/30/2013\\t10:22:48 AM"
+  def _CreateDateTime(self, date_string, time_string):
+    """Creates a date time value from the date time strings.
+
+    The format stores the date and time as 2 separate strings separated by
+    a tab. The time is in local time. The month and day can be either 1 or 2
+    characters long, for example: "7/30/2013\\t10:22:48 AM"
 
     Args:
-      date (str): date.
-      time (str): time.
-      timezone (pytz.timezone): timezone of the date and time.
+      date_string (str): date string.
+      time_string (str): time string.
 
     Returns:
-      int: a timestamp integer containing the number of micro seconds since
-          January 1, 1970, 00:00:00 UTC.
+      dfdatetime.TimeElements: date time object.
 
     Raises:
-      TimestampError: if the timestamp is badly formed or unable to transfer
-          the supplied date and time into a timestamp.
+      TimestampError: if the date or time string cannot be converted in
+          a date time object.
     """
-    # TODO: check if this is correct, likely not date or not time
-    # is more accurate.
-    if not date and not time:
-      raise errors.TimestampError(
-          'Unable to extract timestamp from McAfee AV logline.')
+    if not date_string and not time_string:
+      raise errors.TimestampError('Missing date or time string.')
 
     # TODO: Figure out how McAfee sets Day First and use that here.
     # The in-file time format is '07/30/2013\t10:22:48 AM'.
-    try:
-      time_string = '{0:s} {1:s}'.format(date, time)
-    except UnicodeDecodeError:
-      raise errors.TimestampError('Unable to form a timestamp string.')
 
-    return timelib.Timestamp.FromTimeString(time_string, timezone=timezone)
+    try:
+      month_string, day_of_month_string, year_string = date_string.split('/')
+      year = int(year_string, 10)
+      month = int(month_string, 10)
+      day_of_month = int(day_of_month_string, 10)
+    except (AttributeError, ValueError):
+      raise errors.TimestampError('Unsupported date string: {0:s}'.format(
+          date_string))
+
+    try:
+      time_value, time_suffix = time_string.split(' ')
+      hours_string, minutes_string, seconds_string = time_value.split(':')
+      hours = int(hours_string, 10)
+      minutes = int(minutes_string, 10)
+      seconds = int(seconds_string, 10)
+    except (AttributeError, ValueError):
+      raise errors.TimestampError('Unsupported time string: {0:s}'.format(
+          time_string))
+
+    if time_suffix == 'PM':
+      hours += 12
+    elif time_suffix != 'AM':
+      raise errors.TimestampError('Unsupported time suffix: {0:s}.'.format(
+          time_suffix))
+
+    time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+    try:
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+
+    except ValueError:
+      raise errors.TimestampError(
+          'Unsupported date and time strings: {0:s} {1:s}'.format(
+              date_string, time_string))
+
+    date_time.is_local_time = True
+    return date_time
 
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
@@ -94,20 +125,15 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row_offset (int): line number of the row.
+      row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     try:
-      timestamp = self._ConvertToTimestamp(
-          row['date'], row['time'], parser_mediator.timezone)
+      date_time = self._CreateDateTime(row['date'], row['time'])
     except errors.TimestampError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'Unable to parse time string: [{0:s} {1:s}] with error {2:s}'.format(
-              repr(row['date']), repr(row['time']), exception))
-      return
-
-    if timestamp is None:
-      return
+          'Unable to create date time with error: {0!s}'.format(exception))
+      date_time = dfdatetime_semantic_time.InvalidTime()
 
     event_data = McafeeAVEventData()
     event_data.action = row['action']
@@ -118,8 +144,8 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     event_data.trigger_location = row['trigger_location']
     event_data.username = row['username']
 
-    event = time_events.TimestampEvent(
-        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):
@@ -133,26 +159,14 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if len(row) != 8:
+    if len(row) != self._NUMBER_OF_COLUMNS:
       return False
 
-    # This file can have a UTF-8 byte-order-marker at the beginning of
-    # the first row.
-    # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
-    row_bytes = codecs.encode(row['date'], parser_mediator.codepage)
-    if row_bytes.startswith(b'\xef\xbb\xbf'):
-      row['date'] = row['date'][3:]
-      self._encoding = 'utf-8'
-
-    # Check the date format!
-    # If it doesn't parse, then this isn't a McAfee AV Access Protection Log
+    # If the date and time string cannot be converted into a date time object,
+    # then do not consider this to be a McAfee AV Access Protection Log.
     try:
-      timestamp = self._ConvertToTimestamp(
-          row['date'], row['time'], parser_mediator.timezone)
+      self._CreateDateTime(row['date'], row['time'])
     except errors.TimestampError:
-      return False
-
-    if timestamp is None:
       return False
 
     # Use the presence of these strings as a backup or in case of partial file.

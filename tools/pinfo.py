@@ -5,8 +5,6 @@
 pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
 """
 
-from __future__ import unicode_literals
-
 import logging
 import multiprocessing
 import os
@@ -42,12 +40,35 @@ def Main():
   except KeyboardInterrupt:
     return False
 
+  have_list_option = False
+  if tool.list_reports:
+    tool.ListReports()
+    have_list_option = True
+
+  if tool.list_sections:
+    tool.ListSections()
+    have_list_option = True
+
+  if have_list_option:
+    return True
+
   result = True
   try:
     if tool.compare_storage_information:
       result = tool.CompareStores()
+    elif tool.generate_report:
+      tool.GenerateReport()
     else:
       tool.PrintStorageInformation()
+
+  # Writing to stdout and stderr will raise BrokenPipeError if it
+  # receives a SIGPIPE.
+  except BrokenPipeError:
+    pass
+
+  except (KeyboardInterrupt, errors.UserAbort):
+    logging.warning('Aborted by user.')
+    return False
 
   except errors.BadConfigOption as exception:
     logging.warning(exception)

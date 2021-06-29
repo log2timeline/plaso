@@ -6,8 +6,6 @@ annotation and visualization within Internet-based, two-dimensional maps and
 three-dimensional Earth browsers.
 """
 
-from __future__ import unicode_literals
-
 import codecs
 
 from xml.etree import ElementTree
@@ -17,18 +15,30 @@ from plaso.output import manager
 from plaso.output import rawpy
 
 
-class KMLOutputModule(interface.LinearOutputModule):
+class KMLOutputModule(interface.TextFileOutputModule):
   """Output module for a Keyhole Markup Language (KML) XML file."""
 
   NAME = 'kml'
   DESCRIPTION = 'Saves events with geography data into a KML format.'
 
-  def WriteEventBody(self, event, event_data, event_tag):
+  def __init__(self, output_mediator):
+    """Initializes a Keyhole Markup Language (KML) XML file output module.
+
+    Args:
+      output_mediator (OutputMediator): an output mediator.
+    """
+    event_formatting_helper = rawpy.NativePythonEventFormattingHelper(
+        output_mediator)
+    super(KMLOutputModule, self).__init__(
+        output_mediator, event_formatting_helper)
+
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     latitude = getattr(event_data, 'latitude', None)
@@ -43,10 +53,11 @@ class KMLOutputModule(interface.LinearOutputModule):
 
       description_xml_element = ElementTree.SubElement(
           placemark_xml_element, 'description')
-      # TODO: move the description formatting into this output module.
-      description_xml_element.text = (
-          rawpy.NativePythonFormatterHelper.GetFormattedEvent(
-              event, event_data, event_tag))
+
+      description_text = self._event_formatting_helper.GetFormattedEvent(
+          event, event_data, event_data_stream, event_tag)
+
+      description_xml_element.text = '{0:s}\n'.format(description_text)
 
       point_xml_element = ElementTree.SubElement(
           placemark_xml_element, 'Point')
@@ -60,7 +71,7 @@ class KMLOutputModule(interface.LinearOutputModule):
       xml_string = ElementTree.tostring(placemark_xml_element)
 
       output_text = codecs.decode(xml_string, self._output_mediator.encoding)
-      self._output_writer.Write(output_text)
+      self.WriteText(output_text)
 
   def WriteHeader(self):
     """Writes the header to the output."""
@@ -68,12 +79,11 @@ class KMLOutputModule(interface.LinearOutputModule):
         '<?xml version="1.0" encoding="{0:s}"?>'
         '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'.format(
             self._output_mediator.encoding))
-    self._output_writer.Write(xml_string)
+    self.WriteText(xml_string)
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    xml_string = '</Document></kml>'
-    self._output_writer.Write(xml_string)
+    self.WriteText('</Document></kml>')
 
 
 manager.OutputManager.RegisterOutput(KMLOutputModule)

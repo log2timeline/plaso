@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the output modules CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -25,8 +23,8 @@ usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
 
 Test argument parser.
 
-optional arguments:
-  --additional_fields ADDITIONAL_FIELDS
+{0:s}:
+  --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
                         Defines extra fields to be included in the output, in
                         addition to the default fields, which are datetime,
                         timestamp_desc, source, source_long, message, parser,
@@ -37,7 +35,7 @@ optional arguments:
                         available output formats.
   -w OUTPUT_FILE, --write OUTPUT_FILE
                         Output filename.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -68,22 +66,6 @@ optional arguments:
     # Test with a configuration object missing.
     with self.assertRaises(errors.BadConfigObject):
       output_modules.OutputModulesArgumentsHelper.ParseOptions(options, None)
-
-    # Test with output format missing.
-    options = cli_test_lib.TestOptions()
-
-    with self.assertRaises(errors.BadConfigOption):
-      output_modules.OutputModulesArgumentsHelper.ParseOptions(
-          options, test_tool)
-
-    # Test with output file missing.
-    options.output_format = 'dynamic'
-
-    with self.assertRaises(errors.BadConfigOption):
-      output_modules.OutputModulesArgumentsHelper.ParseOptions(
-          options, test_tool)
-
-    # TODO: improve test coverage.
 
 
 if __name__ == '__main__':

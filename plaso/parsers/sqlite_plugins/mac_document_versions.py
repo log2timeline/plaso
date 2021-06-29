@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the MacOS Document Versions files."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for MacOS document revision database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -13,14 +11,15 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class MacDocumentVersionsEventData(events.EventData):
-  """MacOS Document Versions database event data.
+  """MacOS document revision event data.
 
   Attributes:
+    last_time (str): the system user ID of the user that opened the file.
     name (str): name of the original file.
     path (str): path from the original file.
-    version_path (str): path to the version copy of the original file.
-    last_time (str): the system user ID of the user that opened the file.
+    query (str): SQL query that was used to obtain the event data.
     user_sid (str): identification user ID that open the file.
+    version_path (str): path to the version copy of the original file.
   """
 
   DATA_TYPE = 'mac:document_versions:file'
@@ -32,15 +31,22 @@ class MacDocumentVersionsEventData(events.EventData):
     self.last_time = None
     self.name = None
     self.path = None
+    self.query = None
     self.user_sid = None
     self.version_path = None
 
 
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
-  """Parse the MacOS Document Versions SQLite database.."""
+  """SQLite parser plugin for MacOS document revision database files."""
 
   NAME = 'mac_document_versions'
-  DESCRIPTION = 'Parser for document revisions SQLite database files.'
+  DATA_FORMAT = 'MacOS document revisions SQLite database file'
+
+  REQUIRED_STRUCTURE = {
+      'files': frozenset([
+          'file_name', 'file_path', 'file_last_seen', 'file_storage_id']),
+      'generations': frozenset([
+          'generation_path', 'generation_add_time', 'generation_storage_id'])}
 
   # Define the needed queries.
   # name: name from the original file.
@@ -54,9 +60,6 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
         'g.generation_add_time AS version_time FROM files f, generations g '
         'WHERE f.file_storage_id = g.generation_storage_id;'),
        'DocumentVersionsRow')]
-
-  # The required tables for the query.
-  REQUIRED_TABLES = frozenset(['files', 'generations'])
 
   SCHEMAS = [{
       'files': (

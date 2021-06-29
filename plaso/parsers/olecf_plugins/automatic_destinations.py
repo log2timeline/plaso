@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plugin to parse .automaticDestinations-ms OLECF files."""
 
-from __future__ import unicode_literals
-
 import os
 import re
 
@@ -13,11 +11,12 @@ from dfdatetime import uuid_time as dfdatetime_uuid_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import errors
+from plaso.lib import dtfabric_helper
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import olecf
 from plaso.parsers import winlnk
-from plaso.parsers.olecf_plugins import dtfabric_plugin
+from plaso.parsers.olecf_plugins import interface
 
 
 class AutomaticDestinationsDestListEntryEventData(events.EventData):
@@ -32,7 +31,7 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
     path (str): path.
     pin_status (int): pin status.
     offset (int): offset of the DestList entry relative to the start of
-        the DestList stream.
+        the DestList stream, from which the event data was extracted.
   """
 
   DATA_TYPE = 'olecf:dest_list:entry'
@@ -52,15 +51,19 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
     self.pin_status = None
 
 
-class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
+class AutomaticDestinationsOLECFPlugin(
+    interface.OLECFPlugin, dtfabric_helper.DtFabricHelper):
   """Plugin that parses an .automaticDestinations-ms OLECF file."""
 
   NAME = 'olecf_automatic_destinations'
-  DESCRIPTION = 'Parser for *.automaticDestinations-ms OLECF files.'
+  DATA_FORMAT = (
+      'Automatic destinations jump list OLE compound file '
+      '(.automaticDestinations-ms)')
 
   REQUIRED_ITEMS = frozenset(['DestList'])
 
-  _DEFINITION_FILE = 'automatic_destinations.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'automatic_destinations.yaml')
 
   _RE_LNK_ITEM_NAME = re.compile(r'^[1-9a-f][0-9a-f]*$')
 
@@ -102,6 +105,10 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
     Raises:
       UnableToParseFile: if the DestList cannot be parsed.
     """
+    if olecf_item.size == 0:
+      parser_mediator.ProduceExtractionWarning('empty DestList stream')
+      return
+
     header_map = self._GetDataTypeMap('dest_list_header')
 
     try:
@@ -177,7 +184,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
                 exception))
 
       if entry.last_modification_time == 0:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
       else:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=entry.last_modification_time)
@@ -200,7 +207,7 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
       entry_offset += entry_data_size
 
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses an OLECF file.
+    """Extracts events from an OLECF file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

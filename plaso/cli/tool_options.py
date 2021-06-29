@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 """The CLI tool options mix-ins."""
 
-from __future__ import unicode_literals
-
 import os
+import pytz
 
 from plaso.analysis import manager as analysis_manager
 from plaso.cli import logger
-from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.cli.helpers import profiling
-from plaso.formatters import mediator as formatters_mediator
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
 from plaso.output import manager as output_manager
@@ -95,42 +92,76 @@ class HashersOptions(object):
 
 
 class OutputModuleOptions(object):
-  """Output module options mix-in."""
+  """Output module options mix-in.
+
+  Attributes:
+    list_time_zones (bool): True if the time zones should be listed.
+  """
 
   # pylint: disable=no-member
+
+  # Output format that have second-only date and time value and/or a limited
+  # predefined set of output fields.
+  _DEPRECATED_OUTPUT_FORMATS = frozenset(['l2tcsv', 'l2ttln', 'tln'])
+
+  _MESSAGE_FORMATTERS_DIRECTORY_NAME = 'formatters'
+  _MESSAGE_FORMATTERS_FILE_NAME = 'formatters.yaml'
 
   def __init__(self):
     """Initializes output module options."""
     super(OutputModuleOptions, self).__init__()
+    self._output_dynamic_time = None
     self._output_filename = None
     self._output_format = None
     self._output_module = None
+    self._output_time_zone = None
 
-  def _CreateOutputModule(self, options):
-    """Creates the output module.
+    self.list_time_zones = False
+
+  def _CreateOutputMediator(self):
+    """Creates an output mediator.
+
+    Returns:
+      OutputMediator: output mediator.
+
+    Raises:
+      RuntimeError: if the preferred language identitifier is not supported.
+    """
+    mediator = output_mediator.OutputMediator(
+        self._knowledge_base, data_location=self._data_location,
+        dynamic_time=self._output_dynamic_time,
+        preferred_encoding=self.preferred_encoding)
+
+    try:
+      mediator.SetPreferredLanguageIdentifier(self._preferred_language)
+    except (KeyError, TypeError) as exception:
+      raise RuntimeError(exception)
+
+    mediator.SetTimezone(self._output_time_zone)
+
+    return mediator
+
+  def _CreateOutputModule(self, mediator, options):
+    """Creates an output module.
 
     Args:
+      mediator (OutputMediator): output mediator.
       options (argparse.Namespace): command line arguments.
 
     Returns:
       OutputModule: output module.
 
     Raises:
+      BadConfigOption: if parameters are missing.
       RuntimeError: if the output module cannot be created.
     """
-    formatter_mediator = formatters_mediator.FormatterMediator(
-        data_location=self._data_location)
-
-    try:
-      formatter_mediator.SetPreferredLanguageIdentifier(
-          self._preferred_language)
-    except (KeyError, TypeError) as exception:
-      raise RuntimeError(exception)
-
-    mediator = output_mediator.OutputMediator(
-        self._knowledge_base, formatter_mediator,
-        preferred_encoding=self.preferred_encoding)
-    mediator.SetTimezone(self._preferred_time_zone)
+    if self._output_format in self._DEPRECATED_OUTPUT_FORMATS:
+      self._PrintUserWarning((
+          'the output format: {0:s} has significant limitations such as '
+          'second-only date and time values and/or a limited predefined '
+          'set of output fields. It is strongly recommend to use an '
+          'alternative output format like: dynamic.').format(
+              self._output_format))
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
@@ -141,10 +172,19 @@ class OutputModuleOptions(object):
           'Unable to create output module with error: {0!s}'.format(
               exception))
 
-    if output_manager.OutputManager.IsLinearOutputModule(self._output_format):
-      output_file_object = open(self._output_filename, 'wb')
-      output_writer = tools.FileObjectOutputWriter(output_file_object)
-      output_module.SetOutputWriter(output_writer)
+    if output_module.WRITES_OUTPUT_FILE:
+      if not self._output_filename:
+        raise errors.BadConfigOption(
+            'Output format: {0:s} requires an output file'.format(
+                self._output_format))
+
+      if os.path.exists(self._output_filename):
+        raise errors.BadConfigOption(
+            'Output file already exists: {0:s}.'.format(self._output_filename))
+
+      output_module.Open(path=self._output_filename)
+    else:
+      output_module.Open()
 
     helpers_manager.ArgumentHelperManager.ParseOptions(options, output_module)
 
@@ -152,33 +192,19 @@ class OutputModuleOptions(object):
     # in order for the output module to continue. Prompt user to supply
     # those that may be missing.
     missing_parameters = output_module.GetMissingArguments()
+    if missing_parameters and self._unattended_mode:
+      raise errors.BadConfigOption(
+          'Unable to create output module missing parameters: {0:s}'.format(
+              ', '.join(missing_parameters)))
+
     while missing_parameters:
-      for parameter in missing_parameters:
-        value = self._PromptUserForInput(
-            'Missing parameter {0:s} for output module'.format(parameter))
-        if value is None:
-          logger.warning(
-              'Unable to set the missing parameter for: {0:s}'.format(
-                  parameter))
-          continue
+      self._PromptUserForMissingOutputModuleParameters(
+          options, missing_parameters)
 
-        setattr(options, parameter, value)
-
-      helpers_manager.ArgumentHelperManager.ParseOptions(
-          options, output_module)
+      helpers_manager.ArgumentHelperManager.ParseOptions(options, output_module)
       missing_parameters = output_module.GetMissingArguments()
 
     return output_module
-
-  def ListLanguageIdentifiers(self):
-    """Lists the language identifiers."""
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=['Identifier', 'Language'],
-        title='Language identifiers')
-    for language_id, value_list in sorted(
-        language_ids.LANGUAGE_IDENTIFIERS.items()):
-      table_view.AddRow([language_id, value_list[1]])
-    table_view.Write(self._output_writer)
 
   def _GetOutputModulesInformation(self):
     """Retrieves the output modules information.
@@ -192,17 +218,125 @@ class OutputModuleOptions(object):
 
     return output_modules_information
 
+  def _ParseOutputOptions(self, options):
+    """Parses the output options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._output_dynamic_time = getattr(options, 'dynamic_time', False)
+
+    time_zone_string = self.ParseStringOption(options, 'output_time_zone')
+    if isinstance(time_zone_string, str):
+      if time_zone_string.lower() == 'list':
+        self.list_time_zones = True
+
+      elif time_zone_string:
+        try:
+          pytz.timezone(time_zone_string)
+        except pytz.UnknownTimeZoneError:
+          raise errors.BadConfigOption(
+              'Unknown time zone: {0:s}'.format(time_zone_string))
+
+        self._output_time_zone = time_zone_string
+
+  def _PromptUserForMissingOutputModuleParameters(
+      self, options, missing_parameters):
+    """Prompts the user for missing output module parameters.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+      missing_parameters (list[str]): names of missing output module parameters.
+    """
+    for parameter in missing_parameters:
+      value = None
+      while not value:
+        value = self._PromptUserForInput(
+            'Please specific a value for {0:s}'.format(parameter))
+
+      setattr(options, parameter, value)
+
+  def _ReadMessageFormatters(self, mediator):
+    """Reads the message formatters from a formatters file or directory.
+
+    Args:
+      mediator (OutputMediator): output mediator.
+
+    Raises:
+      BadConfigOption: if the message formatters file or directory cannot be
+          read.
+    """
+    formatters_directory = os.path.join(
+        self._data_location, self._MESSAGE_FORMATTERS_DIRECTORY_NAME)
+    formatters_file = os.path.join(
+        self._data_location, self._MESSAGE_FORMATTERS_FILE_NAME)
+
+    if os.path.isdir(formatters_directory):
+      try:
+        mediator.ReadMessageFormattersFromDirectory(formatters_directory)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read message formatters from directory: {0:s} with '
+            'error: {1!s}').format(formatters_directory, exception))
+
+    elif os.path.isfile(formatters_file):
+      try:
+        mediator.ReadMessageFormattersFromFile(formatters_file)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read message formatters from file: {0:s} with error: '
+            '{1!s}').format(formatters_file, exception))
+
+    else:
+      raise errors.BadConfigOption('Missing formatters file and directory.')
+
+  def AddOutputOptions(self, argument_group):
+    """Adds the output options to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        '--dynamic_time', '--dynamic-time', dest='dynamic_time',
+        action='store_true', default=False, help=(
+            'Indicate that the output should use dynamic time.'))
+
+    # Note the default here is None so we can determine if the time zone
+    # option was set.
+    argument_group.add_argument(
+        '--output_time_zone', '--output-time-zone', dest='output_time_zone',
+        action='store', metavar='TIME_ZONE', type=str, default=None, help=(
+            'time zone of date and time values written to the output, if '
+            'supported by the output format. Output formats that support '
+            'this are: dynamic and l2t_csv. Use "list" to see a list of '
+            'available time zones.'))
+
+  def ListLanguageIdentifiers(self):
+    """Lists the language identifiers."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Identifier', 'Language'],
+        title='Language identifiers')
+    for language_id, value_list in sorted(
+        language_ids.LANGUAGE_IDENTIFIERS.items()):
+      table_view.AddRow([language_id, value_list[1]])
+    table_view.Write(self._output_writer)
+
   def ListOutputModules(self):
     """Lists the output modules."""
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, column_names=['Name', 'Description'],
         title='Output Modules')
 
-    for name, output_class in output_manager.OutputManager.GetOutputClasses():
+    output_classes = sorted(
+        output_manager.OutputManager.GetOutputClasses())
+    for name, output_class in output_classes:
       table_view.AddRow([name, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)
 
-    disabled_classes = list(
+    disabled_classes = sorted(
         output_manager.OutputManager.GetDisabledOutputClasses())
     if not disabled_classes:
       return
@@ -274,3 +408,13 @@ class StorageFileOptions(object):
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
           'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+  def AddStorageOptions(self, argument_parser):
+    """Adds the storage options to the argument group.
+
+    Args:
+      argument_parser (argparse.ArgumentParser): argparse argument parser.
+    """
+    argument_parser.add_argument(
+        'storage_file', metavar='PATH', nargs='?', type=str, default=None,
+        help='Path to a storage file.')

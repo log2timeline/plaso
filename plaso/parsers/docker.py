@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 """Parser for Docker configuration and log files."""
 
-from __future__ import unicode_literals
-
 import codecs
 import json
 import os
 
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import interface
 
@@ -39,7 +38,7 @@ class DockerJSONContainerLogEventData(events.EventData):
 
 
 class DockerJSONContainerEventData(events.EventData):
-  """Docker container's configuration file event data.
+  """Docker container configuration event data.
 
   Attributes:
     action (str): whether the container was created, started, or finished.
@@ -58,11 +57,11 @@ class DockerJSONContainerEventData(events.EventData):
 
 
 class DockerJSONLayerEventData(events.EventData):
-  """Docker filesystem layer configuration file event data.
+  """Docker file system layer configuration event data.
 
   Attributes:
-    command: the command used which made Docker create a new layer
-    layer_id: the identifier of the current Docker layer (sha1)
+    command: the command used which made Docker create a new layer.
+    layer_id: the identifier of the current Docker layer (SHA-1).
   """
 
   DATA_TYPE = 'docker:json:layer'
@@ -75,7 +74,7 @@ class DockerJSONLayerEventData(events.EventData):
 
 
 class DockerJSONParser(interface.FileObjectParser):
-  """Generates various events from Docker json config and log files.
+  """Parser for Docker json configuration and log files.
 
   This handles :
   * Per container config file
@@ -87,7 +86,7 @@ class DockerJSONParser(interface.FileObjectParser):
   """
 
   NAME = 'dockerjson'
-  DESCRIPTION = 'Parser for JSON Docker files.'
+  DATA_FORMAT = 'Docker configuration and log JSON file'
 
   _ENCODING = 'utf-8'
 
@@ -131,7 +130,8 @@ class DockerJSONParser(interface.FileObjectParser):
           'not a valid Docker layer configuration file, missing '
           '\'docker_version\' key.')
 
-    if 'created' in json_dict:
+    time_string = json_dict.get('created', None)
+    if time_string is not None:
       layer_creation_command_array = [
           x.strip() for x in json_dict['container_config']['Cmd']]
       layer_creation_command = ' '.join(layer_creation_command_array).replace(
@@ -141,9 +141,17 @@ class DockerJSONParser(interface.FileObjectParser):
       event_data.command = layer_creation_command
       event_data.layer_id = self._GetIdentifierFromPath(parser_mediator)
 
-      timestamp = timelib.Timestamp.FromTimeString(json_dict['created'])
-      event = time_events.TimestampEvent(
-          timestamp, definitions.TIME_DESCRIPTION_ADDED)
+      try:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromStringISO8601(time_string)
+      except ValueError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'Unable to parse created time string: {0:s} with error: '
+            '{1!s}').format(time_string, exception))
+        date_time = dfdatetime_semantic_time.InvalidTime()
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseContainerConfigJSON(self, parser_mediator, file_object):
@@ -194,35 +202,60 @@ class DockerJSONParser(interface.FileObjectParser):
     event_data.container_id = container_id_from_path
     event_data.container_name = container_name
 
-    if 'State' in json_dict:
-      if 'StartedAt' in json_dict['State']:
+    json_state = json_dict.get('State', None)
+    if json_state is not None:
+      time_string = json_state.get('StartedAt', None)
+      if time_string is not None:
         event_data.action = 'Container Started'
 
-        timestamp = timelib.Timestamp.FromTimeString(
-            json_dict['State']['StartedAt'])
-        event = time_events.TimestampEvent(
-            timestamp, definitions.TIME_DESCRIPTION_START)
+        try:
+          date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+          date_time.CopyFromStringISO8601(time_string)
+        except ValueError as exception:
+          parser_mediator.ProduceExtractionWarning((
+              'Unable to parse container start time string: {0:s} with error: '
+              '{1!s}').format(time_string, exception))
+          date_time = dfdatetime_semantic_time.InvalidTime()
+
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_START)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      if 'FinishedAt' in json_dict['State']:
-        if json_dict['State']['FinishedAt'] != '0001-01-01T00:00:00Z':
+      time_string = json_state.get('FinishedAt', None)
+      if time_string is not None:
+        # If the timestamp is 0001-01-01T00:00:00Z, the container
+        # is still running, so we don't generate a Finished event
+        if time_string != '0001-01-01T00:00:00Z':
           event_data.action = 'Container Finished'
 
-          # If the timestamp is 0001-01-01T00:00:00Z, the container
-          # is still running, so we don't generate a Finished event
-          timestamp = timelib.Timestamp.FromTimeString(
-              json_dict['State']['FinishedAt'])
-          event = time_events.TimestampEvent(
-              timestamp, definitions.TIME_DESCRIPTION_END)
+          try:
+            date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+            date_time.CopyFromStringISO8601(time_string)
+          except ValueError as exception:
+            parser_mediator.ProduceExtractionWarning((
+                'Unable to parse container finish time string: {0:s} with '
+                'error: {1!s}').format(time_string, exception))
+            date_time = dfdatetime_semantic_time.InvalidTime()
+
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_END)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    created_time = json_dict.get('Created', None)
-    if created_time:
+    time_string = json_dict.get('Created', None)
+    if time_string is not None:
       event_data.action = 'Container Created'
 
-      timestamp = timelib.Timestamp.FromTimeString(created_time)
-      event = time_events.TimestampEvent(
-          timestamp, definitions.TIME_DESCRIPTION_ADDED)
+      try:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromStringISO8601(time_string)
+      except ValueError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'Unable to parse container created time string: {0:s} with error: '
+            '{1!s}').format(time_string, exception))
+        date_time = dfdatetime_semantic_time.InvalidTime()
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseContainerLogJSON(self, parser_mediator, file_object):
@@ -245,21 +278,26 @@ class DockerJSONParser(interface.FileObjectParser):
     for log_line in text_file_object:
       json_log_line = json.loads(log_line)
 
-      time = json_log_line.get('time', None)
-      if not time:
+      time_string = json_log_line.get('time', None)
+      if time_string is None:
         continue
 
       event_data = DockerJSONContainerLogEventData()
       event_data.container_id = container_id
       event_data.log_line = json_log_line.get('log', None)
       event_data.log_source = json_log_line.get('stream', None)
-      # TODO: pass line number to offset or remove.
-      event_data.offset = 0
 
-      timestamp = timelib.Timestamp.FromTimeString(time)
+      try:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromStringISO8601(time_string)
+      except ValueError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'Unable to parse written time string: {0:s} with error: '
+            '{1!s}').format(time_string, exception))
+        date_time = dfdatetime_semantic_time.InvalidTime()
 
-      event = time_events.TimestampEvent(
-          timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
@@ -305,8 +343,7 @@ class DockerJSONParser(interface.FileObjectParser):
     except ValueError as exception:
       if exception == 'No JSON object could be decoded':
         raise errors.UnableToParseFile(exception)
-      else:
-        raise
+      raise
 
 
 manager.ParsersManager.RegisterParser(DockerJSONParser)

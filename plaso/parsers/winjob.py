@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Scheduled Task job files."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import systemtime as dfdatetime_systemtime
@@ -9,9 +9,10 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -40,13 +41,14 @@ class WinJobEventData(events.EventData):
     self.working_directory = None
 
 
-class WinJobParser(dtfabric_parser.DtFabricBaseParser):
+class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parse Windows Scheduled Task files for job events."""
 
   NAME = 'winjob'
-  DESCRIPTION = 'Parser for Windows Scheduled Task job (or At-job) files.'
+  DATA_FORMAT = 'Windows Scheduled Task job (or at-job) file'
 
-  _DEFINITION_FILE = 'winjob.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'winjob.yaml')
 
   _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
 
@@ -236,7 +238,7 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
             file_object, file_offset, trigger_data_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.UnableToParseFile((
-            'Unable to parse trigger: {0:d} with error: {2!s}').format(
+            'Unable to parse trigger: {0:d} with error: {1!s}').format(
                 trigger_index, exception))
 
       file_offset += data_size

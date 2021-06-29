@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android SMS plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import android_sms as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import android_sms
 
@@ -21,31 +18,24 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     plugin = android_sms.AndroidSMSPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['mmssms.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEqual(storage_writer.number_of_events, 9)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
     # Check the first SMS sent.
-    event = events[0]
+    expected_event_values = {
+        'address': '1 555-521-5554',
+        'body': 'Yo Fred this is my new number.',
+        'data_type': 'android:messaging:sms',
+        'date_time': '2013-10-29 16:56:28.038',
+        'sms_type': 'SENT',
+        'sms_read': 'READ',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2013-10-29 16:56:28.038000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.address, '1 555-521-5554')
-    self.assertEqual(event_data.body, 'Yo Fred this is my new number.')
-
-    expected_message = (
-        'Type: SENT '
-        'Address: 1 555-521-5554 '
-        'Status: READ '
-        'Message: Yo Fred this is my new number.')
-    expected_short_message = 'Yo Fred this is my new number.'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

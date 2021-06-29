@@ -2,8 +2,8 @@ name: recycler
 type: format
 description: Windows Recycler and Recycle.Bin formats
 urls:
-- "https://github.com/libyal/dtformats/blob/master/documentation/Windows%20Recycler%20file%20formats.asciidoc"
-- "https://github.com/libyal/dtformats/blob/master/documentation/Windows%20Recycle.Bin%20file%20formats.asciidoc"
+- "https://github.com/libyal/dtformats/blob/main/documentation/Windows%20Recycler%20file%20formats.asciidoc"
+- "https://github.com/libyal/dtformats/blob/main/documentation/Windows%20Recycle.Bin%20file%20formats.asciidoc"
 ---
 name: byte
 type: integer
@@ -54,6 +54,7 @@ description: Windows Recycler INFO2 file entry Unicode original filename string
 type: string
 encoding: utf-16-le
 element_data_type: wchar16
+elements_data_size: 520
 elements_terminator: "\x00\x00"
 ---
 name: recycler_info2_file_entry

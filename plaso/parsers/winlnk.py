@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Shortcut (LNK) files."""
 
-from __future__ import unicode_literals
-
 import uuid
 
 import pylnk
@@ -81,7 +79,7 @@ class WinLnkParser(interface.FileObjectParser):
   _INITIAL_FILE_OFFSET = None
 
   NAME = 'lnk'
-  DESCRIPTION = 'Parser for Windows Shortcut (LNK) files.'
+  DATA_FORMAT = 'Windows Shortcut (LNK) file'
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -148,7 +146,7 @@ class WinLnkParser(interface.FileObjectParser):
       return
 
     link_target = None
-    if lnk_file.link_target_identifier_data:
+    if lnk_file.link_target_identifier_data:  # pylint: disable=using-constant-test
       # TODO: change file_entry.name to display name once it is generated
       # correctly.
       display_name = parser_mediator.GetFilename()
@@ -203,12 +201,12 @@ class WinLnkParser(interface.FileObjectParser):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if access_time == 0 and creation_time == 0 and modification_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if lnk_file.droid_file_identifier:
+    if lnk_file.droid_file_identifier:  # pylint: disable=using-constant-test
       try:
         self._ParseDistributedTrackingIdentifier(
             parser_mediator, lnk_file.droid_file_identifier, display_name)
@@ -217,7 +215,7 @@ class WinLnkParser(interface.FileObjectParser):
             'unable to read droid file identifier with error: {0!s}.'.format(
                 exception))
 
-    if lnk_file.birth_droid_file_identifier:
+    if lnk_file.birth_droid_file_identifier:  # pylint: disable=using-constant-test
       try:
         self._ParseDistributedTrackingIdentifier(
             parser_mediator, lnk_file.birth_droid_file_identifier, display_name)

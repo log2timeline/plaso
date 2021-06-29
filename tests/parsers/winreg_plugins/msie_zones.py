@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the MSIE zone settings Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import msie_zones
 
 from tests.parsers.winreg_plugins import test_lib
@@ -55,25 +52,13 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(
-        event_data.data_type, 'windows:registry:msie_zone_settings')
-
-    expected_message = (
-        '[{0:s}\\0 (My Computer)] '
+    expected_settings = (
         '[1200] Run ActiveX controls and plug-ins: 3 (Not Allowed) '
         '[1400] Active scripting: 1 (Prompt User) '
         '[CurrentLevel]: 0 '
@@ -83,11 +68,18 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         '[Icon]: shell32.dll#0016 '
         '[LowIcon]: inetcpl.cpl#005422 '
         '[PMDisplayName]: Computer '
-        '[Protected Mode]').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        '[Protected Mode]')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2011-09-16 21:12:40.1455141',
+        'data_type': 'windows:registry:msie_zone_settings',
+        'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'settings': expected_settings}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
   def testProcessNtuserZones(self):
     """Tests the Process function on a Zones key."""
@@ -103,25 +95,13 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(
-        event_data.data_type, 'windows:registry:msie_zone_settings')
-
-    expected_message = (
-        '[{0:s}\\0 (My Computer)] '
+    expected_settings = (
         '[1200] Run ActiveX controls and plug-ins: 0 (Allow) '
         '[1400] Active scripting: 0 (Allow) '
         '[2001] .NET: Run components signed with Authenticode: 3 (Not '
@@ -135,11 +115,18 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         '[Flags]: 33 [Icon]: shell32.dll#0016 '
         '[LowIcon]: inetcpl.cpl#005422 '
         '[PMDisplayName]: Computer '
-        '[Protected Mode]').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        '[Protected Mode]')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2011-09-16 21:12:40.1455141',
+        'data_type': 'windows:registry:msie_zone_settings',
+        'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'settings': expected_settings}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
   def testProcessSoftwareLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
@@ -155,25 +142,13 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(
-        event_data.data_type, 'windows:registry:msie_zone_settings')
-
-    expected_message = (
-        '[{0:s}\\0 (My Computer)] '
+    expected_settings = (
         '[1001] Download signed ActiveX controls: 1 (Prompt User) '
         '[1004] Download unsigned ActiveX controls: 3 (Not Allowed) '
         '[1200] Run ActiveX controls and plug-ins: 3 (Not Allowed) '
@@ -264,11 +239,18 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         '[Icon]: shell32.dll#0016 '
         '[LowIcon]: inetcpl.cpl#005422 '
         '[PMDisplayName]: Computer '
-        '[Protected Mode]').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        '[Protected Mode]')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2011-08-28 21:32:44.9376751',
+        'data_type': 'windows:registry:msie_zone_settings',
+        'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'settings': expected_settings}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
   def testProcessSoftwareZones(self):
     """Tests the Process function on a Zones key."""
@@ -284,25 +266,13 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(
-        event_data.data_type, 'windows:registry:msie_zone_settings')
-
-    expected_message = (
-        '[{0:s}\\0 (My Computer)] '
+    expected_settings = (
         '[1001] Download signed ActiveX controls: 0 (Allow) '
         '[1004] Download unsigned ActiveX controls: 0 (Allow) '
         '[1200] Run ActiveX controls and plug-ins: 0 (Allow) '
@@ -397,11 +367,18 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         '[Icon]: shell32.dll#0016 '
         '[LowIcon]: inetcpl.cpl#005422 '
         '[PMDisplayName]: Computer '
-        '[Protected Mode]').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        '[Protected Mode]')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2011-08-28 21:32:44.9376751',
+        'data_type': 'windows:registry:msie_zone_settings',
+        'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'settings': expected_settings}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 if __name__ == '__main__':

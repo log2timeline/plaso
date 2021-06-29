@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file contains the Run/RunOnce key plugins for Plaso."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -14,7 +12,7 @@ class RunKeyEventData(events.EventData):
   """Run/RunOnce key event data attribute container.
 
   Attributes:
-    entries (str): Run/RunOnce entries.
+    entries (list[str]): Run/RunOnce entries.
     key_path (str): Windows Registry key path.
   """
 
@@ -35,7 +33,7 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_run'
-  DESCRIPTION = 'Parser for run and run once Registry data.'
+  DATA_FORMAT = 'Run and run once Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -84,7 +82,7 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
       entries.append(value_string)
 
     event_data = RunKeyEventData()
-    event_data.entries = ' '.join(sorted(entries)) or None
+    event_data.entries = sorted(entries)
     event_data.key_path = registry_key.path
 
     event = time_events.DateTimeValuesEvent(
@@ -92,4 +90,4 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(AutoRunsPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(AutoRunsPlugin)

@@ -1,0 +1,65 @@
+# Linux related event formatters.
+
+type: 'conditional'
+data_type: 'apt:history:line'
+message:
+- '{packages}'
+- '[{command}]'
+- '[{error}]'
+- '[{requester}]'
+short_message:
+- '{packages}'
+---
+type: 'conditional'
+data_type: 'dpkg:line'
+message:
+- '{body}'
+short_message:
+- '{body}'
+---
+type: 'conditional'
+data_type: 'linux:utmp:event'
+enumeration_helpers:
+- input_attribute: 'type'
+  output_attribute: 'status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'EMPTY'
+    1: 'RUN_LVL'
+    2: 'BOOT_TIME'
+    3: 'NEW_TIME'
+    4: 'OLD_TIME'
+    5: 'INIT_PROCESS'
+    6: 'LOGIN_PROCESS'
+    7: 'USER_PROCESS'
+    8: 'DEAD_PROCESS'
+    9: 'ACCOUNTING'
+message:
+- 'User: {username}'
+- 'Hostname: {hostname}'
+- 'Terminal: {terminal}'
+- 'PID: {pid}'
+- 'Terminal identifier: {terminal_identifier}'
+- 'Status: {status}'
+- 'IP Address: {ip_address}'
+- 'Exit status: {exit_status}'
+short_message:
+- 'User: {username}'
+- 'PID: {pid}'
+- 'Status: {status}'
+---
+type: 'conditional'
+data_type: 'selinux:line'
+message:
+- '['
+- 'audit_type: {audit_type}'
+- ', pid: {pid}'
+- ']'
+- ' {body}'
+separator: ''
+short_message:
+- '['
+- 'audit_type: {audit_type}'
+- ', pid: {pid}'
+- ']'
+- ' {body}'

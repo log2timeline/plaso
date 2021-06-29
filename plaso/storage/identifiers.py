@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Storage attribute container identifier objects."""
 
-from __future__ import unicode_literals
+import uuid
 
 from plaso.containers import interface as containers_interface
 
@@ -34,29 +34,30 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
     return '{0:d}'.format(self.attribute_values_hash)
 
 
-class SerializedStreamIdentifier(
-    containers_interface.AttributeContainerIdentifier):
-  """Serialized stream attribute container identifier.
+class RedisKeyIdentifier(containers_interface.AttributeContainerIdentifier):
+  """Redis key attribute container identifier.
 
   The identifier is used to uniquely identify attribute containers. Where
   for example an attribute container is stored as a JSON serialized data in
-  a ZIP file.
+  a Redis instance.
 
   Attributes:
-    stream_number (int): number of the serialized attribute container stream.
-    entry_index (int): number of the serialized event within the stream.
+    identifier (UUID): unique identifier of a container.
   """
 
-  def __init__(self, stream_number, entry_index):
-    """Initializes a serialized stream attribute container identifier.
+  def __init__(self, identifier=None):
+    """"Initializes a Redis key identifier.
 
     Args:
-      stream_number (int): number of the serialized attribute container stream.
-      entry_index (int): number of the serialized event within the stream.
+      identifier (Optional[str]): hexadecimal representation of a UUID
+          (version 4). If not specified, a random UUID (version 4) will be
+          generated.
     """
-    super(SerializedStreamIdentifier, self).__init__()
-    self.entry_index = entry_index
-    self.stream_number = stream_number
+    super(RedisKeyIdentifier, self).__init__()
+    if identifier:
+      self.identifier = uuid.UUID(identifier)
+    else:
+      self.identifier = uuid.uuid4()
 
   def CopyToString(self):
     """Copies the identifier to a string representation.
@@ -64,10 +65,10 @@ class SerializedStreamIdentifier(
     Returns:
       str: unique identifier or None.
     """
-    if self.stream_number is not None and self.entry_index is not None:
-      return '{0:d}.{1:d}'.format(self.stream_number, self.entry_index)
+    if not self.identifier:
+      return None
 
-    return None
+    return self.identifier.hex
 
 
 class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):

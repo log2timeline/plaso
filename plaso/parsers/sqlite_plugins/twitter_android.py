@@ -1,7 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Parser for Twitter on Android."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Twitter on Android database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -16,17 +14,18 @@ class TwitterAndroidContactEventData(events.EventData):
   """Twitter on Android contact event data.
 
   Attributes:
-    identifier (int): contact row id.
-    user_identifier (int): twitter account id.
-    username (str): twitter account handler.
-    name (str): twitter account name.
     description (str): twitter account profile description.
-    web_url (str): twitter account profile url content.
-    location (str): twitter account profile location content.
     followers (int): number of followers.
     friends (int): number of following.
-    statuses (int): twitter account number of tweets.
+    identifier (int): contact row id.
     image_url (str): profile picture url.
+    location (str): twitter account profile location content.
+    name (str): twitter account name.
+    query (str): SQL query that was used to obtain the event data.
+    statuses (int): twitter account number of tweets.
+    user_identifier (int): twitter account id.
+    username (str): twitter account handler.
+    web_url (str): twitter account profile url content.
   """
 
   DATA_TYPE = 'twitter:android:contact'
@@ -35,29 +34,31 @@ class TwitterAndroidContactEventData(events.EventData):
     """Initializes event data."""
     super(TwitterAndroidContactEventData,
           self).__init__(data_type=self.DATA_TYPE)
-    self.identifier = None
-    self.user_identifier = None
-    self.username = None
-    self.name = None
     self.description = None
-    self.web_url = None
-    self.location = None
     self.followers = None
     self.friends = None
-    self.statuses = None
+    self.identifier = None
     self.image_url = None
+    self.location = None
+    self.name = None
+    self.query = None
+    self.statuses = None
+    self.user_identifier = None
+    self.username = None
+    self.web_url = None
 
 
 class TwitterAndroidStatusEventData(events.EventData):
   """Twitter on Android status event data.
 
   Attributes:
-    identifier (int): status row identifier.
     author_identifier (int): twitter account identifier.
-    username (str): twitter account handler.
     content (str): status content.
     favorited (int): favorited flag as 0/1 value.
+    identifier (int): status row identifier.
+    query (str): SQL query that was used to obtain the event data.
     retweeted (int): retweeted flag as 0/1 value.
+    username (str): twitter account handler.
   """
 
   DATA_TYPE = 'twitter:android:status'
@@ -71,6 +72,7 @@ class TwitterAndroidStatusEventData(events.EventData):
     self.username = None
     self.content = None
     self.favorited = None
+    self.query = None
     self.retweeted = None
 
 
@@ -79,6 +81,7 @@ class TwitterAndroidSearchEventData(events.EventData):
 
   Attributes:
     name (str): twitter name handler.
+    query (str): SQL query that was used to obtain the event data.
     search_query (str): search query.
   """
 
@@ -89,14 +92,25 @@ class TwitterAndroidSearchEventData(events.EventData):
     super(TwitterAndroidSearchEventData,
           self).__init__(data_type=self.DATA_TYPE)
     self.name = None
+    self.query = None
     self.search_query = None
 
 
 class TwitterAndroidPlugin(interface.SQLitePlugin):
-  """Parser plugin for Twitter on Android."""
+  """SQLite parser plugin for Twitter on Android database files."""
 
   NAME = 'twitter_android'
-  DESCRIPTION = 'Parser for Twitter on android database'
+  DATA_FORMAT = 'Twitter on Android SQLite database file'
+
+  REQUIRED_STRUCTURE = {
+      'search_queries': frozenset([
+          'name', 'query', 'time']),
+      'statuses': frozenset([
+          '_id', 'author_id', 'content', 'created', 'favorited', 'retweeted']),
+      'users': frozenset([
+          'username', 'user_id', '_id', 'name', 'profile_created',
+          'description', 'web_url', 'location', 'followers', 'friends',
+          'statuses', 'image_url', 'updated', 'friendship_time'])}
 
   QUERIES = [
       ('SELECT name, query, time FROM search_queries', 'ParseSearchRow'),
@@ -108,8 +122,6 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
       (('SELECT _id, user_id, username, name, profile_created, description, '
         'web_url, location, followers, friends, statuses, image_url, updated, '
         'friendship_time FROM users'), 'ParseContactRow')]
-
-  REQUIRED_TABLES = frozenset(['search_queries', 'statuses', 'users'])
 
   SCHEMAS = [{
       'activities': (

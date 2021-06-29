@@ -1,7 +1,7 @@
 name: sam
 type: format
 description: Security Accounts Manager (SAM) format
-urls: ["https://github.com/libyal/winreg-kb/blob/master/documentation/Security%20Accounts%20Manager%20keys.asciidoc"]
+urls: ["https://github.com/libyal/winreg-kb/blob/main/documentation/Security%20Accounts%20Manager%20keys.asciidoc"]
 ---
 name: uint16
 type: integer

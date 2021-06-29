@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the shell item event attribute container."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.containers import shell_item_events
@@ -19,8 +17,9 @@ class ShellItemFileEntryEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = shell_item_events.ShellItemFileEntryEventData()
 
     expected_attribute_names = [
-        'data_type', 'file_reference', 'localized_name', 'long_name',
-        'name', 'offset', 'origin', 'query', 'shell_item_path']
+        '_event_data_stream_row_identifier', 'data_type', 'file_reference',
+        'localized_name', 'long_name', 'name', 'origin', 'parser',
+        'shell_item_path']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

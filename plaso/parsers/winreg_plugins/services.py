@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """Windows drivers and services Registry key parser plugin."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -44,14 +42,10 @@ class WindowsRegistryServiceEventData(events.EventData):
 
 
 class ServicesPlugin(interface.WindowsRegistryPlugin):
-  """Plug-in to format the Services and Drivers keys having Type and Start.
-
-  Also see:
-    http://support.microsoft.com/kb/103000
-  """
+  """Plug-in to format the Services and Drivers keys having Type and Start."""
 
   NAME = 'windows_services'
-  DESCRIPTION = 'Parser for services and drivers Registry data.'
+  DATA_FORMAT = 'Windows drivers and services Registry data'
 
   # TODO: use a key path prefix match here. Might be more efficient.
   # HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services
@@ -125,8 +119,9 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     if registry_value:
       event_data.object_name = registry_value.GetDataAsObject()
 
-    values_dict = self._GetValuesFromKey(registry_key, names_to_skip=[
-        'ErrorControl', 'ImagePath', 'ObjectName', 'Start', 'Type'])
+    values_dict = self._GetValuesFromKey(
+         parser_mediator, registry_key, names_to_skip=[
+            'ErrorControl', 'ImagePath', 'ObjectName', 'Start', 'Type'])
     event_data.values = ' '.join([
         '{0:s}: {1!s}'.format(name, value)
         for name, value in sorted(values_dict.items())]) or None
@@ -136,4 +131,4 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(ServicesPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(ServicesPlugin)

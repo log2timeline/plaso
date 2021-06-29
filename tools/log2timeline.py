@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 """The log2timeline command line tool."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import logging
 import multiprocessing
 import os
@@ -57,7 +54,7 @@ def Main():
     tool.ListProfilers()
     have_list_option = True
 
-  if tool.list_timezones:
+  if tool.list_time_zones:
     tool.ListTimeZones()
     have_list_option = True
 
@@ -71,11 +68,17 @@ def Main():
   try:
     tool.ExtractEventsFromSources()
 
+  # Writing to stdout and stderr will raise BrokenPipeError if it
+  # receives a SIGPIPE.
+  except BrokenPipeError:
+    pass
+
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')
     return False
 
-  except (errors.BadConfigOption, errors.SourceScannerError) as exception:
+  except (IOError, errors.BadConfigOption,
+          errors.SourceScannerError) as exception:
     # Display message on stdout as well as the log file.
     print(exception)
     logging.error(exception)

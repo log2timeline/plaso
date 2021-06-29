@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin for the MacOS launch services quarantine events."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for MacOS LS quarantine events database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
@@ -17,9 +15,10 @@ class LsQuarantineEventData(events.EventData):
   """MacOS launch services quarantine event data.
 
   Attributes:
+    agent (str): user agent that was used to download the file.
     data (bytes): data.
+    query (str): SQL query that was used to obtain the event data.
     url (str): original URL of the file.
-    user_agent (str): user agent that was used to download the file.
   """
 
   DATA_TYPE = 'macosx:lsquarantine'
@@ -29,29 +28,31 @@ class LsQuarantineEventData(events.EventData):
     super(LsQuarantineEventData, self).__init__(data_type=self.DATA_TYPE)
     self.agent = None
     self.data = None
+    self.query = None
     self.url = None
 
 
 class LsQuarantinePlugin(interface.SQLitePlugin):
-  """Parses the launch services quarantine events database.
+  """SQLite parser plugin for MacOS LS quarantine events database files.
 
-  The LS quarantine events are stored in SQLite database files named
-  /Users/<username>/Library/Preferences/
-       QuarantineEvents.com.apple.LaunchServices
+  The MacOS launch services (LS) quarantine database file is typically stored
+  in: /Users/<username>/Library/Preferences/
+      QuarantineEvents.com.apple.LaunchServices
   """
 
   NAME = 'ls_quarantine'
-  DESCRIPTION = 'Parser for LS quarantine events SQLite database files.'
+  DATA_FORMAT = (
+      'MacOS launch services quarantine events database SQLite database file')
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'LSQuarantineEvent': frozenset([
+          'LSQuarantineTimeStamp', 'LSQuarantineAgentName',
+          'LSQuarantineOriginURLString', 'LSQuarantineDataURLString'])}
+
   QUERIES = [
-      (('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
-        'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
-        'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
-        'ORDER BY Time'), 'ParseLSQuarantineRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
+      (('SELECT LSQuarantineTimeStamp AS Time, LSQuarantineAgentName AS Agent, '
+        'LSQuarantineOriginURLString AS URL, LSQuarantineDataURLString AS Data '
+        'FROM LSQuarantineEvent ORDER BY Time'), 'ParseLSQuarantineRow')]
 
   SCHEMAS = [{
       'LSQuarantineEvent': (

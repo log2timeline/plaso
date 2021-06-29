@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Filter file."""
 
-from __future__ import unicode_literals
-
 import io
 
 from plaso.engine import path_filters

@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Parser for Zsh extended_history files.
+"""Parser for ZSH extended_history files.
 
 The file format is described here:
 http://zsh.sourceforge.net/Doc/Release/Options.html#index-EXTENDEDHISTORY
 """
-
-from __future__ import unicode_literals
 
 import re
 
@@ -22,7 +20,7 @@ from plaso.parsers import text_parser
 
 
 class ZshHistoryEventData(events.EventData):
-  """Zsh history event data.
+  """ZSH history event data.
 
   Attributes:
     command (str): command that was run.
@@ -38,10 +36,10 @@ class ZshHistoryEventData(events.EventData):
 
 
 class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
-  """Parser for Zsh extended_history files"""
+  """Parser for ZSH extended history files"""
 
   NAME = 'zsh_extended_history'
-  DESCRIPTION = 'Parser for ZSH extended history files'
+  DATA_FORMAT = 'ZSH extended history file'
 
   _ENCODING = 'utf-8'
 
@@ -65,7 +63,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
   LINE_STRUCTURES = [('command', _LINE_GRAMMAR)]
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a record and produces a Zsh history event.
+    """Parses a record and produces a ZSH history event.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -92,7 +90,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
-    """Verifies whether content corresponds to a Zsh extended_history file.
+    """Verifies whether content corresponds to a ZSH extended_history file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -106,5 +104,6 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
       return True
 
     return False
+
 
 manager.ParsersManager.RegisterParser(ZshExtendedHistoryParser)

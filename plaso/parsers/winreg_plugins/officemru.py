@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """"Windows Registry plugin for the Microsoft Office MRU."""
 
-from __future__ import unicode_literals
-
 import re
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -11,7 +9,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -53,7 +51,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   """Plugin that parses Microsoft Office MRU keys."""
 
   NAME = 'microsoft_office_mru'
-  DESCRIPTION = 'Parser for Microsoft Office MRU Registry data.'
+  DATA_FORMAT = 'Microsoft Office MRU Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -133,7 +131,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       entries.append('{0:s}: {1:s}'.format(registry_value.name, value_string))
 
       if not timestamp:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
       else:
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
@@ -143,7 +141,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     event_data = OfficeMRUListWindowsRegistryEventData()
-    event_data.entries = ' '.join([value for value in entries]) or None
+    event_data.entries = ' '.join(entries) or None
     event_data.key_path = registry_key.path
 
     event = time_events.DateTimeValuesEvent(
@@ -151,4 +149,4 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)

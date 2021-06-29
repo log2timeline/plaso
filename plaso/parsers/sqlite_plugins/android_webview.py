@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Android WebView databases."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Android WebView database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -23,8 +21,11 @@ class WebViewCookieEventData(events.EventData):
   Attributes:
     cookie_name (str): name of the cookie.
     data (str): data stored in the cookie.
-    domain (str): host that set the cookie.
+    host (str): host that set the cookie.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     path (str): path for which the cookie was set.
+    query (str): SQL query that was used to obtain the event data.
     secure (bool): True if the cookie should only be transmitted over
         a secure channel.
     url (str): URL of the cookie.
@@ -38,18 +39,23 @@ class WebViewCookieEventData(events.EventData):
     self.cookie_name = None
     self.data = None
     self.host = None
+    self.offset = None
     self.path = None
+    self.query = None
     self.secure = None
     self.url = None
 
 
 class WebViewPlugin(interface.SQLitePlugin):
-  """Parser for WebView databases."""
+  """SQLite parser plugin for Android WebView database files."""
 
   NAME = 'android_webview'
-  DESCRIPTION = 'Parser for Android WebView databases'
+  DATA_FORMAT = 'Android WebView SQLite database file'
 
-  REQUIRED_TABLES = frozenset(['android_metadata', 'cookies'])
+  REQUIRED_STRUCTURE = {
+      'android_metadata': frozenset([]),
+      'cookies': frozenset([
+          '_id', 'name', 'value', 'domain', 'expires', 'path', 'secure'])}
 
   QUERIES = frozenset([
       ('SELECT _id, name, value, domain, expires, path, secure FROM cookies',

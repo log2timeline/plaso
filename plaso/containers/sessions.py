@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Session related attribute container definitions."""
 
-from __future__ import unicode_literals
-
 import collections
 import time
 import uuid
@@ -39,8 +37,11 @@ class Session(interface.AttributeContainer):
     product_name (str): name of the product that created the session for
         example "log2timeline".
     product_version (str): version of the product that created the session.
+    source_configurations (list[SourceConfiguration]): configuration of sources
+        that are (or going to be) processed.
     start_time (int): time that the session was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
+    text_prepend (str): text to prepend to every display name.
   """
   CONTAINER_TYPE = 'session'
 
@@ -64,7 +65,9 @@ class Session(interface.AttributeContainer):
     self.preferred_year = None
     self.product_name = 'plaso'
     self.product_version = plaso.__version__
+    self.source_configurations = None
     self.start_time = int(time.time() * 1000000)
+    self.text_prepend = None
 
   def CopyAttributesFromSessionCompletion(self, session_completion):
     """Copies attributes from a session completion.
@@ -94,24 +97,62 @@ class Session(interface.AttributeContainer):
     if session_completion.parsers_counter:
       self.parsers_counter = session_completion.parsers_counter
 
+  def CopyAttributesFromSessionConfiguration(self, session_configuration):
+    """Copies attributes from a session configuration.
+
+    Args:
+      session_configuration (SessionConfiguration): session configuration
+          attribute container.
+
+    Raises:
+      ValueError: if the identifier of the session configuration does not match
+          that of the session.
+    """
+    if self.identifier != session_configuration.identifier:
+      raise ValueError('Session identifier mismatch.')
+
+    self.artifact_filters = session_configuration.artifact_filters
+    self.command_line_arguments = session_configuration.command_line_arguments
+    self.debug_mode = session_configuration.debug_mode
+    self.enabled_parser_names = session_configuration.enabled_parser_names
+    self.filter_file = session_configuration.filter_file
+    self.parser_filter_expression = (
+        session_configuration.parser_filter_expression)
+    self.preferred_encoding = session_configuration.preferred_encoding
+    self.preferred_time_zone = session_configuration.preferred_time_zone
+    self.source_configurations = session_configuration.source_configurations
+    self.text_prepend = session_configuration.text_prepend
+
   def CopyAttributesFromSessionStart(self, session_start):
     """Copies attributes from a session start.
 
     Args:
       session_start (SessionStart): session start attribute container.
     """
-    self.artifact_filters = session_start.artifact_filters
-    self.command_line_arguments = session_start.command_line_arguments
-    self.debug_mode = session_start.debug_mode
-    self.enabled_parser_names = session_start.enabled_parser_names
-    self.filter_file = session_start.filter_file
     self.identifier = session_start.identifier
-    self.parser_filter_expression = session_start.parser_filter_expression
-    self.preferred_encoding = session_start.preferred_encoding
-    self.preferred_time_zone = session_start.preferred_time_zone
     self.product_name = session_start.product_name
     self.product_version = session_start.product_version
     self.start_time = session_start.timestamp
+
+    # The following is for backward compatibility with older session start
+    # attribute containers.
+    self.artifact_filters = getattr(
+        session_start, 'artifact_filters', self.artifact_filters)
+    self.command_line_arguments = getattr(
+        session_start, 'command_line_arguments', self.command_line_arguments)
+    self.debug_mode = getattr(
+        session_start, 'debug_mode', self.debug_mode)
+    self.enabled_parser_names = getattr(
+        session_start, 'enabled_parser_names', self.enabled_parser_names)
+    self.filter_file = getattr(
+        session_start, 'filter_file', self.filter_file)
+    self.parser_filter_expression = getattr(
+        session_start, 'parser_filter_expression',
+        self.parser_filter_expression)
+    self.preferred_encoding = getattr(
+        session_start, 'preferred_encoding', self.preferred_encoding)
+    self.preferred_time_zone = getattr(
+        session_start, 'preferred_time_zone', self.preferred_time_zone)
 
   def CreateSessionCompletion(self):
     """Creates a session completion.
@@ -130,6 +171,27 @@ class Session(interface.AttributeContainer):
     session_completion.timestamp = self.completion_time
     return session_completion
 
+  def CreateSessionConfiguration(self):
+    """Creates a session configuration.
+
+    Returns:
+      SessionConfiguration: session configuration attribute container.
+    """
+    session_configuration = SessionConfiguration()
+    session_configuration.artifact_filters = self.artifact_filters
+    session_configuration.command_line_arguments = self.command_line_arguments
+    session_configuration.debug_mode = self.debug_mode
+    session_configuration.enabled_parser_names = self.enabled_parser_names
+    session_configuration.filter_file = self.filter_file
+    session_configuration.identifier = self.identifier
+    session_configuration.parser_filter_expression = (
+        self.parser_filter_expression)
+    session_configuration.preferred_encoding = self.preferred_encoding
+    session_configuration.preferred_time_zone = self.preferred_time_zone
+    session_configuration.source_configurations = self.source_configurations
+    session_configuration.text_prepend = self.text_prepend
+    return session_configuration
+
   def CreateSessionStart(self):
     """Creates a session start.
 
@@ -137,15 +199,7 @@ class Session(interface.AttributeContainer):
       SessionStart: session start attribute container.
     """
     session_start = SessionStart()
-    session_start.artifact_filters = self.artifact_filters
-    session_start.command_line_arguments = self.command_line_arguments
-    session_start.debug_mode = self.debug_mode
-    session_start.enabled_parser_names = self.enabled_parser_names
-    session_start.filter_file = self.filter_file
     session_start.identifier = self.identifier
-    session_start.parser_filter_expression = self.parser_filter_expression
-    session_start.preferred_encoding = self.preferred_encoding
-    session_start.preferred_time_zone = self.preferred_time_zone
     session_start.product_name = self.product_name
     session_start.product_version = self.product_version
     session_start.timestamp = self.start_time
@@ -185,8 +239,13 @@ class SessionCompletion(interface.AttributeContainer):
     self.timestamp = None
 
 
-class SessionStart(interface.AttributeContainer):
-  """Session start attribute container.
+class SessionConfiguration(interface.AttributeContainer):
+  """Session configuration attribute container.
+
+  The session configuration contains various settings used within a session,
+  such as parser and collection filters that are used, and information about
+  the source being processed, such as the system configuration determined by
+  pre-processing.
 
   Attributes:
     artifact_filters (list[str]): names of artifact definitions that are
@@ -201,6 +260,40 @@ class SessionStart(interface.AttributeContainer):
     preferred_encoding (str): preferred encoding.
     preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred year.
+    source_configurations (list[SourceConfiguration]): configuration of sources
+        that are (or going to be) processed.
+    text_prepend (str): text to prepend to every display name.
+  """
+  CONTAINER_TYPE = 'session_configuration'
+
+  def __init__(self, identifier=None):
+    """Initializes a session configuration attribute container.
+
+    Args:
+      identifier (Optional[str]): unique identifier of the session.
+          The identifier should match that of the corresponding
+          session start information.
+    """
+    super(SessionConfiguration, self).__init__()
+    self.artifact_filters = None
+    self.command_line_arguments = None
+    self.debug_mode = False
+    self.enabled_parser_names = None
+    self.filter_file = None
+    self.identifier = identifier
+    self.parser_filter_expression = None
+    self.preferred_encoding = None
+    self.preferred_time_zone = None
+    self.preferred_year = None
+    self.source_configurations = None
+    self.text_prepend = None
+
+
+class SessionStart(interface.AttributeContainer):
+  """Session start attribute container.
+
+  Attributes:
+    identifier (str): unique identifier of the session.
     product_name (str): name of the product that created the session for
         example "log2timeline".
     product_version (str): version of the product that created the session.
@@ -218,20 +311,11 @@ class SessionStart(interface.AttributeContainer):
           session completion information.
     """
     super(SessionStart, self).__init__()
-    self.artifact_filters = None
-    self.command_line_arguments = None
-    self.debug_mode = False
-    self.enabled_parser_names = None
-    self.filter_file = None
     self.identifier = identifier
-    self.parser_filter_expression = None
-    self.preferred_encoding = None
-    self.preferred_time_zone = None
-    self.preferred_year = None
     self.product_name = None
     self.product_version = None
     self.timestamp = None
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    Session, SessionCompletion, SessionStart])
+    Session, SessionCompletion, SessionConfiguration, SessionStart])

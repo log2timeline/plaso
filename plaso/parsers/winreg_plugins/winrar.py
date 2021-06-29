@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 """This file contains a WinRAR history Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import re
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -33,7 +31,7 @@ class WinRARHistoryPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing WinRAR History keys."""
 
   NAME = 'winrar_mru'
-  DESCRIPTION = 'Parser for WinRAR History Registry data.'
+  DATA_FORMAT = 'WinRAR History Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -76,4 +74,4 @@ class WinRARHistoryPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(WinRARHistoryPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(WinRARHistoryPlugin)

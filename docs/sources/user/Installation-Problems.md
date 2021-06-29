@@ -16,11 +16,3 @@ Checking availability and versions of plaso dependencies.
 ```
 
 **TODO: add more text**
-
-## Mac OS-X 
-
-See: [Troubleshooting Mac OS X](Troubleshooting-MacOS.md)
-
-## Windows
-
-See: [Troubleshooting Windows](Troubleshooting-Windows.md)

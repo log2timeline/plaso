@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the artifacts attribute containers."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.containers import artifacts
@@ -110,6 +108,57 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
     self.assertEqual(attribute_names, expected_attribute_names)
 
 
+class PathArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the path artifact."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = artifacts.PathArtifact()
+
+    expected_attribute_names = [
+        'data_stream', 'path_segment_separator', 'path_segments']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+    self.assertEqual(attribute_names, expected_attribute_names)
+
+  def testComparison(self):
+    """Tests the comparison functions."""
+    attribute_container = artifacts.PathArtifact(path='etc/issue')
+
+    self.assertTrue(attribute_container == 'etc/issue')
+    self.assertTrue(attribute_container >= 'etc/issue')
+    self.assertFalse(attribute_container > 'etc/issue')
+    self.assertTrue(attribute_container <= 'etc/issue')
+    self.assertFalse(attribute_container < 'etc/issue')
+    self.assertFalse(attribute_container != 'etc/issue')
+
+    self.assertFalse(attribute_container == '/etc/issue')
+
+  # TODO: add tests for _SplitPath.
+
+  def testContainedIn(self):
+    """Tests the ContainedIn function."""
+    attribute_container = artifacts.PathArtifact(path='etc/issue')
+
+    self.assertTrue(attribute_container.ContainedIn('/etc/issue'))
+    self.assertTrue(attribute_container.ContainedIn('/usr/local/etc/issue'))
+    self.assertFalse(attribute_container.ContainedIn('/etc/issue.net'))
+
+
+class SourceConfigurationArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the source configuration artifact."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = artifacts.SourceConfigurationArtifact()
+
+    expected_attribute_names = [
+        'mount_path', 'path_spec', 'system_configuration']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+    self.assertEqual(attribute_names, expected_attribute_names)
+
+
 class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the system configuration artifact."""
 
@@ -120,7 +169,8 @@ class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         'available_time_zones', 'code_page', 'hostname', 'keyboard_layout',
         'operating_system', 'operating_system_product',
-        'operating_system_version', 'time_zone', 'user_accounts']
+        'operating_system_version', 'time_zone', 'user_accounts',
+        'windows_eventlog_providers']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
     self.assertEqual(attribute_names, expected_attribute_names)
@@ -139,6 +189,15 @@ class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
     self.assertEqual(attribute_names, expected_attribute_names)
+
+
+class WindowsEventLogProviderArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows EventLog provider artifact."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    attribute_container = artifacts.WindowsEventLogProviderArtifact()
+    self.assertIsNotNone(attribute_container)
 
 
 if __name__ == '__main__':

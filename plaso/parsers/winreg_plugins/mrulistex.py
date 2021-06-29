@@ -2,23 +2,22 @@
 """This file contains MRUListEx Windows Registry plugins.
 
 Also see:
-  https://github.com/libyal/winreg-kb/wiki/MRU-keys
+https://github.com/libyal/winreg-kb/blob/main/documentation/MRU%20keys.asciidoc
 """
 
-from __future__ import unicode_literals
-
 import abc
+import os
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
+from plaso.lib import dtfabric_helper
 from plaso.lib import definitions
 from plaso.parsers import logger
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.shared import shell_items
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -81,10 +80,11 @@ class MRUListExStringRegistryKeyFilter(
 
 
 class BaseMRUListExWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Class for common MRUListEx Windows Registry plugin functionality."""
 
-  _DEFINITION_FILE = 'mru.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'mru.yaml')
 
   @abc.abstractmethod
   def _ParseMRUListExEntryValue(
@@ -184,7 +184,7 @@ class MRUListExStringWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
   """Windows Registry plugin to parse a string MRUListEx."""
 
   NAME = 'mrulistex_string'
-  DESCRIPTION = 'Parser for Most Recently Used (MRU) Registry data.'
+  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
 
   FILTERS = frozenset([MRUListExStringRegistryKeyFilter()])
 
@@ -249,7 +249,7 @@ class MRUListExShellItemListWindowsRegistryPlugin(
   """Windows Registry plugin to parse a shell item list MRUListEx."""
 
   NAME = 'mrulistex_shell_item_list'
-  DESCRIPTION = 'Parser for Most Recently Used (MRU) Registry data.'
+  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -295,8 +295,8 @@ class MRUListExShellItemListWindowsRegistryPlugin(
       shell_items_parser.ParseByteStream(
           parser_mediator, value.data, codepage=codepage)
 
-      value_string = 'Shell item path: {0:s}'.format(
-          shell_items_parser.CopyToPath())
+      shell_item_path = shell_items_parser.CopyToPath() or 'N/A'
+      value_string = 'Shell item path: {0:s}'.format(shell_item_path)
 
     return value_string
 
@@ -326,7 +326,7 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
   """Windows Registry plugin to parse a string and shell item MRUListEx."""
 
   NAME = 'mrulistex_string_and_shell_item'
-  DESCRIPTION = 'Parser for Most Recently Used (MRU) Registry data.'
+  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -393,8 +393,9 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
         shell_items_parser.ParseByteStream(
             parser_mediator, shell_item_data, codepage=codepage)
 
+        shell_item_path = shell_items_parser.CopyToPath() or 'N/A'
         value_string = 'Path: {0:s}, Shell item: [{1:s}]'.format(
-            path, shell_items_parser.CopyToPath())
+            path, shell_item_path)
 
     return value_string
 
@@ -423,7 +424,7 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
   """Windows Registry plugin to parse a string and shell item list MRUListEx."""
 
   NAME = 'mrulistex_string_and_shell_item_list'
-  DESCRIPTION = 'Parser for Most Recently Used (MRU) Registry data.'
+  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -490,8 +491,9 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
         shell_items_parser.ParseByteStream(
             parser_mediator, shell_item_list_data, codepage=codepage)
 
+        shell_item_path = shell_items_parser.CopyToPath() or 'N/A'
         value_string = 'Path: {0:s}, Shell item path: {1:s}'.format(
-            path, shell_items_parser.CopyToPath())
+            path, shell_item_path)
 
     return value_string
 
@@ -509,7 +511,7 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
     self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
 
 
-winreg.WinRegistryParser.RegisterPlugins([
+winreg_parser.WinRegistryParser.RegisterPlugins([
     MRUListExStringWindowsRegistryPlugin,
     MRUListExShellItemListWindowsRegistryPlugin,
     MRUListExStringAndShellItemWindowsRegistryPlugin,

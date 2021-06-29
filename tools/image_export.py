@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """The image export command line tool."""
 
-from __future__ import unicode_literals
-
 import logging
 import multiprocessing
 import os
@@ -44,7 +42,14 @@ def Main():
     return False
 
   if tool.list_signature_identifiers:
-    tool.ListSignatureIdentifiers()
+    try:
+      tool.ListSignatureIdentifiers()
+
+    # BadConfigOption will be raised if signatures.conf cannot be found.
+    except errors.BadConfigOption as exception:
+      logging.warning(exception)
+      return False
+
     return True
 
   if not tool.has_filters:
@@ -55,6 +60,11 @@ def Main():
 
   try:
     tool.ProcessSources()
+
+  # Writing to stdout and stderr will raise BrokenPipeError if it
+  # receives a SIGPIPE.
+  except BrokenPipeError:
+    pass
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')

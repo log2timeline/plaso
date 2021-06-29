@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the helper for parser and plugin filter expressions."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.filters import parser_filter
@@ -63,6 +61,43 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
     with self.assertRaises(RuntimeError):
       test_helper._JoinExpression({'excluded': set(['plugin1'])}, {})
 
+  def testExpandPreset(self):
+    """Tests the _ExpandPreset function."""
+    presets_file = self._GetTestFilePath(['presets.yaml'])
+    self._SkipIfPathNotExists(presets_file)
+
+    presets_manager = parsers_presets.ParserPresetsManager()
+    presets_manager.ReadFromFile(presets_file)
+
+    test_helper = parser_filter.ParserFilterExpressionHelper()
+
+    parsers_and_plugins = {'win_gen': set(['*'])}
+    test_helper._ExpandPreset(presets_manager, 'win_gen', parsers_and_plugins)
+
+    expected_parsers_and_plugins = {
+        'bencode': set(['*']),
+        'czip': set(['oxml']),
+        'filestat': set(['*']),
+        'gdrive_synclog': set(['*']),
+        'java_idx': set(['*']),
+        'lnk': set(['*']),
+        'mcafee_protection': set(['*']),
+        'olecf': set(['*']),
+        'pe': set(['*']),
+        'prefetch': set(['*']),
+        'sccm': set(['*']),
+        'skydrive_log': set(['*']),
+        'skydrive_log_old': set(['*']),
+        'sqlite': set(['google_drive', 'skype']),
+        'symantec_scanlog': set(['*']),
+        'usnjrnl': set(['*']),
+        'webhist': set(['*']),
+        'winfirewall': set(['*']),
+        'winjob': set(['*']),
+        'winreg': set(['*'])}
+
+    self.assertEqual(parsers_and_plugins, expected_parsers_and_plugins)
+
   def testExpandPresets(self):
     """Tests the ExpandPresets function."""
     presets_file = self._GetTestFilePath(['presets.yaml'])
@@ -80,7 +115,6 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
         'chrome_cache',
         'chrome_preferences',
         'czip/oxml',
-        'esedb',
         'esedb/msie_webcache',
         'filestat',
         'firefox_cache',
@@ -126,7 +160,6 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
         'chrome_cache',
         'chrome_preferences',
         'czip/oxml',
-        'esedb',
         'esedb/msie_webcache',
         'filestat',
         'firefox_cache',
@@ -167,6 +200,9 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
     parser_filter_expression = test_helper.ExpandPresets(
         presets_manager, 'olecf,!utmp')
     self.assertEqual(parser_filter_expression, '!utmp,olecf')
+
+    parser_filter_expression = test_helper.ExpandPresets(presets_manager, '')
+    self.assertIsNone(parser_filter_expression)
 
   def testSplitExpression(self):
     """Tests the SplitExpression function."""

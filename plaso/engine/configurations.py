@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Processing configuration classes."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import interface
 
 
@@ -39,7 +37,6 @@ class EventExtractionConfiguration(interface.AttributeContainer):
   Attributes:
     filter_object (objectfilter.Filter): filter that specifies which
         events to include.
-    text_prepend (str): text to prepend to every event.
   """
   CONTAINER_TYPE = 'event_extraction_configuration'
 
@@ -47,7 +44,6 @@ class EventExtractionConfiguration(interface.AttributeContainer):
     """Initializes an event extraction configuration object."""
     super(EventExtractionConfiguration, self).__init__()
     self.filter_object = None
-    self.text_prepend = None
 
 
 class ExtractionConfiguration(interface.AttributeContainer):
@@ -78,20 +74,6 @@ class ExtractionConfiguration(interface.AttributeContainer):
     self.yara_rules_string = None
 
 
-class InputSourceConfiguration(interface.AttributeContainer):
-  """Configuration settings of an input source.
-
-  Attributes:
-    mount_path (str): path of a "mounted" directory input source.
-  """
-  CONTAINER_TYPE = 'input_source'
-
-  def __init__(self):
-    """Initializes an input source configuration object."""
-    super(InputSourceConfiguration, self).__init__()
-    self.mount_path = None
-
-
 class ProfilingConfiguration(interface.AttributeContainer):
   """Configuration settings for profiling.
 
@@ -119,6 +101,14 @@ class ProfilingConfiguration(interface.AttributeContainer):
     self.directory = None
     self.profilers = set()
     self.sample_rate = 1000
+
+  def HaveProfileAnalyzers(self):
+    """Determines if analyzers profiling is configured.
+
+    Returns:
+      bool: True if analyzers profiling is configured.
+    """
+    return 'analyzers' in self.profilers
 
   def HaveProfileMemory(self):
     """Determines if memory profiling is configured.
@@ -191,7 +181,6 @@ class ProcessingConfiguration(interface.AttributeContainer):
         configuration.
     extraction (ExtractionConfiguration): extraction configuration.
     filter_file (str): path to a file with find specifications.
-    input_source (InputSourceConfiguration): input source configuration.
     log_filename (str): name of the log file.
     parser_filter_expression (str): parser filter expression,
         where None represents all parsers and plugins.
@@ -199,6 +188,8 @@ class ProcessingConfiguration(interface.AttributeContainer):
         time values.
     profiling (ProfilingConfiguration): profiling configuration.
     task_storage_format (str): format to use for storing task results.
+    task_storage_path (str): path of the directory containing SQLite task
+        storage files.
     temporary_directory (str): path of the directory for temporary files.
   """
   CONTAINER_TYPE = 'processing_configuration'
@@ -213,10 +204,10 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.event_extraction = EventExtractionConfiguration()
     self.extraction = ExtractionConfiguration()
     self.filter_file = None
-    self.input_source = InputSourceConfiguration()
     self.log_filename = None
     self.parser_filter_expression = None
     self.preferred_year = None
     self.profiling = ProfilingConfiguration()
     self.task_storage_format = None
+    self.task_storage_path = None
     self.temporary_directory = None

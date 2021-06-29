@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Google Chrome extension activity database files.
-
-The Chrome extension activity is stored in SQLite database files named
-Extension Activity.
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Google Chrome extension activity database files."""
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
@@ -29,6 +23,7 @@ class ChromeExtensionActivityEventData(events.EventData):
     other (str): other.
     page_title (str): title of webpage.
     page_url (str): URL of webpage.
+    query (str): SQL query that was used to obtain the event data.
   """
 
   DATA_TYPE = 'chrome:extension_activity:activity_log'
@@ -46,23 +41,29 @@ class ChromeExtensionActivityEventData(events.EventData):
     self.other = None
     self.page_title = None
     self.page_url = None
+    self.query = None
 
 
 class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
-  """Plugin to parse Chrome extension activity database files."""
+  """SQLite parser plugin for Google Chrome extension activity database files.
+
+  The Google Chrome extension activity database file is typically stored in:
+  Extension Activity
+  """
 
   NAME = 'chrome_extension_activity'
-  DESCRIPTION = 'Parser for Chrome extension activity SQLite database files.'
+  DATA_FORMAT = 'Google Chrome extension activity SQLite database file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'activitylog_compressed': frozenset([
+          'time', 'extension_id_x', 'action_type', 'api_name_x', 'args_x',
+          'page_url_x', 'page_title_x', 'arg_url_x', 'other_x'])}
+
   QUERIES = [
       (('SELECT time, extension_id, action_type, api_name, args, page_url, '
         'page_title, arg_url, other, activity_id '
         'FROM activitylog_uncompressed ORDER BY time'),
        'ParseActivityLogUncompressedRow')]
-
-  REQUIRED_TABLES = frozenset([
-      'activitylog_compressed', 'string_ids', 'url_ids'])
 
   SCHEMAS = [{
       'activitylog_compressed': (

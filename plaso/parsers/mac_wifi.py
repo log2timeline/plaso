@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the wifi.log (MacOS) parser."""
-
-from __future__ import unicode_literals
+"""Parses for MacOS Wifi log (wifi.log) files."""
 
 import re
 
@@ -13,7 +11,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -43,10 +40,10 @@ class MacWifiLogEventData(events.EventData):
 
 
 class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parse text based on wifi.log file."""
+  """Parses MacOS Wifi log (wifi.log) files."""
 
   NAME = 'macwifi'
-  DESCRIPTION = 'Parser for MacOS wifi.log files.'
+  DATA_FORMAT = 'MacOS Wifi log (wifi.log) file'
 
   _ENCODING = 'utf-8'
 
@@ -120,7 +117,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(MacWifiLogParser, self).__init__()
     self._last_month = 0
     self._year_use = 0
@@ -197,7 +194,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
     # Note that dfdatetime_time_elements.TimeElements will raise ValueError
     # for an invalid month.
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     if month != 0 and month < self._last_month:
       # Gap detected between years.

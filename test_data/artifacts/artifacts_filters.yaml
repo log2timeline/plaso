@@ -6,8 +6,8 @@ sources:
 - type: ARTIFACT_GROUP
   attributes:
     names:
-     - 'TestFiles3'
-     - 'TestFiles4'
+    - 'TestFiles3'
+    - 'TestFiles4'
 labels: [System]
 supported_os: [Windows]
 ---
@@ -17,8 +17,8 @@ sources:
 - type: ARTIFACT_GROUP
   attributes:
     names:
-     - 'TestFiles'
-     - 'TestFiles2'
+    - 'TestFiles'
+    - 'TestFiles2'
 labels: [System]
 supported_os: [Windows]
 ---
@@ -38,12 +38,12 @@ sources:
 - type: FILE
   attributes:
     paths:
-      - '%%environ_systemdrive%%\test_data\*.evtx'
-      - '%%users.homedir%%\Documents\WindowsPowerShell\profile.ps1'
-      - '\test_data\testdir\filter_*.txt'
-      - '\does_not_exist\some_file_*.txt'
-      - '\globbed\test\path\**'
-      - 'failing'
+    - '%%environ_systemdrive%%\test_data\*.evtx'
+    - '%%users.homedir%%\Documents\WindowsPowerShell\profile.ps1'
+    - '\test_data\testdir\filter_*.txt'
+    - '\does_not_exist\some_file_*.txt'
+    - '\globbed\test\path\**'
+    - 'failing'
     separator: '\'
 labels: [System]
 supported_os: [Windows]
@@ -54,8 +54,8 @@ sources:
 - type: FILE
   attributes:
     paths:
-      - '\a_directory\'
-      - '\a_directory\a_file'
+    - '\a_directory\'
+    - '\a_directory\a_file'
     separator: '\'
 labels: [System]
 supported_os: [Windows]
@@ -66,8 +66,8 @@ sources:
 - type: FILE
   attributes:
     paths:
-      - '\a_directory\another_file'
-      - '\passwords.txt'
+    - '\a_directory\another_file'
+    - '\passwords.txt'
     separator: '\'
 labels: [System]
 supported_os: [Windows]
@@ -86,9 +86,9 @@ sources:
 - type: REGISTRY_KEY
   attributes:
     keys:
-      - 'HKEY_LOCAL_MACHINE\System\ControlSet001\services\**'
-      - 'HKEY_LOCAL_MACHINE\System\ControlSet002\services\**'
-      - 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
+    - 'HKEY_LOCAL_MACHINE\System\ControlSet001\services\**'
+    - 'HKEY_LOCAL_MACHINE\System\ControlSet002\services\**'
+    - 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
 supported_os: [Windows]
 ---
 name: TestRegistryValue
@@ -97,8 +97,8 @@ sources:
 - type: REGISTRY_VALUE
   attributes:
     key_value_pairs:
-      - {key: 'HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager', value: 'BootExecute'}
-      - {key: 'HKEY_LOCAL_MACHINE\System\ControlSet002\Control\Session Manager', value: 'BootExecute'}
+    - {key: 'HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager', value: 'BootExecute'}
+    - {key: 'HKEY_LOCAL_MACHINE\System\ControlSet002\Control\Session Manager', value: 'BootExecute'}
 supported_os: [Windows]
 ---
 name: TestFilesImageExport

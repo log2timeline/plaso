@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the file system stat event formatter."""
-
-from __future__ import unicode_literals
+"""Tests for the file system event formatters."""
 
 import unittest
 
@@ -11,49 +9,53 @@ from plaso.formatters import file_system
 from tests.formatters import test_lib
 
 
-class FileStatEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the file system stat event formatter."""
+class NTFSFileReferenceFormatterHelperTest(test_lib.EventFormatterTestCase):
+  """Tests for the NTFS file reference formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = file_system.FileStatEventFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = file_system.NTFSFileReferenceFormatterHelper()
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = file_system.FileStatEventFormatter()
+    event_values = {'file_reference': 0x2000000000011 }
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['file_reference'], '17-2')
 
-    expected_attribute_names = [
-        'display_name', 'file_entry_type', 'unallocated']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
-  # TODO: add test for GetSources.
+    event_values = {'file_reference': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['file_reference'])
 
 
-class NTFSFileStatEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the NFTS file system stat event formatter."""
+class NTFSParentFileReferenceFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the NTFS parent file reference formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = file_system.NTFSFileStatEventFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = file_system.NTFSParentFileReferenceFormatterHelper()
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = file_system.NTFSFileStatEventFormatter()
+    event_values = {'parent_file_reference': 0x2000000000011 }
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['parent_file_reference'], '17-2')
 
-    expected_attribute_names = [
-        'attribute_name', 'display_name', 'file_reference', 'name',
-        'parent_file_reference', 'path_hints', 'unallocated']
+    event_values = {'parent_file_reference': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['parent_file_reference'])
 
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
 
-  # TODO: add test for GetMessages.
-  # TODO: add test for GetSources.
+class NTFSPathHintsFormatterHelper(test_lib.EventFormatterTestCase):
+  """Tests for the NTFS path hints formatter helper."""
+
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = file_system.NTFSPathHintsFormatterHelper()
+
+    event_values = {'path_hints': ['path1', 'path2']}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['path_hints'], 'path1;path2')
+
+    event_values = {'path_hints': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['path_hints'])
 
 
 if __name__ == '__main__':

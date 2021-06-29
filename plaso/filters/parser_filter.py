@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper for parser and plugin filter expressions."""
 
-from __future__ import unicode_literals
-
 
 class ParserFilterExpressionHelper(object):
   """Helper for parser and plugin filter expressions.
@@ -156,8 +154,8 @@ class ParserFilterExpressionHelper(object):
       presets_manager (ParserPresetsManager): a parser preset manager, that
           is used to resolve which parsers and/or plugins are defined by
           presets.
-      expression (str): parser filter expression, where None represents all
-          parsers and plugins.
+      expression (str): parser filter expression, where an empty expression
+          represents all parsers and plugins.
 
           A parser filter expression is a comma separated value string that
           denotes which parsers and plugins should be used. Each element can be
@@ -178,6 +176,9 @@ class ParserFilterExpressionHelper(object):
       str: a parser filter expression where presets have been expanded or None
           to represent all parsers and plugins.
     """
+    if not expression:
+      return None
+
     preset_names = set(presets_manager.GetNames())
 
     excludes, includes = self.SplitExpression(expression)
@@ -197,8 +198,7 @@ class ParserFilterExpressionHelper(object):
     parser names.
 
     Args:
-      expression (str): parser filter expression, where None represents all
-          parsers and plugins.
+      expression (str): parser filter expression.
 
           A parser filter expression is a comma separated value string that
           denotes which parsers and plugins should be used. Each element can be

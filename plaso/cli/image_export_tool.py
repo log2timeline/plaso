@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The image export CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import codecs
 import collections
@@ -11,10 +9,8 @@ import json
 import os
 import textwrap
 
-from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
-from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -49,6 +45,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   EPILOG = 'And that is how you export files, plaso style.'
 
+  _COPY_BUFFER_SIZE = 32768
+
   _DIRTY_CHARACTERS = frozenset([
       '\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07',
       '\x08', '\x09', '\x0a', '\x0b', '\x0c', '\x0d', '\x0e', '\x0f',
@@ -57,7 +55,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       os.path.sep, '!', '$', '%', '&', '*', '+', ':', ';', '<', '>',
       '?', '@', '|', '~', '\x7f'])
 
-  _COPY_BUFFER_SIZE = 32768
+  _HASHES_FILENAME = 'hashes.json'
 
   _READ_BUFFER_SIZE = 4096
 
@@ -70,8 +68,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
 
   _SPECIFICATION_FILE_ENCODING = 'utf-8'
-
-  _HASHES_FILENAME = 'hashes.json'
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -93,12 +89,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._digests = {}
     self._filter_collection = file_entry_filters.FileEntryFilterCollection()
     self._filter_file = None
+    self._no_hashes = False
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_memory_limit = None
     self._paths_by_hash = collections.defaultdict(list)
     self._resolver_context = context.Context()
     self._skip_duplicates = True
-    self._source_type = None
 
     self.has_filters = False
     self.list_signature_identifiers = False
@@ -119,18 +115,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not file_object:
       return None
 
-    try:
-      file_object.seek(0, os.SEEK_SET)
+    file_object.seek(0, os.SEEK_SET)
 
-      hasher_object = hashers_manager.HashersManager.GetHasher('sha256')
+    hasher_object = hashers_manager.HashersManager.GetHasher('sha256')
 
+    data = file_object.read(self._READ_BUFFER_SIZE)
+    while data:
+      hasher_object.Update(data)
       data = file_object.read(self._READ_BUFFER_SIZE)
-      while data:
-        hasher_object.Update(data)
-        data = file_object.read(self._READ_BUFFER_SIZE)
-
-    finally:
-      file_object.close()
 
     return hasher_object.GetStringDigest()
 
@@ -168,12 +160,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     parent_path_spec = getattr(source_file_entry.path_spec, 'parent', None)
 
     while parent_path_spec:
-      if parent_path_spec.type_indicator == (
-          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+      if parent_path_spec.type_indicator in (
+          dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS):
         path_segments.insert(0, parent_path_spec.location[1:])
         break
 
-      elif parent_path_spec.type_indicator == (
+      if parent_path_spec.type_indicator == (
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
         path_segments.insert(0, parent_path_spec.location[1:])
 
@@ -186,28 +178,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           target_filename, source_data_stream_name)
 
     return target_directory, target_filename
-
-  # TODO: merge with collector and/or engine.
-  def _Extract(
-      self, source_path_specs, destination_path, output_writer,
-      skip_duplicates=True):
-    """Extracts files.
-
-    Args:
-      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
-      destination_path (str): path where the extracted files should be stored.
-      output_writer (CLIOutputWriter): output writer.
-      skip_duplicates (Optional[bool]): True if files with duplicate content
-          should be skipped.
-    """
-    output_writer.Write('Extracting file entries.\n')
-    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, resolver_context=self._resolver_context)
-
-    for path_spec in path_spec_generator:
-      self._ExtractFileEntry(
-          path_spec, destination_path, skip_duplicates=skip_duplicates)
-
 
   def _ExtractDataStream(
       self, file_entry, data_stream_name, destination_path,
@@ -244,7 +214,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     target_directory, target_filename = self._CreateSanitizedDestination(
         file_entry, file_entry.path_spec, data_stream_name, destination_path)
 
-    # If does not exist, append path separator to have consistant behaviour.
+    # If does not exist, append path separator to have consistent behaviour.
     if not destination_path.endswith(os.path.sep):
       destination_path = destination_path + os.path.sep
 
@@ -288,22 +258,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         pass
 
   def _ExtractFileEntry(
-      self, path_spec, destination_path, skip_duplicates=True):
+      self, file_entry, destination_path, skip_duplicates=True):
     """Extracts a file entry.
 
     Args:
-      path_spec (dfvfs.PathSpec): path specification of the source file.
+      file_entry (dfvfs.FileEntry): file entry whose content is to be written.
       destination_path (str): path where the extracted files should be stored.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
-    if not file_entry:
-      logger.warning('Unable to open file entry for path spec: {0:s}'.format(
-          path_spec.comparable))
-      return
-
     if not self._filter_collection.Matches(file_entry):
       return
 
@@ -322,11 +285,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           file_entry, '', destination_path, skip_duplicates=skip_duplicates)
 
   # TODO: merge with collector and/or engine.
-  def _ExtractWithFilter(
+  def _Extract(
       self, source_path_specs, destination_path, output_writer,
       artifact_filters, filter_file, artifact_definitions_path,
       custom_artifacts_path, skip_duplicates=True):
-    """Extracts files using a filter expression.
+    """Extracts files.
 
     This method runs the file extraction process on the image and
     potentially on every VSS if that is wanted.
@@ -354,66 +317,52 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
-    for source_path_spec in source_path_specs:
-      file_system, mount_point = self._GetSourceFileSystem(
-          source_path_spec, resolver_context=self._resolver_context)
+    try:
+      extraction_engine.BuildCollectionFilters(
+          artifact_definitions_path, custom_artifacts_path,
+          extraction_engine.knowledge_base, artifact_filters, filter_file)
+    except errors.InvalidFilter as exception:
+      raise errors.BadConfigOption(
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
 
-      display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
-          source_path_spec)
-      output_writer.Write(
-          'Extracting file entries from: {0:s}\n'.format(display_name))
+    filters_helper = extraction_engine.collection_filters_helper
 
-      try:
-        extraction_engine.BuildCollectionFilters(
-            artifact_definitions_path, custom_artifacts_path,
-            extraction_engine.knowledge_base, artifact_filters, filter_file)
-      except errors.InvalidFilter as exception:
-        raise errors.BadConfigOption(
-            'Unable to build collection filters with error: {0!s}'.format(
-                exception))
+    excluded_find_specs = None
+    included_find_specs = None
+    if filters_helper:
+      excluded_find_specs = filters_helper.excluded_file_system_find_specs
+      included_find_specs = filters_helper.included_file_system_find_specs
 
-      searcher = file_system_searcher.FileSystemSearcher(
-          file_system, mount_point)
-      filters_helper = extraction_engine.collection_filters_helper
-      for path_spec in searcher.Find(find_specs=(
-          filters_helper.included_file_system_find_specs)):
-        self._ExtractFileEntry(
-            path_spec, destination_path, skip_duplicates=skip_duplicates)
+    output_writer.Write('Extracting file entries.\n')
+    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+        source_path_specs, find_specs=included_find_specs,
+        resolver_context=self._resolver_context)
 
-      file_system.Close()
+    for path_spec in path_spec_generator:
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=self._resolver_context)
 
-  # TODO: refactor, this is a duplicate of the function in engine.
-  def _GetSourceFileSystem(self, source_path_spec, resolver_context=None):
-    """Retrieves the file system of the source.
+      if not file_entry:
+        path_spec_string = self._GetPathSpecificationString(path_spec)
+        logger.warning(
+            'Unable to open file entry for path specfication: {0:s}'.format(
+                path_spec_string))
+        continue
 
-    Args:
-      source_path_spec (dfvfs.PathSpec): source path specification of the file
-          system.
-      resolver_context (dfvfs.Context): resolver context.
+      skip_file_entry = False
+      for find_spec in excluded_find_specs or []:
+        skip_file_entry = find_spec.CompareLocation(file_entry)
+        if skip_file_entry:
+          break
 
-    Returns:
-      tuple: containing:
+      if skip_file_entry:
+        logger.info('Skipped: {0:s} because of exclusion filter.'.format(
+            file_entry.path_spec.location))
+        continue
 
-        dfvfs.FileSystem: file system.
-        dfvfs.PathSpec: mount point path specification that refers
-            to the base location of the file system.
-
-    Raises:
-      RuntimeError: if source path specification is not set.
-    """
-    if not source_path_spec:
-      raise RuntimeError('Missing source.')
-
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(
-        source_path_spec, resolver_context=resolver_context)
-
-    type_indicator = source_path_spec.type_indicator
-    if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
-      mount_point = source_path_spec
-    else:
-      mount_point = source_path_spec.parent
-
-    return file_system, mount_point
+      self._ExtractFileEntry(
+          file_entry, destination_path, skip_duplicates=skip_duplicates)
 
   def _ParseExtensionsString(self, extensions_string):
     """Parses the extensions string.
@@ -527,8 +476,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     try:
       artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
           self._artifact_definitions_path, self._custom_artifacts_path)
+      # Setting storage writer to None here since we do not want to store
+      # preprocessing information.
       extraction_engine.PreprocessSources(
-          artifacts_registry, self._source_path_specs,
+          artifacts_registry, self._source_path_specs, None,
           resolver_context=self._resolver_context)
 
     except IOError as exception:
@@ -599,17 +550,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not source_file_object:
       return
 
-    try:
-      with open(destination_file, 'wb') as destination_file_object:
-        source_file_object.seek(0, os.SEEK_SET)
+    with open(destination_file, 'wb') as destination_file_object:
+      source_file_object.seek(0, os.SEEK_SET)
 
+      data = source_file_object.read(self._COPY_BUFFER_SIZE)
+      while data:
+        destination_file_object.write(data)
         data = source_file_object.read(self._COPY_BUFFER_SIZE)
-        while data:
-          destination_file_object.write(data)
-          data = source_file_object.read(self._COPY_BUFFER_SIZE)
-
-    finally:
-      source_file_object.close()
 
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.
@@ -690,7 +637,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
 
-    argument_helper_names = ['artifact_definitions', 'data_location']
+    argument_helper_names = [
+        'artifact_definitions', 'data_location', 'vfs_backend']
     if self._CanEnforceProcessMemoryLimit():
       argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
@@ -709,19 +657,24 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             'The directory in which extracted files should be stored.'))
 
     argument_parser.add_argument(
-        '--include_duplicates', dest='include_duplicates',
-        action='store_true', default=False, help=(
-            'If extraction from VSS is enabled, by default a digest hash '
-            'is calculated for each file. These hashes are compared to the '
-            'previously exported files and duplicates are skipped. Use '
-            'this option to include duplicate files in the export.'))
+        '--include_duplicates', '--include-duplicates',
+        dest='include_duplicates', action='store_true', default=False, help=(
+            'By default a digest hash (SHA-256) is calculated for each file '
+            '(data stream). These hashes are compared to the previously '
+            'exported files and duplicates are skipped. Use this option to '
+            'include duplicate files in the export.'))
+
+    argument_parser.add_argument(
+        '--no_hashes', '--no-hashes', dest='no_hashes', action='store_true',
+        default=False, help=(
+            'Do not generate the {0:s} file'.format(self._HASHES_FILENAME)))
 
     argument_parser.add_argument(
         self._SOURCE_OPTION, nargs='?', action='store', metavar='IMAGE',
         default=None, type=str, help=(
             'The full path to the image file that we are about to extract '
             'files from, it should be a raw image or another image that '
-            'plaso supports.'))
+            'Plaso supports.'))
 
     try:
       options = argument_parser.parse_args(arguments)
@@ -739,6 +692,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       self._output_writer.Write('')
       self._output_writer.Write(argument_parser.format_usage())
       return False
+
+    self._WaitUserWarning()
 
     loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
@@ -781,15 +736,43 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not self._data_location:
       logger.warning('Unable to automatically determine data location.')
 
-    argument_helper_names = ['artifact_definitions', 'process_resources']
+    argument_helper_names = [
+        'artifact_definitions', 'process_resources', 'vfs_backend']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
+    if self._vfs_back_end == 'fsext':
+      dfvfs_definitions.PREFERRED_EXT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_EXT)
+
+    elif self._vfs_back_end == 'fshfs':
+      dfvfs_definitions.PREFERRED_HFS_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_HFS)
+
+    elif self._vfs_back_end == 'fsntfs':
+      dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_NTFS)
+
+    elif self._vfs_back_end == 'tsk':
+      dfvfs_definitions.PREFERRED_EXT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK)
+      dfvfs_definitions.PREFERRED_GPT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
+      dfvfs_definitions.PREFERRED_HFS_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK)
+      dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+    elif self._vfs_back_end == 'vsgpt':
+      dfvfs_definitions.PREFERRED_GPT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_GPT)
+
     self._ParseFilterOptions(options)
 
-    if (getattr(options, 'no_vss', False) or
-        getattr(options, 'include_duplicates', False)):
-      self._skip_duplicates = False
+    include_duplicates = getattr(options, 'include_duplicates', False)
+    self._skip_duplicates = not include_duplicates
+
+    self._no_hashes = getattr(options, 'no_hashes', False)
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
@@ -805,32 +788,27 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           file system.
       UserAbort: if the user initiated an abort.
     """
-    scan_context = self.ScanSource(self._source_path)
-    self._source_type = scan_context.source_type
+    self.ScanSource(self._source_path)
 
     self._output_writer.Write('Export started.\n')
 
     if not os.path.isdir(self._destination_path):
       os.makedirs(self._destination_path)
 
-    if self._artifact_filters or self._filter_file:
-      self._ExtractWithFilter(
-          self._source_path_specs, self._destination_path,
-          self._output_writer, self._artifact_filters, self._filter_file,
-          self._artifact_definitions_path, self._custom_artifacts_path,
-          skip_duplicates=self._skip_duplicates)
-    else:
-      self._Extract(
-          self._source_path_specs, self._destination_path,
-          self._output_writer, skip_duplicates=self._skip_duplicates)
+    self._Extract(
+        self._source_path_specs, self._destination_path,
+        self._output_writer, self._artifact_filters, self._filter_file,
+        self._artifact_definitions_path, self._custom_artifacts_path,
+        skip_duplicates=self._skip_duplicates)
 
     json_data = []
 
-    with open(os.path.join(
-        self._destination_path, self._HASHES_FILENAME), 'w') as write_file:
-      for sha256, paths in self._paths_by_hash.items():
-        json_data.append({"sha256": sha256, "paths": paths})
-      json.dump(json_data, write_file)
+    if not self._no_hashes:
+      with open(os.path.join(
+          self._destination_path, self._HASHES_FILENAME), 'w') as write_file:
+        for sha256, paths in self._paths_by_hash.items():
+          json_data.append({'sha256': sha256, 'paths': paths})
+        json.dump(json_data, write_file)
 
     self._output_writer.Write('Export completed.\n')
     self._output_writer.Write('\n')

@@ -4,10 +4,8 @@
 An extractor is a class used to extract information from "raw" data.
 """
 
-from __future__ import unicode_literals
-
 import copy
-import hashlib
+import re
 
 import pysigscan
 
@@ -32,10 +30,12 @@ class EventExtractor(object):
   _PARSE_RESULT_SUCCESS = 2
   _PARSE_RESULT_UNSUPPORTED = 3
 
-  def __init__(self, parser_filter_expression=None):
+  def __init__(self, force_parser=False, parser_filter_expression=None):
     """Initializes an event extractor.
 
     Args:
+      force_parser (Optional[bool]): True if a specified parser should be forced
+          to be used to extract events.
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
 
@@ -46,6 +46,7 @@ class EventExtractor(object):
     super(EventExtractor, self).__init__()
     self._file_scanner = None
     self._filestat_parser = None
+    self._force_parser = force_parser
     self._formats_with_signatures = None
     self._mft_parser = None
     self._non_sigscan_parser_names = None
@@ -153,12 +154,8 @@ class EventExtractor(object):
     if not file_object:
       raise RuntimeError('Unable to retrieve file-like object from file entry.')
 
-    try:
-      self._ParseFileEntryWithParser(
-          parser_mediator, parser, file_entry, file_object=file_object)
-
-    finally:
-      file_object.close()
+    self._ParseFileEntryWithParser(
+        parser_mediator, parser, file_entry, file_object=file_object)
 
   def _ParseFileEntryWithParser(
       self, parser_mediator, parser, file_entry, file_object=None):
@@ -187,10 +184,6 @@ class EventExtractor(object):
 
     parser_mediator.ClearParserChain()
 
-    reference_count = (
-        parser_mediator.resolver_context.GetFileObjectReferenceCount(
-            file_entry.path_spec))
-
     parser_mediator.SampleStartTiming(parser.NAME)
 
     try:
@@ -218,15 +211,6 @@ class EventExtractor(object):
     finally:
       parser_mediator.SampleStopTiming(parser.NAME)
       parser_mediator.SampleMemoryUsage(parser.NAME)
-
-      new_reference_count = (
-          parser_mediator.resolver_context.GetFileObjectReferenceCount(
-              file_entry.path_spec))
-      if reference_count != new_reference_count:
-        display_name = parser_mediator.GetDisplayName(file_entry)
-        logger.warning((
-            '[{0:s}] did not explicitly close file-object for file: '
-            '{1:s}.').format(parser.NAME, display_name))
 
     return result
 
@@ -295,24 +279,27 @@ class EventExtractor(object):
       raise RuntimeError(
           'Unable to retrieve file-like object from file entry.')
 
-    try:
-      parser_names = self._GetSignatureMatchParserNames(file_object)
+    parser_names = self._GetSignatureMatchParserNames(file_object)
 
-      parse_with_non_sigscan_parsers = True
-      if parser_names:
-        parse_result = self._ParseFileEntryWithParsers(
-            parser_mediator, parser_names, file_entry, file_object=file_object)
-        if parse_result in (
-            self._PARSE_RESULT_FAILURE, self._PARSE_RESULT_SUCCESS):
-          parse_with_non_sigscan_parsers = False
+    parse_with_non_sigscan_parsers = True
+    if parser_names:
+      parse_result = self._ParseFileEntryWithParsers(
+          parser_mediator, parser_names, file_entry, file_object=file_object)
+      if parse_result in (
+          self._PARSE_RESULT_FAILURE, self._PARSE_RESULT_SUCCESS):
+        parse_with_non_sigscan_parsers = False
 
-      if parse_with_non_sigscan_parsers:
-        self._ParseFileEntryWithParsers(
-            parser_mediator, self._non_sigscan_parser_names, file_entry,
-            file_object=file_object)
+    if parse_with_non_sigscan_parsers:
+      self._ParseFileEntryWithParsers(
+          parser_mediator, self._non_sigscan_parser_names, file_entry,
+          file_object=file_object)
 
-    finally:
-      file_object.close()
+    if self._force_parser and self._usnjrnl_parser:
+      # TODO: the usnjrnl needs to be adjusted to be used on an export of
+      # $UsnJrnl:$J
+      self._ParseFileEntryWithParser(
+          parser_mediator, self._usnjrnl_parser, file_entry,
+          file_object=file_object)
 
   def ParseFileEntryMetadata(self, parser_mediator, file_entry):
     """Parses the file entry metadata such as file system data.
@@ -348,12 +335,9 @@ class EventExtractor(object):
       volume_file_object = path_spec_resolver.Resolver.OpenFileObject(
           parent_path_spec, resolver_context=parser_mediator.resolver_context)
 
-      try:
-        self._ParseFileEntryWithParser(
-            parser_mediator, self._usnjrnl_parser, file_entry,
-            file_object=volume_file_object)
-      finally:
-        volume_file_object.close()
+      self._ParseFileEntryWithParser(
+          parser_mediator, self._usnjrnl_parser, file_entry,
+          file_object=volume_file_object)
 
 
 class PathSpecExtractor(object):
@@ -365,60 +349,7 @@ class PathSpecExtractor(object):
 
   _MAXIMUM_DEPTH = 255
 
-  def __init__(self, duplicate_file_check=False):
-    """Initializes a path specification extractor.
-
-    The source collector discovers all the file entries in the source.
-    The source can be a single file, directory or a volume within
-    a storage media image or device.
-
-    Args:
-      duplicate_file_check (Optional[bool]): True if duplicate files should
-          be ignored.
-    """
-    super(PathSpecExtractor, self).__init__()
-    self._duplicate_file_check = duplicate_file_check
-    self._hashlist = {}
-
-  def _CalculateNTFSTimeHash(self, file_entry):
-    """Calculates an MD5 from the date and time value of a NTFS file entry.
-
-    Args:
-      file_entry (dfvfs.FileEntry): file entry.
-
-    Returns:
-      str: hexadecimal representation of the MD5 hash value of the date and
-          time values of the file entry.
-    """
-    date_time_values = []
-
-    access_time = getattr(file_entry, 'access_time', None)
-    if access_time:
-      date_time_string = access_time.CopyToDateTimeString()
-      date_time_values.append('atime:{0:s}'.format(date_time_string))
-
-    creation_time = getattr(file_entry, 'creation_time', None)
-    if creation_time:
-      date_time_string = creation_time.CopyToDateTimeString()
-      date_time_values.append('crtime:{0:s}'.format(date_time_string))
-
-    modification_time = getattr(file_entry, 'modification_time', None)
-    if modification_time:
-      date_time_string = modification_time.CopyToDateTimeString()
-      date_time_values.append('mtime:{0:s}'.format(date_time_string))
-
-    # file_entry.change_time is an alias of file_entry.entry_modification_time.
-    change_time = getattr(file_entry, 'change_time', None)
-    if change_time:
-      date_time_string = change_time.CopyToDateTimeString()
-      date_time_values.append('ctime:{0:s}'.format(date_time_string))
-
-    date_time_values = ''.join(date_time_values)
-    date_time_values = date_time_values.encode('ascii')
-
-    hash_value = hashlib.md5()
-    hash_value.update(date_time_values)
-    return hash_value.hexdigest()
+  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   def _ExtractPathSpecs(
       self, path_spec, find_specs=None, recurse_file_system=True,
@@ -447,13 +378,15 @@ class PathSpecExtractor(object):
           exception))
 
     if not file_entry:
-      logger.warning('Unable to open: {0:s}'.format(path_spec.comparable))
+      path_spec_string = self._GetPathSpecificationString(path_spec)
+      logger.warning('Unable to open: {0:s}'.format(path_spec_string))
 
     elif (not file_entry.IsDirectory() and not file_entry.IsFile() and
           not file_entry.IsDevice()):
+      path_spec_string = self._GetPathSpecificationString(path_spec)
       logger.warning((
           'Source path specification not a device, file or directory.\n'
-          '{0:s}').format(path_spec.comparable))
+          '{0:s}').format(path_spec_string))
 
     elif file_entry.IsFile():
       yield path_spec
@@ -491,10 +424,11 @@ class PathSpecExtractor(object):
         if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
           continue
       except dfvfs_errors.BackEndError as exception:
+        path_spec_string = self._GetPathSpecificationString(
+            sub_file_entry.path_spec)
         logger.warning(
             'Unable to process file: {0:s} with error: {1!s}'.format(
-                sub_file_entry.path_spec.comparable.replace(
-                    '\n', ';'), exception))
+                path_spec_string.replace('\n', ';'), exception))
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles
@@ -505,21 +439,6 @@ class PathSpecExtractor(object):
 
       if sub_file_entry.IsDirectory():
         sub_directories.append(sub_file_entry)
-
-      elif sub_file_entry.IsFile():
-        # If we are dealing with a VSS we want to calculate a hash
-        # value based on available timestamps and compare that to previously
-        # calculated hash values, and only include the file into the queue if
-        # the hash does not match.
-        if self._duplicate_file_check:
-          hash_value = self._CalculateNTFSTimeHash(sub_file_entry)
-
-          inode = getattr(sub_file_entry.path_spec, 'inode', 0)
-          if inode in self._hashlist:
-            if hash_value in self._hashlist[inode]:
-              continue
-
-          self._hashlist.setdefault(inode, []).append(hash_value)
 
       for path_spec in self._ExtractPathSpecsFromFile(sub_file_entry):
         yield path_spec
@@ -611,8 +530,24 @@ class PathSpecExtractor(object):
           dfvfs_errors.PathSpecError) as exception:
         logger.warning('{0!s}'.format(exception))
 
-      finally:
-        file_system.Close()
+  def _GetPathSpecificationString(self, path_spec):
+    """Retrieves a printable string representation of the path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: printable string representation of the path specification.
+    """
+    path_spec_string = path_spec.comparable
+
+    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
+      path_spec_string = path_spec_string.encode(
+          'utf-8', errors='surrogateescape')
+      path_spec_string = path_spec_string.decode(
+          'utf-8', errors='backslashreplace')
+
+    return path_spec_string
 
   def ExtractPathSpecs(
       self, path_specs, find_specs=None, recurse_file_system=True,

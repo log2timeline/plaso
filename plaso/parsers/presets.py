@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The parser and parser plugin presets."""
 
-from __future__ import unicode_literals
-
 import yaml
 
 from plaso.containers import artifacts

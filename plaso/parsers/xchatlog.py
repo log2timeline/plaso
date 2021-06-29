@@ -52,8 +52,6 @@ References
 http://xchat.org
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -62,7 +60,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -89,7 +86,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat log files."""
 
   NAME = 'xchatlog'
-  DESCRIPTION = 'Parser for XChat log files.'
+  DATA_FORMAT = 'XChat log file'
 
   _ENCODING = 'utf-8'
 
@@ -142,15 +139,13 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   LINE_STRUCTURES = [
       ('logline', _LOG_LINE),
       ('header', _HEADER),
-      ('header_signature', _HEADER_SIGNATURE),
-  ]
+      ('header_signature', _HEADER_SIGNATURE)]
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(XChatLogParser, self).__init__()
     self._last_month = 0
     self._xchat_year = None
-    self.offset = 0
 
   def _GetTimeElementsTuple(self, structure):
     """Retrieves a time elements tuple from the structure.
@@ -172,7 +167,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     # TODO: what if time_elements_tuple is None.
     month, day, hours, minutes, seconds = time_elements_tuple
 
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     if month != 0 and month < self._last_month:
       # Gap detected between years.
@@ -193,7 +188,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     # TODO: what if time_elements_tuple is None.
     _, month, day, hours, minutes, seconds, year = time_elements_tuple
 
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     time_elements_tuple = (year, month, day, hours, minutes, seconds)
 
@@ -326,7 +321,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple))
       return False
 
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     time_elements_tuple = (year, month, day, hours, minutes, seconds)
 

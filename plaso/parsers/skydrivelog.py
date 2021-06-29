@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains SkyDrive log file parser in plaso."""
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -62,7 +60,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses SkyDrive log files."""
 
   NAME = 'skydrive_log'
-  DESCRIPTION = 'Parser for OneDrive (or SkyDrive) log files.'
+  DATA_FORMAT = 'OneDrive (or SkyDrive) log file'
 
   _ENCODING = 'utf-8'
 
@@ -272,7 +270,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse SkyDrive old log files."""
 
   NAME = 'skydrive_log_old'
-  DESCRIPTION = 'Parser for OneDrive (or SkyDrive) old log files.'
+  DATA_FORMAT = 'OneDrive (or SkyDrive) old log file'
 
   _ENCODING = 'utf-8'
 
@@ -325,11 +323,10 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   ]
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(SkyDriveOldLogParser, self).__init__()
     self._last_date_time = None
     self._last_event_data = None
-    self.offset = 0
 
   def _ParseLogline(self, parser_mediator, structure):
     """Parse a logline and store appropriate attributes.
@@ -359,7 +356,6 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
 
     event_data = SkyDriveOldLogEventData()
     event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
-    event_data.offset = self.offset
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
     event_data.text = self._GetValueFromStructure(structure, 'text')
@@ -385,7 +381,6 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     event_data = SkyDriveOldLogEventData()
-    event_data.offset = self._last_event_data.offset
     event_data.text = self._GetValueFromStructure(structure, 'text')
 
     event = time_events.DateTimeValuesEvent(

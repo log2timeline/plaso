@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 """A plugin to tag events according to rules in a tag file."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import reports
 from plaso.lib import definitions
 
 
@@ -13,10 +10,6 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
   """Analysis plugin that labels events by session."""
 
   NAME = 'sessionize'
-
-  ENABLE_IN_EXTRACTION = False
-
-  _EVENT_TAG_COMMENT = 'Tag applied by sessionize analysis plugin.'
 
   _DEFAULT_MAXIMUM_PAUSE = 10 * definitions.MICROSECONDS_PER_MINUTE
 
@@ -57,10 +50,14 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
       report_text.append('\tSession {0:d}: {1:d} events'.format(
           session, event_count))
     report_text = '\n'.join(report_text)
-    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
+
+    analysis_report = super(SessionizeAnalysisPlugin, self).CompileReport(
+        mediator)
+    analysis_report.text = report_text
+    return analysis_report
 
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an EventObject and tags it as part of a session.
 
     Args:
@@ -68,6 +65,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     if self._session_end_timestamp is None:
       self._session_end_timestamp = (
@@ -85,7 +83,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
     self._events_per_session[-1] += 1
 
     label = 'session_{0:d}'.format(self._session_counter)
-    event_tag = self._CreateEventTag(event, self._EVENT_TAG_COMMENT, [label])
+    event_tag = self._CreateEventTag(event, [label])
     mediator.ProduceEventTag(event_tag)
     self._number_of_event_tags += 1
 

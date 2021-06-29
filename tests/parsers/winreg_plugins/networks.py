@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the Networks Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import networks
 
@@ -37,119 +34,124 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         last_written_time=filetime.timestamp, offset=153)
 
     # Setup Profiles.
-    profiles = dfwinreg_fake.FakeWinRegistryKey('Profiles')
-    registry_key.AddSubkey(profiles)
+    profiles_key_name = 'Profiles'
+    profiles_key = dfwinreg_fake.FakeWinRegistryKey(profiles_key_name)
+    registry_key.AddSubkey(profiles_key_name, profiles_key)
 
-    profile_1 = dfwinreg_fake.FakeWinRegistryKey(
-        '{B358E985-4464-4ABD-AF99-7D4A0AF66BB7}')
-    profiles.AddSubkey(profile_1)
+    profile1_key_name = '{B358E985-4464-4ABD-AF99-7D4A0AF66BB7}'
+    profile1_key = dfwinreg_fake.FakeWinRegistryKey(profile1_key_name)
+    profiles_key.AddSubkey(profile1_key_name, profile1_key)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Category', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    profile_1.AddValue(registry_value)
+    profile1_key.AddValue(registry_value)
 
     value_data = (
         b'\xde\x07\x0c\x00\x02\x00\x10\x00\x08\x00\x04\x00\x27\x00\x6a\x00')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'DateCreated', data=value_data,
         data_type=dfwinreg_definitions.REG_BINARY)
-    profile_1.AddValue(registry_value)
+    profile1_key.AddValue(registry_value)
 
     value_data = (
         b'\xdf\x07\x01\x00\x02\x00\x1b\x00\x0f\x00\x0f\x00\x1b\x00\xc5\x03')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'DateLastConnected', data=value_data,
         data_type=dfwinreg_definitions.REG_BINARY)
-    profile_1.AddValue(registry_value)
+    profile1_key.AddValue(registry_value)
 
     value_data = 'My Awesome Wifi Hotspot'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Description', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    profile_1.AddValue(registry_value)
+    profile1_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Managed', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    profile_1.AddValue(registry_value)
+    profile1_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x47'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'NameType', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    profile_1.AddValue(registry_value)
+    profile1_key.AddValue(registry_value)
 
     value_data = 'My Awesome Wifi Hotspot'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'ProfileName', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    profile_1.AddValue(registry_value)
+    profile1_key.AddValue(registry_value)
 
-    profile_2 = dfwinreg_fake.FakeWinRegistryKey(
-        '{C1C57B58-BFE2-428B-818C-9D69A873AD3D}')
-    profiles.AddSubkey(profile_2)
+    profile2_key_name = '{C1C57B58-BFE2-428B-818C-9D69A873AD3D}'
+    profile2_key = dfwinreg_fake.FakeWinRegistryKey(profile2_key_name)
+    profiles_key.AddSubkey(profile2_key_name, profile2_key)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Category', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    profile_2.AddValue(registry_value)
+    profile2_key.AddValue(registry_value)
 
     value_data = (
         b'\xde\x07\x05\x00\x02\x00\x06\x00\x11\x00\x02\x00\x13\x00\x1b\x03')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'DateCreated', data=value_data,
         data_type=dfwinreg_definitions.REG_BINARY)
-    profile_2.AddValue(registry_value)
+    profile2_key.AddValue(registry_value)
 
     value_data = (
         b'\xde\x07\x05\x00\x02\x00\x06\x00\x11\x00\x07\x00\x36\x00\x0a\x00')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'DateLastConnected', data=value_data,
         data_type=dfwinreg_definitions.REG_BINARY)
-    profile_2.AddValue(registry_value)
+    profile2_key.AddValue(registry_value)
 
     value_data = 'Network'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Description', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    profile_2.AddValue(registry_value)
+    profile2_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Managed', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    profile_2.AddValue(registry_value)
+    profile2_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x06'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'NameType', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    profile_2.AddValue(registry_value)
+    profile2_key.AddValue(registry_value)
 
     value_data = 'Network'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'ProfileName', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    profile_2.AddValue(registry_value)
+    profile2_key.AddValue(registry_value)
 
     # Setup signatures.
-    signatures = dfwinreg_fake.FakeWinRegistryKey('Signatures')
-    registry_key.AddSubkey(signatures)
+    signatures_key_name = 'Signatures'
+    signatures_key = dfwinreg_fake.FakeWinRegistryKey(signatures_key_name)
+    registry_key.AddSubkey(signatures_key_name, signatures_key)
 
-    managed = dfwinreg_fake.FakeWinRegistryKey('Managed')
-    signatures.AddSubkey(managed)
+    managed_key_name = 'Managed'
+    managed_key = dfwinreg_fake.FakeWinRegistryKey(managed_key_name)
+    signatures_key.AddSubkey(managed_key_name, managed_key)
 
-    unmanaged = dfwinreg_fake.FakeWinRegistryKey('Unmanaged')
-    signatures.AddSubkey(unmanaged)
+    unmanaged_key_name = 'Unmanaged'
+    unmanaged_key = dfwinreg_fake.FakeWinRegistryKey(unmanaged_key_name)
+    signatures_key.AddSubkey(unmanaged_key_name, unmanaged_key)
 
-    unmanaged_subkey = dfwinreg_fake.FakeWinRegistryKey(
+    unmanaged_subkey_name = (
         '010103000F0000F0080000000F0000F0E8982FB31F37E52AF30A6575A4898CE667'
         '6E8C2F99C4C5131D84F64BD823E0')
-    unmanaged.AddSubkey(unmanaged_subkey)
+    unmanaged_subkey = dfwinreg_fake.FakeWinRegistryKey(unmanaged_subkey_name)
+    unmanaged_key.AddSubkey(unmanaged_subkey_name, unmanaged_subkey)
 
     value_data = b'\x00\x50\x56\xea\x6c\xec'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -204,56 +206,38 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function on created key."""
     key_path = (
         'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-    time_string = '2013-01-30 10:47:57'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey(key_path, '2013-01-30 10:47:57')
 
     plugin = networks.NetworksWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'connection_type': 'Wired',
+        'date_time': '2014-05-06 17:02:19.795',
+        'data_type': 'windows:registry:network',
+        'default_gateway_mac': '00:50:56:ea:6c:ec',
+        'description': 'Network',
+        'dns_suffix': 'localdomain',
+        'ssid': 'Network',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2014-05-06 17:02:19.795000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'connection_type': 'Wireless',
+        'date_time': '2015-01-27 15:15:27.965',
+        'data_type': 'windows:registry:network',
+        'description': 'My Awesome Wifi Hotspot',
+        'ssid': 'My Awesome Wifi Hotspot',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CONNECTED}
 
-    self.assertEqual(event_data.data_type, 'windows:registry:network')
-
-    expected_message = (
-        'SSID: Network '
-        'Description: Network '
-        'Connection Type: Wired '
-        'Default Gateway Mac: 00:50:56:ea:6c:ec '
-        'DNS Suffix: localdomain')
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    event = events[3]
-
-    self.CheckTimestamp(event.timestamp, '2015-01-27 15:15:27.965000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:network')
-
-    expected_message = (
-        'SSID: My Awesome Wifi Hotspot '
-        'Description: My Awesome Wifi Hotspot '
-        'Connection Type: Wireless')
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
 
 if __name__ == '__main__':

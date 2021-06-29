@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Android contacts2 Call History.
-
-Android Call History is stored in SQLite database files named contacts2.db.
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Android call history database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import py2to3
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -23,6 +17,9 @@ class AndroidCallEventData(events.EventData):
     duration (int): number of seconds the call lasted.
     name (str): name associated to the remote party.
     number (str): phone number associated to the remote party.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
   """
 
   DATA_TYPE = 'android:event:call'
@@ -34,17 +31,23 @@ class AndroidCallEventData(events.EventData):
     self.duration = None
     self.name = None
     self.number = None
+    self.offset = None
+    self.query = None
 
 
 class AndroidCallPlugin(interface.SQLitePlugin):
-  """Parse Android contacts2 database."""
+  """SQLite parser plugin for Android call history database files.
+
+  The Android call history database file is typically stored in:
+  contacts2.db
+  """
 
   NAME = 'android_calls'
-  DESCRIPTION = 'Parser for Android calls SQLite database files.'
+  DATA_FORMAT = 'Android call history SQLite database (contacts2.db) file'
 
-  REQUIRED_TABLES = frozenset(['calls'])
+  REQUIRED_STRUCTURE = {
+      'calls': frozenset(['_id', 'date', 'number', 'name', 'duration', 'type'])}
 
-  # Define the needed queries.
   QUERIES = [
       ('SELECT _id AS id, date, number, name, duration, type FROM calls',
        'ParseCallsRow')]
@@ -186,7 +189,7 @@ class AndroidCallPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if duration:
-      if isinstance(duration, py2to3.STRING_TYPES):
+      if isinstance(duration, str):
         try:
           duration = int(duration, 10)
         except ValueError:

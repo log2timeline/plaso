@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
-from __future__ import unicode_literals
-
-import lz4.block
+import lzma
+import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-try:
-  import lzma
-except ImportError:
-  from backports import lzma
+from lz4 import block as lz4_block
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -42,16 +39,15 @@ class SystemdJournalEventData(events.EventData):
     self.reporter = None
 
 
-class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
+class SystemdJournalParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses Systemd Journal files."""
 
   NAME = 'systemd_journal'
+  DATA_FORMAT = 'Systemd journal file'
 
-  DESCRIPTION = 'Parser for Systemd Journal files.'
-
-  _DEFINITION_FILE = 'systemd_journal.yaml'
-
-  _FILE_SIGNATURE = b'LPKSHHRH'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'systemd_journal.yaml')
 
   _OBJECT_COMPRESSED_FLAG_XZ = 1
   _OBJECT_COMPRESSED_FLAG_LZ4 = 2
@@ -68,7 +64,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
   _SUPPORTED_FILE_HEADER_SIZES = frozenset([208, 224, 240])
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(SystemdJournalParser, self).__init__()
     self._maximum_journal_file_offset = 0
 
@@ -123,8 +119,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
             'Unable to parse LZ4 uncompressed size at offset: 0x{0:08x} with '
             'error: {1!s}').format(file_offset + 64, exception))
 
-      data = lz4.block.decompress(
-          data[8:], uncompressed_size=uncompressed_size)
+      data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
 
     return data
 
@@ -275,7 +270,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(cls._FILE_SIGNATURE, offset=0)
+    format_specification.AddNewSignature(b'LPKSHHRH', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):
@@ -297,9 +292,6 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.UnableToParseFile(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.UnableToParseFile('Invalid file signature.')
 
     if file_header.header_size not in self._SUPPORTED_FILE_HEADER_SIZES:
       raise errors.UnableToParseFile(

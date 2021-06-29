@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file contains the Winlogon Registry plugin."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -37,7 +35,7 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the Winlogon key."""
 
   NAME = 'winlogon'
-  DESCRIPTION = 'Parser for winlogon Registry data.'
+  DATA_FORMAT = 'Windows log-on Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -123,4 +121,4 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
       self._ParseRegisteredDLLs(parser_mediator, notify_subkey)
 
 
-winreg.WinRegistryParser.RegisterPlugin(WinlogonPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(WinlogonPlugin)

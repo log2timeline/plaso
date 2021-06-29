@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows firewall log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import winfirewall as _  # pylint: disable=unused-import
 from plaso.parsers import winfirewall
 
 from tests.parsers import test_lib
@@ -20,47 +17,61 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     parser = winfirewall.WinFirewallParser()
     storage_writer = self._ParseFile(['firewall.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 15)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[4]
+    expected_event_values = {
+        'date_time': '2005-04-11 08:06:02',
+        'data_type': 'windows:firewall:log_entry',
+        'dest_ip': '123.156.78.90',
+        'source_ip': '123.45.78.90'}
 
-    self.CheckTimestamp(event.timestamp, '2005-04-11 08:06:02.000000')
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.source_ip, '123.45.78.90')
-    self.assertEqual(event_data.dest_ip, '123.156.78.90')
+    expected_event_values = {
+        'date_time': '2005-04-11 08:06:26',
+        'data_type': 'windows:firewall:log_entry',
+        'dest_ip': '123.156.78.90',
+        'dest_port': 1774,
+        'flags': 'A',
+        'source_ip': '123.45.78.90',
+        'source_port': 80,
+        'size': 576,
+        'tcp_ack': 987654321,
+        'tcp_seq': 123456789,
+        'tcp_win': 12345}
 
-    event = events[7]
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2005-04-11 08:06:26.000000')
+    expected_event_values = {
+        'data_type': 'windows:firewall:log_entry',
+        'icmp_code': 0,
+        'icmp_type': 8}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.size, 576)
-    self.assertEqual(event_data.flags, 'A')
-    self.assertEqual(event_data.tcp_ack, 987654321)
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
-    expected_message = (
-        'DROP [ TCP RECEIVE ] '
-        'From: 123.45.78.90 :80 > 123.156.78.90 :1774 '
-        'Size (bytes): 576 '
-        'Flags [A] '
-        'TCP Seq Number: 123456789 '
-        'TCP ACK Number: 987654321 '
-        'TCP Window Size (bytes): 12345')
-    expected_short_message = (
-        'DROP [TCP] 123.45.78.90 : 80 > 123.156.78.90 : 1774')
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    parser = winfirewall.WinFirewallParser()
+    storage_writer = self._ParseFile(['firewall.log'], parser, timezone='CET')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.assertEqual(storage_writer.number_of_events, 15)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
-    event = events[9]
+    events = list(storage_writer.GetSortedEvents())
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.icmp_type, 8)
-    self.assertEqual(event_data.icmp_code, 0)
+    expected_event_values = {
+        'date_time': '2005-04-11 08:06:02',
+        'data_type': 'windows:firewall:log_entry',
+        'dest_ip': '123.156.78.90',
+        'source_ip': '123.45.78.90',
+        'timestamp': '2005-04-11 06:06:02.000000'}
+
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
 
 if __name__ == '__main__':

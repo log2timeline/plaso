@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Bencode parser plugin for uTorrent files."""
-
-from __future__ import unicode_literals
+"""Bencode parser plugin for uTorrent active torrent files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import bencode_parser
 from plaso.parsers.bencode_plugins import interface
 
 
 class UTorrentEventData(events.EventData):
-  """uTorrent event data.
+  """uTorrent active torrent event data.
 
   Attributes:
-    caption (str): official name of package
-    path (str): Torrent download location
-    seedtime (int): number of seconds client seeded torrent
+    caption (str): official name of package.
+    destination (str): path of the downloaded file.
+    seedtime (int): client seed time in number of minutes.
   """
 
   DATA_TYPE = 'p2p:bittorrent:utorrent'
@@ -32,67 +29,63 @@ class UTorrentEventData(events.EventData):
     self.seedtime = None
 
 
-class UTorrentPlugin(interface.BencodePlugin):
-  """Plugin to extract uTorrent active torrent events."""
+class UTorrentBencodePlugin(interface.BencodePlugin):
+  """Plugin to extract parse uTorrent active torrent files.
+
+  uTorrent creates a file, resume.dat, and a backup, resume.dat.old, to
+  for all active torrents. This is typically stored in the user's
+  application data folder.
+
+  These files, at a minimum, contain a '.fileguard' key and a dictionary
+  with a key name for a particular download with a '.torrent' file
+  extension.
+  """
 
   NAME = 'bencode_utorrent'
-  DESCRIPTION = 'Parser for uTorrent bencoded files.'
+  DATA_FORMAT = 'uTorrent active torrent file'
 
   # The following set is used to determine if the bencoded data is appropriate
   # for this plugin. If there's a match, the entire bencoded data block is
   # returned for analysis.
-  BENCODE_KEYS = frozenset(['.fileguard'])
+  _BENCODE_KEYS = frozenset(['.fileguard'])
 
-  def GetEntries(self, parser_mediator, data=None, **unused_kwargs):
-    """Extracts uTorrent active torrents.
-
-    This is the main parsing engine for the plugin. It determines if
-    the selected file is the proper file to parse and extracts current
-    running torrents.
-
-    interface.Process() checks for the given BENCODE_KEYS set, ensures
-    that it matches, and then passes the bencoded data to this function for
-    parsing. This plugin then parses the entire set of bencoded data to extract
-    the variable file-name keys to retrieve their values.
-
-    uTorrent creates a file, resume.dat, and a backup, resume.dat.old, to
-    for all active torrents. This is typically stored in the user's
-    application data folder.
-
-    These files, at a minimum, contain a '.fileguard' key and a dictionary
-    with a key name for a particular download with a '.torrent' file
-    extension.
+  def Process(self, parser_mediator, bencode_file=None, **kwargs):
+    """Extracts events from an uTorrent active torrent file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      data (Optional[dict[str, object]]): bencode data values.
+      bencode_file (Optional[BencodeFile]): bencode file.
     """
-    # Walk through one of the torrent keys to ensure it's from a valid file.
-    for key, value in iter(data.items()):
+    # This will raise if unhandled keyword arguments are passed.
+    super(UTorrentBencodePlugin, self).Process(parser_mediator, **kwargs)
+
+    for key, value in bencode_file.GetDecodedValues():
       if not '.torrent' in key:
         continue
 
-      caption = value.get('caption')
-      path = value.get('path')
-      seedtime = value.get('seedtime')
+      bencoded_values = bencode_parser.BencodeValues(value)
+      caption = bencoded_values.GetDecodedValue('caption')
+      path = bencoded_values.GetDecodedValue('path')
+      seedtime = bencoded_values.GetDecodedValue('seedtime')
       if not caption or not path or seedtime < 0:
-        raise errors.WrongBencodePlugin(self.NAME)
-
-    for torrent, value in iter(data.items()):
-      if not '.torrent' in torrent:
+        parser_mediator.ProduceExtractionWarning(
+            'key: {0:s} is missing valid caption, path and seedtime'.format(
+                key))
         continue
 
       event_data = UTorrentEventData()
-      event_data.caption = value.get('caption', None)
-      event_data.path = value.get('path', None)
-
+      event_data.caption = caption
+      event_data.path = path
       # Convert seconds to minutes.
-      seedtime = value.get('seedtime', None)
       event_data.seedtime, _ = divmod(seedtime, 60)
 
       # Create timeline events based on extracted values.
-      for event_key, event_value in iter(value.items()):
+      for event_key, event_value in value.items():
+        if isinstance(event_key, bytes):
+          # Work-around for issue in bencode 3.0.1 where keys are bytes.
+          event_key = event_key.decode('utf-8')
+
         if event_key == 'added_on':
           date_time = dfdatetime_posix_time.PosixTime(timestamp=event_value)
           event = time_events.DateTimeValuesEvent(
@@ -117,4 +110,4 @@ class UTorrentPlugin(interface.BencodePlugin):
             parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-bencode_parser.BencodeParser.RegisterPlugin(UTorrentPlugin)
+bencode_parser.BencodeParser.RegisterPlugin(UTorrentBencodePlugin)

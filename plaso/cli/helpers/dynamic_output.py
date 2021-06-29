@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The dynamic output module CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -39,10 +37,10 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
 
     default_fields = ', '.join(cls._DEFAULT_FIELDS)
     argument_group.add_argument(
-        '--additional_fields', dest='additional_fields', type=str,
-        action='store', default='', help=(
-            'Defines extra fields to be included in the output, in addition to'
-            ' the default fields, which are {0:s}.'.format(default_fields)))
+        '--additional_fields', '--additional-fields', dest='additional_fields',
+        type=str, action='store', default='', help=(
+            'Defines extra fields to be included in the output, in addition to '
+            'the default fields, which are {0:s}.'.format(default_fields)))
 
   @classmethod
   def ParseOptions(cls, options, output_module):  # pylint: disable=arguments-differ
@@ -64,11 +62,9 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
     fields = cls._ParseStringOption(
         options, 'fields', default_value=default_fields)
 
-    additional_fields = cls._ParseStringOption(
-        options, 'additional_fields')
-
+    additional_fields = cls._ParseStringOption(options, 'additional_fields')
     if additional_fields:
-      fields = '{0:s},{1:s}'.format(fields, additional_fields)
+      fields = ','.join([fields, additional_fields])
 
     output_module.SetFields([
         field_name.strip() for field_name in fields.split(',')])

@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
-"""TimeMachine plist plugin."""
+"""Plist parser plugin for TimeMachine plist files."""
 
-from __future__ import unicode_literals
+import os
+
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import plist
-from plaso.parsers.plist_plugins import dtfabric_plugin
+from plaso.parsers.plist_plugins import interface
 
 
-class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
-  """Basic plugin to extract time machine hard disk and the backups.
+class TimeMachinePlugin(
+    interface.PlistPlugin, dtfabric_helper.DtFabricHelper):
+  """Plist parser plugin for TimeMachine plist files.
 
   Further details about the extracted fields:
     DestinationID:
@@ -26,15 +30,18 @@ class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
   """
 
   NAME = 'time_machine'
-  DESCRIPTION = 'Parser for TimeMachine plist files.'
+  DATA_FORMAT = 'TimeMachine plist file'
 
-  PLIST_PATH = 'com.apple.TimeMachine.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.TimeMachine.plist')])
+
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
 
-  _DEFINITION_FILE = 'timemachine.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'timemachine.yaml')
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant TimeMachine entries.
 
     Args:
@@ -69,8 +76,11 @@ class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
 
       snapshot_dates = destination.get('SnapshotDates', [])
       for datetime_value in snapshot_dates:
-        event = time_events.PythonDatetimeEvent(
-            datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromDatetime(datetime_value)
+
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

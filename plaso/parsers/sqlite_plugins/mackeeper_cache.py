@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the MacOS MacKeeper cache database."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for MacOS MacKeeper cache database files."""
 
 import codecs
 import json
 
 from dfdatetime import java_time as dfdatetime_java_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -24,6 +21,9 @@ class MacKeeperCacheEventData(events.EventData):
   Attributes:
     description (str): description.
     event_type (str): event type.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     record_id (int): record identifier.
     room (str): room.
     text (str): text.
@@ -38,6 +38,8 @@ class MacKeeperCacheEventData(events.EventData):
     super(MacKeeperCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.description = None
     self.event_type = None
+    self.offset = None
+    self.query = None
     self.record_id = None
     self.room = None
     self.text = None
@@ -47,22 +49,23 @@ class MacKeeperCacheEventData(events.EventData):
 
 
 class MacKeeperCachePlugin(interface.SQLitePlugin):
-  """Plugin for the MacKeeper Cache database file."""
+  """SQLite parser plugin for MacOS MacKeeper cache database files."""
 
   NAME = 'mackeeper_cache'
-  DESCRIPTION = 'Parser for MacKeeper Cache SQLite database files.'
+  DATA_FORMAT = 'MacOS MacKeeper cache SQLite database file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'cfurl_cache_blob_data': frozenset([]),
+      'cfurl_cache_receiver_data': frozenset([
+          'entry_ID', 'receiver_data', 'entry_ID']),
+      'cfurl_cache_response': frozenset([
+          'request_key', 'time_stamp', 'entry_ID'])}
+
   QUERIES = [((
       'SELECT d.entry_ID AS id, d.receiver_data AS data, r.request_key, '
       'r.time_stamp AS time_string FROM cfurl_cache_receiver_data d, '
       'cfurl_cache_response r WHERE r.entry_ID = '
       'd.entry_ID'), 'ParseReceiverData')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset([
-      'cfurl_cache_blob_data', 'cfurl_cache_receiver_data',
-      'cfurl_cache_response'])
 
   SCHEMAS = [{
       'cfurl_cache_blob_data': (
@@ -90,7 +93,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       list[str]: list of strings.
     """
     ret_list = []
-    for key, value in iter(data_dict.items()):
+    for key, value in data_dict.items():
       if key in ('body', 'datetime', 'type', 'room', 'rooms', 'id'):
         continue
       ret_list.append('{0:s} = {1!s}'.format(key, value))
@@ -247,22 +250,20 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     event_data.user_sid = data.get('sid', None)
 
     time_value = self._GetRowValue(query_hash, row, 'time_string')
-    if isinstance(time_value, py2to3.INTEGER_TYPES):
+    if isinstance(time_value, int):
       date_time = dfdatetime_java_time.JavaTime(timestamp=time_value)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_ADDED)
-
     else:
       try:
-        timestamp = timelib.Timestamp.FromTimeString(time_value)
-      except errors.TimestampError:
+        date_time = dfdatetime_time_elements.TimeElements()
+        date_time.CopyFromDateTimeString(time_value)
+      except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse time string: {0:s}'.format(time_value))
-        return
+            'Unable to parse time string: {0:s} with error: {1!s}'.format(
+                time_value, exception))
+        date_time = dfdatetime_semantic_time.InvalidTime()
 
-      event = time_events.TimestampEvent(
-          timestamp, definitions.TIME_DESCRIPTION_ADDED)
-
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

@@ -5,8 +5,6 @@ More documentation on fields can be found here:
 https://msdn.microsoft.com/en-us/library/ms525807(v=vs.90).aspx
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -23,6 +21,29 @@ class IISEventData(events.EventData):
   """IIS log event data.
 
   Attributes:
+    cs_cookie (str): Content of a sent or received cookie.
+    cs_host (str): HTTP host header name.
+    cs_referrer (str): Site that referred to the requested site.
+    cs_uri_query (str): URI query that was requested.
+    cs_username (str): Username of the authenticated user that accessed
+        the server, where anonymous users are indicated by a hyphen.
+    dest_ip (str): IP address of the server that generated the logged activity.
+    dest_port (str): Server port number.
+    http_method (str): HTTP request method, such as GET or POST.
+    http_status (str): HTTP status code that was returned by the server.
+    protocol_version (str): HTTP protocol version that was used.
+    received_bytes (str): Number of bytes received and processed by the server.
+    requested_uri_stem (str): File requested, such as index.php or Default.htm
+    s_computername (str): Name of the server that generated the logged activity.
+    sc_substatus (str):  HTTP substatus error code that was returned by the
+        server.
+    sc_win32_status (str): Windows status code of the server.
+    sent_bytes (str): Number of bytes sent by the server.
+    source_ip (str): IP address of the client that made the request.
+    s_sitename (str): Service name and instance number that was running on the
+        client.
+    time_taken (str): Time taken, in milliseconds, to process the request.
+    user_agent (str): User agent that was used.
   """
 
   DATA_TYPE = 'iis:log:line'
@@ -30,20 +51,35 @@ class IISEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(IISEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.cs_cookie = None
+    self.cs_host = None
+    self.cs_referrer = None
+    self.cs_uri_query = None
+    self.cs_username = None
+    self.dest_ip = None
+    self.dest_port = None
+    self.http_method = None
+    self.http_status = None
+    self.protocol_version = None
+    self.received_bytes = None
+    self.requested_uri_stem = None
+    self.s_computername = None
+    self.sc_substatus = None
+    self.sc_win32_status = None
+    self.sent_bytes = None
+    self.source_ip = None
+    self.s_sitename = None
+    self.time_taken = None
+    self.user_agent = None
 
 
 class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   """Parses a Microsoft IIS log file."""
 
   NAME = 'winiis'
-  DESCRIPTION = 'Parser for Microsoft IIS log files.'
+  DATA_FORMAT = 'Microsoft IIS log file'
 
-  # Common Fields (6.0: date time s-sitename s-ip cs-method cs-uri-stem
-  # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
-  # sc-substatus sc-win32-status.
-  # Common Fields (7.5): date time s-ip cs-method cs-uri-stem cs-uri-query
-  # s-port cs-username c-ip cs(User-Agent) sc-status sc-substatus
-  # sc-win32-status time-taken
+  MAX_LINE_LENGTH = 800
 
   BLANK = pyparsing.Literal('-')
   WORD = pyparsing.Word(pyparsing.alphanums + '-') | BLANK
@@ -60,8 +96,11 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.nums, min=1, max=6).setParseAction(
           text_parser.ConvertTokenToInteger) | BLANK)
 
+  # Username can consist of: domain.username
+  USERNAME = pyparsing.Word(pyparsing.alphanums + '.-') | BLANK
+
   _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%'
-  _URI_UNSAFE_CHARACTERS = '{}|\\^~[]`'
+  _URI_UNSAFE_CHARACTERS = '{}|\\^~[]`\'"<>'
 
   URI = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS) | BLANK
 
@@ -86,6 +125,10 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   COMMENT = pyparsing.Literal('#') + (
       DATE_METADATA | FIELDS_METADATA | pyparsing.SkipTo(pyparsing.LineEnd()))
 
+  # IIS 6.x fields: date time s-sitename s-ip cs-method cs-uri-stem
+  # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
+  # sc-substatus sc-win32-status
+
   LOG_LINE_6_0 = (
       DATE_TIME.setResultsName('date_time') +
       URI.setResultsName('s_sitename') +
@@ -100,6 +143,10 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       INTEGER.setResultsName('sc_status') +
       INTEGER.setResultsName('sc_substatus') +
       INTEGER.setResultsName('sc_win32_status'))
+
+  # IIS 7.x fields: date time s-ip cs-method cs-uri-stem cs-uri-query
+  # s-port cs-username c-ip cs(User-Agent) sc-status sc-substatus
+  # sc-win32-status time-taken
 
   _LOG_LINE_STRUCTURES = {}
 
@@ -116,7 +163,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       'requested_uri_stem')
   _LOG_LINE_STRUCTURES['cs-uri-query'] = QUERY.setResultsName('cs_uri_query')
   _LOG_LINE_STRUCTURES['s-port'] = PORT.setResultsName('dest_port')
-  _LOG_LINE_STRUCTURES['cs-username'] = WORD.setResultsName('cs_username')
+  _LOG_LINE_STRUCTURES['cs-username'] = USERNAME.setResultsName('cs_username')
   _LOG_LINE_STRUCTURES['c-ip'] = IP_ADDRESS.setResultsName('source_ip')
   _LOG_LINE_STRUCTURES['cs(User-Agent)'] = URI.setResultsName('user_agent')
   _LOG_LINE_STRUCTURES['sc-status'] = INTEGER.setResultsName('http_status')
@@ -126,8 +173,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       'sc_win32_status')
 
   # Less common fields.
-  _LOG_LINE_STRUCTURES['s-computername'] = URI.setResultsName(
-      's_computername')
+  _LOG_LINE_STRUCTURES['s-computername'] = URI.setResultsName('s_computername')
   _LOG_LINE_STRUCTURES['sc-bytes'] = INTEGER.setResultsName('sent_bytes')
   _LOG_LINE_STRUCTURES['cs-bytes'] = INTEGER.setResultsName('received_bytes')
   _LOG_LINE_STRUCTURES['time-taken'] = INTEGER.setResultsName('time_taken')
@@ -152,7 +198,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   _ENCODING = 'utf-8'
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(WinIISParser, self).__init__()
     self._day_of_month = None
     self._month = None
@@ -162,13 +208,13 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     """Parses a comment.
 
     Args:
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      structure (pyparsing.ParseResults): structure parsed from a comment in
+          the log file.
     """
-    # TODO: refactor. Why is this method named _ParseComment when it extracts
-    # the date and time?
     if structure[1] == 'Date:':
       time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
       self._year, self._month, self._day_of_month, _, _, _ = time_elements_tuple
+
     elif structure[1] == 'Fields:':
       self._ParseFieldsMetadata(structure)
 
@@ -188,16 +234,14 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       fields = fields[2:]
 
     for member in fields:
-      log_line_structure += self._LOG_LINE_STRUCTURES.get(member, self.URI)
+      if member:
+        log_line_structure += self._LOG_LINE_STRUCTURES.get(member, self.URI)
 
-    updated_structures = []
-    for line_structure in self._line_structures:
-      if line_structure[0] != 'logline':
-        updated_structures.append(line_structure)
-    updated_structures.append(('logline', log_line_structure))
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
-    self._line_structures = updated_structures
+    self._line_structures = [
+      ('comment', self.COMMENT),
+      ('logline', log_line_structure)]
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and produce an event object.
@@ -207,8 +251,19 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
           and other components, such as storage and dfvfs.
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
-    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
-    if not time_elements_tuple:
+    time_elements_structure = structure.get('date_time', None)
+    if time_elements_structure:
+      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+      # overriding __getattr__ with a function that returns an empty string when
+      # named token does not exists.
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+    else:
       time_tuple = self._GetValueFromStructure(structure, 'time')
       if not time_tuple:
         parser_mediator.ProduceExtractionWarning('missing time values')
@@ -234,15 +289,26 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     event_data = IISEventData()
-
-    for key, value in iter(structure.items()):
-      if key in ('date', 'date_time', 'time') or value == '-':
-        continue
-
-      if isinstance(value, pyparsing.ParseResults):
-        value = ''.join(value)
-
-      setattr(event_data, key, value)
+    event_data.cs_cookie = structure.get('cs_cookie', None)
+    event_data.cs_host = structure.get('cs_host', None)
+    event_data.cs_referrer = structure.get('cs_referrer', None)
+    event_data.cs_uri_query = structure.get('cs_uri_query', None)
+    event_data.cs_username = structure.get('cs_username', None)
+    event_data.dest_ip = structure.get('dest_ip', None)
+    event_data.dest_port = structure.get('dest_port', None)
+    event_data.http_method = structure.get('http_method', None)
+    event_data.http_status = structure.get('http_status', None)
+    event_data.protocol_version = structure.get('protocol_version', None)
+    event_data.received_bytes = structure.get('received_bytes', None)
+    event_data.requested_uri_stem = structure.get('requested_uri_stem', None)
+    event_data.s_computername = structure.get('s_computername', None)
+    event_data.sc_substatus = structure.get('sc_substatus', None)
+    event_data.sc_win32_status = structure.get('sc_win32_status', None)
+    event_data.sent_bytes = structure.get('sent_bytes', None)
+    event_data.source_ip = structure.get('source_ip', None)
+    event_data.s_sitename = structure.get('s_sitename', None)
+    event_data.time_taken = structure.get('time_taken', None)
+    event_data.user_agent = structure.get('user_agent', None)
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)

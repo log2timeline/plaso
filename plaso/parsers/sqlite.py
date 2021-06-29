@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
 """SQLite parser."""
 
-from __future__ import unicode_literals
-
 import os
+import sqlite3
 import tempfile
-
-# pylint: disable=wrong-import-order
-try:
-  from pysqlite2 import dbapi2 as sqlite3
-except ImportError:
-  import sqlite3
 
 from dfvfs.path import factory as dfvfs_factory
 
+from plaso.containers import events
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -128,29 +122,27 @@ class SQLiteDatabase(object):
       'AND tbl_name != "sqlite_sequence"')
 
   def __init__(self, filename, temporary_directory=None):
-    """Initializes the database object.
+    """Initializes a SQLite database.
 
     Args:
       filename (str): name of the file entry.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
     """
+    super(SQLiteDatabase, self).__init__()
     self._database = None
     self._filename = filename
-    self._is_open = False
     self._temp_db_file_path = ''
     self._temporary_directory = temporary_directory
     self._temp_wal_file_path = ''
 
     self.schema = {}
+    self.columns_per_table = {}
 
   @property
   def tables(self):
     """list[str]: names of all the tables."""
-    if self._is_open:
-      return self.schema.keys()
-
-    return []
+    return self.schema.keys()
 
   def _CopyFileObjectToTemporaryFile(self, file_object, temporary_file):
     """Copies the contents of the file-like object to a temporary file.
@@ -168,9 +160,6 @@ class SQLiteDatabase(object):
   def Close(self):
     """Closes the database connection and cleans up the temporary file."""
     self.schema = {}
-
-    if self._is_open:
-      self._database.close()
     self._database = None
 
     if os.path.exists(self._temp_db_file_path):
@@ -194,8 +183,6 @@ class SQLiteDatabase(object):
                 self._temp_wal_file_path, self._filename, exception))
 
     self._temp_wal_file_path = ''
-
-    self._is_open = False
 
   def Open(self, file_object, wal_file_object=None):
     """Opens a SQLite database file.
@@ -273,6 +260,17 @@ class SQLiteDatabase(object):
           table_name: ' '.join(query.split())
           for table_name, query in sql_results}
 
+      for table_name in self.schema.keys():
+        self.columns_per_table.setdefault(table_name, [])
+
+        # The table name needs to be enclosed in quotes in case it contains
+        # special characters like a dot.
+        pragma_results = cursor.execute(
+            'PRAGMA table_info("{0:s}")'.format(table_name))
+
+        for pragma_result in pragma_results:
+          self.columns_per_table[table_name].append(pragma_result['name'])
+
     except sqlite3.DatabaseError as exception:
       self._database.close()
       self._database = None
@@ -287,8 +285,6 @@ class SQLiteDatabase(object):
           'Unable to parse SQLite database: {0:s} with error: {1!s}'.format(
               self._filename, exception))
       raise
-
-    self._is_open = True
 
   def Query(self, query):
     """Queries the database.
@@ -311,7 +307,7 @@ class SQLiteParser(interface.FileEntryParser):
   """Parses SQLite database files."""
 
   NAME = 'sqlite'
-  DESCRIPTION = 'Parser for SQLite database files.'
+  DATA_FORMAT = 'SQLite database file'
 
   _plugin_classes = {}
 
@@ -364,10 +360,45 @@ class SQLiteParser(interface.FileEntryParser):
 
       return None, None
 
-    finally:
-      wal_file_object.close()
-
     return database_wal, wal_file_entry
+
+  def _ParseFileEntryWithPlugin(
+      self, parser_mediator, plugin, database, display_name, cache):
+    """Parses a SQLite database file entry with a specific plugin.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      plugin (SQLitePlugin): SQLite parser plugin.
+      database (SQLiteDatabase): database.
+      display_name (str): display name.
+      cache (SQLiteCache): cache.
+    """
+    required_tables_and_column_exist = plugin.CheckRequiredTablesAndColumns(
+        database)
+
+    if not required_tables_and_column_exist:
+      logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
+          display_name, plugin.NAME))
+      return
+
+    logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+        display_name, plugin.NAME))
+
+    schema_match = plugin.CheckSchema(database)
+    if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
+      parser_mediator.ProduceExtractionWarning((
+          'plugin: {0:s} found required tables but not a matching '
+          'schema').format(plugin.NAME))
+      return
+
+    try:
+      plugin.UpdateChainAndProcess(
+          parser_mediator, cache=cache, database=database)
+
+    except Exception as exception:  # pylint: disable=broad-except
+      parser_mediator.ProduceExtractionWarning((
+          'plugin: {0:s} unable to parse SQLite database with error: '
+          '{1!s}').format(plugin.NAME, exception))
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -401,69 +432,46 @@ class SQLiteParser(interface.FileEntryParser):
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to open SQLite database with error: {0!s}'.format(exception))
-      file_object.close()
       return
+
+    # Create a cache in which the resulting tables are cached.
+    cache = SQLiteCache()
+
+    display_name = parser_mediator.GetDisplayName(file_entry)
+
+    try:
+      for plugin in self._plugins:
+        self._ParseFileEntryWithPlugin(
+            parser_mediator, plugin, database, display_name, cache)
+    finally:
+      database.Close()
 
     database_wal, wal_file_entry = self._OpenDatabaseWithWAL(
         parser_mediator, file_entry, file_object, filename)
 
-    file_object.close()
+    if not database_wal:
+      return
+
+    # Note that SetFileEntry will reset the current event data stream in
+    # the parser mediator.
+    parser_mediator.SetFileEntry(wal_file_entry)
+
+    event_data_stream = events.EventDataStream()
+    event_data_stream.path_spec = wal_file_entry.path_spec
+
+    parser_mediator.ProduceEventDataStream(event_data_stream)
 
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
+
+    display_name = parser_mediator.GetDisplayName(wal_file_entry)
+
     try:
-      table_names = frozenset(database.tables)
-
       for plugin in self._plugins:
-        if not plugin.REQUIRED_TABLES.issubset(table_names):
-          continue
-
-        schema_match = plugin.CheckSchema(database)
-        if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} found required tables but not a matching '
-              'schema').format(plugin.NAME))
-          continue
-
-        parser_mediator.SetFileEntry(file_entry)
-        parser_mediator.AddEventAttribute('schema_match', schema_match)
-
-        try:
-          plugin.UpdateChainAndProcess(
-              parser_mediator, cache=cache, database=database,
-              database_wal=database_wal, wal_file_entry=wal_file_entry)
-
-        except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse SQLite database with error: '
-              '{1!s}').format(plugin.NAME, exception))
-
-        finally:
-          parser_mediator.RemoveEventAttribute('schema_match')
-
-        if not database_wal:
-          continue
-
-        schema_match = plugin.CheckSchema(database)
-
-        parser_mediator.SetFileEntry(wal_file_entry)
-        parser_mediator.AddEventAttribute('schema_match', schema_match)
-
-        try:
-          plugin.UpdateChainAndProcess(
-              parser_mediator, cache=cache, database=database,
-              database_wal=database_wal, wal_file_entry=wal_file_entry)
-
-        except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse SQLite database and WAL with '
-              'error: {1!s}').format(plugin.NAME, exception))
-
-        finally:
-          parser_mediator.RemoveEventAttribute('schema_match')
-
+        self._ParseFileEntryWithPlugin(
+            parser_mediator, plugin, database_wal, display_name, cache)
     finally:
-      database.Close()
+      database_wal.Close()
 
 
 manager.ParsersManager.RegisterParser(SQLiteParser)

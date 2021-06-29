@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """View classes."""
 
-from __future__ import unicode_literals
-
 import abc
 
 try:
@@ -10,24 +8,24 @@ try:
 except ImportError:
   win32console = None
 
-from plaso.lib import py2to3
-
 
 class BaseTableView(object):
   """Table view interface."""
 
-  def __init__(self, column_names=None, title=None):
+  def __init__(self, column_names=None, title=None, title_level=3):
     """Initializes a table view.
 
     Args:
       column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
+      title_level (Optional[int]): title heading level.
     """
     super(BaseTableView, self).__init__()
     self._columns = column_names or []
     self._number_of_columns = len(self._columns)
     self._rows = []
     self._title = title
+    self._title_level = title_level
 
   def AddRow(self, values):
     """Adds a row of values.
@@ -67,14 +65,16 @@ class CLITableView(BaseTableView):
 
   _HEADER_FORMAT_STRING = '{{0:*^{0:d}}}\n'.format(_MAXIMUM_WIDTH)
 
-  def __init__(self, column_names=None, title=None):
+  def __init__(self, column_names=None, title=None, title_level=3):
     """Initializes a command line table view.
 
     Args:
       column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
+      title_level (Optional[int]): title heading level.
     """
-    super(CLITableView, self).__init__(column_names=column_names, title=title)
+    super(CLITableView, self).__init__(
+        column_names=column_names, title=title, title_level=title_level)
     if self._columns:
       self._column_width = len(self._columns[0])
     else:
@@ -110,7 +110,7 @@ class CLITableView(BaseTableView):
     secondary_format_string = '{{0:<{0:d}s}}{{1:s}}\n'.format(
         self._column_width + 3)
 
-    if isinstance(values[1], py2to3.STRING_TYPES):
+    if isinstance(values[1], str):
       value_string = values[1]
     else:
       value_string = '{0!s}'.format(values[1])
@@ -268,7 +268,7 @@ class CLITabularTableView(BaseTableView):
 
     value_strings = []
     for value_index, value_string in enumerate(values):
-      if not isinstance(value_string, py2to3.UNICODE_TYPE):
+      if not isinstance(value_string, str):
         value_string = '{0!s}'.format(value_string)
       value_strings.append(value_string)
 
@@ -304,28 +304,56 @@ class CLITabularTableView(BaseTableView):
 class MarkdownTableView(BaseTableView):
   """Markdown table view."""
 
+  def _WriteHeader(self, output_writer):
+    """Writes a header.
+
+    Args:
+      output_writer (OutputWriter): output writer.
+    """
+    if self._title:
+      output_writer.Write('{0:s} {1:s}\n\n'.format(
+          '#' * self._title_level, self._title))
+
+    if self._columns:
+      output_writer.Write(' | '.join(self._columns))
+      output_writer.Write('\n')
+
+      output_writer.Write(' | '.join(['---' for _ in self._columns]))
+      output_writer.Write('\n')
+    else:
+      output_writer.Write('<table>\n')
+
+  def _WriteRow(self, output_writer, values):
+    """Writes a row of values aligned to the column width.
+
+    Args:
+      output_writer (OutputWriter): output writer.
+      values (list[object]): values.
+    """
+    if self._columns:
+      row_values = ['{0!s}'.format(value) for value in values]
+      output_writer.Write(' | '.join(row_values))
+      output_writer.Write('\n')
+    else:
+      row_values = ''.join([
+         '<td>{0!s}</td>'.format(value) for value in values[1:]])
+      output_writer.Write((
+          '<tr><th nowrap style="text-align:left;vertical-align:top">{0!s}</th>'
+          '{1:s}</tr>\n').format(values[0], row_values))
+
   def Write(self, output_writer):
     """Writes the table to the output writer.
 
     Args:
       output_writer (OutputWriter): output writer.
     """
-    if self._title:
-      output_writer.Write('### {0:s}\n\n'.format(self._title))
-
-    if not self._columns:
-      self._columns = ['' for _ in range(0, self._number_of_columns)]
-
-    output_writer.Write(' | '.join(self._columns))
-    output_writer.Write('\n')
-
-    output_writer.Write(' | '.join(['---' for _ in self._columns]))
-    output_writer.Write('\n')
+    self._WriteHeader(output_writer)
 
     for values in self._rows:
-      values = ['{0!s}'.format(value) for value in values]
-      output_writer.Write(' | '.join(values))
-      output_writer.Write('\n')
+      self._WriteRow(output_writer, values)
+
+    if not self._columns:
+      output_writer.Write('</table>\n')
 
     output_writer.Write('\n')
 
@@ -342,13 +370,15 @@ class ViewsFactory(object):
   }
 
   @classmethod
-  def GetTableView(cls, format_type, column_names=None, title=None):
+  def GetTableView(
+      cls, format_type, column_names=None, title=None, title_level=3):
     """Retrieves a table view.
 
     Args:
       format_type (str): table view format type.
       column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
+      title_level (Optional[int]): title heading level.
 
     Returns:
       BaseTableView: table view.
@@ -360,4 +390,5 @@ class ViewsFactory(object):
     if not view_class:
       raise ValueError('Unsupported format type: {0:s}'.format(format_type))
 
-    return view_class(column_names=column_names, title=title)
+    return view_class(
+        column_names=column_names, title=title, title_level=title_level)

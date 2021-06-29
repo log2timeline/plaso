@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script to extract the event data attribute containers schema."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import importlib
 import inspect
@@ -39,7 +36,8 @@ class EventDataAttributeContainersSchemaExtractor(object):
 
       lines.append('{0:s}'.format(event_data.data_type))
       for name in sorted(event_data.GetAttributeNames()):
-        lines.append('  {0:s}'.format(name))
+        if name and name[0] != '_':
+          lines.append('  {0:s}'.format(name))
       lines.append('')
 
     return '\n'.join(lines)
@@ -74,7 +72,7 @@ class EventDataAttributeContainersSchemaExtractor(object):
     return attribute_containers
 
   def GetAttributeContainers(self):
-    """Retrieves event data attribute containers from plaso.
+    """Retrieves event data attribute containers from Plaso.
 
     Returns:
       list[plaso.EventData]: event data attribute containers.
@@ -89,7 +87,7 @@ def Main():
     bool: True if successful or False if not.
   """
   argument_parser = argparse.ArgumentParser(description=(
-      'Extract the event data schema from plaso.'))
+      'Extract the event data schema from Plaso.'))
 
   argument_parser.parse_args()
 

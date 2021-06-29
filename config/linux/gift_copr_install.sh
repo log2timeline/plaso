@@ -9,17 +9,22 @@ set -e
 # Dependencies for running plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
 PYTHON3_DEPENDENCIES="libbde-python3
+                      libcreg-python3
                       libesedb-python3
                       libevt-python3
                       libevtx-python3
                       libewf-python3
                       libfsapfs-python3
+                      libfsext-python3
+                      libfshfs-python3
                       libfsntfs-python3
+                      libfsxfs-python3
                       libfvde-python3
                       libfwnt-python3
                       libfwsi-python3
                       liblnk-python3
                       libluksde-python3
+                      libmodi-python3
                       libmsiecf-python3
                       libolecf-python3
                       libqcow-python3
@@ -30,12 +35,12 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libsmraw-python3
                       libvhdi-python3
                       libvmdk-python3
+                      libvsgpt-python3
                       libvshadow-python3
                       libvslvm-python3
                       python3-XlsxWriter
                       python3-artifacts
                       python3-bencode
-                      python3-biplist
                       python3-certifi
                       python3-cffi
                       python3-chardet
@@ -56,6 +61,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-pytsk3
                       python3-pytz
                       python3-pyyaml
+                      python3-redis
                       python3-requests
                       python3-six
                       python3-urllib3
@@ -63,9 +69,11 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-zmq";
 
 # Additional dependencies for running tests, alphabetized, one per line.
-TEST_DEPENDENCIES="python3-mock
+TEST_DEPENDENCIES="python3-fakeredis
+                   python3-mock
                    python3-pbr
-                   python3-setuptools";
+                   python3-setuptools
+                   python3-sortedcontainers";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
@@ -74,6 +82,8 @@ DEVELOPMENT_DEPENDENCIES="pylint
 # Additional dependencies for debugging, alphabetized, one per line.
 DEBUG_DEPENDENCIES="libbde-debuginfo
                     libbde-python3-debuginfo
+                    libcreg-debuginfo
+                    libcreg-python3-debuginfo
                     libesedb-debuginfo
                     libesedb-python3-debuginfo
                     libevt-debuginfo
@@ -84,8 +94,14 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libewf-python3-debuginfo
                     libfsapfs-debuginfo
                     libfsapfs-python3-debuginfo
+                    libfsext-debuginfo
+                    libfsext-python3-debuginfo
+                    libfshfs-debuginfo
+                    libfshfs-python3-debuginfo
                     libfsntfs-debuginfo
                     libfsntfs-python3-debuginfo
+                    libfsxfs-debuginfo
+                    libfsxfs-python3-debuginfo
                     libfvde-debuginfo
                     libfvde-python3-debuginfo
                     libfwnt-debuginfo
@@ -96,6 +112,8 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     liblnk-python3-debuginfo
                     libluksde-debuginfo
                     libluksde-python3-debuginfo
+                    libmodi-debuginfo
+                    libmodi-python3-debuginfo
                     libmsiecf-debuginfo
                     libmsiecf-python3-debuginfo
                     libolecf-debuginfo
@@ -116,23 +134,25 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libvhdi-python3-debuginfo
                     libvmdk-debuginfo
                     libvmdk-python3-debuginfo
+                    libvsgpt-debuginfo
+                    libvsgpt-python3-debuginfo
                     libvshadow-debuginfo
                     libvshadow-python3-debuginfo
                     libvslvm-debuginfo
                     libvslvm-python3-debuginfo";
 
-sudo dnf install dnf-plugins-core
-sudo dnf copr -y enable @gift/dev
-sudo dnf install -y ${PYTHON3_DEPENDENCIES}
+sudo dnf install -q dnf-plugins-core
+sudo dnf copr -q -y enable @gift/dev
+sudo dnf install -q -y ${PYTHON3_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]]; then
-    sudo dnf install -y ${DEBUG_DEPENDENCIES}
+    sudo dnf install -q -y ${DEBUG_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-development" ]]; then
-    sudo dnf install -y ${DEVELOPMENT_DEPENDENCIES}
+    sudo dnf install -q -y ${DEVELOPMENT_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-test" ]]; then
-    sudo dnf install -y ${TEST_DEPENDENCIES}
+    sudo dnf install -q -y ${TEST_DEPENDENCIES}
 fi

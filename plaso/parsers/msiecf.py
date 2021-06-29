@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Microsoft Internet Explorer (MSIE) Cache Files (CF)."""
 
-from __future__ import unicode_literals
-
 import pymsiecf
 
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time
@@ -25,6 +23,8 @@ class MSIECFLeakEventData(events.EventData):
     cached_file_size (int): size of the cached file.
     cache_directory_index (int): index of the cache directory.
     cache_directory_name (str): name of the cache directory.
+    offset (int): offset of the MSIECF item relative to the start of the file,
+        from which the event data was extracted.
     recovered (bool): True if the item was recovered.
   """
 
@@ -37,6 +37,7 @@ class MSIECFLeakEventData(events.EventData):
     self.cached_file_size = None
     self.cache_directory_index = None
     self.cache_directory_name = None
+    self.offset = None
     self.recovered = None
 
 
@@ -44,6 +45,8 @@ class MSIECFRedirectedEventData(events.EventData):
   """MSIECF redirected event data.
 
   Attributes:
+    offset (int): offset of the MSIECF item relative to the start of the file,
+        from which the event data was extracted.
     recovered (bool): True if the item was recovered.
     url (str): location URL.
   """
@@ -53,6 +56,7 @@ class MSIECFRedirectedEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(MSIECFRedirectedEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.offset = None
     self.recovered = None
     self.url = None
 
@@ -67,6 +71,8 @@ class MSIECFURLEventData(events.EventData):
     cache_directory_name (str): name of the cache directory.
     http_headers (str): HTTP headers.
     number_of_hits (int): number of hits.
+    offset (int): offset of the MSIECF item relative to the start of the file,
+        from which the event data was extracted.
     recovered (bool): True if the item was recovered.
     url (str): location URL.
   """
@@ -91,7 +97,8 @@ class MSIECFParser(interface.FileObjectParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
   NAME = 'msiecf'
-  DESCRIPTION = 'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
+  DATA_FORMAT = (
+      'Microsoft Internet Explorer (MSIE) 4 - 9 cache (index.dat) file')
 
   def _ParseLeak(
       self, parser_mediator, cache_directories, msiecf_item, recovered=False):
@@ -107,7 +114,7 @@ class MSIECFParser(interface.FileObjectParser):
       recovered (Optional[bool]): True if the item was recovered.
     """
     # TODO: add support for possible last cache synchronization date and time.
-    date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+    date_time = dfdatetime_semantic_time.NotSet()
 
     event_data = MSIECFLeakEventData()
     event_data.cached_filename = msiecf_item.filename
@@ -137,7 +144,7 @@ class MSIECFParser(interface.FileObjectParser):
 
     decode_error = False
     cache_directories = []
-    for cache_directory_name in iter(msiecf_file.cache_directories):
+    for cache_directory_name in msiecf_file.cache_directories:
       try:
         cache_directory_name = cache_directory_name.decode('ascii')
       except UnicodeDecodeError:
@@ -186,7 +193,7 @@ class MSIECFParser(interface.FileObjectParser):
               recovered=True)
 
       except IOError as exception:
-        parser_mediator.ProduceExtractionWarning(
+        parser_mediator.ProduceRecoveryWarning(
             'Unable to parse recovered item: {0:d} with error: {1!s}'.format(
                 item_index, exception))
 
@@ -202,7 +209,7 @@ class MSIECFParser(interface.FileObjectParser):
       msiecf_item (pymsiecf.redirected): MSIECF redirected item.
       recovered (Optional[bool]): True if the item was recovered.
     """
-    date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+    date_time = dfdatetime_semantic_time.NotSet()
 
     event_data = MSIECFRedirectedEventData()
     event_data.offset = msiecf_item.offset
@@ -234,7 +241,7 @@ class MSIECFParser(interface.FileObjectParser):
     # between the different type of files.
     timestamp = msiecf_item.get_primary_time_as_integer()
     if not timestamp:
-      primary_date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      primary_date_time = dfdatetime_semantic_time.NotSet()
     else:
       primary_date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
     primary_date_time_description = 'Primary Time'
@@ -285,10 +292,14 @@ class MSIECFParser(interface.FileObjectParser):
           try:
             http_headers = msiecf_item.data[:-1].decode('ascii')
           except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning((
+            warning_message = (
                 'unable to decode HTTP headers of URL record at offset: '
                 '0x{0:08x}. Characters that cannot be decoded will be '
-                'replaced with "?" or "\\ufffd".').format(msiecf_item.offset))
+                'replaced with "?" or "\\ufffd".').format(msiecf_item.offset)
+            if recovered:
+              parser_mediator.ProduceRecoveryWarning(warning_message)
+            else:
+              parser_mediator.ProduceExtractionWarning(warning_message)
             http_headers = msiecf_item.data[:-1].decode(
                 'ascii', errors='replace')
 
@@ -328,13 +339,13 @@ class MSIECFParser(interface.FileObjectParser):
       # apply the right conversion here.
       if format_version == '4.7':
         if expiration_timestamp == 0x7fffffffffffffff:
-          expiration_date_time = dfdatetime_semantic_time.SemanticTime('Never')
+          expiration_date_time = dfdatetime_semantic_time.Never()
         else:
           expiration_date_time = dfdatetime_filetime.Filetime(
               timestamp=expiration_timestamp)
       else:
         if expiration_timestamp == 0xffffffff:
-          expiration_date_time = dfdatetime_semantic_time.SemanticTime('Never')
+          expiration_date_time = dfdatetime_semantic_time.Never()
         else:
           expiration_date_time = dfdatetime_fat_date_time.FATDateTime(
               fat_date_time=expiration_timestamp)

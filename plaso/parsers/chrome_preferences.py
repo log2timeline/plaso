@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """A parser for the Chrome preferences file."""
 
-from __future__ import unicode_literals
-
 import codecs
 import json
 import os
@@ -97,7 +95,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
   NAME = 'chrome_preferences'
 
-  DESCRIPTION = 'Parser for Chrome Preferences files.'
+  DATA_FORMAT = 'Google Chrome Preferences file'
 
   REQUIRED_KEYS = frozenset(['browser', 'extensions'])
 
@@ -208,7 +206,14 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     file_object.seek(0, os.SEEK_SET)
     file_content = file_object.read()
-    file_content = codecs.decode(file_content, self._ENCODING)
+
+    try:
+      file_content = codecs.decode(file_content, self._ENCODING)
+    except UnicodeDecodeError:
+      raise errors.UnableToParseFile((
+          '[{0:s}] {1:s} is not a valid Preference file, '
+          'unable to decode UTF-8.').format(
+              self.NAME, parser_mediator.GetDisplayName()))
 
     # Second pass to verify it's valid JSON
     try:

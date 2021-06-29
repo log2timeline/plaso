@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 """Plug-in to collect the Less Frequently Used Keys."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -57,7 +54,7 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_boot_verify'
-  DESCRIPTION = 'Parser for Boot Verification Registry data.'
+  DATA_FORMAT = 'Windows boot verification Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -86,18 +83,8 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
           registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    values_dict = self._GetValuesFromKey(
-        registry_key, names_to_skip=['ImagePath'])
-    if values_dict:
-      event_data = windows_events.WindowsRegistryEventData()
-      event_data.key_path = registry_key.path
-      event_data.values = ' '.join([
-          '{0:s}: {1!s}'.format(name, value)
-          for name, value in sorted(values_dict.items())]) or None
-
-      event = time_events.DateTimeValuesEvent(
-          registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    self._ProduceDefaultWindowsRegistryEvent(
+        parser_mediator, registry_key, names_to_skip=['ImagePath'])
 
 
 class BootExecutePlugin(interface.WindowsRegistryPlugin):
@@ -108,7 +95,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_boot_execute'
-  DESCRIPTION = 'Parser for Boot Execution Registry data.'
+  DATA_FORMAT = 'Boot Execution Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -123,10 +110,6 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = self._GetValuesFromKey(
-        registry_key, names_to_skip=['BootExecute'])
-
-    boot_execute = None
     registry_value = registry_key.GetValueByName('BootExecute')
     if registry_value:
       # MSDN: claims that the data type of this value is REG_BINARY
@@ -134,36 +117,29 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
       if registry_value.DataIsString():
         boot_execute = registry_value.GetDataAsObject()
       elif registry_value.DataIsMultiString():
-        boot_execute = ', '.join([
-            value for value in registry_value.GetDataAsObject() or []])
+        value_object = registry_value.GetDataAsObject()
+        boot_execute = ', '.join(value_object or [])
       else:
+        boot_execute = None
         error_string = (
             'Key: {0:s}, value: BootExecute: unsupported value data type: '
             '{1:s}.').format(
                 registry_key.path, registry_value.data_type_string)
         parser_mediator.ProduceExtractionWarning(error_string)
 
-    if boot_execute:
-      event_data = WindowsBootExecuteEventData()
-      event_data.key_path = registry_key.path
-      event_data.value = boot_execute
+      if boot_execute:
+        event_data = WindowsBootExecuteEventData()
+        event_data.key_path = registry_key.path
+        event_data.value = boot_execute
 
-      event = time_events.DateTimeValuesEvent(
-          registry_key.last_written_time,
-          definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+        event = time_events.DateTimeValuesEvent(
+            registry_key.last_written_time,
+            definitions.TIME_DESCRIPTION_WRITTEN)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if values_dict:
-      event_data = windows_events.WindowsRegistryEventData()
-      event_data.key_path = registry_key.path
-      event_data.values = ' '.join([
-          '{0:s}: {1!s}'.format(name, value)
-          for name, value in sorted(values_dict.items())])
-
-      event = time_events.DateTimeValuesEvent(
-          registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    self._ProduceDefaultWindowsRegistryEvent(
+        parser_mediator, registry_key, names_to_skip=['BootExecute'])
 
 
-winreg.WinRegistryParser.RegisterPlugins([
+winreg_parser.WinRegistryParser.RegisterPlugins([
     BootVerificationPlugin, BootExecutePlugin])

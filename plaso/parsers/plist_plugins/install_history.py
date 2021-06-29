@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Install history plist plugin."""
+"""Plist parser plugin for MacOS install history plist files."""
 
-from __future__ import unicode_literals
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
@@ -11,24 +11,26 @@ from plaso.parsers.plist_plugins import interface
 
 
 class InstallHistoryPlugin(interface.PlistPlugin):
-  """Plist plugin that extracts the installation history."""
+  """Plist parser plugin for MacOS install history plist files."""
 
   NAME = 'macosx_install_history'
-  DESCRIPTION = 'Parser for installation history plist files.'
+  DATA_FORMAT = 'MacOS installation history plist file'
 
-  PLIST_PATH = 'InstallHistory.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('InstallHistory.plist')])
+
   PLIST_KEYS = frozenset([
       'date', 'displayName', 'displayVersion', 'processName',
       'packageIdentifiers'])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts relevant install history entries.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      top_level (dict[str, object]): plist top-level key.
+      top_level (Optional[dict[str, object]]): plist top-level item.
     """
     for entry in top_level:
       datetime_value = entry.get('date', None)
@@ -50,8 +52,11 @@ class InstallHistoryPlugin(interface.PlistPlugin):
       event_data.key = ''
       event_data.root = '/item'
 
-      event = time_events.PythonDatetimeEvent(
-          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromDatetime(datetime_value)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

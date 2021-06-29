@@ -2,18 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline CLI tool."""
 
-from __future__ import unicode_literals
-
-import argparse
+import collections
 import os
 import platform
 import unittest
 
-try:
-  import resource
-except ImportError:
-  resource = None
-
+from plaso.containers import events
 from plaso.cli import log2timeline_tool
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -30,61 +24,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   _BDE_PASSWORD = 'bde-TEST'
   _OUTPUT_ENCODING = 'utf-8'
-
-  if resource is None:
-    _EXPECTED_PROCESSING_OPTIONS = ("""\
-usage: log2timeline_test.py [--single_process]
-                            [--temporary_directory DIRECTORY]
-                            [--worker_memory_limit SIZE] [--workers WORKERS]
-
-Test argument parser.
-
-optional arguments:
-  --single_process, --single-process
-                        Indicate that the tool should run in a single process.
-  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
-                        Path to the directory that should be used to store
-                        temporary files created during processing.
-  --worker_memory_limit SIZE, --worker-memory-limit SIZE
-                        Maximum amount of memory (data segment and shared
-                        memory) a worker process is allowed to consume in
-                        bytes, where 0 represents no limit. The default limit
-                        is 2147483648 (2 GiB). If a worker process exceeds
-                        this limit is is killed by the main (foreman) process.
-  --workers WORKERS     Number of worker processes [defaults to available
-                        system CPUs minus one].
-""")
-  else:
-    _EXPECTED_PROCESSING_OPTIONS = ("""\
-usage: log2timeline_test.py [--single_process] [--process_memory_limit SIZE]
-                            [--temporary_directory DIRECTORY]
-                            [--worker_memory_limit SIZE] [--workers WORKERS]
-
-Test argument parser.
-
-optional arguments:
-  --process_memory_limit SIZE, --process-memory-limit SIZE
-                        Maximum amount of memory (data segment) a process is
-                        allowed to allocate in bytes, where 0 represents no
-                        limit. The default limit is 4294967296 (4 GiB). This
-                        applies to both the main (foreman) process and the
-                        worker processes. This limit is enforced by the
-                        operating system and will supersede the worker memory
-                        limit (--worker_memory_limit).
-  --single_process, --single-process
-                        Indicate that the tool should run in a single process.
-  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
-                        Path to the directory that should be used to store
-                        temporary files created during processing.
-  --worker_memory_limit SIZE, --worker-memory-limit SIZE
-                        Maximum amount of memory (data segment and shared
-                        memory) a worker process is allowed to consume in
-                        bytes, where 0 represents no limit. The default limit
-                        is 2147483648 (2 GiB). If a worker process exceeds
-                        this limit is is killed by the main (foreman) process.
-  --workers WORKERS     Number of worker processes [defaults to available
-                        system CPUs minus one].
-""")
 
   def _CheckOutput(self, output, expected_output):
     """Compares the output against the expected output.
@@ -145,28 +84,33 @@ optional arguments:
     self.assertIn('Parser Plugins', plugin_info)
     self.assertIsNotNone(plugin_info['Parser Plugins'])
 
-  def testParseProcessingOptions(self):
-    """Tests the _ParseProcessingOptions function."""
-    test_tool = log2timeline_tool.Log2TimelineTool()
+  def CheckEventCounters(self, storage_file, expected_event_counters):
+    """Asserts that the number of events per data type matches.
 
-    options = test_lib.TestOptions()
+    Args:
+      storage_file (StorageFile): storage file.
+      expected_event_counters (dict[str, int|list[int]]): expected event
+          counters per event data type.
+    """
+    event_counters = collections.Counter()
+    for event in storage_file.GetSortedEvents():
+      event_data_identifier = event.GetEventDataIdentifier()
+      event_data = storage_file.GetAttributeContainerByIdentifier(
+          events.EventData.CONTAINER_TYPE, event_data_identifier)
 
-    test_tool._ParseProcessingOptions(options)
+      event_counters[event_data.data_type] += 1
+
+    for data_type, expected_event_count in expected_event_counters.items():
+      event_count = event_counters.pop(data_type, 0)
+      if isinstance(expected_event_count, list):
+        self.assertIn(event_count, expected_event_count)
+      else:
+        self.assertEqual(event_count, expected_event_count)
+
+    # Ensure there are no events left unaccounted for.
+    self.assertEqual(event_counters, collections.Counter())
 
   # TODO: add tests for _PrintProcessingSummary
-
-  def testAddProcessingOptions(self):
-    """Tests the AddProcessingOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='log2timeline_test.py',
-        description='Test argument parser.', add_help=False,
-        formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = log2timeline_tool.Log2TimelineTool()
-    test_tool.AddProcessingOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
@@ -187,7 +131,7 @@ optional arguments:
     test_file_path = self._GetTestFilePath(['testdir'])
     self._SkipIfPathNotExists(test_file_path)
 
-    yara_rules_path = self._GetTestFilePath(['yara.rules'])
+    yara_rules_path = self._GetTestFilePath(['rules.yara'])
     self._SkipIfPathNotExists(yara_rules_path)
 
     options = test_lib.TestOptions()
@@ -320,6 +264,39 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  def testExtractEventsFromSourcesOnCompressedDMGImage(self):
+    """Tests the ExtractEventsFromSources function on a compressed DMG image."""
+    test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    options = self._CreateExtractionOptions(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+      options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ExtractEventsFromSources()
+
+      expected_output = [
+          '',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: storage media image',
+          'Processing time\t\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
+
+      output = output_writer.ReadOutput()
+      self._CheckOutput(output, expected_output)
+
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on single partition image."""
     test_file_path = self._GetTestFilePath(['ímynd.dd'])
@@ -394,6 +371,7 @@ optional arguments:
     self._SkipIfPathNotExists(test_file_path)
 
     options = self._CreateExtractionOptions(test_file_path)
+    options.unattended = True
     options.vss_stores = 'all'
 
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
@@ -558,8 +536,15 @@ optional arguments:
             '{0!s}.').format(exception))
 
       # There should be 3 filestat and 3 pe parser generated events.
-      events = list(storage_file.GetSortedEvents())
-      self.assertEqual(len(events), 6)
+      # Typically there are 3 filestat events, but there can be 4 on platforms
+      # that support os.stat_result st_birthtime.
+      expected_event_counters = {
+          'fs:stat': [3, 4],
+          'pe:delay_import:import_time': 1,
+          'pe:import:import_time': 1,
+          'pe:compilation:compilation_time': 1}
+
+      self.CheckEventCounters(storage_file, expected_event_counters)
 
   def testShowInfo(self):
     """Tests the output of the tool in info mode."""

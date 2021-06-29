@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the cookie plugins manager."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers.cookie_plugins import interface
@@ -14,11 +12,12 @@ class TestCookiePlugin(interface.BaseCookiePlugin):
   """Test cookie plugin."""
 
   NAME = 'test_cookie_plugin'
-  DESCRIPTION = 'Test cookie plugin.'
+  DATA_FORMAT = 'Test cookie file'
 
   # pylint: disable=unused-argument
-  def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extract and return EventObjects from the data structure.
+  def _ParseCookieData(
+      self, parser_mediator, cookie_data=None, url=None, **kwargs):
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

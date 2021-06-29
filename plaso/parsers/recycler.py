@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Recycle files, INFO2 and $I/$R pairs."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -9,8 +9,9 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -20,8 +21,11 @@ class WinRecycleBinEventData(events.EventData):
   Attributes:
     drive_number (int): drive number.
     file_size (int): file size.
+    offset (int): offset of the Recycle Bin record relative to the start of
+        the file, from which the event data was extracted.
     original_filename (str): filename.
-    record_index (int): index of the record on which the event is based.
+    record_index (int): index of the record, from which the event data was
+        extracted.
     short_filename (str): short filename.
   """
 
@@ -32,18 +36,21 @@ class WinRecycleBinEventData(events.EventData):
     super(WinRecycleBinEventData, self).__init__(data_type=self.DATA_TYPE)
     self.drive_number = None
     self.file_size = None
+    self.offset = None
     self.original_filename = None
     self.record_index = None
     self.short_filename = None
 
 
-class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
+class WinRecycleBinParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = 'recycle_bin'
-  DESCRIPTION = 'Parser for Windows $Recycle.Bin $I files.'
+  DATA_FORMAT = 'Windows $Recycle.Bin $I file'
 
-  _DEFINITION_FILE = 'recycler.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'recycler.yaml')
 
   _SUPPORTED_FORMAT_VERSIONS = (1, 2)
 
@@ -116,7 +123,7 @@ class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
               file_header.format_version))
 
     if file_header.deletion_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
       date_time = dfdatetime_filetime.Filetime(
           timestamp=file_header.deletion_time)
@@ -137,13 +144,15 @@ class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
+class WinRecyclerInfo2Parser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses the Windows Recycler INFO2 file."""
 
   NAME = 'recycle_bin_info2'
-  DESCRIPTION = 'Parser for Windows Recycler INFO2 files.'
+  DATA_FORMAT = 'Windows Recycler INFO2 file'
 
-  _DEFINITION_FILE = 'recycler.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'recycler.yaml')
 
   _RECORD_INDEX_OFFSET = 0x104
   _UNICODE_FILENAME_OFFSET = 0x118
@@ -202,13 +211,10 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
             'Unable to map record data at offset: 0x{0:08x} with error: '
             '{1!s}').format(record_offset, exception))
 
-      unicode_filename = unicode_filename.rstrip('\x00')
-
     if record.deletion_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
-      date_time = dfdatetime_filetime.Filetime(
-          timestamp=record.deletion_time)
+      date_time = dfdatetime_filetime.Filetime(timestamp=record.deletion_time)
 
     event_data = WinRecycleBinEventData()
     event_data.drive_number = record.drive_number

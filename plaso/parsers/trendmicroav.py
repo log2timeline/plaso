@@ -7,20 +7,14 @@ real-time) and the web reputation (network scan/filtering).
 Currently only the first log is supported.
 """
 
-from __future__ import unicode_literals
-
-import codecs
-
 from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import py2to3
-from plaso.formatters import trendmicroav as formatter
+from plaso.lib import errors
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
@@ -31,6 +25,8 @@ class TrendMicroAVEventData(events.EventData):
   Attributes:
     action (str): action.
     filename (str): filename.
+    offset (int): offset of the line relative to the start of the file, from
+        which the event data was extracted.
     path (str): path.
     scan_type (str): scan_type.
     threat (str): threat.
@@ -43,12 +39,47 @@ class TrendMicroAVEventData(events.EventData):
     super(TrendMicroAVEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.filename = None
+    self.offset = None
     self.path = None
     self.scan_type = None
     self.threat = None
 
 
-# pylint: disable=abstract-method
+class TrendMicroUrlEventData(events.EventData):
+  """Trend Micro Web Reputation Log event data.
+
+  Attributes:
+    application_name (str): application name.
+    block_mode (str): operation mode.
+    credibility_rating (int): credibility rating.
+    credibility_score (int): credibility score.
+    group_code (str): group code.
+    group_name (str): group name.
+    ip (str): IP address.
+    offset (int): offset of the line relative to the start of the file, from
+        which the event data was extracted.
+    policy_identifier (int): policy identifier.
+    threshold (int): threshold value.
+    url (str): accessed URL.
+  """
+  DATA_TYPE = 'av:trendmicro:webrep'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(TrendMicroUrlEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.application_name = None
+    self.block_mode = None
+    self.credibility_rating = None
+    self.credibility_score = None
+    self.group_code = None
+    self.group_name = None
+    self.ip = None
+    self.offset = None
+    self.policy_identifier = None
+    self.threshold = None
+    self.url = None
+
+
 class TrendMicroBaseParser(dsv_parser.DSVParser):
   """Common code for parsing Trend Micro log files.
 
@@ -56,6 +87,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
   delimiter is a three-character sequence and there is no provision for
   quoting or escaping.
   """
+  # pylint: disable=abstract-method
 
   DELIMITER = '<;>'
 
@@ -65,15 +97,6 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
   # Subclasses must define a list of field names.
   COLUMNS = ()
 
-  def __init__(self, encoding='cp1252'):
-    """Initializes a parsing Trend Micro log file parser.
-
-    Args:
-      encoding (Optional[str]): encoding used in the DSV file, where None
-          indicates the codepage of the parser mediator should be used.
-    """
-    super(TrendMicroBaseParser, self).__init__(encoding=encoding)
-
   def _CreateDictReader(self, line_reader):
     """Iterates over the log lines and provide a reader for the values.
 
@@ -82,15 +105,11 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
     Yields:
       dict[str, str]: column values keyed by column header.
+
+    Raises:
+      UnableToParseFile: if a log line cannot be parsed.
     """
     for line in line_reader:
-      if isinstance(line, py2to3.BYTES_TYPE):
-        try:
-          line = codecs.decode(line, self._encoding)
-        except UnicodeDecodeError as exception:
-          raise errors.UnableToParseFile(
-              'Unable decode line with error: {0!s}'.format(exception))
-
       stripped_line = line.strip()
       values = stripped_line.split(self.DELIMITER)
       number_of_values = len(values)
@@ -198,12 +217,15 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
   """Parses the Trend Micro Office Scan Virus Detection Log."""
 
   NAME = 'trendmicro_vd'
-  DESCRIPTION = 'Parser for Trend Micro Office Scan Virus Detection log files.'
+  DATA_FORMAT = 'Trend Micro Office Scan Virus Detection log file'
 
   COLUMNS = [
       'date', 'time', 'threat', 'action', 'scan_type', 'unused1',
       'path', 'filename', 'unused2', 'timestamp', 'unused3', 'unused4']
   MIN_COLUMNS = 8
+
+  _SUPPORTED_SCAN_RESULTS = frozenset([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 25])
 
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
@@ -211,7 +233,7 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row_offset (int): line number of the row.
+      row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     timestamp = self._ParseTimestamp(parser_mediator, row)
@@ -270,47 +292,13 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     except (ValueError, TypeError):
       return False
 
-    if action not in formatter.SCAN_RESULTS:
-      return False
-    return True
-
-
-class TrendMicroUrlEventData(events.EventData):
-  """Trend Micro Web Reputation Log event data.
-
-  Attributes:
-    block_mode (str): operation mode.
-    url (str): accessed URL.
-    group_code (str): group code.
-    group_name (str): group name.
-    credibility_rating (int): credibility rating.
-    credibility_score (int): credibility score.
-    policy_identifier (int): policy identifier.
-    application_name (str): application name.
-    ip (str): IP address.
-    threshold (int): threshold value.
-  """
-  DATA_TYPE = 'av:trendmicro:webrep'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(TrendMicroUrlEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.block_mode = None
-    self.url = None
-    self.group_code = None
-    self.group_name = None
-    self.credibility_rating = None
-    self.credibility_score = None
-    self.policy_identifier = None
-    self.application_name = None
-    self.ip = None
-    self.threshold = None
+    return action in self._SUPPORTED_SCAN_RESULTS
 
 
 class OfficeScanWebReputationParser(TrendMicroBaseParser):
   """Parses the Trend Micro Office Scan Web Reputation detection log."""
   NAME = 'trendmicro_url'
-  DESCRIPTION = 'Parser for Trend Micro Office Web Reputation log files.'
+  DATA_FORMAT = 'Trend Micro Office Web Reputation log file'
 
   COLUMNS = (
       'date', 'time', 'block_mode', 'url', 'group_code', 'group_name',
@@ -319,13 +307,15 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
 
   MIN_COLUMNS = 12
 
+  _SUPPORTED_BLOCK_MODES = frozenset([0, 1])
+
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row_offset (int): line number of the row.
+      row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     timestamp = self._ParseTimestamp(parser_mediator, row)
@@ -382,11 +372,8 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
     except (ValueError, TypeError):
       return False
 
-    if block_mode not in formatter.BLOCK_MODES:
-      return False
-    return True
+    return block_mode in self._SUPPORTED_BLOCK_MODES
 
 
 manager.ParsersManager.RegisterParsers([
-    OfficeScanVirusDetectionParser,
-    OfficeScanWebReputationParser])
+    OfficeScanVirusDetectionParser, OfficeScanWebReputationParser])

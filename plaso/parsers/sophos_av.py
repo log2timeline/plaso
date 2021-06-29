@@ -5,8 +5,6 @@ References
 https://community.sophos.com/kb/en-us/110923
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -39,7 +37,7 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses Anti-Virus logs (SAV.txt) files."""
 
   NAME = 'sophos_av'
-  DESCRIPTION = 'Parser for Anti-Virus log (SAV.txt) files.'
+  DATA_FORMAT = 'Sophos Anti-Virus log file (SAV.txt) file'
 
   _ENCODING = 'utf-16-le'
 
@@ -74,15 +72,25 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+    # overriding __getattr__ with a function that returns an empty string when
+    # named token does not exists.
+    time_elements_structure = structure.get('date_time', None)
+
     try:
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
+          year, month, day_of_month, hours, minutes, seconds))
       # TODO: check if date and time values are local time or in UTC.
       date_time.is_local_time = True
-    except ValueError:
+
+    except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
+          'invalid date time value: {0!s}'.format(time_elements_structure))
       return
 
     event_data = SophosAVLogEventData()

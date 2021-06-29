@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The parsers and plugins manager."""
 
-from __future__ import unicode_literals
-
 import pysigscan
 
 from plaso.filters import parser_filter
@@ -12,7 +10,44 @@ from plaso.lib import specification
 class ParsersManager(object):
   """The parsers and plugins manager."""
 
+  ALL_PLUGINS = set(['*'])
+
   _parser_classes = {}
+
+  @classmethod
+  def _GetParsers(cls, parser_filter_expression=None):
+    """Retrieves the registered parsers and plugins.
+
+    Args:
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
+
+          A parser filter expression is a comma separated value string that
+          denotes which parsers and plugins should be used. See
+          filters/parser_filter.py for details of the expression syntax.
+
+          This function does not support presets, and requires a parser
+          filter expression where presets have been expanded.
+
+    Yields:
+      tuple: containing:
+
+      * str: name of the parser:
+      * type: parser class (subclass of BaseParser).
+    """
+    parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
+    excludes, includes = parser_filter_helper.SplitExpression(
+        parser_filter_expression)
+
+    for parser_name, parser_class in cls._parser_classes.items():
+      # If there are no includes all parsers are included by default.
+      if not includes and parser_name in excludes:
+        continue
+
+      if includes and parser_name not in includes:
+        continue
+
+      yield parser_name, parser_class
 
   @classmethod
   def CreateSignatureScanner(cls, specification_store):
@@ -68,32 +103,40 @@ class ParsersManager(object):
       * set(str): parser filter expression elements that contain unknown parser
           and/or plugin names.
     """
-    if not parser_filter_expression:
-      return set(cls._parser_classes.keys()), set()
-
     known_parser_elements = set()
     unknown_parser_elements = set()
-    for element in parser_filter_expression.split(','):
-      parser_expression = element
-      if element.startswith('!'):
-        parser_expression = element[1:]
 
-      parser_name, _, plugin_name = parser_expression.partition('/')
-      parser_class = cls._parser_classes.get(parser_name, None)
-      if not parser_class:
-        unknown_parser_elements.add(element)
-        continue
+    if not parser_filter_expression:
+      for parser_name, parser_class in cls._parser_classes.items():
+        known_parser_elements.add(parser_name)
+        if parser_class.SupportsPlugins():
+          for plugin_name in parser_class.GetPluginNames():
+            known_parser_elements.add('/'.join([parser_name, plugin_name]))
 
-      if not plugin_name:
-        known_parser_elements.add(element)
-        continue
+    else:
+      for element in parser_filter_expression.split(','):
+        parser_expression = element
+        if element.startswith('!'):
+          parser_expression = element[1:]
 
-      if parser_class.SupportsPlugins():
-        plugins = dict(parser_class.GetPlugins())
-        if plugin_name in plugins:
-          known_parser_elements.add(element)
-        else:
+        parser_name, _, plugin_name = parser_expression.partition('/')
+        parser_class = cls._parser_classes.get(parser_name, None)
+        if not parser_class:
           unknown_parser_elements.add(element)
+          continue
+
+        if parser_class.SupportsPlugins():
+          plugins = dict(parser_class.GetPlugins())
+          if not plugin_name:
+            for plugin in plugins:
+              known_parser_elements.add('/'.join([parser_name, plugin]))
+          elif plugin_name in plugins:
+            known_parser_elements.add(element)
+          else:
+            unknown_parser_elements.add(element)
+
+        elif not plugin_name:
+          known_parser_elements.add(element)
 
     return known_parser_elements, unknown_parser_elements
 
@@ -178,36 +221,6 @@ class ParsersManager(object):
     return sorted(parser_names)
 
   @classmethod
-  def GetParserAndPluginNames(cls, parser_filter_expression=None):
-    """Retrieves the parser and parser plugin names.
-
-    Args:
-      parser_filter_expression (Optional[str]): parser filter expression,
-          where None represents all parsers and plugins.
-
-          A parser filter expression is a comma separated value string that
-          denotes which parsers and plugins should be used. See
-          filters/parser_filter.py for details of the expression syntax.
-
-          This function does not support presets, and requires a parser
-          filter expression where presets have been expanded.
-
-    Returns:
-      list[str]: parser and parser plugin names.
-    """
-    parser_and_plugin_names = []
-    for parser_name, parser_class in cls._GetParsers(
-        parser_filter_expression=parser_filter_expression):
-      parser_and_plugin_names.append(parser_name)
-
-      if parser_class.SupportsPlugins():
-        for plugin_name, _ in parser_class.GetPlugins():
-          parser_and_plugin_names.append(
-              '{0:s}/{1:s}'.format(parser_name, plugin_name))
-
-    return parser_and_plugin_names
-
-  @classmethod
   def GetParserPluginsInformation(cls, parser_filter_expression=None):
     """Retrieves the parser plugins information.
 
@@ -230,7 +243,15 @@ class ParsersManager(object):
         parser_filter_expression=parser_filter_expression):
       if parser_class.SupportsPlugins():
         for plugin_name, plugin_class in parser_class.GetPlugins():
-          description = getattr(plugin_class, 'DESCRIPTION', '')
+          description = ''
+
+          data_format = getattr(plugin_class, 'DATA_FORMAT', '')
+          if data_format:
+            if data_format.endswith(' file'):
+              description = 'Parser for {0:s}s.'.format(data_format)
+            else:
+              description = 'Parser for {0:s}.'.format(data_format)
+
           parser_plugins_information.append((plugin_name, description))
 
     return parser_plugins_information
@@ -274,7 +295,7 @@ class ParsersManager(object):
         parser_filter_expression)
 
     parser_objects = {}
-    for parser_name, parser_class in iter(cls._parser_classes.items()):
+    for parser_name, parser_class in cls._parser_classes.items():
       # If there are no includes all parsers are included by default.
       if not includes and parser_name in excludes:
         continue
@@ -284,50 +305,12 @@ class ParsersManager(object):
 
       parser_object = parser_class()
       if parser_class.SupportsPlugins():
-        plugin_includes = None
-        if parser_name in includes:
-          plugin_includes = includes[parser_name]
-
+        plugin_includes = includes.get(parser_name, cls.ALL_PLUGINS)
         parser_object.EnablePlugins(plugin_includes)
 
       parser_objects[parser_name] = parser_object
 
     return parser_objects
-
-  @classmethod
-  def _GetParsers(cls, parser_filter_expression=None):
-    """Retrieves the registered parsers and plugins.
-
-    Args:
-      parser_filter_expression (Optional[str]): parser filter expression,
-          where None represents all parsers and plugins.
-
-          A parser filter expression is a comma separated value string that
-          denotes which parsers and plugins should be used. See
-          filters/parser_filter.py for details of the expression syntax.
-
-          This function does not support presets, and requires a parser
-          filter expression where presets have been expanded.
-
-    Yields:
-      tuple: containing:
-
-      * str: name of the parser:
-      * type: parser class (subclass of BaseParser).
-    """
-    parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
-    excludes, includes = parser_filter_helper.SplitExpression(
-        parser_filter_expression)
-
-    for parser_name, parser_class in iter(cls._parser_classes.items()):
-      # If there are no includes all parsers are included by default.
-      if not includes and parser_name in excludes:
-        continue
-
-      if includes and parser_name not in includes:
-        continue
-
-      yield parser_name, parser_class
 
   @classmethod
   def GetParsersInformation(cls):
@@ -338,7 +321,15 @@ class ParsersManager(object):
     """
     parsers_information = []
     for _, parser_class in cls._GetParsers():
-      description = getattr(parser_class, 'DESCRIPTION', '')
+      description = ''
+
+      data_format = getattr(parser_class, 'DATA_FORMAT', '')
+      if data_format:
+        if data_format.endswith(' file'):
+          description = 'Parser for {0:s}s.'.format(data_format)
+        else:
+          description = 'Parser for {0:s}.'.format(data_format)
+
       parsers_information.append((parser_class.NAME, description))
 
     return parsers_information

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the BAM Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -11,7 +9,6 @@ from dfvfs.path import fake_path_spec
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import bam
 
 from tests.parsers.winreg_plugins import test_lib
@@ -67,25 +64,22 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromDateTimeString('2019-03-19 20:55:19.975237')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'UserSettings',
-        key_path=key_path,
+        'UserSettings', key_path=key_path,
         last_written_time=filetime.timestamp)
 
     filetime.CopyFromDateTimeString('2019-03-19 13:29:56.008214')
 
+    sid_key_name = 'S-1-5-21-321011808-3761883066-353627080-1000'
     sid_key = dfwinreg_fake.FakeWinRegistryKey(
-        'S-1-5-21-321011808-3761883066-353627080-1000',
-        last_written_time=filetime.timestamp)
+        sid_key_name, last_written_time=filetime.timestamp)
 
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        (
-            '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell'
-            '\\v1.0\\powershell.exe'),
-        data=binary_data,
-        data_type=dfwinreg_definitions.REG_BINARY)
+        ('\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell'
+         '\\v1.0\\powershell.exe'),
+        data=binary_data, data_type=dfwinreg_definitions.REG_BINARY)
     sid_key.AddValue(registry_value)
 
-    registry_key.AddSubkey(sid_key)
+    registry_key.AddSubkey(sid_key_name, sid_key)
 
     return registry_key
 
@@ -112,27 +106,26 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     plugin = bam.BackgroundActivityModeratorWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 0
-    event = events[event_index]
+    expected_event_values = {
+        'binary_path': (
+            '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
+            'v1.0\\powershell.exe'),
+        'date_time': '2019-03-19 13:25:26.1496853',
+        'data_type': 'windows:registry:bam',
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'user_sid': 'S-1-5-21-321011808-3761883066-353627080-1000'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = (
-        '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
-        'v1.0\\powershell.exe [S-1-5-21-321011808-3761883066-353627080-1000]')
-
-    expected_short_message = (
-        '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\v1.0'
-        '\\powershell.exe')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

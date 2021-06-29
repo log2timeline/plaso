@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Fake storage writer for testing."""
 
-from __future__ import unicode_literals
-
+import collections
 import copy
+import itertools
 
 from plaso.lib import definitions
 from plaso.storage import event_heaps
@@ -15,9 +15,10 @@ class FakeStorageWriter(interface.StorageWriter):
   """Fake storage writer object.
 
   Attributes:
-    analysis_reports (list[AnalysisReport]): analysis reports.
     session_completion (SessionCompletion): session completion attribute
         container.
+    session_configuration (SessionConfiguration): session configuration
+        attribute container.
     session_start (SessionStart): session start attribute container.
     task_completion (TaskCompletion): task completion attribute container.
     task_start (TaskStart): task start attribute container.
@@ -34,35 +35,52 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     super(FakeStorageWriter, self).__init__(
         session, storage_type=storage_type, task=task)
-    self._event_data = {}
-    self._event_sources = []
-    self._event_tags = []
-    self._events = []
-    self._warnings = []
+    self._attribute_containers = {}
+    self._attribute_container_sequence_numbers = collections.Counter()
     self._is_open = False
-    self._task_storage_writers = {}
-    self.analysis_reports = []
+
     self.session_completion = None
+    self.session_configuration = None
     self.session_start = None
     self.task_completion = None
     self.task_start = None
 
-  def _PrepareAttributeContainer(self, attribute_container):
-    """Prepares an attribute container for storage.
+  @property
+  def analysis_reports(self):
+    """list[AnalysisReport]: analysis reports."""
+    containers = self._attribute_containers.get(
+        self._CONTAINER_TYPE_ANALYSIS_REPORT, {})
+    return list(containers.values())
+
+  def _GetAttributeContainerByIndex(self, container_type, index):
+    """Retrieves a specific attribute container.
 
     Args:
-      attribute_container (AttributeContainer): attribute container.
+      container_type (str): attribute container type.
+      index (int): attribute container index.
 
     Returns:
-      AttributeContainer: copy of the attribute container to store in
-          the fake storage.
+      AttributeContainer: attribute container or None if not available.
     """
-    attribute_values_hash = hash(attribute_container.GetAttributeValuesString())
-    identifier = identifiers.FakeIdentifier(attribute_values_hash)
-    attribute_container.SetIdentifier(identifier)
+    containers = self._attribute_containers.get(container_type, {})
+    number_of_containers = len(containers)
+    if index < 0 or index >= number_of_containers:
+      return None
 
-    # Make sure the fake storage preserves the state of the attribute container.
-    return copy.deepcopy(attribute_container)
+    return next(itertools.islice(
+        containers.values(), index, number_of_containers))
+
+  def _GetAttributeContainerNextSequenceNumber(self, container_type):
+    """Retrieves the next sequence number of an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      int: next sequence number.
+    """
+    self._attribute_container_sequence_numbers[container_type] += 1
+    return self._attribute_container_sequence_numbers[container_type]
 
   def _RaiseIfNotWritable(self):
     """Raises if the storage file is not writable.
@@ -74,11 +92,11 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to write to closed storage writer.')
 
-  def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report.
+  def AddAttributeContainer(self, container):
+    """Adds a new attribute container.
 
     Args:
-      analysis_report (AnalysisReport): analysis report.
+      container (AttributeContainer): attribute container.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -86,72 +104,51 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    analysis_report = self._PrepareAttributeContainer(analysis_report)
+    containers = self._attribute_containers.get(container.CONTAINER_TYPE, None)
+    if containers is None:
+      containers = collections.OrderedDict()
+      self._attribute_containers[container.CONTAINER_TYPE] = containers
 
-    self.analysis_reports.append(analysis_report)
+    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+        container.CONTAINER_TYPE)
 
-  def AddEvent(self, event):
-    """Adds an event.
+    identifier = identifiers.FakeIdentifier(next_sequence_number)
+    container.SetIdentifier(identifier)
 
-    Args:
-      event (EventObject): event.
-
-    Raises:
-      IOError: when the storage writer is closed or
-          if the event data identifier type is not supported.
-      OSError: when the storage writer is closed or
-          if the event data identifier type is not supported.
-    """
-    self._RaiseIfNotWritable()
-
-    # TODO: change to no longer allow event_data_identifier is None
-    # after refactoring every parser to generate event data.
-    event_data_identifier = event.GetEventDataIdentifier()
-    if event_data_identifier:
-      if not isinstance(event_data_identifier, identifiers.FakeIdentifier):
-        raise IOError('Unsupported event data identifier type: {0:s}'.format(
-            type(event_data_identifier)))
-
-    event = self._PrepareAttributeContainer(event)
-
-    self._events.append(event)
-    self.number_of_events += 1
-
-  def AddEventData(self, event_data):
-    """Adds event data.
-
-    Args:
-      event_data (EventData): event data.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    event_data = self._PrepareAttributeContainer(event_data)
-
-    identifier = event_data.GetIdentifier()
     lookup_key = identifier.CopyToString()
-    self._event_data[lookup_key] = event_data
 
-  def AddEventSource(self, event_source):
-    """Adds an event source.
+    # Make sure the fake storage preserves the state of the attribute container.
+    container = copy.deepcopy(container)
+    containers[lookup_key] = container
 
-    Args:
-      event_source (EventSource): event source.
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_REPORT:
+      self._UpdateAnalysisReportSessionCounter(container)
 
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_WARNING:
+      self.number_of_analysis_warnings += 1
 
-    event_source = self._PrepareAttributeContainer(event_source)
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      self._UpdateEventParsersSessionCounter(container)
 
-    self._event_sources.append(event_source)
-    self.number_of_event_sources += 1
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      self._UpdateEventDataParsersMappings(container)
 
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE:
+      self.number_of_event_sources += 1
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+      self._UpdateEventLabelsSessionCounter(container)
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EXTRACTION_WARNING:
+      self.number_of_extraction_warnings += 1
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_PREPROCESSING_WARNING:
+      self.number_of_preprocessing_warnings += 1
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_RECOVERY_WARNING:
+      self.number_of_recovery_warnings += 1
+
+  # TODO: remove after refactoctoring.
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
@@ -160,84 +157,12 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      KeyError: if the corresponding event already has an event tag.
       OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
-    event_identifier = event_tag.GetEventIdentifier()
-    if not isinstance(event_identifier, identifiers.FakeIdentifier):
-      raise IOError('Unsupported event identifier type: {0:s}'.format(
-          type(event_identifier)))
-
-    event_tag = self._PrepareAttributeContainer(event_tag)
-
-    self._event_tags.append(event_tag)
-    self.number_of_event_tags += 1
-
-  def AddWarning(self, warning):
-    """Adds a warnings.
-
-    Args:
-      warning (ExtractionWarning): warning.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    warning = self._PrepareAttributeContainer(warning)
-
-    self._warnings.append(warning)
-    self.number_of_warnings += 1
-
-  def CheckTaskReadyForMerge(self, task):
-    """Checks if a task is ready for merging into the session store.
-
-    Args:
-      task (Task): task.
-
-    Returns:
-      bool: True if the task is ready to be merged.
-
-    Raises:
-      IOError: if the task storage type is not supported or the storage writer
-          for the task does not exist.
-      OSError: if the task storage type is not supported or the storage writer
-          for the task does not exist.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
-    # For the fake storage tasks are always ready to be merged.
-    return True
-
-  def CreateTaskStorage(self, task, task_storage_format):
-    """Creates a task storage.
-
-    Args:
-      task (Task): task.
-      task_storage_format (str): storage format to store task results.
-
-    Returns:
-      FakeStorageWriter: storage writer.
-
-    Raises:
-      IOError: if the task storage already exists.
-      OSError: if the task storage already exists.
-    """
-    if task.identifier in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} already exists.'.format(
-          task.identifier))
-
-    storage_writer = FakeStorageWriter(
-        self._session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
-    self._task_storage_writers[task.identifier] = storage_writer
-    return storage_writer
+    self.AddAttributeContainer(event_tag)
 
   def Close(self):
     """Closes the storage writer.
@@ -250,57 +175,32 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
-  def GetWarnings(self):
-    """Retrieves the warnings.
-
-    Returns:
-      generator(ExtractionWarning): warning generator.
-    """
-    return iter(self._warnings)
-
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return iter(self._events)
-
-  def GetEventData(self):
-    """Retrieves the event data.
-
-    Returns:
-      generator(EventData): event data generator.
-    """
-    return iter(self._event_data.values())
-
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
+  def GetAttributeContainerByIdentifier(self, container_type, identifier):
+    """Retrieves a specific type of container with a specific identifier.
 
     Args:
-      identifier (AttributeContainerIdentifier): event data identifier.
+      container_type (str): container type.
+      identifier (AttributeContainerIdentifier): attribute container identifier.
 
     Returns:
-      EventData: event data or None if not available.
+      AttributeContainer: attribute container or None if not available.
     """
+    containers = self._attribute_containers.get(container_type, {})
+
     lookup_key = identifier.CopyToString()
-    return self._event_data.get(lookup_key, None)
+    return containers.get(lookup_key, None)
 
-  def GetEventSources(self):
-    """Retrieves the event sources.
+  def GetAttributeContainers(self, container_type):
+    """Retrieves a specific type of attribute containers.
 
-    Returns:
-      generator(EventSource): event source generator.
-    """
-    return iter(self._event_sources)
-
-  def GetEventTags(self):
-    """Retrieves the event tags.
+    Args:
+      container_type (str): attribute container type.
 
     Returns:
-      generator(EventTags): event tag generator.
+      generator(AttributeContainers): attribute container generator.
     """
-    return iter(self._event_tags)
+    containers = self._attribute_containers.get(container_type, {})
+    return iter(containers.values())
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
@@ -318,10 +218,9 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to read from closed storage writer.')
 
-    if self._written_event_source_index >= len(self._event_sources):
-      return None
-
-    event_source = self._event_sources[self._first_written_event_source_index]
+    event_source = self._GetAttributeContainerByIndex(
+        self._CONTAINER_TYPE_EVENT_SOURCE,
+        self._first_written_event_source_index)
     self._written_event_source_index = (
         self._first_written_event_source_index + 1)
     return event_source
@@ -339,10 +238,8 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to read from closed storage writer.')
 
-    if self._written_event_source_index >= len(self._event_sources):
-      return None
-
-    event_source = self._event_sources[self._written_event_source_index]
+    event_source = self._GetAttributeContainerByIndex(
+        self._CONTAINER_TYPE_EVENT_SOURCE, self._written_event_source_index)
     self._written_event_source_index += 1
     return event_source
 
@@ -363,9 +260,10 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to read from closed storage writer.')
 
+    generator = self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
     event_heap = event_heaps.EventHeap()
 
-    for event_index, event in enumerate(self._events):
+    for event_index, event in enumerate(generator):
       if (time_range and (
           event.timestamp < time_range.start_timestamp or
           event.timestamp > time_range.end_timestamp)):
@@ -377,21 +275,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     return iter(event_heap.PopEvents())
 
-  def FinalizeTaskStorage(self, task):
-    """Finalizes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the task storage does not exist.
-      OSError: if the task storage does not exist.
-    """
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
-  def Open(self):
+  def Open(self, **unused_kwargs):
     """Opens the storage writer.
 
     Raises:
@@ -403,63 +287,10 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = True
 
-    self._first_written_event_source_index = len(self._event_sources)
+    event_sources = self._attribute_containers.get(
+        self._CONTAINER_TYPE_EVENT_SOURCE, {})
+    self._first_written_event_source_index = len(event_sources)
     self._written_event_source_index = self._first_written_event_source_index
-
-  def PrepareMergeTaskStorage(self, task):
-    """Prepares a task storage for merging.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the task storage does not exist.
-      OSError: if the task storage does not exist.
-    """
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
-  # pylint: disable=unused-argument
-  def ReadPreprocessingInformation(self, knowledge_base):
-    """Reads preprocessing information.
-
-    The preprocessing information contains the system configuration which
-    contains information about various system specific configuration data,
-    for example the user accounts.
-
-    Args:
-      knowledge_base (KnowledgeBase): is used to store the preprocessing
-          information.
-
-    Raises:
-      IOError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-      OSError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Preprocessing information not supported by storage type.')
-
-    # TODO: implement.
-
-  def RemoveProcessedTaskStorage(self, task):
-    """Removes a processed task storage.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the task storage does not exist.
-      OSError: if the task storage does not exist.
-    """
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
-    del self._task_storage_writers[task.identifier]
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
@@ -476,27 +307,6 @@ class FakeStorageWriter(interface.StorageWriter):
       storage_profiler (StorageProfiler): storage profiler.
     """
     return
-
-  # pylint: disable=unused-argument
-  def WritePreprocessingInformation(self, knowledge_base):
-    """Writes preprocessing information.
-
-    Args:
-      knowledge_base (KnowledgeBase): used to store the preprocessing
-          information.
-
-    Raises:
-      IOError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-      OSError: if the storage type does not support writing preprocessing
-          information or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Preprocessing information not supported by storage type.')
-
-    # TODO: implement.
 
   def WriteSessionCompletion(self, aborted=False):
     """Writes session completion information.
@@ -517,6 +327,23 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._session.aborted = aborted
     self.session_completion = self._session.CreateSessionCompletion()
+
+  def WriteSessionConfiguration(self):
+    """Writes session configuration information.
+
+
+    Raises:
+      IOError: if the storage type does not support writing session
+          configuration information or when the storage writer is closed.
+      OSError: if the storage type does not support writing session
+          configuration information or when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Session configuration not supported by storage type.')
+
+    self.session_configuration = self._session.CreateSessionConfiguration()
 
   def WriteSessionStart(self):
     """Writes session start information.

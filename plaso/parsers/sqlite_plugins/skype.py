@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a basic Skype SQLite parser."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Skype database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -16,6 +14,7 @@ class SkypeChatEventData(events.EventData):
 
   Attributes:
     from_account (str): from display name and the author.
+    query (str): SQL query that was used to obtain the event data.
     text (str): body XML.
     title (str): title.
     to_account (str): accounts, excluding the author, of the conversation.
@@ -27,6 +26,7 @@ class SkypeChatEventData(events.EventData):
     """Initializes event data."""
     super(SkypeChatEventData, self).__init__(data_type=self.DATA_TYPE)
     self.from_account = None
+    self.query = None
     self.text = None
     self.title = None
     self.to_account = None
@@ -39,6 +39,9 @@ class SkypeAccountEventData(events.EventData):
     country (str): home country of the account holder.
     display_name (str): display name of the account holder.
     email (str): registered email address of the account holder.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     username (str): full name of the Skype account holder and display name.
   """
 
@@ -51,6 +54,7 @@ class SkypeAccountEventData(events.EventData):
     self.display_name = None
     self.email = None
     self.offset = None
+    self.query = None
     self.username = None
 
 
@@ -59,6 +63,7 @@ class SkypeSMSEventData(events.EventData):
 
   Attributes:
     number (str): phone number where the SMS was sent.
+    query (str): SQL query that was used to obtain the event data.
     text (str): text (SMS body) that was sent.
   """
 
@@ -68,6 +73,7 @@ class SkypeSMSEventData(events.EventData):
     """Initialize event data."""
     super(SkypeSMSEventData, self).__init__(data_type=self.DATA_TYPE)
     self.number = None
+    self.query = None
     self.text = None
 
 
@@ -77,6 +83,9 @@ class SkypeCallEventData(events.EventData):
   Attributes:
     call_type (str): call type, such as: WAITING, STARTED, FINISHED.
     dst_call (str): account which received the call.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     src_call (str): account which started the call.
     user_start_call (bool): True if the owner account started the call.
     video_conference (bool): True if the call was a video conference.
@@ -89,6 +98,8 @@ class SkypeCallEventData(events.EventData):
     super(SkypeCallEventData, self).__init__(data_type=self.DATA_TYPE)
     self.call_type = None
     self.dst_call = None
+    self.offset = None
+    self.query = None
     self.src_call = None
     self.user_start_call = None
     self.video_conference = None
@@ -101,6 +112,9 @@ class SkypeTransferFileEventData(events.EventData):
     action_type (str): action type such as: "GETSOLICITUDE", "SENDSOLICITUDE",
         "ACCEPTED" or "FINISHED".
     destination (str): account that received the file.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     source (str): account that sent the file.
     transferred_filename (str): name of the file transferred.
     transferred_filepath (str): path of the file transferred.
@@ -114,6 +128,8 @@ class SkypeTransferFileEventData(events.EventData):
     super(SkypeTransferFileEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action_type = None
     self.destination = None
+    self.offset = None
+    self.query = None
     self.source = None
     self.transferred_filename = None
     self.transferred_filepath = None
@@ -121,10 +137,31 @@ class SkypeTransferFileEventData(events.EventData):
 
 
 class SkypePlugin(interface.SQLitePlugin):
-  """SQLite plugin for Skype main.db SQlite database file."""
+  """SQLite parser plugin for Skype database files."""
 
   NAME = 'skype'
-  DESCRIPTION = 'Parser for Skype SQLite database files.'
+  DATA_FORMAT = 'Skype SQLite database (main.db) file'
+
+  REQUIRED_STRUCTURE = {
+      'Accounts': frozenset([
+          'id', 'fullname', 'given_displayname', 'emails', 'country',
+          'profile_timestamp', 'authreq_timestamp', 'lastonline_timestamp',
+          'mood_timestamp', 'sent_authrequest_time']),
+      'Calls': frozenset([
+          'id', 'is_incoming', 'begin_timestamp']),
+      'CallMembers': frozenset([
+          'guid', 'call_db_id', 'videostatus', 'start_timestamp',
+          'call_duration']),
+      'Chats': frozenset([
+          'id', 'participants', 'friendlyname', 'dialog_partner', 'name']),
+      'Messages': frozenset([
+          'author', 'from_dispname', 'body_xml', 'timestamp', 'chatname']),
+      'SMSes': frozenset([
+          'id', 'target_numbers', 'timestamp', 'body']),
+      'Transfers': frozenset([
+          'parent_id', 'partner_handle', 'partner_dispname', 'pk_id', 'id',
+          'offer_send_list', 'starttime', 'accepttime', 'finishtime',
+          'filepath', 'filename', 'filesize', 'status'])}
 
   # Queries for building cache.
   QUERY_DEST_FROM_TRANSFER = (
@@ -153,10 +190,6 @@ class SkypePlugin(interface.SQLitePlugin):
         'cm.start_timestamp AS accept_call, cm.call_duration '
         'FROM Calls c, CallMembers cm '
         'WHERE c.id = cm.call_db_id;'), 'ParseCall')]
-
-  REQUIRED_TABLES = frozenset([
-      'Chats', 'Accounts', 'Conversations', 'Contacts', 'SMSes',
-      'Transfers', 'CallMembers', 'Calls'])
 
   SCHEMAS = [{
       'Accounts': (

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the artifact definitions CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -25,7 +23,7 @@ usage: cli_helper.py [--artifact_definitions PATH]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --artifact_definitions PATH, --artifact-definitions PATH
                         Path to a directory containing artifact definitions,
                         which are .yaml files. Artifact definitions can be
@@ -36,7 +34,7 @@ optional arguments:
                         which are .yaml files. Artifact definitions can be
                         used to describe and quickly collect data of interest,
                         such as specific files or Windows Registry keys.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

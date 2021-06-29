@@ -1,0 +1,271 @@
+name: spotlight_store_db
+type: format
+description: Apple Spotlight store database file format
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Spotlight%20store%20database%20file%20format.asciidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: char
+type: integer
+attributes:
+  format: signed
+  size: 1
+  units: bytes
+---
+name: uint8
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint32le
+type: integer
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: float32
+type: floating-point
+attributes:
+  size: 4
+  units: bytes
+---
+name: float64
+type: floating-point
+attributes:
+  size: 8
+  units: bytes
+---
+name: cstring
+type: string
+encoding: utf8
+element_data_type: char
+elements_terminator: "\x00"
+---
+name: array_of_byte
+type: sequence
+element_data_type: byte
+elements_data_size: elements_data_size
+---
+name: array_of_cstring
+type: sequence
+element_data_type: cstring
+elements_data_size: elements_data_size
+---
+name: array_of_float32
+type: sequence
+element_data_type: float32
+elements_data_size: elements_data_size
+---
+name: array_of_float64
+type: sequence
+element_data_type: float64
+elements_data_size: elements_data_size
+---
+name: spotlight_store_db_file_header
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+  value: "8tsd"
+- name: flags
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+- name: unknown2
+  data_type: uint32
+- name: unknown3
+  data_type: uint32
+- name: unknown4
+  data_type: uint32
+- name: unknown5
+  data_type: uint32
+- name: unknown6
+  data_type: uint32
+- name: unknown7
+  data_type: uint32
+- name: map_offset
+  data_type: uint32
+- name: map_size
+  data_type: uint32
+- name: page_size
+  data_type: uint32
+- name: metadata_types_block_number
+  data_type: uint32
+- name: metadata_values_block_number
+  data_type: uint32
+- name: unknown_values41_block_number
+  data_type: uint32
+- name: metadata_lists_block_number
+  data_type: uint32
+- name: metadata_localized_strings_block_number
+  data_type: uint32
+- name: unknown8
+  type: sequence
+  element_data_type: byte
+  elements_data_size: 256
+- name: path
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_data_size: 256
+  elements_terminator: "\x00"
+---
+name: spotlight_store_db_map_page_header
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+  values: ["1mbd", "2mbd"]
+- name: page_size
+  data_type: uint32
+- name: number_of_map_values
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+- name: unknown2
+  data_type: uint32
+---
+name: spotlight_store_db_map_page_value
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: unknown1
+  data_type: uint64
+- name: block_number
+  data_type: uint32
+- name: unknown2
+  data_type: uint32
+---
+name: spotlight_store_db_property_page_header
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+  value: "2pbd"
+- name: page_size
+  data_type: uint32
+- name: used_page_size
+  data_type: uint32
+- name: property_table_type
+  data_type: uint32
+- name: uncompressed_page_size
+  data_type: uint32
+---
+name: spotlight_store_db_property_values_header
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: next_block_number
+  data_type: uint32
+- name: unknown1
+  data_type: uint64
+---
+name: spotlight_store_db_property_value11
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: table_index
+  data_type: uint32
+- name: value_type
+  data_type: uint8
+- name: property_type
+  data_type: uint8
+- name: key_name
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"
+---
+name: spotlight_store_db_property_value21
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: table_index
+  data_type: uint32
+- name: value_name
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"
+---
+name: spotlight_store_db_property_value81
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: table_index
+  data_type: uint32
+---
+name: spotlight_store_db_index_values
+type: sequence
+element_data_type: uint32le
+elements_data_size: index_size
+---
+name: spotlight_store_db_record
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+---
+name: spotlight_store_db_lz4_block_header
+type: structure
+description: LZ4 block header.
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  number_of_elements: 4
+- name: uncompressed_data_size
+  data_type: uint32
+- name: compressed_data_size
+  data_type: uint32

@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """Plug-in to collect information about the Windows timezone settings."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -32,7 +30,7 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect information about the Windows timezone settings."""
 
   NAME = 'windows_timezone'
-  DESCRIPTION = 'Parser for Windows timezone settings.'
+  DATA_FORMAT = 'Windows time zone Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -76,4 +74,4 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(WinRegTimezonePlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(WinRegTimezonePlugin)

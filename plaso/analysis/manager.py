@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the analysis plugin manager class."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import definitions
 
 
@@ -45,28 +43,22 @@ class AnalysisPluginManager(object):
 
   # TODO: refactor to match parsers manager.
   @classmethod
-  def GetAllPluginInformation(cls, show_all=True):
+  def GetAllPluginInformation(cls):
     """Retrieves a list of the registered analysis plugins.
-
-    Args:
-      show_all (Optional[bool]): True if all analysis plugin names should
-          be listed.
 
     Returns:
       list[tuple[str, str, str]]: the name, docstring and type string of each
           analysis plugin in alphabetical order.
     """
     results = []
-    for plugin_class in iter(cls._plugin_classes.values()):
-      plugin_object = plugin_class()
-      if not show_all and not plugin_class.ENABLE_IN_EXTRACTION:
-        continue
-
-      # TODO: Use a specific description variable, not the docstring.
-      doc_string, _, _ = plugin_class.__doc__.partition('\n')
-      type_string = cls._PLUGIN_TYPE_STRINGS.get(plugin_object.plugin_type)
-      information_tuple = (plugin_object.plugin_name, doc_string, type_string)
-      results.append(information_tuple)
+    for plugin_class in cls._plugin_classes.values():
+      if not plugin_class.TEST_PLUGIN:
+        plugin_object = plugin_class()
+        # TODO: Use a specific description variable, not the docstring.
+        doc_string, _, _ = plugin_class.__doc__.partition('\n')
+        type_string = cls._PLUGIN_TYPE_STRINGS.get(plugin_object.plugin_type)
+        information_tuple = (plugin_object.NAME, doc_string, type_string)
+        results.append(information_tuple)
 
     return sorted(results)
 
@@ -90,7 +82,7 @@ class AnalysisPluginManager(object):
       dict[str, AnalysisPlugin]: analysis plugins per name.
     """
     plugin_objects = {}
-    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+    for plugin_name, plugin_class in cls._plugin_classes.items():
       if plugin_name not in plugin_names:
         continue
 
@@ -108,7 +100,7 @@ class AnalysisPluginManager(object):
         str: name of the plugin
         type: plugin class
     """
-    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+    for plugin_name, plugin_class in cls._plugin_classes.items():
       yield plugin_name, plugin_class
 
   @classmethod

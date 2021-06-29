@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """OLECF plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import pyolecf
 
 from plaso.containers import sessions
@@ -46,11 +44,11 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
 
     file_object = file_entry.GetFileObject()
 
-    try:
-      olecf_file = pyolecf.file()
-      olecf_file.set_ascii_codepage(codepage)
-      olecf_file.open_file_object(file_object)
+    olecf_file = pyolecf.file()
+    olecf_file.set_ascii_codepage(codepage)
+    olecf_file.open_file_object(file_object)
 
+    try:
       # Get a list of all root items from the OLE CF file.
       root_item = olecf_file.root_item
       item_names = [item.name for item in root_item.sub_items]
@@ -58,9 +56,7 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
       plugin.Process(
           parser_mediator, root_item=root_item, item_names=item_names)
 
-      olecf_file.close()
-
     finally:
-      file_object.close()
+      olecf_file.close()
 
     return storage_writer

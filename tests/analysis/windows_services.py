@@ -2,15 +2,13 @@
 # -*- coding: utf-8 -*-
 """Tests for the windows services analysis plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 
 from tests.analysis import test_lib
 
@@ -24,7 +22,8 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
        'key_path': '\\ControlSet001\\services\\TestbDriver',
        'name': 'TestbDriver',
        'object_name': None,
-       'pathspec': fake_path_spec.FakePathSpec(
+       'parser': 'winreg/services',
+       'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\SYSTEM'),
        'service_dll': None,
        'service_type': 2,
@@ -38,7 +37,8 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
        'key_path': '\\ControlSet003\\services\\TestbDriver',
        'name': 'TestbDriver',
        'object_name': None,
-       'pathspec': fake_path_spec.FakePathSpec(
+       'parser': 'winreg/services',
+       'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\SYSTEM'),
        'service_dll': None,
        'service_type': 2,
@@ -77,12 +77,12 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     plugin = windows_services.WindowsServicesAnalysisPlugin()
 
     storage_writer = self._ParseAndAnalyzeFile(['SYSTEM'], parser, plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 31436)
+    self.assertEqual(storage_writer.number_of_events, 31438)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
@@ -106,13 +106,13 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    parser = winreg.WinRegistryParser()
+    parser = winreg_parser.WinRegistryParser()
     plugin = windows_services.WindowsServicesAnalysisPlugin()
     plugin.SetOutputFormat('yaml')
 
     storage_writer = self._ParseAndAnalyzeFile(['SYSTEM'], parser, plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 31436)
+    self.assertEqual(storage_writer.number_of_events, 31438)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 

@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
-"""The Apple System Log Parser."""
+"""The Apple System Log (ASL) file parser."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
 class ASLEventData(events.EventData):
-  """Convenience class for an ASL event.
+  """Apple System Log (ASL) event data.
 
   Attributes:
     computer_name (str): name of the host.
@@ -55,15 +57,32 @@ class ASLEventData(events.EventData):
     self.user_sid = None
 
 
-class ASLParser(dtfabric_parser.DtFabricBaseParser):
-  """Parser for ASL log files."""
+class ASLFileEventData(events.EventData):
+  """Apple System Log (ASL) file event data.
+
+  Attributes:
+    format_version (int): ASL file format version.
+    is_dirty (bool): True if the last log entry offset does not match value
+        in file header and the file is considered dirty.
+  """
+
+  DATA_TYPE = 'mac:asl:file'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(ASLFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.format_version = None
+    self.is_dirty = None
+
+
+class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
+  """Parser for Apple System Log (ASL) files."""
 
   NAME = 'asl_log'
-  DESCRIPTION = 'Parser for ASL log files.'
+  DATA_FORMAT = 'Apple System Log (ASL) file'
 
-  _DEFINITION_FILE = 'asl.yaml'
-
-  _FILE_SIGNATURE = b'ASL DB\x00\x00\x00\x00\x00\x00'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'asl.yaml')
 
   # Most significant bit of a 64-bit string offset.
   _STRING_OFFSET_MSB = 1 << 63
@@ -84,37 +103,27 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the record cannot be parsed.
     """
-    record_strings_data_offset = file_object.tell()
-    record_strings_data_size = record_offset - record_strings_data_offset
-
-    record_strings_data = self._ReadData(
-        file_object, record_strings_data_offset, record_strings_data_size)
-
     record_map = self._GetDataTypeMap('asl_record')
 
     try:
       record, record_data_size = self._ReadStructureFromFileObject(
           file_object, record_offset, record_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.ParseError((
           'Unable to parse record at offset: 0x{0:08x} with error: '
           '{1!s}').format(record_offset, exception))
 
     hostname = self._ParseRecordString(
-        record_strings_data, record_strings_data_offset,
-        record.hostname_string_offset)
+        file_object, record.hostname_string_offset)
 
     sender = self._ParseRecordString(
-        record_strings_data, record_strings_data_offset,
-        record.sender_string_offset)
+        file_object, record.sender_string_offset)
 
     facility = self._ParseRecordString(
-        record_strings_data, record_strings_data_offset,
-        record.facility_string_offset)
+        file_object, record.facility_string_offset)
 
     message = self._ParseRecordString(
-        record_strings_data, record_strings_data_offset,
-        record.message_string_offset)
+        file_object, record.message_string_offset)
 
     file_offset = record_offset + record_data_size
     additional_data_size = record.data_size + 6 - record_data_size
@@ -135,12 +144,10 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
       file_offset += 16
 
       name = self._ParseRecordString(
-          record_strings_data, record_strings_data_offset,
-          record_extra_field.name_string_offset)
+          file_object, record_extra_field.name_string_offset)
 
       value = self._ParseRecordString(
-          record_strings_data, record_strings_data_offset,
-          record_extra_field.value_string_offset)
+          file_object, record_extra_field.value_string_offset)
 
       if name is not None:
         extra_fields[name] = value
@@ -150,7 +157,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     event_data = ASLEventData()
     event_data.computer_name = hostname
     event_data.extra_information = ', '.join([
-        '{0:s}: {1:s}'.format(name, value)
+        '{0:s}: {1!s}'.format(name, value)
         for name, value in sorted(extra_fields.items())])
     event_data.facility = facility
     event_data.group_id = record.group_identifier
@@ -165,15 +172,13 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     # Note that the user_sid value is expected to be a string.
     event_data.user_sid = '{0:d}'.format(record.user_identifier)
 
-    microseconds, _ = divmod(record.written_time_nanoseconds, 1000)
-    timestamp = (record.written_time * 1000000) + microseconds
+    timestamp = (
+        (record.written_time * 1000000000) + record.written_time_nanoseconds)
 
-    # TODO: replace by PosixTimeInNanoseconds.
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+    date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
         timestamp=timestamp)
-    # TODO: replace by written time.
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     return record.next_record_offset
@@ -204,14 +209,11 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
 
     return record_extra_field
 
-  def _ParseRecordString(
-      self, record_strings_data, record_strings_data_offset, string_offset):
+  def _ParseRecordString(self, file_object, string_offset):
     """Parses a record string.
 
     Args:
-      record_strings_data (bytes): record strings data.
-      record_strings_data_offset (int): offset of the record strings data
-          relative to the start of the file.
+      file_object (file): file-like object.
       string_offset (int): offset of the string relative to the start of
           the file.
 
@@ -243,12 +245,11 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
             'Unable to decode inline record string with error: {0!s}.'.format(
                 exception))
 
-    data_offset = string_offset - record_strings_data_offset
     record_string_map = self._GetDataTypeMap('asl_record_string')
 
     try:
-      record_string = self._ReadStructureFromByteStream(
-          record_strings_data[data_offset:], string_offset, record_string_map)
+      record_string, _ = self._ReadStructureFromFileObject(
+          file_object, string_offset, record_string_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to parse record string at offset: 0x{0:08x} with error: '
@@ -264,7 +265,8 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(cls._FILE_SIGNATURE, offset=0)
+    format_specification.AddNewSignature(
+        b'ASL DB\x00\x00\x00\x00\x00\x00', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):
@@ -288,11 +290,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
           'Unable to parse file header with error: {0!s}'.format(
               exception))
 
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.UnableToParseFile('Invalid file signature.')
-
-    # TODO: generate event for creation time.
-
+    is_dirty = False
     file_size = file_object.get_size()
 
     if file_header.first_log_entry_offset > 0:
@@ -314,8 +312,23 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
           break
 
       if last_log_entry_offset != file_header.last_log_entry_offset:
-        parser_mediator.ProduceExtractionWarning(
+        is_dirty = True
+        parser_mediator.ProduceRecoveryWarning(
             'last log entry offset does not match value in file header.')
+
+    event_data = ASLFileEventData()
+    event_data.format_version = file_header.format_version
+    event_data.is_dirty = is_dirty
+
+    if file_header.creation_time:
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=file_header.creation_time)
+    else:
+      date_time = dfdatetime_semantic_time.NotSet()
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(ASLParser)

@@ -6,16 +6,14 @@ also some implementations that extend it to provide a more comprehensive
 parser.
 """
 
-from __future__ import unicode_literals
-
 import abc
+import codecs
 
 import pyparsing
 
 from dfvfs.helpers import text_file
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import logger
 
@@ -43,52 +41,6 @@ def ConvertTokenToInteger(string, location, tokens):
     return int(tokens[0], 10)
   except ValueError:
     pass
-
-
-def PyParseRangeCheck(lower_bound, upper_bound):
-  """Verify that a number is within a defined range.
-
-  This is a callback method for pyparsing setParseAction
-  that verifies that a read number is within a certain range.
-
-  To use this method it needs to be defined as a callback method
-  in setParseAction with the upper and lower bound set as parameters.
-
-  Args:
-    lower_bound (int): lower bound of the range.
-    upper_bound (int): upper bound of the range.
-
-  Returns:
-    Function: callback method that can be used by pyparsing setParseAction.
-  """
-  # pylint: disable=unused-argument
-  def CheckRange(string, location, tokens):
-    """Parse the arguments.
-
-    Args:
-      string (str): original string.
-      location (int): location in the string where the match was made
-      tokens (list[str]): tokens.
-    """
-    try:
-      check_number = tokens[0]
-    except IndexError:
-      check_number = -1
-
-    if check_number < lower_bound:
-      raise pyparsing.ParseException(
-          'Value: {0:d} precedes lower bound: {1:d}'.format(
-              check_number, lower_bound))
-
-    if check_number > upper_bound:
-      raise pyparsing.ParseException(
-          'Value: {0:d} exceeds upper bound: {1:d}'.format(
-              check_number, upper_bound))
-
-  # Since callback methods for pyparsing need to accept certain parameters
-  # and there is no way to define conditions, like upper and lower bounds
-  # we need to return here a method that accepts those pyparsing parameters.
-  return CheckRange
 
 
 def PyParseIntCast(string, location, tokens):
@@ -126,30 +78,6 @@ def PyParseIntCast(string, location, tokens):
       tokens[key] = 0
 
 
-def PyParseJoinList(string, location, tokens):
-  """Return a joined token from a list of tokens.
-
-  This is a callback method for pyparsing setParseAction that modifies
-  the returned token list to join all the elements in the list to a single
-  token.
-
-  Args:
-    string (str): original string.
-    location (int): location in the string where the match was made.
-    tokens (list[str]): extracted tokens, where the string to be converted
-        is stored.
-  """
-  join_list = []
-  for token in tokens:
-    try:
-      join_list.append(str(token))
-    except UnicodeDecodeError:
-      join_list.append(repr(token))
-
-  tokens[0] = ''.join(join_list)
-  del tokens[1:]
-
-
 class PyparsingConstants(object):
   """Constants for pyparsing-based parsers."""
 
@@ -172,6 +100,8 @@ class PyparsingConstants(object):
 
   ONE_OR_TWO_DIGITS = pyparsing.Word(
       pyparsing.nums, min=1, max=2).setParseAction(PyParseIntCast)
+  ONE_TO_THREE_DIGITS = pyparsing.Word(
+      pyparsing.nums, min=1, max=3).setParseAction(PyParseIntCast)
   TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       PyParseIntCast)
   THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
@@ -243,6 +173,20 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
   # Allow for a maximum of 40 empty lines before we bail out.
   _MAXIMUM_DEPTH = 40
 
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
+
   def __init__(self):
     """Initializes a parser."""
     super(PyparsingSingleLineTextParser, self).__init__()
@@ -250,6 +194,34 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
     self._line_structures = list(self.LINE_STRUCTURES)
+    self._parser_mediator = None
+
+    codecs.register_error('text_parser_handler', self._EncodingErrorHandler)
+
+  def _EncodingErrorHandler(self, exception):
+    """Encoding error handler.
+
+    Args:
+      exception [UnicodeDecodeError]: exception.
+
+    Returns:
+      tuple[str, int]: replacement string and a position where encoding should
+          continue.
+
+    Raises:
+      TypeError: if exception is not of type UnicodeDecodeError.
+    """
+    if not isinstance(exception, UnicodeDecodeError):
+      raise TypeError('Unsupported exception type.')
+
+    if self._parser_mediator:
+      self._parser_mediator.ProduceExtractionWarning(
+          'error decoding 0x{0:02x} at offset: {1:d}'.format(
+              exception.object[exception.start],
+              self._current_offset + exception.start))
+
+    escaped = '\\x{0:2x}'.format(exception.object[exception.start])
+    return (escaped, exception.start + 1)
 
   def _GetValueFromStructure(self, structure, name, default_value=None):
     """Retrieves a token value from a Pyparsing structure.
@@ -267,7 +239,16 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       object: value in the token or default value if the token is not available
           in the structure.
     """
-    return structure.get(name, default_value)
+    value = structure.get(name, default_value)
+    if isinstance(value, pyparsing.ParseResults) and not value:
+      # Ensure the return value is not an empty pyparsing.ParseResults otherwise
+      # copy.deepcopy() will fail on Python 3.8 with: "TypeError: 'str' object
+      # is not callable" due to pyparsing.ParseResults overriding __getattr__
+      # with a function that returns an empty string when named token does not
+      # exists.
+      return None
+
+    return value
 
   # Pylint is confused by the formatting of the bytes_in argument.
   # pylint: disable=missing-param-doc,missing-type-doc
@@ -295,13 +276,11 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # Start with the assumption we are dealing with text.
     is_text = True
 
-    if isinstance(bytes_in, py2to3.UNICODE_TYPE):
+    if isinstance(bytes_in, str):
       return is_text
 
     # Check if this is ASCII text string.
     for value in bytes_in:
-      if py2to3.PY_2:
-        value = ord(value)
       if not 31 < value < 128:
         is_text = False
         break
@@ -345,7 +324,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     Raises:
       UnicodeDecodeError: if the text cannot be decoded using the specified
-          encoding.
+          encoding and encoding errors is set to strict.
     """
     line = text_file_object.readline(size=max_len)
 
@@ -378,6 +357,10 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
           'Line structure undeclared, unable to proceed.')
 
     encoding = self._ENCODING or parser_mediator.codepage
+
+    # Use strict encoding error handling in the verification step so that
+    # a text parser does not generate extraction warning for encoding errors
+    # of unsupported files.
     text_file_object = text_file.TextFile(file_object, encoding=encoding)
 
     try:
@@ -402,6 +385,12 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     if not self.VerifyStructure(parser_mediator, line):
       raise errors.UnableToParseFile('Wrong file structure.')
+
+    self._parser_mediator = parser_mediator
+
+    text_file_object = text_file.TextFile(
+        file_object, encoding=encoding, encoding_errors='text_parser_handler')
+    line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
 
     consecutive_line_failures = 0
     index = None
@@ -598,7 +587,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
   BUFFER_SIZE = 2048
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
 
@@ -635,7 +624,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     # with spaces to SkipAhead() the correct number of bytes after a match.
     for key, structure in self.LINE_STRUCTURES:
       structure.parseWithTabs()
-
 
     consecutive_line_failures = 0
     # Read every line in the text file.

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the parsers CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -24,7 +22,7 @@ usage: cli_helper.py [--parsers PARSER_FILTER_EXPRESSION]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --parsers PARSER_FILTER_EXPRESSION
                         Define which presets, parsers and/or plugins to use,
                         or show possible values. The expression is a comma
@@ -38,7 +36,7 @@ optional arguments:
                         "win7,syslog" enables the win7 preset, as well as the
                         syslog parser. Use "--parsers list" or "--info" to
                         list available presets, parsers and plugins.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """MountPoints2 Windows Registry parser plugin."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -40,7 +38,7 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the MountPoints2 key."""
 
   NAME = 'explorer_mountpoints2'
-  DESCRIPTION = 'Parser for mount points Registry data.'
+  DATA_FORMAT = 'Windows Explorer mount points Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -92,4 +90,4 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(MountPoints2Plugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(MountPoints2Plugin)

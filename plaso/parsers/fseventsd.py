@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parsers for MacOS fseventsd files."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -10,9 +10,10 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -38,7 +39,8 @@ class FseventsdEventData(events.EventData):
     self.path = None
 
 
-class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
+class FseventsdParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for fseventsd files.
 
   This parser supports both version 1 and version 2 fseventsd files.
@@ -46,8 +48,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
   """
 
   NAME = 'fseventsd'
-
-  DESCRIPTION = 'Parser for fseventsd files.'
+  DATA_FORMAT = 'MacOS File System Events Disk Log Stream (fseventsd) file'
 
   # The version 1 format was used in Mac OS X 10.5 (Leopard) through macOS 10.12
   # (Sierra).
@@ -56,9 +57,8 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
   # The version 2 format was introduced in MacOS High Sierra (10.13).
   _DLS_V2_SIGNATURE = b'2SLD'
 
-  _DLS_SIGNATURES = [_DLS_V1_SIGNATURE, _DLS_V2_SIGNATURE]
-
-  _DEFINITION_FILE = 'fseventsd.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'fseventsd.yaml')
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -98,11 +98,6 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError(
           'Unable to parse page header at offset: 0x{0:08x} '
           'with error: {1!s}'.format(page_offset, exception))
-
-    if page_header.signature not in self._DLS_SIGNATURES:
-      raise errors.UnableToParseFile(
-          'Unsupported page header signature at offset: 0x{0:08x}'.format(
-              page_offset))
 
     return page_header, page_size
 
@@ -170,9 +165,6 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
           'Unable to parse page header with error: {0!s}'.format(
               exception))
 
-    if page_header.signature not in self._DLS_SIGNATURES:
-      raise errors.UnableToParseFile('Invalid file signature')
-
     current_page_end = page_header.page_size
 
     file_entry = parser_mediator.GetFileEntry()
@@ -182,7 +174,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
     if date_time:
       timestamp_description = definitions.TIME_DESCRIPTION_RECORDED
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
     event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
 

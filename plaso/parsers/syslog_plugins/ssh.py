@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a plugin for SSH syslog entries."""
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -58,7 +56,8 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
   """A plugin for creating events from syslog message produced by SSH."""
 
   NAME = 'ssh'
-  DESCRIPTION = 'Parser for SSH syslog entries.'
+  DATA_FORMAT = 'SSH syslog line'
+
   REPORTER = 'sshd'
 
   _AUTHENTICATION_METHOD = (
@@ -112,7 +111,7 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
       ('failed_connection', _FAILED_CONNECTION_GRAMMAR),
       ('opened_connection', _OPENED_CONNECTION_GRAMMAR),]
 
-  def ParseMessage(self, parser_mediator, key, date_time, tokens):
+  def _ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Produces an event from a syslog body that matched one of the grammars.
 
     Args:
@@ -144,8 +143,6 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
     event_data.body = tokens.get('body', None)
     event_data.fingerprint = tokens.get('fingerprint', None)
     event_data.hostname = tokens.get('hostname', None)
-    # TODO: pass line number to offset or remove.
-    event_data.offset = 0
     event_data.pid = tokens.get('pid', None)
     event_data.protocol = tokens.get('protocol', None)
     event_data.port = tokens.get('port', None)

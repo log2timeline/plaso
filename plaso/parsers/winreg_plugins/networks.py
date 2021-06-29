@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """This file contains the NetworkList Registry plugin."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import systemtime as dfdatetime_systemtime
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import winreg
-from plaso.parsers.winreg_plugins import dtfabric_plugin
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -39,18 +39,19 @@ class WindowsRegistryNetworkListEventData(events.EventData):
 
 
 class NetworksWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Windows Registry plugin for parsing the NetworkList key."""
 
   NAME = 'networks'
-  DESCRIPTION = 'Parser for NetworkList data.'
+  DATA_FORMAT = 'Windows networks (NetworkList) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion'
           '\\NetworkList')])
 
-  _DEFINITION_FILE = 'systemtime.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'systemtime.yaml')
 
   _CONNECTION_TYPE = {
       0x06: 'Wired',
@@ -207,4 +208,4 @@ class NetworksWindowsRegistryPlugin(
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(NetworksWindowsRegistryPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(NetworksWindowsRegistryPlugin)

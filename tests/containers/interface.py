@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the attribute container interface."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.containers import interface
@@ -26,6 +24,8 @@ class AttributeContainerIdentifierTest(shared_test_lib.BaseTestCase):
 class AttributeContainerTest(shared_test_lib.BaseTestCase):
   """Tests for the attribute container interface."""
 
+  # pylint: disable=protected-access
+
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     attribute_container = interface.AttributeContainer()
@@ -43,6 +43,7 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
   def testGetAttributeNames(self):
     """Tests the GetAttributeNames function."""
     attribute_container = interface.AttributeContainer()
+    attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
 
@@ -52,9 +53,20 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(attribute_names, expected_attribute_names)
 
+    attribute_container._SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+        '_protected_attribute']
+
+    expected_attribute_names = [
+        '_protected_attribute', 'attribute_name', 'attribute_value']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+
+    self.assertEqual(attribute_names, expected_attribute_names)
+
   def testGetAttributes(self):
     """Tests the GetAttributes function."""
     attribute_container = interface.AttributeContainer()
+    attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
 
@@ -66,9 +78,22 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(attributes, expected_attributes)
 
+    attribute_container._SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+        '_protected_attribute']
+
+    expected_attributes = [
+        ('_protected_attribute', 'protected'),
+        ('attribute_name', 'attribute_name'),
+        ('attribute_value', 'attribute_value')]
+
+    attributes = sorted(attribute_container.GetAttributes())
+
+    self.assertEqual(attributes, expected_attributes)
+
   def testGetAttributeValueHash(self):
     """Tests the GetAttributeValuesHash function."""
     attribute_container = interface.AttributeContainer()
+    attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
 
@@ -80,15 +105,34 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     self.assertNotEqual(attribute_values_hash1, attribute_values_hash2)
 
+    attribute_container.attribute_value = 'attribute_value'
+
+    attribute_container._SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+        '_protected_attribute']
+
+    attribute_values_hash2 = attribute_container.GetAttributeValuesHash()
+
+    self.assertNotEqual(attribute_values_hash1, attribute_values_hash2)
+
   def testGetAttributeValuesString(self):
     """Tests the GetAttributeValuesString function."""
     attribute_container = interface.AttributeContainer()
+    attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
 
     attribute_values_string1 = attribute_container.GetAttributeValuesString()
 
     attribute_container.attribute_value = 'changes'
+
+    attribute_values_string2 = attribute_container.GetAttributeValuesString()
+
+    self.assertNotEqual(attribute_values_string1, attribute_values_string2)
+
+    attribute_container.attribute_value = 'attribute_value'
+
+    attribute_container._SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+        '_protected_attribute']
 
     attribute_values_string2 = attribute_container.GetAttributeValuesString()
 

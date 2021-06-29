@@ -1,12 +1,15 @@
 # YAML-based formatters file for testing format features.
 
+type: 'basic'
+data_type: 'test:event'
+message: '{text}'
+short_message: '{text}'
+---
 type: 'conditional'
-data_type: 'fs:stat'
+data_type: 'test:fs:stat'
 message:
 - '{display_name}'
 - 'Type: {file_entry_type}'
 - '({unallocated})'
 short_message:
 - '{filename}'
-short_source: 'FILE'
-source: 'File system'

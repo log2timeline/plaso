@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """"Windows Registry plugin for SAM Users Account information."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import winreg
-from plaso.parsers.winreg_plugins import dtfabric_plugin
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -40,17 +40,18 @@ class SAMUsersWindowsRegistryEventData(events.EventData):
 
 
 class SAMUsersWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Windows Registry plugin for SAM Users Account information."""
 
   NAME = 'windows_sam_users'
-  DESCRIPTION = 'Parser for SAM Users and Names Registry keys.'
+  DATA_FORMAT = 'Security Accounts Manager (SAM) users Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users')])
 
-  _DEFINITION_FILE = 'sam_users.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'sam_users.yaml')
 
   _V_VALUE_STRINGS_OFFSET = 0xcc
 
@@ -196,4 +197,4 @@ class SAMUsersWindowsRegistryPlugin(
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(SAMUsersWindowsRegistryPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(SAMUsersWindowsRegistryPlugin)

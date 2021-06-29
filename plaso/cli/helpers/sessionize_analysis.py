@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The sessionize analysis plugin CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import sessionize
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager

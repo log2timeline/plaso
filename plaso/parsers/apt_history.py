@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Advanced Packaging Tool (APT) History log files."""
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -20,7 +18,7 @@ class APTHistoryLogEventData(events.EventData):
   """APT History log event data.
 
   Attributes:
-    command (str): command exectued
+    command (str): command executed
     error (str): reported error.
     packages (str): list of packages being affected.
     requester (str): user requesting the activity.
@@ -38,11 +36,11 @@ class APTHistoryLogEventData(events.EventData):
 
 
 class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses events from APT History log files."""
+  """Parses for Advanced Packaging Tool (APT) History log files."""
 
   NAME = 'apt_history'
 
-  DESCRIPTION = 'Parser for APT History log files.'
+  DATA_FORMAT = 'Advanced Packaging Tool (APT) History log file'
 
   # APT History log lines can be very long.
   MAX_LINE_LENGTH = 65536
@@ -115,13 +113,22 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       dfdatetime.TimeElements: date and time extracted from the structure or
           None f the structure does not represent a valid string.
     """
+    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+    # overriding __getattr__ with a function that returns an empty string when
+    # named token does not exists.
     try:
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_structure)
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
+          year, month, day_of_month, hours, minutes, seconds))
+
       # APT History logs store date and time values in local time.
       date_time.is_local_time = True
       return date_time
-    except ValueError:
+    except (TypeError, ValueError):
       return None
 
   def _ParseRecordStart(self, parser_mediator, structure):
@@ -133,12 +140,10 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a log entry.
     """
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'start_date')
-    self._date_time = self._BuildDateTime(time_elements_structure)
+    self._date_time = self._BuildDateTime(structure.get('start_date', None))
     if not self._date_time:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_structure))
+          'invalid date time value: {0!s}'.format(self._date_time))
       return
 
     self._event_data = APTHistoryLogEventData()
@@ -152,10 +157,10 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           a log entry.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: when the date and time value is missing.
     """
     if not self._date_time:
-      raise errors.ParseError('Unable to parse, record incomplete.')
+      raise errors.ParseError('Missing date time value.')
 
     # Command data
     if structure[0] == 'Commandline:':
@@ -191,10 +196,10 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
           and other components, such as storage and dfvfs.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: when the date and time value is missing.
     """
     if not self._date_time:
-      raise errors.ParseError('Unable to parse, record incomplete.')
+      raise errors.ParseError('Missing date time value.')
 
     # Create relevant events for record
     if self._downgrade:
@@ -256,6 +261,9 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       key (str): identifier of the structure of tokens.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a log entry.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
     if key == 'record_start':
       self._ParseRecordStart(parser_mediator, structure)
@@ -294,7 +302,6 @@ class APTHistoryLogParser(text_parser.PyparsingSingleLineTextParser):
       return False
 
     return True
-
 
 
 manager.ParsersManager.RegisterParser(APTHistoryLogParser)

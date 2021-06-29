@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-"""This file contains the MacOS securityd log plaintext parser.
+"""Parses MacOS security daemon (securityd) log files.
 
 Also see:
-  http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
+  https://opensource.apple.com/source/Security/Security-55471/sec/securityd
 """
-
-from __future__ import unicode_literals
 
 import pyparsing
 
@@ -15,7 +13,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -49,10 +46,10 @@ class MacOSSecuritydLogEventData(events.EventData):
 
 
 class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses the securityd file that contains logs from the security daemon."""
+  """Parses MacOS security daemon (securityd) log files."""
 
   NAME = 'mac_securityd'
-  DESCRIPTION = 'Parser for MacOS securityd log files.'
+  DATA_FORMAT = 'MacOS security daemon (securityd) log file'
 
   _ENCODING = 'utf-8'
   _DEFAULT_YEAR = 2012
@@ -92,7 +89,7 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       ('repeated', REPEATED_LINE)]
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(MacOSSecuritydLogParser, self).__init__()
     self._last_month = None
     self._previous_structure = None
@@ -120,7 +117,7 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
     # Note that dfdatetime_time_elements.TimeElements will raise ValueError
     # for an invalid month.
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     if month != 0 and month < self._last_month:
       # Gap detected between years.

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """This file contains BagMRU Windows Registry plugins (shellbags)."""
 
-from __future__ import unicode_literals
+import os
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers.shared import shell_items
-from plaso.parsers import winreg
-from plaso.parsers.winreg_plugins import dtfabric_plugin
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -33,11 +33,11 @@ class BagMRUEventData(events.EventData):
 
 
 class BagMRUWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Class that defines a BagMRU Windows Registry plugin."""
 
   NAME = 'bagmru'
-  DESCRIPTION = 'Parser for BagMRU Registry data.'
+  DATA_FORMAT = 'BagMRU (or ShellBags) Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -58,7 +58,8 @@ class BagMRUWindowsRegistryPlugin(
           'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
           'ShellNoRoam\\BagMRU')])
 
-  _DEFINITION_FILE = 'mru.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'mru.yaml')
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_number, parent_path_segments,
@@ -175,7 +176,7 @@ class BagMRUWindowsRegistryPlugin(
       entry_numbers[entry_number] = upper_path_segment
 
       entry = 'Index: {0:d} [MRU Value {1:d}]: Shell item path: {2:s}'.format(
-          entry_index + 1, entry_number, path)
+          entry_index + 1, entry_number, path or 'N/A')
       entries.append(entry)
 
     event_data = BagMRUEventData()
@@ -186,7 +187,7 @@ class BagMRUWindowsRegistryPlugin(
         registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    for entry_number, path_segment in iter(entry_numbers.items()):
+    for entry_number, path_segment in entry_numbers.items():
       sub_key_name = '{0:d}'.format(entry_number)
       sub_key = registry_key.GetSubkeyByName(sub_key_name)
       if not sub_key:
@@ -214,4 +215,4 @@ class BagMRUWindowsRegistryPlugin(
     self._ParseSubKey(parser_mediator, registry_key, [], codepage=codepage)
 
 
-winreg.WinRegistryParser.RegisterPlugin(BagMRUWindowsRegistryPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(BagMRUWindowsRegistryPlugin)

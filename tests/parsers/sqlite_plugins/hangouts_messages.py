@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the hangouts messages plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import hangouts_messages as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import hangouts_messages
 
@@ -22,32 +19,22 @@ class HangoutsMessagesTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['googlehangouts.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
-    # Check the second message.
-    event = events[1]
+    expected_event_values = {
+        'body': 'How are you?',
+        'data_type': 'android:messaging:hangouts',
+        'date_time': '2017-07-17 04:41:54.326967',
+        'message_status': 4,
+        'message_type': 2,
+        'sender': 'John Macron',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2017-07-17 04:41:54.326967')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.body, 'How are you?')
-    self.assertEqual(event_data.message_status, 4)
-    self.assertEqual(event_data.message_type, 2)
-    self.assertEqual(event_data.sender, 'John Macron')
-
-    expected_message = (
-        'Sender: John Macron '
-        'Body: How are you? '
-        'Status: READ '
-        'Type: RECEIVED')
-    expected_short_message = 'How are you?'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 if __name__ == '__main__':

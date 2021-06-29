@@ -1,7 +1,7 @@
 name: job
 type: format
 description: Windows Job file format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Job%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Job%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer

@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tool options mix-ins."""
 
-from __future__ import unicode_literals
-
+import argparse
 import unittest
 
 from plaso.cli import tool_options
@@ -134,6 +133,21 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
+  _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
+usage: tool_options.py [--dynamic_time] [--output_time_zone TIME_ZONE]
+
+Test argument parser.
+
+{0:s}:
+  --dynamic_time, --dynamic-time
+                        Indicate that the output should use dynamic time.
+  --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
+                        time zone of date and time values written to the
+                        output, if supported by the output format. Output
+                        formats that support this are: dynamic and l2t_csv.
+                        Use "list" to see a list of available time zones.
+""".format(test_lib.ARGPARSE_OPTIONS)
+
   def testGetOutputModulesInformation(self):
     """Tests the _GetOutputModulesInformation function."""
     test_tool = TestToolWithOutputModuleOptions()
@@ -144,6 +158,38 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
     available_module_names = [name for name, _ in modules_info]
     self.assertIn('dynamic', available_module_names)
     self.assertIn('json', available_module_names)
+
+  def testParseOutputOptions(self):
+    """Tests the _ParseOutputOptions function."""
+    test_tool = TestToolWithOutputModuleOptions()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseOutputOptions(options)
+    self.assertFalse(test_tool._output_dynamic_time)
+    self.assertIsNone(test_tool._output_time_zone)
+
+    options.output_time_zone = 'list'
+    test_tool._ParseOutputOptions(options)
+    self.assertFalse(test_tool._output_dynamic_time)
+    self.assertIsNone(test_tool._output_time_zone)
+
+    options.output_time_zone = 'CET'
+    test_tool._ParseOutputOptions(options)
+    self.assertFalse(test_tool._output_dynamic_time)
+    self.assertEqual(test_tool._output_time_zone, 'CET')
+
+  def testAddOutputOptions(self):
+    """Tests the AddOutputOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog='tool_options.py', description='Test argument parser.',
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+
+    test_tool = TestToolWithOutputModuleOptions()
+    test_tool.AddOutputOptions(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_OUTPUT_TIME_ZONE_OPTION)
 
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""
@@ -177,7 +223,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
       expected_number_of_tables += 1
 
     self.assertEqual(number_of_tables, expected_number_of_tables)
-    expected_line = 'rawpy : "raw" (or native) Python output.'
+    expected_line = 'rawpy : native (or "raw") Python output.'
     self.assertIn(expected_line, lines)
 
 
@@ -191,6 +237,22 @@ class ProfilingOptionsTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
+  _EXPECTED_OUTPUT = """\
+
+********************************** Profilers ***********************************
+       Name : Description
+--------------------------------------------------------------------------------
+  analyzers : Profile CPU time of analyzers, like hashing
+     memory : Profile memory usage over time
+    parsers : Profile CPU time per parser
+ processing : Profile CPU time of processing phases
+serializers : Profile CPU time of serialization
+    storage : Profile storage reads and writes
+ task_queue : Profile task queue status (multi-processing only)
+      tasks : Profile the status of tasks (multi-processing only)
+--------------------------------------------------------------------------------
+"""
+
   def testListProfilers(self):
     """Tests the ListProfilers function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -198,15 +260,8 @@ class ProfilingOptionsTest(test_lib.CLIToolTestCase):
 
     test_tool.ListProfilers()
 
-    string = output_writer.ReadOutput()
-    expected_string = (
-        '\n'
-        '********************************** Profilers '
-        '***********************************\n'
-        '       Name : Description\n'
-        '----------------------------------------'
-        '----------------------------------------\n')
-    self.assertTrue(string.startswith(expected_string))
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, self._EXPECTED_OUTPUT)
 
 
 class TestToolWithStorageFileOptions(

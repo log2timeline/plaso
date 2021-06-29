@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin to look up files in VirusTotal and tag events."""
 
-from __future__ import unicode_literals
-
-from plaso.analysis import interface
+from plaso.analysis import hash_tagging
 from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.lib import errors
 
 
-class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
-  """Class that analyzes file hashes by consulting VirusTotal."""
+class VirusTotalAnalyzer(hash_tagging.HTTPHashAnalyzer):
+  """Class that analyzes file hashes by consulting VirusTotal.
 
-  _VIRUSTOTAL_API_REPORT_URL = (
-      'https://www.virustotal.com/vtapi/v2/file/report')
+  The API is documented here:
+  https://developers.virustotal.com/reference
+  """
+
+  SUPPORTED_HASHES = ['md5', 'sha1', 'sha256']
 
   _EICAR_SHA256 = (
       '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f')
 
-  SUPPORTED_HASHES = ['md5', 'sha1', 'sha256']
+  _VIRUSTOTAL_API_REPORT_URL = (
+      'https://www.virustotal.com/vtapi/v2/file/report')
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a VirusTotal analyzer.
@@ -31,10 +33,9 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
     super(VirusTotalAnalyzer, self).__init__(
         hash_queue, hash_analysis_queue, **kwargs)
     self._api_key = None
-    self._checked_for_old_python_version = False
 
   def _QueryHashes(self, digests):
-    """Queries VirusTotal for a specfic hashes.
+    """Queries VirusTotal for a specific hashes.
 
     Args:
       digests (list[str]): hashes to look up.
@@ -56,9 +57,6 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
 
   def Analyze(self, hashes):
     """Looks up hashes in VirusTotal using the VirusTotal HTTP API.
-
-    The API is documented here:
-      https://www.virustotal.com/en/documentation/public-api/
 
     Args:
       hashes (list[str]): hashes to look up.
@@ -83,7 +81,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
 
     for result in json_response:
       resource = result['resource']
-      hash_analysis = interface.HashAnalysis(resource, result)
+      hash_analysis = hash_tagging.HashAnalysis(resource, result)
       hash_analyses.append(hash_analysis)
 
     return hash_analyses
@@ -106,13 +104,11 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
     return json_response is not None
 
 
-class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
+class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in VirusTotal."""
 
   # TODO: Check if there are other file types worth checking VirusTotal for.
   DATA_TYPES = ['pe:compilation:compilation_time']
-
-  URLS = ['https://virustotal.com']
 
   NAME = 'virustotal'
 
@@ -123,7 +119,6 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   def __init__(self):
     """Initializes a VirusTotal analysis plugin."""
     super(VirusTotalAnalysisPlugin, self).__init__(VirusTotalAnalyzer)
-    self._api_key = None
 
   def EnableFreeAPIKeyRateLimit(self):
     """Configures Rate limiting for queries to VirusTotal.

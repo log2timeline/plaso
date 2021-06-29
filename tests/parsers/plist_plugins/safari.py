@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Safari history plist plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import safari
 
 from tests.parsers.plist_plugins import test_lib
@@ -23,30 +20,28 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 18)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[7]
+    expected_event_values = {
+        'data_type': 'safari:history:visit',
+        'date_time': '2013-07-08 17:31:00.000000'}
 
-    self.CheckTimestamp(event.timestamp, '2013-07-08 17:31:00.000000')
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
-    event = events[9]
+    expected_event_values = {
+        'data_type': 'safari:history:visit',
+        'date_time': '2013-07-08 20:53:54.000000',
+        'title': 'Amínósýrur',
+        'url': 'http://netverslun.sci-mx.is/aminosyrur',
+        'visit_count': 1}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_url = 'http://netverslun.sci-mx.is/aminosyrur'
-    self.assertEqual(event_data.url, expected_url)
-
-    expected_message = (
-        'Visited: {0:s} (Am\xedn\xf3s\xfdrur ) '
-        'Visit Count: 1').format(expected_url)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
 
 if __name__ == '__main__':

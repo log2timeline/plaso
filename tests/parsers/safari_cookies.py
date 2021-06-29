@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Safari cookie parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import safari_cookies as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import safari_cookies
 
@@ -19,58 +16,57 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
   def testParseFile(self):
     """Tests the Parse function on a Safari binary cookies file."""
     parser = safari_cookies.BinaryCookieParser()
-    storage_writer = self._ParseFile(
-        ['Cookies.binarycookies'], parser)
-
-    cookie_events = []
-    for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      if event_data.data_type == 'safari:cookie:entry':
-        cookie_events.append(event)
+    storage_writer = self._ParseFile(['Cookies.binarycookies'], parser)
 
     # There should be:
     # * 207 events in total
     # * 182 events from the safari cookie parser
     # * 25 event from the cookie plugins
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 207)
-    self.assertEqual(len(cookie_events), 182)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
-    event = cookie_events[3]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.flags, 5)
-    self.assertEqual(event_data.url, 'accounts.google.com')
-    self.assertEqual(event_data.cookie_name, 'GAPS')
+    events = []
+    for event in storage_writer.GetEvents():
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type == 'safari:cookie:entry':
+        events.append(event)
 
-    event = cookie_events[48]
+    self.assertEqual(len(events), 182)
 
-    self.CheckTimestamp(event.timestamp, '2013-07-08 20:54:50.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    expected_event_values = {
+        'cookie_name': 'GAPS',
+        'data_type': 'safari:cookie:entry',
+        'flags': 5,
+        'url': 'accounts.google.com'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.flags, 0)
-    self.assertEqual(event_data.cookie_name, 'nonsession')
-    self.assertEqual(event_data.path, '/')
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    expected_message = '.ebay.com </> (nonsession)'
-    expected_short_message = '.ebay.com (nonsession)'
+    expected_event_values = {
+        'cookie_name': 'nonsession',
+        'date_time': '2013-07-08 20:54:50.000000',
+        'data_type': 'safari:cookie:entry',
+        'flags': 0,
+        'path': '/',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'url': '.ebay.com'}
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[48], expected_event_values)
 
-    event = cookie_events[52]
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.cookie_name, 'fpc')
-    value = (
-        'd=0dTg3Ou32s3MrAJ2iHjFph100Tw3E1HTfDOTly0GfJ2g4W.mXpy54F9fjBFfXMw4YyW'
-        'AG2cT2FVSqOvGGi_Y1OPrngmNvpKPPyz5gIUP6x_EQeM7bR3jsrg_F1UXVOgu6JgkFwqO'
-        '5uHrv4HiL05qb.85Bl.V__HZI5wpAGOGPz1XHhY5mOMH.g.pkVDLli36W2iuYwA-&v=2')
-    self.assertEqual(event_data.cookie_value, value)
+    expected_event_values = {
+        'cookie_name': 'fpc',
+        'cookie_value': (
+            'd=0dTg3Ou32s3MrAJ2iHjFph100Tw3E1HTfDOTly0GfJ2g4W.mXpy54F9fjBFfXMw'
+            '4YyWAG2cT2FVSqOvGGi_Y1OPrngmNvpKPPyz5gIUP6x_EQeM7bR3jsrg_F1UXVOgu'
+            '6JgkFwqO5uHrv4HiL05qb.85Bl.V__HZI5wpAGOGPz1XHhY5mOMH.g.pkVDLli36W'
+            '2iuYwA-&v=2'),
+        'date_time': '2013-07-08 17:24:30.000000',
+        'data_type': 'safari:cookie:entry',
+        'path': '/',
+        'url': '.www.yahoo.com'}
 
-    self.assertEqual(event_data.path, '/')
-    self.assertEqual(event_data.url, '.www.yahoo.com')
+    self.CheckEventValues(storage_writer, events[52], expected_event_values)
 
 
 if __name__ == '__main__':

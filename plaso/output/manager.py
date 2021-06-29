@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output plugin manager."""
 
-from __future__ import unicode_literals
-
-from plaso.lib import py2to3
-
-from plaso.output import interface
-
 
 class OutputManager(object):
   """Output module manager."""
@@ -47,7 +41,7 @@ class OutputManager(object):
     Yields:
       tuple[str, type]: output module name and class.
     """
-    for _, output_class in iter(cls._disabled_output_classes.items()):
+    for output_class in cls._disabled_output_classes.values():
       yield output_class.NAME, output_class
 
   @classmethod
@@ -64,7 +58,7 @@ class OutputManager(object):
       KeyError: if there is no output class found with the supplied name.
       ValueError: if name is not a string.
     """
-    if not isinstance(name, py2to3.STRING_TYPES):
+    if not isinstance(name, str):
       raise ValueError('Name attribute is not a string.')
 
     name = name.lower()
@@ -81,7 +75,7 @@ class OutputManager(object):
     Yields:
       tuple[str, type]: output class name and type object.
     """
-    for _, output_class in iter(cls._output_classes.items()):
+    for output_class in cls._output_classes.values():
       yield output_class.NAME, output_class
 
   @classmethod
@@ -94,31 +88,10 @@ class OutputManager(object):
     Returns:
       bool: True if the output class is registered.
     """
-    if not isinstance(name, py2to3.STRING_TYPES):
+    if not isinstance(name, str):
       return False
 
     return name.lower() in cls._output_classes
-
-  @classmethod
-  def IsLinearOutputModule(cls, name):
-    """Determines if a specific output class is a linear output module.
-
-    Args:
-      name (str): name of the output module.
-
-    Returns:
-      True: if the output module is linear.
-    """
-    name = name.lower()
-
-    output_class = cls._output_classes.get(name, None)
-    if not output_class:
-      output_class = cls._disabled_output_classes.get(name, None)
-
-    if output_class:
-      return issubclass(output_class, interface.LinearOutputModule)
-
-    return False
 
   @classmethod
   def NewOutputModule(cls, name, output_mediator):

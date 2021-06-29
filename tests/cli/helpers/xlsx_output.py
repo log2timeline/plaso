@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the XLSX output module CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -26,7 +24,7 @@ usage: cli_helper.py [--fields FIELDS] [--additional_fields ADDITIONAL_FIELDS]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --additional_fields ADDITIONAL_FIELDS
                         Defines extra fields to be included in the output, in
                         addition to the default fields, which are datetime,tim
@@ -36,7 +34,7 @@ optional arguments:
   --timestamp_format TIMESTAMP_FORMAT
                         Set the timestamp format that will be used in the
                         datetimecolumn of the XLSX spreadsheet.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

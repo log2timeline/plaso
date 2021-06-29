@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Safari History files.
-
-The Safari History is stored in SQLite database files named History.db
-"""
-from __future__ import unicode_literals
+"""SQLite parser plugin for Safari history database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
@@ -19,6 +15,9 @@ class SafariHistoryPageVisitedEventData(events.EventData):
 
   Attributes:
     host (str): hostname of the server.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     title (str): title of the webpage visited.
     url (str): URL visited.
     visit_count (int): number of times the website was visited.
@@ -33,6 +32,8 @@ class SafariHistoryPageVisitedEventData(events.EventData):
     super(SafariHistoryPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.host = None
+    self.offset = None
+    self.query = None
     self.title = None
     self.url = None
     self.visit_count = None
@@ -41,13 +42,21 @@ class SafariHistoryPageVisitedEventData(events.EventData):
 
 
 class SafariHistoryPluginSqlite(interface.SQLitePlugin):
-  """Parse Safari History Files.
+  """SQLite parser plugin for Safari history database files.
 
-  Safari history file is stored in a SQLite database file named History.db
+  The Safari history database file is typically stored in:
+  History.db
   """
 
-  NAME = 'safari_history'
-  DESCRIPTION = 'Parser for Safari history SQLite database files.'
+  NAME = 'safari_historydb'
+  DATA_FORMAT = 'Safari history SQLite database (History.db) file'
+
+  REQUIRED_STRUCTURE = {
+      'history_items': frozenset([
+          'id', 'url', 'visit_count']),
+      'history_visits': frozenset([
+          'id', 'history_item', 'visit_time', 'redirect_destination', 'title',
+          'http_non_get', 'redirect_source'])}
 
   QUERIES = [
       (('SELECT history_items.id, history_items.url, history_items.visit'
@@ -59,8 +68,6 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
         'WHERE history_items.id = history_visits.history_item '
         'ORDER BY history_visits.visit_time'), 'ParsePageVisitRow')
   ]
-
-  REQUIRED_TABLES = frozenset(['history_items', 'history_visits'])
 
   SCHEMAS = [{
       'history_client_versions': (

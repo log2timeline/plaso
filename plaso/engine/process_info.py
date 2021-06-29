@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Information about running process."""
 
-from __future__ import unicode_literals
-
 import psutil
 
 

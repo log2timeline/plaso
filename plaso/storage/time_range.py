@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Storage time range objects."""
 
-from __future__ import unicode_literals
-
 
 class TimeRange(object):
   """Date and time range.

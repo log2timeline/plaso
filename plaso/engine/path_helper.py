@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """The path helper."""
 
-from __future__ import unicode_literals
+import re
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.engine import logger
-from plaso.lib import py2to3
 
 
 class PathHelper(object):
   """Class that implements the path helper."""
+
+  _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + list(range(0x7f, 0xa0))
+  _ESCAPE_CHARACTERS = str.maketrans({
+      value: '\\x{0:02x}'.format(value)
+      for value in _NON_PRINTABLE_CHARACTERS})
 
   _RECURSIVE_GLOB_LIMIT = 10
 
@@ -25,6 +29,8 @@ class PathHelper(object):
           ['%%users.userprofile%%', 'AppData', 'LocalLow']],
       '%%users.temp%%': [
           ['%%users.localappdata%%', 'Temp']]}
+
+  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   @classmethod
   def _ExpandUsersHomeDirectoryPathSegments(
@@ -256,7 +262,7 @@ class PathHelper(object):
       for environment_variable in environment_variables:
         attribute_name = environment_variable.name.upper()
         attribute_value = environment_variable.value
-        if not isinstance(attribute_value, py2to3.STRING_TYPES):
+        if not isinstance(attribute_value, str):
           continue
 
         lookup_table[attribute_name] = attribute_value
@@ -300,7 +306,8 @@ class PathHelper(object):
       text_prepend (Optional[str]): text to prepend.
 
     Returns:
-      str: human readable version of the path specification or None.
+      str: human readable version of the path specification or None if no path
+          specification was provided.
     """
     if not path_spec:
       return None
@@ -313,11 +320,17 @@ class PathHelper(object):
     if text_prepend:
       relative_path = '{0:s}{1:s}'.format(text_prepend, relative_path)
 
+    path_type_indicator = path_spec.type_indicator
+
     parent_path_spec = path_spec.parent
-    if parent_path_spec and path_spec.type_indicator in (
-        dfvfs_definitions.TYPE_INDICATOR_BZIP2,
-        dfvfs_definitions.TYPE_INDICATOR_GZIP):
-      parent_path_spec = parent_path_spec.parent
+    if parent_path_spec:
+      if path_spec.type_indicator == (
+          dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM):
+        path_type_indicator = path_spec.compression_method.upper()
+        parent_path_spec = parent_path_spec.parent
+
+      elif path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
+        parent_path_spec = parent_path_spec.parent
 
     if parent_path_spec and parent_path_spec.type_indicator == (
         dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
@@ -326,7 +339,13 @@ class PathHelper(object):
         return 'VSS{0:d}:{1:s}:{2:s}'.format(
             store_index + 1, path_spec.type_indicator, relative_path)
 
-    return '{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
+    display_name = '{0:s}:{1:s}'.format(path_type_indicator, relative_path)
+
+    if cls._UNICODE_SURROGATES_RE.search(display_name):
+      display_name = display_name.encode('utf-8', errors='surrogateescape')
+      display_name = display_name.decode('utf-8', errors='backslashreplace')
+
+    return display_name
 
   @classmethod
   def GetRelativePathForPathSpec(cls, path_spec, mount_path=None):
@@ -358,8 +377,11 @@ class PathHelper(object):
     if not location:
       return None
 
+    location = location.translate(cls._ESCAPE_CHARACTERS)
+
     data_stream = getattr(path_spec, 'data_stream', None)
     if data_stream:
+      data_stream = data_stream.translate(cls._ESCAPE_CHARACTERS)
       location = '{0:s}:{1:s}'.format(location, data_stream)
 
     if path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_OS:

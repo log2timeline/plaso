@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the processing configuration classes."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.engine import configurations
@@ -36,15 +34,6 @@ class ExtractionConfigurationTest(unittest.TestCase):
     self.assertIsNotNone(configuration)
 
 
-class InputSourceConfigurationTest(unittest.TestCase):
-  """Tests the input source configuration settings."""
-
-  def testInitialization(self):
-    """Tests the __init__ function."""
-    configuration = configurations.InputSourceConfiguration()
-    self.assertIsNotNone(configuration)
-
-
 class ProfilingConfigurationTest(unittest.TestCase):
   """Tests the profiling configuration settings."""
 
@@ -52,6 +41,11 @@ class ProfilingConfigurationTest(unittest.TestCase):
     """Tests the __init__ function."""
     configuration = configurations.ProfilingConfiguration()
     self.assertIsNotNone(configuration)
+
+  def testHaveProfileAnalyzers(self):
+    """Tests the HaveProfileAnalyzers function."""
+    configuration = configurations.ProfilingConfiguration()
+    self.assertFalse(configuration.HaveProfileAnalyzers())
 
   def testHaveProfileMemory(self):
     """Tests the HaveProfileMemory function."""

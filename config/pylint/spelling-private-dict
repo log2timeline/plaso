@@ -47,7 +47,6 @@ bde
 bencode
 bencoded
 bing
-biplist
 bkup
 bla
 bluetooth
@@ -463,7 +462,6 @@ queueempty
 queueing
 raðar
 rc
-readfp
 readline
 readlines
 recurse
@@ -475,7 +473,6 @@ referer
 reformats
 regexes
 regf
-regvalue
 reimplement
 renable
 repl

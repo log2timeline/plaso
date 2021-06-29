@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the WinVer Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import windows_version
 
@@ -26,8 +23,9 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_version.WindowsRegistryInstallationEventData()
 
     expected_attribute_names = [
-        'build_number', 'data_type', 'key_path', 'offset', 'owner',
-        'product_name', 'query', 'service_pack', 'version']
+        '_event_data_stream_row_identifier', 'build_number', 'data_type',
+        'key_path', 'owner', 'parser', 'product_name', 'service_pack',
+        'version']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -99,66 +97,46 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     key_path = (
         'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-    time_string = '2012-08-31 20:09:55.123521'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey(key_path, '2012-08-31 20:09:55.123521')
 
     plugin = windows_version.WindowsVersionPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.123521')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
-
-    expected_message = (
-        '[{0:s}] '
+    expected_values = (
         'CSDVersion: [REG_SZ] Service Pack 1 '
         'CurrentVersion: [REG_SZ] 5.1 '
         'ProductName: [REG_SZ] MyTestOS '
-        'RegisteredOwner: [REG_SZ] A Concerned Citizen').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'RegisteredOwner: [REG_SZ] A Concerned Citizen')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2012-08-31 20:09:55.1235210',
+        'data_type': 'windows:registry:key_value',
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+        'values': expected_values}
 
-    event = events[1]
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_INSTALLATION)
+    expected_event_values = {
+        'date_time': '2012-08-31 20:09:55',
+        'data_type': 'windows:registry:installation',
+        'key_path': key_path,
+        'owner': 'A Concerned Citizen',
+        'product_name': 'MyTestOS',
+        'service_pack': 'Service Pack 1',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_INSTALLATION,
+        'version': '5.1'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:installation')
-    self.assertEqual(event_data.key_path, key_path)
-    self.assertEqual(event_data.owner, 'A Concerned Citizen')
-    self.assertEqual(event_data.product_name, 'MyTestOS')
-    self.assertEqual(event_data.service_pack, 'Service Pack 1')
-    self.assertEqual(event_data.version, '5.1')
-
-    expected_message = (
-        'MyTestOS 5.1 Service Pack 1 '
-        'Owner: A Concerned Citizen '
-        'Origin: {0:s}').format(key_path)
-    expected_short_message = (
-        'MyTestOS 5.1 Service Pack 1 '
-        'Origin: HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Win...')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessFile(self):
     """Tests the Process function on a Windows Registry file."""
@@ -173,25 +151,13 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2012-03-15 07:09:20.671875')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
-
-    expected_message = (
-        '[{0:s}] '
+    expected_values = (
         'BuildGUID: [REG_SZ] f4bf21b9-55fe-4ee8-a84b-0e91cbd5fe5d '
         'BuildLab: [REG_SZ] 7601.win7sp1_gdr.111118-2330 '
         'BuildLabEx: [REG_SZ] 7601.17727.amd64fre.win7sp1_gdr.111118-2330 '
@@ -211,11 +177,18 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'RegisteredOrganization: [REG_SZ]  '
         'RegisteredOwner: [REG_SZ] Windows User '
         'SoftwareType: [REG_SZ] System '
-        'SystemRoot: [REG_SZ] C:\\Windows').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'SystemRoot: [REG_SZ] C:\\Windows')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2012-03-15 07:09:20.6718750',
+        'data_type': 'windows:registry:key_value',
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'values': expected_values}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 if __name__ == '__main__':

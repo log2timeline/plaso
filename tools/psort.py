@@ -9,8 +9,6 @@ See additional details here:
   https://plaso.readthedocs.io/en/latest/sources/user/Using-psort.html
 """
 
-from __future__ import unicode_literals
-
 import multiprocessing
 import logging
 import os
@@ -53,15 +51,19 @@ def Main():
     tool.ListAnalysisPlugins()
     have_list_option = True
 
-  if tool.list_output_modules:
-    tool.ListOutputModules()
-    have_list_option = True
-
   if tool.list_language_identifiers:
     tool.ListLanguageIdentifiers()
     have_list_option = True
 
-  if tool.list_timezones:
+  if tool.list_output_modules:
+    tool.ListOutputModules()
+    have_list_option = True
+
+  if tool.list_profilers:
+    tool.ListProfilers()
+    have_list_option = True
+
+  if tool.list_time_zones:
     tool.ListTimeZones()
     have_list_option = True
 
@@ -71,8 +73,17 @@ def Main():
   try:
     tool.ProcessStorage()
 
+  # Writing to stdout and stderr will raise BrokenPipeError if it
+  # receives a SIGPIPE.
+  except BrokenPipeError:
+    pass
+
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')
+    return False
+
+  except RuntimeError as exception:
+    print(exception)
     return False
 
   except errors.BadConfigOption as exception:

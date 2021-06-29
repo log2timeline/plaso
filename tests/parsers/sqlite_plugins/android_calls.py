@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android SMS call history plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import android_calls as _  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import android_calls
 
 from tests.parsers.sqlite_plugins import test_lib
@@ -18,49 +15,36 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Test the Process function on an Android contacts2.db file."""
     plugin = android_calls.AndroidCallPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['contacts2.db'], plugin)
+    storage_writer = self._ParseDatabaseFileWithPlugin(['contacts2.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    # Check the first event.
-    event = events[0]
+    expected_event_values = {
+        'call_type': 'MISSED',
+        'data_type': 'android:event:call',
+        'date_time': '2013-11-06 21:17:16.690',
+        'number': '5404561685',
+        'timestamp_desc': 'Call Started'}
 
-    self.assertEqual(event.timestamp_desc, 'Call Started')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    self.CheckTimestamp(event.timestamp, '2013-11-06 21:17:16.690000')
+    expected_event_values = {
+        'data_type': 'android:event:call',
+        'date_time': '2013-11-07 00:03:36.690'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    expected_number = '5404561685'
-    self.assertEqual(event_data.number, expected_number)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    expected_type = 'MISSED'
-    self.assertEqual(event_data.call_type, expected_type)
+    expected_event_values = {
+        'data_type': 'android:event:call',
+        'date_time': '2013-11-07 00:14:15.690',
+        'duration': 639,
+        'timestamp_desc': 'Call Ended'}
 
-    expected_message = (
-        'MISSED '
-        'Number: 5404561685 '
-        'Name: Barney '
-        'Duration: 0 seconds')
-    expected_short_message = 'MISSED Call'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    event = events[3]
-
-    self.CheckTimestamp(event.timestamp, '2013-11-07 00:03:36.690000')
-
-    event = events[4]
-
-    self.CheckTimestamp(event.timestamp, '2013-11-07 00:14:15.690000')
-
-    self.assertEqual(event.timestamp_desc, 'Call Ended')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.duration, 639)
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
 
 if __name__ == '__main__':

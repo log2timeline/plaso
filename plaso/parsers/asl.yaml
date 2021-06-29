@@ -1,7 +1,7 @@
 name: asl
 type: format
 description: Apple System Log (ASL) file format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Apple%20System%20Log%20(ASL)%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20System%20Log%20(ASL)%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer
@@ -47,6 +47,7 @@ members:
   type: stream
   element_data_type: byte
   elements_data_size: 12
+  value: "ASL DB\x00\x00\x00\x00\x00\x00"
 - name: format_version
   data_type: uint32
 - name: first_log_entry_offset

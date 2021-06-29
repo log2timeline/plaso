@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the scan tree-based path filter."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.filters import path_filter

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for Tango on Android plugins."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions
@@ -21,54 +19,45 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_profile.db'], plugin)
 
-    # We should have 115 tango profile events in total with no warnings.
-    self.assertEqual(115, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_warnings)
+    # We should have 115 events in total with no warnings.
+    self.assertEqual(storage_writer.number_of_events, 115)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
-    # Test tango contact last active time event.
-    event = events[14]
+    # Test a contact last active event.
+    expected_event_values = {
+        'birthday': '1980-10-01',
+        'data_type': 'tango:android:contact',
+        'date_time': '2016-01-15 13:21:45.624',
+        'distance': 39.04880905,
+        'first_name': 'Rouel',
+        'friend_request_message': 'I am following you on Tango',
+        'friend_request_type': 'outRequest',
+        'gender': 'male',
+        'is_friend': False,
+        'last_name': 'Henry',
+        'status': 'Praying!',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACTIVE}
 
-    self.CheckTimestamp(event.timestamp, '2016-01-15 13:21:45.624000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACTIVE)
+    self.CheckEventValues(storage_writer, events[14], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.first_name, 'Rouel')
-    self.assertEqual(event_data.last_name, 'Henry')
-    self.assertEqual(event_data.birthday, '1980-10-01')
-    self.assertEqual(event_data.gender, 'male')
-    self.assertEqual(event_data.status, 'Praying!')
-    self.assertEqual(event_data.distance, 39.04880905)
-    self.assertEqual(event_data.is_friend, False)
-    self.assertEqual(event_data.friend_request_type, 'outRequest')
-    self.assertEqual(
-        event_data.friend_request_message, 'I am following you on Tango')
+    # Test a contact last access event.
+    expected_event_values = {
+        'data_type': 'tango:android:contact',
+        'date_time': '2016-01-15 14:35:20.633',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    expected_message = (
-        'Rouel Henry male birthday: 1980-10-01 Status: Praying! Friend: False '
-        'Request type: outRequest Request message: I am following you on Tango'
-    )
+    self.CheckEventValues(storage_writer, events[57], expected_event_values)
 
-    expected_short_message = 'Rouel Henry Status: Praying!'
+    # Test a contact request sent event.
+    expected_event_values = {
+        'data_type': 'tango:android:contact',
+        'date_time': '2016-01-15 14:35:20.436',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    # Test tango contact last access time event.
-    event = events[57]
-
-    self.CheckTimestamp(event.timestamp, '2016-01-15 14:35:20.633000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-
-    # Test tango contact request sent time event.
-    event = events[56]
-
-    self.CheckTimestamp(event.timestamp, '2016-01-15 14:35:20.436000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_SENT)
+    self.CheckEventValues(storage_writer, events[56], expected_event_values)
 
 
 class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
@@ -80,52 +69,41 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_tc.db'], plugin)
 
-    # We should have 43 tango tc events in total with no warnings.
-    self.assertEqual(43, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_warnings)
+    # We should have 43 events in total with no warnings.
+    self.assertEqual(storage_writer.number_of_events, 43)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
-    # Test the first tango conversation event.
-    event = events[2]
+    # Test the a conversation event.
+    expected_event_values = {
+        'conversation_identifier': 'DyGWr_010wQM_ozkIe-9Ww',
+        'data_type': 'tango:android:conversation',
+        'date_time': 'Not set',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME}
 
-    self.CheckTimestamp(event.timestamp, '1970-01-01 00:00:00.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_NOT_A_TIME)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.conversation_identifier, 'DyGWr_010wQM_ozkIe-9Ww')
+    # Test a message creation event.
+    expected_event_values = {
+        'data_type': 'tango:android:message',
+        'date_time': '2016-01-15 14:41:33.027',
+        'direction': 2,
+        'message_identifier': 16777224,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    expected_message = 'Conversation (DyGWr_010wQM_ozkIe-9Ww)'
-    expected_short_message = 'Conversation (DyGWr_010wQM_ozkIe-9Ww)'
+    self.CheckEventValues(storage_writer, events[21], expected_event_values)
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    # Test a message sent event.
+    expected_event_values = {
+        'data_type': 'tango:android:message',
+        'date_time': '2016-01-15 14:41:34.238',
+        'direction': 2,
+        'message_identifier': 16777224,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
 
-    # Test tango message creation time event
-    event = events[21]
-
-    self.CheckTimestamp(event.timestamp, '2016-01-15 14:41:33.027000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.message_identifier, 16777224)
-    self.assertEqual(event_data.direction, 2)
-
-    expected_message = 'Outgoing Message (16777224)'
-    expected_short_message = 'Outgoing Message (16777224)'
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    # Test tango message sent time event
-    event = events[22]
-
-    self.CheckTimestamp(event.timestamp, '2016-01-15 14:41:34.238000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_SENT)
+    self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
 
 if __name__ == '__main__':

@@ -2,24 +2,22 @@
 """The CUPS IPP files parser.
 
 CUPS IPP version 1.0:
-* http://tools.ietf.org/html/rfc2565
-* http://tools.ietf.org/html/rfc2566
-* http://tools.ietf.org/html/rfc2567
-* http://tools.ietf.org/html/rfc2568
-* http://tools.ietf.org/html/rfc2569
-* http://tools.ietf.org/html/rfc2639
+* https://tools.ietf.org/html/rfc2565
+* https://tools.ietf.org/html/rfc2566
+* https://tools.ietf.org/html/rfc2567
+* https://tools.ietf.org/html/rfc2568
+* https://tools.ietf.org/html/rfc2569
+* https://tools.ietf.org/html/rfc2639
 
 CUPS IPP version 1.1:
-* http://tools.ietf.org/html/rfc2910
-* http://tools.ietf.org/html/rfc2911
-* http://tools.ietf.org/html/rfc3196
-* http://tools.ietf.org/html/rfc3510
+* https://tools.ietf.org/html/rfc2910
+* https://tools.ietf.org/html/rfc2911
+* https://tools.ietf.org/html/rfc3196
+* https://tools.ietf.org/html/rfc3510
 
 CUPS IPP version 2.0:
 * N/A
 """
-
-from __future__ import unicode_literals
 
 import os
 
@@ -28,9 +26,10 @@ from dfdatetime import rfc2579_date_time as dfdatetime_rfc2579_date_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
 
@@ -45,7 +44,6 @@ class CupsIppEventData(events.EventData):
 
   Attributes:
     application (str): application that prints the document.
-    data_dict (dict[str, object]): parsed data coming from the file.
     computer_name (str): name of the computer.
     copies (int): number of copies.
     doc_type (str): type of document.
@@ -65,8 +63,6 @@ class CupsIppEventData(events.EventData):
     self.application = None
     self.computer_name = None
     self.copies = None
-    # TODO: remove data_dict.
-    self.data_dict = None
     self.doc_type = None
     self.job_id = None
     self.job_name = None
@@ -76,13 +72,14 @@ class CupsIppEventData(events.EventData):
     self.user = None
 
 
-class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
+class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for CUPS IPP files."""
 
   NAME = 'cups_ipp'
-  DESCRIPTION = 'Parser for CUPS IPP files.'
+  DATA_FORMAT = 'CUPS IPP file'
 
-  _DEFINITION_FILE = 'cups_ipp.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'cups_ipp.yaml')
 
   _SUPPORTED_FORMAT_VERSIONS = ('1.0', '1.1', '2.0')
 
@@ -387,6 +384,7 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
 
     data_dict = {}
     time_dict = {}
+    is_first_attribute_group = True
 
     try:
       for name, value in self._ParseAttributesGroup(file_object):
@@ -397,16 +395,21 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
         else:
           data_dict.setdefault(name, []).append(value)
 
+        is_first_attribute_group = False
+
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse attributes with error: {0!s}'.format(exception))
+      error_message = (
+          'unable to parse attribute group with error: {0!s}').format(exception)
+      if is_first_attribute_group:
+        raise errors.UnableToParseFile(error_message)
+
+      parser_mediator.ProduceExtractionWarning(error_message)
       return
 
     event_data = CupsIppEventData()
     event_data.application = self._GetStringValue(data_dict, 'application')
     event_data.computer_name = self._GetStringValue(data_dict, 'computer_name')
     event_data.copies = data_dict.get('copies', [0])[0]
-    event_data.data_dict = data_dict
     event_data.doc_type = self._GetStringValue(data_dict, 'doc_type')
     event_data.job_id = self._GetStringValue(data_dict, 'job_id')
     event_data.job_name = self._GetStringValue(data_dict, 'job_name')
@@ -415,12 +418,12 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
     event_data.printer_id = self._GetStringValue(data_dict, 'printer_id')
     event_data.uri = self._GetStringValue(data_dict, 'uri')
 
-    for name, usage in iter(self._DATE_TIME_VALUES.items()):
+    for name, usage in self._DATE_TIME_VALUES.items():
       for date_time in time_dict.get(name, []):
         event = time_events.DateTimeValuesEvent(date_time, usage)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    for name, usage in iter(self._POSIX_TIME_VALUES.items()):
+    for name, usage in self._POSIX_TIME_VALUES.items():
       for time_value in time_dict.get(name, []):
         date_time = dfdatetime_posix_time.PosixTime(timestamp=time_value)
         event = time_events.DateTimeValuesEvent(date_time, usage)

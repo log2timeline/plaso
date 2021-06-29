@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android Application Usage history parsers."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import android_app_usage as _  # pylint: disable=unused-import
 from plaso.parsers import android_app_usage
 
 from tests.parsers import test_lib
@@ -18,53 +15,30 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser = android_app_usage.AndroidAppUsageParser()
-    storage_writer = self._ParseFile(
-        ['usage-history.xml'], parser)
+    storage_writer = self._ParseFile(['usage-history.xml'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 28)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[22]
+    expected_event_values = {
+        'data_type': 'android:event:last_resume_time',
+        'date_time': '2013-12-09 19:28:33.047',
+        'component': (
+            'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd'),
+        'package': 'com.sec.android.widgetapp.ap.hero.accuweather'}
 
-    self.CheckTimestamp(event.timestamp, '2013-12-09 19:28:33.047000')
+    self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.component,
-        'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
+    expected_event_values = {
+        'data_type': 'android:event:last_resume_time',
+        'date_time': '2013-09-27 19:45:55.675',
+        'component': 'com.google.android.gsf.login.NameActivity',
+        'package': 'com.google.android.gsf.login'}
 
-    expected_message = (
-        'Package: '
-        'com.sec.android.widgetapp.ap.hero.accuweather '
-        'Component: '
-        'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
-    expected_short_message = (
-        'Package: com.sec.android.widgetapp.ap.hero.accuweather '
-        'Component: com.sec.and...')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    event = events[17]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.CheckTimestamp(event.timestamp, '2013-09-27 19:45:55.675000')
-
-    self.assertEqual(event_data.package, 'com.google.android.gsf.login')
-
-    expected_message = (
-        'Package: '
-        'com.google.android.gsf.login '
-        'Component: '
-        'com.google.android.gsf.login.NameActivity')
-    expected_short_message = (
-        'Package: com.google.android.gsf.login '
-        'Component: com.google.android.gsf.login...')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[17], expected_event_values)
 
 
 if __name__ == '__main__':

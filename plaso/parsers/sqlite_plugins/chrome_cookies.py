@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Google Chrome Cookie database."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Google Chrome cookies database files."""
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
@@ -25,6 +23,7 @@ class ChromeCookieEventData(events.EventData):
         side script.
     path (str): path where the cookie got set.
     persistent (bool): True if the cookie is persistent.
+    query (str): SQL query that was used to obtain the event data.
     secure (bool): True if the cookie should only be transmitted over a
         secure channel.
     url (str): URL or path where the cookie got set.
@@ -42,53 +41,15 @@ class ChromeCookieEventData(events.EventData):
     self.httponly = None
     self.path = None
     self.persistent = None
+    self.query = None
     self.secure = None
     self.url = None
 
 
-class ChromeCookiePlugin(interface.SQLitePlugin):
-  """Parse Chrome Cookies file."""
-
-  NAME = 'chrome_cookies'
-  DESCRIPTION = 'Parser for Chrome cookies SQLite database files.'
-
-  # Define the needed queries.
-  QUERIES = [
-      # Query for Chrome versions 17 - 65.
-      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
-        'secure, httponly, last_access_utc, has_expires, persistent '
-        'FROM cookies'), 'ParseCookieRow'),
-      # Query for Chrome versions 66 and above. The column names changed
-      # slightly, but the values are the same.
-      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
-        'is_secure AS secure, is_httponly AS httponly, last_access_utc, '
-        'has_expires, is_persistent AS persistent '
-        'FROM cookies'), 'ParseCookieRow')]
-
-  # The required tables for the cookies database.
-  REQUIRED_TABLES = frozenset(['cookies', 'meta'])
-
-  SCHEMAS = [{
-      'cookies': (
-          'CREATE TABLE cookies (creation_utc INTEGER NOT NULL UNIQUE PRIMARY '
-          'KEY, host_key TEXT NOT NULL, name TEXT NOT NULL, value TEXT NOT '
-          'NULL, path TEXT NOT NULL, expires_utc INTEGER NOT NULL, secure '
-          'INTEGER NOT NULL, httponly INTEGER NOT NULL, last_access_utc '
-          'INTEGER NOT NULL, has_expires INTEGER DEFAULT 1, persistent '
-          'INTEGER DEFAULT 1)'),
-      'meta': (
-          'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, '
-          'value LONGVARCHAR)')}]
-
-  # Point to few sources for URL information.
-  URLS = [
-      'http://src.chromium.org/svn/trunk/src/net/cookies/',
-      ('http://www.dfinews.com/articles/2012/02/'
-       'google-analytics-cookies-and-forensic-implications')]
+class BaseChromeCookiePlugin(interface.SQLitePlugin):
+  """SQLite parser plugin for Google Chrome cookies database files."""
 
   # Google Analytics __utmz variable translation.
-  # Taken from:
-  #   http://www.dfinews.com/sites/dfinews.com/files/u739/Tab2Cookies020312.jpg
   GA_UTMZ_TRANSLATION = {
       'utmcsr': 'Last source used to access.',
       'utmccn': 'Ad campaign information.',
@@ -98,7 +59,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
 
   def __init__(self):
     """Initializes a plugin."""
-    super(ChromeCookiePlugin, self).__init__()
+    super(BaseChromeCookiePlugin, self).__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
@@ -176,4 +137,70 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
                 plugin.NAME, exception))
 
 
-sqlite.SQLiteParser.RegisterPlugin(ChromeCookiePlugin)
+class Chrome17CookiePlugin(BaseChromeCookiePlugin):
+  """SQLite parser plugin for Google Chrome 17 - 65 cookies database files."""
+
+  NAME = 'chrome_17_cookies'
+  DATA_FORMAT = 'Google Chrome 17 - 65 cookies SQLite database file'
+
+  REQUIRED_STRUCTURE = {
+      'cookies': frozenset([
+          'creation_utc', 'host_key', 'name', 'value', 'path', 'expires_utc',
+          'secure', 'httponly', 'last_access_utc', 'has_expires',
+          'persistent']),
+      'meta': frozenset([])}
+
+  QUERIES = [
+      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
+        'secure, httponly, last_access_utc, has_expires, persistent '
+        'FROM cookies'), 'ParseCookieRow')]
+
+  SCHEMAS = [{
+      'cookies': (
+          'CREATE TABLE cookies (creation_utc INTEGER NOT NULL UNIQUE PRIMARY '
+          'KEY, host_key TEXT NOT NULL, name TEXT NOT NULL, value TEXT NOT '
+          'NULL, path TEXT NOT NULL, expires_utc INTEGER NOT NULL, secure '
+          'INTEGER NOT NULL, httponly INTEGER NOT NULL, last_access_utc '
+          'INTEGER NOT NULL, has_expires INTEGER DEFAULT 1, persistent '
+          'INTEGER DEFAULT 1)'),
+      'meta': (
+          'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, '
+          'value LONGVARCHAR)')}]
+
+
+class Chrome66CookiePlugin(BaseChromeCookiePlugin):
+  """SQLite parser plugin for Google Chrome 66+ cookies database files."""
+
+  NAME = 'chrome_66_cookies'
+  DATA_FORMAT = 'Google Chrome 66 and later cookies SQLite database file'
+
+  REQUIRED_STRUCTURE = {
+      'cookies': frozenset([
+          'creation_utc', 'host_key', 'name', 'value', 'path', 'expires_utc',
+          'is_secure', 'is_httponly', 'last_access_utc', 'has_expires',
+          'is_persistent']),
+      'meta': frozenset([])}
+
+  QUERIES = [
+      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
+        'is_secure AS secure, is_httponly AS httponly, last_access_utc, '
+        'has_expires, is_persistent AS persistent '
+        'FROM cookies'), 'ParseCookieRow')]
+
+  SCHEMAS = [{
+      'cookies': (
+          'CREATE TABLE cookies (creation_utc INTEGER NOT NULL, host_key TEXT '
+          'NOT NULL, name TEXT NOT NULL, value TEXT NOT NULL, path TEXT NOT '
+          'NULL, expires_utc INTEGER NOT NULL, is_secure INTEGER NOT NULL, '
+          'is_httponly INTEGER NOT NULL, last_access_utc INTEGER NOT NULL, '
+          'has_expires INTEGER NOT NULL DEFAULT 1, is_persistent INTEGER NOT '
+          'NULL DEFAULT 1, priority INTEGER NOT NULL DEFAULT 1, '
+          'encrypted_value BLOB DEFAULT \'\', firstpartyonly INTEGER NOT NULL '
+          'DEFAULT 0, UNIQUE (host_key, name, path))'),
+      'meta': (
+          'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, '
+          'value LONGVARCHAR)')}]
+
+
+sqlite.SQLiteParser.RegisterPlugins([
+    Chrome17CookiePlugin, Chrome66CookiePlugin])

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Android SMS database.
-
-Android SMS messages are stored in SQLite database files named mmssms.dbs.
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Android text messages (SMS) database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -21,6 +16,9 @@ class AndroidSMSEventData(events.EventData):
   Attributes:
     address (str): phone number associated to the sender or receiver.
     body (str): content of the SMS text message.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     sms_read (str): message read status, either Read or Unread.
     sms_type (str): message type, either Sent or Received.
   """
@@ -32,23 +30,28 @@ class AndroidSMSEventData(events.EventData):
     super(AndroidSMSEventData, self).__init__(data_type=self.DATA_TYPE)
     self.address = None
     self.body = None
+    self.offset = None
+    self.query = None
     self.sms_read = None
     self.sms_type = None
 
 
 class AndroidSMSPlugin(interface.SQLitePlugin):
-  """Parser for Android SMS databases."""
+  """SQLite parser plugin for Android text messages (SMS) database files.
+
+  The Android text messages (SMS) database file is typically stored in:
+  mmssms.dbs
+  """
 
   NAME = 'android_sms'
-  DESCRIPTION = 'Parser for Android text messages SQLite database files.'
+  DATA_FORMAT = 'Android text messages (SMS) SQLite database (mmssms.dbs) file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'sms': frozenset(['_id', 'address', 'date', 'read', 'type', 'body'])}
+
   QUERIES = [
       ('SELECT _id AS id, address, date, read, type, body FROM sms',
        'ParseSmsRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['sms'])
 
   SCHEMAS = [{
       'addr': (

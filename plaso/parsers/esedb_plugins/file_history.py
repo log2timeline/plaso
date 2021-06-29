@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for the Microsoft File History ESE database."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -41,7 +39,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
   """Parses a File History ESE database file."""
 
   NAME = 'file_history'
-  DESCRIPTION = 'Parser for File History ESE database files.'
+  DATA_FORMAT = 'Windows 8 File History ESE database file'
 
   # TODO: Add support for other tables as well, backupset, file, library, etc.
   REQUIRED_TABLES = {
@@ -90,7 +88,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
 
     Raises:
@@ -104,16 +102,16 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
 
     strings = cache.GetResults('strings')
     if not strings:
-      esedb_table = database.get_table_by_name('string')
+      esedb_table = database.GetTableByName('string')
       strings = self._GetDictFromStringsTable(parser_mediator, esedb_table)
       cache.StoreDictInCache('strings', strings)
 
-    for esedb_record in table.records:
+    for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, table.name, esedb_record)
+          parser_mediator, table.name, record_index, esedb_record)
 
       event_data = FileHistoryNamespaceEventData()
       event_data.file_attribute = record_values.get('fileAttrib', None)
@@ -137,7 +135,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if not created_timestamp and not modified_timestamp:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
         event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
         parser_mediator.ProduceEventWithEventData(event, event_data)

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Application Compatibility Cache key Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -11,7 +9,6 @@ from dfvfs.path import fake_path_spec
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import appcompatcache
 
 from tests.parsers.winreg_plugins import test_lib
@@ -47,6 +44,8 @@ class TestFileEntry(object):
 
 class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the AppCompatCache Windows Registry plugin."""
+
+  _TEST_KEY_PATH = '\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
 
   _TEST_DATA_XP = bytes(bytearray([
       0xef, 0xbe, 0xad, 0xde, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
@@ -260,11 +259,10 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
-    key_path = '\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromDateTimeString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'AppCompatCache', key_path=key_path,
+        'AppCompatCache', key_path=self._TEST_KEY_PATH,
         last_written_time=filetime.timestamp, offset=1456)
 
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -298,25 +296,22 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 0
-    event = events[event_index]
+    expected_event_values = {
+        'date_time': '2004-08-04 14:00:00.0000000',
+        'data_type': 'windows:registry:appcompatcache',
+        'entry_index': 1,
+        'key_path': self._TEST_KEY_PATH,
+        'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_path = '\\??\\C:\\WINDOWS\\system32\\hticons.dll'
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
-    expected_short_message = 'Path: {0:s}'.format(expected_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessWindows2003(self):
     """Tests the Process function for Windows 2003 AppCompatCache data."""
@@ -326,26 +321,23 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 0
-    event = events[event_index]
+    expected_event_values = {
+        'date_time': '2003-03-24 20:32:18.0000000',
+        'data_type': 'windows:registry:appcompatcache',
+        'entry_index': 1,
+        'key_path': self._TEST_KEY_PATH,
+        'path': (
+            '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_path = (
-        '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
-    expected_short_message = 'Path: {0:s}'.format(expected_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # TODO: implement 64 bit
 
@@ -357,25 +349,22 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 0
-    event = events[event_index]
+    expected_event_values = {
+        'date_time': '2006-11-02 12:35:24.7041218',
+        'data_type': 'windows:registry:appcompatcache',
+        'entry_index': 1,
+        'key_path': self._TEST_KEY_PATH,
+        'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_path = '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
-    expected_short_message = 'Path: {0:s}'.format(expected_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # TODO: implement 64 bit
 
@@ -391,32 +380,24 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 330)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 9
-    event = events[event_index]
+    expected_event_values = {
+        'date_time': '2012-04-04 01:46:37.9329644',
+        'data_type': 'windows:registry:appcompatcache',
+        'entry_index': 10,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'path': '\\??\\C:\\Windows\\PSEXESVC.EXE'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-04 01:46:37.932964')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
-
-    expected_path = '\\??\\C:\\Windows\\PSEXESVC.EXE'
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
-    expected_short_message = 'Path: {0:s}'.format(expected_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     # TODO: implement 64 bit
 
@@ -428,25 +409,22 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 0
-    event = events[event_index]
+    expected_event_values = {
+        'date_time': '2012-02-18 05:18:23.9350000',
+        'data_type': 'windows:registry:appcompatcache',
+        'entry_index': 1,
+        'key_path': self._TEST_KEY_PATH,
+        'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_path = 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
-    expected_short_message = 'Path: {0:s}'.format(expected_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessWindows8_1(self):
     """Tests the Process function for Windows 8.1 AppCompatCache data."""
@@ -456,25 +434,22 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 0
-    event = events[event_index]
+    expected_event_values = {
+        'date_time': '2013-08-22 12:35:25.3750709',
+        'data_type': 'windows:registry:appcompatcache',
+        'entry_index': 1,
+        'key_path': self._TEST_KEY_PATH,
+        'path': 'SYSVOL\\Windows\\System32\\dllhost.exe'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_path = 'SYSVOL\\Windows\\System32\\dllhost.exe'
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
-    expected_short_message = 'Path: {0:s}'.format(expected_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessWindows10(self):
     """Tests the Process function for Windows 10 AppCompatCache data."""
@@ -484,25 +459,22 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 0
-    event = events[event_index]
+    expected_event_values = {
+        'date_time': '2014-09-22 06:42:39.0000000',
+        'data_type': 'windows:registry:appcompatcache',
+        'entry_index': 1,
+        'key_path': self._TEST_KEY_PATH,
+        'path': 'C:\\Windows\\system32\\MpSigStub.exe'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_path = 'C:\\Windows\\system32\\MpSigStub.exe'
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
-    expected_short_message = 'Path: {0:s}'.format(expected_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessWindows10Creator(self):
     """Tests the Process function for Windows 10 Creator AppCompatCache data."""
@@ -512,25 +484,24 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.plugin_name)
+        parser_chain=plugin.NAME)
 
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event_index = 0
-    event = events[event_index]
+    expected_event_values = {
+        'date_time': '2017-03-16 22:56:01.2487145',
+        'data_type': 'windows:registry:appcompatcache',
+        'entry_index': 1,
+        'key_path': self._TEST_KEY_PATH,
+        'path': (
+            'C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\'
+            'nvstreg.exe')}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_path = (
-        'C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\nvstreg.exe')
-    expected_message = '[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_data.key_path, event_index + 1, expected_path)
-    expected_short_message = 'Path: {0:s}'.format(expected_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

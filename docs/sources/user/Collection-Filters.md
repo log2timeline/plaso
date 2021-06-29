@@ -30,14 +30,16 @@ sources:
 conditions: [os_major_version < 6]
 labels: [Logs]
 supported_os: [Windows]
-urls: ['http://www.forensicswiki.org/wiki/Windows_Event_Log_(EVT)']
+urls: ['https://forensicswiki.xyz/wiki/index.php?title=Windows_Event_Log_(EVT)']
 ```
 
 'WindowsEventLogSystem' refers to the path '%SystemRoot%\System32\winevt\Logs\SysEvent.evt'.
 
 To use:
 
-`log2timeline.py --artifact-filters WindowsEventLogSystem name.plaso source.raw`
+```bash
+log2timeline.py --artifact-filters WindowsEventLogSystem --storage-file timeline.plaso source.raw
+```
 
 **Note that for convenience the Forensic Artifacts definition names can also
 be stored in a file.**
@@ -58,16 +60,17 @@ and case insensitive when compared to a case insensitive file system.
 
 To use:
 
-`log2timeline.py --file-filter windows.yaml name.plaso source.raw`
+```bash
+log2timeline.py --file-filter windows.yaml --storage-file timeline.plaso source.raw
+```
 
 ### Text-based filter file format
 
 A text-based filter can be used to describe the path of each file or
 directory Plaso should include in parsing.
 
-**Note that the text-based filter file does not support exclusion filters (or
-blacklisting). If you need this functionality use the YAML-based filter file
-instead.**
+**Note that the text-based filter file does not support exclusion filters.
+If you need this functionality use the YAML-based filter file instead.**
 
 The text-based filter file itself contains a path filter per line or a line
 starting `#` for comment.

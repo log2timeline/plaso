@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper to create filters based on forensic artifact definitions."""
 
-from __future__ import unicode_literals
-
 from artifacts import definitions as artifact_types
 
 from dfwinreg import registry_searcher
@@ -20,7 +18,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
   Builds collection filters from forensic artifact definitions.
 
   For more information about Forensic Artifacts see:
-  https://github.com/ForensicArtifacts/artifacts/blob/master/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
+  https://github.com/ForensicArtifacts/artifacts/blob/main/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
 
   Attributes:
     file_system_artifact_names (set[str]): names of artifacts definitions that
@@ -89,8 +87,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
         # https://github.com/log2timeline/dfwinreg/issues/98
 
         # Use set-comprehension to create a set of the source key paths.
-        key_paths = {
-            key_value['key'] for key_value in source.key_value_pairs}
+        key_paths = {key_value['key'] for key_value in source.key_value_pairs}
         key_paths_string = ', '.join(key_paths)
 
         logger.warning((
@@ -147,13 +144,18 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
           source type.
     """
     find_specs = []
-    for key_path_glob in path_helper.PathHelper.ExpandGlobStars(
-        key_path, '\\'):
+    for key_path_glob in path_helper.PathHelper.ExpandGlobStars(key_path, '\\'):
       logger.debug('building find spec from key path glob: {0:s}'.format(
           key_path_glob))
 
       key_path_glob_upper = key_path_glob.upper()
-      if key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
+      if key_path_glob_upper.startswith(
+          'HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTCONTROLSET'):
+        # Rewrite CurrentControlSet to ControlSet* for Windows NT.
+        key_path_glob = 'HKEY_LOCAL_MACHINE\\System\\ControlSet*{0:s}'.format(
+            key_path_glob[43:])
+
+      elif key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
         key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
 
       find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
@@ -242,7 +244,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
         self.registry_find_specs.append(find_spec)
 
       else:
-        logger.warning('Unsupported find specification type: {0:s}'.format(
+        logger.warning('Unsupported find specification type: {0!s}'.format(
             type(find_spec)))
 
   @classmethod

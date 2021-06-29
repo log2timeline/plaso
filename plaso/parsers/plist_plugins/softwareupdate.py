@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Software update plist plugin."""
+"""Plist parser plugin for MacOS software update plist files."""
 
-from __future__ import unicode_literals
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
@@ -10,9 +10,8 @@ from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-
 class SoftwareUpdatePlugin(interface.PlistPlugin):
-  """Basic plugin to extract the MacOS update status.
+  """Plist parser plugin for MacOS software update plist files.
 
   Further details about the extracted fields:
     LastFullSuccessfulDate:
@@ -21,17 +20,19 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
       timestamp when MacOS was partially update.
   """
 
-  NAME = 'maxos_software_update'
-  DESCRIPTION = 'Parser for MacOS software update plist files.'
+  NAME = 'macos_software_update'
+  DATA_FORMAT = 'MacOS software update plist file'
 
-  PLIST_PATH = 'com.apple.SoftwareUpdate.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('com.apple.SoftwareUpdate.plist')])
+
   PLIST_KEYS = frozenset([
       'LastFullSuccessfulDate', 'LastSuccessfulDate',
       'LastAttemptSystemVersion', 'LastUpdatesAvailable',
       'LastRecommendedUpdatesAvailable', 'RecommendedUpdates'])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant MacOS update entries.
 
     Args:
@@ -49,8 +50,11 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
 
     datetime_value = match.get('LastFullSuccessfulDate', None)
     if datetime_value:
-      event = time_events.PythonDatetimeEvent(
-          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromDatetime(datetime_value)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     datetime_value = match.get('LastSuccessfulDate', None)
@@ -70,8 +74,11 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
           'Last Mac OS {0!s} partially update, pending {1!s}: '
           '{2:s}.').format(version, pending, software)
 
-      event = time_events.PythonDatetimeEvent(
-          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromDatetime(datetime_value)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

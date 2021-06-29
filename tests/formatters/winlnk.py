@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Shortcut (LNK) event formatter."""
-
-from __future__ import unicode_literals
+"""Tests for the Windows Shortcut (LNK) custom event formatter helpers."""
 
 import unittest
 
@@ -11,29 +9,53 @@ from plaso.formatters import winlnk
 from tests.formatters import test_lib
 
 
-class WinLnkLinkFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Windows Shortcut (LNK) event formatter."""
+class WindowsShortcutLinkedPathFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Windows Shortcut (LNK) linked path formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = winlnk.WinLnkLinkFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = winlnk.WindowsShortcutLinkedPathFormatterHelper()
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = winlnk.WinLnkLinkFormatter()
+    event_values = {
+        'local_path': 'local',
+        'network_path': 'network',
+        'relative_path': 'relative',
+        'working_directory': 'cwd'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['linked_path'], 'local')
 
-    expected_attribute_names = [
-        'description', 'file_size', 'file_attribute_flags', 'drive_type',
-        'drive_serial_number', 'volume_label', 'local_path',
-        'network_path', 'command_line_arguments', 'env_var_location',
-        'relative_path', 'working_directory', 'icon_location',
-        'link_target']
+    event_values = {
+        'local_path': None,
+        'network_path': 'network',
+        'relative_path': 'relative',
+        'working_directory': 'cwd'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['linked_path'], 'network')
 
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
+    event_values = {
+        'local_path': None,
+        'network_path': None,
+        'relative_path': 'relative',
+        'working_directory': 'cwd'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['linked_path'], 'cwd\\relative')
 
-  # TODO: add test for GetMessages.
+    event_values = {
+        'local_path': None,
+        'network_path': None,
+        'relative_path': 'relative',
+        'working_directory': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['linked_path'], 'relative')
+
+    event_values = {
+        'local_path': None,
+        'network_path': None,
+        'relative_path': None,
+        'working_directory': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['linked_path'], 'Unknown')
 
 
 if __name__ == '__main__':

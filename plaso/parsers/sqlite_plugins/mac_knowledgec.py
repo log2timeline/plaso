@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the MacOS Duet/KnowledgeC database."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for MacOS Duet/KnowledgeC database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
@@ -52,10 +50,10 @@ class MacKnowledgeCSafariEventData(events.EventData):
 
 
 class MacKnowledgeCPlugin(interface.SQLitePlugin):
-  """Parse the MacOS Duet / KnowledgeC database."""
+  """SQLite parser plugin for MacOS Duet/KnowledgeC database files."""
 
   NAME = 'mac_knowledgec'
-  DESCRIPTION = 'Parser for Duet / KnowledgeC database file.'
+  DATA_FORMAT = 'MacOS Duet / KnowledgeC SQLites database file'
 
   # Define the needed queries.
   # entry_creation: when the entry was created in the database.
@@ -80,8 +78,13 @@ class MacKnowledgeCPlugin(interface.SQLitePlugin):
         """),
        'KnowledgeCRow')]
 
-  # The required tables for the query.
-  REQUIRED_TABLES = frozenset(['ZOBJECT', 'ZSTRUCTUREDMETADATA'])
+  REQUIRED_STRUCTURE = {
+      'ZOBJECT': frozenset([
+          'ZCREATIONDATE', 'ZENDDATE', 'ZSTARTDATE', 'ZSTREAMNAME',
+          'ZVALUESTRING']),
+      'ZSTRUCTUREDMETADATA': frozenset([
+          'Z_DKSAFARIHISTORYMETADATAKEY__TITLE']),
+  }
 
   _SCHEMA_10_13 = {
       'ACHANGE': (

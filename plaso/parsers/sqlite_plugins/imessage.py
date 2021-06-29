@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the iMessage database on OSX and iOS.
-
-iMessage and SMS data in OSX and iOS are stored in SQLite databases named
-chat.db and sms.db respectively.
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for MacOS and iOS iMessage database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
@@ -25,6 +19,9 @@ class IMessageEventData(events.EventData):
         to or received from.
     message_type (int): value to indicate the message was sent (1) or
         received (0).
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     read_receipt (bool): True if the message read receipt was received.
     service (str): service, which is either SMS or iMessage.
     text (str): content of the message.
@@ -38,19 +35,35 @@ class IMessageEventData(events.EventData):
     self.attachment_location = None
     self.imessage_id = None
     self.message_type = None
+    self.offset = None
+    self.query = None
     self.read_receipt = None
     self.service = None
     self.text = None
 
 
 class IMessagePlugin(interface.SQLitePlugin):
-  """SQLite plugin for the iMessage and SMS database."""
+  """SQLite parser plugin for MacOS and iOS iMessage database files.
+
+  The iMessage database file is typically stored in:
+  chat.db
+  sms.db
+  """
 
   NAME = 'imessage'
-  DESCRIPTION = (
-      'Parser for the iMessage and SMS SQLite databases on OSX and iOS.')
+  DATA_FORMAT = 'MacOS and iOS iMessage database (chat.db, sms.db) file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'message': frozenset([
+          'date', 'ROWID', 'is_read', 'is_from_me', 'service', 'text',
+          'handle_id']),
+      'handle': frozenset([
+          'id', 'ROWID']),
+      'attachment': frozenset([
+          'filename', 'ROWID']),
+      'message_attachment_join': frozenset([
+          'message_id', 'attachment_id'])}
+
   QUERIES = [
       ('SELECT m.date, m.ROWID, h.id AS imessage_id, m.is_read AS '
        'read_receipt, m.is_from_me AS message_type, m.service, a.filename AS'
@@ -58,10 +71,6 @@ class IMessagePlugin(interface.SQLitePlugin):
        'h.ROWID = m.handle_id LEFT OUTER JOIN message_attachment_join AS maj '
        'ON m.ROWID = maj.message_id LEFT OUTER JOIN attachment AS a ON '
        'maj.attachment_id = a.ROWID', 'ParseMessageRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset([
-      'message', 'handle', 'attachment', 'message_attachment_join'])
 
   SCHEMAS = [{
       '_SqliteDatabaseProperties': (

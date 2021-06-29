@@ -3,12 +3,11 @@
 # pylint: disable=invalid-name
 """End-to-end test launcher."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import abc
 import argparse
+import configparser
 import difflib
+import hashlib
 import logging
 import os
 import shutil
@@ -16,19 +15,6 @@ import subprocess
 import sys
 import tempfile
 
-try:
-  import ConfigParser as configparser
-except ImportError:
-  import configparser  # pylint: disable=import-error
-
-if sys.version_info[0] < 3:
-  PY2 = True
-  PY3 = False
-  BYTES_TYPE = str
-else:
-  PY2 = False
-  PY3 = True
-  BYTES_TYPE = bytes
 
 # Since os.path.abspath() uses the current working directory (cwd)
 # os.path.abspath(__file__) will point to a different location if
@@ -307,7 +293,7 @@ class TestDefinitionReader(object):
     except configparser.NoOptionError:
       value = None
 
-    if isinstance(value, BYTES_TYPE):
+    if isinstance(value, bytes):
       value = value.decode('utf-8')
 
     if split_string and value:
@@ -333,13 +319,10 @@ class TestDefinitionReader(object):
     Yields:
       TestDefinition: end-to-end test definition.
     """
-    # TODO: replace by:
-    # self._config_parser = configparser.ConfigParser(interpolation=None)
-    self._config_parser = configparser.RawConfigParser()
+    self._config_parser = configparser.ConfigParser(interpolation=None)
 
     try:
-      # pylint: disable=deprecated-method
-      self._config_parser.readfp(file_object)
+      self._config_parser.read_file(file_object)
 
       for section_name in self._config_parser.sections():
         test_definition = TestDefinition(section_name)
@@ -478,7 +461,7 @@ class StorageFileTestCase(TestCase):
       temp_directory (str): name of a temporary directory.
 
     Returns:
-      bool: True if he output files are identical.
+      bool: True if the output files are identical.
     """
     output_file_path = os.path.join(temp_directory, test_definition.output_file)
 
@@ -502,19 +485,16 @@ class StorageFileTestCase(TestCase):
           # the tests under UNIX and Windows.
           reference_output_list = []
           for line in reference_output_file.readlines():
-            if PY2:
-              line = line.decode('utf-8')
             line = line.replace('/tmp/test/test_data/', '')
             reference_output_list.append(line)
 
           output_list = []
-          for line in output_file:
-            if PY2:
-              line = line.decode('utf-8')
+          for line in output_file.readlines():
             line = line.replace('/tmp/test/test_data/', '')
             line = line.replace('C:\\tmp\\test\\test_data\\', '')
-            line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
+            line = line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
             output_list.append(line)
+
           differences = list(difflib.unified_diff(
               reference_output_list, output_list,
               fromfile=reference_output_file_path, tofile=output_file_path))
@@ -533,17 +513,11 @@ class StorageFileTestCase(TestCase):
 
   def _InitializePinfoPath(self):
     """Initializes the location of pinfo."""
-    for filename in ('pinfo.exe', 'pinfo.sh', 'pinfo.py'):
-      self._pinfo_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._pinfo_path):
-        break
+    self._pinfo_path = os.path.join(self._tools_path, 'pinfo.py')
 
   def _InitializePsortPath(self):
     """Initializes the location of psort."""
-    for filename in ('psort.exe', 'psort.sh', 'psort.py'):
-      self._psort_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._psort_path):
-        break
+    self._psort_path = os.path.join(self._tools_path, 'psort.py')
 
   def _RunPinfo(self, test_definition, temp_directory, storage_file):
     """Runs pinfo on the storage file.
@@ -671,7 +645,7 @@ class StorageFileTestCase(TestCase):
     command.extend(analysis_options)
     command.extend(output_options)
     command.extend(logging_options)
-    command.extend(['--status-view', 'none'])
+    command.extend(['--status-view', 'none', '--unattended'])
     command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
@@ -752,11 +726,7 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
 
   def _InitializeLog2TimelinePath(self):
     """Initializes the location of log2timeline."""
-    for filename in (
-        'log2timeline.exe', 'log2timeline.sh', 'log2timeline.py'):
-      self._log2timeline_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._log2timeline_path):
-        break
+    self._log2timeline_path = os.path.join(self._tools_path, 'log2timeline.py')
 
   def _RunLog2Timeline(
       self, test_definition, temp_directory, storage_file, source_path):
@@ -771,8 +741,22 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     Returns:
       bool: True if log2timeline ran successfully.
     """
-    extract_options = ['--status-view=none']
+    extract_options = ['--status-view=none', '--unattended']
     extract_options.extend(test_definition.extract_options)
+
+    filter_file_path = getattr(test_definition, 'filter_file', None)
+    if filter_file_path:
+      if self._test_sources_path:
+        filter_file_path = os.path.join(
+            self._test_sources_path, filter_file_path)
+      extract_options.extend(['--filter-file', filter_file_path])
+
+    yara_rules_path = getattr(test_definition, 'yara_rules', None)
+    if yara_rules_path:
+      if self._test_sources_path:
+        yara_rules_path = os.path.join(
+            self._test_sources_path, yara_rules_path)
+      extract_options.extend(['--yara-rules', yara_rules_path])
 
     logging_options = [
         option.replace('%command%', 'log2timeline')
@@ -786,7 +770,7 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     command.extend(extract_options)
     command.extend(logging_options)
     command.extend(test_definition.profiling_options)
-    command.extend([storage_file, source_path])
+    command.extend(['--storage-file', storage_file, source_path])
 
     with open(stdout_file, 'w') as stdout:
       with open(stderr_file, 'w') as stderr:
@@ -820,6 +804,9 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     test_definition.extract_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'extract_options', default=[], split_string=True)
 
+    test_definition.filter_file = test_definition_reader.GetConfigValue(
+        test_definition.name, 'filter_file')
+
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)
 
@@ -846,6 +833,9 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
 
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, 'source')
+
+    test_definition.yara_rules = test_definition_reader.GetConfigValue(
+        test_definition.name, 'yara_rules')
 
     return True
 
@@ -930,13 +920,11 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
 
   def _InitializePstealPath(self):
     """Initializes the location of psteal."""
-    for filename in ('psteal.exe', 'psteal.sh', 'psteal.py'):
-      self._psteal_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._psteal_path):
-        break
+    self._psteal_path = os.path.join(self._tools_path, 'psteal.py')
 
   def _RunPsteal(
-      self, test_definition, temp_directory, storage_file, source_path):
+      self, test_definition, temp_directory, storage_file, source_path,
+      output_options=None):
     """Runs psteal with the parameters specified by the test definition.
 
     Args:
@@ -944,18 +932,21 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
       temp_directory (str): name of a temporary directory.
       storage_file (str): path of the storage file.
       source_path (str): path of the source.
+      output_options (Optional[str]): output options.
 
     Returns:
       bool: True if psteal ran successfully.
     """
+    output_options = output_options or []
+
+    output_format = test_definition.output_format or 'null'
+    if '-o' not in output_options and '--output-format' not in output_options:
+      output_options.extend(['--output-format', output_format])
+
     psteal_options = [
         '--source={0:s}'.format(source_path),
-        '--status-view=none',
         '--storage-file={0:s}'.format(storage_file)]
     psteal_options.extend(test_definition.extract_options)
-
-    if test_definition.output_format:
-      psteal_options.extend(['-o', test_definition.output_format])
 
     output_file_path = None
     if test_definition.output_file:
@@ -975,6 +966,8 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
     command = [self._psteal_path]
     command.extend(psteal_options)
     command.extend(logging_options)
+    command.extend(output_options)
+    command.extend(['--status-view', 'none', '--unattended'])
     command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
@@ -1061,13 +1054,87 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
 
       # Extract and output events with psteal.
       if not self._RunPsteal(
-          test_definition, temp_directory, storage_file, source_path):
+          test_definition, temp_directory, storage_file, source_path,
+          output_options=test_definition.output_options):
         return False
 
       # Compare output file with a reference output file.
       if test_definition.output_file and test_definition.reference_output_file:
         if not self._CompareOutputFile(test_definition, temp_directory):
           return False
+
+    return True
+
+
+class ExtractAndAnalyzeTestCase(ExtractAndOutputTestCase):
+  """Extract and analyze test case.
+
+  The extract and analyze test case runs log2timeline to extract data
+  from a source, specified by the test definition. After the data has been
+  extracted psort is run to analyze events in the resulting storage file.
+  """
+
+  NAME = 'extract_and_analyze'
+
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+    if not super(ExtractAndAnalyzeTestCase, self).ReadAttributes(
+        test_definition_reader, test_definition):
+      return False
+
+    test_definition.analysis_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'analysis_options', default=[], split_string=True)
+
+    return True
+
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error('No such source: {0:s}'.format(source_path))
+      return False
+
+    with TempDirectory() as temp_directory:
+      storage_file = os.path.join(
+          temp_directory, '{0:s}.plaso'.format(test_definition.name))
+
+      # Extract events with log2timeline.
+      if not self._RunLog2Timeline(
+          test_definition, temp_directory, storage_file, source_path):
+        return False
+
+      # Analyze events with psort.
+      output_options = ['--output-format', 'null']
+
+      if not self._RunPsort(
+          test_definition, temp_directory, storage_file,
+          analysis_options=test_definition.analysis_options,
+          output_options=output_options):
+        return False
+
+      # Check if the resulting storage file can be read with psort.
+      if not self._RunPsort(
+          test_definition, temp_directory, storage_file,
+          output_options=test_definition.output_options):
+        return False
 
     return True
 
@@ -1160,6 +1227,8 @@ class ImageExportTestCase(TestCase):
 
   NAME = 'image_export'
 
+  _READ_BUFFER_SIZE = 4 * 1024 * 1024
+
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
@@ -1178,13 +1247,148 @@ class ImageExportTestCase(TestCase):
     self._image_export_path = None
     self._InitializeImageExportPath()
 
+  def _CompareHashesFile(self, test_definition, temp_directory):
+    """Compares the hashes file with a reference hashes file.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+
+    Returns:
+      bool: True if the hashes files are identical.
+    """
+    hashes_file_path = os.path.join(temp_directory, test_definition.hashes_file)
+
+    result = False
+    if test_definition.reference_hashes_file:
+      reference_hashes_file_path = test_definition.reference_hashes_file
+      if self._test_references_path:
+        reference_hashes_file_path = os.path.join(
+            self._test_references_path, reference_hashes_file_path)
+
+      if not os.path.exists(reference_hashes_file_path):
+        logging.error('No such reference hashes file: {0:s}'.format(
+            reference_hashes_file_path))
+        return False
+
+      with open(reference_hashes_file_path, 'r') as reference_hashes_file:
+        with open(hashes_file_path, 'r') as hashes_file:
+          reference_hashes_list = reference_hashes_file.readlines()
+          hashes_list = hashes_file.readlines()
+
+          differences = list(difflib.unified_diff(
+              reference_hashes_list, hashes_list,
+              fromfile=reference_hashes_file_path, tofile=hashes_file_path))
+
+      if differences:
+        differences_output = []
+        for difference in differences:
+          differences_output.append(difference)
+        differences_output = '\n'.join(differences_output)
+        logging.error('Differences: {0:s}'.format(differences_output))
+
+      if not differences:
+        result = True
+
+    return result
+
+  def _CompareHashesJSONFile(self, test_definition, temp_directory):
+    """Compares the hashes.json file with a reference hashes file.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+
+    Returns:
+      bool: True if the hashes files are identical.
+    """
+    hashes_json_file_path = os.path.join(
+        temp_directory, 'export', 'hashes.json')
+
+    result = False
+    if test_definition.reference_hashes_json_file:
+      reference_hashes_json_file_path = (
+          test_definition.reference_hashes_json_file)
+      if self._test_references_path:
+        reference_hashes_json_file_path = os.path.join(
+            self._test_references_path, reference_hashes_json_file_path)
+
+      if not os.path.exists(reference_hashes_json_file_path):
+        logging.error('No such reference hashes.json file: {0:s}'.format(
+            reference_hashes_json_file_path))
+        return False
+
+      with open(reference_hashes_json_file_path, 'r') as (
+          reference_hashes_json_file):
+        with open(hashes_json_file_path, 'r') as hashes_json_file:
+          reference_hashes_list = reference_hashes_json_file.readlines()
+
+          hashes_list = []
+          for line in hashes_json_file.readlines():
+            # Hack to change Windows paths to POSIX ones, so we can easily
+            # compare them against the reference file.
+            line = line.replace('\\\\', '/')
+            hashes_list.append(line)
+
+          differences = list(difflib.unified_diff(
+              reference_hashes_list, hashes_list,
+              fromfile=reference_hashes_json_file_path,
+              tofile=hashes_json_file_path))
+
+      if differences:
+        differences_output = []
+        for difference in differences:
+          differences_output.append(difference)
+        differences_output = '\n'.join(differences_output)
+        logging.error('Differences: {0:s}'.format(differences_output))
+
+      if not differences:
+        result = True
+
+    return result
+
+  def _CreateHashesFile(self, test_definition, temp_directory):
+    """Calculates the SHA-256 hashes of the exported files.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+    """
+    hashes_file_path = os.path.join(temp_directory, test_definition.hashes_file)
+    exported_files_path = os.path.join(temp_directory, 'export')
+
+    with open(hashes_file_path, 'wt', encoding='utf-8') as hashes_file_object:
+      for path, _, filenames in sorted(os.walk(exported_files_path)):
+        for filename in sorted(filenames):
+          file_path = os.path.join(path, filename)
+          if not os.path.isfile(file_path):
+            continue
+
+          relative_file_path = file_path[len(temp_directory):]
+          # Hack to change Windows paths to POSIX ones, so we can easily
+          # compare them against the reference file.
+          relative_file_path = relative_file_path.replace('\\', '/')
+
+          # Skip the hashes.json and compare it separately.
+          if relative_file_path == '/export/hashes.json':
+            continue
+
+          hash_context = hashlib.sha256()
+          with open(file_path, 'rb') as file_object:
+            data = file_object.read(self._READ_BUFFER_SIZE)
+            while data:
+              hash_context.update(data)
+              data = file_object.read(self._READ_BUFFER_SIZE)
+
+          hashes_file_object.write('{0:s}\t{1:s}\n'.format(
+              hash_context.hexdigest(), relative_file_path))
+
+    if os.path.exists(hashes_file_path):
+      shutil.copy(hashes_file_path, self._test_results_path)
+
   def _InitializeImageExportPath(self):
     """Initializes the location of image_export."""
-    for filename in (
-        'image_export.exe', 'image_export.sh', 'image_export.py'):
-      self._image_export_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._image_export_path):
-        break
+    self._image_export_path = os.path.join(self._tools_path, 'image_export.py')
 
   def _RunImageExport(self, test_definition, temp_directory, source_path):
     """Runs image_export on a storage media image.
@@ -1197,8 +1401,17 @@ class ImageExportTestCase(TestCase):
     Returns:
       bool: True if image_export ran successfully.
     """
-    output_file_path = os.path.join(temp_directory, 'export')
-    output_options = ['-w', output_file_path]
+    exported_files_path = os.path.join(temp_directory, 'export')
+    export_options = list(test_definition.export_options)
+
+    if test_definition.filter_file:
+      filter_file_path = test_definition.filter_file
+      if self._test_sources_path:
+        filter_file_path = os.path.join(
+            self._test_sources_path, filter_file_path)
+      export_options.extend(['--filter-file', filter_file_path])
+
+    output_options = ['-w', exported_files_path]
 
     logging_options = [
         option.replace('%command%', 'image_export')
@@ -1210,6 +1423,7 @@ class ImageExportTestCase(TestCase):
         temp_directory, '{0:s}-image_export.err'.format(test_definition.name))
 
     command = [self._image_export_path]
+    command.extend(export_options)
     command.extend(output_options)
     command.extend(logging_options)
     command.extend(test_definition.profiling_options)
@@ -1224,12 +1438,18 @@ class ImageExportTestCase(TestCase):
         output_data = file_object.read()
         print(output_data)
 
-    # TODO: hash the files.
-
     if os.path.exists(stdout_file):
       shutil.copy(stdout_file, self._test_results_path)
     if os.path.exists(stderr_file):
       shutil.copy(stderr_file, self._test_results_path)
+
+    hashes_json_file_path = os.path.join(
+        temp_directory, 'export', 'hashes.json')
+    if os.path.exists(hashes_json_file_path):
+      result_hashes_json_file_path = os.path.join(
+          self._test_results_path,
+          '{0:s}-hashes.json'.format(test_definition.name))
+      shutil.copy(hashes_json_file_path, result_hashes_json_file_path)
 
     return result
 
@@ -1243,8 +1463,14 @@ class ImageExportTestCase(TestCase):
     Returns:
       bool: True if the read was successful.
     """
+    test_definition.export_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'export_options', default=[], split_string=True)
+
     test_definition.filter_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'filter_file')
+
+    test_definition.hashes_file = test_definition_reader.GetConfigValue(
+        test_definition.name, 'hashes_file')
 
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)
@@ -1252,6 +1478,14 @@ class ImageExportTestCase(TestCase):
     test_definition.profiling_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'profiling_options', default=[],
         split_string=True)
+
+    test_definition.reference_hashes_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_hashes_file'))
+
+    test_definition.reference_hashes_json_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_hashes_json_file'))
 
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, 'source')
@@ -1280,6 +1514,19 @@ class ImageExportTestCase(TestCase):
       if not self._RunImageExport(
           test_definition, temp_directory, source_path):
         return False
+
+      if test_definition.hashes_file:
+        self._CreateHashesFile(test_definition, temp_directory)
+
+        # Compare hashes file with a reference hashes file.
+        if test_definition.reference_hashes_file:
+          if not self._CompareHashesFile(test_definition, temp_directory):
+            return False
+
+      # Compare hashes.json file with a reference hashes.json file.
+      if test_definition.reference_hashes_json_file:
+        if not self._CompareHashesJSONFile(test_definition, temp_directory):
+          return False
 
     return True
 
@@ -1468,6 +1715,9 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, 'source')
 
+    test_definition.source_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'source_options', default=[], split_string=True)
+
     return True
 
   def Run(self, test_definition):
@@ -1488,6 +1738,12 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
       return False
 
     with TempDirectory() as temp_directory:
+      if 'backup' in test_definition.source_options:
+        temp_source_path = os.path.join(
+            temp_directory, os.path.basename(source_path))
+        shutil.copyfile(source_path, temp_source_path)
+        source_path = temp_source_path
+
       # Run psort with both analysis and output options.
       if not self._RunPsort(
           test_definition, temp_directory, source_path,
@@ -1703,9 +1959,10 @@ class OutputTestCase(StorageFileTestCase):
 
 TestCasesManager.RegisterTestCases([
     AnalyzeAndOutputTestCase, ExtractAndOutputTestCase,
-    ExtractAndOutputWithPstealTestCase, ExtractAndTagTestCase,
-    ImageExportTestCase, MultiAnalyzeAndOutputTestCase,
-    MultiExtractAndOutputTestCase, OutputTestCase])
+    ExtractAndOutputWithPstealTestCase, ExtractAndAnalyzeTestCase,
+    ExtractAndTagTestCase, ImageExportTestCase,
+    MultiAnalyzeAndOutputTestCase, MultiExtractAndOutputTestCase,
+    OutputTestCase])
 
 
 def Main():

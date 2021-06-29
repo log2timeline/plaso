@@ -5,14 +5,12 @@ The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE
 as of version 10.
 """
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
@@ -121,7 +119,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
   """Parses a MSIE WebCache ESE database file."""
 
   NAME = 'msie_webcache'
-  DESCRIPTION = 'Parser for MSIE WebCache ESE database files.'
+  DATA_FORMAT = (
+      'Internet Explorer WebCache ESE database (WebCacheV01.dat, '
+      'WebCacheV24.dat) file')
 
   # TODO: add support for AppCache_#, AppCacheEntry_#, DependencyEntry_#
 
@@ -138,7 +138,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       'ResponseHeaders': '_ConvertHeadersValues'}
 
   _SUPPORTED_CONTAINER_NAMES = frozenset([
-      'Content', 'Cookies', 'History', 'iedownload'])
+      'BackgroundTransferApi', 'Content', 'Cookies', 'DOMStore', 'History',
+      'iedownload'])
 
   _IGNORED_CONTAINER_NAMES = frozenset([
       'MicrosoftEdge_DNTException', 'MicrosoftEdge_EmieSiteList',
@@ -155,7 +156,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       str: string representation of headers value or None.
     """
     if value:
-      value = value.decode('ascii')
+      value = value.decode('utf-8')
       header_values = [value.strip() for value in value.split('\r\n') if value]
       return '[{0:s}]'.format('; '.join(header_values))
 
@@ -166,16 +167,10 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       table (pyesedb.table): table.
       container_name (str): container name, which indicates the table type.
-
-    Raises:
-      ValueError: if the table value is missing.
     """
-    if table is None:
-      raise ValueError('Missing table value.')
-
     for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:
         break
@@ -189,7 +184,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
       try:
         record_values = self._GetRecordValues(
-            parser_mediator, table.name, esedb_record,
+            parser_mediator, table.name, record_index, esedb_record,
             value_mappings=value_mappings)
 
       except UnicodeDecodeError:
@@ -217,12 +212,12 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
         request_headers = record_values.get('RequestHeaders', None)
         # Ignore non-Unicode request headers values.
-        if not isinstance(request_headers, py2to3.UNICODE_TYPE):
+        if not isinstance(request_headers, str):
           request_headers = None
 
         response_headers = record_values.get('ResponseHeaders', None)
         # Ignore non-Unicode response headers values.
-        if not isinstance(response_headers, py2to3.UNICODE_TYPE):
+        if not isinstance(response_headers, str):
           response_headers = None
 
         event_data = MsieWebCacheContainerEventData()
@@ -255,7 +250,11 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
         timestamp = record_values.get('ExpiryTime', None)
         if timestamp:
-          date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+          # TODO: add support for timestamp == 1 and other edge cases.
+          if timestamp == 0x7fffffffffffffff:
+            date_time = dfdatetime_semantic_time.SemanticTime(string='Infinite')
+          else:
+            date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
           event = time_events.DateTimeValuesEvent(
               date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
           parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -287,8 +286,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      database (Optional[pyesedb.file]): ESE database.
+          and other components, such as storage and dfVFS.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
 
     Raises:
@@ -300,12 +299,12 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     if table is None:
       raise ValueError('Missing table value.')
 
-    for esedb_record in table.records:
+    for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, table.name, esedb_record)
+          parser_mediator, table.name, record_index, esedb_record)
 
       event_data = MsieWebCacheContainersEventData()
       event_data.container_identifier = record_values.get('ContainerId', None)
@@ -340,13 +339,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       table_name = 'Container_{0:d}'.format(container_identifier)
-      esedb_table = database.get_table_by_name(table_name)
-      if not esedb_table:
-        parser_mediator.ProduceExtractionWarning(
-            'Missing table: {0:s}'.format(table_name))
-        continue
-
-      self._ParseContainerTable(parser_mediator, esedb_table, container_name)
+      esedb_table = database.GetTableByName(table_name)
+      if esedb_table:
+        self._ParseContainerTable(parser_mediator, esedb_table, container_name)
 
   def ParseLeakFilesTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
@@ -354,8 +349,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      database (Optional[pyesedb.file]): ESE database.
+          and other components, such as storage and dfVFS.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
 
     Raises:
@@ -367,12 +362,12 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     if table is None:
       raise ValueError('Missing table value.')
 
-    for esedb_record in table.records:
+    for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, table.name, esedb_record)
+          parser_mediator, table.name, record_index, esedb_record)
 
       event_data = MsieWebCacheLeakFilesEventData()
       event_data.cached_filename = record_values.get('Filename', None)
@@ -391,8 +386,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      database (Optional[pyesedb.file]): ESE database.
+          and other components, such as storage and dfVFS.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
 
     Raises:
@@ -404,12 +399,12 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     if table is None:
       raise ValueError('Missing table value.')
 
-    for esedb_record in table.records:
+    for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, table.name, esedb_record)
+          parser_mediator, table.name, record_index, esedb_record)
 
       event_data = MsieWebCachePartitionsEventData()
       event_data.directory = record_values.get('Directory', None)

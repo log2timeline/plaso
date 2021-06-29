@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plugin to parse the OLECF summary/document summary information items."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 import pyolecf
@@ -10,7 +8,6 @@ import pyolecf
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
@@ -23,6 +20,9 @@ class OLECFPropertySetStream(object):
         properties and values.
   """
   _CLASS_IDENTIFIER = None
+
+  _EVENT_DATA_TYPE = None
+  _EVENT_DATA_NAME = None
 
   _INTEGER_TYPES = frozenset([
       pyolecf.value_types.INTEGER_16BIT_SIGNED,
@@ -48,7 +48,8 @@ class OLECFPropertySetStream(object):
     self._properties = {}
     self.date_time_properties = {}
 
-    self._ReadPropertySet(olecf_item.set)
+    if olecf_item:
+      self._ReadPropertySet(olecf_item.set)
 
   def _GetValueAsObject(self, property_value):
     """Retrieves the property value as a Python object.
@@ -111,72 +112,30 @@ class OLECFPropertySetStream(object):
         if property_name not in properties_dict:
           properties_dict[property_name] = value
 
-  def GetEventData(self, data_type):
+  def GetEventData(self):
     """Retrieves the properties as event data.
-
-    Args:
-      data_type (str): event data type.
 
     Returns:
       EventData: event data.
     """
-    event_data = events.EventData(data_type=data_type)
-    for property_name, property_value in iter(self._properties.items()):
-      if isinstance(property_value, py2to3.BYTES_TYPE):
+    event_data = events.EventData(data_type=self._EVENT_DATA_TYPE)
+    event_data.name = self._EVENT_DATA_NAME
+
+    for property_name, property_value in self._properties.items():
+      if isinstance(property_value, bytes):
         property_value = repr(property_value)
       setattr(event_data, property_name, property_value)
 
     return event_data
 
 
-class OLECFDocumentSummaryInformationEvent(time_events.DateTimeValuesEvent):
-  """Convenience class for an OLECF Document summary information event.
-
-  Attributes:
-    name (str): name of the OLECF item.
-  """
-
-  DATA_TYPE = 'olecf:document_summary_info'
-
-  def __init__(self, date_time, date_time_description):
-    """Initializes an event.
-
-    Args:
-      date_time (dfdatetime.DateTimeValues): date and time values.
-      date_time_description (str): description of the meaning of the date
-          and time values.
-    """
-    super(OLECFDocumentSummaryInformationEvent, self).__init__(
-        date_time, date_time_description)
-    self.name = 'Document Summary Information'
-
-
-class OLECFSummaryInformationEvent(time_events.DateTimeValuesEvent):
-  """Convenience class for an OLECF Summary information event.
-
-  Attributes:
-    name (str): name of the OLECF item.
-  """
-
-  DATA_TYPE = 'olecf:summary_info'
-
-  def __init__(self, date_time, date_time_description):
-    """Initializes an event.
-
-    Args:
-      date_time (dfdatetime.DateTimeValues): date and time values.
-      date_time_description (str): description of the meaning of the date
-          and time values.
-    """
-    super(OLECFSummaryInformationEvent, self).__init__(
-        date_time, date_time_description)
-    self.name = 'Summary Information'
-
-
 class OLECFDocumentSummaryInformation(OLECFPropertySetStream):
   """OLECF Document Summary information property set."""
 
   _CLASS_IDENTIFIER = 'd5cdd502-2e9c-101b-9397-08002b2cf9ae'
+
+  _EVENT_DATA_TYPE = 'olecf:document_summary_info'
+  _EVENT_DATA_NAME = 'Document Summary Information'
 
   _PROPERTY_NAMES = {
       0x0001: 'codepage',  # PIDDSI_CODEPAGE
@@ -232,6 +191,9 @@ class OLECFSummaryInformation(OLECFPropertySetStream):
   _DATE_TIME_PROPERTIES = frozenset([
       'creation_time', 'last_printed_time', 'last_save_time'])
 
+  _EVENT_DATA_TYPE = 'olecf:summary_info'
+  _EVENT_DATA_NAME = 'Summary Information'
+
   _PROPERTY_NAMES = {
       0x0001: 'codepage',  # PIDSI_CODEPAGE
       0x0002: 'title',  # PIDSI_TITLE
@@ -259,13 +221,14 @@ class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
   """Plugin that parses DocumentSummaryInformation item from an OLECF file."""
 
   NAME = 'olecf_document_summary'
-  DESCRIPTION = 'Parser for a DocumentSummaryInformation OLECF stream.'
+  DATA_FORMAT = (
+      'Document summary information (\\0x05DocumentSummaryInformation)')
 
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005DocumentSummaryInformation'])
 
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses a document summary information OLECF item.
+    """Extracts events from a document summary information OLECF item.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -290,21 +253,19 @@ class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
         continue
 
       summary_information = OLECFDocumentSummaryInformation(item)
-      event_data = summary_information.GetEventData(
-          data_type='olecf:document_summary_info')
-      event_data.name = 'Document Summary Information'
+      event_data = summary_information.GetEventData()
 
       if root_creation_time:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=root_creation_time)
-        event = OLECFDocumentSummaryInformationEvent(
+        event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if root_modification_time:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=root_modification_time)
-        event = OLECFDocumentSummaryInformationEvent(
+        event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
@@ -313,7 +274,8 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
   """Plugin that parses the SummaryInformation item from an OLECF file."""
 
   NAME = 'olecf_summary'
-  DESCRIPTION = 'Parser for a SummaryInformation OLECF stream.'
+  DATA_FORMAT = (
+      'Summary information (\\0x05SummaryInformation) (top-level only)')
 
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005SummaryInformation'])
@@ -325,7 +287,7 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
   }
 
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses a summary information OLECF item.
+    """Extracts events from a summary information OLECF item.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -350,28 +312,27 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
         continue
 
       summary_information = OLECFSummaryInformation(item)
-      event_data = summary_information.GetEventData(
-          data_type='olecf:summary_info')
-      event_data.name = 'Summary Information'
+      event_data = summary_information.GetEventData()
 
-      for property_name, date_time in iter(
+      for property_name, date_time in (
           summary_information.date_time_properties.items()):
         date_time_description = self._DATE_TIME_DESCRIPTIONS.get(
             property_name, definitions.TIME_DESCRIPTION_UNKNOWN)
-        event = OLECFSummaryInformationEvent(date_time, date_time_description)
+        event = time_events.DateTimeValuesEvent(
+            date_time, date_time_description)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if root_creation_time:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=root_creation_time)
-        event = OLECFSummaryInformationEvent(
+        event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if root_modification_time:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=root_modification_time)
-        event = OLECFSummaryInformationEvent(
+        event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 

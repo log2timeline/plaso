@@ -1,21 +1,42 @@
 # -*- coding: utf-8 -*-
 """Warning attribute containers."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import interface
 from plaso.containers import manager
 
 
-# TODO: add AnalysisWarning.
+class AnalysisWarning(interface.AttributeContainer):
+  """Analysis warning attribute container.
+
+  Analysis warnings are produced by analysis plugins when they encounter
+  situations that should be brought to the users' attention but are not
+  analysis results.
+
+  Attributes:
+    message (str): warning message.
+    plugin_name (str): name of the analysis plugin to which the warning applies.
+  """
+  CONTAINER_TYPE = 'analysis_warning'
+
+  def __init__(self, message=None, plugin_name=None):
+    """Initializes an analysis warning.
+
+    Args:
+      message (Optional[str]): warning message.
+      plugin_name (Optional[str]): name of the analysis plugin to which the
+          warning applies.
+    """
+    super(AnalysisWarning, self).__init__()
+    self.message = message
+    self.plugin_name = plugin_name
 
 
 class ExtractionWarning(interface.AttributeContainer):
   """Extraction warning attribute container.
 
-  Extraction warnings are produced by parsers/plugins as well the Plaso engine
-  when they encounter situations that should be brought to the users' attention
-  but are not events derived from the data being processed.
+  Extraction warnings are produced by parsers/plugins when they encounter
+  situations that should be brought to the users' attention but are not
+  events derived from the data being processed.
 
   Attributes:
     message (str): warning message.
@@ -40,11 +61,43 @@ class ExtractionWarning(interface.AttributeContainer):
     self.path_spec = path_spec
 
 
-class ExtractionError(ExtractionWarning):
-  """Extraction error attribute container.
+class PreprocessingWarning(interface.AttributeContainer):
+  """Preprocessing warning attribute container.
 
-  This class is provided for backwards compatiblity only, all new code must use
-  ExtractionWarning.
+  Preprocessing warnings are produced by preprocessing plugins when they
+  encounter situations that should be brought to the users' attention but are
+  not preprocessing results.
+
+  Attributes:
+    message (str): warning message.
+    path_spec (dfvfs.PathSpec): path specification of the file entry to which
+        the warning applies.
+    plugin_name (str): name of the preprocessing plugin to which the warning
+        applies.
+  """
+  CONTAINER_TYPE = 'preprocessing_warning'
+
+  def __init__(self, message=None, path_spec=None, plugin_name=None):
+    """Initializes an extraction warning.
+
+    Args:
+      message (Optional[str]): warning message.
+      path_spec (Optional[dfvfs.PathSpec]): path specification of the file entry
+          to which the warning applies.
+      plugin_name (Optional[str]): name of the preprocessing plugin to which the
+          warning applies.
+    """
+    super(PreprocessingWarning, self).__init__()
+    self.message = message
+    self.path_spec = path_spec
+    self.plugin_name = plugin_name
+
+
+class RecoveryWarning(interface.AttributeContainer):
+  """Recovery warning attribute container.
+
+  Recovery warnings are warning encountered during recovery. They are typically
+  produced by parsers/plugins when they are unable to recover events.
 
   Attributes:
     message (str): warning message.
@@ -52,8 +105,22 @@ class ExtractionError(ExtractionWarning):
     path_spec (dfvfs.PathSpec): path specification of the file entry to which
         the warning applies.
   """
-  CONTAINER_TYPE = 'extraction_error'
+  CONTAINER_TYPE = 'recovery_warning'
+
+  def __init__(self, message=None, parser_chain=None, path_spec=None):
+    """Initializes a recovery warning.
+
+    Args:
+      message (Optional[str]): warning message.
+      parser_chain (Optional[str]): parser chain to which the warning applies.
+      path_spec (Optional[dfvfs.PathSpec]): path specification of the file entry
+          to which the warning applies.
+    """
+    super(RecoveryWarning, self).__init__()
+    self.message = message
+    self.parser_chain = parser_chain
+    self.path_spec = path_spec
 
 
-manager.AttributeContainersManager.RegisterAttributeContainers(
-    [ExtractionError, ExtractionWarning])
+manager.AttributeContainersManager.RegisterAttributeContainers([
+    AnalysisWarning, ExtractionWarning, PreprocessingWarning, RecoveryWarning])

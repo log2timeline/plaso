@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the VirusTotal analysis plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 try:
@@ -14,8 +12,8 @@ except ImportError:
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import virustotal
+from plaso.containers import events
 from plaso.lib import definitions
-from plaso.lib import timelib
 
 from tests.analysis import test_lib
 
@@ -45,11 +43,12 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [{
       'data_type': 'pe:compilation:compilation_time',
-      'pathspec': fake_path_spec.FakePathSpec(
+      'parser': 'pe',
+      'path_spec': fake_path_spec.FakePathSpec(
           location='C:\\WINDOWS\\system32\\evil.exe'),
       'pe_type': 'Executable (EXE)',
       'sha256_hash': _EVENT_1_HASH,
-      'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+      'timestamp': '2015-01-01 17:00:00',
       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   def _MockGet(self, url, params):
@@ -101,11 +100,12 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
     expected_text = (
         'virustotal hash tagging results\n'
-        '1 path specifications tagged with label: virustotal_detections_10\n')
+        '1 events tagged with label: virustotal_detections_10\n')
     self.assertEqual(report.text, expected_text)
 
     labels = []
-    for event_tag in storage_writer.GetEventTags():
+    for event_tag in storage_writer.GetAttributeContainers(
+        events.EventTag.CONTAINER_TYPE):
       labels.extend(event_tag.labels)
     self.assertEqual(len(labels), 1)
 

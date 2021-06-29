@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the view classes."""
 
-from __future__ import unicode_literals
-
 import sys
 import unittest
 
@@ -58,9 +56,27 @@ class BaseTableViewTests(shared_test_lib.BaseTestCase):
 class CLITableViewTests(shared_test_lib.BaseTestCase):
   """Tests for the command line table view class."""
 
+  _EXPECTED_OUTPUT1 = """\
+
+************************************ Title *************************************
+       Name : Description
+--------------------------------------------------------------------------------
+ First name : The first name in the table
+Second name : The second name in the table
+--------------------------------------------------------------------------------
+"""
+
+  _EXPECTED_OUTPUT2 = """\
+
+************************************ Title *************************************
+       Name : The name in the table
+Description : The description in the table
+--------------------------------------------------------------------------------
+"""
+
   def testWrite(self):
     """Tests the Write function."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
 
     # Table with columns.
     table_view = views.CLITableView(
@@ -70,21 +86,9 @@ class CLITableViewTests(shared_test_lib.BaseTestCase):
 
     table_view.Write(output_writer)
     string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'************************************ '
-        b'Title '
-        b'*************************************\n'
-        b'       Name : Description\n'
-        b'----------------------------------------'
-        b'----------------------------------------\n'
-        b' First name : The first name in the table\n'
-        b'Second name : The second name in the table\n'
-        b'----------------------------------------'
-        b'----------------------------------------\n')
 
     # Splitting the string makes it easier to see differences.
-    self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
+    self.assertEqual(string.split('\n'), self._EXPECTED_OUTPUT1.split('\n'))
 
     # Table without columns.
     table_view = views.CLITableView(title='Title')
@@ -93,18 +97,9 @@ class CLITableViewTests(shared_test_lib.BaseTestCase):
 
     table_view.Write(output_writer)
     string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'************************************ '
-        b'Title '
-        b'*************************************\n'
-        b'       Name : The name in the table\n'
-        b'Description : The description in the table\n'
-        b'----------------------------------------'
-        b'----------------------------------------\n')
 
     # Splitting the string makes it easier to see differences.
-    self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
+    self.assertEqual(string.split('\n'), self._EXPECTED_OUTPUT2.split('\n'))
 
     # TODO: add test without title.
 
@@ -128,7 +123,7 @@ class CLITabularTableView(shared_test_lib.BaseTestCase):
 
   def testWrite(self):
     """Tests the Write function."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
 
     table_view = views.CLITabularTableView(
         column_names=['Name', 'Description'])
@@ -139,23 +134,33 @@ class CLITabularTableView(shared_test_lib.BaseTestCase):
     string = output_writer.ReadOutput()
 
     expected_strings = [
-        b'Name            Description',
-        b'First name      The first name in the table',
-        b'Second name     The second name in the table',
-        b'']
+        'Name            Description',
+        'First name      The first name in the table',
+        'Second name     The second name in the table',
+        '']
 
     if not sys.platform.startswith('win'):
-      expected_strings[0] = b'\x1b[1mName            Description\x1b[0m'
+      expected_strings[0] = '\x1b[1mName            Description\x1b[0m'
 
-    self.assertEqual(string.split(b'\n'), expected_strings)
+    self.assertEqual(string.split('\n'), expected_strings)
 
 
 class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
   """Tests for the Markdown table view class."""
 
+  _EXPECTED_OUTPUT1 = """\
+### Title
+
+Name | Description
+--- | ---
+First name | The first name in the table
+Second name | The second name in the table
+
+"""
+
   def testWrite(self):
     """Tests the Write function."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
 
     # Table with columns.
     table_view = views.MarkdownTableView(
@@ -165,17 +170,9 @@ class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
 
     table_view.Write(output_writer)
     string = output_writer.ReadOutput()
-    expected_string = (
-        b'### Title\n'
-        b'\n'
-        b'Name | Description\n'
-        b'--- | ---\n'
-        b'First name | The first name in the table\n'
-        b'Second name | The second name in the table\n'
-        b'\n')
 
     # Splitting the string makes it easier to see differences.
-    self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
+    self.assertEqual(string.split('\n'), self._EXPECTED_OUTPUT1.split('\n'))
 
     # Table without columns.
     table_view = views.MarkdownTableView(title='Title')
@@ -185,16 +182,18 @@ class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
     table_view.Write(output_writer)
     string = output_writer.ReadOutput()
     expected_string = (
-        b'### Title\n'
-        b'\n'
-        b' | \n'
-        b'--- | ---\n'
-        b'Name | The name in the table\n'
-        b'Description | The description in the table\n'
-        b'\n')
+        '### Title\n'
+        '\n'
+        '<table>\n'
+        '<tr><th nowrap style="text-align:left;vertical-align:top">Name</th>'
+        '<td>The name in the table</td></tr>\n'
+        '<tr><th nowrap style="text-align:left;vertical-align:top">Description'
+        '</th><td>The description in the table</td></tr>\n'
+        '</table>\n'
+        '\n')
 
     # Splitting the string makes it easier to see differences.
-    self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
+    self.assertEqual(string.split('\n'), expected_string.split('\n'))
 
     # TODO: add test without title.
 

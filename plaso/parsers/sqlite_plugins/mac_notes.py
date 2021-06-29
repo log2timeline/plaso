@@ -1,30 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Parser for mac notes database.
+"""SQLite parser plugin for MacOS Notes database files."""
 
-SQLite database path: test_data/NotesV7.storedata
-SQLite database Name: NotesV7.storedata
-"""
-
-from __future__ import unicode_literals
+import html.parser as HTMLParser
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
-# pylint: disable=import-error
-if py2to3.PY_2:
-  import HTMLParser
-else:
-  import html.parser as HTMLParser
-
 
 class _ZHTMLStringTextExtractor(HTMLParser.HTMLParser):
-  """HTML parser for extracting text from a mac notes zhtmlstring."""
+  """HTML parser for extracting text from a MacOS notes zhtmlstring."""
+
+  # pylint: disable=abstract-method
+  # Method 'error' is abstract in class 'ParserBase' but is not overridden
 
   # This method is part of the HTMLParser interface.
   # pylint: disable=invalid-name
@@ -76,18 +68,29 @@ class MacNotesEventData(events.EventData):
 
 
 class MacNotesPlugin(interface.SQLitePlugin):
-  """Plugin for the Mac OS Notes database."""
+  """SQLite parser plugin for MacOS notes database files.
+
+  The MacOS Notes database file is typically stored in:
+  test_data/NotesV7.storedata
+  """
 
   NAME = 'mac_notes'
-  DESCRIPTION = 'Parser for Mac Notes'
+  DATA_FORMAT = 'MacOS Notes SQLite database (NotesV7.storedata) file'
 
-  QUERIES = [('SELECT nb.ZHTMLSTRING AS zhtmlstring, '
-              'n.ZDATECREATED AS timestamp, '
-              'n.ZDATEEDITED AS last_modified_time, n.ZTITLE as title '
-              'FROM ZNOTEBODY nb, ZNOTE n '
-              'WHERE nb.Z_PK = n.Z_PK', 'ParseZHTMLSTRINGRow')]
+  QUERIES = [(
+      ('SELECT ZNOTEBODY.ZHTMLSTRING AS zhtmlstring, '
+       'ZNOTE.ZDATECREATED AS timestamp, '
+       'ZNOTE.ZDATEEDITED AS last_modified_time, '
+       'ZNOTE.ZTITLE as title '
+       'FROM ZNOTEBODY, ZNOTE WHERE ZNOTEBODY.Z_PK = ZNOTE.Z_PK'),
+      'ParseZHTMLSTRINGRow')]
 
-  REQUIRED_TABLES = frozenset(['ZNOTEBODY', 'ZNOTE'])
+  REQUIRED_STRUCTURE = {
+      'ZNOTEBODY': frozenset([
+          'ZHTMLSTRING']),
+      'ZNOTE': frozenset([
+          'ZDATECREATED', 'ZDATEEDITED', 'ZTITLE']),
+  }
 
   SCHEMAS = [{
       'ZACCOUNT': (

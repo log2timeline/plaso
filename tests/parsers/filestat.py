@@ -2,18 +2,17 @@
 # -*- coding: utf-8 -*-
 """Tests for filestat parser."""
 
-from __future__ import unicode_literals
-
 import os
+
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.formatters import file_system  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import filestat
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -35,28 +34,23 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'fs:stat',
+        'date_time': '2012-05-25 16:00:53',
+        'display_name': 'TSK:/passwords.txt',
+        'file_entry_type': 'file',
+        'file_size': 116,
+        'file_system_type': 'EXT2',
+        'inode': 15,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    self.CheckTimestamp(event.timestamp, '2012-05-25 16:00:53.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.file_size, 116)
-    self.assertEqual(event_data.inode, 15)
-    self.assertEqual(event_data.file_system_type, 'EXT2')
-
-    expected_message = (
-        'TSK:/passwords.txt '
-        'Type: file')
-    expected_short_message = '/passwords.txt'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testZipFile(self):
     """Test a ZIP file."""
@@ -73,27 +67,23 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'fs:stat',
+        'date_time': '2012-07-24 14:45:24',
+        'display_name': 'ZIP:/syslog',
+        'file_entry_type': 'file',
+        'file_size': 1247,
+        'file_system_type': 'ZIP',
+        'inode': None,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2012-07-24 14:45:24.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.file_size, 1247)
-    self.assertIsNone(event_data.inode)
-
-    expected_message = (
-        'ZIP:/syslog '
-        'Type: file')
-    expected_short_message = '/syslog'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testGzipFile(self):
     """Test a GZIP file."""
@@ -109,28 +99,25 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    test_path = os.path.join(shared_test_lib.TEST_DATA_PATH, 'syslog.gz')
 
-    self.CheckTimestamp(event.timestamp, '2012-07-28 16:44:07.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+    expected_event_values = {
+        'data_type': 'fs:stat',
+        'date_time': '2012-07-28 16:44:07',
+        'display_name': 'GZIP:{0:s}'.format(test_path),
+        'file_entry_type': 'file',
+        'file_size': 1247,
+        'file_system_type': 'GZIP',
+        'inode': None,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.file_size, 1247)
-    self.assertIsNone(event_data.inode)
-
-    test_path = os.path.join(os.getcwd(), 'test_data', 'syslog.gz')
-    expected_message = (
-        'GZIP:{0:s} '
-        'Type: file').format(test_path)
-    expected_short_message = self._GetShortMessage(test_path)
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testTarFile(self):
     """Test a TAR file."""
@@ -147,27 +134,23 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'fs:stat',
+        'date_time': '2012-07-24 21:45:24',
+        'display_name': 'TAR:/syslog',
+        'file_entry_type': 'file',
+        'file_size': 1247,
+        'file_system_type': 'TAR',
+        'inode': None,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2012-07-24 21:45:24.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.file_size, 1247)
-    self.assertIsNone(event_data.inode)
-
-    expected_message = (
-        'TAR:/syslog '
-        'Type: file')
-    expected_short_message = '/syslog'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testNestedFile(self):
     """Test a nested file."""
@@ -186,27 +169,23 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'fs:stat',
+        'date_time': '2012-07-24 21:45:24',
+        'display_name': 'TAR:/syslog',
+        'file_entry_type': 'file',
+        'file_size': 1247,
+        'file_system_type': 'TAR',
+        'inode': None,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2012-07-24 21:45:24.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.file_size, 1247)
-    self.assertIsNone(event_data.inode)
-
-    expected_message = (
-        'TAR:/syslog '
-        'Type: file')
-    expected_short_message = '/syslog'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     test_file_path = self._GetTestFilePath(['syslog.tgz'])
     self._SkipIfPathNotExists(test_file_path)
@@ -218,28 +197,25 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    test_path = os.path.join(shared_test_lib.TEST_DATA_PATH, 'syslog.tgz')
 
-    self.CheckTimestamp(event.timestamp, '2012-07-28 16:44:43.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+    expected_event_values = {
+        'data_type': 'fs:stat',
+        'date_time': '2012-07-28 16:44:43',
+        'display_name': 'GZIP:{0:s}'.format(test_path),
+        'file_entry_type': 'file',
+        'file_size': 10240,
+        'file_system_type': 'GZIP',
+        'inode': None,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.file_size, 10240)
-    self.assertIsNone(event_data.inode)
-
-    test_path = os.path.join(os.getcwd(), 'test_data', 'syslog.tgz')
-    expected_message = (
-        'GZIP:{0:s} '
-        'Type: file').format(test_path)
-    expected_short_message = self._GetShortMessage(test_path)
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
@@ -259,27 +235,23 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'fs:stat',
+        'date_time': '2012-07-20 15:44:14',
+        'display_name': 'ZIP:/syslog',
+        'file_entry_type': 'file',
+        'file_size': 1247,
+        'file_system_type': 'ZIP',
+        'inode': None,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckTimestamp(event.timestamp, '2012-07-20 15:44:14.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.file_size, 1247)
-    self.assertIsNone(event_data.inode)
-
-    expected_message = (
-        'ZIP:/syslog '
-        'Type: file')
-    expected_short_message = '/syslog'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

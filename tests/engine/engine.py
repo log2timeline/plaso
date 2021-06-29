@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests the engine."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from artifacts import reader as artifacts_reader
@@ -16,9 +14,11 @@ from dfvfs.path import path_spec
 from dfvfs.resolver import context
 from dfvfs.vfs import file_system as dfvfs_file_system
 
+from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.lib import definitions
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 
@@ -59,7 +59,6 @@ class TestEngine(engine.BaseEngine):
             searcher (FileSystemSearcher) to indicate the base location of
             the file system
     """
-    self._file_system.Open(self._mount_point)
     return self._file_system, self._mount_point
 
 
@@ -136,8 +135,6 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     self.assertIsNotNone(test_mount_point)
     self.assertIsInstance(test_mount_point, path_spec.PathSpec)
 
-    test_file_system.Close()
-
     with self.assertRaises(RuntimeError):
       test_engine.GetSourceFileSystem(None)
 
@@ -161,12 +158,16 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
-    test_engine.PreprocessSources(registry, [source_path_spec])
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
+
+    test_engine.PreprocessSources(registry, [source_path_spec], storage_writer)
 
     operating_system = test_engine.knowledge_base.GetValue('operating_system')
     self.assertEqual(operating_system, 'Windows NT')
 
-    test_engine.PreprocessSources(registry, [None])
+    test_engine.PreprocessSources(registry, [None], storage_writer)
 
 
 if __name__ == '__main__':

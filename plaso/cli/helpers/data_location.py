@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The data location CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import os
 import sys
 
@@ -50,6 +48,7 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the location of the data files cannot be determined.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(

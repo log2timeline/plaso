@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite database plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import os
 
 from plaso.containers import sessions
@@ -40,21 +38,15 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
 
     database = sqlite.SQLiteDatabase(file_entry.name)
     file_object = file_entry.GetFileObject()
-    try:
-      if not wal_file_entry:
-        database.Open(file_object)
-      else:
-        wal_file_object = wal_file_entry.GetFileObject()
 
-        # Seek file_object to 0 so we can re-open the database with WAL file.
-        file_object.seek(0, os.SEEK_SET)
-        try:
-          database.Open(file_object, wal_file_object=wal_file_object)
-        finally:
-          wal_file_object.close()
+    if not wal_file_entry:
+      database.Open(file_object)
+    else:
+      wal_file_object = wal_file_entry.GetFileObject()
 
-    finally:
-      file_object.close()
+      # Seek file_object to 0 so we can re-open the database with WAL file.
+      file_object.seek(0, os.SEEK_SET)
+      database.Open(file_object, wal_file_object=wal_file_object)
 
     return file_entry, database
 
@@ -62,6 +54,10 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       self, path_segments, plugin, knowledge_base_values=None,
       wal_path_segments=None):
     """Parses a file as a SQLite database with a specific plugin.
+
+    This method will first test if a SQLite database contains the required
+    tables and columns using plugin.CheckRequiredTablesAndColumns() and then
+    extracts events using plugin.Process().
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
@@ -84,6 +80,10 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
 
     file_entry, database = self._OpenDatabaseFile(
         path_segments, wal_path_segments=wal_path_segments)
+
+    required_tables_and_column_exist = plugin.CheckRequiredTablesAndColumns(
+        database)
+    self.assertTrue(required_tables_and_column_exist)
 
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,

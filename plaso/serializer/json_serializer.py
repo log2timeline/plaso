@@ -1,25 +1,42 @@
 # -*- coding: utf-8 -*-
-"""The json serializer object implementation."""
-
-from __future__ import unicode_literals
+"""The JSON serializer object implementation."""
 
 import binascii
 import codecs
 import collections
 import json
 
+from dfdatetime import factory as dfdatetime_factory
+from dfdatetime import interface as dfdatetime_interface
+
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
+# The following import is needed to make sure TSKTime is registered with
+# the dfDateTime factory.
+from dfvfs.vfs import tsk_file_entry  # pylint: disable=unused-import
+
 from plaso.containers import interface as containers_interface
 from plaso.containers import manager as containers_manager
-from plaso.lib import py2to3
 from plaso.serializer import interface
 from plaso.serializer import logger
 
 
 class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
-  """Class that implements the json attribute container serializer."""
+  """JSON attribute container serializer."""
+
+  # Backwards compatibility for older session attribute containers that
+  # contain session configuration attributes.
+  _SESSION_START_LEGACY_ATTRIBUTE_NAMES = frozenset([
+      'artifact_filters',
+      'command_line_arguments',
+      'debug_mode',
+      'enabled_parser_names',
+      'filter_file',
+      'parser_filter_expression',
+      'preferred_encoding',
+      'preferred_time_zone'])
 
   @classmethod
   def _ConvertAttributeContainerToDict(cls, attribute_container):
@@ -50,12 +67,12 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """
     if not isinstance(
         attribute_container, containers_interface.AttributeContainer):
-      raise TypeError('{0:s} is not an attribute container type.'.format(
+      raise TypeError('{0!s} is not an attribute container type.'.format(
           type(attribute_container)))
 
     container_type = getattr(attribute_container, 'CONTAINER_TYPE', None)
     if not container_type:
-      raise ValueError('Unsupported attribute container type: {0:s}.'.format(
+      raise ValueError('Unsupported attribute container type: {0!s}.'.format(
           type(attribute_container)))
 
     json_dict = {
@@ -81,7 +98,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     Returns:
       dict|list: The JSON serialized object which can be a dictionary or a list.
     """
-    if isinstance(attribute_value, py2to3.BYTES_TYPE):
+    if isinstance(attribute_value, bytes):
       encoded_value = binascii.b2a_qp(attribute_value)
       encoded_value = codecs.decode(encoded_value, 'ascii')
       attribute_value = {
@@ -105,6 +122,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     elif isinstance(attribute_value, collections.Counter):
       attribute_value = cls._ConvertCollectionsCounterToDict(attribute_value)
+
+    elif isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+      attribute_value = cls._ConvertDateTimeValuesToDict(attribute_value)
 
     elif isinstance(attribute_value, dfvfs_path_spec.PathSpec):
       attribute_value = cls._ConvertPathSpecToDict(attribute_value)
@@ -141,11 +161,11 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       raise TypeError
 
     json_dict = {'__type__': 'collections.Counter'}
-    for attribute_name, attribute_value in iter(collections_counter.items()):
+    for attribute_name, attribute_value in collections_counter.items():
       if attribute_value is None:
         continue
 
-      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+      if isinstance(attribute_value, bytes):
         attribute_value = {
             '__type__': 'bytes',
             'stream': '{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -182,7 +202,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       AttributeContainer|dict|list|tuple: deserialized object.
 
     Raises:
-      ValueError: if the class type or container type is not supported.
+      ValueError: if the class type, container type or attribute type
+          of event data container is not supported.
     """
     # Use __type__ to indicate the object class type.
     class_type = json_dict.get('__type__', None)
@@ -204,6 +225,11 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       container_type = json_dict.get('__container_type__', None)
 
     # Since we would like the JSON as flat as possible we handle decoding
+    # date time values.
+    elif class_type == 'DateTimeValues':
+      return cls._ConvertDictToDateTimeValues(json_dict)
+
+    # Since we would like the JSON as flat as possible we handle decoding
     # a path specification.
     elif class_type == 'PathSpec':
       return cls._ConvertDictToPathSpec(json_dict)
@@ -211,19 +237,32 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     else:
       raise ValueError('Unsupported class type: {0:s}'.format(class_type))
 
-    container_class = (
-        containers_manager.AttributeContainersManager.GetAttributeContainer(
+    container_object = (
+        containers_manager.AttributeContainersManager.CreateAttributeContainer(
             container_type))
-    if not container_class:
-      raise ValueError('Unsupported container type: {0:s}'.format(
-          container_type))
 
-    container_object = container_class()
     supported_attribute_names = container_object.GetAttributeNames()
-    for attribute_name, attribute_value in iter(json_dict.items()):
-      # Be strict about which attributes to set in non event values.
-      if (container_type not in ('event', 'event_data') and
-          attribute_name not in supported_attribute_names):
+    for attribute_name, attribute_value in json_dict.items():
+      # Convert attribute names to provide backwards compatibility for previous
+      # variants of attribute containers.
+      if (container_type == 'event' and
+          attribute_name == 'event_data_row_identifier'):
+        attribute_name = '_event_data_row_identifier'
+
+      elif (container_type == 'event_tag' and
+            attribute_name == 'event_row_identifier'):
+        attribute_name = '_event_row_identifier'
+
+      # Backwards compatibility for older session attribute containers that
+      # contain session configuration attributes.
+      if (container_type == 'session_start' and
+          attribute_name in cls._SESSION_START_LEGACY_ATTRIBUTE_NAMES):
+        pass
+
+      # Be strict about which attributes to set in non event data attribute
+      # containers.
+      elif (container_type != 'event_data' and
+            attribute_name not in supported_attribute_names):
 
         if attribute_name not in ('__container_type__', '__type__'):
           logger.debug((
@@ -237,6 +276,17 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
       elif isinstance(attribute_value, list):
         attribute_value = cls._ConvertListToObject(attribute_value)
+
+      if container_type == 'event_data':
+        if isinstance(attribute_value, bytes):
+          raise ValueError((
+              'Event data attribute value: {0:s} of type bytes is not '
+              'supported.').format(attribute_name))
+
+        if isinstance(attribute_value, dict):
+          raise ValueError((
+              'Event data attribute value: {0:s} of type dict is not '
+              'supported.').format(attribute_name))
 
       setattr(container_object, attribute_name, attribute_value)
 
@@ -264,7 +314,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """
     collections_counter = collections.Counter()
 
-    for key, value in iter(json_dict.items()):
+    for key, value in json_dict.items():
       if key == '__type__':
         continue
       collections_counter[key] = value
@@ -295,6 +345,50 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     return list_value
 
   @classmethod
+  def _ConvertDictToDateTimeValues(cls, json_dict):
+    """Converts a JSON dict into a date time values object.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'DateTimeValues'
+        '__class_name__': 'RFC2579DateTime'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case this should
+    be 'DateTimeValues'. The rest of the elements of the dictionary make up the
+    date time values object properties.
+
+    Args:
+      json_dict (dict[str, object]): JSON serialized objects.
+
+    Returns:
+      dfdatetime.DateTimeValues: date and time values.
+    """
+    class_name = json_dict.get('__class_name__', None)
+    if class_name:
+      del json_dict['__class_name__']
+
+    # Remove the class type from the JSON dict since we cannot pass it.
+    del json_dict['__type__']
+
+    is_local_time = json_dict.get('is_local_time', None)
+    if is_local_time is not None:
+      del json_dict['is_local_time']
+
+    if class_name in ('InvalidTime', 'Never', 'NotSet'):
+      string = json_dict.get('string', None)
+      if string is not None:
+        del json_dict['string']
+
+    date_time = dfdatetime_factory.Factory.NewDateTimeValues(
+        class_name, **json_dict)
+    if is_local_time:
+      date_time.is_local_time = is_local_time
+
+    return date_time
+
+  @classmethod
   def _ConvertDictToPathSpec(cls, json_dict):
     """Converts a JSON dict into a path specification object.
 
@@ -314,7 +408,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
-      path.PathSpec: path specification.
+      dfvfs.PathSpec: path specification.
     """
     type_indicator = json_dict.get('type_indicator', None)
     if type_indicator:
@@ -326,8 +420,89 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     # Remove the class type from the JSON dict since we cannot pass it.
     del json_dict['__type__']
 
-    return dfvfs_path_spec_factory.Factory.NewPathSpec(
+    path_spec = dfvfs_path_spec_factory.Factory.NewPathSpec(
         type_indicator, **json_dict)
+
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
+      # dfvfs.OSPathSpec() will change the location to an absolute path
+      # here we want to preserve the original location.
+      path_spec.location = json_dict.get('location', None)
+
+    return path_spec
+
+  @classmethod
+  def _ConvertDateTimeValuesToDict(cls, date_time_values):
+    """Converts a date and time values object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'DateTimeValues'
+        '__class_name__': 'RFC2579DateTime'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case
+    'DateTimeValues'. The rest of the elements of the dictionary make up the
+    date and time value object properties.
+
+    Args:
+      date_time_values (dfdatetime.DateTimeValues): date and time values.
+
+    Returns:
+      dict[str, object]: JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of dfdatetime.DateTimeValues.
+    """
+    if not isinstance(date_time_values, dfdatetime_interface.DateTimeValues):
+      raise TypeError
+
+    class_name = type(date_time_values).__name__
+
+    json_dict = {
+        '__class_name__': class_name,
+        '__type__': 'DateTimeValues'}
+
+    if hasattr(date_time_values, 'timestamp'):
+      json_dict['timestamp'] = date_time_values.timestamp
+
+    elif hasattr(date_time_values, 'string'):
+      json_dict['string'] = date_time_values.string
+
+    elif class_name == 'FATDateTime':
+      json_dict['fat_date_time'] = date_time_values.fat_date_time
+
+    elif class_name == 'RFC2579DateTime':
+      json_dict['rfc2579_date_time_tuple'] = (
+          date_time_values.year, date_time_values.month,
+          date_time_values.day_of_month, date_time_values.hours,
+          date_time_values.minutes, date_time_values.seconds,
+          date_time_values.deciseconds)
+
+    elif class_name == 'TimeElements':
+      json_dict['time_elements_tuple'] = (
+          date_time_values.year, date_time_values.month,
+          date_time_values.day_of_month, date_time_values.hours,
+          date_time_values.minutes, date_time_values.seconds)
+
+    elif class_name == 'TimeElementsInMilliseconds':
+      json_dict['time_elements_tuple'] = (
+          date_time_values.year, date_time_values.month,
+          date_time_values.day_of_month, date_time_values.hours,
+          date_time_values.minutes, date_time_values.seconds,
+          date_time_values.milliseconds)
+
+    elif class_name == 'TimeElementsInMicroseconds':
+      json_dict['time_elements_tuple'] = (
+          date_time_values.year, date_time_values.month,
+          date_time_values.day_of_month, date_time_values.hours,
+          date_time_values.minutes, date_time_values.seconds,
+          date_time_values.microseconds)
+
+    if date_time_values.is_local_time:
+      json_dict['is_local_time'] = True
+
+    return json_dict
 
   @classmethod
   def _ConvertPathSpecToDict(cls, path_spec_object):
@@ -406,14 +581,25 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       TypeError: if the serialized dictionary does not contain an
           AttributeContainer.
     """
-    if json_dict:
-      json_object = cls._ConvertDictToObject(json_dict)
-      if not isinstance(json_object, containers_interface.AttributeContainer):
-        raise TypeError('{0:s} is not an attribute container type.'.format(
-            type(json_object)))
+    if not json_dict:
+      return None
+
+    if isinstance(json_dict, list):
+      return json_dict
+
+    json_object = cls._ConvertDictToObject(json_dict)
+
+    if isinstance(json_object, dfdatetime_interface.DateTimeValues):
       return json_object
 
-    return None
+    if isinstance(json_object, dfvfs_path_spec.PathSpec):
+      return json_object
+
+    if not isinstance(json_object, containers_interface.AttributeContainer):
+      raise TypeError('{0!s} is not an attribute container type.'.format(
+          type(json_object)))
+
+    return json_object
 
   @classmethod
   def WriteSerialized(cls, attribute_container):
@@ -438,4 +624,13 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     Returns:
       dict[str, object]: JSON serialized objects.
     """
+    if isinstance(attribute_container, list):
+      return attribute_container
+
+    if isinstance(attribute_container, dfdatetime_interface.DateTimeValues):
+      return cls._ConvertDateTimeValuesToDict(attribute_container)
+
+    if isinstance(attribute_container, dfvfs_path_spec.PathSpec):
+      return cls._ConvertPathSpecToDict(attribute_container)
+
     return cls._ConvertAttributeContainerToDict(attribute_container)

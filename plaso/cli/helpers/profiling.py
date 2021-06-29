@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The profiling CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import os
 
 from plaso.cli import tools
@@ -20,6 +18,7 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
   DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
   PROFILERS_INFORMATION = {
+      'analyzers': 'Profile CPU time of analyzers, like hashing',
       'memory': 'Profile memory usage over time',
       'parsers': 'Profile CPU time per parser',
       'processing': 'Profile CPU time of processing phases',
@@ -72,6 +71,8 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the configuration options are missing or not
+          supported.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(

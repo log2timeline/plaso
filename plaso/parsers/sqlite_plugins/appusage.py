@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the MacOS application usage.
-
-The application usage is stored in SQLite database files named
-/var/db/application_usage.sqlite
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for MacOS application usage database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -23,6 +17,7 @@ class MacOSApplicationUsageEventData(events.EventData):
     app_version (str): version of the application.
     bundle_id (str): bundle identifier of the application.
     count (int): TODO: number of times what?
+    query (str): SQL query that was used to obtain the event data.
   """
 
   DATA_TYPE = 'macosx:application_usage'
@@ -35,34 +30,37 @@ class MacOSApplicationUsageEventData(events.EventData):
     self.app_version = None
     self.bundle_id = None
     self.count = None
+    self.query = None
 
 
 class ApplicationUsagePlugin(interface.SQLitePlugin):
-  """Parse Application Usage history files.
+  """SQLite parser plugin for MacOS application usage database files.
 
-  Application usage is a SQLite database that logs down entries
-  triggered by NSWorkspaceWillLaunchApplicationNotification and
+  The MacOS application usage database is typlically stored in:
+  /var/db/application_usage.sqlite
+
+  Application usage is a SQLite database that logs down entries triggered by
+  NSWorkspaceWillLaunchApplicationNotification and
   NSWorkspaceDidTerminateApplicationNotification NSWorkspace notifications by
   crankd.
 
-  See the code here:
-  http://code.google.com/p/google-macops/source/browse/trunk/crankd/\
-      ApplicationUsage.py
-
-  Default installation: /var/db/application_usage.sqlite
+  More information can be found here:
+  https://github.com/google/macops/blob/master/crankd/ApplicationUsage.py
   """
 
   NAME = 'appusage'
-  DESCRIPTION = 'Parser for MacOS application usage SQLite database files.'
+  DATA_FORMAT = (
+      'MacOS application usage SQLite database (application_usage.sqlite) file')
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'application_usage': frozenset([
+          'last_time', 'event', 'bundle_id', 'app_version', 'app_path',
+          'number_times'])}
+
   QUERIES = [(
       ('SELECT last_time, event, bundle_id, app_version, app_path, '
        'number_times FROM application_usage ORDER BY last_time'),
       'ParseApplicationUsageRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['application_usage'])
 
   SCHEMAS = [{
       'application_usage': (

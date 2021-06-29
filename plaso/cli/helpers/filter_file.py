@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The filter file CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import os
 
 from plaso.cli import tools
@@ -58,10 +56,10 @@ class FilterFileArgumentsHelper(interface.ArgumentsHelper):
 
     # Search the data location for the filter file.
     if filter_file and not os.path.isfile(filter_file):
-      data_location = getattr(configuration_object, '_data_location', None)
-      if data_location:
+      if configuration_object.data_location:
         filter_file_basename = os.path.basename(filter_file)
-        filter_file_path = os.path.join(data_location, filter_file_basename)
+        filter_file_path = os.path.join(
+            configuration_object.data_location, filter_file_basename)
         if os.path.isfile(filter_file_path):
           filter_file = filter_file_path
 

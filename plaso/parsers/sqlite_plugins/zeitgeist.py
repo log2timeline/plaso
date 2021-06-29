@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin for the Zeitgeist SQLite database.
-
-Zeitgeist is a service which logs the user activities and events, anywhere
-from files opened to websites visited and conversations.
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Zeitgeist activity database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -20,6 +14,9 @@ class ZeitgeistActivityEventData(events.EventData):
   """Zeitgeist activity event data.
 
   Attributes:
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     subject_uri (str): subject URI.
   """
 
@@ -28,22 +25,32 @@ class ZeitgeistActivityEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(ZeitgeistActivityEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.offset = None
+    self.query = None
     self.subject_uri = None
 
 
 class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
-  """SQLite plugin for Zeitgeist activity database."""
+  """SQLite parser plugin for Zeitgeist activity database files.
+
+  Zeitgeist is a service which logs the user activities and events, anywhere
+  from files opened to websites visited and conversations.
+  """
 
   NAME = 'zeitgeist'
-  DESCRIPTION = 'Parser for Zeitgeist activity SQLite database files.'
+  DATA_FORMAT = 'Zeitgeist activity SQLite database file'
 
   # TODO: Explore the database more and make this parser cover new findings.
+
+  REQUIRED_STRUCTURE = {
+      'actor': frozenset([]),
+      'event': frozenset([
+          'id', 'subj_id', 'timestamp']),
+      'uri': frozenset(['id'])}
 
   QUERIES = [
       ('SELECT id, timestamp, subj_uri FROM event_view',
        'ParseZeitgeistEventRow')]
-
-  REQUIRED_TABLES = frozenset(['event', 'actor'])
 
   SCHEMAS = [{
       'actor': (

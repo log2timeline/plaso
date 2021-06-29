@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the storage format CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -24,14 +22,14 @@ usage: cli_helper.py [--storage_format FORMAT] [--task_storage_format FORMAT]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --storage_format FORMAT, --storage-format FORMAT
                         Format of the storage file, the default is: sqlite.
                         Supported options: sqlite
   --task_storage_format FORMAT, --task-storage-format FORMAT
                         Format for task storage, the default is: sqlite.
-                        Supported options: sqlite
-"""
+                        Supported options: redis, sqlite
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

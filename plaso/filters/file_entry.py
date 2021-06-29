@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 """File entry filters."""
 
-from __future__ import unicode_literals
-
 import abc
 import collections
-import logging
 
 import pysigscan
 
 from dfdatetime import time_elements
 
-from plaso.lib import py2to3
+from plaso.filters import logger
 
 
 class FileEntryFilter(object):
@@ -80,7 +77,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     Raises:
       ValueError: If the filter is badly formed.
     """
-    if not isinstance(time_value, py2to3.STRING_TYPES):
+    if not isinstance(time_value, str):
       raise ValueError('Filter type must be a string.')
 
     if start_time_string is None and end_time_string is None:
@@ -332,13 +329,10 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     except IOError as exception:
       # TODO: replace location by display name.
       location = getattr(file_entry.path_spec, 'location', '')
-      logging.error((
+      logger.error((
           '[skipping] unable to scan file: {0:s} for signatures '
           'with error: {1!s}').format(location, exception))
       return False
-
-    finally:
-      file_object.close()
 
     return scan_state.number_of_scan_results > 0
 

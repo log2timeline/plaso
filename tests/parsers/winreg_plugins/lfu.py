@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the Less Frequently Used (LFU) Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import lfu
 
 from tests.parsers.winreg_plugins import test_lib
@@ -111,40 +108,24 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
     plugin = lfu.BootExecutePlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'date_time': '2012-08-31 20:45:29.0000000',
+        'data_type': 'windows:registry:boot_execute',
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'value': 'autocheck autochk *'}
 
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:boot_execute')
-
-    expected_message = (
-        '[{0:s}] '
-        'BootExecute: autocheck autochk *').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.data_type, 'windows:registry:key_value')
-
-    expected_message = (
-        '[{0:s}] '
+    expected_values = (
         'CriticalSectionTimeout: [REG_SZ] 2592000 '
         'ExcludeFromKnownDlls: [REG_MULTI_SZ] [] '
         'GlobalFlag: [REG_SZ] 0 '
@@ -152,11 +133,15 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
         'HeapDeCommitTotalFreeThreshold: [REG_SZ] 0 '
         'HeapSegmentCommit: [REG_SZ] 0 '
         'HeapSegmentReserve: [REG_SZ] 0 '
-        'NumberOfInitialSessions: [REG_SZ] 2').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'NumberOfInitialSessions: [REG_SZ] 2')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2012-08-31 20:45:29.0000000',
+        'data_type': 'windows:registry:key_value',
+        'key_path': key_path,
+        'values': expected_values}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
@@ -207,30 +192,22 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
     plugin = lfu.BootVerificationPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'date_time': '2012-08-31 20:45:29.0000000',
+        'data_type': 'windows:registry:boot_verification',
+        'image_path': 'C:\\WINDOWS\\system32\\googleupdater.exe',
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME}
 
-    self.CheckTimestamp(event.timestamp, '2012-08-31 20:45:29.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:boot_verification')
-
-    expected_message = (
-        '[{0:s}] '
-        'ImagePath: C:\\WINDOWS\\system32\\googleupdater.exe').format(
-            key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

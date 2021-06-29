@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Linux preprocess plug-ins."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
@@ -27,10 +25,11 @@ class LinuxHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxHostnamePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, None, plugin)
 
-    self.assertEqual(knowledge_base.hostname, 'plaso.kiddaland.net')
+    self.assertEqual(
+        test_mediator.knowledge_base.hostname, 'plaso.kiddaland.net')
 
 
 class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
@@ -46,10 +45,11 @@ class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxDistributionPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, None, plugin)
 
-    system_product = knowledge_base.GetValue('operating_system_product')
+    system_product = test_mediator.knowledge_base.GetValue(
+        'operating_system_product')
     self.assertEqual(system_product, 'Fedora release 26 (Twenty Six)')
 
 
@@ -69,10 +69,11 @@ Debian GNU/Linux 5.0 \\n \\l
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxIssueFilePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, None, plugin)
 
-    system_product = knowledge_base.GetValue('operating_system_product')
+    system_product = test_mediator.knowledge_base.GetValue(
+        'operating_system_product')
     self.assertEqual(system_product, 'Debian GNU/Linux 5.0')
 
 
@@ -94,10 +95,11 @@ DISTRIB_RELEASE=14.04"""
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxStandardBaseReleasePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, None, plugin)
 
-    system_product = knowledge_base.GetValue('operating_system_product')
+    system_product = test_mediator.knowledge_base.GetValue(
+        'operating_system_product')
     self.assertEqual(system_product, 'Ubuntu 14.04 LTS')
 
 
@@ -131,10 +133,11 @@ VARIANT_ID=workstation"""
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxSystemdOperatingSystemPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, None, plugin)
 
-    system_product = knowledge_base.GetValue('operating_system_product')
+    system_product = test_mediator.knowledge_base.GetValue(
+        'operating_system_product')
     self.assertEqual(system_product, 'Fedora 26 (Workstation Edition)')
 
 
@@ -149,11 +152,34 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
-    plugin = linux.LinuxTimeZonePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    storage_writer = self._CreateTestStorageWriter()
 
-    self.assertEqual(knowledge_base.timezone.zone, 'Europe/Zurich')
+    plugin = linux.LinuxTimeZonePlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+
+    self.assertEqual(
+        test_mediator.knowledge_base.timezone.zone, 'Europe/Zurich')
+
+  def testParseFileEntryWithBogusLink(self):
+    """Tests the _ParseFileEntry function on a bogus symbolic link."""
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddSymbolicLink(
+        '/etc/localtime', '/usr/share/zoneinfo/Bogus')
+
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxTimeZonePlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
   def testParseFileEntryWithTZif(self):
     """Tests the _ParseFileEntry function on a timezone information file."""
@@ -165,11 +191,15 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
-    plugin = linux.LinuxTimeZonePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    storage_writer = self._CreateTestStorageWriter()
 
-    self.assertEqual(knowledge_base.timezone.zone, 'CET')
+    plugin = linux.LinuxTimeZonePlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+
+    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'CET')
 
   def testParseFileEntryWithBogusTZif(self):
     """Tests the _ParseFileEntry function on a bogus TZif file."""
@@ -181,11 +211,15 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
-    plugin = linux.LinuxTimeZonePlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    storage_writer = self._CreateTestStorageWriter()
 
-    self.assertEqual(knowledge_base.timezone.zone, 'UTC')
+    plugin = linux.LinuxTimeZonePlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
 
 class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
@@ -210,15 +244,18 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     """Tests the _ParseFileData function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile('/etc/passwd', self._FILE_DATA)
-
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
+    storage_writer = self._CreateTestStorageWriter()
+
     plugin = linux.LinuxUserAccountsPlugin()
-    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, plugin)
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     users = sorted(
-        knowledge_base.user_accounts,
+        test_mediator.knowledge_base.user_accounts,
         key=lambda user_account: user_account.identifier)
     self.assertEqual(len(users), 13)
 
@@ -229,6 +266,132 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     self.assertEqual(user_account.user_directory, '/var/ftp')
     self.assertEqual(user_account.username, 'ftp')
     self.assertEqual(user_account.shell, '/sbin/nologin')
+
+    # Test on /etc/passwd with missing field.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b'error:99:99:Nobody:/home/error:/sbin/nologin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    # Test on /etc/passwd with empty username.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b':x:99:99:Nobody:/home/error:/sbin/nologin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    # Test on /etc/passwd with empty user identifier.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b'error:x::99:Nobody:/home/error:/sbin/nologin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    # Test on /etc/passwd with non UTF-8 username.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b'er\xbfor:x:99:99:Nobody:/home/error:/sbin/nologin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    # Test on /etc/passwd with non UTF-8 user identifier.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b'error:x:\xbf9:99:Nobody:/home/error:/sbin/nologin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    # Test on /etc/passwd with non UTF-8 group identifier.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b'error:x:99:\xbf9:Nobody:/home/error:/sbin/nologin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    # Test on /etc/passwd with non UTF-8 full name.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b'error:x:99:99:Nob\xbfdy:/home/error:/sbin/nologin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    # Test on /etc/passwd with non UTF-8 user directory.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b'error:x:99:99:Nobody:/home/er\xbfor:/sbin/nologin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+
+    # Test on /etc/passwd with non UTF-8 shell.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        '/etc/passwd', b'error:x:99:99:Nobody:/home/error:/sbin/nol\xbfgin\n')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = linux.LinuxUserAccountsPlugin()
+    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
 
 
 if __name__ == '__main__':

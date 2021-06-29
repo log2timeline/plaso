@@ -1,20 +1,16 @@
 # -*- coding: utf-8 -*-
-"""This file contains the MacOS user plist plugin."""
-
-from __future__ import unicode_literals
+"""Plist parser plugin for MacOS user plist files."""
 
 # TODO: Only plists from MacOS 10.8 and 10.9 were tested. Look at other
 #       versions as well.
 
 import codecs
+import plistlib
 
-import biplist
+from xml.parsers import expat
 
 from defusedxml import ElementTree
 from dfdatetime import time_elements as dfdatetime_time_elements
-from dfvfs.file_io import fake_file_io
-from dfvfs.path import fake_path_spec
-from dfvfs.resolver import context
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
@@ -25,7 +21,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class MacUserPlugin(interface.PlistPlugin):
-  """Basic plugin to extract timestamp Mac user information.
+  """Plist parser plugin for MacOS user plist files.
 
   Further details about the extracted fields.
     name:
@@ -39,7 +35,7 @@ class MacUserPlugin(interface.PlistPlugin):
     lastLoginTimestamp:
       last time the user was authenticated depending on the situation,
       these timestamps are reset (0 value). It is translated by the
-      library as a 2001-01-01 00:00:00 (COCAO zero time representation).
+      library as a 2001-01-01 00:00:00 (Cocoa zero time representation).
       If this happens, the event is not yield.
     failedLoginTimestamp:
       last time the user passwd was incorrectly(*).
@@ -48,7 +44,7 @@ class MacUserPlugin(interface.PlistPlugin):
   """
 
   NAME = 'macuser'
-  DESCRIPTION = 'Parser for MacOS user plist files.'
+  DATA_FORMAT = 'MacOS user plist file'
 
   # The PLIST_PATH is dynamic, "user".plist is the name of the
   # MacOS user.
@@ -57,20 +53,8 @@ class MacUserPlugin(interface.PlistPlugin):
 
   _ROOT = '/'
 
-  def Process(self, parser_mediator, plist_name, top_level, **kwargs):
-    """Check if it is a valid MacOS system  account plist file name.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      plist_name (str): name of the plist.
-      top_level (dict[str, object]): plist top-level key.
-    """
-    super(MacUserPlugin, self).Process(
-        parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
-
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant user timestamp entries.
 
     Args:
@@ -87,7 +71,8 @@ class MacUserPlugin(interface.PlistPlugin):
     for policy in match.get('passwordpolicyoptions', []):
       try:
         xml_policy = ElementTree.fromstring(policy)
-      except (ElementTree.ParseError, LookupError) as exception:
+      except (LookupError, ElementTree.ParseError,
+              expat.ExpatError) as exception:
         logger.error((
             'Unable to parse XML structure for an user policy, account: '
             '{0:s} and uid: {1!s}, with error: {2!s}').format(
@@ -95,7 +80,7 @@ class MacUserPlugin(interface.PlistPlugin):
         continue
 
       for dict_elements in xml_policy.iterfind('dict'):
-        key_values = [value.text for value in iter(dict_elements)]
+        key_values = [value.text for value in dict_elements]
         # Taking a list and converting it to a dict, using every other item
         # as the key and the other one as the value.
         policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
@@ -113,28 +98,19 @@ class MacUserPlugin(interface.PlistPlugin):
 
         shadow_hash_data = match.get('ShadowHashData', None)
         if date_time and isinstance(shadow_hash_data, (list, tuple)):
-          # Extract the hash password information.
-          # It is store in the attribute ShadowHasData which is
-          # a binary plist data; However biplist only extracts one
-          # level of binary plist, then it returns this information
-          # as a string.
-
-          # TODO: change this into a DataRange instead. For this we
-          # need the file offset and size of the ShadowHashData value data.
-          shadow_hash_data = shadow_hash_data[0]
-
-          resolver_context = context.Context()
-          fake_file = fake_file_io.FakeFile(
-              resolver_context, shadow_hash_data)
-          shadow_hash_data_path_spec = fake_path_spec.FakePathSpec(
-              location='ShadowHashData')
-          fake_file.open(path_spec=shadow_hash_data_path_spec)
-
+          # Extract the hash password information, which is stored in
+          # the attribute ShadowHashData which is a binary plist data.
           try:
-            plist_file = biplist.readPlist(fake_file)
-          except biplist.InvalidPlistException:
-            plist_file = {}
-          salted_hash = plist_file.get('SALTED-SHA512-PBKDF2', None)
+            property_list = plistlib.loads(shadow_hash_data[0])
+          except plistlib.InvalidFileException as exception:
+            parser_mediator.ProduceExtractionWarning(
+                'unable to parse ShadowHashData with error: {0!s}'.format(
+                    exception))
+            property_list = {}
+
+          password_hash = 'N/A'
+
+          salted_hash = property_list.get('SALTED-SHA512-PBKDF2', None)
           if salted_hash:
             salt_hex_bytes = codecs.encode(salted_hash['salt'], 'hex')
             salt_string = codecs.decode(salt_hex_bytes, 'ascii')
@@ -142,8 +118,6 @@ class MacUserPlugin(interface.PlistPlugin):
             entropy_string = codecs.decode(entropy_hex_bytes, 'ascii')
             password_hash = '$ml${0:d}${1:s}${2:s}'.format(
                 salted_hash['iterations'], salt_string, entropy_string)
-          else:
-            password_hash = 'N/A'
 
           event_data = plist_event.PlistTimeEventData()
           event_data.desc = (

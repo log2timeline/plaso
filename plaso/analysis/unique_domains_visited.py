@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
 """A plugin to generate a list of domains visited."""
 
-from __future__ import unicode_literals
+from urllib import parse as urlparse
 
-try:
-  import urlparse
-except ImportError:
-  from urllib import parse as urlparse
-
-# pylint: disable=wrong-import-position
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import reports
 
 
 class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
@@ -23,9 +16,6 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
   """
 
   NAME = 'unique_domains_visited'
-
-  # Indicate that we can run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = True
 
   _SUPPORTED_EVENT_DATA_TYPES = frozenset([
       'chrome:history:file_downloaded',
@@ -39,13 +29,8 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       'opera:history',
       'safari:history:visit'])
 
-  def __init__(self):
-    """Initializes the domains visited plugin."""
-    super(UniqueDomainsVisitedPlugin, self).__init__()
-    self._domains = []
-
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event and extracts domains from it.
 
     We only evaluate straightforward web history events, not visits which can
@@ -56,6 +41,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
       return
@@ -65,30 +51,12 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       return
 
     parsed_url = urlparse.urlparse(url)
+
     domain = getattr(parsed_url, 'netloc', None)
-    if domain in self._domains:
-      # We've already found an event containing this domain.
+    if not domain:
       return
 
-    self._domains.append(domain)
-
-  def CompileReport(self, mediator):
-    """Compiles an analysis report.
-
-    Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
-
-    Returns:
-      AnalysisReport: the analysis report.
-    """
-    lines_of_text = ['Listing domains visited by all users']
-    for domain in sorted(self._domains):
-      lines_of_text.append(domain)
-
-    lines_of_text.append('')
-    report_text = '\n'.join(lines_of_text)
-    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
+    self._analysis_counter[domain] += 1
 
 
 manager.AnalysisPluginManager.RegisterPlugin(UniqueDomainsVisitedPlugin)

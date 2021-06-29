@@ -26,7 +26,7 @@ Not the operating system of the image/files you're trying to analyze.
 For example:
 * installed from [GiFT PPA][https://launchpad.net/~gift] stable track
 * installed from [GiFT COPR][https://copr.fedorainfracloud.org/coprs/g/gift/] stable track
-* installed from [l2tbinaries][https://github.com/log2timeline/l2tbinaries] master branch
+* installed from [l2tbinaries][https://github.com/log2timeline/l2tbinaries] main branch
 * built using [l2devtools][https://github.com/log2timeline/l2tdevtools]
 * other, namely ...
 

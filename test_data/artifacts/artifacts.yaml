@@ -20,7 +20,7 @@ name: LinuxPasswdFile
 doc: |
   Linux passwd file.
 
-  A passwd file consist of colon seperated values in the format:
+  A passwd file consist of colon separated values in the format:
   username:password:uid:gid:full name:home directory:shell
 sources:
 - type: FILE
@@ -96,8 +96,8 @@ sources:
 labels: [System]
 supported_os: [Darwin]
 urls:
-- 'http://forensicswiki.org/wiki/Mac_OS_X'
-- 'http://forensicswiki.org/wiki/Mac_OS_X_10.9_-_Artifacts_Location#System_Info_Misc.'
+- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X'
+- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X_10.9_-_Artifacts_Location#System_Info_Misc.'
 ---
 name: MacOSSystemConfigurationPreferencesPlistFile
 doc: System configuration preferences plist file
@@ -115,8 +115,8 @@ sources:
 labels: [System]
 supported_os: [Darwin]
 urls:
-- 'http://forensicswiki.org/wiki/Mac_OS_X'
-- 'http://forensicswiki.org/wiki/Mac_OS_X_10.9_-_Artifacts_Location#System_Settings_and_Informations'
+- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X'
+- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X_10.9_-_Artifacts_Location#System_Settings_and_Informations'
 ---
 name: MacOSUserPasswordHashesPlistFiles
 doc: User password hashes plist files
@@ -129,8 +129,8 @@ sources:
 labels: [System, Users, Authentication]
 supported_os: [Darwin]
 urls:
-- 'http://forensicswiki.org/wiki/Mac_OS_X'
-- 'http://forensicswiki.org/wiki/Mac_OS_X_10.9_-_Artifacts_Location#System_Settings_and_Informations'
+- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X'
+- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X_10.9_-_Artifacts_Location#System_Settings_and_Informations'
 ---
 name: WindowsAvailableTimeZones
 doc: Timezones available on a Windows system.
@@ -138,7 +138,7 @@ sources:
 - type: REGISTRY_KEY
   attributes: {keys: ['HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Time Zones\*']}
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/blob/master/documentation/Time%20zone%20keys.asciidoc']
+urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/Time%20zone%20keys.asciidoc']
 ---
 name: WindowsCodePage
 doc: The code page of the system.
@@ -149,7 +149,7 @@ sources:
     - {key: '%%current_control_set%%\Control\Nls\CodePage', value: 'ACP'}
 provides: [code_page]
 supported_os: [Windows]
-urls: ['http://en.wikipedia.org/wiki/Windows_code_page']
+urls: ['https://en.wikipedia.org/wiki/Windows_code_page']
 ---
 name: WindowsComputerName
 doc: The name of the system.
@@ -162,12 +162,12 @@ provides: [hostname]
 supported_os: [Windows]
 ---
 name: WindowsCurrentVersion
-doc: The Windows current verson
+doc: The Windows current version
 sources:
 - type: REGISTRY_VALUE
   attributes: {key_value_pairs: [{key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion', value: 'CurrentVersion'}]}
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/blob/master/documentation/System%20keys.asciidoc']
+urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/System%20keys.asciidoc']
 ---
 name: WindowsEnvironmentVariableAllUsersProfile
 doc: |
@@ -265,13 +265,22 @@ provides: [environ_windir]
 supported_os: [Windows]
 urls: ['http://environmentvariables.org/WinDir']
 ---
+name: WindowsEventLogProviders
+doc: Windows EventLog provider Registry keys.
+sources:
+- type: REGISTRY_KEY
+  attributes:
+    keys: ['HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\EventLog\*\*']
+supported_os: [Windows]
+urls: ['https://winreg-kb.readthedocs.io/en/latest/sources/EventLog-keys.html']
+---
 name: WindowsProductName
 doc: The Windows product name
 sources:
 - type: REGISTRY_VALUE
   attributes: {key_value_pairs: [{key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion', value: 'ProductName'}]}
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/blob/master/documentation/System%20keys.asciidoc']
+urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/System%20keys.asciidoc']
 ---
 name: WindowsRegistryProfiles
 doc: |
@@ -288,10 +297,13 @@ supported_os: [Windows]
 urls: ['http://msdn.microsoft.com/en-us/library/windows/desktop/bb776892(v=vs.85).aspx']
 ---
 name: WindowsTimezone
-doc: The timezone of the system in Olson format.
+doc: The time zone of the system as a Windows time zone name or in MUI form.
 sources:
 - type: REGISTRY_VALUE
-  attributes: {key_value_pairs: [{key: '%%current_control_set%%\Control\TimeZoneInformation', value: 'StandardName'}]}
+  attributes:
+    key_value_pairs:
+    - {key: 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation', value: 'StandardName'}
+    - {key: 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation', value: 'TimeZoneKeyName'}
 provides: [time_zone]
 supported_os: [Windows]
-urls: ['https://github.com/libyal/winreg-kb/wiki/Time-zone-keys']
+urls: ['https://winreg-kb.readthedocs.io/en/latest/sources/system-keys/Time-zones.html']

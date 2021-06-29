@@ -12,8 +12,6 @@ See additional details here:
   https://plaso.readthedocs.io/en/latest/sources/user/Creating-a-timeline.html#using-psteal
 """
 
-from __future__ import unicode_literals
-
 import multiprocessing
 import logging
 import os
@@ -51,7 +49,7 @@ def Main():
 
   have_list_option = False
 
-  if tool.list_timezones:
+  if tool.list_time_zones:
     tool.ListTimeZones()
     have_list_option = True
 
@@ -59,7 +57,7 @@ def Main():
     tool.ListOutputModules()
     have_list_option = True
 
-  if tool.list_timezones:
+  if tool.list_time_zones:
     tool.ListTimeZones()
     have_list_option = True
 
@@ -85,6 +83,11 @@ def Main():
   try:
     tool.ExtractEventsFromSources()
     tool.AnalyzeEvents()
+
+  # Writing to stdout and stderr will raise BrokenPipeError if it
+  # receives a SIGPIPE.
+  except BrokenPipeError:
+    pass
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')

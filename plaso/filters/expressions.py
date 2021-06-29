@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 """The event filter expression parser expression classes."""
 
-from __future__ import unicode_literals
-
 import abc
-import logging
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import interface as dfdatetime_interface
 
-from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.filters import filters
+from plaso.filters import logger
+from plaso.filters import value_types
+from plaso.lib import errors
 
 
 class Expression(object):
@@ -18,7 +16,7 @@ class Expression(object):
 
   Attributes:
     attribute (str): attribute or None if not set.
-    args (list[str]): arguments.
+    args (list[object]): arguments.
     number_of_args (int): expected number of arguments.
     operator (str): operator or None if not set.
   """
@@ -30,15 +28,16 @@ class Expression(object):
   def __init__(self):
     """Initializes an event filter parser expression."""
     super(Expression, self).__init__()
+    self.attribute = None
     self.args = []
     self.number_of_args = 1
     self.operator = None
 
-  def AddArg(self, argument):
+  def AddArgument(self, argument):
     """Adds a new argument to this expression.
 
     Args:
-       argument (str): argument to add.
+      argument (object): argument to add.
 
     Returns:
       bool: True if the argument is the last argument, False otherwise.
@@ -92,6 +91,13 @@ class BinaryExpression(Expression):
     super(BinaryExpression, self).__init__()
     self.args = []
     self.operator = operator
+
+  def __repr__(self):
+    """Retrieves a string representation of the object for debugging."""
+    if len(self.args) == 2:
+      return '({0!s}) {1:s} {2!s}'.format(
+          self.args[0], self.operator, self.args[1])
+    return self.operator
 
   def AddOperands(self, lhs, rhs):
     """Adds an operand.
@@ -178,40 +184,9 @@ class EventExpression(Expression):
     super(EventExpression, self).__init__()
     self._bool_value = True
 
-  def _CopyValueToDateTime(self, value):
-    """Copies an event filter value to a date and time object.
-
-    Args:
-      value (str): event filter value.
-
-    Returns:
-      dfdatetime.PosixTimeInMicroseconds: date and time object.
-
-    Raises:
-      ValueError: if the value cannot be copied to a date and time object.
-    """
-    if not isinstance(value, py2to3.INTEGER_TYPES):
-      try:
-        value = int(value, 10)
-      except (TypeError, ValueError):
-        pass
-
-    if isinstance(value, py2to3.INTEGER_TYPES):
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=value)
-    else:
-      try:
-        # Adjust the ISO 8601 string so is rembles a Python date and time
-        # string.
-        if value and len(value) > 10 and value[10] == 'T':
-          value = ' '.join(value.split('T'))
-
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds()
-        date_time.CopyFromDateTimeString(value)
-      except (TypeError, ValueError):
-        raise ValueError('Unsupported timestamp value: {0!s}'.format(value))
-
-    return date_time
+  def __repr__(self):
+    """Retrieves a string representation of the object for debugging."""
+    return '{0:s} {1:s} {2!s}'.format(self.attribute, self.operator, self.args)
 
   def Compile(self):
     """Compiles the expression into a filter.
@@ -223,7 +198,7 @@ class EventExpression(Expression):
       ParseError: if the operator is missing or unknown.
     """
     if self.attribute in self._DEPRECATED_EVENT_FILTER_ALIAS:
-      logging.warning(
+      logger.warning(
           'Event filter alias: "{0:s}" no longer supported'.format(
               self.attribute))
 
@@ -242,10 +217,18 @@ class EventExpression(Expression):
     if self.attribute == 'timestamp':
       date_time_arguments = []
       for argument in self.args:
-        try:
-          date_time = self._CopyValueToDateTime(argument)
-        except ValueError as exception:
-          raise errors.ParseError(exception)
+        if isinstance(argument, dfdatetime_interface.DateTimeValues):
+          date_time = argument
+
+        else:
+          logger.warning(
+              'Implicit event filter date and time conversion is deprecated '
+              'use the DATETIME() value type indicator instead')
+
+          try:
+            date_time = value_types.DateTimeValueType(argument)
+          except ValueError as exception:
+            raise errors.ParseError(exception)
 
         date_time_arguments.append(date_time)
 

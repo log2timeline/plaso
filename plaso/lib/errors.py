@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the error classes."""
 
-from __future__ import unicode_literals
-
 
 class Error(Exception):
   """Base error class."""
@@ -104,16 +102,8 @@ class WrongBencodePlugin(Error):
   """Error reporting wrong bencode plugin used."""
 
 
-class WrongCompoundZIPPlugin(Error):
-  """Error reporting wrong compound ZIP plugin used."""
-
-
 class WrongFormatter(Error):
   """Raised when the formatter is not applicable for a particular event."""
-
-
-class WrongPlistPlugin(Error):
-  """Error reporting wrong plist plugin used."""
 
 
 class WrongPlugin(Error):

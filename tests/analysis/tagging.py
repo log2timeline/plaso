@@ -2,13 +2,11 @@
 # -*- coding: utf-8 -*-
 """Tests for the tagging analysis plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.analysis import tagging
+from plaso.containers import events
 from plaso.lib import definitions
-from plaso.lib import timelib
 
 from tests.analysis import test_lib
 
@@ -20,24 +18,29 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [
       {'data_type': 'windows:prefetch',
-       'timestamp': timelib.Timestamp.CopyFromString('2015-05-01 15:12:00'),
+       'parser': 'winprefetch',
+       'timestamp': '2015-05-01 15:12:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'chrome:history:file_downloaded',
-       'timestamp': timelib.Timestamp.CopyFromString('2015-05-01 05:06:00'),
+       'parser': 'sqlite/chrome_history',
+       'timestamp': '2015-05-01 05:06:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'something_else',
-       'timestamp': timelib.Timestamp.CopyFromString('2015-02-19 08:00:01'),
+       'parser': 'test',
+       'timestamp': '2015-02-19 08:00:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'windows:evt:record',
        'event_identifier': 538,
+       'parser': 'winevt',
        'source_name': 'Security',
-       'timestamp': timelib.Timestamp.CopyFromString('2016-05-25 13:00:06'),
+       'timestamp': '2016-05-25 13:00:06',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'body': 'this is a message',
        'data_type': 'windows:evt:record',
        'event_identifier': 16,
-       'timestamp': timelib.Timestamp.CopyFromString('2016-05-25 13:00:06'),
+       'parser': 'winevt',
        'source_name': 'Messaging',
+       'timestamp': '2016-05-25 13:00:06',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   def testExamineEventAndCompileReport(self):
@@ -56,21 +59,25 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     report = storage_writer.analysis_reports[0]
     self.assertIsNotNone(report)
 
-    expected_text = 'Tagging plugin produced 4 tags.\n'
-    self.assertEqual(report.text, expected_text)
+    self.assertIsNotNone(report.analysis_counter)
+    self.assertEqual(report.analysis_counter['event_tags'], 4)
+    self.assertEqual(report.analysis_counter['application_execution'], 1)
+    self.assertEqual(report.analysis_counter['file_downloaded'], 1)
+    self.assertEqual(report.analysis_counter['login_attempt'], 1)
+    self.assertEqual(report.analysis_counter['security_event'], 1)
+    self.assertEqual(report.analysis_counter['text_contains'], 1)
 
     labels = []
-    for event_tag in storage_writer.GetEventTags():
+    for event_tag in storage_writer.GetAttributeContainers(
+        events.EventTag.CONTAINER_TYPE):
       labels.extend(event_tag.labels)
 
     self.assertEqual(len(labels), 5)
 
-    # This is from a tag rule declared in objectfilter syntax.
-    self.assertIn('application_execution', labels)
-    # This is from a tag rule declared in dotty syntax.
-    self.assertIn('login_attempt', labels)
-    # This is from a rule using the "contains" operator
-    self.assertIn('text_contains', labels)
+    expected_labels = [
+        'application_execution', 'file_downloaded', 'login_attempt',
+        'security_event', 'text_contains']
+    self.assertEqual(sorted(labels), expected_labels)
 
 
 if __name__ == '__main__':

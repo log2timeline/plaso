@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Explorer ProgramsCache key."""
 
-from __future__ import unicode_literals
-
+import os
 import uuid
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.shared import shell_items
-from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -39,11 +37,11 @@ class ExplorerProgramsCacheEventData(events.EventData):
 
 
 class ExplorerProgramsCacheWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Class that parses the Explorer ProgramsCache Registry data."""
 
   NAME = 'explorer_programscache'
-  DESCRIPTION = 'Parser for Explorer ProgramsCache Registry data.'
+  DATA_FORMAT = 'Windows Explorer Programs Cache Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -53,7 +51,8 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\StartPage2')])
 
-  _DEFINITION_FILE = 'programscache.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'programscache.yaml')
 
   def _ParseValueData(self, parser_mediator, registry_key, registry_value):
     """Extracts event objects from a Explorer ProgramsCache value data.
@@ -143,7 +142,8 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
           codepage=parser_mediator.codepage)
 
       link_target = shell_items_parser.CopyToPath()
-      link_targets.append(link_target)
+      if link_target:
+        link_targets.append(link_target)
 
       value_data_offset += entry_header.data_size
 
@@ -197,22 +197,10 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
     if registry_value:
       self._ParseValueData(parser_mediator, registry_key, registry_value)
 
-    values_dict = self._GetValuesFromKey(registry_key)
-    for name in list(values_dict.keys()):
-      if name.lower() in (
-          'programscache', 'programscachesmp', 'programscachetbp'):
-        del values_dict[name]
-
-    event_data = windows_events.WindowsRegistryEventData()
-    event_data.key_path = registry_key.path
-    event_data.values = ' '.join([
-        '{0:s}: {1!s}'.format(name, value)
-        for name, value in sorted(values_dict.items())]) or None
-
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    self._ProduceDefaultWindowsRegistryEvent(
+        parser_mediator, registry_key, names_to_skip=[
+            'programscache', 'programscachesmp', 'programscachetbp'])
 
 
-winreg.WinRegistryParser.RegisterPlugin(
+winreg_parser.WinRegistryParser.RegisterPlugin(
     ExplorerProgramsCacheWindowsRegistryPlugin)

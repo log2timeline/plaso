@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Prefetch files."""
 
-from __future__ import unicode_literals
-
 import pyscca
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -25,7 +23,7 @@ class WinPrefetchExecutionEventData(events.EventData):
     format_version (int): format version.
     mapped_files (list[str]): mapped filenames.
     number_of_volumes (int): number of volumes.
-    path (str): path to the executable.
+    path_hints (list[str]): possible full paths to the executable.
     prefetch_hash (int): prefetch hash.
     run_count (int): run count.
     volume_device_paths (list[str]): volume device paths.
@@ -41,7 +39,7 @@ class WinPrefetchExecutionEventData(events.EventData):
     self.executable = None
     self.mapped_files = None
     self.number_of_volumes = None
-    self.path = None
+    self.path_hints = None
     self.prefetch_hash = None
     self.run_count = None
     self.version = None
@@ -55,7 +53,7 @@ class WinPrefetchParser(interface.FileObjectParser):
   _INITIAL_FILE_OFFSET = None
 
   NAME = 'prefetch'
-  DESCRIPTION = 'Parser for Windows Prefetch files.'
+  DATA_FORMAT = 'Windows Prefetch File (PF)'
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -69,23 +67,17 @@ class WinPrefetchParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'MAM\x04', offset=0)
     return format_specification
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a Windows Prefetch file-like object.
+  def _ParseSCCAFile(self, parser_mediator, scca_file):
+    """Parses a Windows Prefetch (SCCA) file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): file-like object.
+      scca_file (pyscca.file): Windows Prefetch (SCCA) file
+
+    Raises:
+      IOError: if the Windows Prefetch (SCCA) file cannot be parsed.
     """
-    scca_file = pyscca.file()
-
-    try:
-      scca_file.open_file_object(file_object)
-    except IOError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
-      return
-
     format_version = scca_file.format_version
     executable_filename = scca_file.executable_filename
     prefetch_hash = scca_file.prefetch_hash
@@ -94,7 +86,7 @@ class WinPrefetchParser(interface.FileObjectParser):
 
     volume_serial_numbers = []
     volume_device_paths = []
-    path = ''
+    path_hints = []
 
     for volume_information in iter(scca_file.volumes):
       volume_serial_number = volume_information.serial_number
@@ -122,6 +114,7 @@ class WinPrefetchParser(interface.FileObjectParser):
         if (filename.startswith(volume_device_path) and
             filename.endswith(executable_filename)):
           _, _, path = filename.partition(volume_device_path)
+          path_hints.append(path)
 
     mapped_files = []
     for entry_index, file_metrics in enumerate(scca_file.file_metrics_entries):
@@ -145,7 +138,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     event_data.executable = executable_filename
     event_data.mapped_files = mapped_files
     event_data.number_of_volumes = number_of_volumes
-    event_data.path = path
+    event_data.path_hints = path_hints
     event_data.prefetch_hash = prefetch_hash
     event_data.run_count = run_count
     event_data.version = format_version
@@ -155,7 +148,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     timestamp = scca_file.get_last_run_time_as_integer(0)
     if not timestamp:
       parser_mediator.ProduceExtractionWarning('missing last run time')
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
       date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
@@ -178,7 +171,30 @@ class WinPrefetchParser(interface.FileObjectParser):
             date_time, date_time_description)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    scca_file.close()
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Windows Prefetch file-like object.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+    """
+    scca_file = pyscca.file()
+
+    try:
+      scca_file.open_file_object(file_object)
+    except IOError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'unable to open file with error: {0!s}'.format(exception))
+      return
+
+    try:
+      self._ParseSCCAFile(parser_mediator, scca_file)
+    except IOError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'unable to parse file with error: {0!s}'.format(exception))
+    finally:
+      scca_file.close()
 
 
 manager.ParsersManager.RegisterParser(WinPrefetchParser)

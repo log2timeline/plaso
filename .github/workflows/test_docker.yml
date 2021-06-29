@@ -1,0 +1,80 @@
+# Run tests on Fedora and Ubuntu Docker images using GIFT CORP and GIFT PPA on commit
+name: test_docker
+on: [push]
+jobs:
+  test_fedora:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ['33', '34']
+    container:
+      image: registry.fedoraproject.org/fedora:${{ matrix.version }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up container
+      run: |
+        dnf install -y dnf-plugins-core langpacks-en
+    - name: Install dependencies
+      run: |
+        dnf copr -y enable @gift/dev
+        dnf install -y python3 libbde-python3 libcreg-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfsapfs-python3 libfsext-python3 libfshfs-python3 libfsntfs-python3 libfsxfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libluksde-python3 libmodi-python3 libmsiecf-python3 libolecf-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvsgpt-python3 libvshadow-python3 libvslvm-python3 python3-XlsxWriter python3-artifacts python3-bencode python3-certifi python3-cffi python3-chardet python3-cryptography python3-dateutil python3-defusedxml python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-elasticsearch python3-fakeredis python3-future python3-idna python3-lz4 python3-mock python3-pbr python3-pefile python3-psutil python3-pyparsing python3-pytsk3 python3-pytz python3-pyyaml python3-redis python3-requests python3-setuptools python3-six python3-sortedcontainers python3-urllib3 python3-yara python3-zmq
+    - name: Run tests
+      env:
+        LANG: C.utf8
+      run: |
+        python3 ./run_tests.py
+    - name: Run end-to-end tests
+      run: |
+        if test -f tests/end-to-end.py; then PYTHONPATH=. python3 ./tests/end-to-end.py --debug -c config/end-to-end.ini; fi
+    - name: Build source distribution
+      run: |
+        python3 ./setup.py sdist
+    - name: Build binary distribution
+      run: |
+        python3 ./setup.py bdist
+    - name: Run build and install test
+      run: |
+        python3 ./setup.py build
+        python3 ./setup.py install
+  test_ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ['18.04', '20.04']
+    container:
+      image: ubuntu:${{ matrix.version }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up container
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        apt-get update -q
+        apt-get install -y libterm-readline-gnu-perl locales software-properties-common
+        locale-gen en_US.UTF-8
+        ln -f -s /usr/share/zoneinfo/UTC /etc/localtime
+    - name: Install dependencies
+      run: |
+        add-apt-repository -y ppa:gift/dev
+        apt-get update -q
+        apt-get install -y python3 libbde-python3 libcreg-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfsapfs-python3 libfsext-python3 libfshfs-python3 libfsntfs-python3 libfsxfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libluksde-python3 libmodi-python3 libmsiecf-python3 libolecf-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvsgpt-python3 libvshadow-python3 libvslvm-python3 python3-artifacts python3-bencode python3-certifi python3-cffi-backend python3-chardet python3-cryptography python3-dateutil python3-defusedxml python3-dfdatetime python3-dfvfs python3-dfwinreg python3-distutils python3-dtfabric python3-elasticsearch python3-fakeredis python3-future python3-idna python3-lz4 python3-mock python3-pbr python3-pefile python3-psutil python3-pyparsing python3-pytsk3 python3-redis python3-requests python3-setuptools python3-six python3-sortedcontainers python3-tz python3-urllib3 python3-xlsxwriter python3-yaml python3-yara python3-zmq
+    - name: Run tests
+      env:
+        LANG: en_US.UTF-8
+      run: |
+        python3 ./run_tests.py
+    - name: Run end-to-end tests
+      env:
+        LANG: en_US.UTF-8
+      run: |
+        if test -f tests/end-to-end.py; then PYTHONPATH=. python3 ./tests/end-to-end.py --debug -c config/end-to-end.ini; fi
+    - name: Build source distribution
+      run: |
+        python3 ./setup.py sdist
+    - name: Build binary distribution
+      run: |
+        python3 ./setup.py bdist
+    - name: Run build and install test
+      run: |
+        python3 ./setup.py build
+        python3 ./setup.py install

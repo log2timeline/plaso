@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Analysis plugin to look up files in nsrlsvr and tag events."""
-
-from __future__ import unicode_literals
+"""Analysis plugin to look up file hashes in nsrlsvr and tag events."""
 
 import socket
 
-from plaso.analysis import interface
+from plaso.analysis import hash_tagging
 from plaso.analysis import logger
 from plaso.analysis import manager
 
 
-class NsrlsvrAnalyzer(interface.HashAnalyzer):
+class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
   """Analyzes file hashes by consulting an nsrlsvr instance.
 
   Attributes:
@@ -35,11 +33,11 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       hash_analysis_queue (Queue.queue): that the analyzer will append
           HashAnalysis objects this queue.
     """
+    kwargs.pop('hashes_per_batch', None)
     super(NsrlsvrAnalyzer, self).__init__(
-        hash_queue, hash_analysis_queue, **kwargs)
+        hash_queue, hash_analysis_queue, hashes_per_batch=100, **kwargs)
     self._host = None
     self._port = None
-    self.hashes_per_batch = 100
 
   def _GetSocket(self):
     """Establishes a connection to an nsrlsvr instance.
@@ -53,8 +51,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
           (self._host, self._port), self._SOCKET_TIMEOUT)
 
     except socket.error as exception:
-      logger.error(
-          'Unable to connect to nsrlsvr with error: {0!s}.'.format(exception))
+      logger.error('Unable to connect to nsrlsvr with error: {0!s}.'.format(
+          exception))
 
   def _QueryHash(self, nsrl_socket, digest):
     """Queries nsrlsvr for a specific hash.
@@ -92,7 +90,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     return response == b'OK 1'
 
   def Analyze(self, hashes):
-    """Looks up hashes in nsrlsvr.
+    """Looks up file hashes in nsrlsvr.
 
     Args:
       hashes (list[str]): hash values to look up.
@@ -100,8 +98,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     Returns:
       list[HashAnalysis]: analysis results, or an empty list on error.
     """
-    logger.debug(
-        'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
+    logger.debug('Opening connection to {0:s}:{1:d}'.format(
+        self._host, self._port))
 
     nsrl_socket = self._GetSocket()
     if not nsrl_socket:
@@ -111,16 +109,14 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     hash_analyses = []
     for digest in hashes:
       response = self._QueryHash(nsrl_socket, digest)
-      if response is None:
-        continue
-
-      hash_analysis = interface.HashAnalysis(digest, response)
-      hash_analyses.append(hash_analysis)
+      if response is not None:
+        hash_analysis = hash_tagging.HashAnalysis(digest, response)
+        hash_analyses.append(hash_analysis)
 
     nsrl_socket.close()
 
-    logger.debug(
-        'Closed connection to {0:s}:{1:d}'.format(self._host, self._port))
+    logger.debug('Closed connection to {0:s}:{1:d}'.format(
+        self._host, self._port))
 
     return hash_analyses
 
@@ -160,35 +156,35 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     return response is not None
 
 
-class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
+class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   """Analysis plugin for looking up hashes in nsrlsvr."""
 
   # The NSRL contains files of all different types, and can handle a high load
   # so look up all files.
   DATA_TYPES = ['fs:stat', 'fs:stat:ntfs']
 
-  URLS = ['https://rjhansen.github.io/nsrlsvr/']
+  DEFAULT_LABEL = 'nsrl_present'
 
   NAME = 'nsrlsvr'
 
   def __init__(self):
     """Initializes an nsrlsvr analysis plugin."""
     super(NsrlsvrAnalysisPlugin, self).__init__(NsrlsvrAnalyzer)
-    self._label = None
+    self._label = self.DEFAULT_LABEL
 
   def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
-      hash_information (bool): whether the analyzer received a response from
-          nsrlsvr indicating that the hash was present in its loaded NSRL
-          set.
+      hash_information (bool): response from the hash tagging analyzer that
+          indicates that the file hash was present or not.
 
     Returns:
-      list[str]: strings describing the results from nsrlsvr.
+      list[str]: list of labels to apply to event.
     """
     if hash_information:
       return [self._label]
+
     # TODO: Renable when tagging is removed from the analysis report.
     # return ['nsrl_not_present']
     return []

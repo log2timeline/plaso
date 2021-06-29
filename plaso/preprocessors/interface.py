@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains classes used for preprocessing in plaso."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from dfwinreg import registry_searcher
@@ -32,12 +30,13 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
   @abc.abstractmethod
   def _ParsePathSpecification(
-      self, knowledge_base, searcher, file_system, path_specification,
+      self, mediator, searcher, file_system, path_specification,
       path_separator):
     """Parses a file system for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -49,12 +48,12 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
       PreProcessFail: if the preprocessing fails.
     """
 
-  def Collect(
-      self, knowledge_base, artifact_definition, searcher, file_system):
+  def Collect(self, mediator, artifact_definition, searcher, file_system):
     """Collects values using a file artifact definition.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       artifact_definition (artifacts.ArtifactDefinition): artifact definition.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
@@ -76,7 +75,7 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
         for path_specification in searcher.Find(find_specs=[find_spec]):
           self._ParsePathSpecification(
-              knowledge_base, searcher, file_system, path_specification,
+              mediator, searcher, file_system, path_specification,
               source.separator)
 
 
@@ -88,11 +87,12 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
   """
 
   @abc.abstractmethod
-  def _ParseFileEntry(self, knowledge_base, file_entry):
+  def _ParseFileEntry(self, mediator, file_entry):
     """Parses a file entry for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
@@ -101,12 +101,13 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
     """
 
   def _ParsePathSpecification(
-      self, knowledge_base, searcher, file_system, path_specification,
+      self, mediator, searcher, file_system, path_specification,
       path_separator):
     """Parses a file system for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -131,7 +132,8 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
           '{1!s}').format(relative_path, exception))
 
     if file_entry:
-      self._ParseFileEntry(knowledge_base, file_entry)
+      mediator.SetFileEntry(file_entry)
+      self._ParseFileEntry(mediator, file_entry)
 
 
 class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
@@ -142,11 +144,12 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
   """
 
   @abc.abstractmethod
-  def _ParseFileData(self, knowledge_base, file_object):
+  def _ParseFileData(self, mediator, file_object):
     """Parses file content (data) for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -154,22 +157,25 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
       PreProcessFail: if the preprocessing fails.
     """
 
-  def _ParseFileEntry(self, knowledge_base, file_entry):
+  def _ParseFileEntry(self, mediator, file_entry):
     """Parses a file entry for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
+    if not file_entry.IsFile():
+      raise errors.PreProcessFail((
+          'Unable to read: {0:s} with error: file entry is not a regular '
+          'file').format(self.ARTIFACT_DEFINITION_NAME))
+
     file_object = file_entry.GetFileObject()
-    try:
-      self._ParseFileData(knowledge_base, file_object)
-    finally:
-      file_object.close()
+    self._ParseFileData(mediator, file_object)
 
 
 class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
@@ -180,11 +186,12 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
   """
 
   @abc.abstractmethod
-  def _ParseKey(self, knowledge_base, registry_key, value_name):
+  def _ParseKey(self, mediator, registry_key, value_name):
     """Parses a Windows Registry key for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value.
 
@@ -193,11 +200,12 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
     """
 
   def Collect(
-      self, knowledge_base, artifact_definition, searcher):
+      self, mediator, artifact_definition, searcher):
     """Collects values using a Windows Registry value artifact definition.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       artifact_definition (artifacts.ArtifactDefinition): artifact definition.
       searcher (dfwinreg.WinRegistrySearcher): Windows Registry searcher to
           preprocess the Windows Registry.
@@ -240,7 +248,7 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
           if registry_key:
             value_name = key_value_pair.get('value', None)
-            self._ParseKey(knowledge_base, registry_key, value_name)
+            self._ParseKey(mediator, registry_key, value_name)
 
 
 class WindowsRegistryValueArtifactPreprocessorPlugin(
@@ -251,11 +259,12 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
   Registry value artifact definition.
   """
 
-  def _ParseKey(self, knowledge_base, registry_key, value_name):
+  def _ParseKey(self, mediator, registry_key, value_name):
     """Parses a Windows Registry key for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value.
 
@@ -273,14 +282,15 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
     if registry_value:
       value_object = registry_value.GetDataAsObject()
       if value_object:
-        self._ParseValueData(knowledge_base, value_object)
+        self._ParseValueData(mediator, value_object)
 
   @abc.abstractmethod
-  def _ParseValueData(self, knowledge_base, value_data):
+  def _ParseValueData(self, mediator, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -296,11 +306,12 @@ class KnowledgeBasePreprocessorPlugin(object):
   """
 
   @abc.abstractmethod
-  def Collect(self, knowledge_base):
+  def Collect(self, mediator):
     """Collects values from the knowledge base.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
 
     Raises:
       PreProcessFail: if the preprocessing fails.

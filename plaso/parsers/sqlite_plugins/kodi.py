@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Kodi MyVideos.db
-
-Kodi videos events are stored in a database called MyVideos.db
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Kodi videos database files."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -16,11 +11,12 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class KodiVideoEventData(events.EventData):
-  """Kodi event data.
+  """Kodi video event data.
 
   Attributes:
     filename (str): video filename.
     play_count (int): number of times the video has been played.
+    query (str): SQL query that was used to obtain the event data.
   """
 
   DATA_TYPE = 'kodi:videos:viewing'
@@ -30,20 +26,26 @@ class KodiVideoEventData(events.EventData):
     super(KodiVideoEventData, self).__init__(data_type=self.DATA_TYPE)
     self.filename = None
     self.play_count = None
+    self.query = None
+
 
 class KodiMyVideosPlugin(interface.SQLitePlugin):
-  """Parser for Kodi Video databases."""
+  """SQLite parser plugin for Kodi videos database files.
+
+  The Kodi videos database file is typically stored in:
+  MyVideos.db
+  """
 
   NAME = 'kodi'
-  DESCRIPTION = 'Parser for Kodi MyVideos.db files.'
+  DATA_FORMAT = 'Kodi videos SQLite database (MyVideos.db) file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'files': frozenset([
+          'idFile', 'strFilename', 'playCount', 'lastPlayed'])}
+
   QUERIES = [
-      ('SELECT idFile,strFilename,playCount,lastPlayed FROM files;',
+      ('SELECT idFile, strFilename, playCount, lastPlayed FROM files',
        'ParseVideoRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['files'])
 
   SCHEMAS = [{
       'actor': (
@@ -181,5 +183,6 @@ class KodiMyVideosPlugin(interface.SQLitePlugin):
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(KodiMyVideosPlugin)

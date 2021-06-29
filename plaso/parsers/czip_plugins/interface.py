@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Interface for compound zip file plugins.
-"""
-
-from __future__ import unicode_literals
+"""Interface for compound ZIP file plugins."""
 
 import abc
 
-from plaso.lib import errors
-from plaso.parsers import logger
 from plaso.parsers import plugins
 
+
 class CompoundZIPPlugin(plugins.BasePlugin):
-  """Compound zip parser plugin."""
+  """Compound ZIP parser plugin."""
 
   # REQUIRED_PATHS is a list of paths required by a plugin.
   # This is used to understand whether a plugin is suited for a given compound
@@ -19,46 +15,57 @@ class CompoundZIPPlugin(plugins.BasePlugin):
   # This must be overridden by actual plugins.
   REQUIRED_PATHS = frozenset()
 
-  NAME = 'czip'
+  NAME = 'czip_plugin'
+  DATA_FORMAT = 'Compound ZIP file'
 
   @abc.abstractmethod
-  def InspectZipFile(self, parser_mediator, zip_file):
-    """Inspects a compound ZIP file and produces events.
-
-    This is the main method that a compound ZIP plugin needs to implement.
+  def _ParseZIPFile(self, parser_mediator, zip_file):
+    """Extracts events from the ZIP file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      zip_file (zipfile.ZipFile): the zip file. It should not be closed in
+      zip_file (zipfile.ZipFile): the ZIP file. It should not be closed in
           this method, but will be closed by the parser logic in czip.py.
     """
 
-  # pylint: disable=arguments-differ
-  def Process(self, parser_mediator, zip_file, archive_members):
-    """Determines if this is the correct plugin; if so proceed with processing.
-
-    This method checks if the zip file being contains the paths specified in
-    REQUIRED_PATHS. If all paths are present, the plugin logic processing
-    continues in InspectZipFile.
+  def CheckRequiredPaths(self, zip_file):
+    """Checks if the ZIP file has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      zip_file (zipfile.ZipFile): the zip file. It should not be closed in
+      zip_file (zipfile.ZipFile): the ZIP file. It should not be closed in
           this method, but will be closed by the parser logic in czip.py.
-      archive_members (list[str]): file paths in the archive.
 
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-      ValueError: if a subclass has not specified REQUIRED_PATHS.
+    Returns:
+      bool: True if the ZIP file has the minimum paths defined by the plugin,
+          or False if it does not or no required paths are defined. The
+          ZIP file can have more paths than specified by the plugin and still
+          return True.
     """
     if not self.REQUIRED_PATHS:
-      raise ValueError('REQUIRED_PATHS not specified')
+      return False
 
-    if not set(archive_members).issuperset(self.REQUIRED_PATHS):
-      raise errors.WrongCompoundZIPPlugin(self.NAME)
+    archive_members = zip_file.namelist()
+    return set(self.REQUIRED_PATHS).issubset(archive_members)
 
-    logger.debug('Compound ZIP Plugin used: {0:s}'.format(self.NAME))
+  # pylint: disable=arguments-differ
+  def Process(self, parser_mediator, zip_file=None, **kwargs):
+    """Extracts events from the ZIP file.
 
-    self.InspectZipFile(parser_mediator, zip_file)
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      zip_file (Optional[zipfile.ZipFile]): the ZIP file. It should not be
+          closed in this method, but will be closed by the parser logic in
+          czip.py.
+
+    Raises:
+      ValueError: If the ZIP file argument is not valid.
+    """
+    if zip_file is None:
+      raise ValueError('Invalid ZIP file.')
+
+    # This will raise if unhandled keyword arguments are passed.
+    super(CompoundZIPPlugin, self).Process(parser_mediator)
+
+    self._ParseZIPFile(parser_mediator, zip_file)

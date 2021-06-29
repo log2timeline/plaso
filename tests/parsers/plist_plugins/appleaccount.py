@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Apple account plist plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import appleaccount
 
 from tests.parsers.plist_plugins import test_lib
@@ -26,49 +23,42 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_timestamps = [1372106802000000, 1387980032000000, 1387980032000000]
-    timestamps = sorted([event.timestamp for event in events])
+    expected_event_values = {
+        'data_type': 'plist:key',
+        'date_time': '2013-06-24 20:46:42.000000',
+        'desc': (
+            'Configured Apple account email@domain.com (Joaquin Moreno '
+            'Garijo)'),
+        'key': 'email@domain.com',
+        'root': '/Accounts'}
 
-    self.assertEqual(timestamps, expected_timestamps)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'plist:key',
+        'date_time': '2013-12-25 14:00:32.000000',
+        'desc': (
+            'Connected Apple account '
+            'email@domain.com (Joaquin Moreno Garijo)')}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.root, '/Accounts')
-    self.assertEqual(event_data.key, 'email@domain.com')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_description = (
-        'Configured Apple account email@domain.com (Joaquin Moreno Garijo)')
-    self.assertEqual(event_data.desc, expected_description)
+    expected_event_values = {
+        'data_type': 'plist:key',
+        'date_time': '2013-12-25 14:00:32.000000',
+        'desc': (
+            'Last validation Apple account '
+            'email@domain.com (Joaquin Moreno Garijo)')}
 
-    expected_message = '/Accounts/email@domain.com {0:s}'.format(
-        expected_description)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
-
-    event = events[1]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    expected_description = (
-        'Connected Apple account '
-        'email@domain.com (Joaquin Moreno Garijo)')
-    self.assertEqual(event_data.desc, expected_description)
-
-    event = events[2]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    expected_description = (
-        'Last validation Apple account '
-        'email@domain.com (Joaquin Moreno Garijo)')
-    self.assertEqual(event_data.desc, expected_description)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
 
 if __name__ == '__main__':

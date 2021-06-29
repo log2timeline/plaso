@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the McAfee AV Log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import mcafeeav as _  # pylint: disable=unused-import
 from plaso.parsers import mcafeeav
 
 from tests.parsers import test_lib
@@ -20,16 +17,19 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     parser = mcafeeav.McafeeAccessProtectionParser()
     storage_writer = self._ParseFile(['AccessProtectionLog.txt'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[10]
+    expected_event_values = {
+        'data_type': 'av:mcafee:accessprotectionlog',
+        'date_time': '2013-09-27 14:42:26'}
 
-    self.CheckTimestamp(event.timestamp, '2013-09-27 14:42:26.000000')
+    self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     # TODO: Test that the UTF-8 byte order mark gets removed from
     # the first line.
@@ -41,29 +41,22 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Protection:Prevent termination of McAfee processes  Action blocked :
     # Terminate
 
-    event = events[11]
+    expected_event_values = {
+        'action': 'Action blocked : Terminate',
+        'data_type': 'av:mcafee:accessprotectionlog',
+        'date_time': '2013-09-27 14:42:39',
+        'filename': 'C:\\Windows\\System32\\procexp64.exe',
+        'rule': (
+            'Common Standard Protection:Prevent termination of McAfee '
+            'processes'),
+        # Note that the trailing space is part of the status event value.
+        'status': 'Blocked by Access Protection rule ',
+        'trigger_location': (
+            'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
+            'workService.exe'),
+        'username': 'SOMEDOMAIN\\someUser'}
 
-    self.CheckTimestamp(event.timestamp, '2013-09-27 14:42:39.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.username, 'SOMEDOMAIN\\someUser')
-    self.assertEqual(
-        event_data.filename, 'C:\\Windows\\System32\\procexp64.exe')
-
-    expected_message = (
-        'File Name: C:\\Windows\\System32\\procexp64.exe '
-        'User: SOMEDOMAIN\\someUser '
-        'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
-        'workService.exe '
-        'Blocked by Access Protection rule  '
-        'Common Standard Protection:Prevent termination of McAfee processes '
-        'Action blocked : Terminate')
-    expected_short_message = (
-        'C:\\Windows\\System32\\procexp64.exe '
-        'Action blocked : Terminate')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
 
 if __name__ == '__main__':

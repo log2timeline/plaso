@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Google Drive snapshots.
-
-The Google Drive snapshots are stored in SQLite database files named
-snapshot.db.
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Google Drive snapshot database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -22,6 +16,7 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
   Attributes:
     doc_type (int): document type.
     path (str): path of the file.
+    query (str): SQL query that was used to obtain the event data.
     shared (bool): True if the file is shared, False if the file is private.
     size (int): size of the file.
     url (str): URL of the file.
@@ -35,6 +30,7 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.document_type = None
     self.path = None
+    self.query = None
     self.shared = None
     self.size = None
     self.url = None
@@ -45,6 +41,7 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
 
   Attributes:
     path (str): path of the file.
+    query (str): SQL query that was used to obtain the event data.
     size (int): size of the file.
   """
 
@@ -55,16 +52,31 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
     super(GoogleDriveSnapshotLocalEntryEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.path = None
+    self.query = None
     self.size = None
 
 
 class GoogleDrivePlugin(interface.SQLitePlugin):
-  """SQLite plugin for Google Drive snapshot.db files."""
+  """SQLite parser plugin for Google Drive snapshot database files.
+
+  The Google Drive snapshot database file is typically stored in:
+  snapshot.db
+  """
 
   NAME = 'google_drive'
-  DESCRIPTION = 'Parser for Google Drive SQLite database files.'
+  DATA_FORMAT = 'Google Drive snapshot SQLite database (snapshot.db) file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'cloud_entry': frozenset([
+          'resource_id', 'filename', 'modified', 'created', 'size', 'doc_type',
+          'shared', 'checksum', 'url']),
+      'cloud_relations': frozenset([
+          'parent_resource_id', 'child_resource_id']),
+      'local_entry': frozenset([
+          'inode_number', 'filename', 'modified', 'checksum', 'size']),
+      'local_relations': frozenset([
+          'child_inode_number', 'parent_inode_number'])}
+
   QUERIES = [
       (('SELECT cloud_entry.resource_id, cloud_entry.filename, '
         'cloud_entry.modified, cloud_entry.created, cloud_entry.size, '
@@ -77,11 +89,6 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       (('SELECT inode_number, filename, modified, checksum, size '
         'FROM local_entry WHERE modified IS NOT NULL;'),
        'ParseLocalEntryRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset([
-      'cloud_entry', 'cloud_relations', 'local_entry', 'local_relations',
-      'mapping', 'overlay_status'])
 
   SCHEMAS = [{
       'cloud_entry': (

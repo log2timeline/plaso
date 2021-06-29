@@ -1,41 +1,68 @@
 # -*- coding: utf-8 -*-
 """The output mediator object."""
 
-from __future__ import unicode_literals
+import glob
+import os
+import pytz
 
+from plaso.engine import path_helper
+from plaso.formatters import default
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import winevt_rc
+from plaso.formatters import yaml_formatters_file
 from plaso.lib import definitions
-
-import pytz  # pylint: disable=wrong-import-order
+from plaso.output import logger
+from plaso.winnt import language_ids
 
 
 class OutputMediator(object):
   """Output mediator.
 
   Attributes:
-    fields_filter (FilterObject): filter object that indicates
-        which fields to output.
+    data_location (Optional[str]): path of the formatter data files.
   """
 
+  DEFAULT_LANGUAGE_IDENTIFIER = 'en-US'
+
+  # TODO: add smarter language ID to LCID resolving e.g.
+  # 'en-US' falls back to 'en'.
+  # LCID 0x0409 is en-US.
+  DEFAULT_LCID = 0x0409
+
+  _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
+
+  _WINEVT_RC_DATABASE = 'winevt-rc.db'
+
   def __init__(
-      self, knowledge_base, formatter_mediator, fields_filter=None,
+      self, knowledge_base, data_location=None, dynamic_time=False,
       preferred_encoding='utf-8'):
     """Initializes an output mediator.
 
     Args:
       knowledge_base (KnowledgeBase): knowledge base.
-      formatter_mediator (FormatterMediator): formatter mediator.
-      fields_filter (Optional[FilterObject]): filter object that indicates
-          which fields to output.
+      data_location (Optional[str]): path of the formatter data files.
+      dynamic_time (Optional[bool]): True if date and time values should be
+          represented in their granularity or semantically.
       preferred_encoding (Optional[str]): preferred encoding to output.
     """
     super(OutputMediator, self).__init__()
-    self._formatter_mediator = formatter_mediator
+    self._dynamic_time = dynamic_time
     self._knowledge_base = knowledge_base
+    self._language_identifier = self.DEFAULT_LANGUAGE_IDENTIFIER
+    self._lcid = self.DEFAULT_LCID
+    self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
     self._timezone = pytz.UTC
+    self._winevt_database_reader = None
 
-    self.fields_filter = fields_filter
+    self.data_location = data_location
+
+  @property
+  def dynamic_time(self):
+    """bool: True if date and time values should be represented in their
+             granularity or semantically.
+    """
+    return self._dynamic_time
 
   @property
   def encoding(self):
@@ -43,70 +70,65 @@ class OutputMediator(object):
     return self._preferred_encoding
 
   @property
-  def filter_expression(self):
-    """str: filter expression if a filter is set, None otherwise."""
-    if not self.fields_filter:
-      return None
-
-    return self.fields_filter.filter_expression
-
-  @property
   def timezone(self):
     """The timezone."""
     return self._timezone
 
-  def GetEventFormatter(self, event):
-    """Retrieves the event formatter for a specific event type.
-
-    Args:
-      event (EventObject): event.
+  def _GetWinevtRcDatabaseReader(self):
+    """Opens the Windows Event Log resource database reader.
 
     Returns:
-      EventFormatter: event formatter or None.
+      WinevtResourcesSqlite3DatabaseReader: Windows Event Log resource
+          database reader or None.
     """
-    data_type = getattr(event, 'data_type', None)
-    if not data_type:
-      return None
+    if not self._winevt_database_reader and self.data_location:
+      database_path = os.path.join(
+          self.data_location, self._WINEVT_RC_DATABASE)
+      if not os.path.isfile(database_path):
+        return None
 
-    return formatters_manager.FormattersManager.GetFormatterObject(
-        event.data_type)
+      self._winevt_database_reader = (
+          winevt_rc.WinevtResourcesSqlite3DatabaseReader())
+      if not self._winevt_database_reader.Open(database_path):
+        self._winevt_database_reader = None
 
-  def GetFormattedMessages(self, event):
-    """Retrieves the formatted messages related to the event.
+    return self._winevt_database_reader
+
+  def _ReadMessageFormattersFile(self, path):
+    """Reads a message formatters configuration file.
 
     Args:
-      event (EventObject): event.
+      path (str): path of file that contains the message formatters
+           configuration.
 
-    Returns:
-      tuple: containing:
-
-        str: full message string or None if no event formatter was found.
-        str: short message string or None if no event formatter was found.
+    Raises:
+      KeyError: if the message formatter is already set for the corresponding
+          data type.
     """
-    event_formatter = self.GetEventFormatter(event)
-    if not event_formatter:
-      return None, None
+    message_formatters_file = yaml_formatters_file.YAMLFormattersFile()
+    for message_formatter in message_formatters_file.ReadFromFile(path):
+      for identifier in message_formatter.custom_helpers:
+        custom_formatter_helper = (
+             formatters_manager.FormattersManager.GetEventFormatterHelper(
+                identifier))
+        if custom_formatter_helper:
+          message_formatter.AddHelper(custom_formatter_helper)
 
-    return event_formatter.GetMessages(self._formatter_mediator, event)
+      self._message_formatters[message_formatter.data_type] = message_formatter
 
-  def GetFormattedSources(self, event, event_data):
-    """Retrieves the formatted sources related to the event.
+  def GetDisplayNameForPathSpec(self, path_spec):
+    """Retrieves the display name for a path specification.
 
     Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
+      path_spec (dfvfs.PathSpec): path specification.
 
     Returns:
-      tuple: containing:
-
-        str: full source string or None if no event formatter was found.
-        str: short source string or None if no event formatter was found.
+      str: human readable version of the path specification.
     """
-    event_formatter = self.GetEventFormatter(event_data)
-    if not event_formatter:
-      return None, None
-
-    return event_formatter.GetSources(event, event_data)
+    mount_path = self._knowledge_base.GetMountPath()
+    text_prepend = self._knowledge_base.GetTextPrepend()
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(
+        path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
   def GetHostname(self, event_data, default_hostname='-'):
     """Retrieves the hostname related to the event.
@@ -247,6 +269,39 @@ class OutputMediator(object):
 
     return ''.join(macb_representation)
 
+  def GetMessageFormatter(self, data_type):
+    """Retrieves the message formatter for a specific data type.
+
+    Args:
+      data_type (str): data type.
+
+    Returns:
+      EventFormatter: corresponding message formatter or the default message
+          formatter if not available.
+    """
+    data_type = data_type.lower()
+    message_formatter = self._message_formatters.get(data_type, None)
+    if not message_formatter:
+      logger.warning(
+          'Using default message formatter for data type: {0:s}'.format(
+              data_type))
+      message_formatter = self._DEFAULT_MESSAGE_FORMATTER
+
+    return message_formatter
+
+  def GetRelativePathForPathSpec(self, path_spec):
+    """Retrieves the relative path for a path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: relateive path of the path specification.
+    """
+    mount_path = self._knowledge_base.GetMountPath()
+    return path_helper.PathHelper.GetRelativePathForPathSpec(
+        path_spec, mount_path=mount_path)
+
   def GetStoredHostname(self):
     """Retrieves the stored hostname.
 
@@ -277,6 +332,78 @@ class OutputMediator(object):
     username = self._knowledge_base.GetUsernameByIdentifier(
         user_sid, session_identifier=session_identifier)
     return username or default_username
+
+  def GetWindowsEventMessage(self, log_source, message_identifier):
+    """Retrieves the message string for a specific Windows Event Log source.
+
+    Args:
+      log_source (str): Event Log source, such as "Application Error".
+      message_identifier (int): message identifier.
+
+    Returns:
+      str: message string or None if not available.
+    """
+    database_reader = self._GetWinevtRcDatabaseReader()
+    if not database_reader:
+      return None
+
+    if self._lcid != self.DEFAULT_LCID:
+      message_string = database_reader.GetMessage(
+          log_source, self._lcid, message_identifier)
+      if message_string:
+        return message_string
+
+    return database_reader.GetMessage(
+        log_source, self.DEFAULT_LCID, message_identifier)
+
+  def ReadMessageFormattersFromDirectory(self, path):
+    """Reads message formatters from a directory.
+
+    Args:
+      path (str): path of directory that contains the message formatters
+          configuration files.
+
+    Raises:
+      KeyError: if the message formatter is already set for the corresponding
+          data type.
+    """
+    for formatters_file_path in glob.glob(os.path.join(path, '*.yaml')):
+      self._ReadMessageFormattersFile(formatters_file_path)
+
+  def ReadMessageFormattersFromFile(self, path):
+    """Reads message formatters from a file.
+
+    Args:
+      path (str): path of file that contains the message formatters
+          configuration.
+
+    Raises:
+      KeyError: if the message formatter is already set for the corresponding
+          data type.
+    """
+    self._ReadMessageFormattersFile(path)
+
+  def SetPreferredLanguageIdentifier(self, language_identifier):
+    """Sets the preferred language identifier.
+
+    Args:
+      language_identifier (str): language identifier string such as "en-US"
+          for US English or "is-IS" for Icelandic.
+
+    Raises:
+      KeyError: if the language identifier is not defined.
+      ValueError: if the language identifier is not a string type.
+    """
+    if not isinstance(language_identifier, str):
+      raise ValueError('Language identifier is not a string.')
+
+    values = language_ids.LANGUAGE_IDENTIFIERS.get(
+        language_identifier.lower(), None)
+    if not values:
+      raise KeyError('Language identifier: {0:s} is not defined.'.format(
+          language_identifier))
+    self._language_identifier = language_identifier
+    self._lcid = values[0]
 
   def SetTimezone(self, timezone):
     """Sets the timezone.

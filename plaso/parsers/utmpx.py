@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """Parser for utmpx files."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -19,6 +20,8 @@ class UtmpxMacOSEventData(events.EventData):
 
   Attributes:
     hostname (str): hostname or IP address.
+    offset (int): offset of the utmpx record relative to the start of the file,
+        from which the event data was extracted.
     pid (int): process identifier (PID).
     terminal (str): name of the terminal.
     terminal_identifier (int): inittab identifier.
@@ -32,6 +35,7 @@ class UtmpxMacOSEventData(events.EventData):
     """Initializes event data."""
     super(UtmpxMacOSEventData, self).__init__(data_type=self.DATA_TYPE)
     self.hostname = None
+    self.offset = None
     self.pid = None
     self.terminal = None
     self.terminal_identifier = None
@@ -39,13 +43,14 @@ class UtmpxMacOSEventData(events.EventData):
     self.username = None
 
 
-class UtmpxParser(dtfabric_parser.DtFabricBaseParser):
+class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Mac OS X 10.5 utmpx files."""
 
   NAME = 'utmpx'
-  DESCRIPTION = 'Parser for Mac OS X 10.5 utmpx files.'
+  DATA_FORMAT = 'Mac OS X 10.5 utmpx file'
 
-  _DEFINITION_FILE = 'utmp.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'utmp.yaml')
 
   _SUPPORTED_TYPES = frozenset(range(0, 12))
 
@@ -83,8 +88,7 @@ class UtmpxParser(dtfabric_parser.DtFabricBaseParser):
           '{1!s}.').format(file_offset, exception))
 
     if entry.type not in self._SUPPORTED_TYPES:
-      raise errors.UnableToParseFile('Unsupported type: {0:d}'.format(
-          entry.type))
+      raise errors.ParseError('Unsupported type: {0:d}'.format(entry.type))
 
     encoding = parser_mediator.codepage or 'utf8'
 

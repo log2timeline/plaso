@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin for the Windows 10 Timeline SQLite database.
-
-Timeline events on Windows are stored in a SQLite
-database file usually found in ActivitiesCache.db,
-path is usually something like:
-%APPDATA%\\Local\\ConnectedDevicesPlatform\\L.<username>
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Windows 10 Timeline database files."""
 
 import json
 
@@ -18,6 +10,7 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
+
 
 class WindowsTimelineGenericEventData(events.EventData):
   """Windows Timeline database generic event data.
@@ -45,6 +38,7 @@ class WindowsTimelineGenericEventData(events.EventData):
     self.description = None
     self.application_display_name = None
 
+
 class WindowsTimelineUserEngagedEventData(events.EventData):
   """Windows Timeline database User Engaged event data.
 
@@ -71,11 +65,22 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
     self.reporting_app = None
     self.active_duration_seconds = None
 
+
 class WindowsTimelinePlugin(interface.SQLitePlugin):
-  """Parse the Windows Timeline SQLite database."""
+  """SQLite parser plugin for Windows 10 Timeline database files.
+
+  The Windows 10 Timeline database file is typically stored in:
+  %APPDATA%\\Local\\ConnectedDevicesPlatform\\L.<username>\\ActivitiesCache.db
+  """
 
   NAME = 'windows_timeline'
-  DESCRIPTION = 'Parser for the Windows Timeline SQLite database'
+  DATA_FORMAT = 'Windows 10 Timeline SQLite database (ActivitiesCache.db) file'
+
+  REQUIRED_STRUCTURE = {
+      'Activity': frozenset([
+          'StartTime', 'Payload', 'Id', 'AppId']),
+      'Activity_PackageId': frozenset([
+          'ActivityId', 'PackageName'])}
 
   QUERIES = [
       (('SELECT StartTime, Payload, PackageName FROM Activity '
@@ -84,8 +89,6 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
         ' AND Platform = "packageid"'), 'ParseUserEngagedRow'),
       (('SELECT StartTime, Payload, AppId FROM Activity '
         'WHERE instr(Payload, "UserEngaged") = 0'), 'ParseGenericRow')]
-
-  REQUIRED_TABLES = frozenset(['Activity', 'Activity_PackageId'])
 
   SCHEMAS = [{
       'Activity': (
@@ -126,6 +129,58 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
       'AppSettings': (
           'CREATE TABLE [AppSettings]([AppId] TEXT PRIMARY KEY NOT NULL, '
           '[SettingsPropertyBag] BLOB, [AppTitle] TEXT, [Logo4141] TEXT)'),
+      'ManualSequence': (
+          'CREATE TABLE [ManualSequence]([Key] TEXT PRIMARY KEY NOT NULL, '
+          '[Value] INT NOT NULL)'),
+      'Metadata': (
+          'CREATE TABLE [Metadata]([Key] TEXT PRIMARY KEY NOT NULL, [Value] '
+          'TEXT)')},{
+      'Activity': (
+          'CREATE TABLE [Activity]([Id] GUID PRIMARY KEY NOT NULL, [AppId] '
+          'TEXT NOT NULL, [PackageIdHash] TEXT, [AppActivityId] TEXT, '
+          '[ActivityType] INT NOT NULL, [ActivityStatus] INT NOT NULL, '
+          '[ParentActivityId] GUID, [Tag] TEXT, [Group] TEXT, [MatchId] TEXT, '
+          '[LastModifiedTime] DATETIME NOT NULL, [ExpirationTime] DATETIME, '
+          '[Payload] BLOB, [Priority] INT, [IsLocalOnly] INT, '
+          '[PlatformDeviceId] TEXT, [CreatedInCloud] DATETIME, [StartTime] '
+          'DATETIME, [EndTime] DATETIME, [LastModifiedOnClient] DATETIME, '
+          '[GroupAppActivityId] TEXT, [ClipboardPayload] BLOB, [EnterpriseId] '
+          'TEXT, [OriginalPayload] BLOB, [UserActionState] INT,[IsRead] '
+          'INT,[OriginalLastModifiedOnClient] DATETIME, [GroupItems] TEXT, '
+          '[ETag] INT NOT NULL)'),
+      'ActivityAssetCache': (
+          'CREATE TABLE [ActivityAssetCache]([ResourceId] INTEGER PRIMARY KEY '
+          'AUTOINCREMENT NOT NULL, [AppId] TEXT NOT NULL, [AssetHash] TEXT '
+          'NOT NULL, [TimeToLive] DATETIME NOT NULL, [AssetUri] TEXT, '
+          '[AssetId] TEXT, [AssetKey] TEXT, [Contents] BLOB)'),
+      'ActivityOperation': (
+          'CREATE TABLE [ActivityOperation]([OperationOrder] INTEGER PRIMARY '
+          'KEY ASC NOT NULL, [Id] GUID NOT NULL, [OperationType] INT NOT '
+          'NULL, [AppId] TEXT NOT NULL, [PackageIdHash] TEXT, [AppActivityId] '
+          'TEXT, [ActivityType] INT NOT NULL, [ParentActivityId] GUID, [Tag] '
+          'TEXT, [Group] TEXT, [MatchId] TEXT, [LastModifiedTime] DATETIME '
+          'NOT NULL, [ExpirationTime] DATETIME, [Payload] BLOB, [Priority] '
+          'INT, [CreatedTime] DATETIME, [OperationExpirationTime] '
+          'DATETIME,[Attachments] TEXT, [PlatformDeviceId] TEXT, '
+          '[CreatedInCloud] DATETIME, [StartTime] DATETIME NOT NULL, '
+          '[EndTime] DATETIME, [LastModifiedOnClient] DATETIME NOT NULL, '
+          '[CorrelationVector] TEXT, [GroupAppActivityId] TEXT, '
+          '[ClipboardPayload] BLOB, [EnterpriseId] TEXT, [UserActionState] '
+          'INT,[IsRead] INT,[OriginalPayload] BLOB, '
+          '[OriginalLastModifiedOnClient] DATETIME, [UploadAllowedByPolicy] '
+          'INT NOT NULL DEFAULT 1, [PatchFields] BLOB, [GroupItems] TEXT, '
+          '[ETag] INT NOT NULL)'),
+      'Activity_PackageId': (
+          'CREATE TABLE [Activity_PackageId]([ActivityId] GUID NOT NULL, '
+          '[Platform] TEXT NOT NULL COLLATE NOCASE, [PackageName] TEXT NOT '
+          'NULL COLLATE NOCASE, [ExpirationTime] DATETIME NOT NULL)'),
+      'AppSettings': (
+          'CREATE TABLE [AppSettings]([AppId] TEXT PRIMARY KEY NOT NULL, '
+          '[SettingsPropertyBag] BLOB, [AppTitle] TEXT, [Logo4141] TEXT)'),
+      'DataEncryptionKeys': (
+          'CREATE TABLE [DataEncryptionKeys]([KeyVersion] INTEGER PRIMARY KEY '
+          'NOT NULL, [KeyValue] TEXT NOT NULL COLLATE NOCASE, '
+          '[CreatedInCloudTime] DATETIME NOT NULL)'),
       'ManualSequence': (
           'CREATE TABLE [ManualSequence]([Key] TEXT PRIMARY KEY NOT NULL, '
           '[Value] INT NOT NULL)'),

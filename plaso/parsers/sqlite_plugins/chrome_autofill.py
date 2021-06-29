@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Google Chrome autofill entries.
-
-The Chrome autofill information is stored in SQLite database files named
-Web Data.
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Google Chrome autofill database (Web Data) files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -21,34 +15,40 @@ class ChromeAutofillEventData(events.EventData):
 
   Attributes:
     field_name (str): name of form field.
-    value (str): value populated in form field.
+    query (str): SQL query that was used to obtain the event data.
     usage_count (int): count of times value has been used in field_name.
+    value (str): value populated in form field.
   """
 
   DATA_TYPE = 'chrome:autofill:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeAutofillEventData, self).__init__(
-        data_type=self.DATA_TYPE)
+    super(ChromeAutofillEventData, self).__init__(data_type=self.DATA_TYPE)
     self.field_name = None
+    self.query = None
     self.usage_count = None
     self.value = None
 
 
 class ChromeAutofillPlugin(interface.SQLitePlugin):
-  """Plugin to parse Chrome Autofill entries from Web Data database files."""
+  """SQLite parser plugin for Google Chrome autofill database (Web Data) files.
+
+  The Google Chrome autofill database (Web Data) file is typically stored in:
+  Web Data
+  """
 
   NAME = 'chrome_autofill'
-  DESCRIPTION = 'Parser for Chrome autofill SQLite database files.'
+  DATA_FORMAT = 'Google Chrome autofill SQLite database (Web Data) file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'autofill': frozenset([
+          'date_created', 'date_last_used', 'name', 'value', 'count'])}
+
   QUERIES = [
       (('SELECT autofill.date_created, autofill.date_last_used, autofill.name, '
         'autofill.value, autofill.count FROM autofill ORDER BY date_created'),
        'ParseAutofillRow')]
-
-  REQUIRED_TABLES = frozenset(['autofill'])
 
   SCHEMAS = [{
       'autofill': (

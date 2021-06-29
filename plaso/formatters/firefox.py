@@ -1,147 +1,48 @@
 # -*- coding: utf-8 -*-
-"""The Mozilla Firefox history event formatter."""
-
-from __future__ import unicode_literals
+"""Mozilla Firefox history custom event formatter helpers."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 
-class FirefoxBookmarkAnnotationFormatter(interface.ConditionalEventFormatter):
-  """The Firefox bookmark annotation event formatter."""
+class FirefoxHistoryTypedCountFormatterHelper(
+    interface.CustomEventFormatterHelper):
+  """Mozilla Firefox history typed count formatter helper."""
 
-  DATA_TYPE = 'firefox:places:bookmark_annotation'
+  IDENTIFIER = 'firefox_history_typed_count'
 
-  FORMAT_STRING_PIECES = [
-      'Bookmark Annotation: [{content}]',
-      'to bookmark [{title}]',
-      '({url})']
-
-  FORMAT_STRING_SHORT_PIECES = ['Bookmark Annotation: {title}']
-
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
-
-class FirefoxBookmarkFolderFormatter(interface.EventFormatter):
-  """The Firefox bookmark folder event formatter."""
-
-  DATA_TYPE = 'firefox:places:bookmark_folder'
-
-  FORMAT_STRING = '{title}'
-
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
-
-class FirefoxBookmarkFormatter(interface.ConditionalEventFormatter):
-  """The Firefox URL bookmark event formatter."""
-
-  DATA_TYPE = 'firefox:places:bookmark'
-
-  FORMAT_STRING_PIECES = [
-      'Bookmark {type}',
-      '{title}',
-      '({url})',
-      '[{places_title}]',
-      'visit count {visit_count}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      'Bookmarked {title}',
-      '({url})']
-
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
-
-class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
-  """The Firefox page visited event formatter."""
-
-  DATA_TYPE = 'firefox:places:page_visited'
-
-  # Transitions defined in the source file:
-  #   src/toolkit/components/places/nsINavHistoryService.idl
-  # Also contains further explanation into what each of these settings mean.
-  _URL_TRANSITIONS = {
-      1: 'LINK',
-      2: 'TYPED',
-      3: 'BOOKMARK',
-      4: 'EMBED',
-      5: 'REDIRECT_PERMANENT',
-      6: 'REDIRECT_TEMPORARY',
-      7: 'DOWNLOAD',
-      8: 'FRAMED_LINK',
-  }
-  _URL_TRANSITIONS.setdefault('UNKOWN')
-
-  # TODO: Make extra conditional formatting.
-  FORMAT_STRING_PIECES = [
-      '{url}',
-      '({title})',
-      '[count: {visit_count}]',
-      'Host: {host}',
-      '{extra_string}']
-
-  FORMAT_STRING_SHORT_PIECES = ['URL: {url}']
-
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
-
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for the event data.
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
-      event_data (EventData): event data.
-
-    Returns:
-      tuple(str, str): formatted message string and short message string.
-
-    Raises:
-      WrongFormatter: if the event data cannot be formatted by the formatter.
+      event_values (dict[str, object]): event values.
     """
-    if self.DATA_TYPE != event_data.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event_data.data_type))
+    typed = event_values.get('typed', None)
+    if typed == '1':
+      url_typed_string = '(URL directly typed)'
+    else:
+      url_typed_string = '(URL not typed directly)'
 
-    event_values = event_data.CopyToDict()
-
-    visit_type = event_values.get('visit_type', 0)
-    transition = self._URL_TRANSITIONS.get(visit_type, None)
-    if transition:
-      transition_str = 'Transition: {0!s}'.format(transition)
-
-    extra = event_values.get('extra', None)
-    if extra:
-      if transition:
-        extra.append(transition_str)
-      event_values['extra_string'] = ' '.join(extra)
-
-    elif transition:
-      event_values['extra_string'] = transition_str
-
-    return self._ConditionalFormatMessages(event_values)
+    event_values['url_typed_string'] = url_typed_string
 
 
-class FirefoxDowloadFormatter(interface.EventFormatter):
-  """The Firefox download event formatter."""
+class FirefoxHistoryURLHiddenFormatterHelper(
+    interface.CustomEventFormatterHelper):
+  """Mozilla Firefox history URL hidden formatter helper."""
 
-  DATA_TYPE = 'firefox:downloads:download'
+  IDENTIFIER = 'firefox_history_url_hidden'
 
-  FORMAT_STRING = (
-      '{url} ({full_path}). Received: {received_bytes} bytes '
-      'out of: {total_bytes} bytes.')
-  FORMAT_STRING_SHORT = '{full_path} downloaded ({received_bytes} bytes)'
+  def FormatEventValues(self, event_values):
+    """Formats event values using the helper.
 
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
+    Args:
+      event_values (dict[str, object]): event values.
+    """
+    hidden = event_values.get('hidden', None)
+    if hidden == '1':
+      event_values['url_hidden_string'] = '(URL hidden)'
 
 
-manager.FormattersManager.RegisterFormatters([
-    FirefoxBookmarkAnnotationFormatter, FirefoxBookmarkFolderFormatter,
-    FirefoxBookmarkFormatter, FirefoxPageVisitFormatter,
-    FirefoxDowloadFormatter])
+manager.FormattersManager.RegisterEventFormatterHelpers([
+    FirefoxHistoryTypedCountFormatterHelper,
+    FirefoxHistoryURLHiddenFormatterHelper])

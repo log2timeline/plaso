@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Reader for SQLite storage files."""
 
-from __future__ import unicode_literals
-
 from plaso.storage import file_interface
 from plaso.storage.sqlite import sqlite_file
 

@@ -2,15 +2,11 @@
 # -*- coding: utf-8 -*-
 """Parser test for MacOS Cups IPP Log files."""
 
-from __future__ import unicode_literals
-
-import io
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.path import fake_path_spec
 
-from plaso.formatters import cups_ipp as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import cups_ipp
@@ -48,7 +44,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     return attribute_map.FoldByteStream(attribute)
 
   def _CreateDateTimeValueData(self, parser):
-    """Created date time value test data.
+    """Creates date time value test data.
 
     Args:
       parser (CupsIppParser): CUPS IPP parser.
@@ -63,6 +59,22 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         deciseconds=5, direction_from_utc=ord('+'), hours_from_utc=1,
         minutes_from_utc=0)
     return datetime_map.FoldByteStream(datetime)
+
+  def _CreateHeaderData(self, parser):
+    """Creates header test data.
+
+    Args:
+      parser (CupsIppParser): CUPS IPP parser.
+
+    Returns:
+      bytes: header test data.
+    """
+    header_map = parser._GetDataTypeMap('cups_ipp_header')
+
+    header = header_map.CreateStructureValues(
+        major_version=1, minor_version=1, operation_identifier=5,
+        request_identifier=0)
+    return header_map.FoldByteStream(header)
 
   def testGetStringValue(self):
     """Tests the _GetStringValue function."""
@@ -80,14 +92,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     attribute_data = self._CreateAttributeTestData(
         parser, 0x00, 'test', b'\x12')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'test')
     self.assertEqual(value, b'\x12')
 
     # Test with attribute data too small.
-    file_object = io.BytesIO(attribute_data[:-1])
+    file_object = self._CreateFileObject('cups_ipp', attribute_data[:-1])
 
     with self.assertRaises(errors.ParseError):
       parser._ParseAttribute(file_object)
@@ -95,7 +107,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test attribute with integer value.
     attribute_data = self._CreateAttributeTestData(
         parser, 0x21, 'int', b'\x12\x34\x56\x78')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'int')
@@ -104,7 +116,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test attribute with boolean value.
     attribute_data = self._CreateAttributeTestData(
         parser, 0x22, 'bool', b'\x01')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'bool')
@@ -114,7 +126,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     datetime_data = self._CreateDateTimeValueData(parser)
     attribute_data = self._CreateAttributeTestData(
         parser, 0x31, 'datetime', datetime_data)
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'datetime')
@@ -124,7 +136,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test attribute with string without language.
     attribute_data = self._CreateAttributeTestData(
         parser, 0x42, 'string', b'NOLANG')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'string')
@@ -133,7 +145,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test attribute with ASCII string and tag value charset.
     attribute_data = self._CreateAttributeTestData(
         parser, 0x47, 'charset', b'utf8')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'charset')
@@ -143,13 +155,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     """Tests the _ParseAttributesGroup function."""
     parser = cups_ipp.CupsIppParser()
 
-    file_object = io.BytesIO(self._ATTRIBUTES_GROUP_DATA)
+    file_object = self._CreateFileObject(
+        'cups_ipp', self._ATTRIBUTES_GROUP_DATA)
 
     name_value_pairs = list(parser._ParseAttributesGroup(file_object))
     self.assertEqual(name_value_pairs, [('attributes-charset', 'utf-8')])
 
     # Test with unsupported attributes groups start tag value.
-    file_object = io.BytesIO(b''.join([
+    file_object = self._CreateFileObject('cups_ipp', b''.join([
         b'\xff', self._ATTRIBUTES_GROUP_DATA[1:]]))
 
     with self.assertRaises(errors.ParseError):
@@ -208,28 +221,26 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         storage_writer, file_entry=test_file_entry)
 
     parser = cups_ipp.CupsIppParser()
-    header_map = parser._GetDataTypeMap('cups_ipp_header')
 
-    header = header_map.CreateStructureValues(
-        major_version=1, minor_version=1, operation_identifier=5,
-        request_identifier=0)
-    header_data = header_map.FoldByteStream(header)
-    file_object = io.BytesIO(header_data)
+    header_data = self._CreateHeaderData(parser)
+    file_object = self._CreateFileObject('cups_ipp', header_data)
 
     parser._ParseHeader(parser_mediator, file_object)
 
     # Test with header data too small.
-    file_object = io.BytesIO(header_data[:-1])
+    file_object = self._CreateFileObject('cups_ipp', header_data[:-1])
 
     with self.assertRaises(errors.UnableToParseFile):
       parser._ParseHeader(parser_mediator, file_object)
 
     # Test with unsupported format version.
+    header_map = parser._GetDataTypeMap('cups_ipp_header')
+
     header = header_map.CreateStructureValues(
         major_version=99, minor_version=1, operation_identifier=5,
         request_identifier=0)
     header_data = header_map.FoldByteStream(header)
-    file_object = io.BytesIO(header_data)
+    file_object = self._CreateFileObject('cups_ipp', header_data)
 
     with self.assertRaises(errors.UnableToParseFile):
       parser._ParseHeader(parser_mediator, file_object)
@@ -239,7 +250,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         major_version=1, minor_version=1, operation_identifier=99,
         request_identifier=0)
     header_data = header_map.FoldByteStream(header)
-    file_object = io.BytesIO(header_data)
+    file_object = self._CreateFileObject('cups_ipp', header_data)
 
     parser._ParseHeader(parser_mediator, file_object)
 
@@ -247,35 +258,32 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     """Tests the ParseFileObject function."""
     parser = cups_ipp.CupsIppParser()
 
-    header_map = parser._GetDataTypeMap('cups_ipp_header')
-
-    header = header_map.CreateStructureValues(
-        major_version=1, minor_version=1, operation_identifier=5,
-        request_identifier=0)
-    header_data = header_map.FoldByteStream(header)
+    header_data = self._CreateHeaderData(parser)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
 
-    file_object = io.BytesIO(b''.join([
+    file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, self._ATTRIBUTES_GROUP_DATA]))
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Test with attribute group data too small.
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
 
-    file_object = io.BytesIO(b''.join([
+    file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, self._ATTRIBUTES_GROUP_DATA[:-1]]))
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Test attribute with date time value.
     datetime_data = self._CreateDateTimeValueData(parser)
@@ -285,13 +293,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
 
-    file_object = io.BytesIO(b''.join([
+    file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, b'\x01', attribute_data, b'\x03']))
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -299,49 +308,42 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     parser = cups_ipp.CupsIppParser()
     storage_writer = self._ParseFile(['mac_cups_ipp'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'application': 'LibreOffice',
+        'computer_name': 'localhost',
+        'copies': 1,
+        'data_type': 'cups:ipp:event',
+        'date_time': '2013-11-03 18:07:21',
+        'doc_type': 'application/pdf',
+        'job_id': 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a',
+        'job_name': 'Assignament 1',
+        'owner': 'Joaquin Moreno Garijo',
+        'printer_id': 'RHULBW',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'uri': 'ipp://localhost:631/printers/RHULBW',
+        'user': 'moxilo'}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-03 18:07:21.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.application, 'LibreOffice')
-    self.assertEqual(event_data.job_name, 'Assignament 1')
-    self.assertEqual(event_data.computer_name, 'localhost')
-    self.assertEqual(event_data.copies, 1)
-    self.assertEqual(event_data.doc_type, 'application/pdf')
-    self.assertEqual(
-        event_data.job_id, 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a')
-    self.assertEqual(event_data.owner, 'Joaquin Moreno Garijo')
-    self.assertEqual(event_data.user, 'moxilo')
-    self.assertEqual(event_data.printer_id, 'RHULBW')
-    self.assertEqual(event_data.uri, 'ipp://localhost:631/printers/RHULBW')
+    expected_event_values = {
+        'data_type': 'cups:ipp:event',
+        'date_time': '2013-11-03 18:07:21',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
-    expected_message = (
-        'User: moxilo '
-        'Owner: Joaquin Moreno Garijo '
-        'Job Name: Assignament 1 '
-        'Application: LibreOffice '
-        'Printer: RHULBW')
-    expected_short_message = 'Job Name: Assignament 1'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event = events[1]
+    expected_event_values = {
+        'data_type': 'cups:ipp:event',
+        'date_time': '2013-11-03 18:07:32',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_END}
 
-    self.CheckTimestamp(event.timestamp, '2013-11-03 18:07:21.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_START)
-
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2013-11-03 18:07:32.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_END)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
 
 if __name__ == '__main__':

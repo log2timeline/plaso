@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Shared functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import io
 import os
 import shutil
@@ -10,13 +8,30 @@ import re
 import tempfile
 import unittest
 
+from dfdatetime import time_elements
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 
+# The path to top of the Plaso source tree.
+PROJECT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# The paths below are all derived from the project path directory.
+# They are enumerated explicitly here so that they can be overwritten for
+# compatibility with different build systems.
+ANALYSIS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'analysis')
+ANALYZERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'analyzers')
+CLI_HELPERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'cli', 'helpers')
+CONTAINERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'containers')
+DATA_PATH = os.path.join(PROJECT_PATH, 'data')
+OUTPUT_PATH = os.path.join(PROJECT_PATH, 'plaso', 'output')
+PARSERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'parsers')
+PREPROCESSORS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'preprocessors')
+TEST_DATA_PATH = os.path.join(PROJECT_PATH, 'test_data')
+
+
 def GetTestFilePath(path_segments):
-  """Retrieves the path of a test file in the test data directory.
+  """Retrieves the path of a file in the test data directory.
 
   Args:
     path_segments (list[str]): path segments inside the test data directory.
@@ -26,18 +41,51 @@ def GetTestFilePath(path_segments):
   """
   # Note that we need to pass the individual path segments to os.path.join
   # and not a list.
-  return os.path.join(os.getcwd(), 'test_data', *path_segments)
+  return os.path.join(TEST_DATA_PATH, *path_segments)
+
+
+def CopyTimestampFromString(time_string):
+  """Copies a date and time string to a Plaso timestamp.
+
+  Args:
+    time_string (str): a date and time string formatted as:
+        "YYYY-MM-DD hh:mm:ss.######[+-]##:##", where # are numeric digits
+        ranging from 0 to 9 and the seconds fraction can be either 3 or 6
+        digits. The time of day, seconds fraction and timezone offset are
+        optional. The default timezone is UTC.
+
+  Returns:
+    int: timestamp which contains the number of microseconds since January 1,
+        1970, 00:00:00 UTC.
+
+  Raises:
+    ValueError: if the time string is invalid or not supported.
+  """
+  date_time = time_elements.TimeElementsInMicroseconds()
+  date_time.CopyFromDateTimeString(time_string)
+
+  return date_time.GetPlasoTimestamp()
 
 
 class BaseTestCase(unittest.TestCase):
   """The base test case."""
 
-  _DATA_PATH = os.path.join(os.getcwd(), 'data')
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
-
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
   maxDiff = None
+
+  def _GetDataFilePath(self, path_segments):
+    """Retrieves the path of a file in the data directory.
+
+    Args:
+      path_segments (list[str]): path segments inside the data directory.
+
+    Returns:
+      str: path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(DATA_PATH, *path_segments)
 
   def _GetTestFileEntry(self, path_segments):
     """Creates a file entry that references a file in the test data directory.
@@ -52,15 +100,11 @@ class BaseTestCase(unittest.TestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    test_file_path = self._GetTestFilePath(path_segments)
-    self._SkipIfPathNotExists(test_file_path)
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    path_spec = self._GetTestFilePathSpec(path_segments)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file in the test data directory.
+    """Retrieves the path of a file in the test data directory.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
@@ -70,7 +114,25 @@ class BaseTestCase(unittest.TestCase):
     """
     # Note that we need to pass the individual path segments to os.path.join
     # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
+    return os.path.join(TEST_DATA_PATH, *path_segments)
+
+  def _GetTestFilePathSpec(self, path_segments):
+    """Retrieves the path specification of a file in the test data directory.
+
+    Args:
+      path_segments (list[str]): path segments inside the test data directory.
+
+    Returns:
+      dfvfs.PathSpec: path specification.
+
+    Raises:
+      SkipTest: if the path does not exist and the test should be skipped.
+    """
+    test_file_path = self._GetTestFilePath(path_segments)
+    self._SkipIfPathNotExists(test_file_path)
+
+    return path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
   def _SkipIfPathNotExists(self, path):
     """Skips the test if the path does not exist.
@@ -112,9 +174,7 @@ class ImportCheckTestCase(BaseTestCase):
         module_name, _, _ = filename.partition('.')
         import_expression = re.compile(r' import {0:s}\b'.format(module_name))
 
-        # pylint: disable=deprecated-method
-        # TODO: replace by assertRegex once Python 2 support is removed.
-        self.assertRegexpMatches(
+        self.assertRegex(
             init_content, import_expression,
             '{0:s} not imported in {1:s}'.format(module_name, init_path))
 

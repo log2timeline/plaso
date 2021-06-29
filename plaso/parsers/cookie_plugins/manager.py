@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The cookie plugins manager object."""
 
-from __future__ import unicode_literals
-
 # pylint: disable=redundant-returns-doc
 
 
@@ -37,8 +35,7 @@ class CookiePluginsManager(object):
     Returns:
       list[type]: list of all cookie plugin objects.
     """
-    return [plugin_class() for plugin_class in iter(
-        cls._plugin_classes.values())]
+    return [plugin_class() for plugin_class in cls._plugin_classes.values()]
 
   @classmethod
   def RegisterPlugin(cls, plugin_class):

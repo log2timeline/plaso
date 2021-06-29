@@ -2,24 +2,25 @@
 # -*- coding: utf-8 -*-
 """Tests for the serializer object implementation using JSON."""
 
-from __future__ import unicode_literals
-
 import collections
 import json
 import time
 import unittest
 import uuid
 
+from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import fake_path_spec
 from dfvfs.path import factory as path_spec_factory
 
 import plaso
+
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.lib import definitions
 from plaso.serializer import json_serializer
 
 from tests import test_lib as shared_test_lib
@@ -130,8 +131,52 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   # TODO: add ExtractionWarning tests.
 
-  def testReadAndWriteSerializedEventObject(self):
-    """Test ReadSerialized and WriteSerialized of EventObject."""
+  def testReadAndWriteSerializedEventData(self):
+    """Test ReadSerialized and WriteSerialized of EventData."""
+    expected_event_data = events.EventData()
+    expected_event_data.data_type = 'test:event2'
+    expected_event_data.parser = 'test_parser'
+
+    expected_event_data.empty_string = ''
+    expected_event_data.zero_integer = 0
+    expected_event_data.integer = 34
+    expected_event_data.float = -122.082203542683
+    expected_event_data.string = 'Normal string'
+    expected_event_data.unicode_string = 'And I am a unicorn.'
+    expected_event_data.my_list = ['asf', 4234, 2, 54, 'asf']
+    expected_event_data.a_tuple = ('some item', [234, 52, 15])
+    expected_event_data.null_value = None
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_event_data))
+
+    self.assertIsNotNone(json_string)
+
+    event_data = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(event_data)
+    self.assertIsInstance(event_data, events.EventData)
+
+    expected_event_data_dict = {
+        'a_tuple': ('some item', [234, 52, 15]),
+        'data_type': 'test:event2',
+        'empty_string': '',
+        'integer': 34,
+        'float': -122.082203542683,
+        'my_list': ['asf', 4234, 2, 54, 'asf'],
+        'parser': 'test_parser',
+        'string': 'Normal string',
+        'unicode_string': 'And I am a unicorn.',
+        'zero_integer': 0}
+
+    event_data_dict = event_data.CopyToDict()
+    self.assertEqual(event_data_dict, expected_event_data_dict)
+
+  def testReadAndWriteSerializedEventDataStream(self):
+    """Test ReadSerialized and WriteSerialized of EventDataStream."""
     test_file = self._GetTestFilePath(['ímynd.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -140,25 +185,42 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=volume_path_spec)
 
-    expected_event = events.EventObject()
-    expected_event.data_type = 'test:event2'
-    expected_event.pathspec = path_spec
-    expected_event.timestamp = 1234124
-    expected_event.timestamp_desc = 'Written'
+    expected_event_data_stream = events.EventDataStream()
+    expected_event_data_stream.md5_hash = 'e3df0d2abd2c27fbdadfb41a47442520'
+    expected_event_data_stream.path_spec = path_spec
 
-    expected_event.binary_string = b'\xc0\x90\x90binary'
-    expected_event.empty_string = ''
-    expected_event.zero_integer = 0
-    expected_event.integer = 34
-    expected_event.float = -122.082203542683
-    expected_event.string = 'Normal string'
-    expected_event.unicode_string = 'And I am a unicorn.'
-    expected_event.my_list = ['asf', 4234, 2, 54, 'asf']
-    expected_event.my_dict = {
-        'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
-    expected_event.a_tuple = (
-        'some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35)
-    expected_event.null_value = None
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_event_data_stream))
+
+    self.assertIsNotNone(json_string)
+
+    event_data_stream = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(event_data_stream)
+    self.assertIsInstance(event_data_stream, events.EventDataStream)
+
+    expected_event_data_stream_dict = {
+        'md5_hash': 'e3df0d2abd2c27fbdadfb41a47442520',
+        'path_spec': path_spec.comparable}
+
+    event_data_stream_dict = event_data_stream.CopyToDict()
+
+    path_spec = event_data_stream_dict.get('path_spec', None)
+    if path_spec:
+      event_data_stream_dict['path_spec'] = path_spec.comparable
+
+    self.assertEqual(event_data_stream_dict, expected_event_data_stream_dict)
+
+  def testReadAndWriteSerializedEventObject(self):
+    """Test ReadSerialized and WriteSerialized of EventObject."""
+    expected_event = events.EventObject()
+    expected_event.date_time = dfdatetime_posix_time.PosixTime(
+        timestamp=1621839644)
+    expected_event.timestamp = 1621839644
+    expected_event.timestamp_desc = definitions.TIME_DESCRIPTION_MODIFICATION
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -166,44 +228,20 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     self.assertIsNotNone(json_string)
 
-    event = (
-        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
-            json_string))
+    event = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+        json_string)
 
     self.assertIsNotNone(event)
     self.assertIsInstance(event, events.EventObject)
 
     expected_event_dict = {
-        'a_tuple': (
-            'some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35),
-        'binary_string': b'\xc0\x90\x90binary',
-        'data_type': 'test:event2',
-        'empty_string': '',
-        'integer': 34,
-        'float': -122.082203542683,
-        'my_dict': {
-            'a': 'not b',
-            'an': [234, 32],
-            'c': 34,
-            'list': ['sf', 234]
-        },
-        'my_list': ['asf', 4234, 2, 54, 'asf'],
-        'pathspec': path_spec.comparable,
-        'string': 'Normal string',
-        'timestamp_desc': 'Written',
-        'timestamp': 1234124,
-        'unicode_string': 'And I am a unicorn.',
-        'zero_integer': 0
-    }
+        'date_time': expected_event.date_time,
+        'timestamp': 1621839644,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     event_dict = event.CopyToDict()
-    path_spec = event_dict.get('pathspec', None)
-    if path_spec:
-      event_dict['pathspec'] = path_spec.comparable
 
-    self.assertEqual(
-        sorted(event_dict.items()),
-        sorted(expected_event_dict.items()))
+    self.assertEqual(event_dict, expected_event_dict)
 
   def testReadAndWriteSerializedEventSource(self):
     """Test ReadSerialized and WriteSerialized of EventSource."""
@@ -239,7 +277,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedEventTag(self):
     """Test ReadSerialized and WriteSerialized of EventTag."""
-    expected_event_tag = events.EventTag(comment='My first comment.')
+    expected_event_tag = events.EventTag()
     expected_event_tag.AddLabels(['Malware', 'Common'])
 
     json_string = (
@@ -256,7 +294,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event_tag, events.EventTag)
 
     expected_event_tag_dict = {
-        'comment': 'My first comment.',
         'labels': ['Malware', 'Common'],
     }
 
@@ -371,7 +408,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(session_start, sessions.SessionStart)
 
     expected_session_start_dict = {
-        'debug_mode': False,
         'identifier': session_identifier,
         'product_name': 'plaso',
         'product_version': plaso.__version__,
@@ -481,7 +517,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertEqual(
         sorted(task_start_dict.items()),
         sorted(expected_task_start_dict.items()))
-
 
 
 if __name__ == '__main__':

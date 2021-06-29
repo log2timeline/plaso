@@ -1,7 +1,7 @@
 name: rp_log
 type: format
 description: Windows restore point log (rp.log) format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Restore%20point%20formats.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Restore%20point%20formats.asciidoc"]
 ---
 name: uint32
 type: integer

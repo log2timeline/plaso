@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 """A plugin to enable quick triage of Windows Services."""
 
-from __future__ import unicode_literals
-
 import yaml
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import reports
-from plaso.lib import py2to3
-from plaso.winnt import human_readable_service_enums
+from plaso.parsers.winreg_plugins import services
 
 
 class WindowsService(yaml.YAMLObject):
@@ -36,6 +32,20 @@ class WindowsService(yaml.YAMLObject):
   yaml_tag = '!WindowsService'
   yaml_loader = yaml.SafeLoader
   yaml_dumper = yaml.SafeDumper
+
+  _SERVICE_TYPES = {
+      1: 'Kernel Device Driver (0x1)',
+      2: 'File System Driver (0x2)',
+      4: 'Adapter (0x4)',
+      16: 'Service - Own Process (0x10)',
+      32: 'Service - Share Process (0x20)'}
+
+  _START_TYPES = {
+      0: 'Boot (0)',
+      1: 'System (1)',
+      2: 'Auto Start (2)',
+      3: 'Manual (3)',
+      4: 'Disabled (4)'}
 
   def __init__(
       self, name, service_type, image_path, start_type, object_name, source,
@@ -111,17 +121,24 @@ class WindowsService(yaml.YAMLObject):
     return True
 
   @classmethod
-  def FromEventData(cls, event_data):
+  def FromEventData(cls, event_data, event_data_stream):
     """Creates a service object from event data.
 
     Args:
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
 
     Returns:
       WindowsService: service.
     """
-    if event_data.pathspec:
-      source = (event_data.pathspec.location, event_data.key_path)
+    path_specification = getattr(event_data_stream, 'path_spec', None)
+    if not path_specification:
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility.
+      path_specification = getattr(event_data, 'pathspec', None)
+
+    if path_specification:
+      source = (path_specification.location, event_data.key_path)
     else:
       source = ('Unknown', 'Unknown')
 
@@ -136,10 +153,11 @@ class WindowsService(yaml.YAMLObject):
     Returns:
       str: human readable description of the type value.
     """
-    if isinstance(self.service_type, py2to3.STRING_TYPES):
+    if isinstance(self.service_type, str):
       return self.service_type
-    return human_readable_service_enums.SERVICE_ENUMS['Type'].get(
-        self.service_type, '{0:d}'.format(self.service_type))
+
+    default_service_type = '{0:d}'.format(self.service_type)
+    return self._SERVICE_TYPES.get(self.service_type, default_service_type)
 
   def HumanReadableStartType(self):
     """Return a human readable string describing the start type value.
@@ -147,10 +165,11 @@ class WindowsService(yaml.YAMLObject):
     Returns:
       str: human readable description of the start type value.
     """
-    if isinstance(self.start_type, py2to3.STRING_TYPES):
+    if isinstance(self.start_type, str):
       return self.start_type
-    return human_readable_service_enums.SERVICE_ENUMS['Start'].get(
-        self.start_type, '{0:d}'.format(self.start_type))
+
+    default_start_type = '{0:d}'.format(self.start_type)
+    return self._START_TYPES.get(self.start_type, default_start_type)
 
 
 class WindowsServiceCollection(object):
@@ -188,12 +207,6 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
   """Provides a single list of for Windows services found in the Registry."""
 
   NAME = 'windows_services'
-
-  # Indicate that we can run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = True
-
-  _SUPPORTED_EVENT_DATA_TYPES = frozenset([
-      'windows:registry:service'])
 
   def __init__(self):
     """Initializes the Windows Services plugin."""
@@ -250,10 +263,14 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append('')
     report_text = '\n'.join(lines_of_text)
-    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
+
+    analysis_report = super(WindowsServicesAnalysisPlugin, self).CompileReport(
+        mediator)
+    analysis_report.text = report_text
+    return analysis_report
 
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event and creates Windows Services as required.
 
     At present, this method only handles events extracted from the Registry.
@@ -263,12 +280,18 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
-    if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
+    # TODO: Handle event log entries here also (ie, event id 4697).
+    if event_data.data_type != 'windows:registry:service':
       return
 
-    # TODO: Handle event log entries here also (ie, event id 4697).
-    service = WindowsService.FromEventData(event_data)
+    event_data_attributes = event_data.CopyToDict()
+    service_event_data = services.WindowsRegistryServiceEventData()
+    service_event_data.CopyFromDict(event_data_attributes)
+
+    service = WindowsService.FromEventData(
+        service_event_data, event_data_stream)
     self._service_collection.AddService(service)
 
   def SetOutputFormat(self, output_format):

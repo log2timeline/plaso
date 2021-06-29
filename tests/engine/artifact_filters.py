@@ -2,26 +2,23 @@
 # -*- coding: utf-8 -*-
 """Tests for the artifacts file filter functions."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
-
-from dfwinreg import registry as dfwinreg_registry
-from dfwinreg import registry_searcher as dfwinreg_registry_searcher
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from dfwinreg import regf as dfwinreg_regf
+from dfwinreg import registry as dfwinreg_registry
+from dfwinreg import registry_searcher as dfwinreg_registry_searcher
+
 from plaso.containers import artifacts
 from plaso.engine import artifact_filters
 from plaso.engine import knowledge_base as knowledge_base_engine
-from plaso.lib import py2to3
-from plaso.parsers import winreg as windows_registry_parser
 
 from tests import test_lib as shared_test_lib
 
@@ -57,7 +54,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         registry, knowledge_base)
 
   def _CreateTestKnowledgeBaseWindows(self):
-    """Creates a knowlege base for testing Windows paths.
+    """Creates a knowledge base for testing Windows paths.
 
     Creates a knowledge base with 2 user accounts.
 
@@ -131,8 +128,6 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     # total 6 path specifications.
     self.assertEqual(len(path_specs), 6)
 
-    file_system.Close()
-
   def testBuildFindSpecsWithFileSystemAndGroup(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
     test_file_path = self._GetTestFilePath(['System.evtx'])
@@ -177,8 +172,6 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     # total 6 path specifications.
     self.assertEqual(len(path_specs), 6)
 
-    file_system.Close()
-
   def testBuildFindSpecsWithRegistry(self):
     """Tests the BuildFindSpecs function on Windows Registry sources."""
     knowledge_base = knowledge_base_engine.KnowledgeBase()
@@ -193,13 +186,12 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         len(test_filters_helper.included_file_system_find_specs), 0)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 3)
 
-    win_registry_reader = (
-        windows_registry_parser.FileObjectWinRegistryFileReader())
-
     file_entry = self._GetTestFileEntry(['SYSTEM'])
     file_object = file_entry.GetFileObject()
 
-    registry_file = win_registry_reader.Open(file_object)
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(
+        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file.Open(file_object)
 
     win_registry = dfwinreg_registry.WinRegistry()
     key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
@@ -211,8 +203,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         find_specs=test_filters_helper.registry_find_specs))
 
     self.assertIsNotNone(key_paths)
-
-    self.assertEqual(len(key_paths), 5)
+    self.assertEqual(len(key_paths), 8)
 
   def testCheckKeyCompatibility(self):
     """Tests the CheckKeyCompatibility function"""
@@ -254,12 +245,9 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(find_specs), 1)
 
     # Location segments should be equivalent to \Windows\test_data\*.evtx.
-    if py2to3.PY_3:
-      # Underscores are not escaped in regular expressions in supported versions
-      # of Python 3. See https://bugs.python.org/issue2650.
-      expected_location_segments = ['Windows', 'test_data', '.*\\.evtx']
-    else:
-      expected_location_segments = ['Windows', 'test\\_data', '.*\\.evtx']
+    # Underscores are not escaped in regular expressions in supported versions
+    # of Python 3. See https://bugs.python.org/issue2650.
+    expected_location_segments = ['Windows', 'test_data', '.*\\.evtx']
 
     self.assertEqual(
         find_specs[0]._location_segments, expected_location_segments)
@@ -273,12 +261,9 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(find_specs), 10)
 
     # Last entry in find_specs list should be 10 levels of depth.
-    if py2to3.PY_3:
-      # Underscores are not escaped in regular expressions in supported versions
-      # of Python 3. See https://bugs.python.org/issue2650
-      expected_location_segments = ['test_data']
-    else:
-      expected_location_segments = ['test\\_data']
+    # Underscores are not escaped in regular expressions in supported versions
+    # of Python 3. See https://bugs.python.org/issue2650
+    expected_location_segments = ['test_data']
 
     expected_location_segments.extend([
         '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*'])

@@ -2,11 +2,9 @@
 """Parser for the System Resource Usage Monitor (SRUM) ESE database.
 
 For more information about the database format see:
-https://github.com/libyal/esedb-kb/blob/master/documentation/
+https://github.com/libyal/esedb-kb/blob/main/documentation/
     System%20Resource%20Usage%20Monitor%20(SRUM).asciidoc
 """
-
-from __future__ import unicode_literals
 
 import pyfwnt
 
@@ -148,8 +146,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   """Parses a System Resource Usage Monitor (SRUM) ESE database file."""
 
   NAME = 'srum'
-  DESCRIPTION = (
-      'Parser for System Resource Usage Monitor (SRUM) ESE database files.')
+  DATA_FORMAT = 'System Resource Usage Monitor (SRUM) ESE database file'
 
   # TODO: add support for tables:
   # {5C8CF1C7-7257-4F13-B223-970EF5939312}
@@ -204,7 +201,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
   _NETWORK_DATA_USAGE_VALUES_MAP = {
       'application': 'AppId',
-      'bytes_recieved': 'BytesRecvd',
+      'bytes_received': 'BytesRecvd',
       'bytes_sent': 'BytesSent',
       'identifier': 'AutoIncId',
       'interface_luid': 'InterfaceLuid',
@@ -262,7 +259,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       cache (ESEDBCache): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
-      database (pyesedb.file): ESE database.
+      database (ESEDatabase): ESE database.
 
     Returns:
       dict[int, str]: mapping of numeric identifiers to their string
@@ -270,7 +267,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     """
     identifier_mappings = cache.GetResults('SruDbIdMapTable', default_value={})
     if not identifier_mappings:
-      esedb_table = database.get_table_by_name('SruDbIdMapTable')
+      esedb_table = database.GetTableByName('SruDbIdMapTable')
       if not esedb_table:
         parser_mediator.ProduceExtractionWarning(
             'unable to retrieve table: SruDbIdMapTable')
@@ -292,7 +289,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       cache (ESEDBCache): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
-      database (pyesedb.file): ESE database.
+      database (ESEDatabase): ESE database.
       esedb_table (pyesedb.table): table.
       values_map (dict[str, str]): mapping of table columns to event data
           attribute names.
@@ -313,12 +310,12 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     identifier_mappings = self._GetIdentifierMappings(
         parser_mediator, cache, database)
 
-    for esedb_record in esedb_table.records:
+    for record_index, esedb_record in enumerate(esedb_table.records):
       if parser_mediator.abort:
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, esedb_table.name, esedb_record,
+          parser_mediator, esedb_table.name, record_index, esedb_record,
           value_mappings=self._GUID_TABLE_VALUE_MAPPINGS)
 
       event_data = event_data_class()
@@ -340,7 +337,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             timestamp=timestamp)
         timestamp_description = definitions.TIME_DESCRIPTION_SAMPLE
       else:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
         timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
 
       event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
@@ -354,21 +351,22 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseIdentifierMappingRecord(
-      self, parser_mediator, table_name, esedb_record):
+      self, parser_mediator, table_name, record_index, esedb_record):
     """Extracts an identifier mapping from a SruDbIdMapTable record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       table_name (str): name of the table the record is stored in.
-      esedb_record (pyesedb.record): record.
+      record_index (int): ESE record index.
+      esedb_record (pyesedb.record): ESE record.
 
     Returns:
       tuple[int, str]: numeric identifier and its string representation or
           None, None if no identifier mapping can be retrieved from the record.
     """
     record_values = self._GetRecordValues(
-        parser_mediator, table_name, esedb_record)
+        parser_mediator, table_name, record_index, esedb_record)
 
     identifier = record_values.get('IdIndex', None)
     if identifier is None:
@@ -423,12 +421,12 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     """
     identifier_mappings = {}
 
-    for esedb_record in esedb_table.records:
+    for record_index, esedb_record in enumerate(esedb_table.records):
       if parser_mediator.abort:
         break
 
       identifier, mapped_value = self._ParseIdentifierMappingRecord(
-          parser_mediator, esedb_table.name, esedb_record)
+          parser_mediator, esedb_table.name, record_index, esedb_record)
       if identifier is None or mapped_value is None:
         continue
 
@@ -451,7 +449,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
     """
     self._ParseGUIDTable(
@@ -469,7 +467,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
     """
     self._ParseGUIDTable(
@@ -486,7 +484,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
       table (Optional[pyesedb.table]): table.
     """
     # TODO: consider making ConnectStartTime + ConnectedTime an event.

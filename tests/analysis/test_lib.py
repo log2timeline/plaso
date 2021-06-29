@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import artifacts
+from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.parsers import interface as parsers_interface
@@ -23,7 +22,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Analyzes events using the analysis plugin.
 
     Args:
-      event_values_list (list[dict[str, str]]): list of event values.
+      event_values_list (list[dict[str, object]]): list of event values.
       plugin (AnalysisPlugin): plugin.
       knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 
@@ -38,23 +37,26 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     test_events = []
-    for event, event_data in containers_test_lib.CreateEventsFromValues(
-        event_values_list):
-      storage_writer.AddEventData(event_data)
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(event_values_list)):
+      storage_writer.AddAttributeContainer(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
+      storage_writer.AddAttributeContainer(event_data)
 
       event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_writer.AddEvent(event)
+      storage_writer.AddAttributeContainer(event)
 
-      test_events.append((event, event_data))
+      test_events.append((event, event_data, event_data_stream))
 
     mediator = analysis_mediator.AnalysisMediator(
         storage_writer, knowledge_base_object)
 
-    for event, event_data in test_events:
-      plugin.ExamineEvent(mediator, event, event_data)
+    for event, event_data, event_data_stream in test_events:
+      plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
 
     analysis_report = plugin.CompileReport(mediator)
-    storage_writer.AddAnalysisReport(analysis_report)
+    storage_writer.AddAttributeContainer(analysis_report)
 
     return storage_writer
 
@@ -88,13 +90,21 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       event_data = None
       event_data_identifier = event.GetEventDataIdentifier()
       if event_data_identifier:
-        event_data = storage_writer.GetEventDataByIdentifier(
-            event_data_identifier)
+        event_data = storage_writer.GetAttributeContainerByIdentifier(
+            events.EventData.CONTAINER_TYPE, event_data_identifier)
 
-      plugin.ExamineEvent(mediator, event, event_data)
+      event_data_stream = None
+      if event_data:
+        event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+        if event_data_stream_identifier:
+          event_data_stream = storage_writer.GetAttributeContainerByIdentifier(
+              events.EventDataStream.CONTAINER_TYPE,
+              event_data_stream_identifier)
+
+      plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
 
     analysis_report = plugin.CompileReport(mediator)
-    storage_writer.AddAnalysisReport(analysis_report)
+    storage_writer.AddAttributeContainer(analysis_report)
 
     return storage_writer
 
@@ -117,24 +127,24 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    mediator = parsers_mediator.ParserMediator(
+    parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, knowledge_base_object)
 
     file_entry = self._GetTestFileEntry(path_segments)
-    mediator.SetFileEntry(file_entry)
+    parser_mediator.SetFileEntry(file_entry)
+
+    event_data_stream = events.EventDataStream()
+    parser_mediator.ProduceEventDataStream(event_data_stream)
 
     if isinstance(parser, parsers_interface.FileEntryParser):
-      parser.Parse(mediator)
+      parser.Parse(parser_mediator)
 
     elif isinstance(parser, parsers_interface.FileObjectParser):
       file_object = file_entry.GetFileObject()
-      try:
-        parser.Parse(mediator, file_object)
-      finally:
-        file_object.close()
+      parser.Parse(parser_mediator, file_object)
 
     else:
-      self.fail('Got unexpected parser type: {0:s}'.format(type(parser)))
+      self.fail('Got unexpected parser type: {0!s}'.format(type(parser)))
 
     return storage_writer
 
@@ -149,7 +159,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
-      for identifier, value in iter(knowledge_base_values.items()):
+      for identifier, value in knowledge_base_values.items():
         if identifier == 'users':
           self._SetUserAccounts(knowledge_base_object, value)
         else:

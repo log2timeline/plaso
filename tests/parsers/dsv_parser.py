@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the delimiter separated values (DSV) parser."""
 
-from __future__ import unicode_literals
-
+import io
 import unittest
 
 from plaso.parsers import dsv_parser
@@ -22,9 +21,11 @@ class TestDSVParser(dsv_parser.DSVParser):
   COLUMNS = ['place', 'user', 'password']
   NUMBER_OF_HEADER_LINES = 1
 
+  _ENCODING = 'utf-8'
+
   def __init__(self):
     """Initializes a DSV parser."""
-    super(TestDSVParser, self).__init__(encoding='utf-8')
+    super(TestDSVParser, self).__init__()
     self.row_offsets = []
     self.rows = []
 
@@ -61,33 +62,45 @@ class DSVParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def testConvertRowToUnicode(self):
-    """Tests the _ConvertRowToUnicode function."""
-    binary_row = {
-        'place': b'bank',
-        'user': b'joesmith',
-        'password': b'superr\xc3\xadch'}
+  def testCheckForByteOrderMark(self):
+    """Tests the _CheckForByteOrderMark function."""
+    parser = TestDSVParser()
 
-    storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(storage_writer)
-    parser = dsv_parser.DSVParser(encoding='utf-8')
+    file_object = io.BytesIO(b'\xef\xbb\xbfUTF-8')
+    encoding, text_offset = parser._CheckForByteOrderMark(file_object)
 
-    unicode_row = parser._ConvertRowToUnicode(parser_mediator, binary_row)
-    self.assertEqual(unicode_row['password'], 'superrích')
+    self.assertEqual(encoding, 'utf-8')
+    self.assertEqual(text_offset, 3)
 
-    # Convert Unicode values.
-    unicode_row = parser._ConvertRowToUnicode(parser_mediator, unicode_row)
-    self.assertEqual(unicode_row['password'], 'superrích')
+    file_object = io.BytesIO(b'\xfe\xffUTF-16 big-endian')
+    encoding, text_offset = parser._CheckForByteOrderMark(file_object)
 
-    knowledge_base_values = {'codepage': 'ascii'}
-    parser_mediator = self._CreateParserMediator(
-        storage_writer, knowledge_base_values=knowledge_base_values)
-    self.assertEqual(parser_mediator.codepage, 'ascii')
+    self.assertEqual(encoding, 'utf-16-be')
+    self.assertEqual(text_offset, 2)
 
-    parser = dsv_parser.DSVParser()
+    file_object = io.BytesIO(b'\xff\xfeUTF-16 little-endian')
+    encoding, text_offset = parser._CheckForByteOrderMark(file_object)
 
-    unicode_row = parser._ConvertRowToUnicode(parser_mediator, binary_row)
-    self.assertEqual(unicode_row['password'], 'superr\xedch')
+    self.assertEqual(encoding, 'utf-16-le')
+    self.assertEqual(text_offset, 2)
+
+    file_object = io.BytesIO(b'\x00\x00\xfe\xffUTF-32 big-endian')
+    encoding, text_offset = parser._CheckForByteOrderMark(file_object)
+
+    self.assertEqual(encoding, 'utf-32-be')
+    self.assertEqual(text_offset, 4)
+
+    file_object = io.BytesIO(b'\xff\xfe\x00\x00UTF-32 little-endian')
+    encoding, text_offset = parser._CheckForByteOrderMark(file_object)
+
+    self.assertEqual(encoding, 'utf-32-le')
+    self.assertEqual(text_offset, 4)
+
+    file_object = io.BytesIO(b'ASCII')
+    encoding, text_offset = parser._CheckForByteOrderMark(file_object)
+
+    self.assertIsNone(encoding)
+    self.assertEqual(text_offset, 0)
 
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
@@ -111,11 +124,14 @@ class DSVParserTest(test_lib.ParserTestCase):
     test_file_entry = self._GetTestFileEntry(['password.csv'])
     test_file_object = test_file_entry.GetFileObject()
 
-    self.assertTrue(parser._HasExpectedLineLength(test_file_object))
+    self.assertTrue(parser._HasExpectedLineLength(
+        test_file_object, encoding='utf-8'))
 
     parser._maximum_line_length = 2
-    parser._HasExpectedLineLength(test_file_object)
-    self.assertFalse(parser._HasExpectedLineLength(test_file_object))
+    parser._HasExpectedLineLength(
+        test_file_object, encoding='utf-8')
+    self.assertFalse(parser._HasExpectedLineLength(
+        test_file_object, encoding='utf-8'))
 
 
 if __name__ == '__main__':

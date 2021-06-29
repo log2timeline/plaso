@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the xchatscrollback log parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import xchatscrollback as _  # pylint: disable=unused-import
 from plaso.parsers import xchatscrollback
 
 from tests.parsers import test_lib
@@ -20,95 +17,78 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
     parser = xchatscrollback.XChatScrollbackParser()
     storage_writer = self._ParseFile(['xchatscrollback.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'date_time': '2009-01-16 02:56:19',
+        'data_type': 'xchat:scrollback:line',
+        'text': '* Speaking now on ##plaso##'}
 
-    self.CheckTimestamp(event.timestamp, '2009-01-16 02:56:19.000000')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'date_time': '2009-01-16 02:56:27',
+        'data_type': 'xchat:scrollback:line',
+        'text': '* Joachim \xe8 uscito (Client exited)'}
 
-    expected_message = '[] * Speaking now on ##plaso##'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    event = events[1]
+    expected_event_values = {
+        'date_time': '2009-01-18 21:58:36',
+        'data_type': 'xchat:scrollback:line',
+        'text': 'Tcl interface unloaded'}
 
-    self.CheckTimestamp(event.timestamp, '2009-01-16 02:56:27.000000')
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'date_time': '2009-01-18 21:58:36',
+        'data_type': 'xchat:scrollback:line',
+        'text': 'Python interface unloaded'}
 
-    expected_message = '[] * Joachim \xe8 uscito (Client exited)'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    event = events[2]
+    # TODO: change parser to return NotSet semantic time.
+    expected_event_values = {
+        'date_time': '1970-01-01 00:00:00',
+        'data_type': 'xchat:scrollback:line',
+        'nickname': 'fpi',
+        'text': '0 is a good timestamp',
+        'timestamp': 0}
 
-    self.CheckTimestamp(event.timestamp, '2009-01-18 21:58:36.000000')
+    self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'date_time': '2009-01-26 08:50:56',
+        'data_type': 'xchat:scrollback:line',
+        'text': '* Topic of #plasify \xe8: .'}
 
-    expected_message = '[] Tcl interface unloaded'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
-    event = events[3]
+    expected_event_values = {
+        'date_time': '2009-01-26 08:51:02',
+        'data_type': 'xchat:scrollback:line'}
 
-    self.CheckTimestamp(event.timestamp, '2009-01-18 21:58:36.000000')
+    self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'date_time': '2009-01-26 08:52:12',
+        'data_type': 'xchat:scrollback:line',
+        'nickname': 'fpi',
+        'text': 'Hi Kristinn!'}
 
-    expected_message = '[] Python interface unloaded'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
-    event = events[5]
-    self.assertEqual(event.timestamp, 0)
+    expected_event_values = {
+        'date_time': '2009-01-26 08:53:13',
+        'data_type': 'xchat:scrollback:line',
+        'nickname': 'Kristinn',
+        'text': 'GO AND WRITE PARSERS!!! O_o'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = '[nickname: fpi] 0 is a good timestamp'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
-
-    event = events[6]
-
-    self.CheckTimestamp(event.timestamp, '2009-01-26 08:50:56.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = '[] * Topic of #plasify \xe8: .'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
-
-    event = events[7]
-
-    self.CheckTimestamp(event.timestamp, '2009-01-26 08:51:02.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    event = events[8]
-
-    self.CheckTimestamp(event.timestamp, '2009-01-26 08:52:12.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = '[nickname: fpi] Hi Kristinn!'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
-
-    event = events[9]
-
-    self.CheckTimestamp(event.timestamp, '2009-01-26 08:53:13.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_message = '[nickname: Kristinn] GO AND WRITE PARSERS!!! O_o'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_message)
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
 
 if __name__ == '__main__':

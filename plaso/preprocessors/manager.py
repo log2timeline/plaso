@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """The preprocess plugins manager."""
 
-from __future__ import unicode_literals
-
 from dfvfs.helpers import file_system_searcher
 from dfvfs.helpers import windows_path_resolver
+from dfvfs.lib import errors as dfvfs_errors
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
@@ -91,7 +90,6 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       logger.warning(
           'Unable to open Windows Registry file with error: {0!s}'.format(
               exception))
-      file_object.close()
       return None
 
     return registry_file
@@ -106,7 +104,15 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     Returns:
       WinRegistryFile: Windows Registry file or None.
     """
-    path_specification = self._path_resolver.ResolvePath(path)
+    path_specification = None
+
+    try:
+      path_specification = self._path_resolver.ResolvePath(path)
+    except dfvfs_errors.BackEndError as exception:
+      logger.warning((
+          'Unable to open Windows Registry file: {0:s} with error: '
+          '{1!s}').format(path, exception))
+
     if path_specification is None:
       return None
 
@@ -123,13 +129,14 @@ class PreprocessPluginsManager(object):
 
   @classmethod
   def CollectFromFileSystem(
-      cls, artifacts_registry, knowledge_base, searcher, file_system):
+      cls, artifacts_registry, mediator, searcher, file_system):
     """Collects values from Windows Registry values.
 
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifacts
           definitions registry.
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -146,7 +153,7 @@ class PreprocessPluginsManager(object):
           preprocess_plugin.ARTIFACT_DEFINITION_NAME))
       try:
         preprocess_plugin.Collect(
-            knowledge_base, artifact_definition, searcher, file_system)
+            mediator, artifact_definition, searcher, file_system)
       except (IOError, errors.PreProcessFail) as exception:
         logger.warning((
             'Unable to collect value from artifact definition: {0:s} '
@@ -154,35 +161,39 @@ class PreprocessPluginsManager(object):
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
 
   @classmethod
-  def CollectFromKnowledgeBase(cls, knowledge_base):
+  def CollectFromKnowledgeBase(cls, mediator):
     """Collects values from knowledge base values.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
     """
     for preprocess_plugin in cls._knowledge_base_plugins.values():
       logger.debug('Running knowledge base preprocessor plugin: {0:s}'.format(
           preprocess_plugin.__class__.__name__))
       try:
-        preprocess_plugin.Collect(knowledge_base)
+        preprocess_plugin.Collect(mediator)
       except errors.PreProcessFail as exception:
         logger.warning(
             'Unable to collect knowledge base value with error: {0!s}'.format(
                 exception))
 
   @classmethod
-  def CollectFromWindowsRegistry(
-      cls, artifacts_registry, knowledge_base, searcher):
+  def CollectFromWindowsRegistry(cls, artifacts_registry, mediator, searcher):
     """Collects values from Windows Registry values.
 
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifacts
           definitions registry.
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
       searcher (dfwinreg.WinRegistrySearcher): Windows Registry searcher to
           preprocess the Windows Registry.
     """
-    for preprocess_plugin in cls._windows_registry_plugins.values():
+    # TODO: define preprocessing plugin dependency and sort preprocess_plugins
+    # for now sort alphabetically to ensure WindowsAvailableTimeZones is run
+    # before WindowsTimezone.
+    for _, preprocess_plugin in sorted(cls._windows_registry_plugins.items()):
       artifact_definition = artifacts_registry.GetDefinitionByName(
           preprocess_plugin.ARTIFACT_DEFINITION_NAME)
       if not artifact_definition:
@@ -193,7 +204,7 @@ class PreprocessPluginsManager(object):
       logger.debug('Running Windows Registry preprocessor plugin: {0:s}'.format(
           preprocess_plugin.ARTIFACT_DEFINITION_NAME))
       try:
-        preprocess_plugin.Collect(knowledge_base, artifact_definition, searcher)
+        preprocess_plugin.Collect(mediator, artifact_definition, searcher)
       except (IOError, errors.PreProcessFail) as exception:
         logger.warning((
             'Unable to collect value from artifact definition: {0:s} '
@@ -293,8 +304,7 @@ class PreprocessPluginsManager(object):
       cls.RegisterPlugin(plugin_class)
 
   @classmethod
-  def RunPlugins(
-      cls, artifacts_registry, file_system, mount_point, knowledge_base):
+  def RunPlugins(cls, artifacts_registry, file_system, mount_point, mediator):
     """Runs the preprocessing plugins.
 
     Args:
@@ -303,19 +313,20 @@ class PreprocessPluginsManager(object):
       file_system (dfvfs.FileSystem): file system to be preprocessed.
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
     """
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
     cls.CollectFromFileSystem(
-        artifacts_registry, knowledge_base, searcher, file_system)
+        artifacts_registry, mediator, searcher, file_system)
 
     # Run the Registry plugins separately so we do not have to open
     # Registry files for every preprocess plugin.
 
     environment_variables = None
-    if knowledge_base:
-      environment_variables = knowledge_base.GetEnvironmentVariables()
+    if mediator.knowledge_base:
+      environment_variables = mediator.knowledge_base.GetEnvironmentVariables()
 
     registry_file_reader = FileSystemWinRegistryFileReader(
         file_system, mount_point, environment_variables=environment_variables)
@@ -324,10 +335,9 @@ class PreprocessPluginsManager(object):
 
     searcher = registry_searcher.WinRegistrySearcher(win_registry)
 
-    cls.CollectFromWindowsRegistry(
-        artifacts_registry, knowledge_base, searcher)
+    cls.CollectFromWindowsRegistry(artifacts_registry, mediator, searcher)
 
-    cls.CollectFromKnowledgeBase(knowledge_base)
+    cls.CollectFromKnowledgeBase(mediator)
 
-    if not knowledge_base.HasUserAccounts():
+    if not mediator.knowledge_base.HasUserAccounts():
       logger.warning('Unable to find any user accounts on the system.')

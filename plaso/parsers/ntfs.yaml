@@ -1,7 +1,7 @@
 name: ntfs
 type: format
 description: New Technologies File System (NTFS) formats
-urls: ["https://github.com/libyal/libfsntfs/blob/master/documentation/New%20Technologies%20File%20System%20(NTFS).asciidoc"]
+urls: ["https://github.com/libyal/libfsntfs/blob/main/documentation/New%20Technologies%20File%20System%20(NTFS).asciidoc"]
 ---
 name: byte
 type: integer

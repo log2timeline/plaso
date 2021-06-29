@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from dfwinreg import fake as dfwinreg_fake
+from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
 from plaso.containers import sessions
-from plaso.parsers import winreg
 from plaso.storage.fake import writer as fake_writer
 
 from tests.parsers import test_lib
@@ -75,11 +73,9 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     if not file_object:
       return None
 
-    win_registry_reader = winreg.FileObjectWinRegistryFileReader()
-    registry_file = win_registry_reader.Open(file_object)
-    if not registry_file:
-      file_object.close()
-      return None
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(
+        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file.Open(file_object)
 
     win_registry = dfwinreg_registry.WinRegistry()
     key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
@@ -89,7 +85,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
   def _ParseKeyWithPlugin(
       self, registry_key, plugin, file_entry=None, knowledge_base_values=None,
-      parser_chain=None):
+      parser_chain=None, timezone='UTC'):
     """Parses a key within a Windows Registry file using the plugin.
 
     Args:
@@ -98,11 +94,12 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       file_entry (Optional[dfvfs.FileEntry]): file entry.
       knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
+      timezone (Optional[str]): timezone.
 
     Returns:
       FakeStorageWriter: storage writer.
     """
-    self.assertNotEqual(registry_key, None)
+    self.assertIsNotNone(registry_key)
 
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
@@ -110,7 +107,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values)
+        knowledge_base_values=knowledge_base_values, timezone=timezone)
 
     # Most tests aren't explicitly checking for parser chain values,
     # or setting them, so we'll just append the plugin name if no explicit

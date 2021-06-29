@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The time slice."""
 
-from __future__ import unicode_literals
-
 
 class TimeSlice(object):
   """Time slice.

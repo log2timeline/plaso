@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for syslog plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 
 import pyparsing
@@ -13,8 +11,9 @@ from plaso.parsers import plugins
 
 class SyslogPlugin(plugins.BasePlugin):
   """The interface for syslog plugins."""
+
   NAME = 'syslog_plugin'
-  DESCRIPTION = ''
+  DATA_FORMAT = 'Syslog file'
 
   # The syslog 'reporter' value for syslog messages that the plugin is able to
   # parse.
@@ -26,17 +25,17 @@ class SyslogPlugin(plugins.BasePlugin):
   # defined. This is so that each plugin can handle multiple types of message.
   # The tuple should have two entries, a key and a grammar. This is done to
   # keep the structures in an order of priority/preference.
-  # The key is a comment or an identification that is passed to the ParseMessage
-  # method so that the plugin can identify which grammar matched.
+  # The key is a comment or an identification that is passed to the
+  # _ParseMessage method so that the plugin can identify which grammar matched.
   MESSAGE_GRAMMARS = []
 
   @abc.abstractmethod
-  def ParseMessage(self, parser_mediator, key, date_time, tokens):
+  def _ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Parses a syslog body that matched one of the grammars the plugin defined.
 
     Args:
-      parser_mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       date_time (dfdatetime.DateTimeValues): date and time values.
       tokens (dict[str, str]): names of the fields extracted by the syslog
@@ -49,8 +48,8 @@ class SyslogPlugin(plugins.BasePlugin):
     """Processes the data structure produced by the parser.
 
     Args:
-      parser_mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       date_time (dfdatetime.DateTimeValues): date and time values.
       syslog_tokens (dict[str, str]): names of the fields extracted by the
           syslog parser and the matching grammar, and values are the values of
@@ -64,11 +63,11 @@ class SyslogPlugin(plugins.BasePlugin):
     if not body:
       raise AttributeError('Missing required attribute: body')
 
-    for key, grammar in iter(self.MESSAGE_GRAMMARS):
+    for key, grammar in self.MESSAGE_GRAMMARS:
       try:
         tokens = grammar.parseString(body)
         syslog_tokens.update(tokens.asDict())
-        self.ParseMessage(parser_mediator, key, date_time, syslog_tokens)
+        self._ParseMessage(parser_mediator, key, date_time, syslog_tokens)
         return
 
       except pyparsing.ParseException:

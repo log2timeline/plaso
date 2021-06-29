@@ -2,18 +2,14 @@
 # -*- coding: utf-8 -*-
 """Tests for the shared functionality for Elasticsearch output modules."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-try:
-  from mock import MagicMock
-except ImportError:
-  from unittest.mock import MagicMock
+from unittest.mock import MagicMock
+
+from dfvfs.path import fake_path_spec
 
 from plaso.containers import events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.output import shared_elastic
 
 from tests.containers import test_lib as containers_test_lib
@@ -36,18 +32,18 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'data_type': 'syslog:line',
-       'display_name': 'log/syslog.1',
+      {'a_binary_field': b'binary',
+       'data_type': 'syslog:line',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
        'some_additional_foo': True,
-       'a_binary_field': b'binary',
+       'path_spec': fake_path_spec.FakePathSpec(
+           location='log/syslog.1'),
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
-       'timestamp': timelib.Timestamp.CopyFromString(
-           '2012-06-27 18:17:01+00:00'),
+       'timestamp': '2012-06-27 18:17:01+00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
   def testConnect(self):
@@ -72,14 +68,19 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
   def testFlushEvents(self):
     """Tests the _FlushEvents function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = TestElasticsearchOutputModule(output_mediator)
 
     output_module._Connect()
     output_module._CreateIndexIfNotExists('test', {})
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    output_module._InsertEvent(event, event_data, None)
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    output_module._InsertEvent(event, event_data, event_data_stream, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
@@ -92,25 +93,34 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
   def testGetSanitizedEventValues(self):
     """Tests the _GetSanitizedEventValues function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = TestElasticsearchOutputModule(output_mediator)
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     event_tag = events.EventTag()
     event_tag.AddLabel('Test')
 
     event_values = output_module._GetSanitizedEventValues(
-        event, event_data, event_tag)
+        event, event_data, event_data_stream, event_tag)
 
     expected_event_values = {
+        'a_binary_field': 'binary',
         'data_type': 'syslog:line',
-        'datetime': '2012-06-27T18:17:01+00:00',
-        'display_name': 'log/syslog.1',
+        'datetime': '2012-06-27T18:17:01.000000Z',
+        'display_name': 'FAKE:log/syslog.1',
         'filename': 'log/syslog.1',
         'hostname': 'ubuntu',
         'message': '[',
         'my_number': 123,
+        'path_spec': (
+            '{"__type__": "PathSpec", "location": "log/syslog.1", '
+            '"type_indicator": "FAKE"}'),
         'some_additional_foo': True,
         'source_long': 'Log File',
         'source_short': 'LOG',
@@ -122,14 +132,19 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     }
 
     self.assertIsInstance(event_values, dict)
-    self.assertDictContainsSubset(expected_event_values, event_values)
+    self.assertEqual(event_values, expected_event_values)
 
   def testInsertEvent(self):
     """Tests the _InsertEvent function."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = TestElasticsearchOutputModule(output_mediator)
 
     output_module._Connect()
@@ -138,12 +153,12 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-    output_module._InsertEvent(event, event_data, None)
+    output_module._InsertEvent(event, event_data, event_data_stream, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
 
-    output_module._InsertEvent(event, event_data, None)
+    output_module._InsertEvent(event, event_data, event_data_stream, None)
 
     self.assertEqual(len(output_module._event_documents), 4)
     self.assertEqual(output_module._number_of_buffered_events, 2)
@@ -165,18 +180,6 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.Close()
 
     self.assertIsNone(output_module._client)
-
-  def testSetDocumentType(self):
-    """Tests the SetDocumentType function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestElasticsearchOutputModule(output_mediator)
-
-    self.assertEqual(
-        output_module._document_type, output_module._DEFAULT_DOCUMENT_TYPE)
-
-    output_module.SetDocumentType('test_document_type')
-
-    self.assertEqual(output_module._document_type, 'test_document_type')
 
   def testSetFlushInterval(self):
     """Tests the SetFlushInterval function."""
@@ -239,6 +242,11 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetDataFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     output_module = TestElasticsearchOutputModule(output_mediator)
 
     output_module._Connect()
@@ -247,9 +255,9 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-    event, event_data = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data, None)
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    output_module.WriteEventBody(event, event_data, event_data_stream, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)

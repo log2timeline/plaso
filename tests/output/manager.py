@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the output manager."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.output import interface
@@ -17,12 +15,13 @@ class TestOutput(interface.OutputModule):
   DESCRIPTION = 'This is a test output module.'
 
   # pylint: disable=unused-argument
-  def WriteEventBody(self, event, event_data, event_tag):
+  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     return
@@ -109,8 +108,6 @@ class OutputManagerTest(unittest.TestCase):
     self.assertFalse(manager.OutputManager.HasOutputClass(1))
 
     manager.OutputManager.DeregisterOutput(TestOutput)
-
-  # TODO: add tests for IsLinearOutputModule.
 
   def testNewOutputModule(self):
     """Tests the NewOutputModule function."""

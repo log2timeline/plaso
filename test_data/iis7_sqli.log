@@ -1,0 +1,6 @@
+#Software: Microsoft Internet Information Services 7.0
+#Version: 1.0
+#Date: 2015-10-16 00:02:19
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
+2015-10-16 13:01:02 111.111.111.111 GET /foo/bar/baz.asp ID=1%27%20or%201%3D%40%40version--|22|80040e07|[Microsoft][ODBC_SQL_Server_Driver][SQL_Server]Conversion_failed_when_converting_the_nvarchar_value_'Microsoft_SQL_Server_2008_R2_(SP3)_-_10.50.6220.0_(X64)__+Mar_19_2015_12:32:14__+Copyright_(c)_Microsoft_Corporation_+Enterprise_Edition_(64-bit)_on_Windows_NT_6.1_<X64>_(Build_7601:_Service_Pack_1)_(VM)_'_to_data_type_int. 443 - 222.222.222.222 Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_9_2)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/34.0.1847.131+Safari/537.36 500
+2015-10-16 13:01:02 111.111.111.111 GET /foo/bar/baz.asp ID=1%27%20or%201%3D%40%40version-- 443 - 222.222.222.222 Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_9_2)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/34.0.1847.131+Safari/537.36 500

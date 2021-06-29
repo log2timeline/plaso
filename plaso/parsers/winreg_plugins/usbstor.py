@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the USBStor key."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import logger
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -47,11 +45,11 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
   """USBStor key plugin.
 
   Also see:
-    http://www.forensicswiki.org/wiki/USB_History_Viewing
+  https://forensicswiki.xyz/wiki/index.php?title=USB_History_Viewing
   """
 
   NAME = 'windows_usbstor_devices'
-  DESCRIPTION = 'Parser for USB Plug And Play Manager USBStor Registry Key.'
+  DATA_FORMAT = 'Windows USB Plug And Play Manager USBStor Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -141,4 +139,4 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(USBStorPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(USBStorPlugin)

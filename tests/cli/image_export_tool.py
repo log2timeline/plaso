@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 """Tests for the image export CLI tool."""
 
-from __future__ import unicode_literals
-
 import io
 import json
 import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -88,7 +87,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         location='/a_directory', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-    with self.assertRaises(IOError):
+    with self.assertRaises(dfvfs_errors.BackEndError):
       test_tool._CalculateDigestHash(file_entry, '')
 
   # TODO: add tests for _CreateSanitizedDestination.
@@ -127,15 +126,9 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
         location='/a_directory/another_file', parent=os_path_spec)
 
-    non_existent_test_path = self._GetTestFilePath(['does_not_exist'])
-    non_existent_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=non_existent_test_path)
-
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_tool._ExtractFileEntry(
-          tsk_path_spec, temp_directory, output_writer)
-      test_tool._ExtractFileEntry(
-          non_existent_path_spec, temp_directory, output_writer)
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+      test_tool._ExtractFileEntry(file_entry, temp_directory, output_writer)
 
   # TODO: add tests for _ExtractWithFilter.
   # TODO: add tests for _GetSourceFileSystem.
@@ -158,7 +151,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     """Tests the _ParseSignatureIdentifiers function."""
     test_tool = image_export_tool.ImageExportTool()
 
-    test_tool._ParseSignatureIdentifiers(self._DATA_PATH, 'gzip')
+    test_tool._ParseSignatureIdentifiers(shared_test_lib.DATA_PATH, 'gzip')
 
     with self.assertRaises(ValueError):
       test_tool._ParseSignatureIdentifiers(None, 'gzip')
@@ -195,7 +188,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
-    test_tool._data_location = self._TEST_DATA_PATH
+    test_tool._data_location = shared_test_lib.TEST_DATA_PATH
 
     test_tool.ListSignatureIdentifiers()
 

@@ -16,7 +16,7 @@ PyInstaller from its download directory.**
 
 If you're building with Visual Studio note that for some reason PyInstaller
 does not include the Microsoft Visual C++ run-time DLLs you can find them here:
-[The latest supported Visual C++ downloads](https://support.microsoft.com/en-au/help/2977003/the-latest-supported-visual-c-downloads)
+[The latest supported Visual C++ downloads](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0)
 
 ## Preparations
 
@@ -31,12 +31,12 @@ command from the l2tdevtools source directory:
 
 ```
 set PYTHONPATH=.
-C:\Python37\python.exe tools\update.py
+C:\Python38\python.exe tools\update.py --preset plaso --track stable
 ```
 
 ## Packaging
 
-Download a copy of the [make_release.ps1](https://raw.githubusercontent.com/log2timeline/l2tdevtools/master/data/pyinstaller/make_release.ps1)
+Download a copy of the [make_release.ps1](https://raw.githubusercontent.com/log2timeline/l2tdevtools/main/data/pyinstaller/make_release.ps1)
 script. The easiest is to git clone l2tdevtools:
 ```
 git clone https://github.com/log2timeline/l2tdevtools.git
@@ -67,7 +67,7 @@ From the l2tdevtools source directory run:
 
 ```
 set PYTHONPATH=.
-C:\Python37 (x86)\python.exe tools\update.py --machine-type x86
+C:\Python38 (x86)\python.exe tools\update.py --machine-type x86 --preset plaso --track stable
 ```
 
 From the plaso source directory run:

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The YARA rules CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import io
 
 import yara
@@ -46,6 +44,7 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the Yara rules file cannot be read or parsed.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
@@ -60,7 +59,7 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
           yara_rules_string = rules_file.read()
 
       except IOError as exception:
-        raise errors.BadConfigObject(
+        raise errors.BadConfigOption(
             'Unable to read Yara rules file: {0:s} with error: {1!s}'.format(
                 path, exception))
 
@@ -71,7 +70,7 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
         yara.compile(source=yara_rules_string)
 
       except yara.Error as exception:
-        raise errors.BadConfigObject(
+        raise errors.BadConfigOption(
             'Unable to parse Yara rules in: {0:s} with error: {1!s}'.format(
                 path, exception))
 

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a plugin for cron syslog entries."""
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -32,7 +30,8 @@ class CronSyslogPlugin(interface.SyslogPlugin):
   """A syslog plugin for parsing cron messages."""
 
   NAME = 'cron'
-  DESCRIPTION = 'Parser for syslog cron messages.'
+  DATA_FORMAT = 'Cron syslog line'
+
   REPORTER = 'CRON'
 
   _PYPARSING_COMPONENTS = {
@@ -53,7 +52,7 @@ class CronSyslogPlugin(interface.SyslogPlugin):
 
   MESSAGE_GRAMMARS = [('task_run', _TASK_RUN_GRAMMAR)]
 
-  def ParseMessage(self, parser_mediator, key, date_time, tokens):
+  def _ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Parses a syslog body that matched one of defined grammars.
 
     Args:
@@ -74,8 +73,6 @@ class CronSyslogPlugin(interface.SyslogPlugin):
     event_data.body = tokens.get('body', None)
     event_data.command = tokens.get('command', None)
     event_data.hostname = tokens.get('hostname', None)
-    # TODO: pass line number to offset or remove.
-    event_data.offset = 0
     event_data.pid = tokens.get('pid', None)
     event_data.reporter = tokens.get('reporter', None)
     event_data.severity = tokens.get('severity', None)

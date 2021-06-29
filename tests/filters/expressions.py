@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the event filter expression parser expression classes."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.filters import expressions
@@ -15,14 +13,14 @@ from tests import test_lib as shared_test_lib
 class ExpressionTest(shared_test_lib.BaseTestCase):
   """Tests the expression."""
 
-  def testAddArg(self):
-    """Tests the AddArg function."""
+  def testAddArgument(self):
+    """Tests the AddArgument function."""
     expression = expressions.Expression()
 
-    expression.AddArg('argument1')
+    expression.AddArgument('argument1')
 
     with self.assertRaises(errors.ParseError):
-      expression.AddArg('argument2')
+      expression.AddArgument('argument2')
 
   def testSetAttribute(self):
     """Tests the SetAttribute function."""
@@ -80,54 +78,23 @@ class EventExpressionTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def testCopyValueToDateTime(self):
-    """Tests the _CopyValueToDateTime function."""
-    expression = expressions.EventExpression()
-
-    date_time = expression._CopyValueToDateTime('2009-07-13T23:29:02.849131')
-    self.assertIsNotNone(date_time)
-    self.assertEqual(date_time.timestamp, 1247527742849131)
-
-    date_time = expression._CopyValueToDateTime('2009-07-13')
-    self.assertIsNotNone(date_time)
-    self.assertEqual(date_time.timestamp, 1247443200000000)
-
-    date_time = expression._CopyValueToDateTime('2009-07-13 23:29:02')
-    self.assertIsNotNone(date_time)
-    self.assertEqual(date_time.timestamp, 1247527742000000)
-
-    date_time = expression._CopyValueToDateTime('2009-07-13 23:29:02.849131')
-    self.assertIsNotNone(date_time)
-    self.assertEqual(date_time.timestamp, 1247527742849131)
-
-    date_time = expression._CopyValueToDateTime('1247527742849131')
-    self.assertIsNotNone(date_time)
-    self.assertEqual(date_time.timestamp, 1247527742849131)
-
-    date_time = expression._CopyValueToDateTime(1247527742849131)
-    self.assertIsNotNone(date_time)
-    self.assertEqual(date_time.timestamp, 1247527742849131)
-
-    with self.assertRaises(ValueError):
-      expression._CopyValueToDateTime(None)
-
   def testCompile(self):
     """Tests the Compile function."""
     expression = expressions.EventExpression()
     expression.SetOperator('==')
-    expression.AddArg('first')
+    expression.AddArgument('first')
     expression.Compile()
 
     # Test missing operator.
     expression = expressions.EventExpression()
-    expression.AddArg('first')
+    expression.AddArgument('first')
     with self.assertRaises(errors.ParseError):
       expression.Compile()
 
     # Test unknown operator.
     expression = expressions.EventExpression()
     expression.SetOperator('bogus')
-    expression.AddArg('first')
+    expression.AddArgument('first')
     with self.assertRaises(errors.ParseError):
       expression.Compile()
 

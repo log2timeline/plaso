@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The artifact definitions CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import os
 import sys
 
@@ -72,10 +70,9 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
     artifacts_path = getattr(options, 'artifact_definitions_path', None)
 
-    data_location = getattr(configuration_object, '_data_location', None)
     if ((not artifacts_path or not os.path.exists(artifacts_path)) and
-        data_location):
-      artifacts_path = os.path.dirname(data_location)
+        configuration_object.data_location):
+      artifacts_path = os.path.dirname(configuration_object.data_location)
       artifacts_path = os.path.join(artifacts_path, 'artifacts')
 
       if not os.path.exists(artifacts_path) and 'VIRTUAL_ENV' in os.environ:

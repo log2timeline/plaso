@@ -9,7 +9,7 @@ and/or a particular conversation, XChat will display the last messages
 exchanged. This artifact could be present, if not disabled, even if
 normal logging is disabled.
 
-From the XChat FAQ (http://xchatdata.net/Using/FAQ):
+From the XChat FAQ (http://xchat.org/faq):
 
 Q: 'How do I keep text from previous sessions from being displayed when I
 join a channel?'
@@ -34,8 +34,6 @@ should strip those control fields.
 References
 http://xchat.org
 """
-
-from __future__ import unicode_literals
 
 import pyparsing
 
@@ -70,7 +68,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   """Parses XChat scrollback log files."""
 
   NAME = 'xchatscrollback'
-  DESCRIPTION = 'Parser for XChat scrollback log files.'
+  DATA_FORMAT = 'XChat scrollback log file'
 
   _ENCODING = 'utf-8'
 
@@ -99,11 +97,6 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   MSG_ENTRY_TEXT = pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('text')
   MSG_ENTRY = MSG_ENTRY_NICK + MSG_ENTRY_TEXT
   MSG_ENTRY.parseWithTabs()
-
-  def __init__(self):
-    """Initializes a parser."""
-    super(XChatScrollbackParser, self).__init__()
-    self._offset = 0
 
   def _StripThenGetNicknameAndText(self, text):
     """Strips decorators from text and gets <nickname> if available.
@@ -157,12 +150,11 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       text = self._GetValueFromStructure(structure, 'text', default_value='')
       nickname, text = self._StripThenGetNicknameAndText(text)
     except pyparsing.ParseException:
-      logger.debug('Error parsing entry at offset {0:d}'.format(self._offset))
+      logger.debug('Unable to parse entry')
       return
 
     event_data = XChatScrollbackEventData()
     event_data.nickname = nickname
-    event_data.offset = self._offset
     event_data.text = text
 
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)

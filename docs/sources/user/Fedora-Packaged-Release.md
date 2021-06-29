@@ -1,22 +1,24 @@
-# Fedora Packaged Release 
+# Fedora Packaged Release
 
-### Fedora 29 and 30
+### Fedora 33 and 34
 
 **Note that other versions of Fedora are not supported at this time.**
 
-To install plaso and dependencies from the GIFT Cool Other Package Repo (COPR) you'll need to have dnf plugins installed:
+To install Plaso and dependencies from the GIFT Cool Other Package Repo (COPR)
+you'll need to have dnf plugins installed:
 
 ```
 sudo dnf install dnf-plugins-core
 ```
 
-Add the [GIFT COPR](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) to your dnf configuration:
+Add the [GIFT COPR](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) to
+your dnf configuration:
 
 ```
 sudo dnf copr enable @gift/stable
 ```
 
-Install plaso, tools and dependencies:
+Install Plaso, tools and dependencies:
 
 ```
 sudo dnf install plaso-tools

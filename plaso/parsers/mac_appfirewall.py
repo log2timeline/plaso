@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a appfirewall.log (MacOS Firewall) parser."""
-
-from __future__ import unicode_literals
+"""Parser for MacOS Application firewall log (appfirewall.log) files."""
 
 import pyparsing
 
@@ -11,14 +9,13 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
 class MacAppFirewallLogEventData(events.EventData):
-  """MacOS Firewall log event data.
+  """MacOS Application firewall log (appfirewall.log) file event data.
 
   Attributes:
     action (str): action.
@@ -41,10 +38,10 @@ class MacAppFirewallLogEventData(events.EventData):
 
 
 class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
-  """Parse text based on appfirewall.log file."""
+  """Parser for MacOS Application firewall log (appfirewall.log) files."""
 
   NAME = 'mac_appfirewall_log'
-  DESCRIPTION = 'Parser for appfirewall.log files.'
+  DATA_FORMAT = 'MacOS Application firewall log (appfirewall.log) file'
 
   _ENCODING = 'utf-8'
 
@@ -83,7 +80,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       ('repeated', REPEATED_LINE)]
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(MacAppFirewallParser, self).__init__()
     self._last_month = 0
     self._previous_structure = None
@@ -111,7 +108,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     # Note that dfdatetime_time_elements.TimeElements will raise ValueError
     # for an invalid month.
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
 
     if month != 0 and month < self._last_month:
       # Gap detected between years.

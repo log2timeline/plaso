@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """This file contains the Task Scheduler Registry keys plugins."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import winreg
-from plaso.parsers.winreg_plugins import dtfabric_plugin
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -34,18 +34,19 @@ class TaskCacheEventData(events.EventData):
 
 
 class TaskCacheWindowsRegistryPlugin(
-    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
   """Plugin that parses a Task Cache key."""
 
   NAME = 'windows_task_cache'
-  DESCRIPTION = 'Parser for Task Scheduler cache Registry data.'
+  DATA_FORMAT = 'Windows Task Scheduler cache Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
           'CurrentVersion\\Schedule\\TaskCache')])
 
-  _DEFINITION_FILE = 'task_scheduler.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'task_scheduler.yaml')
 
   def _GetIdValue(self, registry_key):
     """Retrieves the Id value from Task Cache Tree key.
@@ -172,4 +173,4 @@ class TaskCacheWindowsRegistryPlugin(
     # TODO: Add support for the Triggers value.
 
 
-winreg.WinRegistryParser.RegisterPlugin(TaskCacheWindowsRegistryPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(TaskCacheWindowsRegistryPlugin)

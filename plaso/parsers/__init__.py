@@ -2,7 +2,6 @@
 """This file imports Python modules that register parsers."""
 
 from plaso.parsers import asl
-from plaso.parsers import amcache
 from plaso.parsers import android_app_usage
 from plaso.parsers import apache_access
 from plaso.parsers import apt_history
@@ -21,6 +20,7 @@ from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
 from plaso.parsers import fseventsd
 from plaso.parsers import gdrive_synclog
+from plaso.parsers import google_logging
 from plaso.parsers import iis
 from plaso.parsers import java_idx
 from plaso.parsers import mac_appfirewall
@@ -46,14 +46,10 @@ from plaso.parsers import selinux
 from plaso.parsers import setupapi
 from plaso.parsers import skydrivelog
 from plaso.parsers import sophos_av
+from plaso.parsers import spotlight_storedb
 from plaso.parsers import sqlite
 from plaso.parsers import symantec
-
-try:
-  from plaso.parsers import systemd_journal
-except ImportError:
-  pass
-
+from plaso.parsers import systemd_journal
 from plaso.parsers import syslog
 from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
@@ -65,7 +61,7 @@ from plaso.parsers import winfirewall
 from plaso.parsers import winjob
 from plaso.parsers import winlnk
 from plaso.parsers import winprefetch
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers import winrestore
 from plaso.parsers import xchatlog
 from plaso.parsers import xchatscrollback

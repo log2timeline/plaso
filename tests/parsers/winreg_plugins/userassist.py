@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the UserAssist Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import userassist as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import userassist
 
@@ -56,36 +53,23 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'date_time': '2009-08-04 15:11:22.8110676',
+        'key_path': '{0:s}\\Count'.format(key_path),
+        'number_of_executions': 14,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'value_name': 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'}
 
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:11:22.811068')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
-    expected_value_name = 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
-    self.assertEqual(event_data.value_name, expected_value_name)
-    self.assertEqual(event_data.number_of_executions, 14)
-
-    expected_message = (
-        '[{0:s}\\Count] '
-        'Value name: {1:s} '
-        'Count: 14').format(key_path, expected_value_name)
-    expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
@@ -101,42 +85,25 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 61)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'application_focus_count': 21,
+        'application_focus_duration': 420000,
+        'date_time': '2010-11-10 07:49:37.0780676',
+        'key_path': '{0:s}\\Count'.format(key_path),
+        'number_of_executions': 14,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
+        'value_name': 'Microsoft.Windows.GettingStarted'}
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 07:49:37.078068')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
-    expected_value_name = 'Microsoft.Windows.GettingStarted'
-    self.assertEqual(event_data.value_name, expected_value_name)
-    self.assertEqual(event_data.number_of_executions, 14)
-    self.assertEqual(event_data.application_focus_count, 21)
-    self.assertEqual(event_data.application_focus_duration, 420000)
-
-    expected_message = (
-        '[{0:s}\\Count] '
-        'UserAssist entry: 1 '
-        'Value name: {1:s} '
-        'Count: 14 '
-        'Application focus count: 21 '
-        'Application focus duration: 420000').format(
-            key_path, expected_value_name)
-    expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

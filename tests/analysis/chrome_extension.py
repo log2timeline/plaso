@@ -2,14 +2,11 @@
 # -*- coding: utf-8 -*-
 """Tests for the chrome extension analysis plugin."""
 
-from __future__ import unicode_literals
-
 import os
 import unittest
 
 from plaso.analysis import chrome_extension
 from plaso.lib import definitions
-from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
@@ -19,8 +16,6 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
   """Chrome extension analysis plugin used for testing."""
 
   NAME = 'chrome_extension_test'
-
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
 
   def _GetChromeWebStorePage(self, extension_identifier):
     """Retrieves the page for the extension from the Chrome store website.
@@ -41,19 +36,6 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
 
     return page_content.decode('utf-8')
 
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file in the test data directory.
-
-    Args:
-    path_segments (list[str]): path segments inside the test data directory.
-
-    Returns:
-      str: path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
-
 
 class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   """Tests for the chrome extension analysis plugin."""
@@ -61,8 +43,8 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   # pylint: disable=protected-access
 
   _MACOS_PATHS = [
-      '/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
-      ('/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
+      '/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions',
+      ('/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions/'
        'apdfllckaahabafndbhieahigkjlhalf'),
       '/private/var/log/system.log',
       '/Users/frank/Library/Application Data/Google/Chrome/Default',
@@ -74,7 +56,8 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   _MACOS_TEST_EVENTS = [
       {'data_type': 'fs:stat',
        'filename': path,
-       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'parser': 'filestat',
+       'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
       for path in _MACOS_PATHS]
 
@@ -99,7 +82,8 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   _WINDOWS_TEST_EVENTS = [
       {'data_type': 'fs:stat',
        'filename': path,
-       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'parser': 'filestat',
+       'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
       for path in _WINDOWS_PATHS]
 

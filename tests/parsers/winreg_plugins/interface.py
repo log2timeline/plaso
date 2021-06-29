@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Registry plugin interface."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
+from plaso.containers import sessions
 from plaso.parsers.winreg_plugins import interface
+from plaso.storage.fake import writer as fake_writer
 
 from tests.parsers.winreg_plugins import test_lib
 
@@ -195,6 +195,12 @@ class WindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testGetValuesFromKey(self):
     """Tests the _GetValuesFromKey function."""
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
+
+    parser_mediator = self._CreateParserMediator(storage_writer)
+
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         'Explorer', key_path='HKEY_LOCAL_MACHINE\\Software\\Windows\\MRU')
 
@@ -214,7 +220,7 @@ class WindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'a': '[REG_SZ] one',
         'MRUList': '[REG_BINARY] (2 bytes)'}
 
-    values_dict = plugin._GetValuesFromKey(registry_key)
+    values_dict = plugin._GetValuesFromKey(parser_mediator, registry_key)
     self.assertEqual(
         sorted(values_dict.items()), sorted(expected_value_dict.items()))
 

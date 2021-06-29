@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the parsers manager."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import interface
@@ -17,7 +15,7 @@ class TestParser(interface.BaseParser):
   """Test parser."""
 
   NAME = 'test_parser'
-  DESCRIPTION = 'Test parser.'
+  DATA_FORMAT = 'Test parser'
 
   # pylint: disable=unused-argument
   def Parse(self, parser_mediator, **kwargs):
@@ -33,7 +31,7 @@ class TestParserWithPlugins(interface.BaseParser):
   """Test parser with plugins."""
 
   NAME = 'test_parser_with_plugins'
-  DESCRIPTION = 'Test parser with plugins.'
+  DATA_FORMAT = 'Test parser with plugins'
 
   _plugin_classes = {}
 
@@ -51,7 +49,7 @@ class TestPlugin(plugins.BasePlugin):
   """Test plugin."""
 
   NAME = 'test_plugin'
-  DESCRIPTION = 'Test plugin.'
+  DATA_FORMAT = 'Test plugin'
 
   # pylint: disable=unused-argument
   def Process(self, parser_mediator, **kwargs):
@@ -108,8 +106,8 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
       valid_elements, invalid_elements = (
           manager.ParsersManager.CheckFilterExpression(
               expression_invalid_and_valid_names))
-      self.assertEqual(expected_valid_elements, valid_elements)
-      self.assertEqual(expected_invalid_elements, invalid_elements)
+      self.assertEqual(valid_elements, expected_valid_elements)
+      self.assertEqual(invalid_elements, expected_invalid_elements)
 
       expression_invalid_and_valid_names_with_negation = (
           '!test_parser,!non_existent')
@@ -118,8 +116,8 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
       valid_elements, invalid_elements = (
           manager.ParsersManager.CheckFilterExpression(
               expression_invalid_and_valid_names_with_negation))
-      self.assertEqual(expected_valid_elements, valid_elements)
-      self.assertEqual(expected_invalid_elements, invalid_elements)
+      self.assertEqual(valid_elements, expected_valid_elements)
+      self.assertEqual(invalid_elements, expected_invalid_elements)
 
       expression_with_plugins = (
           '!test_parser_with_plugins/test_plugin,'
@@ -128,18 +126,17 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
       expected_invalid_elements = set(['test_parser_with_plugins/non_existent'])
       valid_elements, invalid_elements = (
           manager.ParsersManager.CheckFilterExpression(expression_with_plugins))
-      self.assertEqual(expected_valid_elements, valid_elements)
-      self.assertEqual(expected_invalid_elements, invalid_elements)
+      self.assertEqual(valid_elements, expected_valid_elements)
+      self.assertEqual(invalid_elements, expected_invalid_elements)
 
       none_expression = None
-      all_parser_names = manager.ParsersManager._parser_classes.keys()
-      expected_valid_elements = set(all_parser_names)
-      expected_invalid_elements = set()
       valid_elements, invalid_elements = (
-          manager.ParsersManager.CheckFilterExpression(
-              none_expression))
-      self.assertEqual(expected_valid_elements, valid_elements)
-      self.assertEqual(expected_invalid_elements, invalid_elements)
+          manager.ParsersManager.CheckFilterExpression(none_expression))
+      self.assertNotEqual(valid_elements, set())
+      self.assertEqual(invalid_elements, set())
+
+      all_parser_names = set(manager.ParsersManager._parser_classes.keys())
+      self.assertTrue(all_parser_names.issubset(valid_elements))
 
     # Degister parsers to ensure unrelated tests don't fail.
     finally:
@@ -154,39 +151,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     self.assertGreaterEqual(len(parsers_names), 1)
 
     self.assertIn('winreg', parsers_names)
-
-  def testGetParserAndPluginNames(self):
-    """Tests the GetParserAndPluginNames function."""
-    TestParserWithPlugins.RegisterPlugin(TestPlugin)
-    manager.ParsersManager.RegisterParser(TestParserWithPlugins)
-    manager.ParsersManager.RegisterParser(TestParser)
-
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='test_parser')
-    self.assertEqual(parser_names, ['test_parser'])
-
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='!test_parser')
-    self.assertNotIn('test_parser', parser_names)
-
-    expected_parser_names = [
-        'test_parser_with_plugins',
-        'test_parser_with_plugins/test_plugin']
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='test_parser_with_plugins/test_plugin')
-    self.assertEqual(parser_names, expected_parser_names)
-
-    # Test with a parser name, not using plugin names.
-    expected_parser_names = [
-        'test_parser_with_plugins',
-        'test_parser_with_plugins/test_plugin']
-    parser_names = manager.ParsersManager.GetParserAndPluginNames(
-        parser_filter_expression='test_parser_with_plugins')
-    self.assertEqual(parser_names, expected_parser_names)
-
-    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
-    manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
-    manager.ParsersManager.DeregisterParser(TestParser)
 
   def testGetParserPluginsInformation(self):
     """Tests the GetParserPluginsInformation function."""
@@ -220,14 +184,14 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     parser_names = []
     parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression='test_parser')
-    for _, parser in iter(parsers.items()):
+    for parser in parsers.values():
       parser_names.append(parser.NAME)
     self.assertEqual(parser_names, ['test_parser'])
 
     parser_names = []
     parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression='!test_parser')
-    for _, parser in iter(parsers.items()):
+    for parser in parsers.values():
       parser_names.append(parser.NAME)
     self.assertNotEqual(len(parser_names), 0)
     self.assertNotIn('test_parser', parser_names)
@@ -235,7 +199,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     parser_names = []
     parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression='test_parser_with_plugins/test_plugin')
-    for _, parser in iter(parsers.items()):
+    for parser in parsers.values():
       parser_names.append(parser.NAME)
     self.assertEqual(parser_names, ['test_parser_with_plugins'])
 
@@ -243,7 +207,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     parser_names = []
     parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression='test_parser_with_plugins')
-    for _, parser in iter(parsers.items()):
+    for parser in parsers.values():
       parser_names.append(parser.NAME)
     self.assertEqual(parser_names, ['test_parser_with_plugins'])
 

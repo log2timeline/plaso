@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the dynamic output module CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -26,14 +24,14 @@ usage: cli_helper.py [--fields FIELDS] [--additional_fields ADDITIONAL_FIELDS]
 
 Test argument parser.
 
-optional arguments:
-  --additional_fields ADDITIONAL_FIELDS
+{0:s}:
+  --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
                         Defines extra fields to be included in the output, in
                         addition to the default fields, which are datetime,
                         timestamp_desc, source, source_long, message, parser,
                         display_name, tag.
   --fields FIELDS       Defines which fields should be included in the output.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

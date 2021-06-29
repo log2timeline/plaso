@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
+from dfvfs.file_io import fake_file_io
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.path import fake_path_spec
+from dfvfs.resolver import context as dfvfs_context
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
-from plaso.formatters import manager as formatters_manager
-from plaso.formatters import mediator as formatters_mediator
 from plaso.parsers import interface
-from plaso.parsers import mediator
+from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
@@ -22,6 +22,25 @@ from tests import test_lib as shared_test_lib
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
   """Parser test case."""
+
+  def _CreateFileObject(self, filename, data):
+    """Creates a file-like object.
+
+    Args:
+      filename (str): name of the file.
+      data (bytes): data of the file.
+
+    Returns:
+      dfvfs.FakeFile: file-like object.
+    """
+    resolver_context = dfvfs_context.Context()
+
+    location = '/{0:s}'.format(filename)
+    test_path_spec = fake_path_spec.FakePathSpec(location=location)
+    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
+    file_object.Open()
+
+    return file_object
 
   def _CreateParserMediator(
       self, storage_writer, collection_filters_helper=None, file_entry=None,
@@ -35,14 +54,14 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
       knowledge_base_values (Optional[dict]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
-      timezone (str): timezone.
+      timezone (Optional[str]): timezone.
 
     Returns:
       ParserMediator: parser mediator.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
-      for identifier, value in iter(knowledge_base_values.items()):
+      for identifier, value in knowledge_base_values.items():
         if identifier == 'codepage':
           knowledge_base_object.SetCodepage(value)
         else:
@@ -50,7 +69,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     knowledge_base_object.SetTimeZone(timezone)
 
-    parser_mediator = mediator.ParserMediator(
+    parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
 
@@ -84,22 +103,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       EventData: event data corresponding to the event.
     """
     event_data_identifier = event.GetEventDataIdentifier()
-    return storage_writer.GetEventDataByIdentifier(event_data_identifier)
-
-  def _GetShortMessage(self, message_string):
-    """Shortens a message string to a maximum of 80 character width.
-
-    Args:
-      message_string (str): message string.
-
-    Returns:
-      str: short message string, if it is longer than 80 characters it will
-           be shortened to it's first 77 characters followed by a "...".
-    """
-    if len(message_string) > 80:
-      return '{0:s}...'.format(message_string[:77])
-
-    return message_string
+    return storage_writer.GetAttributeContainerByIdentifier(
+        events.EventData.CONTAINER_TYPE, event_data_identifier)
 
   def _ParseFile(
       self, path_segments, parser, collection_filters_helper=None,
@@ -112,7 +117,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      timezone (str): timezone.
+      timezone (Optional[str]): timezone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -141,7 +146,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      timezone (str): timezone.
+      timezone (Optional[str]): timezone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -158,58 +163,44 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     elif isinstance(parser, interface.FileObjectParser):
       file_object = file_entry.GetFileObject()
-      try:
-        parser.Parse(parser_mediator, file_object)
-      finally:
-        file_object.close()
+      parser.Parse(parser_mediator, file_object)
 
     else:
-      self.fail('Got unsupported parser type: {0:s}'.format(type(parser)))
+      self.fail('Got unsupported parser type: {0!s}'.format(type(parser)))
 
     return storage_writer
 
-  def _TestGetMessageStrings(
-      self, event_data, expected_message, expected_short_message):
-    """Tests the formatting of the message strings.
-
-    This function invokes the GetMessageStrings function of the event data
-    formatter on the event data and compares the resulting messages strings
-    with those expected.
+  def CheckEventValues(self, storage_writer, event, expected_event_values):
+    """Asserts that an event and its event data matches the expected values.
 
     Args:
-      event_data (EventData): event data.
-      expected_message (str): expected message string.
-      expected_short_message (str): expected short message string.
+      storage_writer (StorageWriter): storage writer.
+      event (EventObject): event to check.
+      expected_event_values (dict[str, list[str]): expected values of the event
+          and event data attribute values per name.
     """
-    formatter_mediator = formatters_mediator.FormatterMediator(
-        data_location=self._DATA_PATH)
-    message, message_short = (
-        formatters_manager.FormattersManager.GetMessageStrings(
-            formatter_mediator, event_data))
-    self.assertEqual(message, expected_message)
-    self.assertEqual(message_short, expected_short_message)
+    event_data = None
+    for name, expected_value in expected_event_values.items():
+      if name == 'timestamp' and isinstance(expected_value, str):
+        posix_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=event.timestamp)
+        value = posix_time.CopyToDateTimeString()
 
-  def _TestGetSourceStrings(
-      self, event, event_data, expected_source, expected_source_short):
-    """Tests the formatting of the source strings.
+      elif name in ('date_time', 'timestamp', 'timestamp_desc'):
+        value = getattr(event, name, None)
 
-    This function invokes the GetSourceStrings function of the event
-    formatter on the event and compares the resulting source
-    strings with those expected.
+      else:
+        if not event_data:
+          event_data = self._GetEventDataOfEvent(storage_writer, event)
 
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      expected_source (str): expected source string.
-      expected_source_short (str): expected short source string.
-    """
-    # TODO: change this to return the long variant first so it is consistent
-    # with GetMessageStrings.
-    source_short, source = (
-        formatters_manager.FormattersManager.GetSourceStrings(
-            event, event_data))
-    self.assertEqual(source, expected_source)
-    self.assertEqual(source_short, expected_source_short)
+        value = getattr(event_data, name, None)
+
+      if name == 'date_time' and value and isinstance(expected_value, str):
+        value = value.CopyToDateTimeString()
+
+      error_message = (
+          'event value: "{0:s}" does not match expected value').format(name)
+      self.assertEqual(value, expected_value, error_message)
 
   def CheckTimestamp(self, timestamp, expected_date_time):
     """Asserts that a timestamp value matches the expected date and time.

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Preprocessing related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 from dfvfs.helpers import fake_file_system_builder
@@ -13,8 +11,11 @@ from dfwinreg import registry as dfwinreg_registry
 from dfwinreg import registry_searcher
 
 from plaso.containers import artifacts
+from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.preprocessors import manager
+from plaso.preprocessors import mediator
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 
@@ -31,44 +32,58 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     reader = artifacts_reader.YamlArtifactsReader()
     cls._artifacts_registry.ReadFromDirectory(reader, artifacts_path)
 
+  def _CreateTestStorageWriter(self):
+    """Creates a storage writer for testing purposes.
+
+    Returns:
+      StorageWriter: storage writer.
+    """
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
+    return storage_writer
+
   def _RunPreprocessorPluginOnFileSystem(
-      self, file_system, mount_point, plugin):
+      self, file_system, mount_point, storage_writer, plugin):
     """Runs a preprocessor plugin on a file system.
 
     Args:
       file_system (dfvfs.FileSystem): file system to be preprocessed.
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
+      storage_writer (StorageWriter): storage writer.
       plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
 
     Return:
-      KnowledgeBase: knowledge base filled with preprocessing information.
+      PreprocessMediator: preprocess mediator.
     """
     artifact_definition = self._artifacts_registry.GetDefinitionByName(
         plugin.ARTIFACT_DEFINITION_NAME)
     self.assertIsNotNone(artifact_definition)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
-    plugin.Collect(
-        knowledge_base_object, artifact_definition, searcher, file_system)
+    plugin.Collect(test_mediator, artifact_definition, searcher, file_system)
 
-    return knowledge_base_object
+    return test_mediator
 
   def _RunPreprocessorPluginOnWindowsRegistryValue(
-      self, file_system, mount_point, plugin):
+      self, file_system, mount_point, storage_writer, plugin):
     """Runs a preprocessor plugin on a Windows Registry value.
 
     Args:
       file_system (dfvfs.FileSystem): file system to be preprocessed.
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
+      storage_writer (StorageWriter): storage writer.
       plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
 
     Return:
-      KnowledgeBase: knowledge base filled with preprocessing information.
+      PreprocessMediator: preprocess mediator.
     """
     artifact_definition = self._artifacts_registry.GetDefinitionByName(
         plugin.ARTIFACT_DEFINITION_NAME)
@@ -82,22 +97,27 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    storage_writer = self._CreateTestStorageWriter()
+    test_knowledge_base = knowledge_base.KnowledgeBase()
+    test_mediator = mediator.PreprocessMediator(
+        storage_writer, test_knowledge_base)
 
     searcher = registry_searcher.WinRegistrySearcher(win_registry)
 
-    plugin.Collect(knowledge_base_object, artifact_definition, searcher)
+    plugin.Collect(test_mediator, artifact_definition, searcher)
 
-    return knowledge_base_object
+    return test_mediator
 
-  def _RunPreprocessorPluginOnWindowsRegistryValueSoftware(self, plugin):
+  def _RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+      self, storage_writer, plugin):
     """Runs a preprocessor plugin on a Windows Registry value in SOFTWARE.
 
     Args:
+      storage_writer (StorageWriter): storage writer.
       plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
 
     Return:
-      KnowledgeBase: knowledge base filled with preprocessing information.
+      PreprocessMediator: preprocess mediator.
     """
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
@@ -108,16 +128,18 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
     return self._RunPreprocessorPluginOnWindowsRegistryValue(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-  def _RunPreprocessorPluginOnWindowsRegistryValueSystem(self, plugin):
+  def _RunPreprocessorPluginOnWindowsRegistryValueSystem(
+      self, storage_writer, plugin):
     """Runs a preprocessor plugin on a Windows Registry value in SYSTEM.
 
     Args:
+      storage_writer (StorageWriter): storage writer.
       plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
 
     Return:
-      KnowledgeBase: knowledge base filled with preprocessing information.
+      PreprocessMediator: preprocess mediator.
     """
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath(['SYSTEM'])
@@ -128,4 +150,4 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
     return self._RunPreprocessorPluginOnWindowsRegistryValue(
-        file_system_builder.file_system, mount_point, plugin)
+        file_system_builder.file_system, mount_point, storage_writer, plugin)

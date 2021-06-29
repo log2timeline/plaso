@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """The parser mediator."""
 
-from __future__ import unicode_literals
-
-import copy
-import os
+import datetime
 import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -13,8 +10,6 @@ from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
 from plaso.lib import errors
-from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.parsers import logger
 
 
@@ -53,24 +48,24 @@ class ParserMediator(object):
     """
     super(ParserMediator, self).__init__()
     self._abort = False
+    self._cached_parser_chain = None
     self._cpu_time_profiler = None
-    self._extra_event_attributes = {}
+    self._event_data_stream_identifier = None
     self._file_entry = None
     self._knowledge_base = knowledge_base
     self._last_event_data_hash = None
     self._last_event_data_identifier = None
     self._memory_profiler = None
-    self._mount_path = None
     self._number_of_event_sources = 0
     self._number_of_events = 0
-    self._number_of_warnings = 0
+    self._number_of_extraction_warnings = 0
+    self._number_of_recovery_warnings = 0
     self._parser_chain_components = []
     self._preferred_year = preferred_year
     self._process_information = None
     self._resolver_context = resolver_context
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
-    self._text_prepend = None
 
     self.collection_filters_helper = collection_filters_helper
     self.last_activity_timestamp = 0.0
@@ -86,16 +81,6 @@ class ParserMediator(object):
     return self._knowledge_base.codepage
 
   @property
-  def hostname(self):
-    """str: hostname."""
-    return self._knowledge_base.hostname
-
-  @property
-  def knowledge_base(self):
-    """KnowledgeBase: knowledge base."""
-    return self._knowledge_base
-
-  @property
   def number_of_produced_event_sources(self):
     """int: number of produced event sources."""
     return self._number_of_event_sources
@@ -106,14 +91,9 @@ class ParserMediator(object):
     return self._number_of_events
 
   @property
-  def number_of_produced_warnings(self):
-    """int: number of produced warnings."""
-    return self._number_of_warnings
-
-  @property
-  def operating_system(self):
-    """str: operating system or None if not set."""
-    return self._knowledge_base.GetValue('operating_system')
+  def number_of_produced_extraction_warnings(self):
+    """int: number of produced extraction warnings."""
+    return self._number_of_extraction_warnings
 
   @property
   def resolver_context(self):
@@ -148,57 +128,21 @@ class ParserMediator(object):
     if not file_entry:
       return None
 
-    stat_object = file_entry.GetStat()
+    date_time = file_entry.creation_time
+    if not date_time:
+      date_time = file_entry.change_time
 
-    posix_time = getattr(stat_object, 'crtime', None)
-    if posix_time is None:
-      posix_time = getattr(stat_object, 'ctime', None)
-
-    # Gzip files don't store the creation or metadata modification times,
-    # but the modification time stored in the file is a good proxy.
+    # Gzip files do not store a creation or change time, but its modification
+    # time is a good alternative.
     if file_entry.TYPE_INDICATOR == dfvfs_definitions.TYPE_INDICATOR_GZIP:
-      posix_time = getattr(stat_object, 'mtime', None)
+      date_time = file_entry.modification_time
 
-    if posix_time is None:
-      logger.warning(
-          'Unable to determine earliest year from file stat information.')
+    if date_time is None:
+      logger.warning('File entry has no creation or change time.')
       return None
 
-    try:
-      year = timelib.GetYearFromPosixTime(
-          posix_time, timezone=self._knowledge_base.timezone)
-      return year
-    except ValueError as exception:
-      logger.error((
-          'Unable to determine earliest year from file stat information with '
-          'error: {0!s}').format(exception))
-      return None
-
-  def _GetInode(self, inode_value):
-    """Retrieves the inode from the inode value.
-
-    Args:
-      inode_value (int|str): inode, such as 1 or '27-128-1'.
-
-    Returns:
-      int: inode or -1 if the inode value cannot be converted to an integer.
-    """
-    if isinstance(inode_value, py2to3.INTEGER_TYPES):
-      return inode_value
-
-    if isinstance(inode_value, float):
-      return int(inode_value)
-
-    if not isinstance(inode_value, py2to3.STRING_TYPES):
-      return -1
-
-    if b'-' in inode_value:
-      inode_value, _, _ = inode_value.partition(b'-')
-
-    try:
-      return int(inode_value, 10)
-    except ValueError:
-      return -1
+    year, _, _ = date_time.GetDate()
+    return year
 
   def _GetLatestYearFromFileEntry(self):
     """Retrieves the maximum (highest value) year from the file entry.
@@ -207,52 +151,22 @@ class ParserMediator(object):
     time (metadata last modification time) is used.
 
     Returns:
-      int: year of the file entry or None.
+      int: year of the file entry or None if the year cannot be retrieved.
     """
     file_entry = self.GetFileEntry()
     if not file_entry:
       return None
 
-    stat_object = file_entry.GetStat()
+    date_time = file_entry.modification_time
+    if not date_time:
+      date_time = file_entry.change_time
 
-    posix_time = getattr(stat_object, 'mtime', None)
-    if posix_time is None:
-      posix_time = getattr(stat_object, 'ctime', None)
-
-    if posix_time is None:
-      logger.warning(
-          'Unable to determine modification year from file stat information.')
+    if date_time is None:
+      logger.warning('File entry has no modification or change time.')
       return None
 
-    try:
-      year = timelib.GetYearFromPosixTime(
-          posix_time, timezone=self._knowledge_base.timezone)
-      return year
-    except ValueError as exception:
-      logger.error((
-          'Unable to determine creation year from file stat '
-          'information with error: {0!s}').format(exception))
-      return None
-
-  def AddEventAttribute(self, attribute_name, attribute_value):
-    """Adds an attribute that will be set on all events produced.
-
-    Setting attributes using this method will cause events produced via this
-    mediator to have an attribute with the provided name set with the
-    provided value.
-
-    Args:
-      attribute_name (str): name of the attribute to add.
-      attribute_value (str): value of the attribute to add.
-
-    Raises:
-      KeyError: if the event attribute is already set.
-    """
-    if attribute_name in self._extra_event_attributes:
-      raise KeyError('Event attribute {0:s} already set'.format(
-          attribute_name))
-
-    self._extra_event_attributes[attribute_name] = attribute_value
+    year, _, _ = date_time.GetDate()
+    return year
 
   def AppendToParserChain(self, plugin_or_parser):
     """Adds a parser or parser plugin to the parser chain.
@@ -260,14 +174,12 @@ class ParserMediator(object):
     Args:
       plugin_or_parser (BaseParser): parser or parser plugin.
     """
+    self._cached_parser_chain = None
     self._parser_chain_components.append(plugin_or_parser.NAME)
-
-  def ClearEventAttributes(self):
-    """Clears the extra event attributes."""
-    self._extra_event_attributes = {}
 
   def ClearParserChain(self):
     """Clears the parser chain."""
+    self._cached_parser_chain = None
     self._parser_chain_components = []
 
   def GetDisplayName(self, file_entry=None):
@@ -291,12 +203,15 @@ class ParserMediator(object):
 
     path_spec = getattr(file_entry, 'path_spec', None)
 
+    mount_path = self._knowledge_base.GetMountPath()
     relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
-        path_spec, mount_path=self._mount_path)
+        path_spec, mount_path=mount_path)
     if not relative_path:
       return file_entry.name
 
-    return self.GetDisplayNameForPathSpec(path_spec)
+    text_prepend = self._knowledge_base.GetTextPrepend()
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(
+        path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -307,8 +222,10 @@ class ParserMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
+    mount_path = self._knowledge_base.GetMountPath()
+    text_prepend = self._knowledge_base.GetTextPrepend()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=self._mount_path, text_prepend=self._text_prepend)
+        path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
   def GetEstimatedYear(self):
     """Retrieves an estimate of the year.
@@ -331,13 +248,14 @@ class ParserMediator(object):
       return self._knowledge_base.year
 
     # TODO: Find a decent way to actually calculate the correct year
-    # instead of relying on stats object.
+    # instead of relying on file entry timestamps.
     year = self._GetEarliestYearFromFileEntry()
     if not year:
       year = self._GetLatestYearFromFileEntry()
 
     if not year:
-      year = timelib.GetCurrentYear()
+      year = self.GetCurrentYear()
+
     return year
 
   def GetFileEntry(self):
@@ -363,6 +281,15 @@ class ParserMediator(object):
 
     return self._file_entry.name
 
+  def GetCurrentYear(self):
+    """Retrieves current year.
+
+    Returns:
+      int: the current year.
+    """
+    datetime_object = datetime.datetime.now()
+    return datetime_object.year
+
   def GetLatestYear(self):
     """Retrieves the latest (newest) year for an event from a file.
 
@@ -374,7 +301,7 @@ class ParserMediator(object):
     """
     year = self._GetLatestYearFromFileEntry()
     if not year:
-      year = timelib.GetCurrentYear()
+      year = self.GetCurrentYear()
 
     return year
 
@@ -384,77 +311,67 @@ class ParserMediator(object):
     Returns:
       str: parser chain.
     """
-    return '/'.join(self._parser_chain_components)
+    if not self._cached_parser_chain:
+      self._cached_parser_chain = '/'.join(self._parser_chain_components)
+    return self._cached_parser_chain
+
+  def GetRelativePath(self):
+    """Retrieves the relative path of the current file entry.
+
+    Returns:
+      str: relateive path of the current file entry or None if no current
+          file entry.
+    """
+    if self._file_entry is None:
+      return None
+
+    mount_path = self._knowledge_base.GetMountPath()
+    return path_helper.PathHelper.GetRelativePathForPathSpec(
+        self._file_entry.path_spec, mount_path=mount_path)
+
+  def GetRelativePathForPathSpec(self, path_spec):
+    """Retrieves the relative path for a path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: relateive path of the path specification.
+    """
+    mount_path = self._knowledge_base.GetMountPath()
+    return path_helper.PathHelper.GetRelativePathForPathSpec(
+        path_spec, mount_path=mount_path)
 
   def PopFromParserChain(self):
     """Removes the last added parser or parser plugin from the parser chain."""
+    self._cached_parser_chain = None
     self._parser_chain_components.pop()
 
-  def ProcessEventData(
-      self, event_data, parser_chain=None, file_entry=None, query=None):
-    """Processes event data before it written to the storage.
+  def ProduceEventDataStream(self, event_data_stream):
+    """Produces an event data stream.
 
     Args:
-      event_data (EventData): event data.
-      parser_chain (Optional[str]): parsing chain up to this point.
-      file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
-          use the current file entry set in the mediator.
-      query (Optional[str]): query that was used to obtain the event data.
+      event_data_stream (EventDataStream): an event data stream or None if no
+          event data stream is needed.
 
     Raises:
-      KeyError: if there's an attempt to add a duplicate attribute value to the
-          event data.
+      RuntimeError: when storage writer is not set.
     """
-    # TODO: rename this to event_data.parser_chain or equivalent.
-    if not getattr(event_data, 'parser', None) and parser_chain:
-      event_data.parser = parser_chain
+    if not self._storage_writer:
+      raise RuntimeError('Storage writer not set.')
 
-    # TODO: deprecate text_prepend in favor of an event tag.
-    if not getattr(event_data, 'text_prepend', None) and self._text_prepend:
-      event_data.text_prepend = self._text_prepend
+    if not event_data_stream:
+      self._event_data_stream_identifier = None
+    else:
+      if not event_data_stream.path_spec:
+        event_data_stream.path_spec = getattr(
+            self._file_entry, 'path_spec', None)
 
-    if file_entry is None:
-      file_entry = self._file_entry
+      self._storage_writer.AddAttributeContainer(event_data_stream)
 
-    display_name = None
-    if file_entry:
-      event_data.pathspec = file_entry.path_spec
+      self._event_data_stream_identifier = event_data_stream.GetIdentifier()
 
-      if not getattr(event_data, 'filename', None):
-        path_spec = getattr(file_entry, 'path_spec', None)
-        event_data.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
-            path_spec, mount_path=self._mount_path)
-
-      if not display_name:
-        # TODO: dfVFS refactor: move display name to output since the path
-        # specification contains the full information.
-        display_name = self.GetDisplayName(file_entry)
-
-      stat_object = file_entry.GetStat()
-      inode_value = getattr(stat_object, 'ino', None)
-      if getattr(event_data, 'inode', None) is None and inode_value is not None:
-        event_data.inode = self._GetInode(inode_value)
-
-    if not getattr(event_data, 'display_name', None) and display_name:
-      event_data.display_name = display_name
-
-    if not getattr(event_data, 'hostname', None) and self.hostname:
-      event_data.hostname = self.hostname
-
-    if not getattr(event_data, 'username', None):
-      user_sid = getattr(event_data, 'user_sid', None)
-      username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
-      if username:
-        event_data.username = username
-
-    if not getattr(event_data, 'query', None) and query:
-      event_data.query = query
-
-    for attribute, value in iter(self._extra_event_attributes.items()):
-      if hasattr(event_data, attribute):
-        raise KeyError('Event already has a value for {0:s}'.format(attribute))
-
-      setattr(event_data, attribute, value)
+    self.last_activity_timestamp = time.time()
 
   def ProduceEventSource(self, event_source):
     """Produces an event source.
@@ -468,7 +385,7 @@ class ParserMediator(object):
     if not self._storage_writer:
       raise RuntimeError('Storage writer not set.')
 
-    self._storage_writer.AddEventSource(event_source)
+    self._storage_writer.AddAttributeContainer(event_source)
     self._number_of_event_sources += 1
 
     self.last_activity_timestamp = time.time()
@@ -481,24 +398,43 @@ class ParserMediator(object):
       event_data (EventData): event data.
 
     Raises:
-      InvalidEvent: if the event timestamp value is not set or out of bounds.
+      InvalidEvent: if the event date_time or timestamp value is not set, or
+          the timestamp value is out of bounds, or if the event data (attribute
+          container) values cannot be hashed.
     """
+    parser_chain = self.GetParserChain()
+
+    if event.date_time is None:
+      raise errors.InvalidEvent(
+          'Date time value not set in event produced by: {0:s}.'.format(
+              parser_chain))
+
     if event.timestamp is None:
-      raise errors.InvalidEvent('Event timestamp value not set.')
+      raise errors.InvalidEvent(
+          'Timestamp value not set in event produced by: {0:s}.'.format(
+              parser_chain))
 
     if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
-      raise errors.InvalidEvent('Event timestamp value out of bounds.')
+      raise errors.InvalidEvent(
+          'Timestamp value out of bounds in event produced by: {0:s}.'.format(
+              parser_chain))
 
-    event_data_hash = event_data.GetAttributeValuesHash()
+    # TODO: rename this to event_data.parser_chain or equivalent.
+    event_data.parser = parser_chain
+
+    try:
+      event_data_hash = event_data.GetAttributeValuesHash()
+    except TypeError as exception:
+      raise errors.InvalidEvent((
+          'Unable to hash event data values produced by: {0:s} with error: '
+          '{1!s}').format(parser_chain, exception))
+
     if event_data_hash != self._last_event_data_hash:
-      # Make a copy of the event data before adding additional values.
-      event_data = copy.deepcopy(event_data)
+      if self._event_data_stream_identifier:
+        event_data.SetEventDataStreamIdentifier(
+            self._event_data_stream_identifier)
 
-      self.ProcessEventData(
-          event_data, parser_chain=self.GetParserChain(),
-          file_entry=self._file_entry)
-
-      self._storage_writer.AddEventData(event_data)
+      self._storage_writer.AddAttributeContainer(event_data)
 
       self._last_event_data_hash = event_data_hash
       self._last_event_data_identifier = event_data.GetIdentifier()
@@ -506,11 +442,7 @@ class ParserMediator(object):
     if self._last_event_data_identifier:
       event.SetEventDataIdentifier(self._last_event_data_identifier)
 
-    # TODO: remove this after structural fix is in place
-    # https://github.com/log2timeline/plaso/issues/1691
-    event.parser = self.GetParserChain()
-
-    self._storage_writer.AddEvent(event)
+    self._storage_writer.AddAttributeContainer(event)
     self._number_of_events += 1
 
     self.last_activity_timestamp = time.time()
@@ -536,24 +468,36 @@ class ParserMediator(object):
     parser_chain = self.GetParserChain()
     warning = warnings.ExtractionWarning(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
-    self._storage_writer.AddWarning(warning)
-    self._number_of_warnings += 1
+    self._storage_writer.AddAttributeContainer(warning)
+    self._number_of_extraction_warnings += 1
 
     self.last_activity_timestamp = time.time()
 
-  def RemoveEventAttribute(self, attribute_name):
-    """Removes an attribute from being set on all events produced.
+  def ProduceRecoveryWarning(self, message, path_spec=None):
+    """Produces a recovery warning.
 
     Args:
-      attribute_name (str): name of the attribute to remove.
+      message (str): message of the warning.
+      path_spec (Optional[dfvfs.PathSpec]): path specification, where None
+          will use the path specification of current file entry set in
+          the mediator.
 
     Raises:
-      KeyError: if the event attribute is not set.
+      RuntimeError: when storage writer is not set.
     """
-    if attribute_name not in self._extra_event_attributes:
-      raise KeyError('Event attribute: {0:s} not set'.format(attribute_name))
+    if not self._storage_writer:
+      raise RuntimeError('Storage writer not set.')
 
-    del self._extra_event_attributes[attribute_name]
+    if not path_spec and self._file_entry:
+      path_spec = self._file_entry.path_spec
+
+    parser_chain = self.GetParserChain()
+    warning = warnings.RecoveryWarning(
+        message=message, parser_chain=parser_chain, path_spec=path_spec)
+    self._storage_writer.AddAttributeContainer(warning)
+    self._number_of_recovery_warnings += 1
+
+    self.last_activity_timestamp = time.time()
 
   def ResetFileEntry(self):
     """Resets the active file entry."""
@@ -587,30 +531,6 @@ class ParserMediator(object):
     if self._cpu_time_profiler:
       self._cpu_time_profiler.StopTiming(parser_name)
 
-  def SetEventExtractionConfiguration(self, configuration):
-    """Sets the event extraction configuration settings.
-
-    Args:
-      configuration (EventExtractionConfiguration): event extraction
-          configuration.
-    """
-    self._text_prepend = configuration.text_prepend
-
-  def SetInputSourceConfiguration(self, configuration):
-    """Sets the input source configuration settings.
-
-    Args:
-      configuration (InputSourceConfiguration): input source configuration.
-    """
-    mount_path = configuration.mount_path
-
-    # Remove a trailing path separator from the mount path so the relative
-    # paths will start with a path separator.
-    if mount_path and mount_path.endswith(os.sep):
-      mount_path = mount_path[:-1]
-
-    self._mount_path = mount_path
-
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.
 
@@ -618,6 +538,7 @@ class ParserMediator(object):
       file_entry (dfvfs.FileEntry): file entry.
     """
     self._file_entry = file_entry
+    self._event_data_stream_identifier = None
 
   def SetStorageWriter(self, storage_writer):
     """Sets the storage writer.

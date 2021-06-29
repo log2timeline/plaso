@@ -1,30 +1,14 @@
 # -*- coding: utf-8 -*-
 """A plugin that extracts browser history from events."""
 
-from __future__ import unicode_literals
-
 import collections
 import re
-import sys
 
-if sys.version_info[0] < 3:
-  import urllib as urlparse
-else:
-  from urllib import parse as urlparse # pylint: disable=no-name-in-module
+from urllib import parse as urlparse
 
-# pylint: disable=wrong-import-position
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
-from plaso.containers import reports
-from plaso.lib import py2to3
-
-
-# Create a lightweight object that is used to store timeline based information
-# about each search term.
-# pylint: disable=invalid-name
-SEARCH_OBJECT = collections.namedtuple(
-    'SEARCH_OBJECT', 'time source engine search_term')
 
 
 class BrowserSearchPlugin(interface.AnalysisPlugin):
@@ -32,10 +16,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
   NAME = 'browser_search'
 
-  # Indicate that we do not want to run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = False
-
-  _EVENT_TAG_COMMENT = 'Browser Search'
   _EVENT_TAG_LABELS = ['browser_search']
 
   _SUPPORTED_EVENT_DATA_TYPES = frozenset([
@@ -45,17 +25,17 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       'chrome:extension_activity:activity_log',
       'chrome:history:file_downloaded',
       'chrome:history:page_visited',
-      'firefox:cache:record',
-      'firefox:cookie:entry',
-      'firefox:places:bookmark_annotation',
-      'firefox:places:bookmark_folder',
-      'firefox:places:bookmark',
-      'firefox:places:page_visited',
-      'firefox:downloads:download',
       'cookie:google:analytics:utma',
       'cookie:google:analytics:utmb',
       'cookie:google:analytics:utmt',
       'cookie:google:analytics:utmz',
+      'firefox:cache:record',
+      'firefox:cookie:entry',
+      'firefox:downloads:download',
+      'firefox:places:bookmark',
+      'firefox:places:bookmark_annotation',
+      'firefox:places:bookmark_folder',
+      'firefox:places:page_visited',
       'msiecf:leak',
       'msiecf:redirected',
       'msiecf:url',
@@ -98,35 +78,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
   def __init__(self):
     """Initializes an analysis plugin."""
     super(BrowserSearchPlugin, self).__init__()
-    self._counter = collections.Counter()
-
-    # Store a list of search terms in a timeline format.
-    # The format is key = timestamp, value = (source, engine, search term).
-    self._search_term_timeline = []
-
-  def _DecodeURL(self, url):
-    """Decodes the URL, replaces %XX to their corresponding characters.
-
-    Args:
-      url (str): encoded URL.
-
-    Returns:
-      str: decoded URL.
-    """
-    if not url:
-      return ''
-
-    decoded_url = urlparse.unquote(url)
-    if isinstance(decoded_url, py2to3.BYTES_TYPE):
-      try:
-        decoded_url = decoded_url.decode('utf-8')
-      except UnicodeDecodeError as exception:
-        decoded_url = decoded_url.decode('utf-8', errors='replace')
-        logger.warning(
-            'Unable to decode URL: {0:s} with error: {1!s}'.format(
-                url, exception))
-
-    return decoded_url
+    self._search_queries_counter = collections.Counter()
 
   def _ExtractDuckDuckGoSearchQuery(self, url):
     """Extracts a search query from a DuckDuckGo search URL.
@@ -314,31 +266,32 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       AnalysisReport: analysis report.
     """
     results = {}
-    for key, count in iter(self._counter.items()):
+    for key, number_of_queries in self._search_queries_counter.items():
       search_engine, _, search_term = key.partition(':')
       results.setdefault(search_engine, {})
-      results[search_engine][search_term] = count
+      results[search_engine][search_term] = number_of_queries
 
     lines_of_text = []
     for search_engine, terms in sorted(results.items()):
       lines_of_text.append(' == ENGINE: {0:s} =='.format(search_engine))
 
-      for search_term, count in sorted(
+      for search_term, number_of_queries in sorted(
           terms.items(), key=lambda x: (x[1], x[0]), reverse=True):
-        lines_of_text.append('{0:d} {1:s}'.format(count, search_term))
+        line = '{0:d} {1:s}'.format(number_of_queries, search_term)
+        lines_of_text.append(line)
 
       # An empty string is added to have SetText create an empty line.
       lines_of_text.append('')
 
     lines_of_text.append('')
     report_text = '\n'.join(lines_of_text)
-    analysis_report = reports.AnalysisReport(
-        plugin_name=self.NAME, text=report_text)
-    analysis_report.report_array = self._search_term_timeline
+
+    analysis_report = super(BrowserSearchPlugin, self).CompileReport(mediator)
+    analysis_report.text = report_text
     analysis_report.report_dict = results
     return analysis_report
 
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event.
 
     Args:
@@ -346,6 +299,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
       return
@@ -354,12 +308,12 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     if not url:
       return
 
-    parser_or_plugin_name = getattr(event_data, 'parser', 'N/A')
-
     for engine, url_expression, method_name in self._URL_FILTERS:
       callback_method = getattr(self, method_name, None)
       if not callback_method:
-        logger.warning('Missing method: {0:s}'.format(callback_method))
+        logger.warning(
+            'Missing callback method: {0:s} to parse search query'.format(
+                method_name))
         continue
 
       match = url_expression.search(url)
@@ -368,23 +322,27 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
       search_query = callback_method(url)
       if not search_query:
-        logger.warning('Missing search query for URL: {0:s}'.format(url))
+        mediator.ProduceAnalysisWarning(
+            'Unable to determine search query: {0:s} in URL: {1:s}'.format(
+                method_name, url), self.NAME)
         continue
 
-      search_query = self._DecodeURL(search_query)
+      try:
+        search_query = urlparse.unquote(search_query)
+      except TypeError:
+        search_query = None
+
       if not search_query:
+        mediator.ProduceAnalysisWarning(
+            'Unable to decode search query: {0:s} in URL: {1:s}'.format(
+                method_name, url), self.NAME)
         continue
 
-      event_tag = self._CreateEventTag(
-          event, self._EVENT_TAG_COMMENT, self._EVENT_TAG_LABELS)
+      event_tag = self._CreateEventTag(event, self._EVENT_TAG_LABELS)
       mediator.ProduceEventTag(event_tag)
 
-      self._counter['{0:s}:{1:s}'.format(engine, search_query)] += 1
-
-      # Add the timeline format for each search term.
-      search_object = SEARCH_OBJECT(
-          event.timestamp, parser_or_plugin_name, engine, search_query)
-      self._search_term_timeline.append(search_object)
+      lookup_key = '{0:s}:{1:s}'.format(engine, search_query)
+      self._search_queries_counter[lookup_key] += 1
 
 
 manager.AnalysisPluginManager.RegisterPlugin(BrowserSearchPlugin)

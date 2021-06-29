@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Kik database on iOS.
-
-Kik messages on iOS devices are stored in an
-SQLite database file named kik.sqlite.
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for iOS Kik messenger database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
@@ -24,6 +18,9 @@ class KikIOSMessageEventData(events.EventData):
     message_status (str): message status, such as:
         read, unread, not sent, delivered, etc.
     message_type (str): message type, either Sent or Received.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
+    query (str): SQL query that was used to obtain the event data.
     username (str): unique username of the sender or receiver.
   """
 
@@ -36,24 +33,32 @@ class KikIOSMessageEventData(events.EventData):
     self.displayname = None
     self.message_status = None
     self.message_type = None
+    self.offset = None
+    self.query = None
     self.username = None
 
 
 class KikIOSPlugin(interface.SQLitePlugin):
-  """SQLite plugin for Kik iOS database."""
+  """SQLite parser plugin for iOS Kik messenger database files.
+
+  The OS Kik messenger database file is typically stored in:
+  kik.sqlite
+  """
 
   NAME = 'kik_messenger'
-  DESCRIPTION = 'Parser for iOS Kik messenger SQLite database files.'
+  DATA_FORMAT = 'iOS Kik messenger SQLite database (kik.sqlite) file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'ZKIKMESSAGE': frozenset([
+          'Z_PK', 'ZRECEIVEDTIMESTAMP', 'ZSTATE', 'ZTYPE', 'ZBODY', 'ZUSER']),
+      'ZKIKUSER': frozenset([
+          'ZUSERNAME', 'ZDISPLAYNAME', 'ZEXTRA'])}
+
   QUERIES = [
       ('SELECT a.Z_PK AS id, b.ZUSERNAME, b.ZDISPLAYNAME,'
        'a.ZRECEIVEDTIMESTAMP, a.ZSTATE, a.ZTYPE, a.ZBODY '
        'FROM ZKIKMESSAGE a JOIN ZKIKUSER b ON b.ZEXTRA = a.ZUSER',
        'ParseMessageRow')]
-
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['ZKIKMESSAGE', 'ZKIKUSER'])
 
   SCHEMAS = [{
       'Z_3MESSAGES': (

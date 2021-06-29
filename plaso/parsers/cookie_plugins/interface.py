@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains an interface for browser cookie plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.lib import errors
@@ -15,22 +13,18 @@ class BaseCookiePlugin(plugins.BasePlugin):
   This is a generic cookie parsing interface that can handle parsing
   cookies from all browsers.
   """
-  NAME = 'cookie'
-  DESCRIPTION = ''
+  NAME = 'cookie_plugin'
+  DATA_FORMAT = 'Browser cookie data'
 
   # The name of the cookie value that this plugin is designed to parse.
   # This value is used to evaluate whether the plugin is the correct one
   # to parse the browser cookie.
   COOKIE_NAME = ''
 
-  def __init__(self):
-    """Initialize the browser cookie plugin."""
-    super(BaseCookiePlugin, self).__init__()
-    self.cookie_data = ''
-
   @abc.abstractmethod
-  def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extract and return EventObjects from the data structure.
+  def _ParseCookieData(
+      self, parser_mediator, cookie_data=None, url=None, **kwargs):
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -41,7 +35,7 @@ class BaseCookiePlugin(plugins.BasePlugin):
 
   # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
-    """Determine if this is the right plugin for this cookie.
+    """Extracts events from cookie data.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -66,4 +60,4 @@ class BaseCookiePlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(BaseCookiePlugin, self).Process(parser_mediator)
 
-    self.GetEntries(parser_mediator, cookie_data=cookie_data, url=url)
+    self._ParseCookieData(parser_mediator, cookie_data=cookie_data, url=url)

@@ -1,27 +1,37 @@
 # -*- coding: utf-8 -*-
-"""Output module for the "raw" (or native) Python format."""
-
-from __future__ import unicode_literals
+"""Output module for the native (or "raw") Python format."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.lib import definitions
-from plaso.lib import py2to3
+from plaso.output import dynamic
+from plaso.output import formatting_helper
 from plaso.output import interface
 from plaso.output import logger
 from plaso.output import manager
 
 
-class NativePythonFormatterHelper(object):
-  """Helper for outputting as "raw" (or native) Python."""
+class NativePythonEventFormattingHelper(
+    formatting_helper.EventFormattingHelper):
+  """Native (or "raw") Python output module event formatting helper."""
 
-  @classmethod
-  def GetFormattedEvent(cls, event, event_data, event_tag):
+  def __init__(self, output_mediator):
+    """Initializes a JSON output module event formatting helper.
+
+    Args:
+      output_mediator (OutputMediator): output mediator.
+    """
+    super(NativePythonEventFormattingHelper, self).__init__(output_mediator)
+    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper(
+        output_mediator)
+
+  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
 
     Returns:
@@ -36,13 +46,19 @@ class NativePythonFormatterHelper(object):
         '[Timestamp]:',
         '  {0:s}'.format(date_time_string)]
 
-    pathspec = getattr(event_data, 'pathspec', None)
-    if pathspec:
+    path_specification = getattr(event_data_stream, 'path_spec', None)
+    if not path_specification:
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility.
+      path_specification = getattr(event_data, 'pathspec', None)
+
+    if path_specification:
       lines_of_text.extend([
           '',
           '[Pathspec]:'])
       lines_of_text.extend([
-          '  {0:s}'.format(line) for line in pathspec.comparable.split('\n')])
+          '  {0:s}'.format(line)
+          for line in path_specification.comparable.split('\n')])
 
       # Remove additional empty line.
       lines_of_text.pop()
@@ -54,16 +70,39 @@ class NativePythonFormatterHelper(object):
         '',
         '[Additional attributes]:']
 
-    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+    event_attributes = list(event_data.GetAttributes())
+    if event_data_stream:
+      event_attributes.extend(event_data_stream.GetAttributes())
+
+    event_attribute_names = [name for name, _ in event_attributes]
+
+    if 'display_name' not in event_attribute_names:
+      attribute_value = self._field_formatting_helper.GetFormattedField(
+          'display_name', event, event_data, event_data_stream, event_tag)
+      event_attributes.append(('display_name', attribute_value))
+
+    if 'filename' not in event_attribute_names:
+      attribute_value = self._field_formatting_helper.GetFormattedField(
+          'filename', event, event_data, event_data_stream, event_tag)
+      event_attributes.append(('filename', attribute_value))
+
+    if 'inode' not in event_attribute_names:
+      attribute_value = self._field_formatting_helper.GetFormattedField(
+          'inode', event, event_data, event_data_stream, event_tag)
+      event_attributes.append(('inode', attribute_value))
+
+    for attribute_name, attribute_value in sorted(event_attributes):
       # Some parsers have written bytes values to storage.
-      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+      if isinstance(attribute_value, bytes):
         attribute_value = attribute_value.decode('utf-8', 'replace')
         logger.warning(
             'Found bytes value for attribute "{0:s}" for data type: '
             '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
                 attribute_name, event_data.data_type, attribute_value))
 
-      if attribute_name == 'pathspec':
+      # Note that support for event_data.pathspec is kept for backwards
+      # compatibility. The current value is event_data_stream.path_spec.
+      if attribute_name in ('path_spec', 'pathspec'):
         continue
 
       attribute_string = '  {{{0!s}}} {1!s}'.format(
@@ -85,28 +124,26 @@ class NativePythonFormatterHelper(object):
           '[Tag]:',
           '  {{labels}} [{0:s}]'.format(', '.join(labels))])
 
-    lines_of_text.extend(['', ''])
+    lines_of_text.append('')
 
     return '\n'.join(lines_of_text)
 
 
-class NativePythonOutputModule(interface.LinearOutputModule):
-  """Output module for the "raw" (or native) Python output format."""
+class NativePythonOutputModule(interface.TextFileOutputModule):
+  """Output module for native (or "raw") Python output format."""
 
   NAME = 'rawpy'
-  DESCRIPTION = '"raw" (or native) Python output.'
+  DESCRIPTION = 'native (or "raw") Python output.'
 
-  def WriteEventBody(self, event, event_data, event_tag):
-    """Writes event values to the output.
+  def __init__(self, output_mediator):
+    """Initializes a native (or "raw") Python output module.
 
     Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_tag (EventTag): event tag.
+      output_mediator (OutputMediator): an output mediator.
     """
-    output_string = NativePythonFormatterHelper.GetFormattedEvent(
-        event, event_data, event_tag)
-    self._output_writer.Write(output_string)
+    event_formatting_helper = NativePythonEventFormattingHelper(output_mediator)
+    super(NativePythonOutputModule, self).__init__(
+        output_mediator, event_formatting_helper)
 
 
 manager.OutputManager.RegisterOutput(NativePythonOutputModule)

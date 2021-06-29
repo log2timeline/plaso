@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Restore Point (rp.log) files."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -9,8 +9,8 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -36,16 +36,18 @@ class RestorePointEventData(events.EventData):
     self.sequence_number = None
 
 
-class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
+class RestorePointLogParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """A parser for Windows Restore Point (rp.log) files."""
 
   NAME = 'rplog'
-  DESCRIPTION = 'Parser for Windows Restore Point (rp.log) files.'
+  DATA_FORMAT = 'Windows Restore Point log (rp.log) file'
 
   FILTERS = frozenset([
       interface.FileNameFileEntryFilter('rp.log')])
 
-  _DEFINITION_FILE = 'winrestore.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'winrestore.yaml')
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Restore Point (rp.log) log file-like object.
@@ -87,7 +89,7 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
     description = file_header.description.rstrip('\0')
 
     if file_footer.creation_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
     else:
       date_time = dfdatetime_filetime.Filetime(
           timestamp=file_footer.creation_time)

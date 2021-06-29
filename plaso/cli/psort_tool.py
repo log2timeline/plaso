@@ -1,49 +1,33 @@
 # -*- coding: utf-8 -*-
 """The psort CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import collections
 import os
-import time
 
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
 
-# The following import makes sure the formatters are registered.
-from plaso import formatters  # pylint: disable=unused-import
-
 # The following import makes sure the output modules are registered.
 from plaso import output   # pylint: disable=unused-import
 
-from plaso.analysis import manager as analysis_manager
+from plaso.cli import analysis_tool
 from plaso.cli import logger
 from plaso.cli import status_view
-from plaso.cli import time_slices
 from plaso.cli import tool_options
-from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
-from plaso.engine import knowledge_base
-from plaso.filters import event_filter
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.lib import timelib
-from plaso.multi_processing import psort
+from plaso.multi_process import output_engine as multi_output_engine
 from plaso.storage import factory as storage_factory
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class PsortTool(
-    tools.CLITool,
-    tool_options.AnalysisPluginOptions,
-    tool_options.OutputModuleOptions,
-    tool_options.ProfilingOptions,
-    tool_options.StorageFileOptions):
+    analysis_tool.AnalysisTool,
+    tool_options.OutputModuleOptions):
   """Psort CLI tool.
 
   Attributes:
@@ -72,28 +56,15 @@ class PsortTool(
     """
     super(PsortTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._analysis_manager = analysis_manager.AnalysisPluginManager
-    self._analysis_plugins = None
-    self._analysis_plugins_output_format = None
     self._command_line_arguments = None
     self._deduplicate_events = True
-    self._event_filter_expression = None
-    self._event_filter = None
-    self._knowledge_base = knowledge_base.KnowledgeBase()
-    self._number_of_analysis_reports = 0
     self._preferred_language = 'en-US'
     self._process_memory_limit = None
     self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
-    self._stdout_output_writer = isinstance(
-        self._output_writer, tools.StdoutOutputWriter)
-    self._storage_file_path = None
-    self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
-    self._worker_memory_limit = None
 
-    self.list_analysis_plugins = False
     self.list_language_identifiers = False
     self.list_output_modules = False
     self.list_profilers = False
@@ -107,23 +78,28 @@ class PsortTool(
     Raises:
       BadConfigOption: if the storage file path is invalid.
     """
-    if os.path.exists(storage_file_path):
-      if not os.path.isfile(storage_file_path):
-        raise errors.BadConfigOption(
-            'Storage file: {0:s} already exists and is not a file.'.format(
-                storage_file_path))
-      logger.warning('Appending to an already existing storage file.')
+    if not storage_file_path:
+      raise errors.BadConfigOption('Missing storage file option.')
 
-    dirname = os.path.dirname(storage_file_path)
-    if not dirname:
-      dirname = '.'
+    if not os.path.exists(storage_file_path):
+      raise errors.BadConfigOption(
+          'No such storage file: {0:s}.'.format(storage_file_path))
 
-    # TODO: add a more thorough check to see if the storage file really is
-    # a plaso storage file.
+    if not os.path.isfile(storage_file_path):
+      raise errors.BadConfigOption(
+          'Storage file: {0:s} already exists and is not a file.'.format(
+              storage_file_path))
 
-    if not os.access(dirname, os.W_OK):
+    storage_file_directory = os.path.dirname(storage_file_path) or '.'
+    if not os.access(storage_file_directory, os.W_OK):
       raise errors.BadConfigOption(
           'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+    if not storage_factory.StorageFactory.CheckStorageFileHasSupportedFormat(
+        storage_file_path, check_readable_only=False):
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(
+              storage_file_path))
 
   def _GetAnalysisPlugins(self, analysis_plugins_string):
     """Retrieves analysis plugins.
@@ -181,52 +157,6 @@ class PsortTool(
       helpers_manager.ArgumentHelperManager.ParseOptions(
           options, analysis_plugin)
 
-  def _ParseFilterOptions(self, options):
-    """Parses the filter options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._event_filter_expression = self.ParseStringOption(options, 'filter')
-    if self._event_filter_expression:
-      self._event_filter = event_filter.EventObjectFilter()
-
-      try:
-        self._event_filter.CompileFilter(self._event_filter_expression)
-      except errors.ParseError as exception:
-        raise errors.BadConfigOption((
-            'Unable to compile filter expression with error: '
-            '{0!s}').format(exception))
-
-    time_slice_event_time_string = getattr(options, 'slice', None)
-    time_slice_duration = getattr(options, 'slice_size', 5)
-    self._use_time_slicer = getattr(options, 'slicer', False)
-
-    # The slice and slicer cannot be set at the same time.
-    if time_slice_event_time_string and self._use_time_slicer:
-      raise errors.BadConfigOption(
-          'Time slice and slicer cannot be used at the same time.')
-
-    time_slice_event_timestamp = None
-    if time_slice_event_time_string:
-      # Note self._preferred_time_zone is None when not set but represents UTC.
-      preferred_time_zone = self._preferred_time_zone or 'UTC'
-      timezone = pytz.timezone(preferred_time_zone)
-      time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
-          time_slice_event_time_string, timezone=timezone)
-      if time_slice_event_timestamp is None:
-        raise errors.BadConfigOption(
-            'Unsupported time slice event date and time: {0:s}'.format(
-                time_slice_event_time_string))
-
-    if time_slice_event_timestamp is not None or self._use_time_slicer:
-      # Note that time slicer uses the time slice to determine the duration.
-      self._time_slice = time_slices.TimeSlice(
-          time_slice_event_timestamp, duration=time_slice_duration)
-
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
 
@@ -260,29 +190,19 @@ class PsortTool(
     worker_memory_limit = getattr(options, 'worker_memory_limit', None)
 
     if worker_memory_limit and worker_memory_limit < 0:
-      raise errors.BadConfigOption(
-          'Invalid worker memory limit value cannot be negative.')
+      raise errors.BadConfigOption((
+          'Invalid worker memory limit: {0:d}, value must be 0 or '
+          'greater.').format(worker_memory_limit))
+
+    worker_timeout = getattr(options, 'worker_timeout', None)
+
+    if worker_timeout is not None and worker_timeout <= 0.0:
+      raise errors.BadConfigOption((
+          'Invalid worker timeout: {0:f}, value must be greater than '
+          '0.0 minutes.').format(worker_timeout))
 
     self._worker_memory_limit = worker_memory_limit
-
-  def _PrintAnalysisReportsDetails(self, storage_reader):
-    """Prints the details of the analysis reports.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    for index, analysis_report in enumerate(
-        storage_reader.GetAnalysisReports()):
-      if index + 1 <= self._number_of_analysis_reports:
-        continue
-
-      title = 'Analysis report: {0:d}'.format(index)
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title=title)
-
-      table_view.AddRow(['String', analysis_report.GetString()])
-
-      table_view.Write(self._output_writer)
+    self._worker_timeout = worker_timeout
 
   def AddProcessingOptions(self, argument_group):
     """Adds processing options to the argument group
@@ -297,14 +217,22 @@ class PsortTool(
         argument_group, names=argument_helper_names)
 
     argument_group.add_argument(
-        '--worker-memory-limit', '--worker_memory_limit',
+        '--worker_memory_limit', '--worker-memory-limit',
         dest='worker_memory_limit', action='store', type=int,
         metavar='SIZE', help=(
             'Maximum amount of memory (data segment and shared memory) '
             'a worker process is allowed to consume in bytes, where 0 '
             'represents no limit. The default limit is 2147483648 (2 GiB). '
-            'If a worker process exceeds this limit is is killed by the main '
+            'If a worker process exceeds this limit it is killed by the main '
             '(foreman) process.'))
+
+    argument_group.add_argument(
+        '--worker_timeout', '--worker-timeout', dest='worker_timeout',
+        action='store', type=float, metavar='MINUTES', help=(
+            'Number of minutes before a worker process that is not providing '
+            'status updates is considered inactive. The default timeout is '
+            '15.0 minutes. If a worker process exceeds this timeout it is '
+            'killed by the main (foreman) process.'))
 
   def ParseArguments(self, arguments):
     """Parses the command line arguments.
@@ -323,9 +251,7 @@ class PsortTool(
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=['storage_file'])
+    self.AddStorageOptions(argument_parser)
 
     analysis_group = argument_parser.add_argument_group('Analysis Arguments')
 
@@ -365,7 +291,7 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_group, names=['language'])
 
-    self.AddTimeZoneOption(output_group)
+    self.AddOutputOptions(output_group)
 
     output_format_group = argument_parser.add_argument_group(
         'Output Format Arguments')
@@ -390,15 +316,10 @@ class PsortTool(
 
     # Properly prepare the attributes according to local encoding.
     if self.preferred_encoding == 'ascii':
-      logger.warning(
-          'The preferred encoding of your system is ASCII, which is not '
+      self._PrintUserWarning((
+          'the preferred encoding of your system is ASCII, which is not '
           'optimal for the typically non-ASCII characters that need to be '
-          'parsed and processed. The tool will most likely crash and die, '
-          'perhaps in a way that may not be recoverable. A five second delay '
-          'is introduced to give you time to cancel the runtime and '
-          'reconfigure your preferred encoding, otherwise continue at own '
-          'risk.')
-      time.sleep(5)
+          'parsed and processed. This will most likely result in an error.'))
 
     try:
       self.ParseOptions(options)
@@ -408,6 +329,8 @@ class PsortTool(
       self._output_writer.Write(argument_parser.format_usage())
 
       return False
+
+    self._WaitUserWarning()
 
     loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
@@ -424,9 +347,9 @@ class PsortTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    # The output modules options are dependent on the preferred language
-    # and preferred time zone options.
-    self._ParseTimezoneOption(options)
+    # The output modules options are dependent on the preferred_language
+    # and output_time_zone options.
+    self._ParseOutputOptions(options)
 
     names = ['analysis_plugins', 'language', 'profiling']
     helpers_manager.ArgumentHelperManager.ParseOptions(
@@ -439,7 +362,7 @@ class PsortTool(
     self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
 
     if (self.list_analysis_plugins or self.list_language_identifiers or
-        self.list_profilers or self.list_timezones or
+        self.list_profilers or self.list_time_zones or
         self.show_troubleshooting):
       return
 
@@ -456,6 +379,9 @@ class PsortTool(
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
+
+    output_mediator = self._CreateOutputMediator()
+    self._ReadMessageFormatters(output_mediator)
 
     self._ParseLogFileOptions(options)
 
@@ -474,21 +400,14 @@ class PsortTool(
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=['storage_file'])
-
     # TODO: move check into _CheckStorageFile.
-    if not self._storage_file_path:
-      raise errors.BadConfigOption('Missing storage file option.')
-
-    if not os.path.isfile(self._storage_file_path):
-      raise errors.BadConfigOption(
-          'No such storage file: {0:s}.'.format(self._storage_file_path))
+    self._storage_file_path = self.ParseStringOption(options, 'storage_file')
+    self._CheckStorageFile(self._storage_file_path)
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
     self._analysis_plugins = self._CreateAnalysisPlugins(options)
-    self._output_module = self._CreateOutputModule(options)
+    self._output_module = self._CreateOutputModule(output_mediator, options)
 
   def ProcessStorage(self):
     """Processes a plaso storage file.
@@ -498,8 +417,6 @@ class PsortTool(
           storage file cannot be opened with read access.
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    self._CheckStorageFile(self._storage_file_path)
-
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetStorageFileInformation(self._storage_file_path)
 
@@ -513,9 +430,18 @@ class PsortTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      raise errors.BadConfigOption(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
+      raise RuntimeError('Unable to create storage reader.')
+
+    for session in storage_reader.GetSessions():
+      if not session.source_configurations:
+        storage_reader.ReadSystemConfiguration(self._knowledge_base)
+      else:
+        for source_configuration in session.source_configurations:
+          self._knowledge_base.ReadSystemConfigurationArtifact(
+              source_configuration.system_configuration,
+              session_identifier=session.identifier)
+
+      self._knowledge_base.SetTextPrepend(session.text_prepend)
 
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
@@ -523,33 +449,19 @@ class PsortTool(
 
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location
+    configuration.debug_output = self._debug_mode
+    configuration.log_filename = self._log_file
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.sample_rate = self._profiling_sample_rate
     configuration.profiling.profilers = self._profilers
 
     analysis_counter = None
     if self._analysis_plugins:
-      storage_writer = (
-          storage_factory.StorageFactory.CreateStorageWriterForFile(
-              session, self._storage_file_path))
-      if not storage_writer:
-        raise errors.BadConfigOption(
-            'Format of storage file: {0:s} not supported for writing'.format(
-                self._storage_file_path))
-
-      # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine()
-
-      analysis_engine.AnalyzeEvents(
-          self._knowledge_base, storage_writer, self._data_location,
-          self._analysis_plugins, configuration,
-          event_filter=self._event_filter,
-          event_filter_expression=self._event_filter_expression,
-          status_update_callback=status_update_callback,
-          worker_memory_limit=self._worker_memory_limit)
+      self._AnalyzeEvents(
+          session, configuration, status_update_callback=status_update_callback)
 
       analysis_counter = collections.Counter()
-      for item, value in iter(session.analysis_reports_counter.items()):
+      for item, value in session.analysis_reports_counter.items():
         analysis_counter[item] = value
 
     if self._output_format != 'null':
@@ -557,15 +469,19 @@ class PsortTool(
           storage_factory.StorageFactory.CreateStorageReaderForFile(
               self._storage_file_path))
 
-      # TODO: add single processing support.
-      analysis_engine = psort.PsortMultiProcessEngine()
+      # TODO: add single process output and formatting engine support.
+      output_engine = (
+          multi_output_engine.OutputAndFormattingMultiProcessEngine())
 
-      analysis_engine.ExportEvents(
+      output_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
           configuration, deduplicate_events=self._deduplicate_events,
           event_filter=self._event_filter,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+
+      self._output_module.Close()
+      self._output_module = None
 
     if self._quiet_mode:
       return

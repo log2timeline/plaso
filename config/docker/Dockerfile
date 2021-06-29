@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM ubuntu:focal
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 # Create container with:
@@ -11,15 +11,20 @@ MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 ARG PPA_TRACK=stable
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get -y update
-RUN apt-get -y install software-properties-common apt-transport-https
+RUN apt-get -y install apt-transport-https apt-utils
+RUN apt-get -y install libterm-readline-gnu-perl software-properties-common
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 
 RUN apt-get -y update
 RUN apt-get -y upgrade
 
 RUN apt-get -y install locales plaso-tools
-RUN apt-get clean &&  rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+
+# Clean up apt-get cache files
+RUN apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Set terminal to UTF-8 by default
 RUN locale-gen en_US.UTF-8

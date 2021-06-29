@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
 """Parser for NTFS metadata files."""
 
-from __future__ import unicode_literals
-
+import os
 import uuid
-
-import pyfsntfs  # pylint: disable=wrong-import-order
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import uuid_time as dfdatetime_uuid_time
 
+import pyfsntfs
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -28,14 +27,17 @@ class NTFSFileStatEventData(events.EventData):
   Attributes:
     attribute_type (int): attribute type for example "0x00000030", which
         represents "$FILE_NAME".
+    display_name (str): display name.
     file_attribute_flags (int): NTFS file attribute flags.
     file_reference (int): NTFS file reference.
     file_system_type (str): file system type.
+    filename (str): name of the file.
     is_allocated (bool): True if the MFT entry is allocated (marked as in use).
     name (str): name associated with the stat event, for example that of
         a $FILE_NAME attribute or None if not available.
     parent_file_reference (int): NTFS file reference of the parent.
     path_hints (list[str]): hints about the full path of the file.
+    symbolic_link_target (str): path of the symbolic link target.
   """
 
   DATA_TYPE = 'fs:stat:ntfs'
@@ -44,13 +46,16 @@ class NTFSFileStatEventData(events.EventData):
     """Initializes event data."""
     super(NTFSFileStatEventData, self).__init__(data_type=self.DATA_TYPE)
     self.attribute_type = None
+    self.display_name = None
     self.file_attribute_flags = None
     self.file_reference = None
     self.file_system_type = 'NTFS'
+    self.filename = None
     self.is_allocated = None
     self.name = None
     self.parent_file_reference = None
     self.path_hints = None
+    self.symbolic_link_target = None
 
 
 class NTFSUSNChangeEventData(events.EventData):
@@ -62,6 +67,8 @@ class NTFSUSNChangeEventData(events.EventData):
     file_reference (int): NTFS file reference.
     file_system_type (str): file system type.
     parent_file_reference (int): NTFS file reference of the parent.
+    offset (int): offset of the USN record relative to the start of the $J data
+        stream, from which the event data was extracted.
     update_reason_flags (int): update reason flags.
     update_sequence_number (int): update sequence number.
     update_source_flags (int): update source flags.
@@ -76,6 +83,7 @@ class NTFSUSNChangeEventData(events.EventData):
     self.filename = None
     self.file_reference = None
     self.parent_file_reference = None
+    self.offset = None
     self.update_reason_flags = None
     self.update_sequence_number = None
     self.update_source_flags = None
@@ -84,14 +92,15 @@ class NTFSUSNChangeEventData(events.EventData):
 class NTFSMFTParser(interface.FileObjectParser):
   """Parses a NTFS $MFT metadata file."""
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = 'mft'
-  DESCRIPTION = 'Parser for NTFS $MFT metadata files.'
+  DATA_FORMAT = 'NTFS $MFT metadata file'
+
+  _INITIAL_FILE_OFFSET = None
 
   _MFT_ATTRIBUTE_STANDARD_INFORMATION = 0x00000010
   _MFT_ATTRIBUTE_FILE_NAME = 0x00000030
   _MFT_ATTRIBUTE_OBJECT_ID = 0x00000040
+  _MFT_ATTRIBUTE_DATA = 0x00000080
 
   _NAMESPACE_DOS = 2
 
@@ -103,7 +112,6 @@ class NTFSMFTParser(interface.FileObjectParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'BAAD', offset=0)
     format_specification.AddNewSignature(b'FILE', offset=0)
     return format_specification
 
@@ -117,7 +125,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       dfdatetime.DateTimeValues: date and time.
     """
     if filetime == 0:
-      return dfdatetime_semantic_time.SemanticTime('Not set')
+      return dfdatetime_semantic_time.NotSet()
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
 
@@ -154,9 +162,12 @@ class NTFSMFTParser(interface.FileObjectParser):
     """
     event_data = NTFSFileStatEventData()
     event_data.attribute_type = mft_attribute.attribute_type
+    event_data.display_name = parser_mediator.GetDisplayName()
     event_data.file_reference = mft_entry.file_reference
+    event_data.filename = parser_mediator.GetRelativePath()
     event_data.is_allocated = mft_entry.is_allocated()
-    event_data.path_hints = path_hints
+    event_data.path_hints = path_hints or None
+    event_data.symbolic_link_target = mft_entry.get_symbolic_link_target()
 
     if mft_attribute.attribute_type == self._MFT_ATTRIBUTE_FILE_NAME:
       event_data.file_attribute_flags = mft_attribute.file_attribute_flags
@@ -270,9 +281,11 @@ class NTFSMFTParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       mft_entry (pyfsntfs.file_entry): MFT entry.
     """
+    data_stream_names = []
     path_hints = []
     standard_information_attribute = None
     standard_information_attribute_index = None
+
     for attribute_index in range(0, mft_entry.number_of_attributes):
       try:
         mft_attribute = mft_entry.get_attribute(attribute_index)
@@ -285,12 +298,15 @@ class NTFSMFTParser(interface.FileObjectParser):
           path_hint = mft_entry.get_path_hint(attribute_index)
           self._ParseFileStatAttribute(
               parser_mediator, mft_entry, mft_attribute, [path_hint])
-          if mft_attribute.namespace != self._NAMESPACE_DOS:
+          if mft_attribute.name_space != self._NAMESPACE_DOS:
             path_hints.append(path_hint)
 
         elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_OBJECT_ID:
           self._ParseObjectIDAttribute(
               parser_mediator, mft_entry, mft_attribute)
+
+        elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_DATA:
+          data_stream_names.append(mft_attribute.attribute_name)
 
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
@@ -298,10 +314,27 @@ class NTFSMFTParser(interface.FileObjectParser):
                 attribute_index, exception))
 
     if standard_information_attribute:
+      path_hints_with_data_streams = []
+      for path_hint in path_hints:
+        if not path_hint:
+          path_hint = '\\'
+
+        if not data_stream_names:
+          path_hints_with_data_streams.append(path_hint)
+        else:
+          for data_stream_name in data_stream_names:
+            if not data_stream_name:
+              path_hint_with_data_stream = path_hint
+            else:
+              path_hint_with_data_stream = '{0:s}:{1:s}'.format(
+                  path_hint, data_stream_name)
+
+            path_hints_with_data_streams.append(path_hint_with_data_stream)
+
       try:
         self._ParseFileStatAttribute(
             parser_mediator, mft_entry, standard_information_attribute,
-            path_hints)
+            path_hints_with_data_streams)
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
             'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
@@ -321,7 +354,8 @@ class NTFSMFTParser(interface.FileObjectParser):
       mft_metadata_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
+          'unable to open $MFT file with error: {0!s}'.format(exception))
+      return
 
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
       try:
@@ -338,15 +372,18 @@ class NTFSMFTParser(interface.FileObjectParser):
     mft_metadata_file.close()
 
 
-class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
+class NTFSUsnJrnlParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses a NTFS USN change journal."""
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = 'usnjrnl'
-  DESCRIPTION = 'Parser for NTFS USN change journal ($UsnJrnl).'
+  DATA_FORMAT = (
+      'NTFS USN change journal ($UsnJrnl:$J) file system metadata file')
 
-  _DEFINITION_FILE = 'ntfs.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'ntfs.yaml')
+
+  _INITIAL_FILE_OFFSET = None
 
   # TODO: add support for USN_RECORD_V3 and USN_RECORD_V4 when actually
   # seen to be used.
@@ -403,7 +440,7 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
       event_data.update_source_flags = usn_record.update_source_flags
 
       if not usn_record.update_date_time:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
       else:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=usn_record.update_date_time)
@@ -422,18 +459,19 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
     """
-    volume = pyfsntfs.volume()
+    fsntfs_volume = pyfsntfs.volume()
     try:
-      volume.open_file_object(file_object)
+      fsntfs_volume.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to open NTFS volume with error: {0!s}'.format(exception))
+      return
 
     try:
-      usn_change_journal = volume.get_usn_change_journal()
+      usn_change_journal = fsntfs_volume.get_usn_change_journal()
       self._ParseUSNChangeJournal(parser_mediator, usn_change_journal)
     finally:
-      volume.close()
+      fsntfs_volume.close()
 
 
 manager.ParsersManager.RegisterParsers([NTFSMFTParser, NTFSUsnJrnlParser])

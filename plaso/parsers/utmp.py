@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
 """Parser for Linux utmp files."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
 class UtmpEventData(events.EventData):
-  """utmp event data.
+  """Linux libc6 utmp event data.
 
   Attributes:
     exit_status (int): exit status.
     hostname (str): hostname or IP address.
     ip_address (str): IP address from the connection.
+    offset (int): offset of the utmp record relative to the start of the file,
+        from which the event data was extracted.
     pid (int): process identifier (PID).
     terminal_identifier (int): inittab identifier.
     terminal (str): type of terminal.
@@ -35,6 +38,7 @@ class UtmpEventData(events.EventData):
     self.exit_status = None
     self.hostname = None
     self.ip_address = None
+    self.offset = None
     self.pid = None
     self.terminal_identifier = None
     self.terminal = None
@@ -42,13 +46,14 @@ class UtmpEventData(events.EventData):
     self.username = None
 
 
-class UtmpParser(dtfabric_parser.DtFabricBaseParser):
+class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Linux libc6 utmp files."""
 
   NAME = 'utmp'
-  DESCRIPTION = 'Parser for Linux libc6 utmp files.'
+  DATA_FORMAT = 'Linux libc6 utmp file'
 
-  _DEFINITION_FILE = 'utmp.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'utmp.yaml')
 
   _EMPTY_IP_ADDRESS = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
@@ -89,8 +94,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
           '{1!s}.').format(file_offset, exception))
 
     if entry.type not in self._SUPPORTED_TYPES:
-      raise errors.UnableToParseFile('Unsupported type: {0:d}'.format(
-          entry.type))
+      raise errors.ParseError('Unsupported type: {0:d}'.format(entry.type))
 
     encoding = parser_mediator.codepage or 'utf-8'
 

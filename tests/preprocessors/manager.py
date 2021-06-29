@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the preprocess plugins manager."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from artifacts import reader as artifacts_reader

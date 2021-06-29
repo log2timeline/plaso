@@ -9,10 +9,6 @@ https://github.com/libyal/libsigscan/wiki/Internals#scanning-tree-based-signatur
 The scan tree is used in the filter to filter provided paths.
 """
 
-from __future__ import unicode_literals
-
-from plaso.lib import py2to3
-
 
 class _PathFilterTable(object):
   """Path filter table.
@@ -539,7 +535,7 @@ class PathFilterScanTree(object):
 
     scan_object = self._root_node
     while scan_object:
-      if isinstance(scan_object, py2to3.STRING_TYPES):
+      if isinstance(scan_object, str):
         break
 
       if scan_object.path_segment_index >= number_of_path_segments:
@@ -549,7 +545,7 @@ class PathFilterScanTree(object):
       path_segment = path_segments[scan_object.path_segment_index]
       scan_object = scan_object.GetScanObject(path_segment)
 
-    if not isinstance(scan_object, py2to3.STRING_TYPES):
+    if not isinstance(scan_object, str):
       return False
 
     filter_path_segments = scan_object.split(self._path_segment_separator)
@@ -632,8 +628,7 @@ class PathFilterScanTreeNode(object):
       TypeError: if the scan object is of an unsupported type.
       ValueError: if the default value is already set.
     """
-    if (not isinstance(scan_object, PathFilterScanTreeNode) and
-        not isinstance(scan_object, py2to3.STRING_TYPES)):
+    if not isinstance(scan_object, (str, PathFilterScanTreeNode)):
       raise TypeError('Unsupported scan object type.')
 
     if self.default_value:
@@ -663,9 +658,8 @@ class PathFilterScanTreeNode(object):
         text_parts.append('{0:s}scan tree node:\n'.format(indentation))
         text_parts.append(scan_object.ToDebugString(indentation_level + 1))
 
-      elif isinstance(scan_object, py2to3.STRING_TYPES):
-        text_parts.append('{0:s}path: {1:s}\n'.format(
-            indentation, scan_object))
+      elif isinstance(scan_object, str):
+        text_parts.append('{0:s}path: {1:s}\n'.format(indentation, scan_object))
 
     text_parts.append('{0:s}default value:\n'.format(indentation))
 
@@ -673,7 +667,7 @@ class PathFilterScanTreeNode(object):
       text_parts.append('{0:s}scan tree node:\n'.format(indentation))
       text_parts.append(self.default_value.ToDebugString(indentation_level + 1))
 
-    elif isinstance(self.default_value, py2to3.STRING_TYPES):
+    elif isinstance(self.default_value, str):
       text_parts.append('{0:s}pattern: {1:s}\n'.format(
           indentation, self.default_value))
 

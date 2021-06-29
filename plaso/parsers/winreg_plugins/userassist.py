@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """The UserAssist Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import codecs
+import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -12,10 +11,10 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.engine import path_helper
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import logger
-from plaso.parsers import winreg
-from plaso.parsers.winreg_plugins import dtfabric_plugin
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import known_folder_ids
 
@@ -28,7 +27,7 @@ class UserAssistWindowsRegistryEventData(events.EventData):
     application_focus_duration (int): application focus duration.
     entry_index (int): entry index.
     key_path (str): Windows Registry key path.
-    number_of_executions (int): nubmer of executions.
+    number_of_executions (int): number of executions.
     value_name (str): name of the Windows Registry value.
   """
 
@@ -64,17 +63,12 @@ class UserAssistWindowsRegistryKeyPathFilter(
     super(UserAssistWindowsRegistryKeyPathFilter, self).__init__(key_path)
 
 
-class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
-  """Plugin that parses an UserAssist key.
-
-  Also see:
-    http://blog.didierstevens.com/programs/userassist/
-    https://code.google.com/p/winreg-kb/wiki/UserAssistKeys
-    http://intotheboxes.files.wordpress.com/2010/04/intotheboxes_2010_q1.pdf
-  """
+class UserAssistPlugin(
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
+  """Plugin that parses an UserAssist key."""
 
   NAME = 'userassist'
-  DESCRIPTION = 'Parser for User Assist Registry data.'
+  DATA_FORMAT = 'User Assist Registry data'
 
   FILTERS = frozenset([
       UserAssistWindowsRegistryKeyPathFilter(
@@ -102,7 +96,8 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
       UserAssistWindowsRegistryKeyPathFilter(
           'BCB48336-4DDD-48FF-BB0B-D3190DACB3E2')])
 
-  _DEFINITION_FILE = 'userassist.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'userassist.yaml')
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -231,7 +226,7 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
 
       timestamp = user_assist_entry.last_execution_time
       if not timestamp:
-        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+        date_time = dfdatetime_semantic_time.NotSet()
       else:
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
@@ -240,4 +235,4 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(UserAssistPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

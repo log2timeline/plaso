@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the USB Device key."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import logger
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -43,7 +41,7 @@ class USBPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'windows_usb_devices'
-  DESCRIPTION = 'Parser for USB device Registry entries.'
+  DATA_FORMAT = 'Windows USB device Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -89,4 +87,4 @@ class USBPlugin(interface.WindowsRegistryPlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(USBPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(USBPlugin)

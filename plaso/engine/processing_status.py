@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Processing status classes."""
 
-from __future__ import unicode_literals
-
 import time
 
 
@@ -31,10 +29,10 @@ class ProcessStatus(object):
         by the process.
     number_of_consumed_sources_delta (int): number of event sources consumed
         by the process since the last status update.
-    number_of_consumed_warnings (int): total number of warnings consumed by
-        the process.
-    number_of_consumed_warnings_delta (int): number of warnings consumed by
-        the process since the last status update.
+    number_of_consumed_extraction_warnings (int): total number of extraction
+        warnings consumed by the process.
+    number_of_consumed_extraction_warnings_delta (int): number of extraction
+        warnings consumed by the process since the last status update.
     number_of_produced_event_tags (int): total number of event tags produced by
         the process.
     number_of_produced_event_tags_delta (int): number of event tags produced by
@@ -51,10 +49,10 @@ class ProcessStatus(object):
         produced by the process.
     number_of_produced_sources_delta (int): number of event sources produced
         by the process since the last status update.
-    number_of_produced_warnings (int): total number of warnings produced by
-        the process.
-    number_of_produced_warnings_delta (int): number of warnings produced by
-        the process since the last status update.
+    number_of_produced_extraction_warnings (int): total number of extraction
+        warnings produced by the process.
+    number_of_produced_extraction_warnings_delta (int): number of extraction
+        warnings produced by the process since the last status update.
     pid (int): process identifier (PID).
     status (str): human readable status indication such as "Hashing" or "Idle".
     used_memory (int): size of used memory in bytes.
@@ -70,22 +68,22 @@ class ProcessStatus(object):
     self.number_of_consumed_event_tags_delta = 0
     self.number_of_consumed_events = 0
     self.number_of_consumed_events_delta = 0
+    self.number_of_consumed_extraction_warnings = 0
+    self.number_of_consumed_extraction_warnings_delta = 0
     self.number_of_consumed_reports = 0
     self.number_of_consumed_reports_delta = 0
     self.number_of_consumed_sources = 0
     self.number_of_consumed_sources_delta = 0
-    self.number_of_consumed_warnings = 0
-    self.number_of_consumed_warnings_delta = 0
     self.number_of_produced_event_tags = 0
     self.number_of_produced_event_tags_delta = 0
     self.number_of_produced_events = 0
     self.number_of_produced_events_delta = 0
+    self.number_of_produced_extraction_warnings = 0
+    self.number_of_produced_extraction_warnings_delta = 0
     self.number_of_produced_reports = 0
     self.number_of_produced_reports_delta = 0
     self.number_of_produced_sources = 0
     self.number_of_produced_sources_delta = 0
-    self.number_of_produced_warnings = 0
-    self.number_of_produced_warnings_delta = 0
     self.pid = None
     self.status = None
     self.used_memory = 0
@@ -262,46 +260,54 @@ class ProcessStatus(object):
 
     return consumed_event_tags_delta > 0 or produced_event_tags_delta > 0
 
-  def UpdateNumberOfWarnings(
+  def UpdateNumberOfExtractionWarnings(
       self, number_of_consumed_warnings, number_of_produced_warnings):
-    """Updates the number of warnings.
+    """Updates the number of extraction warnings.
 
     Args:
-      number_of_consumed_warnings (int): total number of warnings consumed by
-          the process.
-      number_of_produced_warnings (int): total number of warnings produced by
-          the process.
+      number_of_consumed_warnings (int): total number of extraction warnings
+          consumed by the process.
+      number_of_produced_warnings (int): total number of extraction warnings
+          produced by the process.
 
     Returns:
-      bool: True if either number of warnings has increased.
+      bool: True if either number of extraction warnings has increased.
 
     Raises:
-      ValueError: if the consumed or produced number of warnings is smaller
-          than the value of the previous update.
+      ValueError: if the consumed or produced number of extraction warnings is
+          smaller than the value of the previous update.
     """
     consumed_warnings_delta = 0
     if number_of_consumed_warnings is not None:
-      if number_of_consumed_warnings < self.number_of_consumed_warnings:
-        raise ValueError(
-            'Number of consumed warnings smaller than previous update.')
+      if number_of_consumed_warnings < (
+          self.number_of_consumed_extraction_warnings):
+        raise ValueError((
+            'Number of consumed extraction warnings smaller than previous '
+            'update.'))
 
       consumed_warnings_delta = (
-          number_of_consumed_warnings - self.number_of_consumed_warnings)
+          number_of_consumed_warnings -
+           self.number_of_consumed_extraction_warnings)
 
-      self.number_of_consumed_warnings = number_of_consumed_warnings
-      self.number_of_consumed_warnings_delta = consumed_warnings_delta
+      self.number_of_consumed_extraction_warnings = number_of_consumed_warnings
+      self.number_of_consumed_extraction_warnings_delta = (
+          consumed_warnings_delta)
 
     produced_warnings_delta = 0
     if number_of_produced_warnings is not None:
-      if number_of_produced_warnings < self.number_of_produced_warnings:
-        raise ValueError(
-            'Number of produced warnings smaller than previous update.')
+      if number_of_produced_warnings < (
+          self.number_of_produced_extraction_warnings):
+        raise ValueError((
+            'Number of produced extraction warnings smaller than previous '
+            'update.'))
 
       produced_warnings_delta = (
-          number_of_produced_warnings - self.number_of_produced_warnings)
+          number_of_produced_warnings -
+          self.number_of_produced_extraction_warnings)
 
-      self.number_of_produced_warnings = number_of_produced_warnings
-      self.number_of_produced_warnings_delta = produced_warnings_delta
+      self.number_of_produced_extraction_warnings = number_of_produced_warnings
+      self.number_of_produced_extraction_warnings_delta = (
+          produced_warnings_delta)
 
     return consumed_warnings_delta > 0 or produced_warnings_delta > 0
 
@@ -387,7 +393,7 @@ class ProcessingStatus(object):
     new_event_tags = process_status.UpdateNumberOfEventTags(
         number_of_consumed_event_tags, number_of_produced_event_tags)
 
-    new_warnings = process_status.UpdateNumberOfWarnings(
+    new_extraction_warnings = process_status.UpdateNumberOfExtractionWarnings(
         number_of_consumed_warnings, number_of_produced_warnings)
 
     new_reports = process_status.UpdateNumberOfEventReports(
@@ -397,10 +403,12 @@ class ProcessingStatus(object):
     process_status.identifier = identifier
     process_status.pid = pid
     process_status.status = status
-    process_status.used_memory = used_memory
 
-    if (new_sources or new_events or new_event_tags or new_warnings or
-        new_reports):
+    if used_memory > 0:
+      process_status.used_memory = used_memory
+
+    if (new_sources or new_events or new_event_tags or
+        new_extraction_warnings or new_reports):
       process_status.last_running_time = time.time()
 
   # pylint: disable=too-many-arguments

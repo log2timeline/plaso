@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows XML EventLog (EVTX) parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import winevtx as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import winevtx
 
@@ -21,15 +18,15 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     parser = winevtx.WinEvtxParser()
     storage_writer = self._ParseFile(['System.evtx'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
+    self.assertEqual(storage_writer.number_of_events, 3202)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Windows Event Viewer Log (EVTX) information:
     #   Version                     : 3.1
     #   Number of records           : 1601
     #   Number of recovered records : 0
     #   Log type                    : System
-
-    self.assertEqual(storage_writer.number_of_events, 3202)
 
     events = list(storage_writer.GetEvents())
 
@@ -45,31 +42,21 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # String: 2           : C:\Windows\System32\Winevt\Logs\
     #                     : Archive-System-2012-03-14-04-17-39-932.evtx
 
-    event = events[0]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.record_number, 12049)
-    self.assertEqual(
-        event_data.computer_name, 'WKS-WIN764BITB.shieldbase.local')
-    self.assertEqual(event_data.source_name, 'Microsoft-Windows-Eventlog')
-    self.assertEqual(event_data.event_level, 4)
-    self.assertEqual(event_data.event_identifier, 105)
-
-    self.assertEqual(event_data.strings[0], 'System')
-
-    expected_string = (
+    expected_string2 = (
         'C:\\Windows\\System32\\Winevt\\Logs\\'
         'Archive-System-2012-03-14-04-17-39-932.evtx')
 
-    self.assertEqual(event_data.strings[1], expected_string)
+    expected_event_values = {
+        'computer_name': 'WKS-WIN764BITB.shieldbase.local',
+        'data_type': 'windows:evtx:record',
+        'event_identifier': 105,
+        'event_level': 4,
+        'message_identifier': 105,
+        'record_number': 12049,
+        'source_name': 'Microsoft-Windows-Eventlog',
+        'strings': ['System', expected_string2]}
 
-    event = events[2]
-
-    self.CheckTimestamp(event.timestamp, '2012-03-14 04:17:38.276340')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_xml_string = (
         '<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/'
@@ -100,28 +87,20 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         '  </EventData>\n'
         '</Event>\n')
 
-    self.assertEqual(event_data.xml_string, expected_xml_string)
+    expected_event_values = {
+        'computer_name': 'WKS-WIN764BITB.shieldbase.local',
+        'date_time': '2012-03-14 04:17:38.2763402',
+        'data_type': 'windows:evtx:record',
+        'event_level': 4,
+        'record_number': 12050,
+        'source_name': 'Service Control Manager',
+        'strings': ['Windows Modules Installer', 'stopped', (
+            '540072007500730074006500640049006E007300740061006C006C00650072002F'
+            '0031000000')],
+        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
+        'xml_string': expected_xml_string}
 
-    expected_message = (
-        '[7036 / 0x1b7c] '
-        'Source Name: Service Control Manager '
-        'Message string: The Windows Modules Installer service entered '
-        'the stopped state. '
-        'Strings: [\'Windows Modules Installer\', \'stopped\', '
-        '\'540072007500730074006500640049006E00'
-        '7300740061006C006C00650072002F0031000000\'] '
-        'Computer Name: WKS-WIN764BITB.shieldbase.local '
-        'Record Number: 12050 '
-        'Event Level: 4'
-    )
-
-    expected_short_message = (
-        '[7036 / 0x1b7c] '
-        'Strings: [\'Windows Modules Installer\', \'stopped\', '
-        '\'5400720075...')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
   def testParseTruncated(self):
     """Tests the Parse function on a truncated file."""
@@ -130,43 +109,25 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # contains invalid log at the end.
     storage_writer = self._ParseFile(['System2.evtx'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 388)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[356]
+    expected_event_values = {
+        'data_type': 'windows:evtx:record',
+        'event_identifier': 4624,
+        'message_identifier': 4624}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.CheckEventValues(storage_writer, events[356], expected_event_values)
 
-    expected_strings_parsed = [
-        ('source_user_id', 'S-1-5-18'),
-        ('source_user_name', 'GREENDALEGOLD$'),
-        ('target_machine_ip', '-'),
-        ('target_machine_name', None),
-        ('target_user_id', 'S-1-5-18'),
-        ('target_user_name', 'SYSTEM')]
+    expected_event_values = {
+        'data_type': 'windows:evtx:record',
+        'event_identifier': 4648,
+        'message_identifier': 4648}
 
-    strings_parsed = sorted(event_data.strings_parsed.items())
-    self.assertEqual(strings_parsed, expected_strings_parsed)
-
-    self.assertEqual(event_data.event_identifier, 4624)
-
-    event = events[360]
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_strings_parsed = [
-        ('source_user_id', 'S-1-5-21-1539974973-2753941131-3212641383-1000'),
-        ('source_user_name', 'gold_administrator'),
-        ('target_machine_ip', '-'),
-        ('target_machine_name', 'DC1.internal.greendale.edu'),
-        ('target_user_name', 'administrator')]
-
-    strings_parsed = sorted(event_data.strings_parsed.items())
-    self.assertEqual(strings_parsed, expected_strings_parsed)
-
-    self.assertEqual(event_data.event_identifier, 4648)
+    self.CheckEventValues(storage_writer, events[360], expected_event_values)
 
 
 if __name__ == '__main__':

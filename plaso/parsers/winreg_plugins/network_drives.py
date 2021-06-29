@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file contains the Network drive Registry plugin."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -35,7 +33,7 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the Network key."""
 
   NAME = 'network_drives'
-  DESCRIPTION = 'Parser for Network Registry data.'
+  DATA_FORMAT = 'Windows network drives Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter('HKEY_CURRENT_USER\\Network')])
@@ -74,4 +72,4 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(NetworkDrivesPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(NetworkDrivesPlugin)

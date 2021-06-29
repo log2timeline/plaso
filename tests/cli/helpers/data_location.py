@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the data location CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -24,9 +22,9 @@ usage: cli_helper.py [--data PATH]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --data PATH  Path to a directory containing the data files.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

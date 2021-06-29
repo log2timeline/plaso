@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 """Parsers for Opera Browser history files."""
 
-from __future__ import unicode_literals
-
 import os
 
-try:
-  import urlparse
-except ImportError:
-  from urllib import parse as urlparse
+from urllib import parse as urlparse
 
-# pylint: disable=wrong-import-position
 from defusedxml import ElementTree
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -71,7 +65,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
   """Parses the Opera typed_history.xml file."""
 
   NAME = 'opera_typed_history'
-  DESCRIPTION = 'Parser for Opera typed_history.xml files.'
+  DATA_FORMAT = 'Opera typed history (typed_history.xml) file'
 
   _HEADER_READ_SIZE = 128
 
@@ -136,7 +130,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = 'opera_global'
-  DESCRIPTION = 'Parser for Opera global_history.dat files.'
+  DATA_FORMAT = 'Opera global history (global_history.dat) file'
 
   _ENCODING = 'utf-8'
 
@@ -224,7 +218,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       timestamp = None
 
     if timestamp is None:
-      date_time = dfdatetime_semantic_time.SemanticTime('Invalid')
+      date_time = dfdatetime_semantic_time.InvalidTime()
     else:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 

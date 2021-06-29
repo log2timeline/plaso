@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the necessary interface for OLECF plugins."""
 
-from __future__ import unicode_literals
-
 import abc
 
 from plaso.parsers import logger
@@ -12,7 +10,8 @@ from plaso.parsers import plugins
 class OLECFPlugin(plugins.BasePlugin):
   """The OLECF parser plugin interface."""
 
-  NAME = 'olecf'
+  NAME = 'olecf_plugin'
+  DATA_FORMAT = 'OLE compound file'
 
   # List of tables that should be present in the database, for verification.
   REQUIRED_ITEMS = frozenset([])
@@ -59,7 +58,7 @@ class OLECFPlugin(plugins.BasePlugin):
   # pylint: disable=arguments-differ
   @abc.abstractmethod
   def Process(self, parser_mediator, root_item=None, **kwargs):
-    """Parses an OLECF file.
+    """Extracts events from an OLECF file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

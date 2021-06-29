@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the knowledge base."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.containers import artifacts
@@ -183,8 +181,32 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     hostname = knowledge_base_object.GetHostname()
     self.assertEqual(hostname, '')
 
+  # TODO: add tests for GetMountPoint.
+
+  def testGetSourceConfigurationArtifacts(self):
+    """Tests the GetSourceConfigurationArtifacts function."""
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
+    knowledge_base_object.SetHostname(hostname_artifact)
+
+    user_account = artifacts.UserAccountArtifact(
+        identifier='1000', user_directory='/home/testuser',
+        username='testuser')
+    knowledge_base_object.AddUserAccount(user_account)
+
+    source_configurations = (
+        knowledge_base_object.GetSourceConfigurationArtifacts())
+    self.assertEqual(len(source_configurations), 1)
+    self.assertIsNotNone(source_configurations[0])
+
+    system_configuration = source_configurations[0].system_configuration
+    self.assertIsNotNone(system_configuration)
+    self.assertIsNotNone(system_configuration.hostname)
+    self.assertEqual(system_configuration.hostname.name, 'myhost.mydomain')
+
   def testGetSystemConfigurationArtifact(self):
-    """Tests the GetSystemConfigurationArtifact function."""
+    """Tests the _GetSystemConfigurationArtifact function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
@@ -196,10 +218,12 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     knowledge_base_object.AddUserAccount(user_account)
 
     system_configuration = (
-        knowledge_base_object.GetSystemConfigurationArtifact())
+        knowledge_base_object._GetSystemConfigurationArtifact())
     self.assertIsNotNone(system_configuration)
     self.assertIsNotNone(system_configuration.hostname)
     self.assertEqual(system_configuration.hostname.name, 'myhost.mydomain')
+
+  # TODO: add tests for GetTextPrepend.
 
   def testGetUsernameByIdentifier(self):
     """Tests the GetUsernameByIdentifier function."""
@@ -329,11 +353,34 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
     knowledge_base_object.SetHostname(hostname_artifact)
 
+  # TODO: add tests for SetMountPoint.
+  # TODO: add tests for SetTextPrepend.
+
   def testSetTimeZone(self):
     """Tests the SetTimeZone function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
+    time_zone_artifact = artifacts.TimeZoneArtifact(
+        localized_name='Eastern (standaardtijd)', mui_form='@tzres.dll,-112',
+        name='Eastern Standard Time')
+
+    knowledge_base_object.AddAvailableTimeZone(time_zone_artifact)
+
+    # Set an IANA time zone name.
     knowledge_base_object.SetTimeZone('Europe/Zurich')
+    self.assertEqual(knowledge_base_object._time_zone.zone, 'Europe/Zurich')
+
+    # Set a Windows time zone name.
+    knowledge_base_object.SetTimeZone('Eastern Standard Time')
+    self.assertEqual(knowledge_base_object._time_zone.zone, 'America/New_York')
+
+    # Set a localized Windows time zone name.
+    knowledge_base_object.SetTimeZone('Eastern (standaardtijd)')
+    self.assertEqual(knowledge_base_object._time_zone.zone, 'America/New_York')
+
+    # Set a MUI form Windows time zone name.
+    knowledge_base_object.SetTimeZone('@tzres.dll,-112')
+    self.assertEqual(knowledge_base_object._time_zone.zone, 'America/New_York')
 
     with self.assertRaises(ValueError):
       knowledge_base_object.SetTimeZone('Bogus')

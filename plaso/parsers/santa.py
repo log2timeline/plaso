@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Santa log (santa.log) parser."""
 
-from __future__ import unicode_literals
-
 import re
 import pyparsing
 
@@ -132,7 +130,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
   """Parses santa log files"""
 
   NAME = 'santa'
-  DESCRIPTION = 'Santa Parser'
+  DATA_FORMAT = 'Santa log (santa.log) file'
 
   _ENCODING = 'utf-8'
 

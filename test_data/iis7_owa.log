@@ -1,0 +1,5 @@
+#Software: Microsoft Internet Information Services 7.0
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status sc-substatus sc-win32-status time-taken
+2015-12-31 00:19:48 10.11.2.3 GET /owa/ &prfltncy=16&prfrpccnt=14&prfrpcltncy=15&prfldpcnt=0&prfldpltncy=0&prfavlcnt=0&prfavlltncy=0 443 domain.localjohndoe 77.123.22.98 Mozilla/5.0+(Windows+NT+6.1;+WOW64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/39.0.2171.95+Safari/537.36 200 0 0 31
+2015-12-31 14:40:38 10.11.2.3 POST /EWS/Exchange.asmx SoapAction=GetUserOofSettingsResponse;MailboxRPCRequests=10;MailboxRPCLatency=15;ADRequests=2;ADLatency=0;TimeInGetUserOOFSettings=28; 443 domain.localjohndoe 10.10.5.2 Microsoft+Office/14.0+(Windows+NT+6.1;+Microsoft+Outlook+14.0.7128;+Pro) 200 0 0 46
+2015-01-01 22:16:03 192.168.16.3 POST /Microsoft-Server-ActiveSync/default.eas User=johndoe&DeviceId=Appl2312SDKJ2313&DeviceType=iPhone&Cmd=Ping 443 domain.localjohndoe 77.123.22.98 Apple-iPhone5C2/1104.257 200 0 0 62

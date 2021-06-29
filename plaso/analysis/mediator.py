@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """The analysis plugin mediator object."""
 
-from __future__ import unicode_literals
-
 import time
 
+from plaso.containers import warnings
 from plaso.engine import path_helper
-from plaso.lib import timelib
 
 
 class AnalysisMediator(object):
@@ -40,9 +38,8 @@ class AnalysisMediator(object):
     self._data_location = data_location
     self._event_filter_expression = None
     self._knowledge_base = knowledge_base
-    self._mount_path = None
+    self._number_of_warnings = 0
     self._storage_writer = storage_writer
-    self._text_prepend = None
 
     self.last_activity_timestamp = 0.0
     self.number_of_produced_analysis_reports = 0
@@ -72,8 +69,10 @@ class AnalysisMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
+    mount_path = self._knowledge_base.GetMountPath()
+    text_prepend = self._knowledge_base.GetTextPrepend()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=self._mount_path, text_prepend=self._text_prepend)
+        path_spec, mount_path=mount_path, text_prepend=text_prepend)
 
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.
@@ -98,23 +97,28 @@ class AnalysisMediator(object):
     """
     analysis_report = plugin.CompileReport(self)
     if not analysis_report:
+      # TODO: produce AnalysisWarning that no report can be generated.
       return
 
-    analysis_report.time_compiled = timelib.Timestamp.GetNow()
+    analysis_report.event_filter = self._event_filter_expression
 
-    plugin_name = getattr(analysis_report, 'plugin_name', plugin.plugin_name)
-    if plugin_name:
-      analysis_report.plugin_name = plugin_name
-
-    if self._event_filter_expression:
-      # TODO: rename filter string when refactoring the analysis reports.
-      analysis_report.filter_string = self._event_filter_expression
-
-    self._storage_writer.AddAnalysisReport(analysis_report)
+    self._storage_writer.AddAttributeContainer(analysis_report)
 
     self.number_of_produced_analysis_reports += 1
-    self.number_of_produced_event_tags = (
-        self._storage_writer.number_of_event_tags)
+
+    self.last_activity_timestamp = time.time()
+
+  def ProduceAnalysisWarning(self, message, plugin_name):
+    """Produces an analysis warning.
+
+    Args:
+      message (str): message of the warning.
+      plugin_name (str): name of the analysis plugin to which the warning
+          applies.
+    """
+    warning = warnings.AnalysisWarning(message=message, plugin_name=plugin_name)
+    self._storage_writer.AddAttributeContainer(warning)
+    self._number_of_warnings += 1
 
     self.last_activity_timestamp = time.time()
 

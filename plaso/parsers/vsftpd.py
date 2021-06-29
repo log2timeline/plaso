@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for vsftpd Logs."""
 
-from __future__ import unicode_literals
-
 import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -10,7 +8,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import logger
 from plaso.parsers import text_parser
 from plaso.parsers import manager
@@ -35,7 +32,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses a vsftpd log."""
 
   NAME = 'vsftpd'
-  DESCRIPTION = 'Parser for vsftpd log files.'
+  DATA_FORMAT = 'vsftpd log file'
 
   _DATETIME_ELEMENTS = (
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('day') +
@@ -78,7 +75,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
     _, month, day_of_month, hours, minutes, seconds, year = time_elements_tuple
-    month = timelib.MONTH_DICT.get(month.lower(), 0)
+    month = self._MONTH_DICT.get(month.lower(), 0)
     return (year, month, day_of_month, hours, minutes, seconds)
 
 

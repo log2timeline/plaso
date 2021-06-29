@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for bash history files."""
 
-from __future__ import unicode_literals
-
 import re
 
 import pyparsing
@@ -37,7 +35,7 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
   NAME = 'bash_history'
 
-  DESCRIPTION = 'Parser for Bash history files'
+  DATA_FORMAT = 'Bash history file'
 
   _ENCODING = 'utf-8'
 

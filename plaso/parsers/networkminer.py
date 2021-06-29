@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for NetworkMiner fileinfos files."""
-
-from __future__ import unicode_literals
+"""Parser for NetworkMiner .fileinfos files."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -10,6 +8,7 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
+
 
 class NetworkMinerEventData(events.EventData):
   """NetworkMiner event Data.
@@ -24,7 +23,7 @@ class NetworkMinerEventData(events.EventData):
     filename (string): Name of the file.
     source_ip (str): Originating IP address.
     source_port (str): Originating port number.
-	"""
+  """
   DATA_TYPE = 'networkminer:fileinfos:file'
 
   def __init__(self):
@@ -39,11 +38,12 @@ class NetworkMinerEventData(events.EventData):
     self.source_ip = None
     self.source_port = None
 
+
 class NetworkMinerParser(dsv_parser.DSVParser):
-  """Parser class for NetworkMiner fileinfos."""
+  """Parser for NetworkMiner .fileinfos files."""
 
   NAME = 'networkminer_fileinfo'
-  DESCRIPTION = 'Parser for NetworkMiner .fileinfos files.'
+  DATA_FORMAT = 'NetworkMiner .fileinfos file'
 
   COLUMNS = (
       'source_ip', 'source_port', 'destination_ip', 'destination_port',
@@ -98,14 +98,16 @@ class NetworkMinerParser(dsv_parser.DSVParser):
       return False
 
     # Check the date format
-    # If it doesn't parse, then this isn't a NetworkMiner fileinfos file.
-    if row.get('timestamp', None) != 'Timestamp':
+    # If it doesn't parse, then this isn't a NetworkMiner .fileinfos file.
+    timestamp_value = row.get('timestamp', None)
+    if timestamp_value != 'Timestamp':
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       try:
-        date_time.CopyFromStringISO8601(row.get('timestamp', None))
+        date_time.CopyFromStringISO8601(timestamp_value)
       except ValueError:
         return False
 
     return True
+
 
 manager.ParsersManager.RegisterParser(NetworkMinerParser)

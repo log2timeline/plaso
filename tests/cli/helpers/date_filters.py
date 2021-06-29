@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the date filters CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -25,7 +23,7 @@ usage: cli_helper.py [--date-filter TYPE_START_END]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --date-filter TYPE_START_END, --date_filter TYPE_START_END
                         Filter based on file entry date and time ranges. This
                         parameter is formatted as
@@ -45,7 +43,7 @@ optional arguments:
                         2013-01-01 23:12:14, 2013-02-23". This parameter can
                         be repeated as needed to add additional date
                         boundaries, e.g. once for atime, once for crtime, etc.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -1,7 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Parser for Tango on Android databases."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Tango on Android database files."""
 
 import codecs
 from base64 import b64decode as base64_decode
@@ -82,10 +80,18 @@ class TangoAndroidContactEventData(events.EventData):
 
 
 class TangoAndroidTCPlugin(interface.SQLitePlugin):
-  """Parser for Tango on Android tc database."""
+  """SQLite parser plugin for Tango on Android TC database files."""
 
   NAME = 'tango_android_tc'
-  DESCRIPTION = 'Parser for Tango on Android tc database.'
+  DATA_FORMAT = 'Tango on Android TC SQLite database file'
+
+  REQUIRED_STRUCTURE = {
+      'conversations': frozenset([
+          'conv_id', 'payload']),
+      'messages': frozenset([
+          'create_time', 'send_time', 'msg_id', 'payload', 'direction']),
+      'likes': frozenset([
+          'msg_id'])}
 
   QUERIES = [
       (('SELECT conversations.conv_id AS conv_id, conversations.payload AS '
@@ -94,10 +100,6 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
         'send_time, messages.msg_id AS msg_id, messages.payload AS payload, '
         'messages.direction AS direction FROM messages LEFT JOIN likes ON '
         'messages.msg_id = likes.msg_id'), 'ParseMessageRow')]
-
-  REQUIRED_TABLES = frozenset([
-      'profiles', 'conversations', 'messages', 'receipts', 'sms', 'likes',
-      'games'])
 
   SCHEMAS = [{
       'conversations': (
@@ -193,10 +195,17 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
 
 
 class TangoAndroidProfilePlugin(interface.SQLitePlugin):
-  """Parser for Tango on Android profile database."""
+  """SQLite parser plugin for Tango on Android profile database files."""
 
   NAME = 'tango_android_profile'
-  DESCRIPTION = 'Parser for Tango on Android profile database.'
+  DATA_FORMAT = 'Tango on Android profile SQLite database file'
+
+  REQUIRED_STRUCTURE = {
+      'profiletable': frozenset([
+          'itemLastActiveTime', 'itemLastLocalAccessTime',
+          'itemFriendRequestTime', 'itemFirstName', 'itemLastName',
+          'itemBirthday', 'itemGender', 'itemStatus', 'itemDistance',
+          'itemIsFriend', 'itemFriendRequestType', 'itemFriendRequestMessage'])}
 
   QUERIES = [
       (('SELECT itemLastActiveTime AS last_active_time, itemLastLocalAccessTime'
@@ -206,8 +215,6 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
         'AS distance, itemIsFriend AS friend, itemFriendRequestType AS '
         'friend_request_type, itemFriendRequestMessage AS '
         'friend_request_message FROM profiletable'), 'ParseContactRow')]
-
-  REQUIRED_TABLES = frozenset(['profiles', 'profiletable'])
 
   SCHEMAS = [{
       'profiles': (

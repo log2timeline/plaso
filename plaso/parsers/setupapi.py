@@ -5,8 +5,6 @@ The format is documented at:
 https://docs.microsoft.com/en-us/windows-hardware/drivers/install/setupapi-text-logs
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -43,8 +41,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses events from Windows Setupapi log files."""
 
   NAME = 'setupapi'
-
-  DESCRIPTION = 'Parser for Windows Setupapi log files.'
+  DATA_FORMAT = 'Windows SetupAPI log file'
 
   _ENCODING = 'utf-8'
 

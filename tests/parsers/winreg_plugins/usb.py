@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the USB Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import usb
 
 from tests.parsers.winreg_plugins import test_lib
@@ -36,36 +33,25 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 7)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[3]
+    expected_event_values = {
+        'date_time': '2012-04-07 10:31:37.6252465',
+        'data_type': 'windows:registry:usb',
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'product': 'PID_0002',
+        'serial': '6&2ab01149&0&2',
+        'subkey_name': 'VID_0E0F&PID_0002',
+        'vendor': 'VID_0E0F'}
 
-    self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.625247')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-    self.assertEqual(event_data.data_type, 'windows:registry:usb')
-    self.assertEqual(event_data.pathspec, test_file_entry.path_spec)
-    self.assertEqual(event_data.subkey_name, 'VID_0E0F&PID_0002')
-    self.assertEqual(event_data.vendor, 'VID_0E0F')
-    self.assertEqual(event_data.product, 'PID_0002')
-
-    expected_message = (
-        '[{0:s}] '
-        'Product: PID_0002 '
-        'Serial: 6&2ab01149&0&2 '
-        'Subkey name: VID_0E0F&PID_0002 '
-        'Vendor: VID_0E0F').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
 
 if __name__ == '__main__':

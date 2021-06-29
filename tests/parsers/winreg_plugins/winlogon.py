@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the Winlogon Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import winlogon
 
 from tests.parsers.winreg_plugins import test_lib
@@ -164,106 +161,109 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     registry_key.AddValue(registry_value)
 
     # Setup registered event handlers.
-    notify = dfwinreg_fake.FakeWinRegistryKey('Notify')
-    registry_key.AddSubkey(notify)
+    notify_key_name = 'Notify'
+    notify_key = dfwinreg_fake.FakeWinRegistryKey(notify_key_name)
+    registry_key.AddSubkey(notify_key_name, notify_key)
 
-    navlogon = dfwinreg_fake.FakeWinRegistryKey(
-        'NavLogon', last_written_time=filetime.timestamp)
-    notify.AddSubkey(navlogon)
+    navlogon_key_name = 'NavLogon'
+    navlogon_key = dfwinreg_fake.FakeWinRegistryKey(
+        navlogon_key_name, last_written_time=filetime.timestamp)
+    notify_key.AddSubkey(navlogon_key_name, navlogon_key)
 
     value_data = 'NavLogon.dll'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'DllName', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    navlogon.AddValue(registry_value)
+    navlogon_key.AddValue(registry_value)
 
     value_data = 'NavLogoffEvent'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Logoff', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    navlogon.AddValue(registry_value)
+    navlogon_key.AddValue(registry_value)
 
     value_data = 'NavStartShellEvent'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'StartShell', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    navlogon.AddValue(registry_value)
+    navlogon_key.AddValue(registry_value)
 
-    secret_malware = dfwinreg_fake.FakeWinRegistryKey(
-        'SecretMalware', last_written_time=filetime.timestamp)
-    notify.AddSubkey(secret_malware)
+    secret_malware_key_name = 'SecretMalware'
+    secret_malware_key = dfwinreg_fake.FakeWinRegistryKey(
+        secret_malware_key_name, last_written_time=filetime.timestamp)
+    notify_key.AddSubkey(secret_malware_key_name, secret_malware_key)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Asynchronous', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secret_malware.dll'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'DllName', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Impersonate', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventLock'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Lock', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventLogoff'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Logoff', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventLogon'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Logon', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventShutdown'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Shutdown', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventSmartCardLogonNotify'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'SmartCardLogonNotify', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventStartShell'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'StartShell', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventStartup'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Startup', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventStopScreenSaver'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'StopScreenSaver', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     value_data = 'secretEventUnlock'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'Unlock', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
-    secret_malware.AddValue(registry_value)
+    secret_malware_key.AddValue(registry_value)
 
     return registry_key
 
@@ -288,13 +288,16 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     plugin = winlogon.WinlogonPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
-    test_event_data1 = None
-    test_event_data2 = None
+    # The order of the events is non-deterministic since they are sorted on
+    # timestamp and description only.
+    test_event1 = None
+    test_event2 = None
     for event in events:
       self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
@@ -302,31 +305,30 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
       self.assertEqual(event_data.data_type, 'windows:registry:winlogon')
 
       if event_data.application == 'VmApplet':
-        test_event_data1 = event_data
+        test_event1 = event
       elif (event_data.application == 'NavLogon' and
             event_data.trigger == 'Logoff'):
-        test_event_data2 = event_data
+        test_event2 = event
 
-    expected_message = (
-        '[{0:s}] '
-        'Application: VmApplet '
-        'Command: SystemPropertiesPerformance.exe/pagefile '
-        'Trigger: Logon').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+    expected_event_values = {
+        'application': 'VmApplet',
+        'command': 'SystemPropertiesPerformance.exe/pagefile',
+        'date_time': '2013-01-30 10:47:57.0000000',
+        'data_type': 'windows:registry:winlogon',
+        'key_path': key_path,
+        'trigger': 'Logon'}
 
-    self._TestGetMessageStrings(
-        test_event_data1, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, test_event1, expected_event_values)
 
-    expected_message = (
-        '[{0:s}\\Notify\\NavLogon] '
-        'Application: NavLogon '
-        'Command: NavLogon.dll '
-        'Handler: NavLogoffEvent '
-        'Trigger: Logoff').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+    expected_event_values = {
+        'application': 'NavLogon',
+        'command': 'NavLogon.dll',
+        'date_time': '2013-01-30 10:47:57.0000000',
+        'data_type': 'windows:registry:winlogon',
+        'key_path': '{0:s}\\Notify\\NavLogon'.format(key_path),
+        'trigger': 'Logoff'}
 
-    self._TestGetMessageStrings(
-        test_event_data2, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, test_event2, expected_event_values)
 
 
 if __name__ == '__main__':

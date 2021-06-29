@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """The plist file object."""
 
-from __future__ import unicode_literals
-
-import biplist
+import plistlib
 
 
 class PlistFile(object):
@@ -63,9 +61,7 @@ class PlistFile(object):
       OSError: if the plist file-like object cannot be read.
     """
     try:
-      self.root_key = biplist.readPlist(file_object)
+      self.root_key = plistlib.load(file_object)
 
-    except (
-        biplist.NotBinaryPlistException,
-        biplist.InvalidPlistException) as exception:
+    except plistlib.InvalidFileException as exception:
       raise IOError(exception)

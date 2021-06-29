@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the text prepend CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -24,11 +22,11 @@ usage: cli_helper.py [-t TEXT]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   -t TEXT, --text TEXT  Define a free form text string that is prepended to
                         each path to make it easier to distinguish one record
                         from another in a timeline (like c:\\, or host_w_c:\\)
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

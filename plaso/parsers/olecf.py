@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """Parser for OLE Compound Files (OLECF)."""
 
-from __future__ import unicode_literals
-
 import pyolecf
 
 from plaso.lib import specification
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -15,10 +14,10 @@ class OLECFParser(interface.FileObjectParser):
 
   # pylint: disable=no-member
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = 'olecf'
-  DESCRIPTION = 'Parser for OLE Compound Files (OLECF).'
+  DATA_FILE = 'OLE Compound file (OLECF)'
+
+  _INITIAL_FILE_OFFSET = None
 
   _plugin_classes = {}
 
@@ -54,7 +53,7 @@ class OLECFParser(interface.FileObjectParser):
 
     try:
       olecf_file.open_file_object(file_object)
-    except IOError as exception:
+    except (IOError, TypeError) as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to open file with error: {0!s}'.format(exception))
       return
@@ -78,8 +77,16 @@ class OLECFParser(interface.FileObjectParser):
         if parser_mediator.abort:
           break
 
+        file_entry = parser_mediator.GetFileEntry()
+        display_name = parser_mediator.GetDisplayName(file_entry)
+
         if not plugin.REQUIRED_ITEMS.issubset(item_names):
+          logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
+              display_name, plugin.NAME))
           continue
+
+        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+            display_name, plugin.NAME))
 
         try:
           plugin.UpdateChainAndProcess(parser_mediator, root_item=root_item)

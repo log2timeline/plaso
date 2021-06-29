@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """A plugin that gather extension IDs from Chrome history browser."""
 
-from __future__ import unicode_literals
-
 import re
 
 import requests
@@ -10,16 +8,12 @@ import requests
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
-from plaso.containers import reports
 
 
 class ChromeExtensionPlugin(interface.AnalysisPlugin):
   """Convert Chrome extension IDs into names, requires Internet connection."""
 
   NAME = 'chrome_extension'
-
-  # Indicate that we can run this plugin during regular extraction.
-  ENABLE_IN_EXTRACTION = True
 
   _SUPPORTED_EVENT_DATA_TYPES = frozenset([
       'fs:stat'])
@@ -145,13 +139,14 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append('')
     report_text = '\n'.join(lines_of_text)
-    analysis_report = reports.AnalysisReport(
-        plugin_name=self.NAME, text=report_text)
+
+    analysis_report = super(ChromeExtensionPlugin, self).CompileReport(mediator)
+    analysis_report.text = report_text
     analysis_report.report_dict = self._results
     return analysis_report
 
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data):
+  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event.
 
     Args:
@@ -159,6 +154,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
       return

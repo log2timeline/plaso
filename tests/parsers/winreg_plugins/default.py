@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the default Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import default
 
 from tests.parsers.winreg_plugins import test_lib
@@ -70,31 +67,28 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
     plugin = default.DefaultPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
-
-    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    # This should just be the plugin name, as we're invoking it directly,
-    # and not through the parser.
-    self.assertEqual(event_data.parser, plugin.plugin_name)
-
-    expected_message = (
-        '[{0:s}] '
+    expected_values = (
         'MRUList: [REG_SZ] acb '
         'a: [REG_SZ] Some random text here '
         'b: [REG_BINARY] (22 bytes) '
-        'c: [REG_SZ] C:/looks_legit.exe').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
+        'c: [REG_SZ] C:/looks_legit.exe')
 
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'date_time': '2012-08-28 09:23:49.0020310',
+        'data_type': 'windows:registry:key_value',
+        'key_path': key_path,
+        # This should just be the plugin name, as we're invoking it directly,
+        # and not through the parser.
+        'parser': plugin.NAME,
+        'values': expected_values}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

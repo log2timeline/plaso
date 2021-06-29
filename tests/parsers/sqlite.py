@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import py2to3
 from plaso.parsers import sqlite
 # Register all plugins.
 from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
@@ -12,31 +11,34 @@ from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
 from tests.parsers import test_lib
 
 
-class SQLiteParserTest(test_lib.ParserTestCase):
-  """Tests for the SQLite database parser."""
+class SQLiteDatabaseTest(test_lib.ParserTestCase):
+  """Tests for the SQLite database."""
 
-  # pylint: disable=protected-access
+  # TODO: add tests for tables property
+  # TODO: add tests for _CopyFileObjectToTemporaryFile
+  # TODO: add tests for Open and Close
 
-  def testEnablePlugins(self):
-    """Tests the EnablePlugins function."""
-    parser = sqlite.SQLiteParser()
-    parser.EnablePlugins(['chrome_27_history'])
+  def testOpenClose(self):
+    """Tests the Open and Close functions."""
+    database_file_path = self._GetTestFilePath(['contacts2.db'])
+    self._SkipIfPathNotExists(database_file_path)
 
-    self.assertIsNotNone(parser)
-    self.assertIsNone(parser._default_plugin)
-    self.assertNotEqual(parser._plugins, [])
-    self.assertEqual(len(parser._plugins), 1)
+    database = sqlite.SQLiteDatabase('contacts2.db')
+    with open(database_file_path, 'rb') as database_file_object:
+      database.Open(database_file_object)
+      database.Close()
 
-  def testFileParserChainMaintenance(self):
-    """Tests that the parser chain is correctly maintained by the parser."""
-    parser = sqlite.SQLiteParser()
-    storage_writer = self._ParseFile(['contacts2.db'], parser)
+  def testOpenCloseOnDatabaseWithDotInTableName(self):
+    """Tests Open and Close on a database with a dot in a table name."""
+    database_file_path = self._GetTestFilePath(['data.db'])
+    self._SkipIfPathNotExists(database_file_path)
 
-    for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(1, event_data.parser.count('/'))
+    database = sqlite.SQLiteDatabase('data.db')
+    with open(database_file_path, 'rb') as database_file_object:
+      database.Open(database_file_object)
+      database.Close()
 
-  def testQueryDatabaseWithWAL(self):
+  def testQueryOnDatabaseWithWAL(self):
     """Tests the Query function on a database with a WAL file."""
     database_file_path = self._GetTestFilePath(['wal_database.db'])
     self._SkipIfPathNotExists(database_file_path)
@@ -51,15 +53,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     row_results = []
     for row in database.Query('SELECT * FROM MyTable'):
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
-      # Also, Field3 needs to be converted to a string if Python 2 is used
-      # because it is a read-write buffer.
-      field3 = row['Field3']
-      if py2to3.PY_2 and field3 is not None:
-        field3 = str(field3)
-      row_results.append((
-          row['Field1'], row['Field2'], field3))
+      row_results.append((row['Field1'], row['Field2'], row['Field3']))
 
     expected_results = [
         ('Committed Text 1', 1, None),
@@ -76,7 +70,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(expected_results, row_results)
 
-  def testQueryDatabaseWithoutWAL(self):
+  def testQueryOnDatabaseWithoutWAL(self):
     """Tests the Query function on a database without a WAL file."""
     database_file_path = self._GetTestFilePath(['wal_database.db'])
     self._SkipIfPathNotExists(database_file_path)
@@ -87,15 +81,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     row_results = []
     for row in database.Query('SELECT * FROM MyTable'):
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
-      # Also, Field3 needs to be converted to a string if Python 2 is used
-      # because it is a read-write buffer.
-      field3 = row['Field3']
-      if py2to3.PY_2 and field3:
-        field3 = str(field3)
-      row_results.append((
-          row['Field1'], row['Field2'], field3))
+      row_results.append((row['Field1'], row['Field2'], row['Field3']))
 
     expected_results = [
         ('Committed Text 1', 1, None),
@@ -110,6 +96,56 @@ class SQLiteParserTest(test_lib.ParserTestCase):
         ('Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03')]
 
     self.assertEqual(expected_results, row_results)
+
+
+class SQLiteParserTest(test_lib.ParserTestCase):
+  """Tests for the SQLite database parser."""
+
+  # pylint: disable=protected-access
+
+  # TODO: add tests for _OpenDatabaseWithWAL
+
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser = sqlite.SQLiteParser()
+
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    self.assertEqual(len(parser._plugins), number_of_plugins)
+
+    parser.EnablePlugins(['chrome_27_history'])
+    self.assertEqual(len(parser._plugins), 1)
+
+  def testGetFormatSpecification(self):
+    """Tests the GetFormatSpecification function."""
+    format_specification = sqlite.SQLiteParser.GetFormatSpecification()
+    self.assertIsNotNone(format_specification)
+
+  def testParseFileEntry(self):
+    """Tests the ParseFileEntry function."""
+    parser = sqlite.SQLiteParser()
+    storage_writer = self._ParseFile(['contacts2.db'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    for event in storage_writer.GetEvents():
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      self.assertEqual(1, event_data.parser.count('/'))
+
+  def testParseFileEntryOnDatabaseWithDotInTableName(self):
+    """Tests ParseFileEntry on a database with a dot in a table name."""
+    parser = sqlite.SQLiteParser()
+    storage_writer = self._ParseFile(['data.db'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
 
 if __name__ == '__main__':

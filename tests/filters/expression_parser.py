@@ -2,35 +2,16 @@
 # -*- coding: utf-8 -*-
 """Tests for the event filter functions."""
 
-from __future__ import unicode_literals
-
 import re
 import unittest
 
 from plaso.containers import events
 from plaso.filters import expression_parser
 from plaso.filters import filters
-from plaso.formatters import interface as formatters_interface
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
-
-
-class PfilterFakeFormatter(formatters_interface.EventFormatter):
-  """A formatter for this fake class."""
-  DATA_TYPE = 'Weirdo:Made up Source:Last Written'
-
-  FORMAT_STRING = '{text}'
-  FORMAT_STRING_SHORT = '{text_short}'
-
-  SOURCE_LONG = 'Fake Parsing Source'
-  SOURCE_SHORT = 'REG'
-
-
-formatters_manager.FormattersManager.RegisterFormatter(PfilterFakeFormatter)
 
 
 class TestBinaryOperator(filters.GenericBinaryOperator):
@@ -85,20 +66,21 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
        'hostname': 'Agrabah',
        'inode': 1245,
        'parser': 'Weirdo',
-       'text': (
-           'User did a very bad thing, bad, bad thing that awoke Dr. Evil.'),
+       'text': 'User did a very bad thing, bad, bad thing that awoke Dr. Evil.',
        'text_short': 'This description is different than the long one.',
-       'timestamp': timelib.Timestamp.CopyFromString('2015-11-18 01:15:43'),
+       'timestamp': '2015-11-18 01:15:43',
        'timestamp_desc': 'Last Written'}]
 
   def _CheckIfExpressionMatches(
-      self, expression, event, event_data, event_tag, expected_result):
+      self, expression, event, event_data, event_data_stream, event_tag,
+      expected_result):
     """Checks if the event filter expression matches the event values.
 
     Args:
       expression (str): event filter expression.
       event (EventObject): event.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
       expected_result (bool): expected result.
     """
@@ -106,8 +88,15 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     expression = parser.Parse(expression)
     event_filter = expression.Compile()
 
-    result = event_filter.Matches(event, event_data, event_tag)
+    result = event_filter.Matches(
+        event, event_data, event_data_stream, event_tag)
     self.assertEqual(expected_result, result)
+
+  # TODO: add tests for _AddArgument
+  # TODO: add tests for _AddArgumentDateTime
+  # TODO: add tests for _AddArgumentDecimalInteger
+  # TODO: add tests for _AddArgumentFloatingPoint
+  # TODO: add tests for _AddArgumentHexadecimalInteger
 
   def testAddBinaryOperator(self):
     """Tests the _AddBinaryOperator function."""
@@ -169,6 +158,12 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     self.assertEqual(parser._processed_buffer, '(')
 
   # TODO: add tests for _NegateExpression
+
+  def testNoOperation(self):
+    """Tests the _NoOperation function."""
+    parser = expression_parser.EventFilterExpressionParser()
+
+    parser._NoOperation()
 
   def testPopState(self):
     """Tests the _PopState function."""
@@ -256,6 +251,18 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
       match = re.compile(r'\\(.)').match('\\q')
       parser._StringEscape(string='\\q', match=match)
 
+  def testStringExpand(self):
+    """Tests the _StringExpand function."""
+    parser = expression_parser.EventFilterExpressionParser()
+    parser._Reset()
+
+    parser._StringStart()
+    self.assertEqual(parser._string, '')
+
+    next_state = parser._StringExpand(string='string')
+    self.assertIsNone(next_state)
+    self.assertEqual(parser._string, 'string')
+
   def testStringFinish(self):
     """Tests the _StringFinish function."""
     parser = expression_parser.EventFilterExpressionParser()
@@ -263,18 +270,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
     next_state = parser._StringFinish()
     self.assertIsNone(next_state)
-
-  def testStringInsert(self):
-    """Tests the _StringInsert function."""
-    parser = expression_parser.EventFilterExpressionParser()
-    parser._Reset()
-
-    parser._StringStart()
-    self.assertEqual(parser._string, '')
-
-    next_state = parser._StringInsert(string='string')
-    self.assertIsNone(next_state)
-    self.assertEqual(parser._string, 'string')
 
   def testStringStart(self):
     """Tests the _StringStart function."""
@@ -285,17 +280,7 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     self.assertIsNone(next_state)
     self.assertEqual(parser._string, '')
 
-  def testDefault(self):
-    """Tests the Default function."""
-    parser = expression_parser.EventFilterExpressionParser()
-
-    parser.Default()
-
   # TODO: add tests for HexEscape
-  # TODO: add tests for InsertArg
-  # TODO: add tests for InsertFloatArg
-  # TODO: add tests for InsertIntArg
-  # TODO: add tests for InsertInt16Arg
 
   def testParse(self):
     """Tests the Parse function."""
@@ -400,57 +385,59 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
   def testParseWithEvents(self):
     """Tests the Parse function with events."""
-    event, event_data = containers_test_lib.CreateEventFromValues(
+    event, event_data, _ = containers_test_lib.CreateEventFromValues(
         self._TEST_EVENTS[0])
 
-    event_tag = events.EventTag(comment='comment')
+    event_tag = events.EventTag()
     event_tag.AddLabel('browser_search')
 
     self._CheckIfExpressionMatches(
-        'filename contains \'GoodFella\'', event, event_data, event_tag, True)
+        'filename contains \'GoodFella\'', event, event_data, None, event_tag,
+        True)
 
     # Test timestamp filtering.
     self._CheckIfExpressionMatches(
-        'timestamp >= \'2015-11-18\'', event, event_data, event_tag, True)
+        'timestamp >= \'2015-11-18\'', event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'timestamp < \'2015-11-19\'', event, event_data, event_tag, True)
+        'timestamp < \'2015-11-19\'', event, event_data, None, event_tag, True)
 
     expression = (
         'timestamp < \'2015-11-18T01:15:44.341\' and '
         'timestamp > \'2015-11-18 01:15:42\'')
 
     self._CheckIfExpressionMatches(
-        expression, event, event_data, event_tag, True)
+        expression, event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'timestamp > \'2015-11-19\'', event, event_data, event_tag, False)
+        'timestamp > \'2015-11-19\'', event, event_data, None, event_tag, False)
 
     # Perform few attribute tests.
     self._CheckIfExpressionMatches(
-        'filename not contains \'sometext\'', event, event_data, event_tag,
-        True)
+        'filename not contains \'sometext\'', event, event_data, None,
+        event_tag, True)
 
     expression = (
         'timestamp_desc CONTAINS \'written\' AND timestamp > \'2015-11-18\' '
         'AND timestamp < \'2015-11-25 12:56:21\'')
 
     self._CheckIfExpressionMatches(
-        expression, event, event_data, event_tag, True)
+        expression, event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'parser is not \'Made\'', event, event_data, event_tag, True)
+        'parser is not \'Made\'', event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'parser is not \'Weirdo\'', event, event_data, event_tag, False)
+        'parser is not \'Weirdo\'', event, event_data, None, event_tag, False)
 
     self._CheckIfExpressionMatches(
-        'tag contains \'browser_search\'', event, event_data, event_tag, True)
+        'tag contains \'browser_search\'', event, event_data, None, event_tag,
+        True)
 
     # Test multiple attributes.
     self._CheckIfExpressionMatches(
-        'text iregexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'', event,
-        event_data, event_tag, True)
+        'text iregexp \'bad, bad thing [a-zA-Z\\\\s.]+ evil\'', event,
+        event_data, None, event_tag, True)
 
 
 if __name__ == "__main__":

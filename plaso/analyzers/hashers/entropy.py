@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """The entropy calculation implementation."""
 
-from __future__ import division
-from __future__ import unicode_literals
-
 import collections
 import math
 

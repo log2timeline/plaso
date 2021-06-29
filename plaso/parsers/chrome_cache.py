@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Google Chrome and Chromium Cache files."""
 
-from __future__ import unicode_literals
-
 import os
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time
@@ -11,9 +9,9 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -101,7 +99,8 @@ class CacheEntry(object):
     self.rankings_node = None
 
 
-class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
+class ChromeCacheIndexFileParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Chrome cache index file parser.
 
   Attributes:
@@ -111,9 +110,8 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
         the index file.
   """
 
-  _DEFINITION_FILE = 'chrome_cache.yaml'
-
-  _FILE_SIGNATURE = 0xc103cac3
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'chrome_cache.yaml')
 
   def __init__(self):
     """Initializes an index file."""
@@ -139,9 +137,6 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError(
           'Unable to parse index file header with error: {0!s}'.format(
               exception))
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.ParseError('Unsupported index file signature')
 
     format_version = '{0:d}.{1:d}'.format(
         file_header.major_version, file_header.minor_version)
@@ -203,12 +198,12 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
     self._ParseIndexTable(file_object)
 
 
-class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
+class ChromeCacheDataBlockFileParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Chrome cache data block file parser."""
 
-  _DEFINITION_FILE = 'chrome_cache.yaml'
-
-  _FILE_SIGNATURE = 0xc104cac3
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'chrome_cache.yaml')
 
   def _ParseFileHeader(self, file_object):
     """Parses the file header.
@@ -229,9 +224,6 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError(
           'Unable to parse data block file header with error: {0!s}'.format(
               exception))
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.ParseError('Unsupported data block file signature')
 
     format_version = '{0:d}.{1:d}'.format(
         file_header.major_version, file_header.minor_version)
@@ -264,7 +256,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
       cache_entry, _ = self._ReadStructureFromFileObject(
           file_object, block_offset, cache_entry_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.ParseError((
           'Unable to parse cache entry at offset: 0x{0:08x} with error: '
           '{1!s}').format(block_offset, exception))
 
@@ -322,7 +314,7 @@ class ChromeCacheParser(interface.FileEntryParser):
   """Parses Chrome Cache files."""
 
   NAME = 'chrome_cache'
-  DESCRIPTION = 'Parser for Chrome Cache files.'
+  DATA_FORMAT = 'Google Chrome or Chromium Cache file'
 
   def __init__(self):
     """Initializes a Chrome Cache files parser."""
@@ -438,18 +430,11 @@ class ChromeCacheParser(interface.FileEntryParser):
                 'Unable to parse data block file: {0:s} with error: '
                 '{1!s}').format(cache_address.filename, exception)
             parser_mediator.ProduceExtractionWarning(message)
-            data_block_file_object.close()
             data_block_file_object = None
 
         data_block_files[cache_address.filename] = data_block_file_object
 
-    try:
-      self._ParseCacheEntries(
-          parser_mediator, index_table, data_block_files)
-    finally:
-      for data_block_file_object in iter(data_block_files.values()):
-        if data_block_file_object:
-          data_block_file_object.close()
+    self._ParseCacheEntries(parser_mediator, index_table, data_block_files)
 
   def ParseFileEntry(self, parser_mediator, file_entry):
     """Parses Chrome Cache files.
@@ -465,11 +450,15 @@ class ChromeCacheParser(interface.FileEntryParser):
     index_file_parser = ChromeCacheIndexFileParser()
 
     file_object = file_entry.GetFileObject()
+    if not file_object:
+      display_name = parser_mediator.GetDisplayName()
+      raise errors.UnableToParseFile(
+          '[{0:s}] unable to parse index file {1:s}'.format(
+              self.NAME, display_name))
+
     try:
       index_file_parser.ParseFileObject(parser_mediator, file_object)
     except (IOError, errors.ParseError) as exception:
-      file_object.close()
-
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse index file {1:s} with error: {2!s}'.format(
@@ -477,13 +466,9 @@ class ChromeCacheParser(interface.FileEntryParser):
 
     # TODO: create event based on index file creation time.
 
-    try:
-      file_system = file_entry.GetFileSystem()
-      self._ParseIndexTable(
-          parser_mediator, file_system, file_entry,
-          index_file_parser.index_table)
-    finally:
-      file_object.close()
+    file_system = file_entry.GetFileSystem()
+    self._ParseIndexTable(
+        parser_mediator, file_system, file_entry, index_file_parser.index_table)
 
 
 manager.ParsersManager.RegisterParser(ChromeCacheParser)

@@ -1,0 +1,80 @@
+# iOS related event formatters.
+
+type: 'conditional'
+data_type: 'ios:kik:messaging'
+enumeration_helpers:
+- input_attribute: 'message_status'
+  output_attribute: 'message_status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'unread'
+    2: 'message not sent'
+    6: 'sent to Kik server'
+    14: 'delivered '
+    16: 'message read'
+    30: 'read after immediate delivery'
+    38: 'not a member of the group'
+    66: 'delay in reaching Kik server'
+    70: 'push notification sent'
+    78: 'delivered after offline'
+    94: 'read after offline'
+- input_attribute: 'message_type'
+  output_attribute: 'message_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'received'
+    2: 'sent'
+    3: 'message to group admin'
+    4: 'message to group'
+message:
+- 'Username: {username}'
+- 'Displayname: {displayname}'
+- 'Status: {message_status}'
+- 'Type: {message_type}'
+- 'Message: {body}'
+short_message:
+- '{body}'
+---
+type: 'conditional'
+data_type: 'twitter:ios:contact'
+enumeration_helpers:
+- input_attribute: 'following'
+  output_attribute: 'following'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Screen name: {screen_name}'
+- 'Profile picture URL: {profile_url}'
+- 'Name: {name}'
+- 'Location: {location}'
+- 'Description: {description}'
+- 'URL: {url}'
+- 'Following: {following}'
+- 'Number of followers: {followers_count}'
+- 'Number of following: {following_count}'
+short_message:
+- 'Screen name: {screen_name}'
+- 'Description: {description}'
+- 'URL: {url}'
+---
+type: 'conditional'
+data_type: 'twitter:ios:status'
+enumeration_helpers:
+- input_attribute: 'favorited'
+  output_attribute: 'favorited'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Name: {name}'
+- 'User Id: {user_id}'
+- 'Message: {text}'
+- 'Favorite: {favorited}'
+- 'Retweet Count: {retweet_count}'
+- 'Favorite Count: {favorite_count}'
+short_message:
+- 'Name: {name}'
+- 'Message: {text}'

@@ -1,24 +1,61 @@
 # -*- coding: utf-8 -*-
-"""Plist_interface contains basic interface for plist plugins within Plaso.
+"""Interface for plist parser plugins.
 
 Plist files are only one example of a type of object that the Plaso tool is
-expected to encounter and process.  There can be and are many other parsers
+expected to encounter and process. There can be and are many other parsers
 which are designed to process specific data types.
 
 PlistPlugin defines the attributes necessary for registration, discovery
 and operation of plugins for plist files which will be used by PlistParser.
 """
 
-from __future__ import unicode_literals
-
 import abc
 
-from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import plugins
 
-# pylint: disable=missing-type-doc,missing-return-type-doc
-# pylint: disable=missing-yield-doc,missing-yield-type-doc
+
+class PlistPathFilter(object):
+  """The plist path filter."""
+
+  def __init__(self, filename):
+    """Initializes a plist path filter.
+
+    Args:
+      filename (str): expected file name of the plist.
+    """
+    super(PlistPathFilter, self).__init__()
+    self._filename_lower_case = filename.lower()
+
+  def Match(self, filename_lower_case):
+    """Determines if a plist filename matches the filter.
+
+    Note that this method does a case insensitive comparison.
+
+    Args:
+      filename_lower_case (str): filename of the plist in lower case.
+
+    Returns:
+      bool: True if the filename matches the filter.
+    """
+    return bool(filename_lower_case == self._filename_lower_case)
+
+
+class PrefixPlistPathFilter(PlistPathFilter):
+  """The prefix plist path filter."""
+
+  def Match(self, filename_lower_case):
+    """Determines if a plist filename matches the filter.
+
+    Note that this method does a case insensitive comparison.
+
+    Args:
+      filename_lower_case (str): filename of the plist in lower case.
+
+    Returns:
+      bool: True if the filename matches the filter.
+    """
+    return filename_lower_case.startswith(self._filename_lower_case)
 
 
 class PlistPlugin(plugins.BasePlugin):
@@ -28,48 +65,38 @@ class PlistPlugin(plugins.BasePlugin):
   plugin.
 
   Attributes:
-  PLIST_PATH - string of the filename the plugin is designed to process.
-  PLIST_KEY - list of keys holding values that are necessary for processing.
+    PLIST_PATH_FILTERS (set[PlistPathFilter]): plist path filters that should
+         match for the plugin to process the plist.
+    PLIST_KEY (set[str]): keys holding values that are necessary for processing.
 
-  Please note, PLIST_KEY is cAse sensitive and for a plugin to match a
+  Please note, PLIST_KEY is case sensitive and for a plugin to match a
   plist file needs to contain at minimum the number of keys needed for
-  processing or WrongPlistPlugin is raised.
+  processing.
 
   For example if a Plist file contains the following keys,
   {'foo': 1, 'bar': 2, 'opt': 3} with 'foo' and 'bar' being keys critical to
   processing define PLIST_KEY as ['foo', 'bar']. If 'opt' is only optionally
   defined it can still be accessed by manually processing self.top_level from
   the plugin.
-
-  Methods:
-  GetEntries() - extract and format info from keys and yields event.PlistEvent.
   """
 
   NAME = 'plist_plugin'
 
-  # PLIST_PATH is a string for the filename this parser is designed to process.
-  # This is expected to be overridden by the processing plugin.
-  # Ex. 'com.apple.bluetooth.plist'
-  PLIST_PATH = 'any'
+  # This is expected to be overridden by the processing plugin, for example:
+  # frozenset(PlistPathFilter('com.apple.bluetooth.plist'))
+  PLIST_PATH_FILTERS = frozenset()
 
   # PLIST_KEYS is a list of keys required by a plugin.
   # This is expected to be overridden by the processing plugin.
   # Ex. frozenset(['DeviceCache', 'PairedDevices'])
   PLIST_KEYS = frozenset(['any'])
 
-  # This is expected to be overridden by the processing plugin.
-  # URLS should contain a list of URLs with additional information about
-  # this key or value.
-  # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
-  URLS = []
-
   def _GetKeys(self, top_level, keys, depth=1):
     """Helper function to return keys nested in a plist dict.
 
     By default this function will return the values for the named keys requested
     by a plugin in match dictionary object. The default setting is to look
-    a single layer down from the root (same as the check for plugin
-    applicability). This level is suitable for most cases.
+    a single level down from the root, which is suitable for most cases.
 
     For cases where there is variability in the name at the first level, for
     example the name is the MAC address of a device or a UUID, it is possible
@@ -82,12 +109,12 @@ class PlistPlugin(plugins.BasePlugin):
 
     Args:
       top_level (dict[str, object]): plist top-level key.
-      keys: A list of keys that should be returned.
-      depth: Defines how many levels deep to check for a match.
+      keys (list[str]): names of the keys that should be returned.
+      depth (int): number of levels to check for a match.
 
     Returns:
-      A dictionary with just the keys requested or an empty dict if the plist
-      is flat, eg. top_level is a list instead of a dict object.
+      dict[str, object]: the keys requested or an empty set if the plist is
+          flat, for example the top level is a list instead of a dictionary.
     """
     match = {}
     if not isinstance(top_level, dict):
@@ -99,19 +126,78 @@ class PlistPlugin(plugins.BasePlugin):
     if depth == 1:
       for key in keys:
         match[key] = top_level.get(key, None)
+
     else:
-      for _, parsed_key, parsed_value in RecurseKey(top_level, depth=depth):
+      for _, parsed_key, parsed_value in self._RecurseKey(
+          top_level, depth=depth):
         if parsed_key in keys:
           match[parsed_key] = parsed_value
           if set(match.keys()) == keys:
             return match
+
     return match
+
+  def _RecurseKey(self, plist_item, depth=15, key_path=''):
+    """Flattens nested dictionaries and lists by yielding its values.
+
+    The hierarchy of a plist file is a series of nested dictionaries and lists.
+    This is a helper function helps plugins navigate the structure without
+    having to reimplement their own recursive methods.
+
+    This method implements an overridable depth limit to prevent processing
+    extremely deeply nested plists. If the limit is reached a debug message is
+    logged indicating which key processing stopped on.
+
+    Example Input Plist:
+      plist_item = { DeviceRoot: { DeviceMAC1: [Value1, Value2, Value3],
+                                   DeviceMAC2: [Value1, Value2, Value3]}}
+
+    Example Output:
+      ('', DeviceRoot, {DeviceMACs...})
+      (DeviceRoot, DeviceMAC1, [Value1, Value2, Value3])
+      (DeviceRoot, DeviceMAC2, [Value1, Value2, Value3])
+
+    Args:
+      plist_item (object): plist item to be checked for additional nested items.
+      depth (Optional[int]): current recursion depth. This value is used to
+          ensure we stop at the maximum recursion depth.
+      key_path (Optional[str]): path of the current working key.
+
+    Yields:
+      tuple[str, str, object]: key path, key name and value.
+    """
+    if depth < 1:
+      logger.debug(
+          'Maximum recursion depth of 15 reached for key: {0:s}'.format(
+              key_path))
+
+    elif isinstance(plist_item, (list, tuple)):
+      for sub_plist_item in plist_item:
+        for subkey_values in self._RecurseKey(
+            sub_plist_item, depth=depth - 1, key_path=key_path):
+          yield subkey_values
+
+    elif hasattr(plist_item, 'items'):
+      for subkey_name, value in plist_item.items():
+        yield key_path, subkey_name, value
+
+        if isinstance(value, dict):
+          value = [value]
+        elif not isinstance(value, (list, tuple)):
+          continue
+
+        for sub_plist_item in value:
+          if isinstance(sub_plist_item, dict):
+            subkey_path = '{0:s}/{1:s}'.format(key_path, subkey_name)
+            for subkey_values in self._RecurseKey(
+                sub_plist_item, depth=depth - 1, key_path=subkey_path):
+              yield subkey_values
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod
-  def GetEntries(
-      self, parser_mediator, top_level=None, match=None, **unused_kwargs):
-    """Extracts event objects from the values of entries within a plist.
+  def _ParsePlist(
+      self, parser_mediator, match=None, top_level=None, **unused_kwargs):
+    """Extracts events from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
 
@@ -123,148 +209,35 @@ class PlistPlugin(plugins.BasePlugin):
     For example if you want to note the timestamps of when devices were
     LastInquiryUpdated you would need to examine the bluetooth config file
     called 'com.apple.bluetooth' and need to look at devices under the key
-    'DeviceCache'.  To do this the plugin needs to define
-    PLIST_PATH = 'com.apple.bluetooth' and PLIST_KEYS =
-    frozenset(['DeviceCache']). IMPORTANT: this interface requires exact names
-    and is case sensitive. A unit test based on a real world file is expected
-    for each plist plugin.
+    'DeviceCache'. To do this the plugin needs to define:
+        PLIST_PATH_FILTERS = frozenset([
+            interface.PlistPathFilter('com.apple.bluetooth')])
+        PLIST_KEYS = frozenset(['DeviceCache']).
 
     When a file with this key is encountered during processing self.matched is
-    populated and the plugin's GetEntries() is called.  The plugin would have
+    populated and the plugin's _ParsePlist() is called. The plugin would have
     self.matched = {'DeviceCache': [{'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}, 'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}'...}]} and needs to implement logic here to extract
     values, format, and produce the data as a event.PlistEvent.
 
-    The attributes for a PlistEvent should include the following:
-      root = Root key this event was extracted from. E.g. DeviceCache/
-      key = Key the value resided in.  E.g. 'DE:AD:BE:EF:01'
-      time = Date this artifact was created in number of micro seconds
-             (usec) since January 1, 1970, 00:00:00 UTC.
-      desc = Short description.  E.g. 'Device LastInquiryUpdated'
-
-    See plist/bluetooth.py for the implemented example plugin.
-
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      top_level (Optional[dict[str, object]]): plist top-level key.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
+      top_level (Optional[dict[str, object]]): plist top-level item.
     """
 
-  def Process(self, parser_mediator, plist_name, top_level, **kwargs):
-    """Determine if this is the correct plugin; if so proceed with processing.
-
-    Process() checks if the current plist being processed is a match for a
-    plugin by comparing the PATH and KEY requirements defined by a plugin.  If
-    both match processing continues; else raise WrongPlistPlugin.
-
-    This function also extracts the required keys as defined in self.PLIST_KEYS
-    from the plist and stores the result in self.match[key] and calls
-    self.GetEntries() which holds the processing logic implemented by the
-    plugin.
+  def Process(self, parser_mediator, top_level=None, **kwargs):
+    """Extracts events from a plist file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      plist_name (str): name of the plist.
-      top_level (dict[str, object]): plist top-level key.
-
-    Raises:
-      WrongPlistPlugin: If this plugin is not able to process the given file.
-      ValueError: If top_level or plist_name are not set.
+      top_level (Optional[dict[str, object]]): plist top-level item.
     """
-    if plist_name is None or top_level is None:
-      raise ValueError('Top level or plist name are not set.')
-
-    if plist_name.lower() != self.PLIST_PATH.lower():
-      raise errors.WrongPlistPlugin(self.NAME, plist_name)
-
-    if isinstance(top_level, dict):
-      if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
-        raise errors.WrongPlistPlugin(self.NAME, plist_name)
-
-    else:
-      # Make sure we are getting back an object that has an iterator.
-      if not hasattr(top_level, '__iter__'):
-        raise errors.WrongPlistPlugin(self.NAME, plist_name)
-
-      # This is a list and we need to just look at the first level
-      # of keys there.
-      keys = []
-      for top_level_entry in top_level:
-        if isinstance(top_level_entry, dict):
-          keys.extend(top_level_entry.keys())
-
-      # Compare this is a set, which removes possible duplicate entries
-      # in the list.
-      if not set(keys).issuperset(self.PLIST_KEYS):
-        raise errors.WrongPlistPlugin(self.NAME, plist_name)
-
     # This will raise if unhandled keyword arguments are passed.
     super(PlistPlugin, self).Process(parser_mediator)
 
-    logger.debug('Plist Plugin Used: {0:s} for: {1:s}'.format(
-        self.NAME, plist_name))
     match = self._GetKeys(top_level, self.PLIST_KEYS)
-    self.GetEntries(parser_mediator, top_level=top_level, match=match)
-
-
-# TODO: move to lib.plist.
-def RecurseKey(recur_item, depth=15, key_path=''):
-  """Flattens nested dictionaries and lists by yielding it's values.
-
-  The hierarchy of a plist file is a series of nested dictionaries and lists.
-  This is a helper function helps plugins navigate the structure without
-  having to reimplement their own recursive methods.
-
-  This method implements an overridable depth limit to prevent processing
-  extremely deeply nested plists. If the limit is reached a debug message is
-  logged indicating which key processing stopped on.
-
-  Example Input Plist:
-    recur_item = { DeviceRoot: { DeviceMAC1: [Value1, Value2, Value3],
-                                 DeviceMAC2: [Value1, Value2, Value3]}}
-
-  Example Output:
-    ('', DeviceRoot, {DeviceMACs...})
-    (DeviceRoot, DeviceMAC1, [Value1, Value2, Value3])
-    (DeviceRoot, DeviceMAC2, [Value1, Value2, Value3])
-
-  Args:
-    recur_item: An object to be checked for additional nested items.
-    depth: Optional integer indication the current recursion depth.
-           This value is used to ensure we stop at the maximum recursion depth.
-    key_path: Optional path of the current working key.
-
-  Yields:
-    A tuple of the key path, key, and value from a plist.
-  """
-  if depth < 1:
-    logger.debug('Recursion limit hit for key: {0:s}'.format(key_path))
-    return
-
-  if isinstance(recur_item, (list, tuple)):
-    for recur in recur_item:
-      for key in RecurseKey(recur, depth=depth, key_path=key_path):
-        yield key
-    return
-
-  if not hasattr(recur_item, 'items'):
-    return
-
-  for subkey, value in iter(recur_item.items()):
-    yield key_path, subkey, value
-
-    if isinstance(value, dict):
-      value = [value]
-
-    if isinstance(value, list):
-      for item in value:
-        if not isinstance(item, dict):
-          continue
-
-        subkey_path = '{0:s}/{1:s}'.format(key_path, subkey)
-        for tuple_value in RecurseKey(
-            item, depth=depth - 1, key_path=subkey_path):
-          yield tuple_value
+    self._ParsePlist(parser_mediator, match=match, top_level=top_level)

@@ -1,7 +1,7 @@
 name: chrome_cache
 type: format
 description: Google Chrome/Chromium cache file format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Chrome%20Cache%20file%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Chrome%20Cache%20file%20format.asciidoc"]
 ---
 name: byte
 type: integer
@@ -46,6 +46,7 @@ attributes:
 members:
 - name: signature
   data_type: uint32
+  value: 0xc104cac3
 - name: minor_version
   data_type: uint16
 - name: major_version
@@ -130,6 +131,7 @@ attributes:
 members:
 - name: signature
   data_type: uint32
+  value: 0xc103cac3
 - name: minor_version
   data_type: uint16
 - name: major_version

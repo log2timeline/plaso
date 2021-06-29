@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Viper analysis plugin CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -27,7 +25,7 @@ usage: cli_helper.py [--viper-hash HASH] [--viper-host HOST]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --viper-hash HASH, --viper_hash HASH
                         Type of hash to use to query the Viper server, the
                         default is: sha256. Supported options: md5, sha256
@@ -40,7 +38,7 @@ optional arguments:
   --viper-protocol PROTOCOL, --viper_protocol PROTOCOL
                         Protocol to use to query Viper, the default is: http.
                         Supported options: http, https
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

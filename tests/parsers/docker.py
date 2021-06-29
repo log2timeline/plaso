@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Docker JSON parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions
@@ -25,12 +23,13 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'docker', 'containers', container_identifier, 'container-json.log']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    expected_times = [
+    expected_timestamps = [
         '2016-01-07 16:49:10.000000',
         '2016-01-07 16:49:10.200000',
         '2016-01-07 16:49:10.230000',
@@ -42,31 +41,17 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         '2016-01-07 16:49:10.237222',
         '2016-01-07 16:49:10.237222']
 
-    expected_log = (
-        '\x1b]0;root@e7d0b7ea5ccf: '
-        '/home/plaso\x07root@e7d0b7ea5ccf:/home/plaso# ls\r\n')
-
-    expected_message = (
-        'Text: '
-        '\x1b]0;root@e7d0b7ea5ccf: /home/plaso\x07root@e7d0b7ea5ccf:'
-        '/home/plaso# ls, Container ID: {0:s}, '
-        'Source: stdout').format(container_identifier)
-    expected_short_message = (
-        'Text: '
-        '\x1b]0;root@e7d0b7ea5ccf: /home/plaso\x07root@e7d0b7ea5ccf:'
-        '/home/plaso# ls, C...'
-        )
+    expected_event_values = {
+        'container_id': container_identifier,
+        'data_type': 'docker:json:container:log',
+        'log_line': (
+            '\x1b]0;root@e7d0b7ea5ccf: '
+            '/home/plaso\x07root@e7d0b7ea5ccf:/home/plaso# ls\r\n'),
+        'log_source': 'stdout'}
 
     for index, event in enumerate(events):
-      self.CheckTimestamp(event.timestamp, expected_times[index])
-
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(event_data.container_id, container_identifier)
-      self.assertEqual(event_data.log_line, expected_log)
-      self.assertEqual(event_data.log_source, 'stdout')
-
-      self._TestGetMessageStrings(
-          event_data, expected_message, expected_short_message)
+      self.CheckTimestamp(event.timestamp, expected_timestamps[index])
+      self.CheckEventValues(storage_writer, event, expected_event_values)
 
   def testParseContainerConfig(self):
     """Tests the _ParseContainerConfigJSON function."""
@@ -78,30 +63,29 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'docker', 'containers', container_identifier, 'config.json']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'action': 'Container Started',
+        'container_id': container_identifier,
+        'container_name': 'e7d0b7ea5ccf',
+        'data_type': 'docker:json:container',
+        'date_time': '2016-01-07 16:49:08.674873'}
 
-    self.CheckTimestamp(event.timestamp, '2016-01-07 16:49:08.674873')
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    expected_event_values = {
+        'action': 'Container Created',
+        'container_id': container_identifier,
+        'container_name': 'e7d0b7ea5ccf',
+        'data_type': 'docker:json:container',
+        'date_time': '2016-01-07 16:49:08.507979'}
 
-    self.assertEqual(event_data.action, 'Container Started')
-    self.assertEqual(event_data.container_id, container_identifier)
-    self.assertEqual(event_data.container_name, 'e7d0b7ea5ccf')
-
-    event = events[1]
-
-    self.CheckTimestamp(event.timestamp, '2016-01-07 16:49:08.507979')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    self.assertEqual(event_data.action, 'Container Created')
-    self.assertEqual(event_data.container_id, container_identifier)
-    self.assertEqual(event_data.container_name, 'e7d0b7ea5ccf')
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
   def testParseLayerConfig(self):
     """Tests the _ParseLayerConfigJSON function."""
@@ -112,24 +96,22 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
     path_segments = ['docker', 'graph', layer_identifier, 'json']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'command': (
+            '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
+            '/etc/apt/sources.list'),
+        'data_type': 'docker:json:layer',
+        'date_time': '2015-10-12 17:27:03.079273',
+        'layer_id': layer_identifier,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
-    self.CheckTimestamp(event.timestamp, '2015-10-12 17:27:03.079273')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-    expected_command = (
-        '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
-        '/etc/apt/sources.list')
-    self.assertEqual(event_data.command, expected_command)
-    self.assertEqual(event_data.layer_id, layer_identifier)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

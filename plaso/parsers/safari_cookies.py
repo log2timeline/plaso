@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parser for Safari Binary Cookie files."""
 
-from __future__ import unicode_literals
+import os
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -10,12 +10,15 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.lib import specification
-# Need to register cookie plugins.
+
+# Register the cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
-from plaso.parsers import dtfabric_parser
+
+from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 
@@ -43,18 +46,18 @@ class SafariBinaryCookieEventData(events.EventData):
     self.url = None
 
 
-class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
+class BinaryCookieParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
-  DESCRIPTION = 'Parser for Safari Binary Cookie files.'
+  DATA_FORMAT = 'Safari Binary Cookie file'
 
-  _DEFINITION_FILE = 'safari_cookies.yaml'
-
-  _SIGNATURE = b'cook'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'safari_cookies.yaml')
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(BinaryCookieParser, self).__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
@@ -165,7 +168,7 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
       date_time = dfdatetime_cocoa_time.CocoaTime(
           timestamp=record_header.expiration_time)
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
+      date_time = dfdatetime_semantic_time.NotSet()
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
@@ -207,6 +210,7 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
       file_object (dfvfs.FileIO): file-like object to be parsed.
 
     Raises:
+      ParseError: when the page sizes array cannot be parsed.
       UnableToParseFile: when the file cannot be parsed, this will signal
           the event extractor to apply other parsers.
     """
@@ -218,9 +222,6 @@ class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to read file header with error: {0!s}.'.format(exception))
-
-    if file_header.signature != self._SIGNATURE:
-      raise errors.UnableToParseFile('Unsupported file signature.')
 
     file_offset = file_header_data_size
 

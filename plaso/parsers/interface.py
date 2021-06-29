@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The parsers and plugins interface classes."""
 
-from __future__ import unicode_literals
-
 import abc
 import os
 
@@ -56,11 +54,19 @@ class FileNameFileEntryFilter(BaseFileEntryFilter):
 class BaseParser(object):
   """The parser interface."""
 
+  # The name of the parser. This is the name that is used in the registration
+  # and used for parser/plugin selection, so this needs to be concise and unique
+  # for all plugins/parsers, such as 'Chrome', 'Safari' or 'UserAssist'.
   NAME = 'base_parser'
-  DESCRIPTION = ''
+
+  # Data format supported by the parser plugin. This information is used by
+  # the parser manager to generate parser and plugin information.
+  DATA_FORMAT = ''
 
   # List of filters that should match for the parser to be applied.
   FILTERS = frozenset()
+
+  ALL_PLUGINS = set(['*'])
 
   # Every derived parser class that implements plugins should define
   # its own _plugin_classes dict:
@@ -83,7 +89,7 @@ class BaseParser(object):
     super(BaseParser, self).__init__()
     self._default_plugin = None
     self._plugins = None
-    self.EnablePlugins([])
+    self.EnablePlugins(self.ALL_PLUGINS)
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
@@ -109,8 +115,8 @@ class BaseParser(object):
     """Enables parser plugins.
 
     Args:
-      plugin_includes (list[str]): names of the plugins to enable, where None
-          or an empty list represents all plugins. Note the default plugin, if
+      plugin_includes (set[str]): names of the plugins to enable, where
+          set(['*']) represents all plugins. Note the default plugin, if
           it exists, is always enabled and cannot be disabled.
     """
     self._plugins = []
@@ -118,12 +124,13 @@ class BaseParser(object):
       return
 
     default_plugin_name = '{0:s}_default'.format(self.NAME)
-    for plugin_name, plugin_class in iter(self._plugin_classes.items()):
+    for plugin_name, plugin_class in self._plugin_classes.items():
       if plugin_name == default_plugin_name:
         self._default_plugin = plugin_class()
         continue
 
-      if plugin_includes and plugin_name not in plugin_includes:
+      if (plugin_includes != self.ALL_PLUGINS and
+          plugin_name not in plugin_includes):
         continue
 
       plugin_object = plugin_class()
@@ -139,6 +146,15 @@ class BaseParser(object):
       FormatSpecification: a format specification or None if not available.
     """
     return
+
+  @classmethod
+  def GetPluginNames(cls):
+    """Retrieves the names of registered plugins.
+
+    Returns:
+      list[str]: names of the plugins.
+    """
+    return list(cls._plugin_classes.keys())
 
   @classmethod
   def GetPluginObjectByName(cls, plugin_name):
@@ -163,7 +179,7 @@ class BaseParser(object):
     Yields:
       tuple[str, type]: name and class of the plugin.
     """
-    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+    for plugin_name, plugin_class in cls._plugin_classes.items():
       yield plugin_name, plugin_class
 
   @classmethod

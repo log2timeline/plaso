@@ -1,13 +1,32 @@
 # -*- coding: utf-8 -*-
 """This file contains the attribute container manager class."""
 
-from __future__ import unicode_literals
-
 
 class AttributeContainersManager(object):
   """Class that implements the attribute container manager."""
 
   _attribute_container_classes = {}
+
+  @classmethod
+  def CreateAttributeContainer(cls, container_type):
+    """Creates an instance of a specific attribute container type.
+
+    Args:
+      container_type (str): container type.
+
+    Returns:
+      AttributeContainer: an instance of attribute container.
+
+    Raises:
+      ValueError: if the container type is not supported.
+    """
+    container_class = cls._attribute_container_classes.get(
+        container_type, None)
+    if not container_class:
+      raise ValueError('Unsupported container type: {0:s}'.format(
+          container_type))
+
+    return container_class()
 
   @classmethod
   def DeregisterAttributeContainer(cls, attribute_container_class):
@@ -30,18 +49,6 @@ class AttributeContainersManager(object):
           '{0:s}.'.format(attribute_container_class.CONTAINER_TYPE))
 
     del cls._attribute_container_classes[container_type]
-
-  @classmethod
-  def GetAttributeContainer(cls, container_type):
-    """Retrieves the attribute container for a specific container type.
-
-    Args:
-      container_type (str): container type.
-
-    Returns:
-      AttributeContainer: attribute container.
-    """
-    return cls._attribute_container_classes.get(container_type, None)
 
   @classmethod
   def RegisterAttributeContainer(cls, attribute_container_class):

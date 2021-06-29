@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Drive database plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import gdrive as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import gdrive
 
@@ -21,8 +18,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     plugin = gdrive.GoogleDrivePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['snapshot.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 30)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Let's verify that we've got the correct balance of cloud and local
     # entry events.
@@ -42,44 +40,30 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(len(cloud_entries), 20)
 
     # Test one local and one cloud entry.
-    event = local_entries[5]
+    expected_event_values = {
+        'data_type': 'gdrive:snapshot:local_entry',
+        'date_time': '2014-01-28 00:11:25',
+        'path': (
+            '%local_sync_root%/Top Secret/Enn meiri '
+            'leyndarmál/Sýnileiki - Örverpi.gdoc'),
+        'size': 184}
 
-    self.CheckTimestamp(event.timestamp, '2014-01-28 00:11:25.000000')
+    self.CheckEventValues(
+        storage_writer, local_entries[5], expected_event_values)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    file_path = (
-        '%local_sync_root%/Top Secret/Enn meiri '
-        'leyndarmál/Sýnileiki - Örverpi.gdoc')
-    self.assertEqual(event_data.path, file_path)
+    expected_event_values = {
+        'data_type': 'gdrive:snapshot:cloud_entry',
+        'date_time': '2014-01-28 00:12:27',
+        'document_type': 6,
+        'path': '/Almenningur/Saklausa hliðin',
+        'size': 0,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
+        'url': (
+            'https://docs.google.com/document/d/1ypXwXhQWliiMSQN9S5M0K6Wh39XF4U'
+            'z4GmY-njMf-Z0/edit?usp=docslist_api')}
 
-    expected_message = 'File Path: {0:s} Size: 184'.format(file_path)
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, file_path)
-
-    event = cloud_entries[16]
-
-    self.CheckTimestamp(event.timestamp, '2014-01-28 00:12:27.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.document_type, 6)
-    expected_url = (
-        'https://docs.google.com/document/d/'
-        '1ypXwXhQWliiMSQN9S5M0K6Wh39XF4Uz4GmY-njMf-Z0/edit?usp=docslist_api')
-    self.assertEqual(event_data.url, expected_url)
-
-    expected_message = (
-        'File Path: /Almenningur/Saklausa hliðin '
-        '[Private] '
-        'Size: 0 '
-        'URL: {0:s} '
-        'Type: DOCUMENT').format(expected_url)
-    expected_short_message = '/Almenningur/Saklausa hliðin'
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(
+        storage_writer, cloud_entries[16], expected_event_values)
 
 
 if __name__ == '__main__':

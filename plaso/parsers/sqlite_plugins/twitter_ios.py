@@ -1,12 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Parser for Twitter on iOS 8+ database.
-
-SQLite database path:
-/private/var/mobile/Containers/Data/Application/Library/Caches/databases/
-SQLite database name: twitter.db
-"""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Twitter on iOS 8+ database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -28,6 +21,7 @@ class TwitterIOSContactEventData(events.EventData):
     location (str): location of the profile.
     name (str): name of the profile.
     profile_url (str): URL of the profile picture.
+    query (str): SQL query that was used to obtain the event data.
     screen_name (str): screen name.
     url (str): URL of the profile.
   """
@@ -44,6 +38,7 @@ class TwitterIOSContactEventData(events.EventData):
     self.location = None
     self.name = None
     self.profile_url = None
+    self.query = None
     self.screen_name = None
     self.url = None
 
@@ -55,6 +50,7 @@ class TwitterIOSStatusEventData(events.EventData):
     favorite_count (int): number of times the status message has been favorited.
     favorited (int): value to mark status as favorite by the account.
     name (str): user's profile name.
+    query (str): SQL query that was used to obtain the event data.
     retweet_count (str): number of times the status message has been retweeted.
     text (str): content of the status message.
     user_id (int): user unique identifier.
@@ -68,16 +64,31 @@ class TwitterIOSStatusEventData(events.EventData):
     self.favorite_count = None
     self.favorited = None
     self.name = None
+    self.query = None
     self.retweet_count = None
     self.text = None
     self.user_id = None
 
 
 class TwitterIOSPlugin(interface.SQLitePlugin):
-  """Parser for Twitter on iOS 8+ database."""
+  """SQLite parser plugin for Twitter on iOS 8+ database files.
+
+  The Twitter on iOS 8+ database file is typically stored in:
+  /private/var/mobile/Containers/Data/Application/Library/Caches/databases/
+  twitter.db
+  """
 
   NAME = 'twitter_ios'
-  DESCRIPTION = 'Parser for Twitter on iOS 8+ database'
+  DATA_FORMAT = 'Twitter on iOS 8 and later SQLite database (twitter.db) file'
+
+  REQUIRED_STRUCTURE = {
+      'Users': frozenset([
+          'createdDate', 'updatedAt', 'screenName', 'name', 'profileImageUrl',
+          'location', 'description', 'url', 'following', 'followersCount',
+          'followingCount', 'id']),
+      'Statuses': frozenset([
+          'date', 'text', 'userId', 'retweetCount', 'favoriteCount',
+          'favorited', 'updatedAt'])}
 
   QUERIES = [
       (('SELECT createdDate, updatedAt, screenName, name, profileImageUrl,'
@@ -89,10 +100,6 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
         'Statuses.favorited AS favorited, Statuses.updatedAt AS updatedAt '
         'FROM Statuses LEFT join Users ON Statuses.userId = Users.id ORDER '
         'BY date'), 'ParseStatusRow')]
-
-  REQUIRED_TABLES = frozenset([
-      'Lists', 'MyRetweets', 'StatusesShadow', 'UsersShadow',
-      'ListsShadow', 'Statuses', 'Users'])
 
   SCHEMAS = [{
       'Lists': (

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Spotlight Volume Configuration plist plugin."""
+"""Plist parser plugin for Spotlight volume configuration plist files."""
 
-from __future__ import unicode_literals
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
@@ -11,16 +11,18 @@ from plaso.parsers.plist_plugins import interface
 
 
 class SpotlightVolumePlugin(interface.PlistPlugin):
-  """Basic plugin to extract the Spotlight Volume Configuration."""
+  """Plist parser plugin for Spotlight volume configuration plist files."""
 
   NAME = 'spotlight_volume'
-  DESCRIPTION = 'Parser for Spotlight volume configuration plist files.'
+  DATA_FORMAT = 'Spotlight volume configuration plist file'
 
-  PLIST_PATH = 'VolumeConfiguration.plist'
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('VolumeConfiguration.plist')])
+
   PLIST_KEYS = frozenset(['Stores'])
 
   # pylint: disable=arguments-differ
-  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
+  def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Volume Configuration Spotlight entries.
 
     Args:
@@ -29,7 +31,7 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     stores = match.get('Stores', {})
-    for volume_name, volume in iter(stores.items()):
+    for volume_name, volume in stores.items():
       datetime_value = volume.get('CreationDate', None)
       if not datetime_value:
         continue
@@ -42,8 +44,11 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
       event_data.key = ''
       event_data.root = '/Stores'
 
-      event = time_events.PythonDatetimeEvent(
-          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromDatetime(datetime_value)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

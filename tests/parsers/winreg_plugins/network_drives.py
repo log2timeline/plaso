@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the Network Drives Windows Registry plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import network_drives
 
 from tests.parsers.winreg_plugins import test_lib
@@ -36,9 +33,10 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
         last_written_time=filetime.timestamp, offset=153)
 
     # Setup H drive.
+    h_key_name = 'H'
     h_key = dfwinreg_fake.FakeWinRegistryKey(
-        'H', last_written_time=filetime.timestamp)
-    registry_key.AddSubkey(h_key)
+        h_key_name, last_written_time=filetime.timestamp)
+    registry_key.AddSubkey(h_key_name, h_key)
 
     value_data = b'\x00\x00\x00\x01'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -84,9 +82,10 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     h_key.AddValue(registry_value)
 
     # Setup Z drive.
+    z_key_name = 'Z'
     z_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Z', last_written_time=filetime.timestamp)
-    registry_key.AddSubkey(z_key)
+        z_key_name, last_written_time=filetime.timestamp)
+    registry_key.AddSubkey(z_key_name, z_key)
 
     value_data = b'\x00\x00\x00\x01'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -143,34 +142,26 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function on created key."""
     key_path = 'HKEY_CURRENT_USER\\Network'
-    time_string = '2013-01-30 10:47:57'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey(key_path, '2013-01-30 10:47:57')
 
     plugin = network_drives.NetworkDrivesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'date_time': '2013-01-30 10:47:57.0000000',
+        'data_type': 'windows:registry:network_drive',
+        'drive_letter': 'H',
+        'key_path': key_path,
+        'server_name': 'acme.local',
+        'share_name': '\\Shares\\User_Data\\John.Doe'}
 
-    self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:registry:network_drive')
-
-    expected_message = (
-        '[{0:s}] '
-        'DriveLetter: H '
-        'RemoteServer: acme.local '
-        'ShareName: \\Shares\\User_Data\\John.Doe '
-        'Type: Mapped Drive').format(key_path)
-    expected_short_message = '{0:s}...'.format(expected_message[:77])
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

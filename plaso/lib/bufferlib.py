@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Circular buffer for storing event objects."""
 
-from __future__ import unicode_literals
-
 
 class CircularBuffer(object):
   """Class that defines a circular buffer for storing event objects."""

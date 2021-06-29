@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows Event Log resources database reader."""
 
-from __future__ import unicode_literals
-
 import re
-
-try:
-  from pysqlite2 import dbapi2 as sqlite3  # pylint: disable=wrong-import-order
-except ImportError:
-  import sqlite3  # pylint: disable=wrong-import-order
+import sqlite3
 
 
 # TODO: Move the generic sqlite3 code to a different spot e.g. lib/.

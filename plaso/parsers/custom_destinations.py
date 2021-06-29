@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for .customDestinations-ms files."""
-
-from __future__ import unicode_literals
+"""Parser for custom destinations jump list (.customDestinations-ms) files."""
 
 import os
 
@@ -10,22 +8,25 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver
 
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers import winlnk
 
 
-class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
-  """Parses .customDestinations-ms files."""
+class CustomDestinationsParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
+  """Parses custom destinations jump list (.customDestinations-ms) files."""
 
   NAME = 'custom_destinations'
-  DESCRIPTION = 'Parser for *.customDestinations-ms files.'
+  DATA_FORMAT = 'Custom destinations jump list (.customDestinations-ms) file'
 
   _INITIAL_FILE_OFFSET = None
 
-  _DEFINITION_FILE = 'custom_destinations.yaml'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'custom_destinations.yaml')
 
   # We cannot use the parser registry here since winlnk could be disabled.
   # TODO: see if there is a more elegant solution for this.
@@ -33,8 +34,6 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
 
   _LNK_GUID = (
       b'\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46')
-
-  _FILE_FOOTER_SIGNATURE = 0xbabffbab
 
   def _ParseLNKFile(
       self, parser_mediator, file_entry, file_offset, remaining_file_size):
@@ -78,11 +77,7 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
 
     # We cannot trust the file size in the LNK data so we get the last offset
     # that was read instead.
-    lnk_file_size = lnk_file_object.get_offset()
-
-    lnk_file_object.close()
-
-    return lnk_file_size
+    return lnk_file_object.get_offset()
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -181,13 +176,8 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
 
         try:
           # Check if we found the footer instead of an entry header.
-          file_footer, _ = self._ReadStructureFromFileObject(
+          self._ReadStructureFromFileObject(
               file_object, file_offset, file_footer_map)
-
-          if file_footer.signature != self._FILE_FOOTER_SIGNATURE:
-            parser_mediator.ProduceExtractionWarning(
-                'invalid entry header signature at offset: 0x{0:08x}'.format(
-                    file_offset))
 
         except (ValueError, errors.ParseError) as exception:
           parser_mediator.ProduceExtractionWarning((
@@ -209,12 +199,8 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
       remaining_file_size -= lnk_file_size
 
     try:
-      file_footer, _ = self._ReadStructureFromFileObject(
+      self._ReadStructureFromFileObject(
           file_object, file_offset, file_footer_map)
-
-      if file_footer.signature != self._FILE_FOOTER_SIGNATURE:
-        parser_mediator.ProduceExtractionWarning(
-            'invalid footer signature at offset: 0x{0:08x}'.format(file_offset))
 
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionWarning((

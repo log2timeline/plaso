@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 """The event filter expression parser filter classes."""
 
-from __future__ import unicode_literals
-
 import abc
 import codecs
-import logging
 import re
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import interface as dfdatetime_interface
 
+from plaso.containers import artifacts
+from plaso.filters import logger
+from plaso.filters import value_types
 from plaso.lib import errors
-from plaso.lib import py2to3
 
 
 class Filter(object):
@@ -29,7 +28,7 @@ class Filter(object):
     Args:
       arguments (Optional[object]): arguments.
     """
-    logging.debug('Adding {0!s}'.format(arguments))
+    logger.debug('Adding {0!s}'.format(arguments))
 
     super(Filter, self).__init__()
     self.args = arguments or []
@@ -47,20 +46,21 @@ class Filter(object):
       value = [self._CopyValueToString(item) for item in value]
       return ''.join(value)
 
-    if isinstance(value, py2to3.INTEGER_TYPES):
+    if isinstance(value, int):
       value = '{0:d}'.format(value)
 
-    if not isinstance(value, py2to3.UNICODE_TYPE):
+    if not isinstance(value, str):
       return codecs.decode(value, 'utf8', 'ignore')
     return value
 
   @abc.abstractmethod
-  def Matches(self, event, event_data, event_tag):
+  def Matches(self, event, event_data, event_data_stream, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -74,19 +74,22 @@ class AndFilter(Filter):
   Note that if no conditions are passed, all objects will pass.
   """
 
-  def Matches(self, event, event_data, event_tag):
+  def Matches(self, event, event_data, event_data_stream, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
       bool: True if the event, data and tag match the filter, False otherwise.
     """
     for sub_filter in self.args:
-      if not sub_filter.Matches(event, event_data, event_tag):
+      match = sub_filter.Matches(
+          event, event_data, event_data_stream, event_tag)
+      if not match:
         return False
     return True
 
@@ -97,12 +100,13 @@ class OrFilter(Filter):
   Note that if no conditions are passed, all objects will pass.
   """
 
-  def Matches(self, event, event_data, event_tag):
+  def Matches(self, event, event_data, event_data_stream, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -112,7 +116,9 @@ class OrFilter(Filter):
       return True
 
     for sub_filter in self.args:
-      if sub_filter.Matches(event, event_data, event_tag):
+      match = sub_filter.Matches(
+          event, event_data, event_data_stream, event_tag)
+      if match:
         return True
     return False
 
@@ -121,12 +127,13 @@ class Operator(Filter):
   """Interface for filters that represent operators."""
 
   @abc.abstractmethod
-  def Matches(self, event, event_data, event_tag):
+  def Matches(self, event, event_data, event_data_stream, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -137,12 +144,13 @@ class Operator(Filter):
 class IdentityFilter(Operator):
   """A filter which always evaluates to True."""
 
-  def Matches(self, event, event_data, event_tag):
+  def Matches(self, event, event_data, event_data_stream, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -179,12 +187,13 @@ class BinaryOperator(Operator):
     self.right_operand = arguments[1]
 
   @abc.abstractmethod
-  def Matches(self, event, event_data, event_tag):
+  def Matches(self, event, event_data, event_data_stream, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -200,8 +209,6 @@ class GenericBinaryOperator(BinaryOperator):
 
   # Attributes that are stored in the event attribute container.
   _EVENT_ATTRIBUTE_NAMES = frozenset(['timestamp', 'timestamp_desc'])
-
-  _OBJECT_PATH_SEPARATOR = '.'
 
   def __init__(self, arguments=None, **kwargs):
     """Initializes a generic binary operator.
@@ -224,20 +231,22 @@ class GenericBinaryOperator(BinaryOperator):
       bool: True if the values match according to the operator, False otherwise.
     """
 
-  def _GetValue(self, attribute_name, event, event_data, event_tag):
+  def _GetValue(
+      self, attribute_name, event, event_data, event_data_stream, event_tag):
     """Retrieves the value of a specific event, data or tag attribute.
 
     Args:
       attribute_name (str): name of the attribute to retrieve the value from.
       event (EventObject): event to retrieve the value from.
       event_data (EventData): event data to retrieve the value from.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag to retrieve the value from.
 
     Returns:
       object: attribute value or None if not available.
     """
     if attribute_name in self._DEPRECATED_ATTRIBUTE_NAMES:
-      logging.warning(
+      logger.warning(
           'Expansion of {0:s} in event filter no longer supported'.format(
               attribute_name))
 
@@ -247,10 +256,13 @@ class GenericBinaryOperator(BinaryOperator):
       # Make sure timestamp attribute values are (dfdatetime) date time objects.
       # TODO: remove when timestamp values are (de)serialized as dfdatetime
       # objects.
-      if attribute_name == 'timestamp' and not isinstance(
-          attribute_value, dfdatetime_posix_time.PosixTimeInMicroseconds):
-        attribute_value = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=attribute_value)
+      if attribute_name == 'timestamp' and not isinstance(attribute_value, (
+          dfdatetime_interface.DateTimeValues, value_types.DateTimeValueType)):
+        attribute_value = value_types.DateTimeValueType(attribute_value)
+
+    elif (event_data_stream and
+          attribute_name in event_data_stream.GetAttributeNames()):
+      attribute_value = getattr(event_data_stream, attribute_name, None)
 
     elif attribute_name == 'tag':
       attribute_value = getattr(event_tag, 'labels', None)
@@ -262,21 +274,23 @@ class GenericBinaryOperator(BinaryOperator):
 
   def FlipBool(self):
     """Negates the internal boolean value attribute."""
-    logging.debug('Negative matching.')
+    logger.debug('Negative matching.')
     self._bool_value = not self._bool_value
 
-  def Matches(self, event, event_data, event_tag):
+  def Matches(self, event, event_data, event_data_stream, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
+      event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
       bool: True if the event, data and tag match the filter, False otherwise.
     """
-    value = self._GetValue(self.left_operand, event, event_data, event_tag)
+    value = self._GetValue(
+        self.left_operand, event, event_data, event_data_stream, event_tag)
 
     if value and self._CompareValue(value, self.right_operand):
       return self._bool_value
@@ -387,7 +401,7 @@ class Contains(GenericBinaryOperator):
   def _CompareValue(self, event_value, filter_value):
     """Compares if the second value is part of the first.
 
-    Note that this method will do a case insensitive comparion if the first
+    Note that this method will do a case insensitive comparison if the first
     value is a string.
 
     Args:
@@ -398,7 +412,10 @@ class Contains(GenericBinaryOperator):
       bool: True if the second value is part of the first, False otherwise.
     """
     try:
-      if isinstance(event_value, py2to3.STRING_TYPES):
+      if isinstance(filter_value, artifacts.PathArtifact):
+        return filter_value.ContainedIn(event_value)
+
+      if isinstance(event_value, str):
         return filter_value.lower() in event_value.lower()
 
       return filter_value in event_value
@@ -413,7 +430,7 @@ class InSet(GenericBinaryOperator):
   def _CompareValue(self, event_value, filter_value):
     """Compares if the event value is part of the second.
 
-    Note that this method will do a case insensitive string comparion if
+    Note that this method will do a case insensitive string comparison if
     the event value is a string.
 
     Args:
@@ -428,9 +445,7 @@ class InSet(GenericBinaryOperator):
 
     # event_value might be an iterable
     # first we need to skip strings or we'll do silly things
-    # pylint: disable=consider-merging-isinstance
-    if (isinstance(event_value, py2to3.STRING_TYPES) or
-        isinstance(event_value, bytes)):
+    if isinstance(event_value, (bytes, str)):
       return False
 
     try:
@@ -454,7 +469,7 @@ class Regexp(GenericBinaryOperator):
   def __init__(self, arguments=None, **kwargs):
     """Initializes a regular expression operator.
 
-    This operator uses case senstive comparision.
+    This operator uses case sensitive comparison.
 
     Args:
       arguments (Optional[object]): operands of the filter.
@@ -465,7 +480,7 @@ class Regexp(GenericBinaryOperator):
     super(Regexp, self).__init__(arguments=arguments, **kwargs)
 
     # Note that right_operand is not necessarily a string.
-    logging.debug('Compiled: {0!s}'.format(self.right_operand))
+    logger.debug('Compiled: {0!s}'.format(self.right_operand))
 
     try:
       expression = self._CopyValueToString(self.right_operand)
@@ -503,7 +518,7 @@ class RegexpInsensitive(Regexp):
   def __init__(self, arguments=None, **kwargs):
     """Initializes a regular expression operator.
 
-    This operator uses case insenstive comparision.
+    This operator uses case insensitive comparison.
 
     Args:
       arguments (Optional[object]): operands of the filter.
@@ -514,7 +529,7 @@ class RegexpInsensitive(Regexp):
     super(RegexpInsensitive, self).__init__(arguments=arguments, **kwargs)
 
     # Note that right_operand is not necessarily a string.
-    logging.debug('Compiled: {0!s}'.format(self.right_operand))
+    logger.debug('Compiled: {0!s}'.format(self.right_operand))
 
     try:
       expression = self._CopyValueToString(self.right_operand)

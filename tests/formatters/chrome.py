@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Google Chrome history event formatters."""
-
-from __future__ import unicode_literals
+"""Tests for the Google Chrome history custom event formatter helpers."""
 
 import unittest
 
@@ -11,55 +9,36 @@ from plaso.formatters import chrome
 from tests.formatters import test_lib
 
 
-class ChromeFileDownloadFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Chrome file download event formatter."""
+class ChromeHistoryTypedCountFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Google Chrome history typed count formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = chrome.ChromeFileDownloadFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = chrome.ChromeHistoryTypedCountFormatterHelper()
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = chrome.ChromeFileDownloadFormatter()
+    event_values = {'typed_count': 0}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(
+        event_values['url_typed_string'], '(URL not typed directly)')
 
-    expected_attribute_names = [
-        'url',
-        'full_path',
-        'received_bytes',
-        'total_bytes']
+    event_values = {'typed_count': 1}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(
+        event_values['url_typed_string'], '(URL typed 1 time)')
 
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
+    event_values = {'typed_count': 3}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(
+        event_values['url_typed_string'], '(URL typed 3 times)')
 
-  # TODO: add test for GetMessages.
+    event_values = {'typed_count': -1}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['url_typed_string'], -1)
 
-
-class ChromePageVisitedFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Chrome page visited event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = chrome.ChromePageVisitedFormatter()
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = chrome.ChromePageVisitedFormatter()
-
-    expected_attribute_names = [
-        'url',
-        'title',
-        'typed_count',
-        'from_visit',
-        'visit_source',
-        'page_transition',
-        'extra']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+    event_values = {'typed_count': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertNotIn('url_typed_string', event_values)
 
 
 if __name__ == '__main__':

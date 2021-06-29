@@ -5,7 +5,7 @@ Information updated 20 january 2014.
 From Debian Package Popularity Contest
 Avery Pennarun <apenwarr@debian.org>
 
-From  'http://www.unix.com/man-page/Linux/8/popularity-contest/':
+From 'https://www.unix.com/man-page/Linux/8/popularity-contest':
 
     The  popularity-contest command gathers information about Debian pack-
     ages installed on the system, and prints the name of the most  recently
@@ -19,7 +19,7 @@ From  'http://www.unix.com/man-page/Linux/8/popularity-contest/':
     which packages should be installed by default on new systems.
 
     The resulting  statistic  is  available  from  the  project  home  page
-    http://popcon.debian.org/.
+    https://popcon.debian.org
 
     Normally,    popularity-contest    is   run   from   a cron(8)   job,
     /etc/cron.daily/popularity-contest,  which  automatically  submits  the
@@ -28,7 +28,7 @@ From  'http://www.unix.com/man-page/Linux/8/popularity-contest/':
     contest/default.conf.
 
 
-From 'http://popcon.ubuntu.com/README':
+From 'https://popcon.ubuntu.com/README':
 
 The popularity-contest output looks like this:
 
@@ -80,8 +80,6 @@ The popularity-contest output looks like this:
    reported in the log line.
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -90,7 +88,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -141,12 +138,12 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   """Parse popularity contest log files."""
 
   NAME = 'popularity_contest'
-  DESCRIPTION = 'Parser for popularity contest log files.'
+  DATA_FORMAT = 'Popularity Contest log file'
 
   _ASCII_PRINTABLES = pyparsing.printables
   _UNICODE_PRINTABLES = ''.join(
-      py2to3.UNICHR(character) for character in range(65536)
-      if not py2to3.UNICHR(character).isspace())
+      chr(character) for character in range(65536)
+      if not chr(character).isspace())
 
   MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName('mru')
   PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName('package')

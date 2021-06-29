@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Artifact attribute containers."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import interface
 from plaso.containers import manager
 from plaso.lib import definitions
@@ -219,6 +217,206 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
     return False
 
 
+class PathArtifact(ArtifactAttributeContainer):
+  """Path artifact attribute container.
+
+  Attributes:
+    data_stream (str): name of a data stream.
+    path_segment_separator (str): path segment separator.
+    path_segments (list[str]): path segments.
+  """
+  CONTAINER_TYPE = 'path'
+
+  def __init__(self, data_stream=None, path=None, path_segment_separator='/'):
+    """Initializes a path artifact.
+
+    Args:
+      data_stream (Optional[str]): name of a data stream.
+      path (Optional[str]): a path.
+      path_segment_separator (Optional[str]): path segment separator.
+    """
+    super(PathArtifact, self).__init__()
+    self.data_stream = data_stream
+    self.path_segment_separator = path_segment_separator
+    self.path_segments = self._SplitPath(path, path_segment_separator)
+
+  def __eq__(self, other):
+    """Determines if the path is equal to other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are equal to other.
+    """
+    if not isinstance(other, str):
+      return False
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments == other_path_segments
+
+  def __ge__(self, other):
+    """Determines if the path are greater than or equal to other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are greater than or equal to other.
+
+    Raises:
+      ValueError: if other is not an instance of string.
+    """
+    if not isinstance(other, str):
+      raise ValueError('Other not an instance of string.')
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments >= other_path_segments
+
+  def __gt__(self, other):
+    """Determines if the path are greater than other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are greater than other.
+
+    Raises:
+      ValueError: if other is not an instance of string.
+    """
+    if not isinstance(other, str):
+      raise ValueError('Other not an instance of string.')
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments > other_path_segments
+
+  def __le__(self, other):
+    """Determines if the path are greater than or equal to other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are greater than or equal to other.
+
+    Raises:
+      ValueError: if other is not an instance of string.
+    """
+    if not isinstance(other, str):
+      raise ValueError('Other not an instance of string.')
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments <= other_path_segments
+
+  def __lt__(self, other):
+    """Determines if the path are less than other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are less than other.
+
+    Raises:
+      ValueError: if other is not an instance of string.
+    """
+    if not isinstance(other, str):
+      raise ValueError('Other not an instance of string.')
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments < other_path_segments
+
+  def __ne__(self, other):
+    """Determines if the path are not equal to other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path are not equal to other.
+    """
+    if not isinstance(other, str):
+      return False
+
+    other_path_segments = self._SplitPath(other, self.path_segment_separator)
+    return self.path_segments != other_path_segments
+
+  def _SplitPath(self, path, path_segment_separator):
+    """Splits a path.
+
+    Args:
+      path (str): a path.
+      path_segment_separator (str): path segment separator.
+
+    Returns:
+      list[str]: path segments.
+    """
+    path = path or ''
+    split_path = path.split(path_segment_separator)
+
+    path_segments = [split_path[0]]
+    path_segments.extend(list(filter(None, split_path[1:])))
+
+    return path_segments
+
+  def ContainedIn(self, other):
+    """Determines if the path are contained in other.
+
+    Args:
+      other (str): path to compare against.
+
+    Returns:
+      bool: True if the path is contained in other.
+    """
+    if isinstance(other, str):
+      number_of_path_segments = len(self.path_segments)
+      other_path_segments = self._SplitPath(other, self.path_segment_separator)
+      number_of_other_path_segments = len(other_path_segments)
+      if number_of_path_segments < number_of_other_path_segments:
+        maximum_compare_length = (
+            number_of_other_path_segments - number_of_path_segments + 1)
+
+        for compare_start_index in range(0, maximum_compare_length):
+          compare_end_index = compare_start_index + number_of_path_segments
+          compare_path_segments = other_path_segments[
+              compare_start_index:compare_end_index]
+          if self.path_segments == compare_path_segments:
+            return True
+
+    return False
+
+
+class SourceConfigurationArtifact(ArtifactAttributeContainer):
+  """Source configuration artifact attribute container.
+
+  The source configuration contains the configuration data of a source
+  that is (or going to be) processed such as volume in a storage media
+  image or a mounted directory.
+
+  Attributes:
+    mount_path (str): path of a "mounted" directory input source.
+    path_spec (dfvfs.PathSpec): path specification of the source that is
+        processed.
+    system_configuration (SystemConfigurationArtifact): system configuration of
+        a specific system installation, such as Windows or Linux, detected by
+        the pre-processing on the source.
+  """
+  CONTAINER_TYPE = 'source_configuration'
+
+  def __init__(self, path_spec=None):
+    """Initializes a source configuration artifact.
+
+    Args:
+      path_spec (Optional[dfvfs.PathSpec]): path specification of the source
+          that is processed.
+    """
+    super(SourceConfigurationArtifact, self).__init__()
+    self.mount_path = None
+    self.path_spec = path_spec
+    self.system_configuration = None
+
+
 class SystemConfigurationArtifact(ArtifactAttributeContainer):
   """System configuration artifact attribute container.
 
@@ -237,6 +435,8 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
         "10.9.2" or "8.1".
     time_zone (str): system time zone.
     user_accounts (list[UserAccountArtifact]): user accounts.
+    windows_eventlog_providers (list[WindowsEventLogProviderArtifact]): Windows
+        Event Log providers.
   """
   CONTAINER_TYPE = 'system_configuration'
 
@@ -257,26 +457,41 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     self.operating_system_version = None
     self.time_zone = time_zone
     self.user_accounts = []
+    self.windows_eventlog_providers = []
 
 
 class TimeZoneArtifact(ArtifactAttributeContainer):
   """Time zone artifact attribute container.
 
   Attributes:
-    name (str): name describing the time zone for example Greenwich Standard
-        Time.
+    localized_name (str): name describing the time zone in localized language
+        for example "Greenwich (standaardtijd)".
+    mui_form (str): MUI form of the name describing the time zone for example
+        "@tzres.dll,-112".
+    name (str): name describing the time zone for example "Greenwich Standard
+        Time".
+    offset (int): time zone offset in number of minutes from UTC.
   """
   CONTAINER_TYPE = 'time_zone'
 
-  def __init__(self, name=None):
+  def __init__(
+      self, localized_name=None, mui_form=None, name=None, offset=None):
     """Initializes a time zone artifact.
 
     Args:
-      name (Optional[str]): name describing the time zone for example Greenwich
-          Standard Time.
+      localized_name (Optional[str]): name describing the time zone in localized
+          language for example "Greenwich (standaardtijd)".
+      mui_form (Optional[str]): MUI form of the name describing the time zone
+          for example "@tzres.dll,-112".
+      name (Optional[str]): name describing the time zone for example "Greenwich
+          Standard Time".
+      offset (Optional[int]): time zone offset in number of minutes from UTC.
     """
     super(TimeZoneArtifact, self).__init__()
+    self.localized_name = localized_name
+    self.mui_form = mui_form
     self.name = name
+    self.offset = offset
 
 
 class UserAccountArtifact(ArtifactAttributeContainer):
@@ -330,6 +545,43 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     return self.user_directory.split(self._path_separator)
 
 
+class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
+  """Windows Event Log provider artifact attribute container.
+
+  Attributes:
+    category_message_files (list[str]): filenames of the category message files.
+    event_message_files (list[str]): filenames of the event message files.
+    log_source (str): Windows Event Log source.
+    log_type (str): Windows Event Log type.
+    parameter_message_files (list[str]): filenames of the parameter message
+        files.
+  """
+  CONTAINER_TYPE = 'windows_eventlog_provider'
+
+  def __init__(
+      self, category_message_files=None, event_message_files=None,
+      log_source=None, log_type=None, parameter_message_files=None):
+    """Initializes a Windows Even tLog provider artifact.
+
+    Args:
+      category_message_files (Optional[list[str]]): filenames of the category
+          message files.
+      event_message_files (Optional[list[str]]): filenames of the event message
+          files.
+      log_source (Optional[str]): Windows Event Log source.
+      log_type (Optional[str]): Windows Event Log type.
+      parameter_message_files (Optional[list[str]]): filenames of the parameter
+          message files.
+    """
+    super(WindowsEventLogProviderArtifact, self).__init__()
+    self.category_message_files = category_message_files
+    self.event_message_files = event_message_files
+    self.log_source = log_source
+    self.log_type = log_type
+    self.parameter_message_files = parameter_message_files
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EnvironmentVariableArtifact, HostnameArtifact, SystemConfigurationArtifact,
-    TimeZoneArtifact, UserAccountArtifact])
+    EnvironmentVariableArtifact, HostnameArtifact, OperatingSystemArtifact,
+    PathArtifact, SourceConfigurationArtifact, SystemConfigurationArtifact,
+    TimeZoneArtifact, UserAccountArtifact, WindowsEventLogProviderArtifact])

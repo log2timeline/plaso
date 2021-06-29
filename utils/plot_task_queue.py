@@ -5,18 +5,14 @@
 This script requires the matplotlib and numpy Python modules.
 """
 
-from __future__ import print_function
-# mathplotlib does not support Unicode strings a column names.
-# from __future__ import unicode_literals
-
 import argparse
 import glob
 import os
 import sys
 
-import numpy  # pylint: disable=import-error
+import numpy
 
-from matplotlib import pyplot  # pylint: disable=import-error
+from matplotlib import pyplot
 
 
 def Main():
@@ -52,10 +48,11 @@ def Main():
         csv_file_name, delimiter='\t', dtype=None, encoding='utf-8',
         names=names, skip_header=1)
 
-    pyplot.plot(data['time'], data['queued'], label='queued')
-    pyplot.plot(data['time'], data['processing'], label='processing')
-    pyplot.plot(data['time'], data['to_merge'], label='to merge')
-    pyplot.plot(data['time'], data['abandoned'], label='abandoned')
+    if data.size > 0:
+      pyplot.plot(data['time'], data['queued'], label='queued')
+      pyplot.plot(data['time'], data['processing'], label='processing')
+      pyplot.plot(data['time'], data['to_merge'], label='to merge')
+      pyplot.plot(data['time'], data['abandoned'], label='abandoned')
 
   pyplot.title('Number of tasks over time')
 

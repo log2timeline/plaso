@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the profiler classes."""
 
-from __future__ import unicode_literals
-
 import time
 import unittest
 
@@ -98,6 +96,29 @@ class MemoryProfilerTest(shared_test_lib.BaseTestCase):
       test_profiler.Stop()
 
 
+class AnalyzersProfilerTest(shared_test_lib.BaseTestCase):
+  """Tests for the analyzers CPU time profiler."""
+
+  def testStartStopTiming(self):
+    """Tests the StartTiming and StopTiming functions."""
+    profiling_configuration = configurations.ProfilingConfiguration()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      profiling_configuration.directory = temp_directory
+
+      test_profiler = profilers.AnalyzersProfiler(
+          'test', profiling_configuration)
+
+      test_profiler.Start()
+
+      for _ in range(5):
+        test_profiler.StartTiming('test_profile')
+        time.sleep(0.01)
+        test_profiler.StopTiming('test_profile')
+
+      test_profiler.Stop()
+
+
 class ProcessingProfilerTest(shared_test_lib.BaseTestCase):
   """Tests for the processing CPU time profiler."""
 
@@ -160,8 +181,10 @@ class StorageProfilerTest(shared_test_lib.BaseTestCase):
       test_profiler.Start()
 
       for _ in range(5):
-        test_profiler.Sample('read', 'test', 1024, 128)
+        test_profiler.StartTiming('test_profile')
         time.sleep(0.01)
+        test_profiler.StopTiming('test_profile')
+        test_profiler.Sample('test_profile', 'read', 'test', 1024, 128)
 
       test_profiler.Stop()
 

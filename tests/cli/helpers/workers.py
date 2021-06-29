@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the worker processes CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -20,20 +18,28 @@ class WorkersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--worker_memory_limit SIZE] [--workers WORKERS]
+usage: cli_helper.py [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
+                     [--workers WORKERS]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
                         bytes, where 0 represents no limit. The default limit
                         is 2147483648 (2 GiB). If a worker process exceeds
-                        this limit is is killed by the main (foreman) process.
-  --workers WORKERS     Number of worker processes [defaults to available
-                        system CPUs minus one].
-"""
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout MINUTES, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
+  --workers WORKERS     Number of worker processes. The default is the number
+                        of available system CPUs minus one, for the main
+                        (foreman) process.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

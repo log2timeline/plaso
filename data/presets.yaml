@@ -10,9 +10,10 @@ parsers:
 - sqlite/android_sms
 - sqlite/android_webview
 - sqlite/android_webviewcache
-- sqlite/chrome_27_history
 - sqlite/chrome_8_history
-- sqlite/chrome_cookies
+- sqlite/chrome_17_cookies
+- sqlite/chrome_27_history
+- sqlite/chrome_66_cookies
 - sqlite/skype
 ---
 name: linux
@@ -28,6 +29,7 @@ parsers:
 - dpkg
 - filestat
 - gdrive_synclog
+- googlelog
 - olecf
 - pls_recall
 - popularity_contest
@@ -64,6 +66,7 @@ parsers:
 - macwifi
 - olecf
 - plist
+- spotlight_storedb
 - sqlite/appusage
 - sqlite/google_drive
 - sqlite/imessage
@@ -91,21 +94,22 @@ parsers:
 - opera_global
 - opera_typed_history
 - plist/safari_history
-- sqlite/chrome_27_history
 - sqlite/chrome_8_history
+- sqlite/chrome_17_cookies
+- sqlite/chrome_27_history
+- sqlite/chrome_66_cookies
 - sqlite/chrome_autofill
-- sqlite/chrome_cookies
 - sqlite/chrome_extension_activity
 - sqlite/firefox_cookies
 - sqlite/firefox_downloads
 - sqlite/firefox_history
+- sqlite/safari_historydb
 ---
 name: win_gen
 description: Preset for generic Windows, intended as template for other Windows presets.
 parsers:
 - bencode
 - czip/oxml
-- esedb
 - filestat
 - gdrive_synclog
 - lnk
@@ -131,7 +135,6 @@ description: Preset for generic Windows, intended for Windows Vista and later.
 operating_systems:
 - {family: Windows NT}
 parsers:
-- amcache
 - custom_destinations
 - esedb/file_history
 - olecf/olecf_automatic_destinations
@@ -142,6 +145,7 @@ parsers:
 name: win7_slow
 description: Preset for Windows 7 and later including parsers that require more processing time.
 parsers:
+- esedb
 - mft
 - win7
 ---
@@ -160,5 +164,6 @@ parsers:
 name: winxp_slow
 description: Preset for Windows XP and 2003 including parsers that require more processing time.
 parsers:
+- esedb
 - mft
 - winxp

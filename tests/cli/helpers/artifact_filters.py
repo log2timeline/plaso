@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the filter file CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -25,7 +23,7 @@ usage: cli_helper.py [--artifact_filters ARTIFACT_FILTERS]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --artifact_filters ARTIFACT_FILTERS, --artifact-filters ARTIFACT_FILTERS
                         Names of forensic artifact definitions, provided on
                         the command command line (comma separated). Forensic
@@ -46,7 +44,7 @@ optional arguments:
                         can be used to describe and quickly collect data of
                         interest, such as specific files or Windows Registry
                         keys.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

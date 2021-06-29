@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The tagging analysis plugin CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import os
 
 from plaso.lib import errors

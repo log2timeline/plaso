@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Android WebviewCache databases."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Android WebviewCache database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -17,6 +15,7 @@ class AndroidWebViewCacheEventData(events.EventData):
 
   Attributes:
     content_length (int): size of the cached content.
+    query (str): SQL query that was used to obtain the event data.
     url (str): URL the content was retrieved from.
   """
 
@@ -26,16 +25,19 @@ class AndroidWebViewCacheEventData(events.EventData):
     """Initializes event data."""
     super(AndroidWebViewCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.content_length = None
+    self.query = None
     self.url = None
 
 
 class AndroidWebViewCachePlugin(interface.SQLitePlugin):
-  """Parser for Android WebViewCache databases."""
+  """SQLite parser plugin for Android WebviewCache database files."""
 
   NAME = 'android_webviewcache'
-  DESCRIPTION = 'Parser for Android WebViewCache databases'
+  DATA_FORMAT = 'Android WebViewCache SQLite database file'
 
-  REQUIRED_TABLES = frozenset(['android_metadata', 'cache'])
+  REQUIRED_STRUCTURE = {
+      'android_metadata': frozenset([]),
+      'cache': frozenset(['url', 'contentlength', 'expires', 'lastmodify'])}
 
   QUERIES = frozenset([
       ('SELECT url, contentlength, expires, lastmodify FROM cache',

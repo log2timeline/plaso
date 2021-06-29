@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Analyzer result attribute container."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import interface
 from plaso.containers import manager
 

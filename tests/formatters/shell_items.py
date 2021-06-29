@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the shell item event formatter."""
-
-from __future__ import unicode_literals
+"""Tests for the Windows shell item custom event formatter helpers."""
 
 import unittest
 
@@ -11,30 +9,31 @@ from plaso.formatters import shell_items
 from tests.formatters import test_lib
 
 
-class ShellItemFileEntryEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the shell item event formatter."""
+class ShellItemFileEntryNameFormatterHelperTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the Windows shell item file entry name formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = shell_items.ShellItemFileEntryEventFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = shell_items.ShellItemFileEntryNameFormatterHelper()
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = shell_items.ShellItemFileEntryEventFormatter()
+    event_values = {
+        'long_name': 'long',
+        'name': 'short'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['file_entry_name'], 'long')
 
-    expected_attribute_names = [
-        'name',
-        'long_name',
-        'localized_name',
-        'file_reference',
-        'shell_item_path',
-        'origin']
+    event_values = {
+        'long_name': None,
+        'name': 'short'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['file_entry_name'], 'short')
 
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+    event_values = {
+        'long_name': None,
+        'name': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['file_entry_name'])
 
 
 if __name__ == '__main__':

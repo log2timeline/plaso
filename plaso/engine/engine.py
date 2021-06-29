@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The processing engine."""
 
-from __future__ import unicode_literals
-
 import os
 
 from artifacts import errors as artifacts_errors
@@ -26,6 +24,7 @@ from plaso.engine import yaml_filter_file
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.preprocessors import manager as preprocess_manager
+from plaso.preprocessors import mediator as preprocess_mediator
 
 
 class BaseEngine(object):
@@ -47,6 +46,7 @@ class BaseEngine(object):
     """Initializes an engine."""
     super(BaseEngine, self).__init__()
     self._abort = False
+    self._analyzers_profiler = None
     self._memory_profiler = None
     self._name = 'Main'
     self._processing_status = processing_status.ProcessingStatus()
@@ -128,6 +128,12 @@ class BaseEngine(object):
           self._name, configuration)
       self._memory_profiler.Start()
 
+    if configuration.HaveProfileAnalyzers():
+      identifier = '{0:s}-analyzers'.format(self._name)
+      self._analyzers_profiler = profilers.AnalyzersProfiler(
+          identifier, configuration)
+      self._analyzers_profiler.Start()
+
     if configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profilers.ProcessingProfiler(
@@ -156,6 +162,10 @@ class BaseEngine(object):
       self._memory_profiler.Stop()
       self._memory_profiler = None
 
+    if self._analyzers_profiler:
+      self._analyzers_profiler.Stop()
+      self._analyzers_profiler = None
+
     if self._processing_profiler:
       self._processing_profiler.Stop()
       self._processing_profiler = None
@@ -176,7 +186,7 @@ class BaseEngine(object):
   def CreateSession(
       cls, artifact_filter_names=None, command_line_arguments=None,
       debug_mode=False, filter_file_path=None, preferred_encoding='utf-8',
-      preferred_time_zone=None, preferred_year=None):
+      preferred_time_zone=None, preferred_year=None, text_prepend=None):
     """Creates a session attribute container.
 
     Args:
@@ -189,6 +199,7 @@ class BaseEngine(object):
       preferred_encoding (Optional[str]): preferred encoding.
       preferred_time_zone (Optional[str]): preferred time zone.
       preferred_year (Optional[int]): preferred year.
+      text_prepend (Optional[str]): text to prepend to every display name.
 
     Returns:
       Session: session attribute container.
@@ -202,6 +213,7 @@ class BaseEngine(object):
     session.preferred_encoding = preferred_encoding
     session.preferred_time_zone = preferred_time_zone
     session.preferred_year = preferred_year
+    session.text_prepend = text_prepend
 
     return session
 
@@ -241,7 +253,7 @@ class BaseEngine(object):
     return file_system, mount_point
 
   def PreprocessSources(
-      self, artifacts_registry_object, source_path_specs,
+      self, artifacts_registry_object, source_path_specs, storage_writer,
       resolver_context=None):
     """Preprocesses the sources.
 
@@ -250,6 +262,7 @@ class BaseEngine(object):
           artifact definitions registry.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
+      storage_writer (StorageWriter): storage writer.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
     detected_operating_systems = []
@@ -261,20 +274,23 @@ class BaseEngine(object):
         logger.error(exception)
         continue
 
+      searcher = file_system_searcher.FileSystemSearcher(
+          file_system, mount_point)
+
       try:
-        searcher = file_system_searcher.FileSystemSearcher(
-            file_system, mount_point)
-
         operating_system = self._DetermineOperatingSystem(searcher)
-        if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
-          preprocess_manager.PreprocessPluginsManager.RunPlugins(
-              artifacts_registry_object, file_system, mount_point,
-              self.knowledge_base)
+      except (ValueError, dfvfs_errors.PathSpecError) as exception:
+        logger.error(exception)
+        continue
 
-          detected_operating_systems.append(operating_system)
+      if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
+        mediator = preprocess_mediator.PreprocessMediator(
+            storage_writer, self.knowledge_base)
 
-      finally:
-        file_system.Close()
+        preprocess_manager.PreprocessPluginsManager.RunPlugins(
+            artifacts_registry_object, file_system, mount_point, mediator)
+
+        detected_operating_systems.append(operating_system)
 
     if detected_operating_systems:
       logger.info('Preprocessing detected operating systems: {0:s}'.format(

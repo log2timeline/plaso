@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the MacOS Knowledge C db."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import definitions
@@ -16,67 +14,58 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacOS KnowledgeC database."""
 
   def testProcessHighSierra(self):
-    """Tests the Process function on a MacOS High Sierra database."""
+    """Tests the Process function on a MacOS 10.13 database."""
     plugin = mac_knowledgec.MacKnowledgeCPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_knowledgec-10.13.db'], plugin)
 
-    self.assertEqual(0, storage_writer.number_of_warnings)
-    self.assertEqual(51, storage_writer.number_of_events)
+    self.assertEqual(storage_writer.number_of_events, 51)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
     events = list(storage_writer.GetEvents())
-    event = events[0]
-    self.CheckTimestamp(event.timestamp, '2019-02-10 16:59:58.860665')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(
-        event_data.bundle_identifier, 'com.apple.Installer-Progress')
+    # TODO: look into rounding difference between date_time and timestamp
+    expected_event_values = {
+        'bundle_identifier': 'com.apple.Installer-Progress',
+        'data_type': 'mac:knowledgec:application',
+        'date_time': '2019-02-10 16:59:58.860664',
+        'duration': 1,
+        'timestamp': '2019-02-10 16:59:58.860665',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    expected_message = (
-        'Application com.apple.Installer-Progress executed for 1 seconds')
-    expected_short_message = 'Application com.apple.Installer-Progress'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessMojave(self):
-    """Tests the Process function on a MacOS High Sierra database."""
+    """Tests the Process function on a MacOS 10.14 database."""
     plugin = mac_knowledgec.MacKnowledgeCPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_knowledgec-10.14.db'], plugin)
 
-    self.assertEqual(0, storage_writer.number_of_warnings)
-    self.assertEqual(231, storage_writer.number_of_events)
+    self.assertEqual(storage_writer.number_of_events, 231)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
     events = list(storage_writer.GetEvents())
 
-    event = events[225]
-    self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:30.668998')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    expected_event_values = {
+        'bundle_identifier': 'com.apple.Terminal',
+        'data_type': 'mac:knowledgec:application',
+        'date_time': '2019-05-08 13:57:30.668998',
+        'duration': 1041,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.bundle_identifier, 'com.apple.Terminal')
+    self.CheckEventValues(storage_writer, events[225], expected_event_values)
 
-    expected_message = (
-        'Application com.apple.Terminal executed for 1041 seconds')
-    expected_short_message = 'Application com.apple.Terminal'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    expected_event_values = {
+        'data_type': 'mac:knowledgec:safari',
+        'date_time': '2019-05-08 13:57:20.000000',
+        'duration': 0,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_END,
+        'title': 'Instagram',
+        'url': 'https://www.instagram.com/'}
 
-    event = events[212]
-    self.CheckTimestamp(event.timestamp, '2019-05-08 13:57:20.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_END)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.url, 'https://www.instagram.com/')
-    self.assertEqual(event_data.title, 'Instagram')
-
-    expected_message = (
-        'Visited: https://www.instagram.com/ (Instagram) Duration: 0')
-    expected_short_message = 'Safari: https://www.instagram.com/'
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[212], expected_event_values)
 
 
 if __name__ == '__main__':

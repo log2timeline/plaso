@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Firefox Cookie database."""
-
-from __future__ import unicode_literals
+"""SQLite parser plugin for Mozilla Firefox cookies database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -25,7 +23,10 @@ class FirefoxCookieEventData(events.EventData):
     httponly (bool): True if the cookie cannot be accessed through client
         side script.
     host (str): hostname of host that set the cookie value.
+    offset (str): identifier of the row, from which the event data was
+        extracted.
     path (str): URI of the page that set the cookie.
+    query (str): SQL query that was used to obtain the event data.
     secure (bool): True if the cookie should only be transmitted over a secure
         channel.
   """
@@ -39,25 +40,32 @@ class FirefoxCookieEventData(events.EventData):
     self.data = None
     self.host = None
     self.httponly = None
+    self.offset = None
     self.path = None
+    self.query = None
     self.secure = None
     self.url = None
 
 
 class FirefoxCookiePlugin(interface.SQLitePlugin):
-  """Parser for the Firefox Cookie database."""
+  """SQLite parser plugin for Mozilla Firefox cookies database files.
+
+  Also see:
+    https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h
+  """
 
   NAME = 'firefox_cookies'
-  DESCRIPTION = 'Parser for Firefox cookies SQLite database files.'
+  DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file'
 
-  # Define the needed queries.
+  REQUIRED_STRUCTURE = {
+      'moz_cookies': frozenset([
+          'id', 'baseDomain', 'name', 'value', 'host', 'path', 'expiry',
+          'lastAccessed', 'creationTime', 'isSecure', 'isHttpOnly'])}
+
   QUERIES = [
       (('SELECT id, baseDomain, name, value, host, path, expiry, '
         'lastAccessed, creationTime, isSecure, isHttpOnly FROM moz_cookies'),
        'ParseCookieRow')]
-
-  # The required tables common to Archived History and History.
-  REQUIRED_TABLES = frozenset(['moz_cookies'])
 
   SCHEMAS = [{
       'moz_cookies': (
@@ -67,11 +75,6 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
           'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
           'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
           'path, appId, inBrowserElement))')}]
-
-  # Point to few sources for URL information.
-  URLS = [
-      ('https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/'
-       'cookie/nsCookie.h')]
 
   def __init__(self):
     """Initializes a Firefox Cookies database SQLite parser plugin."""

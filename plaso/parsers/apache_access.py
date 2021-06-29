@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Apache access log (access.log) parser.
+"""Apache access log (access.log) file parser.
 
 Parser based on the two default apache formats, common and combined log format
 defined in https://httpd.apache.org/docs/2.4/logs.html
 """
-
-from __future__ import unicode_literals
 
 import pyparsing
 
@@ -14,7 +12,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -53,10 +50,10 @@ class ApacheAccessEventData(events.EventData):
 
 
 class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
-  """Apache access log file parser"""
+  """Apache access log (access.log) file parser."""
 
   NAME = 'apache_access'
-  DESCRIPTION = 'Apache access Parser'
+  DATA_FORMAT = 'Apache access log (access.log) file'
 
   MAX_LINE_LENGTH = 2048
 
@@ -82,7 +79,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
   _HTTP_REQUEST = (
       pyparsing.Suppress('"') +
-      pyparsing.SkipTo('"').setResultsName('http_request') +
+      pyparsing.SkipTo('" ').setResultsName('http_request') +
       pyparsing.Suppress('"'))
 
   _PORT_NUMBER = text_parser.PyparsingConstants.INTEGER.setResultsName(
@@ -98,7 +95,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
   _REFERER = (
       pyparsing.Suppress('"') +
-      pyparsing.SkipTo('"').setResultsName('referer') +
+      pyparsing.SkipTo('" ').setResultsName('referer') +
       pyparsing.Suppress('"'))
 
   _SERVER_NAME = (
@@ -184,7 +181,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
     month = self._GetValueFromStructure(structure, 'month')
 
     try:
-      month = timelib.MONTH_DICT.get(month.lower(), 0)
+      month = self._MONTH_DICT.get(month.lower(), 0)
     except AttributeError as exception:
       raise ValueError('unable to parse month with error: {0!s}.'.format(
           exception))

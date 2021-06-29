@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tools classes."""
 
-from __future__ import unicode_literals
-
 import argparse
 import io
 import locale
@@ -27,33 +25,34 @@ usage: tool_test.py [-h] [--troubles] [-V]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --troubles     Show troubleshooting information.
   -V, --version  Show the version information.
   -h, --help     Show this help message and exit.
-"""
+""".format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_INFORMATIONAL_OPTIONS = """\
-usage: tool_test.py [-d] [-q]
+usage: tool_test.py [-d] [-q] [-u]
 
 Test argument parser.
 
-optional arguments:
-  -d, --debug  Enable debug output.
-  -q, --quiet  Disable informational output.
+{0:s}:
+  -d, --debug       Enable debug output.
+  -q, --quiet       Disable informational output.
+  -u, --unattended  Enable unattended mode and do not ask the user for
+                    additional input when needed, but terminate with an error
+                    instead.
+""".format(test_lib.ARGPARSE_OPTIONS)
+
+  _EXPECTED_SEPARATOR_LINE = """\
+--------------------------------------------------------------------------------
 """
 
-  _EXPECTED_TIMEZONE_OPTION = """\
-usage: tool_test.py [-z TIMEZONE]
+  _EXPECTED_TIME_ZONE_OPTIONS = """\
 
-Test argument parser.
-
-optional arguments:
-  -z TIMEZONE, --zone TIMEZONE, --timezone TIMEZONE
-                        explicitly define the timezone. Typically the timezone
-                        is determined automatically where possible otherwise
-                        it will default to UTC. Use "-z list" to see a list of
-                        available timezones.
+************************************ Zones *************************************
+                        Timezone : UTC Offset
+--------------------------------------------------------------------------------
 """
 
   # TODO: add test for _ConfigureLogging
@@ -77,23 +76,6 @@ optional arguments:
     options.log_file = 'file.log'
 
     test_tool._ParseLogFileOptions(options)
-
-  def testParseTimezoneOption(self):
-    """Tests the _ParseTimezoneOption function."""
-    test_tool = tools.CLITool()
-
-    options = test_lib.TestOptions()
-
-    test_tool._ParseTimezoneOption(options)
-    self.assertIsNone(test_tool._preferred_time_zone)
-
-    options.timezone = 'list'
-    test_tool._ParseTimezoneOption(options)
-    self.assertIsNone(test_tool._preferred_time_zone)
-
-    options.timezone = 'CET'
-    test_tool._ParseTimezoneOption(options)
-    self.assertEqual(test_tool._preferred_time_zone, 'CET')
 
   # TODO: add test for _PromptUserForInput
 
@@ -123,18 +105,6 @@ optional arguments:
 
   # TODO: add test for AddLogFileOptions
 
-  def testAddTimeZoneOption(self):
-    """Tests the AddTimeZoneOption function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='tool_test.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = tools.CLITool()
-    test_tool.AddTimeZoneOption(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)
-
   def testCheckOutDated(self):
     """Tests the CheckOutDated function."""
     cli_tool = tools.CLITool()
@@ -157,14 +127,7 @@ optional arguments:
     cli_tool.ListTimeZones()
 
     string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'************************************ Zones '
-        b'*************************************\n'
-        b'                        Timezone : UTC Offset\n'
-        b'----------------------------------------'
-        b'----------------------------------------\n')
-    self.assertTrue(string.startswith(expected_string))
+    self.assertTrue(string[:4], self._EXPECTED_TIME_ZONE_OPTIONS)
 
   def testParseNumericOption(self):
     """Tests the ParseNumericOption function."""
@@ -242,15 +205,12 @@ optional arguments:
 
   def testPrintSeparatorLine(self):
     """Tests the PrintSeparatorLine function."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
     cli_tool = tools.CLITool(output_writer=output_writer)
 
     cli_tool.PrintSeparatorLine()
     string = output_writer.ReadOutput()
-    expected_string = (
-        b'----------------------------------------'
-        b'----------------------------------------\n')
-    self.assertEqual(string, expected_string)
+    self.assertEqual(string, self._EXPECTED_SEPARATOR_LINE)
 
 
 class CLIInputReaderTest(test_lib.CLIToolTestCase):

@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the psteal CLI tool."""
 
-from __future__ import unicode_literals
-
-import io
 import os
 import unittest
 
@@ -24,14 +21,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
   _BDE_PASSWORD = 'bde-TEST'
 
-  _EXPECTED_PROCESSING_OPTIONS = '\n'.join([
-      'usage: psteal_test.py',
-      '',
-      'Test argument parser.',
-      ''])
-
-  _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
-
   def _CheckOutput(self, output, expected_output):
     """Compares the output against the expected output.
 
@@ -46,45 +35,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(output[:3], expected_output[:3])
     self.assertTrue(output[3].startswith('Processing time\t\t: '))
     self.assertEqual(output[4:], expected_output[4:])
-
-  def testGenerateStorageFileName(self):
-    """Tests the _GenerateStorageFileName function."""
-    test_tool = psteal_tool.PstealTool()
-
-    test_tool._source_path = '/test/storage/path'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='path')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
-
-    test_tool._source_path = '/test/storage/path/'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='path')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
-
-    test_tool._source_path = '/'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='ROOT')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
-
-    test_tool._source_path = '/foo/..'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='ROOT')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
-
-    test_tool._source_path = 'foo/../bar'
-    storage_filename = test_tool._GenerateStorageFileName()
-    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
-        filename='bar')
-    # pylint: disable=deprecated-method
-    self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
   def testFailWhenOutputAlreadyExists(self):
     """Test to make sure the tool raises when the output file already exists."""
@@ -114,8 +64,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       # error: bogus escape: '\\1'
       expected_error = 'Output file already exists: {0:s}.'.format(
           options.write.replace('\\', '\\\\'))
-      # pylint: disable=deprecated-method
-      with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+      with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
   def testParseOptions(self):
@@ -129,36 +78,29 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
+    # Test when the output file is missing.
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
     options.source = 'source'
-    # Test when the output file is missing.
+
     expected_error = 'Output format: dynamic requires an output file'
-    # pylint: disable=deprecated-method
-    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+    with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
+    # Test when the source is missing.
     options = test_lib.TestOptions()
     options.write = 'output.csv'
-    # Test when the source is missing.
-    expected_error = 'Missing source path.'
 
-    # pylint: disable=deprecated-method
-    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+    expected_error = 'Missing source path.'
+    with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
-    # Test when the source is missing.
-    expected_error = 'Missing source path.'
-    # pylint: disable=deprecated-method
-    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
-      test_tool.ParseOptions(options)
-
+    # Test when both source and output are specified.
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
       options.source = test_file_path
       options.write = os.path.join(temp_directory, 'dynamic.out')
 
-      # Test when both source and output are specified.
       test_tool.ParseOptions(options)
 
       with open(options.write, 'w') as file_object:
@@ -169,8 +111,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       # error: bogus escape: '\\1'
       expected_error = 'Output file already exists: {0:s}.'.format(
           options.write.replace('\\', '\\\\'))
-      # pylint: disable=deprecated-method
-      with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+      with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
   def testParseArguments(self):
@@ -182,7 +123,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     result = test_tool.ParseArguments([])
     self.assertFalse(result)
     output = output_writer.ReadOutput()
-    expected_error = 'ERROR: Output format: dynamic requires an output file'
+    expected_error = 'ERROR: Missing source path.'
     self.assertIn(expected_error, output)
 
   def testExtractEventsFromSourceDirectory(self):
@@ -225,8 +166,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  # TODO: Fix test https://github.com/log2timeline/plaso/issues/2253.
-  @unittest.skip('failing on Windows')
   def testExtractEventsFromSourceBDEImage(self):
     """Tests the ExtractEventsFromSources function on an image with BDE."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
@@ -369,6 +308,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.single_process = True
     options.status_view_mode = 'none'
     options.source = test_file_path
+    options.unattended = True
     options.vss_stores = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -446,8 +386,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_file_path = self._GetTestFilePath(['psort_test.plaso'])
     self._SkipIfPathNotExists(test_file_path)
 
-    expected_output_file_path = self._GetTestFilePath(
-        ['end_to_end', 'dynamic.log'])
+    expected_output_file_path = self._GetTestFilePath([
+        'end_to_end', 'dynamic.log'])
     self._SkipIfPathNotExists(expected_output_file_path)
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -455,6 +395,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
+    options.dynamic_time = True
     options.storage_file = test_file_path
     options.source = 'unused_source'
 
@@ -465,11 +406,11 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ParseOptions(options)
       test_tool.AnalyzeEvents()
 
-      with io.open(
+      with open(
           expected_output_file_path, 'rt', encoding='utf-8') as file_object:
         expected_output = file_object.read()
 
-      with io.open(options.write, 'rt', encoding='utf-8') as file_object:
+      with open(options.write, 'rt', encoding='utf-8') as file_object:
         result_output = file_object.read()
 
       expected_output = sorted(expected_output.split('\n'))

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the analysis plugins CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 import argparse
 import unittest
 
@@ -24,12 +22,12 @@ usage: cli_helper.py [--analysis PLUGIN_LIST]
 
 Test argument parser.
 
-optional arguments:
+{0:s}:
   --analysis PLUGIN_LIST
                         A comma separated list of analysis plugin names to be
                         loaded or "--analysis list" to see a list of available
                         plugins.
-"""
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

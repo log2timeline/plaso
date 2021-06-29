@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The XLSX output module CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -85,7 +83,6 @@ class XLSXOutputArgumentsHelper(interface.ArgumentsHelper):
 
     output_module.SetFields([
         field_name.strip() for field_name in fields.split(',')])
-    output_module.SetFilename(filename)
     output_module.SetTimestampFormat(timestamp_format)
 
 

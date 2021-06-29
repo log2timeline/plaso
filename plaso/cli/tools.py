@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """The command line interface (CLI) tools classes."""
 
-from __future__ import unicode_literals
-
 import abc
 import codecs
 import datetime
 import locale
+import re
 import sys
+import time
+import textwrap
+
+import pytz
 
 try:
   import resource
@@ -19,28 +22,27 @@ import plaso
 from plaso.cli import logger
 from plaso.cli import views
 from plaso.lib import errors
-from plaso.lib import py2to3
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class CLITool(object):
   """Command line interface tool.
 
   Attributes:
-    list_timezones (bool): True if the time zones should be listed.
     preferred_encoding (str): preferred encoding of single-byte or multi-byte
         character strings, sometimes referred to as extended ASCII.
     show_troubleshooting (bool): True if troubleshooting information should
         be shown.
   """
+
+  NAME = ''
+
   # The maximum number of characters of a line written to the output writer.
   _LINE_LENGTH = 80
 
   # The fall back preferred encoding.
   _PREFERRED_ENCODING = 'utf-8'
 
-  NAME = ''
+  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes a command line interface tool.
@@ -56,7 +58,7 @@ class CLITool(object):
     preferred_encoding = locale.getpreferredencoding()
     if not preferred_encoding:
       preferred_encoding = self._PREFERRED_ENCODING
-    elif isinstance(preferred_encoding, py2to3.BYTES_TYPE):
+    elif isinstance(preferred_encoding, bytes):
       preferred_encoding = preferred_encoding.decode('utf-8')
 
     if not input_reader:
@@ -67,16 +69,22 @@ class CLITool(object):
     self._data_location = None
     self._debug_mode = False
     self._encode_errors = 'strict'
+    self._has_user_warning = False
     self._input_reader = input_reader
     self._log_file = None
     self._output_writer = output_writer
-    self._preferred_time_zone = None
     self._quiet_mode = False
+    self._unattended_mode = False
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
+    self._vfs_back_end = 'auto'
 
-    self.list_timezones = False
     self.preferred_encoding = preferred_encoding
     self.show_troubleshooting = False
+
+  @property
+  def data_location(self):
+    """str: path of the data files."""
+    return self._data_location
 
   def _CanEnforceProcessMemoryLimit(self):
     """Determines if a process memory limit can be enforced.
@@ -128,6 +136,25 @@ class CLITool(object):
 
       resource.setrlimit(resource.RLIMIT_DATA, (memory_limit, memory_limit))
 
+  def _GetPathSpecificationString(self, path_spec):
+    """Retrieves a printable string representation of the path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: printable string representation of the path specification.
+    """
+    path_spec_string = path_spec.comparable
+
+    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
+      path_spec_string = path_spec_string.encode(
+          'utf-8', errors='surrogateescape')
+      path_spec_string = path_spec_string.decode(
+          'utf-8', errors='backslashreplace')
+
+    return path_spec_string
+
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
 
@@ -136,6 +163,7 @@ class CLITool(object):
     """
     self._debug_mode = getattr(options, 'debug', False)
     self._quiet_mode = getattr(options, 'quiet', False)
+    self._unattended_mode = getattr(options, 'unattended', False)
 
     if self._debug_mode and self._quiet_mode:
       logger.warning(
@@ -157,28 +185,18 @@ class CLITool(object):
               local_date_time.day, local_date_time.hour, local_date_time.minute,
               local_date_time.second)
 
-  def _ParseTimezoneOption(self, options):
-    """Parses the timezone options.
+  def _PrintUserWarning(self, warning_text):
+    """Prints a warning to the user.
 
     Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
+      warning_text (str): text used to warn the user.
     """
-    time_zone_string = self.ParseStringOption(options, 'timezone')
-    if isinstance(time_zone_string, py2to3.STRING_TYPES):
-      if time_zone_string.lower() == 'list':
-        self.list_timezones = True
+    warning_text = 'WARNING: {0:s}'.format(warning_text)
+    warning_text = textwrap.wrap(warning_text, 80)
+    print('\n'.join(warning_text))
+    print('')
 
-      elif time_zone_string:
-        try:
-          pytz.timezone(time_zone_string)
-        except pytz.UnknownTimeZoneError:
-          raise errors.BadConfigOption(
-              'Unknown time zone: {0:s}'.format(time_zone_string))
-
-        self._preferred_time_zone = time_zone_string
+    self._has_user_warning = True
 
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input.
@@ -191,6 +209,14 @@ class CLITool(object):
     """
     self._output_writer.Write('{0:s}: '.format(input_text))
     return self._input_reader.Read()
+
+  def _WaitUserWarning(self):
+    """Waits 15 seconds after printing warnings to the user."""
+    if self._has_user_warning:
+      print('Waiting for 15 second to give you time to cancel.')
+      print('')
+
+      time.sleep(15)
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.
@@ -227,6 +253,12 @@ class CLITool(object):
         '-q', '--quiet', dest='quiet', action='store_true', default=False,
         help='Disable informational output.')
 
+    argument_group.add_argument(
+        '-u', '--unattended', dest='unattended', action='store_true',
+        default=False, help=(
+            'Enable unattended mode and do not ask the user for additional '
+            'input when needed, but terminate with an error instead.'))
+
   def AddLogFileOptions(self, argument_group):
     """Adds the log file option to the argument group.
 
@@ -241,22 +273,6 @@ class CLITool(object):
             'that the file will be gzip compressed if the extension is '
             '".gz".').format(self.NAME))
 
-  def AddTimeZoneOption(self, argument_group):
-    """Adds the time zone option to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    # Note the default here is None so we can determine if the time zone
-    # option was set.
-    argument_group.add_argument(
-        '-z', '--zone', '--timezone', dest='timezone', action='store',
-        type=str, default=None, help=(
-            'explicitly define the timezone. Typically the timezone is '
-            'determined automatically where possible otherwise it will '
-            'default to UTC. Use "-z list" to see a list of available '
-            'timezones.'))
-
   def CheckOutDated(self):
     """Checks if the version of plaso is outdated and warns the user."""
     version_date_time = datetime.datetime(
@@ -268,9 +284,9 @@ class CLITool(object):
     if date_time_delta.days > 180:
       logger.warning('This version of plaso is more than 6 months old.')
 
-      print('WARNING the version of plaso you are using is more than 6 months')
-      print('old. We strongly recommend to update it.')
-      print('')
+      self._PrintUserWarning((
+          'the version of plaso you are using is more than 6 months old. We '
+          'strongly recommend to update it.'))
 
   def GetCommandLineArguments(self):
     """Retrieves the command line arguments.
@@ -282,7 +298,7 @@ class CLITool(object):
     if not command_line_arguments:
       return ''
 
-    if isinstance(command_line_arguments[0], py2to3.BYTES_TYPE):
+    if isinstance(command_line_arguments[0], bytes):
       encoding = sys.stdin.encoding
 
       # Note that sys.stdin.encoding can be None.
@@ -398,7 +414,7 @@ class CLITool(object):
     if not argument_value:
       return default_value
 
-    if isinstance(argument_value, py2to3.BYTES_TYPE):
+    if isinstance(argument_value, bytes):
       encoding = sys.stdin.encoding
 
       # Note that sys.stdin.encoding can be None.
@@ -412,7 +428,7 @@ class CLITool(object):
             'Unable to convert option: {0:s} to Unicode with error: '
             '{1!s}.').format(argument_name, exception))
 
-    elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
+    elif not isinstance(argument_value, str):
       raise errors.BadConfigOption(
           'Unsupported option: {0:s} string type required.'.format(
               argument_name))
@@ -493,7 +509,7 @@ class FileObjectInputReader(CLIInputReader):
     """
     encoded_string = self._file_object.readline()
 
-    if isinstance(encoded_string, py2to3.UNICODE_TYPE):
+    if isinstance(encoded_string, str):
       return encoded_string
 
     try:
@@ -522,6 +538,18 @@ class StdinInputReader(FileObjectInputReader):
       encoding (Optional[str]): input encoding.
     """
     super(StdinInputReader, self).__init__(sys.stdin, encoding=encoding)
+
+  def Read(self):
+    """Reads a string from the input.
+
+    Returns:
+      str: input.
+    """
+    # Flush stdout to guarantee that all output has been provided before waiting
+    # for input.
+    sys.stdout.flush()
+
+    return super(StdinInputReader, self).Read()
 
 
 class FileObjectOutputWriter(CLIOutputWriter):
@@ -582,9 +610,4 @@ class StdoutOutputWriter(FileObjectOutputWriter):
     Args:
       string (str): output.
     """
-    if sys.version_info[0] < 3:
-      super(StdoutOutputWriter, self).Write(string)
-    else:
-      # sys.stdout.write() on Python 3 by default will error if string is
-      # of type bytes.
-      sys.stdout.write(string)
+    sys.stdout.write(string)

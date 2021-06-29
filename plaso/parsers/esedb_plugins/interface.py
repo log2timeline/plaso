@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for ESE database plugins."""
 
-from __future__ import unicode_literals
-
 import os
 
 import pyesedb
 
-from dtfabric import errors as dtfabric_errors
-from dtfabric.runtime import fabric as dtfabric_fabric
-
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import plugins
 
 
-class ESEDBPlugin(plugins.BasePlugin):
+class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
   """The ESE database plugin interface."""
 
-  NAME = 'esedb'
+  NAME = 'esedb_plugin'
+  DATA_FORMAT = 'ESE database file'
 
   BINARY_DATA_COLUMN_TYPES = frozenset([
       pyesedb.column_types.BINARY_DATA,
@@ -48,25 +45,15 @@ class ESEDBPlugin(plugins.BasePlugin):
   OPTIONAL_TABLES = {}
 
   # The dtFabric definition file.
-  _DEFINITION_FILE = 'types.yaml'
-
-  # Preserve the absolute path value of __file__ in case it is changed
-  # at run-time.
-  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'types.yaml')
 
   def __init__(self):
     """Initializes the ESE database plugin."""
     super(ESEDBPlugin, self).__init__()
-    self._data_type_maps = {}
-    self._fabric = self._ReadDefinitionFile(self._DEFINITION_FILE)
     self._tables = {}
     self._tables.update(self.REQUIRED_TABLES)
     self._tables.update(self.OPTIONAL_TABLES)
-
-  @property
-  def required_tables(self):
-    """set[str]: required table names."""
-    return frozenset(self.REQUIRED_TABLES.keys())
 
   def _ConvertValueBinaryDataToStringAscii(self, value):
     """Converts a binary data value into a string.
@@ -148,25 +135,6 @@ class ESEDBPlugin(plugins.BasePlugin):
           'Unable to parse integer value with error: {0!s}'.format(
               exception))
 
-  def _GetDataTypeMap(self, name):
-    """Retrieves a data type map defined by the definition file.
-
-    The data type maps are cached for reuse.
-
-    Args:
-      name (str): name of the data type as defined by the definition file.
-
-    Returns:
-      dtfabric.DataTypeMap: data type map which contains a data type definition,
-          such as a structure, that can be mapped onto binary data.
-    """
-    data_type_map = self._data_type_maps.get(name, None)
-    if not data_type_map:
-      data_type_map = self._fabric.CreateDataTypeMap(name)
-      self._data_type_maps[name] = data_type_map
-
-    return data_type_map
-
   def _GetRecordValue(self, record, value_entry):
     """Retrieves a specific value from the record.
 
@@ -221,13 +189,15 @@ class ESEDBPlugin(plugins.BasePlugin):
     return record.get_value_data(value_entry)
 
   def _GetRecordValues(
-      self, parser_mediator, table_name, record, value_mappings=None):
+      self, parser_mediator, table_name, record_index, record,
+      value_mappings=None):
     """Retrieves the values from the record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       table_name (str): name of the table.
+      record_index (int): ESE record index.
       record (pyesedb.record): ESE record.
       value_mappings (Optional[dict[str, str]): value mappings, which map
           the column name to a callback method.
@@ -243,7 +213,7 @@ class ESEDBPlugin(plugins.BasePlugin):
 
       column_name = record.get_column_name(value_entry)
       if column_name in record_values:
-        logger.warning(
+        parser_mediator.ProduceExtractionWarning(
             '[{0:s}] duplicate column: {1:s} in table: {2:s}'.format(
                 self.NAME, column_name, table_name))
         continue
@@ -268,85 +238,34 @@ class ESEDBPlugin(plugins.BasePlugin):
           logger.error(exception)
           value = None
           parser_mediator.ProduceExtractionWarning((
-              'unable to parse value: {0:s} with callback: {1:s} with error: '
-              '{2!s}').format(column_name, value_callback_method, exception))
+              'unable to parse value: {0:s} in record: {1:d} with callback: '
+              '{2:s} in table: {3:s} with error: {4!s}').format(
+                  column_name, record_index, value_callback_method, table_name,
+                  exception))
 
       else:
         try:
           value = self._GetRecordValue(record, value_entry)
         except ValueError as exception:
           value = None
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse value: {0:s} with error: {1!s}'.format(
-                  column_name, exception))
+          parser_mediator.ProduceExtractionWarning((
+              'unable to parse value: {0:s}  in record: {1:d} in table: {2:s} '
+              'with error: {3!s}').format(
+                  column_name, record_index, table_name, exception))
 
       record_values[column_name] = value
 
     return record_values
 
-  def _ReadDefinitionFile(self, filename):
-    """Reads a dtFabric definition file.
-
-    Args:
-      filename (str): name of the dtFabric definition file.
-
-    Returns:
-      dtfabric.DataTypeFabric: data type fabric which contains the data format
-          data type maps of the data type definition, such as a structure, that
-          can be mapped onto binary data or None if no filename is provided.
-    """
-    if not filename:
-      return None
-
-    path = os.path.join(self._DEFINITION_FILES_PATH, filename)
-    with open(path, 'rb') as file_object:
-      definition = file_object.read()
-
-    return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
-
-  def _ReadStructureFromByteStream(
-      self, byte_stream, file_offset, data_type_map, context=None):
-    """Reads a structure from a byte stream.
-
-    Args:
-      byte_stream (bytes): byte stream.
-      file_offset (int): offset of the structure data relative to the start
-          of the file-like object.
-      data_type_map (dtfabric.DataTypeMap): data type map of the structure.
-      context (Optional[dtfabric.DataTypeMapContext]): data type map context.
-          The context is used within dtFabric to hold state about how to map
-          the data type definition onto the byte stream. In this class it is
-          used to determine the size of variable size data type definitions.
-
-    Returns:
-      object: structure values object.
-
-    Raises:
-      ParseError: if the structure cannot be read.
-      ValueError: if file-like object or data type map is missing.
-    """
-    if not byte_stream:
-      raise ValueError('Missing byte stream.')
-
-    if not data_type_map:
-      raise ValueError('Missing data type map.')
-
-    try:
-      return data_type_map.MapByteStream(byte_stream, context=context)
-    except (dtfabric_errors.ByteStreamTooSmallError,
-            dtfabric_errors.MappingError) as exception:
-      raise errors.ParseError((
-          'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-          '{2!s}').format(data_type_map.name or '', file_offset, exception))
-
-  def GetEntries(self, parser_mediator, cache=None, database=None, **kwargs):
+  def _ParseESEDatabase(
+      self, parser_mediator, cache=None, database=None, **kwargs):
     """Extracts event objects from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (Optional[ESEDBCache]): cache.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
 
     Raises:
       ValueError: If the database attribute is not valid.
@@ -370,7 +289,7 @@ class ESEDBPlugin(plugins.BasePlugin):
                 self.NAME, callback_method, table_name))
         continue
 
-      esedb_table = database.get_table_by_name(table_name)
+      esedb_table = database.GetTableByName(table_name)
       if not esedb_table:
         if table_name not in self.OPTIONAL_TABLES:
           logger.warning('[{0:s}] missing table: {1:s}'.format(
@@ -384,18 +303,35 @@ class ESEDBPlugin(plugins.BasePlugin):
           parser_mediator, cache=cache, database=database, table=esedb_table,
           **kwargs)
 
+  def CheckRequiredTables(self, database):
+    """Check if the database has the minimal structure required by the plugin.
+
+    Args:
+      database (ESEDatabase): ESE database to check.
+
+    Returns:
+      bool: True if the database has the minimum tables defined by the plugin,
+          or False if it does not or no required tables are defined. The
+          database can have more tables than specified by the plugin and still
+          return True.
+    """
+    if not self.REQUIRED_TABLES:
+      return False
+
+    return set(self.REQUIRED_TABLES.keys()).issubset(database.tables)
+
   # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cache=None, database=None, **kwargs):
-    """Determines if this is the appropriate plugin for the database.
+    """Extracts events from an ESE database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (Optional[ESEDBCache]): cache.
-      database (Optional[pyesedb.file]): ESE database.
+      database (Optional[ESEDatabase]): ESE database.
 
     Raises:
-      ValueError: If the database attribute is not valid.
+      ValueError: If the database argument is not valid.
     """
     if database is None:
       raise ValueError('Invalid database.')
@@ -403,5 +339,5 @@ class ESEDBPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(ESEDBPlugin, self).Process(parser_mediator)
 
-    self.GetEntries(
+    self._ParseESEDatabase(
         parser_mediator, cache=cache, database=database, **kwargs)

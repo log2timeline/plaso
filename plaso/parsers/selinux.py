@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains SELinux audit.log file parser.
+"""This file contains SELinux audit log (audit.log) file parser.
 
 Information updated 16 january 2013.
 
@@ -14,18 +14,11 @@ for example: "seconds: 1105758604, milliseconds: 519".
 
 The number after the timestamp (420 in the example) is a 'serial number'
 that can be used to correlate multiple logs generated from the same event.
-
-References:
-
-* http://selinuxproject.org/page/NB_AL
-* http://blog.commandlinekungfu.com/2010/08/episode-106-epoch-fail.html
-* http://www.redhat.com/promo/summit/2010/presentations/taste_of_training/
-    Summit_2010_SELinux.pdf
 """
 
-from __future__ import unicode_literals
-
 import pyparsing
+
+from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -56,10 +49,10 @@ class SELinuxLogEventData(events.EventData):
 
 
 class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
-  """Parser for SELinux audit.log files."""
+  """Parser for SELinux audit log (audit.log) files."""
 
   NAME = 'selinux'
-  DESCRIPTION = 'Parser for SELinux audit.log files.'
+  DATA_FORMAT = 'SELinux audit log (audit.log) file'
 
   _ENCODING = 'utf-8'
 
@@ -159,11 +152,11 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     event_data.audit_type = self._GetValueFromStructure(structure, 'type')
     event_data.body = body_text
     event_data.pid = self._GetValueFromStructure(body_structure, 'pid')
-    # TODO: pass line number to offset or remove.
-    event_data.offset = 0
 
-    event = time_events.TimestampEvent(
-        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):

@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file contains the MSIE zone settings plugin."""
 
-from __future__ import unicode_literals
-
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.containers import windows_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -40,7 +37,7 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'msie_zone'
-  DESCRIPTION = 'Parser for Internet Explorer zone settings Registry data.'
+  DATA_FORMAT = 'Microsoft Internet Explorer zone settings Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -182,18 +179,7 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    values_dict = self._GetValuesFromKey(registry_key)
-
-    # Generate an event for the key.
-    event_data = windows_events.WindowsRegistryEventData()
-    event_data.key_path = registry_key.path
-    event_data.values = ' '.join([
-        '{0:s}: {1!s}'.format(name, value)
-        for name, value in sorted(values_dict.items())]) or None
-
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    self._ProduceDefaultWindowsRegistryEvent(parser_mediator, registry_key)
 
     if registry_key.number_of_subkeys == 0:
       error_string = 'Key: {0:s} missing subkeys.'.format(registry_key.path)
@@ -261,4 +247,4 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(MSIEZoneSettingsPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(MSIEZoneSettingsPlugin)

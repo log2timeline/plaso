@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the MSIECF event formatters."""
-
-from __future__ import unicode_literals
+"""Tests for the MSIE cache file custom event formatter helpers."""
 
 import unittest
 
@@ -11,75 +9,46 @@ from plaso.formatters import msiecf
 from tests.formatters import test_lib
 
 
-class MsiecfLeakFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the MSIECF leak item event formatter."""
+class MSIECFCachedPathFormatterHelperTest(test_lib.EventFormatterTestCase):
+  """Tests for the MSIE cache file cached path formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = msiecf.MsiecfLeakFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = msiecf.MSIECFCachedPathFormatterHelper()
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = msiecf.MsiecfLeakFormatter()
+    event_values = {
+        'cached_filename': 'file',
+        'cache_directory_name': 'directory'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['cached_file_path'], 'directory\\file')
 
-    expected_attribute_names = [
-        'cached_file_path',
-        'cached_file_size',
-        'recovered_string']
+    event_values = {
+        'cached_filename': 'file',
+        'cache_directory_name': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['cached_file_path'], 'file')
 
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
-
-
-class MsiecfRedirectedFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the MSIECF redirected item event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = msiecf.MsiecfRedirectedFormatter()
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = msiecf.MsiecfRedirectedFormatter()
-
-    expected_attribute_names = [
-        'url',
-        'recovered_string']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+    event_values = {
+        'cached_filename': None,
+        'cache_directory_name': 'directory'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertNotIn('cached_file_path', event_values)
 
 
-class MsiecfUrlFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the MSIECF URL item event formatter."""
+class MSIECFHTTPHeadersventFormatterHelperTest(test_lib.EventFormatterTestCase):
+  """Tests for the MSIE cache file HTTP headers formatter helper."""
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = msiecf.MsiecfUrlFormatter()
-    self.assertIsNotNone(event_formatter)
+  def testFormatEventValues(self):
+    """Tests the FormatEventValues function."""
+    formatter_helper = msiecf.MSIECFHTTPHeadersventFormatterHelper()
 
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = msiecf.MsiecfUrlFormatter()
+    event_values = {'http_headers': 'header1\r\nheader2'}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertEqual(event_values['http_headers'], 'header1 - header2')
 
-    expected_attribute_names = [
-        'url',
-        'number_of_hits',
-        'cached_file_path',
-        'cached_file_size',
-        'http_headers',
-        'recovered_string']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
+    event_values = {'http_headers': None}
+    formatter_helper.FormatEventValues(event_values)
+    self.assertIsNone(event_values['http_headers'])
 
 
 if __name__ == '__main__':

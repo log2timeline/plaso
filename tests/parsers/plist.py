@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests the plist parser."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.lib import errors
@@ -22,11 +20,17 @@ class PlistParserTest(test_lib.ParserTestCase):
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = plist.PlistParser()
-    parser.EnablePlugins(['airport'])
 
-    self.assertIsNotNone(parser)
-    self.assertIsNotNone(parser._default_plugin)
-    self.assertNotEqual(parser._plugins, [])
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    # Extract 1 for the default plugin.
+    self.assertEqual(len(parser._plugins), number_of_plugins - 1)
+
+    parser.EnablePlugins(['airport'])
     self.assertEqual(len(parser._plugins), 1)
 
   def testParse(self):
@@ -34,8 +38,9 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['plist_binary'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 12)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     keys = set()
     roots = set()
@@ -78,6 +83,82 @@ class PlistParserTest(test_lib.ParserTestCase):
 
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(['truncated.plist'], parser)
+
+  def testParseWithXMLFileLeadingWhitespace(self):
+    """Tests the Parse function on an XML file with leading whitespace."""
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile(['leading_whitespace.plist'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 4)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+  def testParseWithXMLFileInvalidDate(self):
+    """Tests the Parse function on an XML file with an invalid date and time."""
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile(['com.apple.security.KCN.plist'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+  def testParseWithXMLFileExpatError(self):
+    """Tests the Parse function on an XML file that causes an ExpatError."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['WMSDKNS.DTD'], parser)
+
+  def testParseWithXMLFileBinASCIIError(self):
+    """Tests the Parse function on an XML file that causes a binascii.Error."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['manageconsolidatedProviders.aspx.resx'], parser)
+
+  def testParseWithXMLFileNoTopLevel(self):
+    """Tests the Parse function on an XML file without top level."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      test_path_segments = [
+          'SettingsPane_{F8B5DB1C-D219-4bf9-A747-A1325024469B}'
+          '.settingcontent-ms']
+      self._ParseFile(test_path_segments, parser)
+
+    # UTF-8 encoded XML file with byte-order-mark.
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['ReAgent.xml'], parser)
+
+    # UTF-16 little-endian encoded XML file with byte-order-mark.
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['SampleMachineList.xml'], parser)
+
+  def testParseWithXMLFileEncodingUnicode(self):
+    """Tests the Parse function on an XML file with encoding Unicode."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      self._ParseFile(['SAFStore.xml'], parser)
+
+  def testParseWithEmptyBinaryPlistFile(self):
+    """Tests the Parse function on an empty binary plist file."""
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile([
+        'com.apple.networkextension.uuidcache.plist'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+  def testParseWithXMLPlistFileNoTopLevel(self):
+    """Tests the Parse function on an XML plist file without top level."""
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile(['empty.plist'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 0)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
 
 if __name__ == '__main__':

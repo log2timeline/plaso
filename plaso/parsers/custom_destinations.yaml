@@ -1,7 +1,7 @@
 name: custom_destinations_jump_list
 type: format
 description: Custom destinations jump list format
-urls: ["https://github.com/libyal/dtformats/blob/master/documentation/Jump%20lists%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Jump%20lists%20format.asciidoc"]
 ---
 name: byte
 type: integer
@@ -73,6 +73,7 @@ attributes:
 members:
 - name: signature
   data_type: uint32
+  value: 0xbabffbab
 ---
 name: custom_entry_header
 type: structure

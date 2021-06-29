@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the parsers and plugins interface classes."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import interface
@@ -15,6 +13,16 @@ class BaseParserTest(test_lib.ParserTestCase):
   """Tests for the parser interface."""
 
   # pylint: disable=protected-access
+
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser = interface.BaseParser()
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    self.assertEqual(len(parser._plugins), 0)
 
   def testInitialize(self):
     """Tests the initialization."""
@@ -30,7 +38,9 @@ class BaseParserTest(test_lib.ParserTestCase):
 
   # The DeregisterPlugin and RegisterPlugin functions are tested in manager.py
 
-  # The GetPluginObjectByName and GetPlugins functions are tested in manager.py
+  # TODO: add tests for GetPluginNames
+  # TODO: add tests for GetPluginObjectByName
+  # TODO: add tests for GetPlugins
 
 
 if __name__ == '__main__':

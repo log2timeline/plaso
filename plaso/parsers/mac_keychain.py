@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Parser for MacOS Keychain files."""
-
-from __future__ import unicode_literals
+"""Parser for MacOS keychain database files."""
 
 import codecs
 import collections
+import os
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -12,10 +11,11 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
 from plaso.containers import time_events
+from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.lib import definitions
-from plaso.parsers import dtfabric_parser
+from plaso.parsers import interface
 from plaso.parsers import manager
 
 
@@ -112,15 +112,15 @@ class KeychainDatabaseTable(object):
     self.relation_name = None
 
 
-class KeychainParser(dtfabric_parser.DtFabricBaseParser):
-  """Parser for Keychain files."""
+class KeychainParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
+  """Parser for MacOS keychain database files."""
 
   NAME = 'mac_keychain'
-  DESCRIPTION = 'Parser for MacOS Keychain files.'
+  DATA_FORMAT = 'MacOS keychain database file'
 
-  _DEFINITION_FILE = 'mac_keychain.yaml'
-
-  _FILE_SIGNATURE = b'kych'
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'mac_keychain.yaml')
 
   _MAJOR_VERSION = 1
   _MINOR_VERSION = 0
@@ -323,9 +323,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     file_header, _ = self._ReadStructureFromFileObject(
         file_object, 0, data_type_map)
-
-    if file_header.signature != self._FILE_SIGNATURE:
-      raise errors.ParseError('Unsupported file signature.')
 
     if (file_header.major_format_version != self._MAJOR_VERSION or
         file_header.minor_format_version != self._MINOR_VERSION):
@@ -705,6 +702,9 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       dfdatetime.TimeElements: date and time extracted from the value or None
           if the value does not represent a valid string.
     """
+    if not date_time_value:
+      return None
+
     if date_time_value[14] != 'Z':
       parser_mediator.ProduceExtractionWarning(
           'invalid date and time value: {0!s}'.format(date_time_value))
@@ -733,7 +733,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       return None
 
   def _ParseBinaryDataAsString(self, parser_mediator, binary_data_value):
-    """Parses a binary data value as string
+    """Parses a binary data value as string.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -756,6 +756,23 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
               repr(binary_data_value)))
       return None
 
+  def _ParseIntegerTagString(self, integer_value):
+    """Parses an integer value as a tag string.
+
+    Args:
+      integer_value (int): integer value (CSSM_DB_ATTRIBUTE_FORMAT_SINT32,
+          CSSM_DB_ATTRIBUTE_FORMAT_UINT32) that represents a tag string.
+
+    Returns:
+      str: integer value formatted as a tag string or None if integer value is
+          None (NULL).
+    """
+    if not integer_value:
+      return None
+
+    tag_string = codecs.decode('{0:08x}'.format(integer_value), 'hex')
+    return codecs.decode(tag_string, 'utf-8')
+
   def _ParseApplicationPasswordRecord(self, parser_mediator, record):
     """Extracts the information from an application password record.
 
@@ -776,8 +793,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     event_data = KeychainApplicationRecordEventData()
     event_data.account_name = self._ParseBinaryDataAsString(
         parser_mediator, record['acct'])
-    event_data.comments = self._ParseBinaryDataAsString(
-        parser_mediator, record['crtr'])
+    event_data.comments = self._ParseIntegerTagString(record['crtr'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
     ssgp_hash = codecs.encode(key[4:], 'hex')
@@ -820,8 +836,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     event_data = KeychainInternetRecordEventData()
     event_data.account_name = self._ParseBinaryDataAsString(
         parser_mediator, record['acct'])
-    event_data.comments = self._ParseBinaryDataAsString(
-        parser_mediator, record['crtr'])
+    event_data.comments = self._ParseIntegerTagString(record['crtr'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
     event_data.protocol = self._PROTOCOL_TRANSLATION_DICT.get(
@@ -855,7 +870,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(cls._FILE_SIGNATURE, offset=0)
+    format_specification.AddNewSignature(b'kych', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):

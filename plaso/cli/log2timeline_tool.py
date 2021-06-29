@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 """The log2timeline CLI tool."""
 
-from __future__ import unicode_literals
-
 import argparse
 import sys
 import time
 import textwrap
-
-from dfvfs.lib import definitions as dfvfs_definitions
 
 import plaso
 
@@ -18,18 +14,12 @@ from plaso import output  # pylint: disable=unused-import
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import extraction_tool
 from plaso.cli import logger
-from plaso.cli import status_view
-from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.engine import engine
-from plaso.engine import single_process as single_process_engine
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
-from plaso.storage import factory as storage_factory
 
 
 class Log2TimelineTool(extraction_tool.ExtractionTool):
@@ -68,16 +58,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       '',
       'Instead of answering questions, indicate some of the options on the',
       'command line (including data from particular VSS stores).',
-      ('    log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.plaso '
-       'image.E01'),
+      '    log2timeline.py --vss_stores 1,2 /cases/plaso_vss.plaso image.E01',
       '',
       'And that is how you build a timeline using log2timeline...',
       '']))
-
-  _SOURCE_TYPES_TO_PREPROCESS = frozenset([
-      dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
-      dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-      dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes a log2timeline CLI tool.
@@ -90,16 +74,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._command_line_arguments = None
-    self._enable_sigsegv_handler = False
-    self._number_of_extraction_workers = 0
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
-    self._source_type = None
-    self._status_view = status_view.StatusView(self._output_writer, self.NAME)
-    self._status_view_mode = status_view.StatusView.MODE_WINDOW
-    self._stdout_output_writer = isinstance(
-        self._output_writer, tools.StdoutOutputWriter)
-    self._worker_memory_limit = None
 
     self.dependencies_check = True
     self.list_hashers = False
@@ -132,6 +107,28 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     return return_dict
 
+  def AddLegacyStorageOptions(self, argument_parser):
+    """Adds the legacy storage options to the argument group.
+
+    Args:
+      argument_parser (argparse.ArgumentParser): argparse argument parser.
+    """
+    argument_parser.add_argument(
+        'storage_file_legacy', metavar='PATH', nargs='?', type=str,
+        default=None, help='Path to a storage file.')
+
+  def AddStorageOptions(self, argument_group):
+    """Adds the storage options to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        '--storage_file', '--storage-file', dest='storage_file', metavar='PATH',
+        type=str, default=None, help=(
+            'The path of the storage file. If not specified, one will be made '
+            'in the form <timestamp>-<source>.plaso'))
+
   def ParseArguments(self, arguments):
     """Parses the command line arguments.
 
@@ -149,8 +146,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.AddBasicOptions(argument_parser)
 
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=['storage_file'])
+    self.AddLegacyStorageOptions(argument_parser)
 
     data_location_group = argument_parser.add_argument_group(
         'data location arguments')
@@ -223,6 +219,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     storage_group = argument_parser.add_argument_group('storage arguments')
 
+    self.AddStorageOptions(storage_group)
+
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         storage_group, names=['storage_format'])
 
@@ -244,15 +242,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     # Properly prepare the attributes according to local encoding.
     if self.preferred_encoding == 'ascii':
-      logger.warning(
-          'The preferred encoding of your system is ASCII, which is not '
+      self._PrintUserWarning((
+          'the preferred encoding of your system is ASCII, which is not '
           'optimal for the typically non-ASCII characters that need to be '
-          'parsed and processed. The tool will most likely crash and die, '
-          'perhaps in a way that may not be recoverable. A five second delay '
-          'is introduced to give you time to cancel the runtime and '
-          'reconfigure your preferred encoding, otherwise continue at own '
-          'risk.')
-      time.sleep(5)
+          'parsed and processed. This will most likely result in an error.'))
 
     if self._process_archives:
       logger.warning(
@@ -269,6 +262,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       return False
 
     self._command_line_arguments = self.GetCommandLineArguments()
+
+    self._WaitUserWarning()
 
     loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
@@ -296,7 +291,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    self._ParseTimezoneOption(options)
+    self._ParseTimeZoneOption(options)
 
     self.list_hashers = self._hasher_names_string == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
@@ -311,7 +306,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.dependencies_check = getattr(options, 'dependencies_check', True)
 
     if (self.list_hashers or self.list_parsers_and_plugins or
-        self.list_profilers or self.list_timezones or self.show_info or
+        self.list_profilers or self.list_time_zones or self.show_info or
         self.show_troubleshooting):
       return
 
@@ -319,17 +314,36 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     argument_helper_names = [
         'artifact_definitions', 'artifact_filters', 'extraction',
-        'filter_file', 'status_view', 'storage_file', 'storage_format',
-        'text_prepend', 'yara_rules']
+        'filter_file', 'status_view', 'storage_format', 'text_prepend',
+        'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
     self._ParseLogFileOptions(options)
 
+    if (hasattr(options, 'storage_file_legacy') and
+        not getattr(options, self._SOURCE_OPTION, None)):
+      source_option = getattr(options, 'storage_file_legacy', None)
+      setattr(options, self._SOURCE_OPTION, source_option)
+      delattr(options, 'storage_file_legacy')
+
     self._ParseStorageMediaOptions(options)
 
     self._ParsePerformanceOptions(options)
     self._ParseProcessingOptions(options)
+
+    storage_file_legacy = self.ParseStringOption(options, 'storage_file_legacy')
+    if storage_file_legacy and self._source_path:
+      self._PrintUserWarning((
+          'the storage file option has been deprecated you can now safely '
+          'omit it or use "--storage_file" instead.'))
+
+    if storage_file_legacy:
+      self._storage_file_path = storage_file_legacy
+    else:
+      self._storage_file_path = self.ParseStringOption(options, 'storage_file')
+      if not self._storage_file_path:
+        self._storage_file_path = self._GenerateStorageFileName()
 
     if not self._storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')
@@ -342,112 +356,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
               serializer_format))
     self._storage_serializer_format = serializer_format
 
-    # TODO: where is this defined?
-    self._operating_system = getattr(options, 'os', None)
-
-    if self._operating_system:
-      self._mount_path = getattr(options, 'filename', None)
-
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['status_view'])
 
     self._enable_sigsegv_handler = getattr(options, 'sigsegv_handler', False)
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
-
-  def ExtractEventsFromSources(self):
-    """Processes the sources and extracts events.
-
-    Raises:
-      BadConfigOption: if the storage file path is invalid or the storage
-          format not supported or an invalid collection filter was specified.
-      SourceScannerError: if the source scanner could not find a supported
-          file system.
-      UserAbort: if the user initiated an abort.
-    """
-    self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
-
-    scan_context = self.ScanSource(self._source_path)
-    self._source_type = scan_context.source_type
-
-    self._status_view.SetMode(self._status_view_mode)
-    self._status_view.SetSourceInformation(
-        self._source_path, self._source_type,
-        artifact_filters=self._artifact_filters,
-        filter_file=self._filter_file)
-
-    status_update_callback = (
-        self._status_view.GetExtractionStatusUpdateCallback())
-
-    self._output_writer.Write('\n')
-    self._status_view.PrintExtractionStatusHeader(None)
-    self._output_writer.Write('Processing started.\n')
-
-    session = engine.BaseEngine.CreateSession(
-        artifact_filter_names=self._artifact_filters,
-        command_line_arguments=self._command_line_arguments,
-        debug_mode=self._debug_mode,
-        filter_file_path=self._filter_file,
-        preferred_encoding=self.preferred_encoding,
-        preferred_time_zone=self._preferred_time_zone,
-        preferred_year=self._preferred_year)
-
-    storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-        self._storage_format, session, self._storage_file_path)
-    if not storage_writer:
-      raise errors.BadConfigOption(
-          'Unsupported storage format: {0:s}'.format(self._storage_format))
-
-    single_process_mode = self._single_process_mode
-    if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      # No need to multi process a single file source.
-      single_process_mode = True
-
-    if single_process_mode:
-      extraction_engine = single_process_engine.SingleProcessEngine()
-    else:
-      extraction_engine = multi_process_engine.TaskMultiProcessEngine()
-
-    # If the source is a directory or a storage media image
-    # run pre-processing.
-    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      self._PreprocessSources(extraction_engine)
-
-    configuration = self._CreateProcessingConfiguration(
-        extraction_engine.knowledge_base)
-
-    self._SetExtractionParsersAndPlugins(configuration, session)
-    self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
-
-    try:
-      extraction_engine.BuildCollectionFilters(
-          self._artifact_definitions_path, self._custom_artifacts_path,
-          extraction_engine.knowledge_base, self._artifact_filters,
-          self._filter_file)
-    except errors.InvalidFilter as exception:
-      raise errors.BadConfigOption(
-          'Unable to build collection filters with error: {0!s}'.format(
-              exception))
-
-    processing_status = None
-    if single_process_mode:
-      logger.debug('Starting extraction in single process mode.')
-
-      processing_status = extraction_engine.ProcessSources(
-          self._source_path_specs, storage_writer, self._resolver_context,
-          configuration, status_update_callback=status_update_callback)
-
-    else:
-      logger.debug('Starting extraction in multi process mode.')
-
-      processing_status = extraction_engine.ProcessSources(
-          session.identifier, self._source_path_specs, storage_writer,
-          configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
-          number_of_worker_processes=self._number_of_extraction_workers,
-          status_update_callback=status_update_callback,
-          worker_memory_limit=self._worker_memory_limit)
-
-    self._status_view.PrintExtractionSummary(processing_status)
 
   def ShowInfo(self):
     """Shows information about available hashers, parsers, plugins, etc."""

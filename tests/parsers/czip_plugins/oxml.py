@@ -2,13 +2,9 @@
 # -*- coding: utf-8 -*-
 """Tests for the OXML plugin."""
 
-from __future__ import unicode_literals
-
 import unittest
 
-from plaso.formatters import oxml as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.parsers import czip
 from plaso.parsers.czip_plugins import oxml
 
 from tests.parsers.czip_plugins import test_lib
@@ -93,75 +89,60 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         parser_mediator, event_data, properties, 'modified',
         definitions.TIME_DESCRIPTION_MODIFICATION, 'modification time')
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Test parsing a date and time string in intervals of 100 ns.
     plugin._ProduceEvent(
         parser_mediator, event_data, properties, 'created',
         definitions.TIME_DESCRIPTION_CREATION, 'creation time')
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
-    parser = czip.CompoundZIPParser()
-    storage_writer = self._ParseFile(['Document.docx'], parser)
+    plugin = oxml.OpenXMLPlugin()
+    storage_writer = self._ParseZIPFileWithPlugin(['Document.docx'], plugin)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
-    event = events[0]
+    expected_event_values = {
+        'data_type': 'metadata:openxml',
+        'date_time': '2012-11-07 23:29:00',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckTimestamp(event.timestamp, '2012-11-07 23:29:00.000000')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    event = events[1]
+    expected_event_values = {
+        'app_version': '14.0000',
+        'author': 'Nides',
+        'creating_app': 'Microsoft Office Word',
+        'data_type': 'metadata:openxml',
+        'date_time': '2013-08-25 22:18:00',
+        'doc_security': '0',
+        'hyperlinks_changed': 'false',
+        'i4': '1',
+        'last_saved_by': 'Nides',
+        'links_up_to_date': 'false',
+        'number_of_characters': '13',
+        'number_of_characters_with_spaces': '14',
+        'number_of_lines': '1',
+        'number_of_pages': '1',
+        'number_of_paragraphs': '1',
+        'number_of_words': '2',
+        'revision_number': '3',
+        'scale_crop': 'false',
+        'template': 'Normal.dotm',
+        'total_time': '1385'}
 
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.number_of_characters, '13')
-    self.assertEqual(event_data.total_time, '1385')
-    self.assertEqual(event_data.number_of_characters_with_spaces, '14')
-    self.assertEqual(event_data.i4, '1')
-    self.assertEqual(event_data.app_version, '14.0000')
-    self.assertEqual(event_data.number_of_lines, '1')
-    self.assertEqual(event_data.scale_crop, 'false')
-    self.assertEqual(event_data.number_of_pages, '1')
-    self.assertEqual(event_data.number_of_words, '2')
-    self.assertEqual(event_data.links_up_to_date, 'false')
-    self.assertEqual(event_data.number_of_paragraphs, '1')
-    self.assertEqual(event_data.doc_security, '0')
-    self.assertEqual(event_data.hyperlinks_changed, 'false')
-    self.assertEqual(event_data.revision_number, '3')
-    self.assertEqual(event_data.last_saved_by, 'Nides')
-    self.assertEqual(event_data.author, 'Nides')
-    self.assertEqual(event_data.creating_app, 'Microsoft Office Word')
-    self.assertEqual(event_data.template, 'Normal.dotm')
-
-    expected_message = (
-        'Creating App: Microsoft Office Word '
-        'App version: 14.0000 '
-        'Last saved by: Nides '
-        'Author: Nides '
-        'Revision number: 3 '
-        'Template: Normal.dotm '
-        'Number of pages: 1 '
-        'Number of words: 2 '
-        'Number of characters: 13 '
-        'Number of characters with spaces: 14 '
-        'Number of lines: 1 '
-        'Hyperlinks changed: false '
-        'Links up to date: false '
-        'Scale crop: false')
-    expected_short_message = (
-        'Author: Nides')
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 if __name__ == '__main__':

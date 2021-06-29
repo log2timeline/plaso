@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for the CCleaner Registry key."""
 
-from __future__ import unicode_literals
-
 import re
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -10,7 +8,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import winreg
+from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -75,7 +73,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
   """
 
   NAME = 'ccleaner'
-  DESCRIPTION = 'Parser for CCleaner Registry data.'
+  DATA_FORMAT = 'CCleaner Registry data'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
@@ -188,4 +186,4 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(CCleanerPlugin)
+winreg_parser.WinRegistryParser.RegisterPlugin(CCleanerPlugin)

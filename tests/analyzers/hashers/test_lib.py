@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Hashing related functions and classes for testing."""
 
-from __future__ import unicode_literals
-
 import os
 
 from tests import test_lib as shared_test_lib
@@ -25,17 +23,13 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
     """
     file_object = file_entry.GetFileObject()
 
-    try:
-      # Make sure we are starting from the beginning of the file.
-      file_object.seek(0, os.SEEK_SET)
+    # Make sure we are starting from the beginning of the file.
+    file_object.seek(0, os.SEEK_SET)
 
+    data = file_object.read(self._DEFAULT_READ_SIZE)
+    while data:
+      hasher.Update(data)
       data = file_object.read(self._DEFAULT_READ_SIZE)
-      while data:
-        hasher.Update(data)
-        data = file_object.read(self._DEFAULT_READ_SIZE)
-
-    finally:
-      file_object.close()
 
     self.assertEqual(hasher.GetStringDigest(), expected_digest)
 

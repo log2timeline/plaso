@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the path filter."""
 
-from __future__ import unicode_literals
-
 import io
 import unittest
 
@@ -109,8 +107,6 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     path_specs = list(path_spec_generator)
 
-    file_system.Close()
-
     # Two evtx, one symbolic link to evtx, one AUTHORS, two filter_*.txt files,
     # total 6 path specifications.
     self.assertEqual(len(path_specs), 6)
@@ -150,8 +146,6 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
     self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)
-
-    file_system.Close()
 
     # Two evtx, one symbolic link to evtx, one AUTHORS, two filter_*.txt files,
     # total 6 path specifications.

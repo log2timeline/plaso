@@ -2,12 +2,9 @@
 # -*- coding: utf-8 -*-
 """Tests for the System Resource Usage Monitor (SRUM) ESE database file."""
 
-from __future__ import unicode_literals
-
 import collections
 import unittest
 
-from plaso.formatters import srum as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers.esedb_plugins import srum
 
@@ -23,8 +20,9 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(['SRUDB.dat'], plugin)
 
     # TODO: confirm this is working as intended. Also see: #2134
-    self.assertEqual(storage_writer.number_of_warnings, 2)
     self.assertEqual(storage_writer.number_of_events, 18543)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 2)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -39,62 +37,37 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     self.assertEqual(data_types['windows:srum:network_usage'], 1840)
 
     # Test event with data type windows:srum:application_usage
-    event = events[92]
+    expected_event_values = {
+        'application': 'Memory Compression',
+        'data_type': 'windows:srum:application_usage',
+        'date_time': '2017-11-05 11:32:00.000000',
+        'identifier': 22167,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_SAMPLE}
 
-    self.CheckTimestamp(event.timestamp, '2017-11-05 11:32:00.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:srum:application_usage')
-    self.assertEqual(event_data.identifier, 22167)
-
-    expected_message = (
-        'Application: Memory Compression')
-
-    expected_short_message = 'Memory Compression'
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[92], expected_event_values)
 
     # Test event with data type windows:srum:network_connectivity
-    event = events[2]
+    expected_event_values = {
+        'application': 1,
+        'data_type': 'windows:srum:network_connectivity',
+        'date_time': '2017-11-05 10:30:48.1679714',
+        'identifier': 501,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_FIRST_CONNECTED}
 
-    self.CheckTimestamp(event.timestamp, '2017-11-05 10:30:48.167971')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:srum:network_connectivity')
-    self.assertEqual(event_data.identifier, 501)
-
-    expected_message = (
-        'Application: 1')
-
-    expected_short_message = '1'
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # Test event with data type windows:srum:network_usage
-    event = events[8]
+    expected_event_values = {
+        'application': 'DiagTrack',
+        'bytes_sent': 2076,
+        'data_type': 'windows:srum:network_usage',
+        'date_time': '2017-11-05 11:32:00.000000',
+        'identifier': 3495,
+        'interface_luid': 1689399632855040,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_SAMPLE,
+        'user_identifier': 'S-1-5-18'}
 
-    self.CheckTimestamp(event.timestamp, '2017-11-05 11:32:00.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, event)
-    self.assertEqual(event_data.data_type, 'windows:srum:network_usage')
-    self.assertEqual(event_data.identifier, 3495)
-
-    expected_message = (
-        'Application: DiagTrack '
-        'Bytes sent: 2076 '
-        'Interface LUID: 1689399632855040 '
-        'User identifier: S-1-5-18')
-
-    expected_short_message = 'DiagTrack'
-
-    self._TestGetMessageStrings(
-        event_data, expected_message, expected_short_message)
+    self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
 
 if __name__ == '__main__':

@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
-"""The SQLite parser plugin interface."""
+"""Interface for SQLite database file parser plugins."""
 
-from __future__ import unicode_literals
-
-# pylint: disable=wrong-import-order
-try:
-  from pysqlite2 import dbapi2 as sqlite3
-except ImportError:
-  import sqlite3
+import sqlite3
 
 from plaso.parsers import logger
 from plaso.parsers import plugins
@@ -16,16 +10,22 @@ from plaso.parsers import plugins
 class SQLitePlugin(plugins.BasePlugin):
   """SQLite parser plugin."""
 
-  NAME = 'sqlite'
-  DESCRIPTION = 'Parser for SQLite database files.'
+  NAME = 'sqlite_plugin'
+  DATA_FORMAT = 'SQLite database file'
+
+  # Dictionary of frozensets containing the columns in tables that must be
+  # present in the database for the plugin to run.
+  # This generally should only include tables/columns that are used in SQL
+  # queries by the plugin and not include extraneous tables/columns to better
+  # accommodate future application database versions. The exception to this is
+  # when extra tables/columns are needed to identify the target database from
+  # others with a similar structure.
+  REQUIRED_STRUCTURE = {}
 
   # Queries to be executed.
   # Should be a list of tuples with two entries, SQLCommand and callback
   # function name.
   QUERIES = []
-
-  # List of tables that should be present in the database, for verification.
-  REQUIRED_TABLES = frozenset([])
 
   # Database schemas this plugin was originally designed for.
   # Should be a list of dictionaries with {table_name: SQLCommand} format.
@@ -89,8 +89,9 @@ class SQLitePlugin(plugins.BasePlugin):
 
     return hash(' '.join(values))
 
-  def _ParseQuery(self, parser_mediator, database, query, callback, cache):
-    """Queries a database and parses the results.
+  def _ParseSQLiteDatabase(
+      self, parser_mediator, database, query, callback, cache):
+    """Extracts events from a SQLite database.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -131,11 +132,39 @@ class SQLitePlugin(plugins.BasePlugin):
 
       row_cache.add(row_hash)
 
+  def CheckRequiredTablesAndColumns(self, database):
+    """Check if the database has the minimal structure required by the plugin.
+
+    Args:
+      database (SQLiteDatabase): the database who's structure is being checked.
+
+    Returns:
+      bool: True if the database has the required tables and columns defined by
+          the plugin, or False if it does not or if the plugin does not define
+          required tables and columns. The database can have more tables and/or
+          columns than specified by the plugin and still return True.
+    """
+    if not self.REQUIRED_STRUCTURE:
+      return False
+
+    has_required_structure = True
+    for required_table, required_columns in self.REQUIRED_STRUCTURE.items():
+      if required_table not in database.tables:
+        has_required_structure = False
+        break
+
+      if not frozenset(required_columns).issubset(
+          database.columns_per_table.get(required_table)):
+        has_required_structure = False
+        break
+
+    return has_required_structure
+
   def CheckSchema(self, database):
     """Checks the schema of a database with that defined in the plugin.
 
     Args:
-      database (SQLiteDatabase): database.
+      database (SQLiteDatabase): SQLite database to check.
 
     Returns:
       bool: True if the schema of the database matches that defined by
@@ -153,14 +182,7 @@ class SQLitePlugin(plugins.BasePlugin):
   # pylint: disable=arguments-differ
   def Process(
       self, parser_mediator, cache=None, database=None, **unused_kwargs):
-    """Determine if this is the right plugin for this database.
-
-    This function takes a SQLiteDatabase object and compares the list
-    of required tables against the available tables in the database.
-    If all the tables defined in REQUIRED_TABLES are present in the
-    database then this plugin is considered to be the correct plugin
-    and the function will return back a generator that yields event
-    objects.
+    """Extracts events from a SQLite database.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -190,4 +212,5 @@ class SQLitePlugin(plugins.BasePlugin):
                 self.NAME, callback_method, query))
         continue
 
-      self._ParseQuery(parser_mediator, database, query, callback, cache)
+      self._ParseSQLiteDatabase(
+          parser_mediator, database, query, callback, cache)

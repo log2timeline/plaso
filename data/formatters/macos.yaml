@@ -1,0 +1,343 @@
+# Mac-OS related event formatters.
+
+type: 'conditional'
+data_type: 'imessage:event:chat'
+enumeration_helpers:
+- input_attribute: 'message_type'
+  output_attribute: 'message_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Received'
+    1: 'Sent'
+- input_attribute: 'read_receipt'
+  output_attribute: 'read_receipt'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'False'
+    1: 'True'
+message:
+- 'Row ID: {identifier}'
+- 'iMessage ID: {imessage_id}'
+- 'Read Receipt: {read_receipt}'
+- 'Message Type: {message_type}'
+- 'Service: {service}'
+- 'Attachment Location: {attachment_location}'
+- 'Message Content: {text}'
+short_message:
+- '{text}'
+---
+type: 'conditional'
+data_type: 'ipod:device:entry'
+message:
+- 'Device ID: {device_id}'
+- 'Type: {device_class}'
+- '[{family_id}]'
+- 'Connected {use_count} times'
+- 'Serial nr: {serial_number}'
+- 'IMEI [{imei}]'
+short_message:
+- 'Device ID: {device_id}'
+- 'Type: {device_class}'
+- '[{family_id}]'
+- 'Connected {use_count} times'
+- 'Serial nr: {serial_number}'
+- 'IMEI [{imei}]'
+---
+type: 'conditional'
+data_type: 'mac:appfirewall:line'
+message:
+- 'Computer: {computer_name}'
+- 'Agent: {agent}'
+- 'Status: {status}'
+- 'Process name: {process_name}'
+- 'Log: {action}'
+short_message:
+- 'Process name: {process_name}'
+- 'Status: {status}'
+---
+type: 'conditional'
+data_type: 'mac:asl:event'
+enumeration_helpers:
+- input_attribute: 'level'
+  output_attribute: 'level_enumeration'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'EMERGENCY'
+    1: 'ALERT'
+    2: 'CRITICAL'
+    3: 'ERROR'
+    4: 'WARNING'
+    5: 'NOTICE'
+    6: 'INFO'
+    7: 'DEBUG'
+- input_attribute: 'read_gid'
+  output_attribute: 'read_gid'
+  values:
+    -1: 'ALL'
+- input_attribute: 'read_uid'
+  output_attribute: 'read_uid'
+  values:
+    -1: 'ALL'
+message:
+- 'MessageID: {message_id}'
+- 'Level: {level_enumeration}'
+- '({level})'
+- 'User ID: {user_sid}'
+- 'Group ID: {group_id}'
+- 'Read User: {read_uid}'
+- 'Read Group: {read_gid}'
+- 'Host: {computer_name}'
+- 'Sender: {sender}'
+- 'Facility: {facility}'
+- 'Message: {message}'
+- '{extra_information}'
+short_message:
+- 'Host: {host}'
+- 'Sender: {sender}'
+- 'Facility: {facility}'
+---
+type: 'conditional'
+data_type: 'mac:asl:file'
+boolean_helpers:
+- input_attribute: 'is_dirty'
+  output_attribute: 'is_dirty_string'
+  value_if_true: '(Is dirty)'
+message:
+- 'Format version: {format_version}'
+- '{is_dirty_string}'
+short_message:
+- 'Format version: {format_version}'
+- '{is_dirty_string}'
+---
+type: 'basic'
+data_type: 'macosx:application_usage'
+message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
+short_message: '{application} ({count} time(s))'
+---
+type: 'conditional'
+data_type: 'mac:document_versions:file'
+message:
+- 'Version of [{name}]'
+- '({path})'
+- 'stored in {version_path}'
+- 'by {user_sid}'
+short_message:
+- 'Stored a document version of [{name}]'
+---
+type: 'conditional'
+data_type: 'macos:fseventsd:record'
+flags_helpers:
+- input_attribute: 'flags'
+  output_attribute: 'flag_values'
+  # The include header sys/fsevents.h defines various FSE constants, e.g.
+  # #define FSE_CREATE_FILE          0
+  # The flag values correspond to: FLAG = 1 << CONSTANT
+  values:
+    0x00000000: 'None'
+    0x00000001: 'Created'
+    0x00000002: 'Removed'
+    0x00000004: 'InodeMetadataModified'
+    0x00000008: 'Renamed'
+    0x00000010: 'Modified'
+    0x00000020: 'Exchange'
+    0x00000040: 'FinderInfoModified'
+    0x00000080: 'DirectoryCreated'
+    0x00000100: 'PermissionChanged'
+    0x00000200: 'ExtendedAttributeModified'
+    0x00000400: 'ExtendedAttributeRemoved'
+    0x00001000: 'DocumentRevision'
+    0x00004000: 'ItemCloned'
+    0x00080000: 'LastHardLinkRemoved'
+    0x00100000: 'IsHardLink'
+    0x00400000: 'IsSymbolicLink'
+    0x00800000: 'IsFile'
+    0x01000000: 'IsDirectory'
+    0x02000000: 'Mount'
+    0x04000000: 'Unmount'
+    0x20000000: 'EndOfTransaction'
+message:
+- '{path}'
+- 'Flag Values: {flag_values}'
+- 'Flags: 0x{flags:08x}'
+- 'Event Identifier: {event_identifier}'
+short_message:
+- '{path}'
+- '{flag_values}'
+---
+type: 'conditional'
+data_type: 'mac:keychain:application'
+message:
+- 'Name: {entry_name}'
+- 'Account: {account_name}'
+short_message:
+- '{entry_name}'
+---
+type: 'conditional'
+data_type: 'mac:keychain:internet'
+message:
+- 'Name: {entry_name}'
+- 'Account: {account_name}'
+- 'Where: {where}'
+- 'Protocol: {protocol}'
+- '({type_protocol})'
+short_message:
+- '{entry_name}'
+---
+type: 'conditional'
+data_type: 'mac:knowledgec:application'
+message:
+- 'Application {bundle_identifier} executed'
+- 'for {duration} seconds'
+short_message:
+- 'Application {bundle_identifier}'
+---
+type: 'conditional'
+data_type: 'mac:knowledgec:safari'
+message:
+- 'Visited: {url}'
+- '({title})'
+- 'Duration: {duration}'
+short_message:
+- 'Safari: {url}'
+---
+type: 'conditional'
+data_type: 'macosx:lsquarantine'
+message:
+- '[{agent}]'
+- 'Downloaded: {url}'
+- '<{data}>'
+short_message:
+- '{url}'
+---
+type: 'conditional'
+data_type: 'mac:notes:note'
+message:
+- 'title:{title}'
+- 'note_text:{text}'
+short_message:
+- 'title:{title}'
+---
+type: 'conditional'
+data_type: 'mac:notificationcenter:db'
+enumeration_helpers:
+- input_attribute: 'presented'
+  output_attribute: 'presented'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Title: {title}'
+- '(, subtitle: {subtitle}),'
+- 'registered by: {bundle_name}.'
+- 'Presented: {presented},'
+- 'Content: {body}'
+short_message:
+- 'Title: {title},'
+- 'Content: {body}'
+---
+type: 'conditional'
+data_type: 'mac:securityd:line'
+message:
+- 'Sender: {sender}'
+- '({sender_pid})'
+- 'Level: {level}'
+- 'Facility: {facility}'
+- 'Text: {message}'
+short_message:
+- 'Text: {message}'
+---
+type: 'conditional'
+data_type: 'mac:wifilog:line'
+message:
+- 'Action: {action}'
+- 'Agent: {agent}'
+- '({function})'
+- 'Log: {text}'
+short_message:
+- 'Action: {action}'
+---
+type: 'conditional'
+data_type: 'mackeeper:cache'
+message:
+- '{description}'
+- '<{event_type}>'
+- ':'
+- '{text}'
+- '['
+- 'URL: {url}'
+- 'Event ID: {record_id}'
+- 'Room: {room}'
+- ']'
+short_message:
+- '<{event_type}>'
+- '{text}'
+---
+type: 'conditional'
+data_type: 'plist:key'
+message:
+- '{root}/'
+- '{key}'
+- ' {desc}'
+separator: ''
+short_message:
+- '{root}/'
+- '{key}'
+- ' {desc}'
+---
+type: 'conditional'
+data_type: 'mac:utmpx:event'
+enumeration_helpers:
+- input_attribute: 'type'
+  output_attribute: 'status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'EMPTY'
+    1: 'RUN_LVL'
+    2: 'BOOT_TIME'
+    3: 'OLD_TIME'
+    4: 'NEW_TIME'
+    5: 'INIT_PROCESS'
+    6: 'LOGIN_PROCESS'
+    7: 'USER_PROCESS'
+    8: 'DEAD_PROCESS'
+    9: 'ACCOUNTING'
+    10: 'SIGNATURE'
+    11: 'SHUTDOWN_TIME'
+message:
+- 'User: {username}'
+- 'Status: {status}'
+- 'Hostname: {hostname}'
+- 'Terminal: {terminal}'
+- 'PID: {pid}'
+- 'Terminal identifier: {terminal_identifier}'
+short_message:
+- 'User: {username}'
+- 'PID: {pid}'
+- 'Status: {status}'
+---
+type: 'conditional'
+data_type: 'macos:tcc_entry'
+enumeration_helpers:
+- input_attribute: 'allowed'
+  output_attribute: 'allowed'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'False'
+    1: 'True'
+message:
+- 'Service: {service}'
+- 'Client: {client}'
+- 'Allowed: {allowed}'
+- 'Prompt count: {prompt_count}'
+short_message:
+- '{service}:'
+- '{client}'
+---
+type: 'conditional'
+data_type: 'spotlight:metadata_item'
+message:
+- '{file_name}'
+- '{content_type}'
+short_message:
+- '{file_name}'

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The storage format CLI arguments helper."""
 
-from __future__ import unicode_literals
-
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -27,17 +25,17 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
     """
-    storage_formats = sorted(definitions.STORAGE_FORMATS)
+    session_storage_formats = sorted(definitions.SESSION_STORAGE_FORMATS)
     task_storage_formats = sorted(definitions.TASK_STORAGE_FORMATS)
 
     argument_group.add_argument(
         '--storage_format', '--storage-format', action='store',
-        choices=storage_formats, dest='storage_format', type=str,
+        choices=session_storage_formats, dest='storage_format', type=str,
         metavar='FORMAT', default=definitions.DEFAULT_STORAGE_FORMAT, help=(
             'Format of the storage file, the default is: {0:s}. Supported '
             'options: {1:s}'.format(
                 definitions.DEFAULT_STORAGE_FORMAT,
-                ', '.join(storage_formats))))
+                ', '.join(session_storage_formats))))
 
     argument_group.add_argument(
         '--task_storage_format', '--task-storage-format', action='store',
@@ -70,7 +68,7 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
     if not storage_format:
       raise errors.BadConfigOption('Unable to determine storage format.')
 
-    if storage_format not in definitions.STORAGE_FORMATS:
+    if storage_format not in definitions.SESSION_STORAGE_FORMATS:
       raise errors.BadConfigOption(
           'Unsupported storage format: {0:s}'.format(storage_format))
 
