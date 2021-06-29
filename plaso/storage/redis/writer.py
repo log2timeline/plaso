@@ -51,17 +51,6 @@ class RedisStorageWriter(interface.StorageWriter):
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       self._UpdateEventDataParsersMappings(container)
 
-  # TODO: remove after refactoctoring.
-  def AddEventTag(self, event_tag):
-    """Adds an event tag.
-
-    Args:
-      event_tag (EventTag): an event tag.
-    """
-    self._store.AddAttributeContainer(event_tag)
-
-    self._UpdateEventLabelsSessionCounter(event_tag)
-
   def Close(self):
     """Closes the storage writer.
 

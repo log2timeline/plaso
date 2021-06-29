@@ -72,22 +72,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     store.Close()
 
-  def testGetAttributeContainers(self):
-    """Tests the _GetAttributeContainers method."""
-    store = redis_store.RedisStore()
-    redis_client = self._GetRedisClient()
-    store.Open(redis_client=redis_client)
-
-    for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
-      store.AddAttributeContainer(event_data)
-
-    retrieved_event_datas = list(
-        store._GetAttributeContainers(store._CONTAINER_TYPE_EVENT_DATA))
-    self.assertEqual(len(retrieved_event_datas), 4)
-
-    store.Close()
-
   # TODO: add tests for _GetFinalizationKey
   # TODO: add tests for _RaiseIfNotReadable
   # TODO: add tests for _RaiseIfNotWritable
@@ -132,7 +116,22 @@ class RedisStoreTest(test_lib.StorageTestCase):
     self.assertTrue(store.IsFinalized())
     store.Close()
 
-  # TODO: add tests for IsFinalized
+  def testGetAttributeContainers(self):
+    """Tests the GetAttributeContainers method."""
+    store = redis_store.RedisStore()
+    redis_client = self._GetRedisClient()
+    store.Open(redis_client=redis_client)
+
+    for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
+        self._TEST_EVENTS):
+      store.AddAttributeContainer(event_data)
+
+    retrieved_event_datas = list(
+        store.GetAttributeContainers(store._CONTAINER_TYPE_EVENT_DATA))
+    self.assertEqual(len(retrieved_event_datas), 4)
+
+    store.Close()
+
   # TODO: add tests for GetNumberOfAttributeContainers
 
   def testGetSerializedAttributeContainers(self):
@@ -170,6 +169,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     store.Close()
 
   # TODO: add tests for HasAttributeContainers
+  # TODO: add tests for IsFinalized
 
   # TODO: add tests for Open and Close
 
