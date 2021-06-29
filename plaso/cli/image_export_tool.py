@@ -648,6 +648,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self.AddStorageMediaImageOptions(argument_parser)
     self.AddVSSProcessingOptions(argument_parser)
+    self.AddCredentialOptions(argument_parser)
 
     self.AddFilterOptions(argument_parser)
 
