@@ -72,8 +72,12 @@ class BaseStore(object):
       _CONTAINER_TYPE_TASK_COMPLETION,
       _CONTAINER_TYPE_TASK_START)
 
-  def __init__(self):
-    """Initializes a store."""
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
+    """Initializes a store.
+
+    Args:
+      storage_type (Optional[str]): storage type.
+    """
     super(BaseStore, self).__init__()
     self._last_session = 0
     self._serializer = json_serializer.JSONAttributeContainerSerializer
@@ -82,7 +86,7 @@ class BaseStore(object):
 
     self.format_version = None
     self.serialization_format = None
-    self.storage_type = None
+    self.storage_type = storage_type
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -349,7 +353,7 @@ class BaseStore(object):
 
   @abc.abstractmethod
   def Open(self, **kwargs):
-    """Opens the storage."""
+    """Opens the store."""
 
   # TODO: remove, this method is kept for backwards compatibility reasons.
   def ReadSystemConfiguration(self, knowledge_base):
