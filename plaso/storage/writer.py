@@ -2,6 +2,7 @@
 """The storage interface classes."""
 
 import abc
+import collections
 
 from plaso.containers import event_sources
 from plaso.containers import events
@@ -12,17 +13,7 @@ from plaso.lib import definitions
 
 
 class StorageWriter(object):
-  """Storage writer interface.
-
-  Attributes:
-    number_of_analysis_reports (int): number of analysis reports written.
-    number_of_analysis_warnings (int): number of analysis warnings written.
-    number_of_event_sources (int): number of event sources written.
-    number_of_event_tags (int): number of event tags written.
-    number_of_events (int): number of events written.
-    number_of_extraction_warnings (int): number of extraction warnings written.
-    number_of_recovery_warnings (int): number of recovery warnings written.
-  """
+  """Storage writer interface."""
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
   _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
@@ -48,6 +39,7 @@ class StorageWriter(object):
       task(Optional[Task]): task.
     """
     super(StorageWriter, self).__init__()
+    self._attribute_containers_counter = collections.Counter()
     self._event_data_parser_mappings = {}
     self._first_written_event_source_index = 0
     self._serializers_profiler = None
@@ -58,20 +50,50 @@ class StorageWriter(object):
     self._task = task
     self._written_event_source_index = 0
 
-    # TODO: refactor to use counter and make this more generic
-    self.number_of_analysis_reports = 0
-    self.number_of_analysis_warnings = 0
-    self.number_of_event_sources = 0
-    self.number_of_event_tags = 0
-    self.number_of_events = 0
-    self.number_of_extraction_warnings = 0
-    self.number_of_preprocessing_warnings = 0
-    self.number_of_recovery_warnings = 0
+  @property
+  def number_of_analysis_reports(self):
+    """int: number of analysis reports warnings written."""
+    return self._attribute_containers_counter[
+        self._CONTAINER_TYPE_ANALYSIS_REPORT]
 
   @property
-  def number_of_warnings(self):
+  def number_of_analysis_warnings(self):
+    """int: number of analysis warnings written."""
+    return self._attribute_containers_counter[
+        self._CONTAINER_TYPE_ANALYSIS_WARNING]
+
+  @property
+  def number_of_event_sources(self):
+    """int: number of event sources written."""
+    return self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT_SOURCE]
+
+  @property
+  def number_of_event_tags(self):
+    """int: number of event tags written."""
+    return self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT_TAG]
+
+  @property
+  def number_of_events(self):
+    """int: number of events written."""
+    return self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT]
+
+  @property
+  def number_of_extraction_warnings(self):
     """int: number of extraction warnings written."""
-    return self.number_of_extraction_warnings
+    return self._attribute_containers_counter[
+        self._CONTAINER_TYPE_EXTRACTION_WARNING]
+
+  @property
+  def number_of_preprocessing_warnings(self):
+    """int: number of preprocessing warnings written."""
+    return self._attribute_containers_counter[
+        self._CONTAINER_TYPE_PREPROCESSING_WARNING]
+
+  @property
+  def number_of_recovery_warnings(self):
+    """int: number of recovery warnings written."""
+    return self._attribute_containers_counter[
+        self._CONTAINER_TYPE_RECOVERY_WARNING]
 
   def _RaiseIfNotWritable(self):
     """Raises if the storage writer is not writable.
@@ -94,8 +116,6 @@ class StorageWriter(object):
       self._session.analysis_reports_counter['total'] += 1
       self._session.analysis_reports_counter[report_identifier] += 1
 
-    self.number_of_analysis_reports += 1
-
   def _UpdateEventLabelsSessionCounter(self, event_tag):
     """Updates the event labels session counter.
 
@@ -106,8 +126,6 @@ class StorageWriter(object):
       self._session.event_labels_counter['total'] += 1
       for label in event_tag.labels:
         self._session.event_labels_counter[label] += 1
-
-    self.number_of_event_tags += 1
 
   def _UpdateEventDataParsersMappings(self, event_data):
     """Updates the event data parsers mappings.
@@ -135,8 +153,6 @@ class StorageWriter(object):
       self._session.parsers_counter[parser_name] += 1
       self._session.parsers_counter['total'] += 1
 
-    self.number_of_events += 1
-
   def AddAttributeContainer(self, container):
     """Adds an attribute container.
 
@@ -154,29 +170,16 @@ class StorageWriter(object):
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_REPORT:
       self._UpdateAnalysisReportSessionCounter(container)
 
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_WARNING:
-      self.number_of_analysis_warnings += 1
-
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       self._UpdateEventParsersSessionCounter(container)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       self._UpdateEventDataParsersMappings(container)
 
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE:
-      self.number_of_event_sources += 1
-
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
       self._UpdateEventLabelsSessionCounter(container)
 
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EXTRACTION_WARNING:
-      self.number_of_extraction_warnings += 1
-
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_PREPROCESSING_WARNING:
-      self.number_of_preprocessing_warnings += 1
-
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_RECOVERY_WARNING:
-      self.number_of_recovery_warnings += 1
+    self._attribute_containers_counter[container.CONTAINER_TYPE] += 1
 
   # TODO: remove after refactoring.
   def AddEventTag(self, event_tag):
@@ -230,15 +233,6 @@ class StorageWriter(object):
       generator(EventObject): event generator.
     """
     return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
-
-  # TODO: remove this helper method, currently only used by parser tests.
-  def GetExtractionWarnings(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(ExtractionWarning): extraction warning generator.
-    """
-    return self.GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   @abc.abstractmethod
   def GetFirstWrittenEventSource(self):
