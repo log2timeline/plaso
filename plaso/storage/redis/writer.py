@@ -30,19 +30,6 @@ class RedisStorageWriter(writer.StorageWriter):
     self._redis_namespace = '{0:s}-{1:s}'.format(
         task.session_identifier, task.identifier)
 
-  def Close(self):
-    """Closes the storage writer.
-
-    Raises:
-      IOError: if the storage writer is closed.
-      OSError: if the storage writer is closed.
-    """
-    if not self._store:
-      raise IOError('Storage writer is not open.')
-
-    self._store.Finalize()
-    self._store = None
-
   # pylint: disable=redundant-returns-doc,useless-return
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.

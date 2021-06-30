@@ -32,6 +32,7 @@ class RedisStore(interface.BaseStore):
   # DEFAULT_REDIS_URL is public so that it appears in generated documentation.
   DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
+  # TODO: pass session and task identifiers on Open?
   def __init__(
       self, storage_type=definitions.STORAGE_TYPE_TASK,
       session_identifier=None, task_identifier=None):
@@ -58,7 +59,7 @@ class RedisStore(interface.BaseStore):
     if not task_identifier:
       task_identifier = str(uuid.uuid4())
 
-    super(RedisStore, self).__init__()
+    super(RedisStore, self).__init__(storage_type=storage_type)
     self._redis_client = None
     self._session_identifier = session_identifier
     self._task_identifier = task_identifier
@@ -168,19 +169,20 @@ class RedisStore(interface.BaseStore):
       self._redis_client.hset(metadata_key, key, value)
 
   def Close(self):
-    """Closes the store."""
-    self._redis_client = None
+    """Closes the store.
 
-  def Finalize(self):
-    """Marks a store as finalized.
-
-    No further attribute containers will be written to a finalized store.
+    Raises:
+      IOError: if the store is already closed.
+      OSError: if the store is already closed.
     """
-    self._RaiseIfNotWritable()
+    if not self._redis_client:
+      raise IOError('Store already closed.')
 
     finalized_key = self._GetFinalizationKey()
     self._redis_client.hset(
         finalized_key, self._task_identifier, self._FINALIZED_BYTES)
+
+    self._redis_client = None
 
   def GetAttributeContainerByIdentifier(self, container_type, identifier):
     """Retrieves a specific type of container with a specific identifier.
@@ -323,20 +325,6 @@ class RedisStore(interface.BaseStore):
     container_key = self._GenerateRedisKey(container_type)
     number_of_containers = self._redis_client.hlen(container_key)
     return number_of_containers > 0
-
-  def IsFinalized(self):
-    """Checks if a store has been finalized.
-
-    Returns:
-      bool: True if the store has been finalized.
-    """
-    self._RaiseIfNotReadable()
-
-    finalized_key = self._GetFinalizationKey()
-    finalized_value = self._redis_client.hget(
-        finalized_key, self._task_identifier)
-
-    return finalized_value == self._FINALIZED_BYTES
 
   @classmethod
   def MarkTaskAsMerging(

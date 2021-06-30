@@ -51,18 +51,6 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
 
     self._UpdateEventLabelsSessionCounter(event_tag)
 
-  def Close(self):
-    """Closes the storage writer.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    self._store.Close()
-    self._store = None
-
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 
