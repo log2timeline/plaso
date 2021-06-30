@@ -43,11 +43,13 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     return file_object
 
   def _CreateParserMediator(
-      self, storage_writer, collection_filters_helper=None, file_entry=None,
-      knowledge_base_values=None, parser_chain=None, timezone='UTC'):
+      self, session, storage_writer, collection_filters_helper=None,
+      file_entry=None, knowledge_base_values=None, parser_chain=None,
+      timezone='UTC'):
     """Creates a parser mediator.
 
     Args:
+      session (Session): session.
       storage_writer (StorageWriter): storage writer.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
@@ -70,7 +72,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     knowledge_base_object.SetTimeZone(timezone)
 
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object,
+        session, storage_writer, knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
 
     if file_entry:
@@ -151,10 +153,13 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
+    session = sessions.Session()
+
     storage_writer = self._CreateStorageWriter()
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator = self._CreateParserMediator(
-        storage_writer, collection_filters_helper=collection_filters_helper,
+        session, storage_writer,
+        collection_filters_helper=collection_filters_helper,
         file_entry=file_entry, knowledge_base_values=knowledge_base_values,
         timezone=timezone)
 

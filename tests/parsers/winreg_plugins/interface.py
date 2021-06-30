@@ -199,7 +199,7 @@ class WindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    parser_mediator = self._CreateParserMediator(storage_writer)
+    parser_mediator = self._CreateParserMediator(session, storage_writer)
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         'Explorer', key_path='HKEY_LOCAL_MACHINE\\Software\\Windows\\MRU')

@@ -272,7 +272,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._session = session
 
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, self.knowledge_base,
+        session, storage_writer, self.knowledge_base,
         collection_filters_helper=self.collection_filters_helper,
         preferred_year=processing_configuration.preferred_year,
         resolver_context=resolver_context,

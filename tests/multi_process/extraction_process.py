@@ -94,7 +94,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       task_storage_writer = self._CreateStorageWriter(session)
       knowledge_base = self._CreateKnowledgeBase()
       test_process._parser_mediator = self._CreateParserMediator(
-          task_storage_writer, knowledge_base)
+          session, task_storage_writer, knowledge_base)
       status_attributes = test_process._GetStatus()
 
       self.assertIsNotNone(status_attributes)
@@ -140,7 +140,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       task_storage_writer = self._CreateStorageWriter(session)
       knowledge_base = self._CreateKnowledgeBase()
       parser_mediator = self._CreateParserMediator(
-          task_storage_writer, knowledge_base)
+          session, task_storage_writer, knowledge_base)
 
       path_spec = fake_path_spec.FakePathSpec(location='/test/file')
 
@@ -175,7 +175,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
       task_storage_writer = self._CreateStorageWriter(session)
       test_process._parser_mediator = self._CreateParserMediator(
-          task_storage_writer, knowledge_base)
+          session, task_storage_writer, knowledge_base)
 
       task = tasks.Task(session_identifier=session.identifier)
       test_process._ProcessTask(task)

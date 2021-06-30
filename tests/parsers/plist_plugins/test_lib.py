@@ -3,9 +3,9 @@
 
 import plistlib
 
+from plaso.containers import sessions
 from plaso.storage.fake import writer as fake_writer
 
-from plaso.containers import sessions
 from tests.parsers import test_lib
 
 
@@ -62,7 +62,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     storage_writer.Open()
 
     parser_mediator = self._CreateParserMediator(
-        storage_writer, knowledge_base_values=knowledge_base_values)
+        session, storage_writer, knowledge_base_values=knowledge_base_values)
 
     plugin.Process(
         parser_mediator, plist_name=plist_name, top_level=top_level_object)
