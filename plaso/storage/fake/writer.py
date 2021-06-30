@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Fake storage writer for testing."""
+"""Fake (in-memory only) storage writer for testing."""
 
 import collections
 import copy
@@ -8,11 +8,11 @@ import itertools
 from plaso.lib import definitions
 from plaso.storage import event_heaps
 from plaso.storage import identifiers
-from plaso.storage import interface
+from plaso.storage import writer
 
 
-class FakeStorageWriter(interface.StorageWriter):
-  """Fake storage writer object.
+class FakeStorageWriter(writer.StorageWriter):
+  """Fake (in-memory only) storage writer object.
 
   Attributes:
     session_completion (SessionCompletion): session completion attribute
