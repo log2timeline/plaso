@@ -10,7 +10,7 @@ class RedisStorageWriter(writer.StorageWriter):
   """Redis-based storage writer."""
 
   def __init__(
-      self, session, storage_type=definitions.STORAGE_TYPE_TASK, task=None):
+      self, session, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer.
 
     Args:

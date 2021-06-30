@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.containers import warnings
 from plaso.parsers import apache_access
 
 from tests.parsers import test_lib
@@ -59,14 +60,18 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    # Test the extraction warning.
-    warnings = list(storage_writer.GetExtractionWarnings())
-    warning = warnings[0]
+    # Test an extraction warning.
+    generator = storage_writer.GetAttributeContainers(
+        warnings.ExtractionWarning.CONTAINER_TYPE)
 
-    self.assertEqual(warning.message, (
+    test_warnings = list(generator)
+    test_warning = test_warnings[0]
+
+    expected_message = (
         'unable to parse log line: "46.118.127.106 - - [20/May/2015:12:05:17 '
-        '+0000] "GET /scripts/grok-py-test/co..." at offset: 1589'))
-    self.assertEqual(warning.parser_chain, 'apache_access')
+        '+0000] "GET /scripts/grok-py-test/co..." at offset: 1589')
+    self.assertEqual(test_warning.message, expected_message)
+    self.assertEqual(test_warning.parser_chain, 'apache_access')
 
     # Test vhost_combined log format event.
     expected_event_values = {

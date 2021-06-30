@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.containers import warnings
 from plaso.parsers import esedb
 from plaso.parsers import esedb_plugins  # pylint: disable=unused-import
 
@@ -54,13 +55,15 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
-    warnings = list(storage_writer.GetExtractionWarnings())
+    generator = storage_writer.GetAttributeContainers(
+        warnings.ExtractionWarning.CONTAINER_TYPE)
 
-    warning = warnings[0]
-    self.assertIsNotNone(warning)
+    test_warnings = list(generator)
+    test_warning = test_warnings[0]
+    self.assertIsNotNone(test_warning)
 
-    self.assertEqual(
-        warning.message, 'unable to open file with error: Missing file object.')
+    expected_message = 'unable to open file with error: Missing file object.'
+    self.assertEqual(test_warning.message, expected_message)
 
 
 if __name__ == '__main__':

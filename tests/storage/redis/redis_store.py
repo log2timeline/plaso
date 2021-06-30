@@ -10,6 +10,7 @@ import redis
 from plaso.containers import events
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.lib import definitions
 from plaso.storage.redis import redis_store
 from plaso.storage.redis import writer
 
@@ -174,7 +175,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     # Opening and closing a writer for a task should cause the task to be marked
     # as complete.
-    storage_writer = writer.RedisStorageWriter(session, task=task)
+    storage_writer = writer.RedisStorageWriter(
+        session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
     storage_writer.Open(redis_client=redis_client)
     storage_writer.Close()
 
@@ -222,7 +224,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     # Opening and closing a writer for a task should cause the task to be marked
     # as complete.
-    storage_writer = writer.RedisStorageWriter(session, task=task)
+    storage_writer = writer.RedisStorageWriter(
+        session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
     storage_writer.Open(redis_client=redis_client)
     storage_writer.Close()
 
