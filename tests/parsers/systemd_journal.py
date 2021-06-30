@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.containers import warnings
 from plaso.parsers import systemd_journal
 
 from tests.parsers import test_lib
@@ -121,12 +122,17 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    warnings = list(storage_writer.GetExtractionWarnings())
-    warning = warnings[0]
-    expected_warning_message = (
+    generator = storage_writer.GetAttributeContainers(
+        warnings.ExtractionWarning.CONTAINER_TYPE)
+
+    test_warnings = list(generator)
+    test_warning = test_warnings[0]
+    self.assertIsNotNone(test_warning)
+
+    expected_message = (
         'Unable to parse journal entry at offset: 0x0041bfb0 with error: '
         'object offset should be after hash tables (0 < 2527472)')
-    self.assertEqual(warning.message, expected_warning_message)
+    self.assertEqual(test_warning.message, expected_message)
 
 
 if __name__ == '__main__':
