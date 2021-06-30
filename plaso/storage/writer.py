@@ -58,6 +58,7 @@ class StorageWriter(object):
     self._task = task
     self._written_event_source_index = 0
 
+    # TODO: refactor to use counter and make this more generic
     self.number_of_analysis_reports = 0
     self.number_of_analysis_warnings = 0
     self.number_of_event_sources = 0
@@ -186,9 +187,12 @@ class StorageWriter(object):
     """
     self.AddAttributeContainer(event_tag)
 
-  @abc.abstractmethod
   def Close(self):
     """Closes the storage writer."""
+    self._RaiseIfNotWritable()
+
+    self._store.Close()
+    self._store = None
 
   def GetAttributeContainerByIdentifier(self, container_type, identifier):
     """Retrieves a specific type of container with a specific identifier.
@@ -200,6 +204,8 @@ class StorageWriter(object):
     Returns:
       AttributeContainer: attribute container or None if not available.
     """
+    self._RaiseIfNotWritable()
+
     return self._store.GetAttributeContainerByIdentifier(
         container_type, identifier)
 
@@ -212,6 +218,8 @@ class StorageWriter(object):
     Returns:
       generator(AttributeContainers): attribute container generator.
     """
+    self._RaiseIfNotWritable()
+
     return self._store.GetAttributeContainers(container_type)
 
   # TODO: remove this helper method, currently only used by parser tests.

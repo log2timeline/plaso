@@ -3,6 +3,7 @@
 
 import collections
 
+from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import interface
 
@@ -12,9 +13,13 @@ class BaseStorageFile(interface.BaseStore):
 
   # pylint: disable=abstract-method
 
-  def __init__(self):
-    """Initializes a file-based store."""
-    super(BaseStorageFile, self).__init__()
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
+    """Initializes a file-based store.
+
+    Args:
+      storage_type (Optional[str]): storage type.
+    """
+    super(BaseStorageFile, self).__init__(storage_type=storage_type)
     self._attribute_container_sequence_numbers = collections.Counter()
     self._is_open = False
     self._read_only = True

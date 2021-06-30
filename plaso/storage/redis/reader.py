@@ -102,14 +102,6 @@ class RedisStorageReader(interface.StorageReader):
     """
     return self._store.HasAttributeContainers(container_type)
 
-  def IsFinalized(self):
-    """Checks if the store has been finalized.
-
-    Returns:
-      bool: True if the store has been finalized.
-    """
-    return self._store.IsFinalized()
-
   def Open(self):
     """Opens the storage reader."""
     self._store.Open()

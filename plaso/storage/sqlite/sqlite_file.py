@@ -119,7 +119,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   _MAXIMUM_CACHED_CONTAINERS = 32 * 1024
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a store.
+    """Initializes a SQLite storage file.
 
     Args:
       storage_type (Optional[str]): storage type.
@@ -129,7 +129,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     else:
       compression_format = definitions.COMPRESSION_FORMAT_NONE
 
-    super(SQLiteStorageFile, self).__init__()
+    super(SQLiteStorageFile, self).__init__(storage_type=storage_type)
     self._attribute_container_cache = collections.OrderedDict()
     self._connection = None
     self._cursor = None
@@ -138,7 +138,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self.compression_format = compression_format
     self.format_version = self._FORMAT_VERSION
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
-    self.storage_type = storage_type
 
   def _CacheAttributeContainerByIndex(self, attribute_container, index):
     """Caches a specific attribute container.
@@ -1102,7 +1101,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
 
   # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
-    """Opens the storage.
+    """Opens the store.
 
     Args:
       path (Optional[str]): path to the storage file.
