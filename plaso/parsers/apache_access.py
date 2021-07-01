@@ -8,6 +8,7 @@ defined in https://httpd.apache.org/docs/2.4/logs.html
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -162,9 +163,9 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
-  # TODO: migrate function after dfdatetime issue #47 is fixed.
-  def _GetISO8601String(self, structure):
-    """Normalize date time parsed format to an ISO 8601 date time string.
+  def _GetDateTime(self, structure):
+    """Retrieves the date and time from a date and time values structure.
+
     The date and time values in Apache access log files are formatted as:
     "[18/Sep/2011:19:18:28 -0400]".
 
@@ -173,11 +174,12 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
           line of a text file.
 
     Returns:
-      str: ISO 8601 date time string.
+      dfdatetime.DateTimeValues: date and time.
 
     Raises:
       ValueError: if the structure cannot be converted into a date time string.
     """
+    year = self._GetValueFromStructure(structure, 'year')
     month = self._GetValueFromStructure(structure, 'month')
 
     try:
@@ -186,34 +188,28 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       raise ValueError('unable to parse month with error: {0!s}.'.format(
           exception))
 
-    time_offset = self._GetValueFromStructure(structure, 'time_offset')
-
-    try:
-      time_offset_hours = int(time_offset[1:3], 10)
-      time_offset_minutes = int(time_offset[3:5], 10)
-    except (IndexError, TypeError, ValueError) as exception:
-      raise ValueError(
-          'unable to parse time zone offset with error: {0!s}.'.format(
-              exception))
-
-    year = self._GetValueFromStructure(structure, 'year')
     day_of_month = self._GetValueFromStructure(structure, 'day')
     hours = self._GetValueFromStructure(structure, 'hours')
     minutes = self._GetValueFromStructure(structure, 'minutes')
     seconds = self._GetValueFromStructure(structure, 'seconds')
+    time_offset = self._GetValueFromStructure(structure, 'time_offset')
 
     try:
-      date_time_string = (
-          '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.000000'
-          '{6:s}{7:02d}:{8:02d}').format(
-              year, month, day_of_month, hours, minutes, seconds,
-              time_offset[0], time_offset_hours, time_offset_minutes)
-    except ValueError as exception:
+      time_zone_offset = int(time_offset[1:3], 10) * 60
+      time_zone_offset += int(time_offset[3:5], 10)
+      if time_offset[0] == '-':
+        time_zone_offset *= -1
+
+    except (TypeError, ValueError) as exception:
       raise ValueError(
-          'unable to format date time string with error: {0!s}.'.format(
+          'unable to parse time zone offset with error: {0!s}.'.format(
               exception))
 
-    return date_time_string
+    time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+    return dfdatetime_time_elements.TimeElements(
+        time_elements_tuple=time_elements_tuple,
+        time_zone_offset=time_zone_offset)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a matching entry.
@@ -231,16 +227,14 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    date_time = dfdatetime_time_elements.TimeElements()
-
     date_time_string = self._GetValueFromStructure(structure, 'date_time')
 
     try:
-      iso_date_time = self._GetISO8601String(date_time_string)
-      date_time.CopyFromStringISO8601(iso_date_time)
-    except ValueError:
+      date_time = self._GetDateTime(date_time_string)
+    except ValueError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(date_time_string))
+          'unable to parse date time value: {0!s} with error: {1!s}'.format(
+              date_time_string, exception))
       return
 
     event = time_events.DateTimeValuesEvent(
