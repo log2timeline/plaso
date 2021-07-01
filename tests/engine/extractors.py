@@ -71,8 +71,7 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
-    session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
     return storage_writer
 

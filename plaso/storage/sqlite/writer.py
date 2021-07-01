@@ -10,18 +10,16 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
   """SQLite-based storage file writer."""
 
   def __init__(
-      self, session, path, storage_type=definitions.STORAGE_TYPE_SESSION,
-      task=None):
+      self, path, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer.
 
     Args:
-      session (Session): session the storage changes are part of.
       path (str): path to the output file.
       storage_type (Optional[str]): storage type.
       task(Optional[Task]): task.
     """
     super(SQLiteStorageFileWriter, self).__init__(
-        session, storage_type=storage_type, task=task)
+        storage_type=storage_type, task=task)
     self._path = path
 
   # TODO: remove after refactoring.
@@ -109,11 +107,11 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     self._first_written_event_source_index = number_of_event_sources
     self._written_event_source_index = self._first_written_event_source_index
 
-  def WriteSessionCompletion(self, aborted=False):
+  def WriteSessionCompletion(self, session):
     """Writes session completion information.
 
     Args:
-      aborted (Optional[bool]): True if the session was aborted.
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -126,13 +124,14 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    # TODO: move self._session out of the SQLiteStorageFileWriter?
-    self._session.aborted = aborted
-    session_completion = self._session.CreateSessionCompletion()
+    session_completion = session.CreateSessionCompletion()
     self._store.WriteSessionCompletion(session_completion)
 
-  def WriteSessionConfiguration(self):
+  def WriteSessionConfiguration(self, session):
     """Writes session configuration information.
+
+    Args:
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: if the storage type does not support writing session
@@ -145,12 +144,14 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Session configuration not supported by storage type.')
 
-    # TODO: move self._session out of the SQLiteStorageFileWriter?
-    session_configuration = self._session.CreateSessionConfiguration()
+    session_configuration = session.CreateSessionConfiguration()
     self._store.WriteSessionConfiguration(session_configuration)
 
-  def WriteSessionStart(self):
+  def WriteSessionStart(self, session):
     """Writes session start information.
+
+    Args:
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -163,6 +164,5 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    # TODO: move self._session out of the SQLiteStorageFileWriter?
-    session_start = self._session.CreateSessionStart()
+    session_start = session.CreateSessionStart()
     self._store.WriteSessionStart(session_start)

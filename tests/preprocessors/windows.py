@@ -9,6 +9,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import artifacts
+from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.preprocessors import mediator
 from plaso.preprocessors import windows
@@ -24,10 +25,11 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
     """Tests the Collect function."""
     plugin = windows.WindowsAllUsersAppDataKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     plugin.Collect(test_mediator)
 
@@ -41,10 +43,11 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
     """Tests the Collect function with the %AllUsersProfile% variable."""
     plugin = windows.WindowsAllUsersAppDataKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='allusersprofile',
@@ -67,10 +70,11 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
     """Tests the Collect function with the %ProgramData% variable."""
     plugin = windows.WindowsAllUsersAppDataKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='programdata',
@@ -118,10 +122,11 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
     """Tests the Collect function."""
     plugin = windows.WindowsAllUsersAppProfileKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     plugin.Collect(test_mediator)
 
@@ -135,10 +140,11 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
     """Tests the Collect function with the %AllUsersProfile% variable."""
     plugin = windows.WindowsAllUsersAppProfileKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='allusersprofile',
@@ -160,10 +166,11 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
     """Tests the Collect function with the %ProgramData% variable."""
     plugin = windows.WindowsAllUsersAppProfileKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='programdata',
@@ -281,10 +288,11 @@ class WindowsProgramDataKnowledgeBasePluginTest(
     """Tests the Collect function."""
     plugin = windows.WindowsProgramDataKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     plugin.Collect(test_mediator)
 
@@ -298,10 +306,11 @@ class WindowsProgramDataKnowledgeBasePluginTest(
     """Tests the Collect function with the %AllUsersProfile% variable."""
     plugin = windows.WindowsProgramDataKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='allusersprofile',
@@ -323,10 +332,11 @@ class WindowsProgramDataKnowledgeBasePluginTest(
     """Tests the Collect function with the %ProgramData% variable."""
     plugin = windows.WindowsProgramDataKnowledgeBasePlugin()
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='programdata',

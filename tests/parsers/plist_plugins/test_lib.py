@@ -58,7 +58,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
       FakeStorageWriter: a storage writer.
     """
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     parser_mediator = self._CreateParserMediator(

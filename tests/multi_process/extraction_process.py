@@ -91,7 +91,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
           status_attributes['number_of_produced_extraction_warnings'])
 
       session = sessions.Session()
-      task_storage_writer = self._CreateStorageWriter(session)
+      task_storage_writer = self._CreateStorageWriter()
       knowledge_base = self._CreateKnowledgeBase()
       test_process._parser_mediator = self._CreateParserMediator(
           session, task_storage_writer, knowledge_base)
@@ -137,7 +137,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
           None, None, None, None, configuration, name='TestWorker')
 
       session = sessions.Session()
-      task_storage_writer = self._CreateStorageWriter(session)
+      task_storage_writer = self._CreateStorageWriter()
       knowledge_base = self._CreateKnowledgeBase()
       parser_mediator = self._CreateParserMediator(
           session, task_storage_writer, knowledge_base)
@@ -173,7 +173,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
           configuration, name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
 
-      task_storage_writer = self._CreateStorageWriter(session)
+      task_storage_writer = self._CreateStorageWriter()
       test_process._parser_mediator = self._CreateParserMediator(
           session, task_storage_writer, knowledge_base)
 

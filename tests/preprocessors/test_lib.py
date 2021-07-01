@@ -38,8 +38,7 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     Returns:
       StorageWriter: storage writer.
     """
-    session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
     return storage_writer
 
@@ -61,9 +60,10 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
         plugin.ARTIFACT_DEFINITION_NAME)
     self.assertIsNotNone(artifact_definition)
 
+    session = sessions.Session()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
@@ -97,10 +97,11 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
+    session = sessions.Session()
     storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
-        storage_writer, test_knowledge_base)
+        session, storage_writer, test_knowledge_base)
 
     searcher = registry_searcher.WinRegistrySearcher(win_registry)
 

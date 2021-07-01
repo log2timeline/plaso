@@ -51,12 +51,12 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      storage_writer = sqlite_writer.SQLiteStorageFileWriter(session, temp_file)
+      storage_writer = sqlite_writer.SQLiteStorageFileWriter(temp_file)
       storage_writer.Open()
 
       try:
         test_engine.PreprocessSources(
-            registry, [source_path_spec], storage_writer)
+            registry, [source_path_spec], session, storage_writer)
 
         test_engine.ProcessSources(
             session, [source_path_spec], storage_writer, configuration,

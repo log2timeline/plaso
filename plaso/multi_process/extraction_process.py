@@ -302,7 +302,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._task = task
 
     task_storage_writer = self._CreateTaskStorageWriter(
-        self._processing_configuration.task_storage_format, self._session, task)
+        self._processing_configuration.task_storage_format, task)
 
     if self._serializers_profiler:
       task_storage_writer.SetSerializersProfiler(self._serializers_profiler)

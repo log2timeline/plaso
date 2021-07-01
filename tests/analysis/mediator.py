@@ -20,7 +20,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
   def testGetDisplayNameForPathSpec(self):
     """Tests the GetDisplayNameForPathSpec function."""
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     knowledge_base = self._SetUpKnowledgeBase()
 
     analysis_mediator = mediator.AnalysisMediator(
@@ -41,7 +41,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     knowledge_base = self._SetUpKnowledgeBase()
 
     analysis_mediator = mediator.AnalysisMediator(

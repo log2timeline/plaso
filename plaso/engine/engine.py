@@ -253,8 +253,8 @@ class BaseEngine(object):
     return file_system, mount_point
 
   def PreprocessSources(
-      self, artifacts_registry_object, source_path_specs, storage_writer,
-      resolver_context=None):
+      self, artifacts_registry_object, source_path_specs, session,
+      storage_writer, resolver_context=None):
     """Preprocesses the sources.
 
     Args:
@@ -262,6 +262,7 @@ class BaseEngine(object):
           artifact definitions registry.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
+      session (Session): session the preprocessing is part of.
       storage_writer (StorageWriter): storage writer.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
@@ -285,7 +286,7 @@ class BaseEngine(object):
 
       if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
         mediator = preprocess_mediator.PreprocessMediator(
-            storage_writer, self.knowledge_base)
+            session, storage_writer, self.knowledge_base)
 
         preprocess_manager.PreprocessPluginsManager.RunPlugins(
             artifacts_registry_object, file_system, mount_point, mediator)

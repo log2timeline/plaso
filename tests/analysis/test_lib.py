@@ -33,7 +33,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         knowledge_base_values=knowledge_base_values)
 
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     test_events = []
@@ -126,7 +126,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
           the test should be skipped.
     """
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     parser_mediator = parsers_mediator.ParserMediator(

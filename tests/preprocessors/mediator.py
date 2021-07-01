@@ -18,10 +18,10 @@ class PreprocessMediatorTest(shared_test_lib.BaseTestCase):
   def testProducePreprocessingWarning(self):
     """Tests the ProducePreprocessingWarning method."""
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.PreprocessMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     storage_writer.Open()
 
