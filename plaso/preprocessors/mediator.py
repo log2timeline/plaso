@@ -8,10 +8,11 @@ from plaso.preprocessors import logger
 class PreprocessMediator(object):
   """Preprocess mediator."""
 
-  def __init__(self, storage_writer, knowledge_base):
+  def __init__(self, session, storage_writer, knowledge_base):
     """Initializes a preprocess mediator.
 
     Args:
+      session (Session): session the preprocessing is part of.
       storage_writer (StorageWriter): storage writer, to store preprocessing
           information in.
       knowledge_base (KnowledgeBase): knowledge base, to fill with
@@ -20,6 +21,7 @@ class PreprocessMediator(object):
     super(PreprocessMediator, self).__init__()
     self._file_entry = None
     self._knowledge_base = knowledge_base
+    self._session = session
     self._storage_writer = storage_writer
 
   @property

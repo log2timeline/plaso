@@ -50,12 +50,12 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     configuration = configurations.ProcessingConfiguration()
     configuration.parser_filter_expression = 'filestat'
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     try:
       test_engine.PreprocessSources(
-          registry, [source_path_spec], storage_writer)
+          registry, [source_path_spec], session, storage_writer)
 
       test_engine.ProcessSources(
           session, [source_path_spec], storage_writer, resolver_context,

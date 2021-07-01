@@ -128,7 +128,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     self._task = task
 
     task_storage_writer = self._CreateTaskStorageWriter(
-        definitions.STORAGE_FORMAT_SQLITE, self._session, task)
+        definitions.STORAGE_FORMAT_SQLITE, task)
 
     if self._serializers_profiler:
       task_storage_writer.SetSerializersProfiler(self._serializers_profiler)

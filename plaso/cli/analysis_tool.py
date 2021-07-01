@@ -64,7 +64,7 @@ class AnalysisTool(
       RuntimeError: if a non-recoverable situation is encountered.
     """
     storage_writer = storage_factory.StorageFactory.CreateStorageWriterForFile(
-        session, self._storage_file_path)
+        self._storage_file_path)
     if not storage_writer:
       raise RuntimeError('Unable to create storage writer.')
 

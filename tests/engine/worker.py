@@ -113,7 +113,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     try:
-      storage_writer.WriteSessionStart()
+      storage_writer.WriteSessionStart(session)
 
       extraction_worker.ProcessPathSpec(mediator, path_spec)
       event_source = storage_writer.GetFirstWrittenEventSource()
@@ -121,7 +121,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         extraction_worker.ProcessPathSpec(mediator, event_source.path_spec)
         event_source = storage_writer.GetNextWrittenEventSource()
 
-      storage_writer.WriteSessionCompletion()
+      storage_writer.WriteSessionCompletion(session)
 
       if expected_event_counters:
         self.CheckEventCounters(storage_writer, expected_event_counters)
@@ -163,7 +163,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -183,7 +183,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart()
+    storage_writer.WriteSessionStart(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     mediator.SetFileEntry(file_entry)
@@ -194,7 +194,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._AnalyzeDataStream(
         file_entry, '', display_name, event_data_stream)
 
-    storage_writer.WriteSessionCompletion()
+    storage_writer.WriteSessionCompletion(session)
     storage_writer.Close()
 
     self.assertIsNotNone(event_data_stream)
@@ -207,7 +207,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -227,7 +227,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart()
+    storage_writer.WriteSessionStart(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     mediator.SetFileEntry(file_entry)
@@ -239,7 +239,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._AnalyzeFileObject(
         file_object, display_name, event_data_stream)
 
-    storage_writer.WriteSessionCompletion()
+    storage_writer.WriteSessionCompletion(session)
     storage_writer.Close()
 
     self.assertIsNotNone(event_data_stream)
@@ -270,7 +270,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -290,7 +290,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart()
+    storage_writer.WriteSessionStart(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     mediator.SetFileEntry(file_entry)
@@ -298,7 +298,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._ExtractContentFromDataStream(
         mediator, file_entry, '')
 
-    storage_writer.WriteSessionCompletion()
+    storage_writer.WriteSessionCompletion(session)
     storage_writer.Close()
 
     # TODO: check results in storage writer
@@ -308,7 +308,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -328,7 +328,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart()
+    storage_writer.WriteSessionStart(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     mediator.SetFileEntry(file_entry)
@@ -336,7 +336,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._ExtractMetadataFromFileEntry(
         mediator, file_entry, '')
 
-    storage_writer.WriteSessionCompletion()
+    storage_writer.WriteSessionCompletion(session)
     storage_writer.Close()
 
     # TODO: check results in storage writer
@@ -346,7 +346,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -366,7 +366,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart()
+    storage_writer.WriteSessionStart(session)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -375,7 +375,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     type_indicators = extraction_worker._GetArchiveTypes(mediator, path_spec)
     self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_TAR])
 
-    storage_writer.WriteSessionCompletion()
+    storage_writer.WriteSessionCompletion(session)
     storage_writer.Close()
 
   def testGetCompressedStreamTypes(self):
@@ -383,7 +383,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -403,7 +403,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart()
+    storage_writer.WriteSessionStart(session)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -413,7 +413,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         mediator, path_spec)
     self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
-    storage_writer.WriteSessionCompletion()
+    storage_writer.WriteSessionCompletion(session)
     storage_writer.Close()
 
   def testIsMetadataFile(self):
@@ -438,10 +438,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   def testProcessPathSpecFile(self):
     """Tests the ProcessPathSpec function on a file."""
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['syslog'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime.
@@ -457,10 +456,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   def testProcessPathSpecCompressedFileGZIP(self):
     """Tests the ProcessPathSpec function on a gzip compressed file."""
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['syslog.gz'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime. There is 1 additional filestat
@@ -477,10 +475,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   def testProcessPathSpecCompressedFileBZIP2(self):
     """Tests the ProcessPathSpec function on a bzip2 compressed file."""
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['syslog.bz2'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime.
@@ -496,10 +493,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   def testProcessPathSpecCompressedFileXZ(self):
     """Tests the ProcessPathSpec function on a xz compressed file."""
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['syslog.xz'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime.
@@ -515,7 +511,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   def testProcessPathSpec(self):
     """Tests the ProcessPathSpec function on an archive file."""
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     test_file_path = self._GetTestFilePath(['syslog.tar'])
     self._SkipIfPathNotExists(test_file_path)
@@ -526,7 +521,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TAR, location='/syslog',
         parent=path_spec)
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     expected_event_counters = {
         'fs:stat': 1,
@@ -539,7 +534,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     # Process an archive file without "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tar'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime.
@@ -552,7 +547,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tar'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime. There is 1 additional filestat
@@ -569,7 +564,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   def testProcessPathSpecCompressedArchive(self):
     """Tests the ProcessPathSpec function on a compressed archive file."""
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     test_file_path = self._GetTestFilePath(['syslog.tgz'])
     self._SkipIfPathNotExists(test_file_path)
@@ -582,7 +576,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TAR, location='/syslog',
         parent=path_spec)
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     expected_event_counters = {
         'fs:stat': 1,
@@ -595,7 +589,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tgz'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime. There are 2 additional filestat
@@ -612,7 +606,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   def testProcessPathSpecVMDK(self):
     """Tests the ProcessPathSpec function on a VMDK with symbolic links."""
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     test_file_path = self._GetTestFilePath(['image.vmdk'])
     self._SkipIfPathNotExists(test_file_path)
@@ -624,7 +617,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=path_spec)
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     expected_event_counters = {
         'fs:stat': 18}
@@ -646,10 +639,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self.assertIn('hashing', extraction_worker.GetAnalyzerNames())
 
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['empty_file'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime.
@@ -686,10 +678,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self.assertIn('yara', extraction_worker.GetAnalyzerNames())
 
     knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['test_pe.exe'])
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
 
     # Typically there are 3 filestat events, but there can be 4 on platforms
     # that support os.stat_result st_birthtime.

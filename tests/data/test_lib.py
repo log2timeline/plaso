@@ -125,7 +125,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     session = sessions.Session()
 
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     if event_data_stream:

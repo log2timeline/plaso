@@ -41,7 +41,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
     task = tasks.Task(session_identifier=session.identifier)
 
     storage_writer = sqlite_writer.SQLiteStorageFileWriter(
-        session, path, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+        path, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
     storage_writer.Open()
 
@@ -67,7 +67,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
 
       session_storage_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_writer = sqlite_writer.SQLiteStorageFileWriter(
-          session, session_storage_path)
+          session_storage_path)
 
       task_storage_reader = sqlite_reader.SQLiteStorageFileReader(
           task_storage_path)
@@ -94,7 +94,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
 
       session_storage_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_writer = sqlite_writer.SQLiteStorageFileWriter(
-          session, session_storage_path)
+          session_storage_path)
 
       task_storage_reader = sqlite_reader.SQLiteStorageFileReader(
           task_storage_path)

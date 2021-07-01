@@ -18,6 +18,7 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import logger
 from plaso.cli import storage_media_tool
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.containers import sessions
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import path_helper
@@ -473,13 +474,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     logger.debug('Starting preprocessing.')
 
+    session = sessions.Session()
+
     try:
       artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
           self._artifact_definitions_path, self._custom_artifacts_path)
       # Setting storage writer to None here since we do not want to store
       # preprocessing information.
       extraction_engine.PreprocessSources(
-          artifacts_registry, self._source_path_specs, None,
+          artifacts_registry, self._source_path_specs, session, None,
           resolver_context=self._resolver_context)
 
     except IOError as exception:

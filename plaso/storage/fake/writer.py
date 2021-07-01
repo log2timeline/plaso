@@ -19,18 +19,15 @@ class FakeStorageWriter(writer.StorageWriter):
     task_start (TaskStart): task start attribute container.
   """
 
-  def __init__(
-      self, session, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer object.
 
     Args:
-      session (Session): session the storage changes are part of.
       storage_type (Optional[str]): storage type.
       task(Optional[Task]): task.
     """
     super(FakeStorageWriter, self).__init__(
-        session, storage_type=storage_type, task=task)
-
+        storage_type=storage_type, task=task)
     self.session_completion = None
     self.session_configuration = None
     self.session_start = None
@@ -102,11 +99,12 @@ class FakeStorageWriter(writer.StorageWriter):
     self._first_written_event_source_index = 0
     self._written_event_source_index = 0
 
-  def WriteSessionCompletion(self, aborted=False):
+  def WriteSessionCompletion(self, session):
     """Writes session completion information.
 
+
     Args:
-      aborted (Optional[bool]): True if the session was aborted.
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: if the storage type does not support writing a session
@@ -119,12 +117,13 @@ class FakeStorageWriter(writer.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Session start not supported by storage type.')
 
-    self._session.aborted = aborted
-    self.session_completion = self._session.CreateSessionCompletion()
+    self.session_completion = session.CreateSessionCompletion()
 
-  def WriteSessionConfiguration(self):
+  def WriteSessionConfiguration(self, session):
     """Writes session configuration information.
 
+    Args:
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: if the storage type does not support writing session
@@ -137,10 +136,13 @@ class FakeStorageWriter(writer.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Session configuration not supported by storage type.')
 
-    self.session_configuration = self._session.CreateSessionConfiguration()
+    self.session_configuration = session.CreateSessionConfiguration()
 
-  def WriteSessionStart(self):
+  def WriteSessionStart(self, session):
     """Writes session start information.
+
+    Args:
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: if the storage type does not support writing a session
@@ -153,14 +155,14 @@ class FakeStorageWriter(writer.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Session start not supported by storage type.')
 
-    self.session_start = self._session.CreateSessionStart()
+    self.session_start = session.CreateSessionStart()
 
   # TODO: refactor into base writer.
   def WriteTaskCompletion(self, aborted=False):
     """Writes task completion information.
 
     Args:
-      aborted (Optional[bool]): True if the session was aborted.
+      aborted (Optional[bool]): True if the task was aborted.
 
     Raises:
       IOError: if the storage type does not support writing a task
