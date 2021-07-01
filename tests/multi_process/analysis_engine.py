@@ -75,7 +75,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       self._ReadSessionConfiguration(temp_file, knowledge_base_object)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-          definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
+          definitions.DEFAULT_STORAGE_FORMAT, temp_file)
 
       test_engine._processing_configuration = configuration
       test_engine._session = session
@@ -132,7 +132,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-          definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
+          definitions.DEFAULT_STORAGE_FORMAT, temp_file)
 
       storage_writer.Open()
 
@@ -174,7 +174,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-          definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
+          definitions.DEFAULT_STORAGE_FORMAT, temp_file)
 
       storage_writer.Open()
 

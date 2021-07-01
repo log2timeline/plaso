@@ -176,7 +176,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     # Opening and closing a writer for a task should cause the task to be marked
     # as complete.
     storage_writer = writer.RedisStorageWriter(
-        session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+        storage_type=definitions.STORAGE_TYPE_TASK, task=task)
     storage_writer.Open(redis_client=redis_client)
     storage_writer.Close()
 
@@ -225,7 +225,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     # Opening and closing a writer for a task should cause the task to be marked
     # as complete.
     storage_writer = writer.RedisStorageWriter(
-        session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+        storage_type=definitions.STORAGE_TYPE_TASK, task=task)
     storage_writer.Open(redis_client=redis_client)
     storage_writer.Close()
 

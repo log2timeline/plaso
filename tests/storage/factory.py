@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.containers import sessions
 from plaso.storage import factory
 from plaso.storage.sqlite import reader as sqlite_reader
 from plaso.storage.sqlite import writer as sqlite_writer
@@ -22,20 +21,16 @@ class StorageFactoryTest(test_lib.StorageTestCase):
 
     storage_reader = factory.StorageFactory.CreateStorageReaderForFile(
         test_file_path)
-    self.assertIsInstance(
-        storage_reader, sqlite_reader.SQLiteStorageFileReader)
+    self.assertIsInstance(storage_reader, sqlite_reader.SQLiteStorageFileReader)
 
   def testCreateStorageWriterForFile(self):
     """Test the CreateStorageWriterForFile function."""
-    session = sessions.Session()
-
     test_file_path = self._GetTestFilePath(['psort_test.plaso'])
     self._SkipIfPathNotExists(test_file_path)
 
     storage_reader = factory.StorageFactory.CreateStorageWriterForFile(
-        session, test_file_path)
-    self.assertIsInstance(
-        storage_reader, sqlite_writer.SQLiteStorageFileWriter)
+        test_file_path)
+    self.assertIsInstance(storage_reader, sqlite_writer.SQLiteStorageFileWriter)
 
 
 if __name__ == '__main__':

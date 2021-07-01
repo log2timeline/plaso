@@ -356,12 +356,13 @@ class ExtractionTool(
 
         self._preferred_time_zone = time_zone_string
 
-  def _PreprocessSources(self, extraction_engine, storage_writer):
+  def _PreprocessSources(self, extraction_engine, session, storage_writer):
     """Preprocesses the sources.
 
     Args:
       extraction_engine (BaseEngine): extraction engine to preprocess
           the sources.
+      session (Session): session in which the sources are processed.
       storage_writer (StorageWriter): storage writer.
     """
     logger.debug('Starting preprocessing.')
@@ -370,7 +371,7 @@ class ExtractionTool(
       artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
           self._artifact_definitions_path, self._custom_artifacts_path)
       extraction_engine.PreprocessSources(
-          artifacts_registry, self._source_path_specs, storage_writer,
+          artifacts_registry, self._source_path_specs, session, storage_writer,
           resolver_context=self._resolver_context)
 
     except IOError as exception:
@@ -413,7 +414,7 @@ class ExtractionTool(
     # If the source is a directory or a storage media image
     # run pre-processing.
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      self._PreprocessSources(extraction_engine, storage_writer)
+      self._PreprocessSources(extraction_engine, session, storage_writer)
 
     configuration = self._CreateProcessingConfiguration(
         extraction_engine.knowledge_base)
@@ -442,7 +443,7 @@ class ExtractionTool(
     session.source_configurations = (
         extraction_engine.knowledge_base.GetSourceConfigurationArtifacts())
 
-    storage_writer.WriteSessionConfiguration()
+    storage_writer.WriteSessionConfiguration(session)
 
     status_update_callback = (
         self._status_view.GetExtractionStatusUpdateCallback())
@@ -601,7 +602,7 @@ class ExtractionTool(
         text_prepend=self._text_prepend)
 
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-        self._storage_format, session, self._storage_file_path)
+        self._storage_format, self._storage_file_path)
     if not storage_writer:
       raise errors.BadConfigOption('Unsupported storage format: {0:s}'.format(
           self._storage_format))
@@ -615,14 +616,14 @@ class ExtractionTool(
     processing_status = None
 
     try:
-      storage_writer.WriteSessionStart()
+      storage_writer.WriteSessionStart(session)
 
       try:
         processing_status = self._ProcessSources(session, storage_writer)
 
       finally:
-        aborted = getattr(processing_status, 'aborted', True)
-        storage_writer.WriteSessionCompletion(aborted=aborted)
+        session.aborted = getattr(processing_status, 'aborted', True)
+        storage_writer.WriteSessionCompletion(session)
 
     except IOError as exception:
       raise IOError('Unable to write to storage with error: {0!s}'.format(

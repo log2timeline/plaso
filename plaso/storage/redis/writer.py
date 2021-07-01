@@ -9,12 +9,10 @@ from plaso.storage.redis import redis_store
 class RedisStorageWriter(writer.StorageWriter):
   """Redis-based storage writer."""
 
-  def __init__(
-      self, session, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer.
 
     Args:
-      session (Session): session the storage changes are part of.
       storage_type (Optional[str]): storage type.
       task (Optional[Task]): task.
 
@@ -25,7 +23,7 @@ class RedisStorageWriter(writer.StorageWriter):
       raise RuntimeError('Task required.')
 
     super(RedisStorageWriter, self).__init__(
-        session=session, storage_type=storage_type, task=task)
+        storage_type=storage_type, task=task)
 
     self._redis_namespace = '{0:s}-{1:s}'.format(
         task.session_identifier, task.identifier)
@@ -122,11 +120,11 @@ class RedisStorageWriter(writer.StorageWriter):
     raise IOError(
         'Preprocessing information is not supported by the redis store.')
 
-  def WriteSessionCompletion(self, aborted=False):
+  def WriteSessionCompletion(self, session):
     """Writes session completion information.
 
     Args:
-      aborted (Optional[bool]): True if the session was aborted.
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: always, as the Redis store does not support writing a session
@@ -136,8 +134,11 @@ class RedisStorageWriter(writer.StorageWriter):
     """
     raise IOError('Session completion is not supported by the redis store.')
 
-  def WriteSessionConfiguration(self):
+  def WriteSessionConfiguration(self, session):
     """Writes session configuration information.
+
+    Args:
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: always, as the Redis store does not support writing a session
@@ -147,8 +148,11 @@ class RedisStorageWriter(writer.StorageWriter):
     """
     raise IOError('Session configuration is not supported by the redis store.')
 
-  def WriteSessionStart(self):
+  def WriteSessionStart(self, session):
     """Writes session start information.
+
+    Args:
+      session (Session): session the storage changes are part of.
 
     Raises:
       IOError: always, as the Redis store does not support writing a session

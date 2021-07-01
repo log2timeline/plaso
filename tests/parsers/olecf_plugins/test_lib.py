@@ -34,7 +34,7 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
           the test should be skipped.
     """
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     file_entry = self._GetTestFileEntry(path_segments)

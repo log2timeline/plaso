@@ -102,7 +102,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     self.assertIsNotNone(registry_key)
 
     session = sessions.Session()
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     parser_mediator = self._CreateParserMediator(

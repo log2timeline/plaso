@@ -29,12 +29,10 @@ class StorageWriter(object):
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
-  def __init__(
-      self, session, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer.
 
     Args:
-      session (Session): session the storage changes are part of.
       storage_type (Optional[str]): storage type.
       task(Optional[Task]): task.
     """
@@ -42,7 +40,6 @@ class StorageWriter(object):
     self._attribute_containers_counter = collections.Counter()
     self._first_written_event_source_index = 0
     self._serializers_profiler = None
-    self._session = session
     self._storage_profiler = None
     self._storage_type = storage_type
     self._store = None
@@ -232,26 +229,34 @@ class StorageWriter(object):
       self._store.SetStorageProfiler(storage_profiler)
 
   @abc.abstractmethod
-  def WriteSessionCompletion(self, aborted=False):
+  def WriteSessionCompletion(self, session):
     """Writes session completion information.
 
     Args:
-      aborted (Optional[bool]): True if the session was aborted.
+      session (Session): session the storage changes are part of.
     """
 
   @abc.abstractmethod
-  def WriteSessionConfiguration(self):
-    """Writes session configuration information."""
+  def WriteSessionConfiguration(self, session):
+    """Writes session configuration information.
+
+    Args:
+      session (Session): session the storage changes are part of.
+    """
 
   @abc.abstractmethod
-  def WriteSessionStart(self):
-    """Writes session start information."""
+  def WriteSessionStart(self, session):
+    """Writes session start information.
+
+    Args:
+      session (Session): session the storage changes are part of.
+    """
 
   def WriteTaskCompletion(self, aborted=False):
     """Writes task completion information.
 
     Args:
-      aborted (Optional[bool]): True if the session was aborted.
+      aborted (Optional[bool]): True if the task was aborted.
 
     Raises:
       IOError: if the storage type is not supported or

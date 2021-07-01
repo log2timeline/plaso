@@ -56,15 +56,12 @@ class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
 
     return parser_mediator
 
-  def _CreateStorageWriter(self, session):
+  def _CreateStorageWriter(self):
     """Creates a storage writer object.
-
-    Args:
-      session (Session): session.
 
     Returns:
       FakeStorageWriter: storage writer.
     """
-    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
     return storage_writer
