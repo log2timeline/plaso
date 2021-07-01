@@ -139,7 +139,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     task_storage_writer.Open()
 
     self._analysis_mediator = analysis_mediator.AnalysisMediator(
-        task_storage_writer, self._knowledge_base,
+        self._session, task_storage_writer, self._knowledge_base,
         data_location=self._data_location)
 
     # TODO: set event_filter_expression in mediator.

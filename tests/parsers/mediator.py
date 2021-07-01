@@ -33,7 +33,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     earliest_year = parser_mediator._GetEarliestYearFromFileEntry()
     self.assertIsNone(earliest_year)
@@ -46,7 +46,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     latest_year = parser_mediator._GetLatestYearFromFileEntry()
     self.assertIsNone(latest_year)
@@ -62,7 +62,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     with self.assertRaises(ValueError):
       parser_mediator.GetDisplayName(file_entry=None)
@@ -123,7 +123,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     test_file_path = self._GetTestFilePath(['syslog.gz'])
     self._SkipIfPathNotExists(test_file_path)
@@ -141,7 +141,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     expected_estimated_year = parser_mediator.GetCurrentYear()
     estimated_year = parser_mediator.GetEstimatedYear()
@@ -155,7 +155,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     file_entry = parser_mediator.GetFileEntry()
     self.assertIsNone(file_entry)
@@ -166,7 +166,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     filename = parser_mediator.GetFilename()
     self.assertIsNone(filename)
@@ -177,7 +177,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     expected_latest_year = parser_mediator.GetCurrentYear()
     latest_year = parser_mediator.GetLatestYear()
@@ -195,7 +195,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     storage_writer.Open()
 
@@ -226,7 +226,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     storage_writer.Open()
 
@@ -241,7 +241,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     storage_writer.Open()
 
@@ -256,7 +256,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     parser_mediator.ResetFileEntry()
 
@@ -266,7 +266,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     parser_mediator.SetFileEntry(None)
 
@@ -276,7 +276,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     parser_mediator.SetStorageWriter(None)
 
@@ -286,7 +286,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     parser_mediator.SignalAbort()
 

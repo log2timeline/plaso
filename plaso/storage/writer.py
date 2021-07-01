@@ -40,7 +40,6 @@ class StorageWriter(object):
     """
     super(StorageWriter, self).__init__()
     self._attribute_containers_counter = collections.Counter()
-    self._event_data_parser_mappings = {}
     self._first_written_event_source_index = 0
     self._serializers_profiler = None
     self._session = session
@@ -105,54 +104,6 @@ class StorageWriter(object):
     if not self._store:
       raise IOError('Unable to write to closed storage writer.')
 
-  def _UpdateAnalysisReportSessionCounter(self, analysis_report):
-    """Updates the analysis report session counter.
-
-    Args:
-      analysis_report (AnalysisReport): a report.
-    """
-    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
-      report_identifier = analysis_report.plugin_name
-      self._session.analysis_reports_counter['total'] += 1
-      self._session.analysis_reports_counter[report_identifier] += 1
-
-  def _UpdateEventLabelsSessionCounter(self, event_tag):
-    """Updates the event labels session counter.
-
-    Args:
-      event_tag (EventTag): an event tag.
-    """
-    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
-      self._session.event_labels_counter['total'] += 1
-      for label in event_tag.labels:
-        self._session.event_labels_counter[label] += 1
-
-  def _UpdateEventDataParsersMappings(self, event_data):
-    """Updates the event data parsers mappings.
-
-    Args:
-      event_data (EventData): event data.
-    """
-    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
-      identifier = event_data.GetIdentifier()
-      lookup_key = identifier.CopyToString()
-      parser_name = event_data.parser.split('/')[-1]
-      self._event_data_parser_mappings[lookup_key] = parser_name
-
-  def _UpdateEventParsersSessionCounter(self, event):
-    """Updates the event parsers session counter.
-
-    Args:
-      event (EventObject): an event.
-    """
-    if self._storage_type == definitions.STORAGE_TYPE_SESSION:
-      event_data_identifier = event.GetEventDataIdentifier()
-      lookup_key = event_data_identifier.CopyToString()
-
-      parser_name = self._event_data_parser_mappings.get(lookup_key, 'N/A')
-      self._session.parsers_counter[parser_name] += 1
-      self._session.parsers_counter['total'] += 1
-
   def AddAttributeContainer(self, container):
     """Adds an attribute container.
 
@@ -166,18 +117,6 @@ class StorageWriter(object):
     self._RaiseIfNotWritable()
 
     self._store.AddAttributeContainer(container)
-
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_REPORT:
-      self._UpdateAnalysisReportSessionCounter(container)
-
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      self._UpdateEventParsersSessionCounter(container)
-
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-      self._UpdateEventDataParsersMappings(container)
-
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
-      self._UpdateEventLabelsSessionCounter(container)
 
     self._attribute_containers_counter[container.CONTAINER_TYPE] += 1
 

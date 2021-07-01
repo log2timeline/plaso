@@ -205,6 +205,26 @@ class Session(interface.AttributeContainer):
     session_start.timestamp = self.start_time
     return session_start
 
+  def UpdateAnalysisReportSessionCounter(self, analysis_report):
+    """Updates the analysis report session counter.
+
+    Args:
+      analysis_report (AnalysisReport): a report.
+    """
+    report_identifier = analysis_report.plugin_name
+    self.analysis_reports_counter[report_identifier] += 1
+    self.analysis_reports_counter['total'] += 1
+
+  def UpdateEventLabelsSessionCounter(self, event_tag):
+    """Updates the event labels session counter.
+
+    Args:
+      event_tag (EventTag): an event tag.
+    """
+    for label in event_tag.labels:
+      self.event_labels_counter[label] += 1
+    self.event_labels_counter['total'] += 1
+
 
 class SessionCompletion(interface.AttributeContainer):
   """Session completion attribute container.

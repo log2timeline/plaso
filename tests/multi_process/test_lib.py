@@ -31,11 +31,12 @@ class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
     return knowledge_base_object
 
   def _CreateParserMediator(
-      self, storage_writer, knowledge_base_object, file_entry=None,
+      self, session, storage_writer, knowledge_base_object, file_entry=None,
       parser_chain=None):
     """Creates a parser mediator.
 
     Args:
+      session (Session): session.
       storage_writer (StorageWriter): storage writer.
       knowledge_base_object (KnowledgeBase): knowledge base.
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
@@ -45,7 +46,7 @@ class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
       ParserMediator: parser mediator.
     """
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     if file_entry:
       parser_mediator.SetFileEntry(file_entry)
