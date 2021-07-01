@@ -10,28 +10,19 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
   """SQLite-based storage file writer."""
 
   def __init__(
-      self, session, output_file,
-      storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
+      self, session, path, storage_type=definitions.STORAGE_TYPE_SESSION,
+      task=None):
     """Initializes a storage writer.
 
     Args:
       session (Session): session the storage changes are part of.
-      output_file (str): path to the output file.
+      path (str): path to the output file.
       storage_type (Optional[str]): storage type.
       task(Optional[Task]): task.
     """
     super(SQLiteStorageFileWriter, self).__init__(
         session, storage_type=storage_type, task=task)
-    self._output_file = output_file
-    self._store = None
-
-  def _CreateStorageFile(self):
-    """Creates a storage file.
-
-    Returns:
-      SQLiteStorageFile: storage file.
-    """
-    return sqlite_file.SQLiteStorageFile(storage_type=self._storage_type)
+    self._path = path
 
   # TODO: remove after refactoring.
   def AddEventTag(self, event_tag):
@@ -48,8 +39,6 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
 
     # TODO: refactor to use AddOrUpdateAttributeContainer
     self._store.AddEventTag(event_tag)
-
-    self._UpdateEventLabelsSessionCounter(event_tag)
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
@@ -105,7 +94,7 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     if self._store:
       raise IOError('Storage writer already opened.')
 
-    self._store = self._CreateStorageFile()
+    self._store = sqlite_file.SQLiteStorageFile(storage_type=self._storage_type)
 
     if self._serializers_profiler:
       self._store.SetSerializersProfiler(self._serializers_profiler)
@@ -113,7 +102,7 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     if self._storage_profiler:
       self._store.SetStorageProfiler(self._storage_profiler)
 
-    self._store.Open(path=self._output_file, read_only=False)
+    self._store.Open(path=self._path, read_only=False)
 
     number_of_event_sources = self._store.GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)

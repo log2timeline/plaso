@@ -86,7 +86,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     self.assertTrue(required_tables_and_column_exist)
 
     parser_mediator = self._CreateParserMediator(
-        storage_writer, file_entry=file_entry,
+        session, storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values)
 
     parser_mediator.SetFileEntry(file_entry)

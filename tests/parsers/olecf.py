@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.parsers import olecf
@@ -56,8 +57,10 @@ class OLECFParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
+    session = sessions.Session()
+
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(storage_writer)
+    parser_mediator = self._CreateParserMediator(session, storage_writer)
 
     parser = olecf.OLECFParser()
     parser.ParseFileObject(parser_mediator, None)

@@ -23,10 +23,12 @@ class AnalysisMediator(object):
     number_of_produced_event_tags (int): number of produced event tags.
   """
 
-  def __init__(self, storage_writer, knowledge_base, data_location=None):
+  def __init__(
+      self, session, storage_writer, knowledge_base, data_location=None):
     """Initializes an analysis plugin mediator.
 
     Args:
+      session (Session): session the analysis is part of.
       storage_writer (StorageWriter): storage writer.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for analysis.
@@ -39,6 +41,7 @@ class AnalysisMediator(object):
     self._event_filter_expression = None
     self._knowledge_base = knowledge_base
     self._number_of_warnings = 0
+    self._session = session
     self._storage_writer = storage_writer
 
     self.last_activity_timestamp = 0.0
@@ -104,6 +107,8 @@ class AnalysisMediator(object):
 
     self._storage_writer.AddAttributeContainer(analysis_report)
 
+    self._session.UpdateAnalysisReportSessionCounter(analysis_report)
+
     self.number_of_produced_analysis_reports += 1
 
     self.last_activity_timestamp = time.time()
@@ -118,6 +123,7 @@ class AnalysisMediator(object):
     """
     warning = warnings.AnalysisWarning(message=message, plugin_name=plugin_name)
     self._storage_writer.AddAttributeContainer(warning)
+
     self._number_of_warnings += 1
 
     self.last_activity_timestamp = time.time()
@@ -129,6 +135,8 @@ class AnalysisMediator(object):
       event_tag (EventTag): event tag.
     """
     self._storage_writer.AddEventTag(event_tag)
+
+    self._session.UpdateEventLabelsSessionCounter(event_tag)
 
     self.number_of_produced_event_tags += 1
 

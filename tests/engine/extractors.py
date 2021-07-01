@@ -25,11 +25,13 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the event extractor."""
 
   def _CreateParserMediator(
-      self, storage_writer, collection_filters_helper=None, file_entry=None,
-      knowledge_base_values=None, parser_chain=None, timezone='UTC'):
+      self, session, storage_writer, collection_filters_helper=None,
+      file_entry=None, knowledge_base_values=None, parser_chain=None,
+      timezone='UTC'):
     """Creates a parser mediator.
 
     Args:
+      session (Session): session.
       storage_writer (StorageWriter): storage writer.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
@@ -52,7 +54,7 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
     knowledge_base_object.SetTimeZone(timezone)
 
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object,
+        session, storage_writer, knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
 
     if file_entry:
@@ -93,9 +95,11 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
+    session = sessions.Session()
+
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(
-        storage_writer, file_entry=file_entry)
+        session, storage_writer, file_entry=file_entry)
 
     test_extractor.ParseDataStream(parser_mediator, file_entry, '')
 
@@ -115,9 +119,11 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
+    session = sessions.Session()
+
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(
-        storage_writer, file_entry=file_entry)
+        session, storage_writer, file_entry=file_entry)
 
     test_extractor.ParseDataStream(parser_mediator, file_entry, '')
 

@@ -144,8 +144,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       finally:
         storage_writer.Close()
 
-    self.assertIsNotNone(session.analysis_reports_counter)
-    self.assertEqual(len(session.analysis_reports_counter), 2)
+      self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
   def testAnalyzeEventsWithEventFilter(self):
     """Tests the AnalyzeEvents function with an event filter."""
@@ -188,8 +187,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       finally:
         storage_writer.Close()
 
-    self.assertIsNotNone(session.analysis_reports_counter)
-    self.assertEqual(len(session.analysis_reports_counter), 2)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
   # TODO: add bogus data location test.
 

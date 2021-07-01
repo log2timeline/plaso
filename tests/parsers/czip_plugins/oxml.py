@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.parsers.czip_plugins import oxml
 
@@ -78,8 +79,11 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
   def testProduceEvent(self):
     """Tests the _ProduceEvent function."""
     plugin = oxml.OpenXMLPlugin()
+
+    session = sessions.Session()
+
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(storage_writer)
+    parser_mediator = self._CreateParserMediator(session, storage_writer)
     event_data = oxml.OpenXMLEventData()
 
     properties = plugin._ParsePropertiesXMLFile(self._PROPERTIES_XML_DATA)

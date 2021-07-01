@@ -12,6 +12,7 @@ from dfvfs.helpers import text_file as dfvfs_text_file
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 
+from plaso.containers import sessions
 from plaso.parsers import text_parser
 
 from tests.parsers import test_lib
@@ -200,8 +201,10 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
 
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
+    session = sessions.Session()
+
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(storage_writer)
+    parser_mediator = self._CreateParserMediator(session, storage_writer)
     resolver_context = dfvfs_context.Context()
 
     test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
@@ -218,7 +221,7 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(storage_writer)
+    parser_mediator = self._CreateParserMediator(session, storage_writer)
 
     test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
     data = b'This is another file.\nWith tw\xba lines.\n'

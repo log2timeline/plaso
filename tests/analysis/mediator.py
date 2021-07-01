@@ -24,7 +24,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     knowledge_base = self._SetUpKnowledgeBase()
 
     analysis_mediator = mediator.AnalysisMediator(
-        storage_writer, knowledge_base)
+        session, storage_writer, knowledge_base)
 
     test_path = self._GetTestFilePath(['syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -45,7 +45,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     knowledge_base = self._SetUpKnowledgeBase()
 
     analysis_mediator = mediator.AnalysisMediator(
-        storage_writer, knowledge_base)
+        session, storage_writer, knowledge_base)
 
     analysis_mediator.SignalAbort()
 

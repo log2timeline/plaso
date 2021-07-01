@@ -50,7 +50,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       test_events.append((event, event_data, event_data_stream))
 
     mediator = analysis_mediator.AnalysisMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     for event, event_data, event_data_stream in test_events:
       plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
@@ -77,6 +77,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
+    session = sessions.Session()
+
     knowledge_base_object = self._SetUpKnowledgeBase(
         knowledge_base_values=knowledge_base_values)
 
@@ -84,7 +86,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         path_segments, parser, knowledge_base_object)
 
     mediator = analysis_mediator.AnalysisMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     for event in storage_writer.GetSortedEvents():
       event_data = None
@@ -128,7 +130,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        session, storage_writer, knowledge_base_object)
 
     file_entry = self._GetTestFileEntry(path_segments)
     parser_mediator.SetFileEntry(file_entry)
