@@ -499,6 +499,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
           date_time_values.minutes, date_time_values.seconds,
           date_time_values.microseconds)
 
+    if date_time_values.time_zone_offset is not None:
+      json_dict['time_zone_offset'] = date_time_values.time_zone_offset
+
     if date_time_values.is_local_time:
       json_dict['is_local_time'] = True
 
