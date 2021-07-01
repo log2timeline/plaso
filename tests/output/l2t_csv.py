@@ -56,6 +56,11 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     self.assertEqual(date_string, '06/28/2012')
 
     output_mediator.SetTimezone('UTC')
+    event.date_time._time_zone_offset = +600
+
+    date_string = formatting_helper._FormatDate(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_string, '06/28/2012')
 
     # Test with event.timestamp
     event.date_time = None

@@ -57,6 +57,12 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     self.assertEqual(date_time_string, '2012-06-27T20:17:01.000000+02:00')
 
     output_mediator.SetTimezone('UTC')
+    event.date_time._time_zone_offset = -120
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T16:17:01.000000+00:00')
+
     event.date_time = dfdatetime_semantic_time.InvalidTime()
 
     date_time_string = test_helper._FormatDateTime(
@@ -262,6 +268,11 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     self.assertEqual(time_string, '20:17:01')
 
     output_mediator.SetTimezone('UTC')
+    event.date_time._time_zone_offset = -120
+
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '16:17:01')
 
     # Test with event.timestamp
     event.date_time = None
@@ -286,9 +297,23 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
     zone_string = test_helper._FormatTimeZone(
         event, event_data, event_data_stream)
     self.assertEqual(zone_string, 'UTC')
+
+    output_mediator.SetTimezone('Europe/Amsterdam')
+
+    zone_string = test_helper._FormatTimeZone(
+        event, event_data, event_data_stream)
+    self.assertEqual(zone_string, 'CEST')
+
+    output_mediator.SetTimezone('UTC')
+    event.date_time._time_zone_offset = -120
+
+    zone_string = test_helper._FormatTimeZone(
+        event, event_data, event_data_stream)
+    self.assertEqual(zone_string, '+02:00')
 
   def testFormatUsername(self):
     """Tests the _FormatUsername function."""

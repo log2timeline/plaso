@@ -109,11 +109,16 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     year, month, day_of_month, hours, minutes, seconds = (
         date_time.GetDateWithTimeOfDay())
 
-    if self._output_mediator.timezone != pytz.UTC:
+    if self._output_mediator.timezone != pytz.UTC or date_time.time_zone_offset:
       try:
         datetime_object = datetime.datetime(
             year, month, day_of_month, hours, minutes, seconds,
             tzinfo=pytz.UTC)
+
+        if event.date_time.time_zone_offset:
+          datetime_object += datetime.timedelta(
+              minutes=event.date_time.time_zone_offset)
+
         datetime_object = datetime_object.astimezone(
             self._output_mediator.timezone)
 
