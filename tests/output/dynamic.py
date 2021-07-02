@@ -33,10 +33,10 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     formatting_helper = dynamic.DynamicFieldFormattingHelper(output_mediator)
 
+    # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    # Test with event.date_time
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-27')
@@ -48,14 +48,35 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     self.assertEqual(date_string, '2012-06-28')
 
     output_mediator.SetTimezone('UTC')
-    event.date_time._time_zone_offset = +600
+    event.date_time._time_zone_offset = 600
 
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-28')
 
+    # Test with event.is_local_time
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    event.timestamp += 600 * 60 * 1000000
+    event.date_time.is_local_time = True
+
+    date_string = formatting_helper._FormatDate(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_string, '2012-06-28')
+
+    output_mediator.SetTimezone('America/Los_Angeles')
+
+    date_string = formatting_helper._FormatDate(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_string, '2012-06-27')
+
+    output_mediator.SetTimezone('UTC')
+
     # Test with event.timestamp
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     event.date_time = None
+
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-27')

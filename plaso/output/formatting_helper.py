@@ -90,27 +90,37 @@ class FieldFormattingHelper(object):
       if iso8601_string:
         return iso8601_string
 
-      iso8601_string = event.date_time.CopyToDateTimeStringISO8601()
+      date_time = event.date_time
+      if event.date_time.is_local_time:
+        # TODO: replace this by a more generic solution.
+        if event.date_time.precision == '1s':
+          timestamp, _ = divmod(event.timestamp, 1000000)
+          date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+        else:
+          date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+              timestamp=event.timestamp)
+
+      iso8601_string = date_time.CopyToDateTimeStringISO8601()
       if not iso8601_string:
         return 'Invalid'
 
       if (self._output_mediator.timezone == pytz.UTC and
-          not event.date_time.time_zone_offset):
+          not date_time.time_zone_offset):
         iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
       else:
         # For output in a specific time zone overwrite the date, time in seconds
         # and time zone offset in the UTC ISO8601 string.
         year, month, day_of_month, hours, minutes, seconds = (
-            event.date_time.GetDateWithTimeOfDay())
+            date_time.GetDateWithTimeOfDay())
 
         try:
           datetime_object = datetime.datetime(
               year, month, day_of_month, hours, minutes, seconds,
               tzinfo=pytz.UTC)
 
-          if event.date_time.time_zone_offset:
+          if date_time.time_zone_offset:
             datetime_object += datetime.timedelta(
-                minutes=event.date_time.time_zone_offset)
+                minutes=date_time.time_zone_offset)
 
           datetime_object = datetime_object.astimezone(
               self._output_mediator.timezone)
@@ -129,7 +139,7 @@ class FieldFormattingHelper(object):
         return '0000-00-00T00:00:00.000000+00:00'
 
       date_time = event.date_time
-      if not date_time:
+      if not date_time or date_time.is_local_time:
         date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
             timestamp=event.timestamp)
 
@@ -140,6 +150,11 @@ class FieldFormattingHelper(object):
         datetime_object = datetime.datetime(
             year, month, day_of_month, hours, minutes, seconds,
             tzinfo=pytz.UTC)
+
+        if date_time.time_zone_offset:
+          datetime_object += datetime.timedelta(
+              minutes=date_time.time_zone_offset)
+
         datetime_object = datetime_object.astimezone(
             self._output_mediator.timezone)
 
@@ -427,7 +442,7 @@ class FieldFormattingHelper(object):
       return '--:--:--'
 
     date_time = event.date_time
-    if not date_time:
+    if not date_time or date_time.is_local_time:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=event.timestamp)
 
@@ -477,7 +492,7 @@ class FieldFormattingHelper(object):
       return '-'
 
     date_time = event.date_time
-    if not date_time:
+    if not date_time or date_time.is_local_time:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=event.timestamp)
 
