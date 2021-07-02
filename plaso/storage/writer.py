@@ -29,12 +29,11 @@ class StorageWriter(object):
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a storage writer.
 
     Args:
       storage_type (Optional[str]): storage type.
-      task(Optional[Task]): task.
     """
     super(StorageWriter, self).__init__()
     self._attribute_containers_counter = collections.Counter()
@@ -43,7 +42,6 @@ class StorageWriter(object):
     self._storage_profiler = None
     self._storage_type = storage_type
     self._store = None
-    self._task = task
     self._written_event_source_index = 0
 
   @property
@@ -252,11 +250,11 @@ class StorageWriter(object):
       session (Session): session the storage changes are part of.
     """
 
-  def WriteTaskCompletion(self, aborted=False):
+  def WriteTaskCompletion(self, task):
     """Writes task completion information.
 
     Args:
-      aborted (Optional[bool]): True if the task was aborted.
+      task (Task): task.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -269,12 +267,14 @@ class StorageWriter(object):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError('Unsupported storage type.')
 
-    self._task.aborted = aborted
-    task_completion = self._task.CreateTaskCompletion()
+    task_completion = task.CreateTaskCompletion()
     self._store.WriteTaskCompletion(task_completion)
 
-  def WriteTaskStart(self):
+  def WriteTaskStart(self, task):
     """Writes task start information.
+
+    Args:
+      task (Task): task.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -287,5 +287,5 @@ class StorageWriter(object):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError('Unsupported storage type.')
 
-    task_start = self._task.CreateTaskStart()
+    task_start = task.CreateTaskStart()
     self._store.WriteTaskStart(task_start)

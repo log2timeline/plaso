@@ -9,7 +9,7 @@ class SQLiteStorageFileReader(file_interface.StorageFileReader):
   """SQLite-based storage file reader."""
 
   def __init__(self, path):
-    """Initializes a storage reader.
+    """Initializes a SQLite file storage reader.
 
     Args:
       path (str): path to the input file.

@@ -602,13 +602,13 @@ class ExtractionTool(
         text_prepend=self._text_prepend)
 
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-        self._storage_format, self._storage_file_path)
+        self._storage_format)
     if not storage_writer:
       raise errors.BadConfigOption('Unsupported storage format: {0:s}'.format(
           self._storage_format))
 
     try:
-      storage_writer.Open()
+      storage_writer.Open(path=self._storage_file_path)
     except IOError as exception:
       raise IOError('Unable to open storage with error: {0!s}'.format(
           exception))

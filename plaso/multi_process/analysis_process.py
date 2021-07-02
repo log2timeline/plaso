@@ -127,8 +127,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
     self._task = task
 
-    task_storage_writer = self._CreateTaskStorageWriter(
-        definitions.STORAGE_FORMAT_SQLITE, task)
+    task_storage_writer = self._storage_factory.CreateTaskStorageWriter(
+        definitions.STORAGE_FORMAT_SQLITE)
 
     if self._serializers_profiler:
       task_storage_writer.SetSerializersProfiler(self._serializers_profiler)
@@ -136,7 +136,9 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     if self._storage_profiler:
       task_storage_writer.SetStorageProfiler(self._storage_profiler)
 
-    task_storage_writer.Open()
+    storage_file_path = self._GetTaskStorageFilePath(
+        definitions.STORAGE_FORMAT_SQLITE, task)
+    task_storage_writer.Open(path=storage_file_path)
 
     self._analysis_mediator = analysis_mediator.AnalysisMediator(
         self._session, task_storage_writer, self._knowledge_base,
@@ -144,7 +146,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
     # TODO: set event_filter_expression in mediator.
 
-    task_storage_writer.WriteTaskStart()
+    task_storage_writer.WriteTaskStart(task)
 
     try:
       logger.debug(
@@ -188,7 +190,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
       self._abort = True
 
     finally:
-      task_storage_writer.WriteTaskCompletion(aborted=self._abort)
+      task.aborted = self._abort
+      task_storage_writer.WriteTaskCompletion(task)
 
       task_storage_writer.Close()
 

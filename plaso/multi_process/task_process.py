@@ -29,36 +29,8 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
         processing_configuration, **kwargs)
     self._processed_task_storage_path = os.path.join(
         processing_configuration.task_storage_path, 'processed')
+    self._storage_factory = storage_factory.StorageFactory
     self._task_storage_path = processing_configuration.task_storage_path
-
-  def _CreateTaskStorageWriter(self, task_storage_format, task):
-    """Creates a storage writer for a task.
-
-    Args:
-      task_storage_format (str): storage format used to store task results.
-      task (Task): task the storage changes are part of.
-
-    Returns:
-      StorageWriter: storage writer.
-
-    Raises:
-      IOError: if the storage type or storage format is not supported.
-      OSError: if the storage type or storage format is not supported.
-    """
-    storage_file_path = self._GetTaskStorageFilePath(task_storage_format, task)
-
-    task_storage_writer = (
-        storage_factory.StorageFactory.CreateTaskStorageWriter(
-            task_storage_format, task, storage_file_path))
-    if not task_storage_writer:
-      raise IOError('Unsupported storage format: {0:s}'.format(
-          task_storage_format))
-
-    task_storage_writer.SetStorageProfiler(self._storage_profiler)
-
-    task.storage_format = task_storage_format
-
-    return task_storage_writer
 
   def _FinalizeTaskStorageWriter(self, task_storage_format, task):
     """Finalizes a storage writer for a task.

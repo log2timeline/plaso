@@ -32,19 +32,11 @@ class RedisStore(interface.BaseStore):
   # DEFAULT_REDIS_URL is public so that it appears in generated documentation.
   DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
-  # TODO: pass session and task identifiers on Open?
-  def __init__(
-      self, storage_type=definitions.STORAGE_TYPE_TASK,
-      session_identifier=None, task_identifier=None):
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a Redis store.
 
     Args:
       storage_type (Optional[str]): storage type.
-      session_identifier (Optional[str]): session identifier, formatted as
-          a UUID.
-      task_identifier (Optional[str]): unique identifier of the task the store
-          will store containers for. If not specified, an identifier will be
-          generated.
 
     Raises:
       ValueError: if the storage type is not supported.
@@ -53,16 +45,10 @@ class RedisStore(interface.BaseStore):
       raise ValueError('Unsupported storage type: {0:s}.'.format(
           storage_type))
 
-    if not session_identifier:
-      session_identifier = str(uuid.uuid4())
-
-    if not task_identifier:
-      task_identifier = str(uuid.uuid4())
-
     super(RedisStore, self).__init__(storage_type=storage_type)
     self._redis_client = None
-    self._session_identifier = session_identifier
-    self._task_identifier = task_identifier
+    self._session_identifier = None
+    self._task_identifier = None
 
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
 
@@ -364,13 +350,20 @@ class RedisStore(interface.BaseStore):
     redis_client.hset(merging_key, task_identifier, cls._MERGING_BYTES)
 
   # pylint: disable=arguments-differ
-  def Open(self, redis_client=None, url=None, **unused_kwargs):
+  def Open(
+      self, redis_client=None, session_identifier=None, task_identifier=None,
+      url=None, **unused_kwargs):
     """Opens the store.
 
     Args:
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created. If no client is specified a new client
           will be opened connected to the Redis instance specified by 'url'.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
+      task_identifier (Optional[str]): unique identifier of the task the store
+          will store containers for. If not specified, an identifier will be
+          generated.
       url (Optional[str]): URL for a Redis database. If not specified, the
           DEFAULT_REDIS_URL will be used.
 
@@ -388,6 +381,9 @@ class RedisStore(interface.BaseStore):
       self._redis_client = redis_client
     else:
       self._redis_client = redis.from_url(url=url, socket_timeout=60)
+
+    self._session_identifier = session_identifier or str(uuid.uuid4())
+    self._task_identifier = task_identifier or str(uuid.uuid4())
 
     client_name = self._GenerateRedisKey('')
     self._SetClientName(self._redis_client, client_name)

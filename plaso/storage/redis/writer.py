@@ -1,32 +1,12 @@
 # -*- coding: utf-8 -*-
 """Storage writer for Redis."""
 
-from plaso.lib import definitions
 from plaso.storage import writer
 from plaso.storage.redis import redis_store
 
 
 class RedisStorageWriter(writer.StorageWriter):
   """Redis-based storage writer."""
-
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
-    """Initializes a storage writer.
-
-    Args:
-      storage_type (Optional[str]): storage type.
-      task (Optional[Task]): task.
-
-    Raises:
-      RuntimeError: if no task is provided.
-    """
-    if not task:
-      raise RuntimeError('Task required.')
-
-    super(RedisStorageWriter, self).__init__(
-        storage_type=storage_type, task=task)
-
-    self._redis_namespace = '{0:s}-{1:s}'.format(
-        task.session_identifier, task.identifier)
 
   # pylint: disable=redundant-returns-doc,useless-return
   def GetFirstWrittenEventSource(self):
@@ -64,8 +44,17 @@ class RedisStorageWriter(writer.StorageWriter):
     return None
 
   # pylint: disable=arguments-differ
-  def Open(self, redis_client=None, **unused_kwargs):
+  def Open(
+      self, redis_client=None, session_identifier=None, task_identifier=None,
+      **unused_kwargs):
     """Opens the storage writer.
+
+    Args:
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
+          new client will be created. If no client is specified a new client
+          will be opened connected to the Redis instance specified by 'url'.
+      session_identifier (Optional[str]): session identifier.
+      task_identifier (Optional[str]): task identifier.
 
     Raises:
       IOError: if the storage writer is already opened.
@@ -74,10 +63,7 @@ class RedisStorageWriter(writer.StorageWriter):
     if self._store:
       raise IOError('Storage writer already opened.')
 
-    self._store = redis_store.RedisStore(
-        storage_type=self._storage_type,
-        session_identifier=self._task.session_identifier,
-        task_identifier=self._task.identifier)
+    self._store = redis_store.RedisStore(storage_type=self._storage_type)
 
     if self._serializers_profiler:
       self._store.SetSerializersProfiler(self._serializers_profiler)
@@ -85,7 +71,9 @@ class RedisStorageWriter(writer.StorageWriter):
     if self._storage_profiler:
       self._store.SetStorageProfiler(self._storage_profiler)
 
-    self._store.Open(redis_client=redis_client)
+    self._store.Open(
+        redis_client=redis_client, session_identifier=session_identifier,
+        task_identifier=task_identifier)
 
   def ReadSystemConfiguration(self, knowledge_base):
     """Reads system configuration information.

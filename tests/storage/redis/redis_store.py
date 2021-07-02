@@ -57,7 +57,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
     test_event_tags = self._CreateTestEventTags(test_events)
     test_event_tag = test_event_tags[0]
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
     redis_client = self._GetRedisClient()
     test_store.Open(redis_client=redis_client)
 
@@ -84,7 +85,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
     """Tests the _WriteNewAttributeContainer method."""
     event_data = events.EventData()
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
     redis_client = self._GetRedisClient()
     test_store.Open(redis_client=redis_client)
 
@@ -108,7 +110,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testGetAttributeContainers(self):
     """Tests the GetAttributeContainers method."""
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
     redis_client = self._GetRedisClient()
     test_store.Open(redis_client=redis_client)
 
@@ -126,7 +129,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testGetSerializedAttributeContainers(self):
     """Tests the GetSerializedAttributeContainers method."""
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
     redis_client = self._GetRedisClient()
     test_store.Open(redis_client=redis_client)
 
@@ -145,7 +149,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents method."""
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
     redis_client = self._GetRedisClient()
     test_store.Open(redis_client=redis_client)
 
@@ -176,8 +181,10 @@ class RedisStoreTest(test_lib.StorageTestCase):
     # Opening and closing a writer for a task should cause the task to be marked
     # as complete.
     storage_writer = writer.RedisStorageWriter(
-        storage_type=definitions.STORAGE_TYPE_TASK, task=task)
-    storage_writer.Open(redis_client=redis_client)
+        storage_type=definitions.STORAGE_TYPE_TASK)
+    storage_writer.Open(
+        redis_client=redis_client, session_identifier=task.session_identifier,
+        task_identifier=task.identifier)
     storage_writer.Close()
 
     redis_store.RedisStore.MarkTaskAsMerging(
@@ -189,7 +196,8 @@ class RedisStoreTest(test_lib.StorageTestCase):
     """Tests the RemoveAttributeContainer method."""
     event_data = events.EventData()
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
     redis_client = self._GetRedisClient()
     test_store.Open(redis_client=redis_client)
 
@@ -225,8 +233,10 @@ class RedisStoreTest(test_lib.StorageTestCase):
     # Opening and closing a writer for a task should cause the task to be marked
     # as complete.
     storage_writer = writer.RedisStorageWriter(
-        storage_type=definitions.STORAGE_TYPE_TASK, task=task)
-    storage_writer.Open(redis_client=redis_client)
+        storage_type=definitions.STORAGE_TYPE_TASK)
+    storage_writer.Open(
+        redis_client=redis_client, session_identifier=task.session_identifier,
+        task_identifier=task.identifier)
     storage_writer.Close()
 
     # The task store is now marked as processed.

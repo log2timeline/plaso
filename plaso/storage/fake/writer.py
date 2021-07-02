@@ -19,15 +19,13 @@ class FakeStorageWriter(writer.StorageWriter):
     task_start (TaskStart): task start attribute container.
   """
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a storage writer object.
 
     Args:
       storage_type (Optional[str]): storage type.
-      task(Optional[Task]): task.
     """
-    super(FakeStorageWriter, self).__init__(
-        storage_type=storage_type, task=task)
+    super(FakeStorageWriter, self).__init__(storage_type=storage_type)
     self.session_completion = None
     self.session_configuration = None
     self.session_start = None
@@ -158,11 +156,11 @@ class FakeStorageWriter(writer.StorageWriter):
     self.session_start = session.CreateSessionStart()
 
   # TODO: refactor into base writer.
-  def WriteTaskCompletion(self, aborted=False):
+  def WriteTaskCompletion(self, task):
     """Writes task completion information.
 
     Args:
-      aborted (Optional[bool]): True if the task was aborted.
+      task (Task): task.
 
     Raises:
       IOError: if the storage type does not support writing a task
@@ -175,12 +173,14 @@ class FakeStorageWriter(writer.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError('Task completion not supported by storage type.')
 
-    self._task.aborted = aborted
-    self.task_completion = self._task.CreateTaskCompletion()
+    self.task_completion = task.CreateTaskCompletion()
 
   # TODO: refactor into base writer.
-  def WriteTaskStart(self):
+  def WriteTaskStart(self, task):
     """Writes task start information.
+
+    Args:
+      task (Task): task.
 
     Raises:
       IOError: if the storage type does not support writing a task
@@ -193,4 +193,4 @@ class FakeStorageWriter(writer.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError('Task start not supported by storage type.')
 
-    self.task_start = self._task.CreateTaskStart()
+    self.task_start = task.CreateTaskStart()

@@ -299,10 +299,12 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     if self._tasks_profiler:
       self._tasks_profiler.Sample(task, 'processing_started')
 
+    task.storage_format = self._processing_configuration.task_storage_format
+
     self._task = task
 
-    task_storage_writer = self._CreateTaskStorageWriter(
-        self._processing_configuration.task_storage_format, task)
+    task_storage_writer = self._storage_factory.CreateTaskStorageWriter(
+        self._processing_configuration.task_storage_format)
 
     if self._serializers_profiler:
       task_storage_writer.SetSerializersProfiler(self._serializers_profiler)
@@ -312,10 +314,14 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     self._parser_mediator.SetStorageWriter(task_storage_writer)
 
-    task_storage_writer.Open()
+    storage_file_path = self._GetTaskStorageFilePath(
+        self._processing_configuration.task_storage_format, task)
+    task_storage_writer.Open(
+        path=storage_file_path, session_identifier=task.session_identifier,
+        task_identifier=task.identifier)
 
     try:
-      task_storage_writer.WriteTaskStart()
+      task_storage_writer.WriteTaskStart(task)
 
       # TODO: add support for more task types.
       self._ProcessPathSpec(
@@ -323,7 +329,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
       self._number_of_consumed_sources += 1
 
     finally:
-      task_storage_writer.WriteTaskCompletion(aborted=self._abort)
+      task.aborted = self._abort
+      task_storage_writer.WriteTaskCompletion(task)
 
       task_storage_writer.Close()
 

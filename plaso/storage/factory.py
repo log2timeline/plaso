@@ -62,19 +62,18 @@ class StorageFactory(object):
     return None
 
   @classmethod
-  def CreateStorageWriter(cls, storage_format, path):
+  def CreateStorageWriter(cls, storage_format):
     """Creates a storage writer.
 
     Args:
       storage_format (str): storage format.
-      path (str): path to the storage file.
 
     Returns:
       StorageWriter: a storage writer or None if the storage file cannot be
           opened or the storage format is not supported.
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      return sqlite_writer.SQLiteStorageFileWriter(path)
+      return sqlite_writer.SQLiteStorageFileWriter()
 
     if storage_format == definitions.STORAGE_FORMAT_REDIS:
       return redis_writer.RedisStorageWriter()
@@ -93,7 +92,7 @@ class StorageFactory(object):
           opened or the storage format is not supported.
     """
     if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return sqlite_writer.SQLiteStorageFileWriter(path)
+      return sqlite_writer.SQLiteStorageFileWriter()
 
     return None
 
@@ -119,13 +118,11 @@ class StorageFactory(object):
     return None
 
   @classmethod
-  def CreateTaskStorageWriter(cls, storage_format, task, path):
+  def CreateTaskStorageWriter(cls, storage_format):
     """Creates a task storage writer.
 
     Args:
       storage_format (str): storage format.
-      task (Task): task the storage changes are part of.
-      path (str): path to the storage file.
 
     Returns:
       StorageWriter: a storage writer or None if the storage file cannot be
@@ -133,10 +130,10 @@ class StorageFactory(object):
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
       return sqlite_writer.SQLiteStorageFileWriter(
-          path, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+          storage_type=definitions.STORAGE_TYPE_TASK)
 
     if storage_format == definitions.STORAGE_FORMAT_REDIS:
       return redis_writer.RedisStorageWriter(
-          storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+          storage_type=definitions.STORAGE_TYPE_TASK)
 
     return None

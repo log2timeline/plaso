@@ -75,7 +75,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       self._ReadSessionConfiguration(temp_file, knowledge_base_object)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-          definitions.DEFAULT_STORAGE_FORMAT, temp_file)
+          definitions.DEFAULT_STORAGE_FORMAT)
 
       test_engine._processing_configuration = configuration
       test_engine._session = session
@@ -85,7 +85,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
       test_engine._StartAnalysisProcesses(analysis_plugins)
 
-      storage_writer.Open()
+      storage_writer.Open(path=temp_file)
 
       try:
         events_counter = test_engine._AnalyzeEvents(
@@ -132,9 +132,9 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-          definitions.DEFAULT_STORAGE_FORMAT, temp_file)
+          definitions.DEFAULT_STORAGE_FORMAT)
 
-      storage_writer.Open()
+      storage_writer.Open(path=temp_file)
 
       try:
         test_engine.AnalyzeEvents(
@@ -174,9 +174,9 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       shutil.copyfile(test_file_path, temp_file)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
-          definitions.DEFAULT_STORAGE_FORMAT, temp_file)
+          definitions.DEFAULT_STORAGE_FORMAT)
 
-      storage_writer.Open()
+      storage_writer.Open(path=temp_file)
 
       try:
         test_engine.AnalyzeEvents(
