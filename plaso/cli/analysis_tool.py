@@ -73,7 +73,7 @@ class AnalysisTool(
         worker_memory_limit=self._worker_memory_limit,
         worker_timeout=self._worker_timeout)
 
-    storage_writer.Open()
+    storage_writer.Open(path=self._storage_file_path)
 
     try:
       analysis_engine.AnalyzeEvents(

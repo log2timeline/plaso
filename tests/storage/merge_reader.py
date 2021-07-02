@@ -6,7 +6,6 @@ import os
 import unittest
 
 from plaso.containers import sessions
-from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage import merge_reader
 from plaso.storage.sqlite import reader as sqlite_reader
@@ -30,20 +29,17 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
        'values': 'Value: c:/Temp/evil.exe'}]
 
-  def _CreateTaskStorageFile(self, session, path, event_values_list):
+  def _CreateTaskStorageFile(self, path, event_values_list):
     """Creates a task storage file for testing.
 
     Args:
-      session (Session): session the task storage is part of.
       path (str): path to the task storage file that should be merged.
       event_values_list (list[dict[str, str]]): list of event values.
     """
-    task = tasks.Task(session_identifier=session.identifier)
-
     storage_writer = sqlite_writer.SQLiteStorageFileWriter(
-        path, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+        storage_type=definitions.STORAGE_TYPE_TASK)
 
-    storage_writer.Open()
+    storage_writer.Open(path=path)
 
     for event, event_data, event_data_stream in (
         containers_test_lib.CreateEventsFromValues(event_values_list)):
@@ -63,7 +59,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       task_storage_path = os.path.join(temp_directory, 'task.sqlite')
-      self._CreateTaskStorageFile(session, task_storage_path, self._TEST_EVENTS)
+      self._CreateTaskStorageFile(task_storage_path, self._TEST_EVENTS)
 
       session_storage_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_writer = sqlite_writer.SQLiteStorageFileWriter(
@@ -75,7 +71,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
       test_reader = merge_reader.StorageMergeReader(
           session, storage_writer, task_storage_reader)
 
-      storage_writer.Open()
+      storage_writer.Open(path=task_storage_path)
 
       result = test_reader.MergeAttributeContainers()
       self.assertTrue(result)
@@ -89,8 +85,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       task_storage_path = os.path.join(temp_directory, 'task.sqlite')
       self._CreateTaskStorageFile(
-          session, task_storage_path,
-          self._TEST_EVENTS_WITH_DESERIALIZATION_ERROR)
+          task_storage_path, self._TEST_EVENTS_WITH_DESERIALIZATION_ERROR)
 
       session_storage_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_writer = sqlite_writer.SQLiteStorageFileWriter(
@@ -102,7 +97,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
       test_reader = merge_reader.StorageMergeReader(
           session, storage_writer, task_storage_reader)
 
-      storage_writer.Open()
+      storage_writer.Open(path=task_storage_path)
 
       result = test_reader.MergeAttributeContainers()
       self.assertTrue(result)

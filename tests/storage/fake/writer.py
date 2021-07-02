@@ -116,28 +116,28 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     task = tasks.Task(session_identifier=session.identifier)
 
     storage_writer = fake_writer.FakeStorageWriter(
-        storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+        storage_type=definitions.STORAGE_TYPE_TASK)
     storage_writer.Open()
 
-    storage_writer.WriteTaskStart()
-    storage_writer.WriteTaskCompletion()
+    storage_writer.WriteTaskStart(task)
+    storage_writer.WriteTaskCompletion(task)
 
     storage_writer.Close()
 
     with self.assertRaises(IOError):
-      storage_writer.WriteTaskStart()
+      storage_writer.WriteTaskStart(task)
 
     with self.assertRaises(IOError):
-      storage_writer.WriteTaskCompletion()
+      storage_writer.WriteTaskCompletion(task)
 
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     with self.assertRaises(IOError):
-      storage_writer.WriteTaskStart()
+      storage_writer.WriteTaskStart(task)
 
     with self.assertRaises(IOError):
-      storage_writer.WriteTaskCompletion()
+      storage_writer.WriteTaskCompletion(task)
 
     storage_writer.Close()
 

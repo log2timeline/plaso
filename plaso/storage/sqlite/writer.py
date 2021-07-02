@@ -9,19 +9,6 @@ from plaso.storage.sqlite import sqlite_file
 class SQLiteStorageFileWriter(writer.StorageWriter):
   """SQLite-based storage file writer."""
 
-  def __init__(
-      self, path, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
-    """Initializes a storage writer.
-
-    Args:
-      path (str): path to the output file.
-      storage_type (Optional[str]): storage type.
-      task(Optional[Task]): task.
-    """
-    super(SQLiteStorageFileWriter, self).__init__(
-        storage_type=storage_type, task=task)
-    self._path = path
-
   # TODO: remove after refactoring.
   def AddEventTag(self, event_tag):
     """Adds an event tag.
@@ -82,8 +69,12 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
       self._written_event_source_index += 1
     return event_source
 
-  def Open(self, **unused_kwargs):
+  # pylint: disable=arguments-differ
+  def Open(self, path=None, **unused_kwargs):
     """Opens the storage writer.
+
+    Args:
+      path (Optional[str]): path to the output file.
 
     Raises:
       IOError: if the storage writer is already opened.
@@ -100,7 +91,7 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     if self._storage_profiler:
       self._store.SetStorageProfiler(self._storage_profiler)
 
-    self._store.Open(path=self._path, read_only=False)
+    self._store.Open(path=path, read_only=False)
 
     number_of_event_sources = self._store.GetNumberOfAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)

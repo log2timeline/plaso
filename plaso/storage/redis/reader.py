@@ -17,13 +17,15 @@ class RedisStorageReader(interface.StorageReader):
     """
     super(RedisStorageReader, self).__init__()
     self._store = redis_store.RedisStore(
-        storage_type=definitions.STORAGE_TYPE_TASK,
+        storage_type=definitions.STORAGE_TYPE_TASK)
+    self._store.Open(
         session_identifier=task.session_identifier,
         task_identifier=task.identifier)
 
   def Close(self):
     """Closes the storage reader."""
     self._store.Close()
+    self._store = None
 
   def GetAttributeContainerByIdentifier(self, container_type, identifier):
     """Retrieves a specific type of container with a specific identifier.
@@ -101,10 +103,6 @@ class RedisStorageReader(interface.StorageReader):
           containers.
     """
     return self._store.HasAttributeContainers(container_type)
-
-  def Open(self):
-    """Opens the storage reader."""
-    self._store.Open()
 
   # pylint: disable=unused-argument
   def ReadSystemConfiguration(self, knowledge_base):
