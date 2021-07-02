@@ -341,9 +341,11 @@ class MultiProcessEngine(engine.BaseEngine):
         name='Status update', target=self._StatusUpdateThreadMain)
     self._status_update_thread.start()
 
-  @abc.abstractmethod
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
+    while self._status_update_active:
+      self._UpdateStatus()
+      time.sleep(self._STATUS_UPDATE_INTERVAL)
 
   def _StopMonitoringProcess(self, process):
     """Stops monitoring a process.
@@ -440,3 +442,7 @@ class MultiProcessEngine(engine.BaseEngine):
     Raises:
       KeyError: if the process is not registered with the engine.
     """
+
+  @abc.abstractmethod
+  def _UpdateStatus(self):
+    """Updates the status."""
