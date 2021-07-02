@@ -65,7 +65,7 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       return '0000-00-00'
 
     date_time = event.date_time
-    if not date_time:
+    if not date_time or date_time.is_local_time:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=event.timestamp)
 

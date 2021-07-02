@@ -413,9 +413,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       with open(options.write, 'rt', encoding='utf-8') as file_object:
         result_output = file_object.read()
 
-      expected_output = sorted(expected_output.split('\n'))
       result_output = sorted(result_output.split('\n'))
-      self.assertEqual(expected_output, result_output)
+      expected_output = sorted(expected_output.split('\n'))
+      self.assertEqual(result_output, expected_output)
 
     output = output_writer.ReadOutput()
     self.assertIn('Processing completed.', output)

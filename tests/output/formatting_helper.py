@@ -40,7 +40,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
   def testFormatDateTime(self):
     """Tests the _FormatDateTime function with dynamic time."""
-    output_mediator = self._CreateOutputMediator()
+    output_mediator = self._CreateOutputMediator(dynamic_time=True)
     test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
 
     event, event_data, event_data_stream = (
@@ -69,15 +69,31 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(date_time_string, 'Invalid')
 
+    # Test with event.is_local_time
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    event.timestamp -= 120 * 60 * 1000000
+    event.date_time.is_local_time = True
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T16:17:01.000000+00:00')
+
+    output_mediator.SetTimezone('Europe/Amsterdam')
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+02:00')
+
   def testFormatDateTimeWithoutDynamicTime(self):
     """Tests the _FormatDateTime function without dynamic time."""
     output_mediator = self._CreateOutputMediator(dynamic_time=False)
     test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
 
+    # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    # Test with event.date_time
     date_time_string = test_helper._FormatDateTime(
         event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
@@ -89,14 +105,41 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     self.assertEqual(date_time_string, '2012-06-27T20:17:01.000000+02:00')
 
     output_mediator.SetTimezone('UTC')
+    event.date_time._time_zone_offset = -120
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T16:17:01.000000+00:00')
+
     event.date_time = dfdatetime_semantic_time.InvalidTime()
 
     date_time_string = test_helper._FormatDateTime(
         event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '0000-00-00T00:00:00.000000+00:00')
 
+    # Test with event.is_local_time
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    event.timestamp -= 120 * 60 * 1000000
+    event.date_time.is_local_time = True
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T16:17:01.000000+00:00')
+
+    output_mediator.SetTimezone('Europe/Amsterdam')
+
+    date_time_string = test_helper._FormatDateTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+02:00')
+
+    output_mediator.SetTimezone('UTC')
+
     # Test with event.timestamp
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     event.date_time = None
+
     date_time_string = test_helper._FormatDateTime(
         event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
@@ -253,10 +296,10 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
 
+    # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    # Test with event.date_time
     time_string = test_helper._FormatTime(
         event, event_data, event_data_stream)
     self.assertEqual(time_string, '18:17:01')
@@ -274,8 +317,29 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream)
     self.assertEqual(time_string, '16:17:01')
 
+    # Test with event.is_local_time
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    event.timestamp -= 120 * 60 * 1000000
+    event.date_time.is_local_time = True
+
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '16:17:01')
+
+    output_mediator.SetTimezone('Europe/Amsterdam')
+
+    time_string = test_helper._FormatTime(
+        event, event_data, event_data_stream)
+    self.assertEqual(time_string, '18:17:01')
+
+    output_mediator.SetTimezone('UTC')
+
     # Test with event.timestamp
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     event.date_time = None
+
     time_string = test_helper._FormatTime(
         event, event_data, event_data_stream)
     self.assertEqual(time_string, '18:17:01')
@@ -295,6 +359,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
 
+    # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
@@ -314,6 +379,22 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     zone_string = test_helper._FormatTimeZone(
         event, event_data, event_data_stream)
     self.assertEqual(zone_string, '+02:00')
+
+    # Test with event.is_local_time
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    event.timestamp -= 120 * 60 * 1000000
+    event.date_time.is_local_time = True
+
+    zone_string = test_helper._FormatTimeZone(
+        event, event_data, event_data_stream)
+    self.assertEqual(zone_string, 'UTC')
+
+    output_mediator.SetTimezone('Europe/Amsterdam')
+
+    zone_string = test_helper._FormatTimeZone(
+        event, event_data, event_data_stream)
+    self.assertEqual(zone_string, 'CEST')
 
   def testFormatUsername(self):
     """Tests the _FormatUsername function."""
