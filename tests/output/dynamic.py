@@ -26,6 +26,14 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
        'timestamp': '2012-06-27 18:17:01',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+      {'data_type': 'test:event',
+       'filename': 'log/syslog.1',
+       'hostname': 'ubuntu',
+       'text': (
+           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+           'closed for user root)'),
+       'timestamp': '2012-06-28 00:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
 
   def testFormatDate(self):
@@ -48,11 +56,14 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     self.assertEqual(date_string, '2012-06-28')
 
     output_mediator.SetTimezone('UTC')
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1]))
     event.date_time._time_zone_offset = 600
 
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
-    self.assertEqual(date_string, '2012-06-28')
+    self.assertEqual(date_string, '2012-06-27')
 
     # Test with event.is_local_time
     event, event_data, event_data_stream = (
@@ -63,14 +74,6 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-28')
-
-    output_mediator.SetTimezone('America/Los_Angeles')
-
-    date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
-    self.assertEqual(date_string, '2012-06-27')
-
-    output_mediator.SetTimezone('UTC')
 
     # Test with event.timestamp
     event, event_data, event_data_stream = (

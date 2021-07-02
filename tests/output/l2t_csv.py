@@ -34,6 +34,20 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
        'timestamp': '2012-06-27 18:17:01',
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
+      {'a_binary_field': b'binary',
+       'data_type': 'test:event',
+       'filename': 'log/syslog.1',
+       'hostname': 'ubuntu',
+       'my_number': 123,
+       'path_spec': fake_path_spec.FakePathSpec(
+           location='log/syslog.1'),
+       'parser': 'test_parser',
+       'some_additional_foo': True,
+       'text': (
+           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+           'closed for user root)'),
+       'timestamp': '2012-06-28 00:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
   def testFormatDate(self):
@@ -56,11 +70,14 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     self.assertEqual(date_string, '06/28/2012')
 
     output_mediator.SetTimezone('UTC')
-    event.date_time._time_zone_offset = +600
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    event.date_time._time_zone_offset = 600
 
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
-    self.assertEqual(date_string, '06/28/2012')
+    self.assertEqual(date_string, '06/27/2012')
 
     # Test with event.is_local_time
     event, event_data, event_data_stream = (
@@ -71,14 +88,6 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     date_string = formatting_helper._FormatDate(
         event, event_data, event_data_stream)
     self.assertEqual(date_string, '06/28/2012')
-
-    output_mediator.SetTimezone('America/Los_Angeles')
-
-    date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
-    self.assertEqual(date_string, '06/27/2012')
-
-    output_mediator.SetTimezone('UTC')
 
     # Test with event.timestamp
     event, event_data, event_data_stream = (
