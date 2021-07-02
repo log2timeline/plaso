@@ -178,7 +178,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           event_queue.Close()
 
           storage_merge_reader = self._StartMergeTaskStorage(
-              storage_writer, definitions.STORAGE_FORMAT_SQLITE, task)
+              self._session, storage_writer, definitions.STORAGE_FORMAT_SQLITE,
+              task)
 
           storage_merge_reader.MergeAttributeContainers()
           # TODO: temporary solution.
@@ -350,12 +351,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._RegisterProcess(process)
     return process
-
-  def _StatusUpdateThreadMain(self):
-    """Main function of the status update thread."""
-    while self._status_update_active:
-      self._UpdateStatus()
-      time.sleep(self._STATUS_UPDATE_INTERVAL)
 
   def _StopAnalysisProcesses(self, abort=False):
     """Stops the analysis processes.
@@ -612,9 +607,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           exception))
 
     if self._abort:
-      logger.debug('Processing aborted.')
+      logger.debug('Analysis aborted.')
     else:
-      logger.debug('Processing completed.')
+      logger.debug('Analysis completed.')
+
+    # Update the status view one last time.
+    self._UpdateStatus()
 
     # Reset values.
     self._analysis_plugins = {}

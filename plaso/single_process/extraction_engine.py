@@ -339,6 +339,9 @@ class SingleProcessEngine(engine.BaseEngine):
     else:
       logger.debug('Processing completed.')
 
+    # Update the status view one last time.
+    self._UpdateStatus()
+
     self._extraction_worker = None
     self._file_system_cache = []
     self._processing_configuration = None

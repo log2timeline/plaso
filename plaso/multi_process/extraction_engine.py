@@ -314,7 +314,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._merge_task = task
         try:
           self._storage_merge_reader = self._StartMergeTaskStorage(
-              self._storage_writer, self._task_storage_format, task)
+              self._session, self._storage_writer, self._task_storage_format,
+              task)
 
           self._task_manager.SampleTaskStatus(task, 'merge_started')
 
@@ -634,27 +635,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     return process
 
-  def _StatusUpdateThreadMain(self):
-    """Main function of the status update thread."""
-    while self._status_update_active:
-      # Make a local copy of the PIDs in case the dict is changed by
-      # the main thread.
-      for pid in list(self._process_information_per_pid.keys()):
-        self._CheckStatusWorkerProcess(pid)
-
-      self._UpdateForemanProcessStatus()
-
-      tasks_status = self._task_manager.GetStatusInformation()
-      if self._task_queue_profiler:
-        self._task_queue_profiler.Sample(tasks_status)
-
-      self._processing_status.UpdateTasksStatus(tasks_status)
-
-      if self._status_update_callback:
-        self._status_update_callback(self._processing_status)
-
-      time.sleep(self._STATUS_UPDATE_INTERVAL)
-
   def _StopExtractionProcesses(self, abort=False):
     """Stops the extraction processes.
 
@@ -796,6 +776,24 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           'Worker {0:s} is processing unknown task: {1:s}.'.format(
               process.name, task_identifier))
 
+  def _UpdateStatus(self):
+    """Updates the status."""
+    # Make a local copy of the PIDs in case the dict is changed by
+    # the main thread.
+    for pid in list(self._process_information_per_pid.keys()):
+      self._CheckStatusWorkerProcess(pid)
+
+    self._UpdateForemanProcessStatus()
+
+    tasks_status = self._task_manager.GetStatusInformation()
+    if self._task_queue_profiler:
+      self._task_queue_profiler.Sample(tasks_status)
+
+    self._processing_status.UpdateTasksStatus(tasks_status)
+
+    if self._status_update_callback:
+      self._status_update_callback(self._processing_status)
+
   def ProcessSources(
       self, session, source_path_specs, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
@@ -913,6 +911,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._processing_status.aborted = True
     else:
       logger.debug('Processing completed.')
+
+    # Update the status view one last time.
+    self._UpdateStatus()
 
     # Reset values.
     self._enable_sigsegv_handler = None

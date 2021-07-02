@@ -3,7 +3,6 @@
 
 import collections
 import heapq
-import time
 
 from plaso.containers import events
 from plaso.engine import processing_status
@@ -419,12 +418,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     if macb_group:
       output_module.WriteEventMACBGroup(macb_group)
-
-  def _StatusUpdateThreadMain(self):
-    """Main function of the status update thread."""
-    while self._status_update_active:
-      self._UpdateStatus()
-      time.sleep(self._STATUS_UPDATE_INTERVAL)
 
   def _UpdateForemanProcessStatus(self):
     """Update the foreman process status."""

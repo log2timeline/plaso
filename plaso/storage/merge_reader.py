@@ -45,10 +45,11 @@ class StorageMergeReader(object):
       _CONTAINER_TYPE_ANALYSIS_REPORT,
       _CONTAINER_TYPE_ANALYSIS_WARNING)
 
-  def __init__(self, storage_writer, task_storage_reader):
+  def __init__(self, session, storage_writer, task_storage_reader):
     """Initializes a storage merge reader.
 
     Args:
+      session (Session): session the task is part of.
       storage_writer (StorageWriter): storage writer.
       task_storage_reader (StorageReader): task storage reader.
     """
@@ -57,7 +58,9 @@ class StorageMergeReader(object):
     self._active_generator = None
     self._container_types = []
     self._event_data_identifier_mappings = {}
+    self._event_data_parser_mappings = {}
     self._event_data_stream_identifier_mappings = {}
+    self._session = session
     self._storage_writer = storage_writer
     self._task_storage_reader = task_storage_reader
 
@@ -76,10 +79,10 @@ class StorageMergeReader(object):
     """
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       event_data_identifier = container.GetEventDataIdentifier()
-      lookup_key = event_data_identifier.CopyToString()
+      event_data_lookup_key = event_data_identifier.CopyToString()
 
       event_data_identifier = self._event_data_identifier_mappings.get(
-          lookup_key, None)
+          event_data_lookup_key, None)
 
       if event_data_identifier:
         container.SetEventDataIdentifier(event_data_identifier)
@@ -92,21 +95,23 @@ class StorageMergeReader(object):
         logger.error((
             'Unable to merge event attribute container: {0:s} since '
             'corresponding event data: {1:s} could not be found.').format(
-                identifier, lookup_key))
+                identifier, event_data_lookup_key))
         return
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       event_data_stream_identifier = container.GetEventDataStreamIdentifier()
-      lookup_key = None
+      event_data_stream_lookup_key = None
       if event_data_stream_identifier:
-        lookup_key = event_data_stream_identifier.CopyToString()
+        event_data_stream_lookup_key = (
+            event_data_stream_identifier.CopyToString())
 
         event_data_stream_identifier = (
-            self._event_data_stream_identifier_mappings.get(lookup_key, None))
+            self._event_data_stream_identifier_mappings.get(
+                event_data_stream_lookup_key, None))
 
       if event_data_stream_identifier:
         container.SetEventDataStreamIdentifier(event_data_stream_identifier)
-      elif lookup_key:
+      elif event_data_stream_lookup_key:
         identifier = container.GetIdentifier()
         identifier = identifier.CopyToString()
 
@@ -115,7 +120,7 @@ class StorageMergeReader(object):
         logger.error((
             'Unable to merge event data attribute container: {0:s} since '
             'corresponding event data stream: {1:s} could not be '
-            'found.').format(identifier, lookup_key))
+            'found.').format(identifier, event_data_stream_lookup_key))
         return
 
     if container.CONTAINER_TYPE in (
@@ -126,9 +131,18 @@ class StorageMergeReader(object):
 
     self._storage_writer.AddAttributeContainer(container)
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      parser_name = self._event_data_parser_mappings.get(
+          event_data_lookup_key, 'N/A')
+      self._session.parsers_counter[parser_name] += 1
+      self._session.parsers_counter['total'] += 1
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       identifier = container.GetIdentifier()
       self._event_data_identifier_mappings[lookup_key] = identifier
+
+      parser_name = container.parser.split('/')[-1]
+      self._event_data_parser_mappings[lookup_key] = parser_name
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA_STREAM:
       identifier = container.GetIdentifier()

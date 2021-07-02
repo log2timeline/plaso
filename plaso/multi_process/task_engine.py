@@ -207,10 +207,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
             'Unable to remove processed task storage file: {0:s} with error: '
             '{1!s}').format(processed_storage_file_path, exception))
 
-  def _StartMergeTaskStorage(self, storage_writer, task_storage_format, task):
+  def _StartMergeTaskStorage(
+      self, session, storage_writer, task_storage_format, task):
     """Starts a merge of a task store with the session storage.
 
     Args:
+      session (Session): session the task is part of.
       storage_writer (StorageWriter): storage writer for a session storage.
       task_storage_format (str): storage format used to store task results.
       task (Task): task the storage changes are part of.
@@ -240,7 +242,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
             task_storage_format, task, path))
     task_storage_reader.SetStorageProfiler(self._storage_profiler)
 
-    return merge_reader.StorageMergeReader(storage_writer, task_storage_reader)
+    return merge_reader.StorageMergeReader(
+        session, storage_writer, task_storage_reader)
 
   def _StartTaskStorage(self, task_storage_format):
     """Starts the task storage.
