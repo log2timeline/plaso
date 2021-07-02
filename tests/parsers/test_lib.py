@@ -118,7 +118,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      timezone (Optional[str]): timezone.
+      timezone (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -147,7 +147,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      timezone (Optional[str]): timezone.
+      timezone (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.

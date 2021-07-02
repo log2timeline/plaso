@@ -79,7 +79,8 @@ class CronSyslogPlugin(interface.SyslogPlugin):
     event_data.username = tokens.get('username', None)
 
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
+        time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
