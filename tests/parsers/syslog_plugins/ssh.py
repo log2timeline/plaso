@@ -69,6 +69,37 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
+  def testParseWithTimeZone(self):
+    """Tests the Parse function with a time zone."""
+    knowledge_base_values = {'year': 2016}
+
+    storage_writer = self._ParseFileWithPlugin(
+        ['syslog_ssh.log'], 'ssh',
+        knowledge_base_values=knowledge_base_values, timezone='CET')
+
+    self.assertEqual(storage_writer.number_of_events, 9)
+    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
+    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    events = list(storage_writer.GetSortedEvents())
+
+    expected_body = (
+        'Accepted publickey for plaso from 192.168.0.1 port 59229 ssh2: '
+        'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
+
+    expected_fingerprint = (
+        'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
+
+    expected_event_values = {
+        'address': '192.168.0.1',
+        'body': expected_body,
+        'date_time': '2016-03-11 19:26:39',
+        'data_type': 'syslog:ssh:login',
+        'fingerprint': expected_fingerprint,
+        'timestamp': '2016-03-11 18:26:39.000000'}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()

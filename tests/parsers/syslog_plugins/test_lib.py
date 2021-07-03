@@ -12,13 +12,15 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for Syslog plugins."""
 
   def _ParseFileWithPlugin(
-      self, path_segments, plugin_name, knowledge_base_values=None):
+      self, path_segments, plugin_name, knowledge_base_values=None,
+      timezone='UTC'):
     """Parses a syslog file with a specific plugin.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       plugin_name (str): name of the plugin.
       knowledge_base_values (Optional[dict]): knowledge base values.
+      timezone (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -34,7 +36,8 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     file_entry = self._GetTestFileEntry(path_segments)
     parser_mediator = self._CreateParserMediator(
         session, storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values)
+        knowledge_base_values=knowledge_base_values,
+        timezone=timezone)
 
     parser = syslog.SyslogParser()
     parser.EnablePlugins([plugin_name])
