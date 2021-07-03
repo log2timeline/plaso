@@ -176,9 +176,13 @@ class PstealTool(
           'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
 
-    self._number_of_analysis_reports = (
-        storage_reader.GetNumberOfAnalysisReports())
-    storage_reader.Close()
+    try:
+      self._number_of_analysis_reports = (
+          storage_reader.GetNumberOfAttributeContainers(
+              self._CONTAINER_TYPE_ANALYSIS_REPORT))
+
+    finally:
+      storage_reader.Close()
 
     configuration = self._CreateProcessingConfiguration(
         self._knowledge_base)

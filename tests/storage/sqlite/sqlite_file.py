@@ -97,9 +97,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       with self.assertRaises(IOError):
         storage_file._CreateAttributeContainerTable(
@@ -129,9 +129,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testHasTable(self):
     """Tests the _HasTable function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       result = storage_file._HasTable(storage_file._CONTAINER_TYPE_EVENT_DATA)
       self.assertTrue(result)
@@ -160,9 +160,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       storage_file._WriteNewAttributeContainer(event_data)
 
@@ -173,9 +173,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       storage_file.AddAttributeContainer(event_data)
 
@@ -185,9 +185,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       test_events = []
       for event, event_data, event_data_stream in (
@@ -216,9 +216,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       containers = list(storage_file.GetAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA))
@@ -240,9 +240,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       storage_file.AddAttributeContainer(event_data)
       identifier = event_data.GetIdentifier()
@@ -264,9 +264,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       container = storage_file.GetAttributeContainerByIndex(
           storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
@@ -288,9 +288,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       number_of_containers = storage_file.GetNumberOfAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
@@ -321,9 +321,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       for event, event_data, event_data_stream in (
           containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
@@ -339,7 +339,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.Close()
 
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file)
+      storage_file.Open(path=test_path)
 
       test_events = list(storage_file.GetSortedEvents())
       self.assertEqual(len(test_events), 4)
@@ -353,9 +353,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_data = events.EventData()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       result = storage_file.HasAttributeContainers(
           storage_file._CONTAINER_TYPE_EVENT_DATA)
@@ -386,10 +386,10 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         identifier=session.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile(
           storage_type=definitions.STORAGE_TYPE_SESSION)
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       storage_file.WriteSessionStart(session_start)
       storage_file.WriteSessionConfiguration(session_configuration)
@@ -406,10 +406,10 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         session_identifier=session.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile(
           storage_type=definitions.STORAGE_TYPE_TASK)
-      storage_file.Open(path=temp_file, read_only=False)
+      storage_file.Open(path=test_path, read_only=False)
 
       storage_file.WriteTaskStart(task_start)
       storage_file.WriteTaskCompletion(task_completion)

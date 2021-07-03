@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The merge reader."""
+"""The storage merge reader."""
 
 from plaso.containers import event_sources
 from plaso.containers import events

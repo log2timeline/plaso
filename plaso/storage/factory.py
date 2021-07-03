@@ -113,7 +113,8 @@ class StorageFactory(object):
       return sqlite_reader.SQLiteStorageFileReader(path)
 
     if storage_format == definitions.STORAGE_FORMAT_REDIS:
-      return redis_reader.RedisStorageReader(task)
+      return redis_reader.RedisStorageReader(
+          task.session_identifier, task.identifier)
 
     return None
 

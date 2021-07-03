@@ -10,17 +10,17 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
   """Fake attribute container identifier intended for testing.
 
   Attributes:
-    attribute_values_hash (int): hash value of the attribute values.
+    identifier (int): sequence number of the attribute container.
   """
 
-  def __init__(self, attribute_values_hash):
+  def __init__(self, identifier):
     """Initializes a fake attribute container identifier.
 
     Args:
-      attribute_values_hash (int): hash value of the attribute values.
+      identifier (int): sequence number of the attribute container.
     """
     super(FakeIdentifier, self).__init__()
-    self.attribute_values_hash = attribute_values_hash
+    self.identifier = identifier
 
   def CopyToString(self):
     """Copies the identifier to a string representation.
@@ -28,10 +28,10 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
     Returns:
       str: unique identifier or None.
     """
-    if self.attribute_values_hash is None:
+    if self.identifier is None:
       return None
 
-    return '{0:d}'.format(self.attribute_values_hash)
+    return '{0:d}'.format(self.identifier)
 
 
 class RedisKeyIdentifier(containers_interface.AttributeContainerIdentifier):
