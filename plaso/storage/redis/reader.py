@@ -2,11 +2,11 @@
 """Redis reader."""
 
 from plaso.lib import definitions
+from plaso.storage import reader
 from plaso.storage.redis import redis_store
-from plaso.storage import interface
 
 
-class RedisStorageReader(interface.StorageReader):
+class RedisStorageReader(reader.StorageReader):
   """Redis storage file reader."""
 
   def __init__(self, task):
@@ -22,89 +22,6 @@ class RedisStorageReader(interface.StorageReader):
         session_identifier=task.session_identifier,
         task_identifier=task.identifier)
 
-  def Close(self):
-    """Closes the storage reader."""
-    self._store.Close()
-    self._store = None
-
-  def GetAttributeContainerByIdentifier(self, container_type, identifier):
-    """Retrieves a specific type of container with a specific identifier.
-
-    Args:
-      container_type (str): container type.
-      identifier (AttributeContainerIdentifier): attribute container identifier.
-
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-    """
-    return self._store.GetAttributeContainerByIdentifier(
-        container_type, identifier)
-
-  def GetAttributeContainers(self, container_type):
-    """Retrieves a specific type of attribute containers.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      generator(AttributeContainers): attribute container generator.
-    """
-    return self._store.GetAttributeContainers(container_type)
-
-  def GetNumberOfAnalysisReports(self):
-    """Retrieves the number analysis reports.
-
-    Returns:
-      int: number of analysis reports.
-    """
-    return self._store.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
-  def GetNumberOfEventSources(self):
-    """Retrieves the number of event sources.
-
-    Returns:
-      int: number of event sources.
-    """
-    return self._store.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_SOURCE)
-
-  def GetSortedEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    This includes all events written to the storage including those pending
-    being flushed (written) to the storage.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return self._store.GetSortedEvents(time_range)
-
-  def GetSessions(self):
-    """Retrieves the sessions.
-
-    Returns:
-      generator(Session): session generator.
-    """
-    return self._store.GetSessions()
-
-  def HasAttributeContainers(self, container_type):
-    """Determines if a store contains a specific type of attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      bool: True if the store contains the specified type of attribute
-          containers.
-    """
-    return self._store.HasAttributeContainers(container_type)
-
-  # pylint: disable=unused-argument
   def ReadSystemConfiguration(self, knowledge_base):
     """Reads system configuration information.
 
@@ -114,22 +31,11 @@ class RedisStorageReader(interface.StorageReader):
     Args:
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
+
+    Raises:
+      IOError: always, as the Redis store does not support preprocessing
+          information.
+      OSError: always, as the Redis store does not support preprocessing
+          information.
     """
-    # Not implemented by the Redis store, as it is a task store only.
-    return
-
-  def SetSerializersProfiler(self, serializers_profiler):
-    """Sets the serializers profiler.
-
-    Args:
-      serializers_profiler (SerializersProfiler): serializers profiler.
-    """
-    self._store.SetSerializersProfiler(serializers_profiler)
-
-  def SetStorageProfiler(self, storage_profiler):
-    """Sets the storage profiler.
-
-    Args:
-      storage_profiler (StorageProfiler): storage profile.
-    """
-    self._store.SetStorageProfiler(storage_profiler)
+    raise IOError('Preprocessing information not supported by the redis store.')
