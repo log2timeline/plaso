@@ -133,7 +133,7 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self._attribute_container_cache = collections.OrderedDict()
     self._connection = None
     self._cursor = None
-    self._use_schema = bool(storage_type == definitions.STORAGE_TYPE_SESSION)
+    self._use_schema = True
 
     self.compression_format = compression_format
     self.format_version = self._FORMAT_VERSION
@@ -459,7 +459,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     self.storage_type = metadata_values['storage_type']
 
     self._use_schema = bool(
-        self.storage_type == definitions.STORAGE_TYPE_SESSION and
         self.format_version >= self._WITH_SCHEMA_FORMAT_VERSION)
 
   def _UpdateAttributeContainerAfterDeserialize(self, container):
