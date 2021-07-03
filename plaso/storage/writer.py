@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The storage interface classes."""
+"""The storage writer."""
 
 import abc
 import collections

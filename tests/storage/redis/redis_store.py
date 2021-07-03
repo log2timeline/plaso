@@ -25,7 +25,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   _REDIS_URL = 'redis://127.0.0.1/0'
 
-  def _GetRedisClient(self):
+  def _CreateRedisClient(self):
     """Creates a Redis client for testing.
 
     This method will attempt to use a Redis server listening on localhost and
@@ -59,7 +59,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._GetRedisClient()
+    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     test_store.AddAttributeContainer(test_event_tag)
@@ -87,7 +87,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._GetRedisClient()
+    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     number_of_containers = test_store.GetNumberOfAttributeContainers(
@@ -112,7 +112,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     """Tests the GetAttributeContainers method."""
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._GetRedisClient()
+    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
@@ -131,7 +131,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     """Tests the GetSerializedAttributeContainers method."""
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._GetRedisClient()
+    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
@@ -151,7 +151,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     """Tests the GetSortedEvents method."""
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._GetRedisClient()
+    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     for event, _, _ in containers_test_lib.CreateEventsFromValues(
@@ -169,7 +169,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testMarkTaskAsMerging(self):
     """Tests the MarkTaskAsMerging method"""
-    redis_client = self._GetRedisClient()
+    redis_client = self._CreateRedisClient()
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
@@ -198,7 +198,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._GetRedisClient()
+    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     test_store.AddAttributeContainer(event_data)
@@ -221,7 +221,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testScanForProcessedTasks(self):
     """Tests the ScanForProcessedTasks method"""
-    redis_client = self._GetRedisClient()
+    redis_client = self._CreateRedisClient()
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 

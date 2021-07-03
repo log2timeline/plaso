@@ -17,6 +17,7 @@ from plaso.cli import status_view
 from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.containers import reports
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.lib import errors
@@ -44,6 +45,8 @@ class PsortTool(
   DESCRIPTION = (
       'Application to read, filter and process output from a plaso storage '
       'file.')
+
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -432,20 +435,24 @@ class PsortTool(
     if not storage_reader:
       raise RuntimeError('Unable to create storage reader.')
 
-    for session in storage_reader.GetSessions():
-      if not session.source_configurations:
-        storage_reader.ReadSystemConfiguration(self._knowledge_base)
-      else:
-        for source_configuration in session.source_configurations:
-          self._knowledge_base.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration,
-              session_identifier=session.identifier)
+    try:
+      for session in storage_reader.GetSessions():
+        if not session.source_configurations:
+          storage_reader.ReadSystemConfiguration(self._knowledge_base)
+        else:
+          for source_configuration in session.source_configurations:
+            self._knowledge_base.ReadSystemConfigurationArtifact(
+                source_configuration.system_configuration,
+                session_identifier=session.identifier)
 
-      self._knowledge_base.SetTextPrepend(session.text_prepend)
+        self._knowledge_base.SetTextPrepend(session.text_prepend)
 
-    self._number_of_analysis_reports = (
-        storage_reader.GetNumberOfAnalysisReports())
-    storage_reader.Close()
+      self._number_of_analysis_reports = (
+          storage_reader.GetNumberOfAttributeContainers(
+              self._CONTAINER_TYPE_ANALYSIS_REPORT))
+
+    finally:
+      storage_reader.Close()
 
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location

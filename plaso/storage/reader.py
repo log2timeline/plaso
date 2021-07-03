@@ -1,29 +1,9 @@
 # -*- coding: utf-8 -*-
-"""The storage interface classes."""
-
-from plaso.containers import event_sources
-from plaso.containers import events
-from plaso.containers import reports
-from plaso.containers import tasks
-from plaso.containers import warnings
+"""The storage reader."""
 
 
 class StorageReader(object):
   """Storage reader interface."""
-
-  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
-  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
-      warnings.PreprocessingWarning.CONTAINER_TYPE)
-  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
   def __init__(self):
     """Initializes a storage reader."""
@@ -68,23 +48,40 @@ class StorageReader(object):
     """
     return self._store.GetAttributeContainers(container_type)
 
-  def GetNumberOfAnalysisReports(self):
-    """Retrieves the number analysis reports.
+  def GetFormatVersion(self):
+    """Retrieves the format version of the underlying storage file.
 
     Returns:
-      int: number of analysis reports.
+      int: the format version.
     """
-    return self._store.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
+    return self._store.format_version
 
-  def GetNumberOfEventSources(self):
-    """Retrieves the number of event sources.
+  def GetNumberOfAttributeContainers(self, container_type):
+    """Retrieves the number of a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
 
     Returns:
-      int: number of event sources.
+      int: the number of containers of a specified type.
     """
-    return self._store.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_SOURCE)
+    return self._store.GetNumberOfAttributeContainers(container_type)
+
+  def GetSerializationFormat(self):
+    """Retrieves the serialization format of the underlying storage file.
+
+    Returns:
+      str: the serialization format.
+    """
+    return self._store.serialization_format
+
+  def GetStorageType(self):
+    """Retrieves the storage type of the underlying storage file.
+
+    Returns:
+      str: the storage type.
+    """
+    return self._store.storage_type
 
   def GetSessions(self):
     """Retrieves the sessions.
