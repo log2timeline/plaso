@@ -106,18 +106,16 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=event.timestamp)
 
+    # Note that GetDateWithTimeOfDay will return the date and time in UTC,
+    # so no adjustment for date_time.time_zone_offset is needed.
     year, month, day_of_month, hours, minutes, seconds = (
         date_time.GetDateWithTimeOfDay())
 
-    if self._output_mediator.timezone != pytz.UTC or date_time.time_zone_offset:
+    if self._output_mediator.timezone != pytz.UTC:
       try:
         datetime_object = datetime.datetime(
             year, month, day_of_month, hours, minutes, seconds,
             tzinfo=pytz.UTC)
-
-        if event.date_time.time_zone_offset:
-          datetime_object += datetime.timedelta(
-              minutes=event.date_time.time_zone_offset)
 
         datetime_object = datetime_object.astimezone(
             self._output_mediator.timezone)
