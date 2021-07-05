@@ -52,17 +52,32 @@ class RedisStore(interface.BaseStore):
 
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
 
-  def _GenerateRedisKey(self, key_suffix):
-    """Generates a Redis key inside the appropriate namespace.
+  def _GetRedisHashName(self, container_type):
+    """Retrieves the Redis hash name of the attribute container type.
 
     Args:
-      key_suffix (str): Redis key to be prefixed with the namespace value.
+      container_type (str): container type.
 
     Returns:
       str: a Redis key name.
     """
     return '{0:s}-{1:s}-{2:s}'.format(
-        self._session_identifier, self._task_identifier, key_suffix)
+        self._session_identifier, self._task_identifier, container_type)
+
+  # pylint: disable=redundant-returns-doc
+  def GetEventTagByEventIdentifier(self, event_identifier):
+    """Retrieves the event tag related to a specific event identifier.
+
+    Args:
+      event_identifier (AttributeContainerIdentifier): event.
+
+    Returns:
+      EventTag: event tag or None if not available.
+
+    Raises:
+      RuntimeError: since this method is not supported.
+    """
+    raise RuntimeError('Not supported')
 
   def _GetFinalizationKey(self):
     """Generates the finalized key for the store.
@@ -112,14 +127,30 @@ class RedisStore(interface.BaseStore):
           'Unable to set redis client name: {0:s} with error: {1!s}'.format(
               name, exception))
 
-  def _UpdateAttributeContainerBeforeSerialize(self, container):
-    """Updates an attribute container before serialization.
+  def _WriteExistingAttributeContainer(self, container):
+    """Writes an existing attribute container to the store.
 
     Args:
       container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: if an unsupported identifier is provided or if the attribute
+          container does not exist.
+      RuntimeError: since this method is not implemented.
+      OSError: if an unsupported identifier is provided or if the attribute
+          container does not exist.
     """
-    identifier = identifiers.RedisKeyIdentifier()
-    container.SetIdentifier(identifier)
+    identifier = container.GetIdentifier()
+    if not isinstance(identifier, identifiers.RedisKeyIdentifier):
+      raise IOError(
+          'Unsupported attribute container identifier type: {0!s}'.format(
+              type(identifier)))
+
+    redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
+    redis_key = identifier.CopyToString()
+
+    serialized_data = self._SerializeAttributeContainer(container)
+    self._redis_client.hset(redis_hash_name, redis_key, serialized_data)
 
   def _WriteNewAttributeContainer(self, container):
     """Writes a new attribute container to the store.
@@ -127,21 +158,22 @@ class RedisStore(interface.BaseStore):
     Args:
       container (AttributeContainer): attribute container.
     """
-    self._UpdateAttributeContainerBeforeSerialize(container)
+    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+        container.CONTAINER_TYPE)
 
-    container_key = self._GenerateRedisKey(container.CONTAINER_TYPE)
+    identifier = identifiers.RedisKeyIdentifier(
+        container.CONTAINER_TYPE, next_sequence_number)
+    container.SetIdentifier(identifier)
 
-    identifier = container.GetIdentifier()
-    string_identifier = identifier.CopyToString()
+    redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
+    redis_key = identifier.CopyToString()
 
     serialized_data = self._SerializeAttributeContainer(container)
-
-    self._redis_client.hset(container_key, string_identifier, serialized_data)
+    self._redis_client.hsetnx(redis_hash_name, redis_key, serialized_data)
 
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
-      self._redis_client.zincrby(
-          index_name, container.timestamp, string_identifier)
+      index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
+      self._redis_client.zincrby(index_name, container.timestamp, redis_key)
 
   def _WriteStorageMetadata(self):
     """Writes the storage metadata."""
@@ -149,7 +181,7 @@ class RedisStore(interface.BaseStore):
         'format_version': self._FORMAT_VERSION,
         'storage_type': definitions.STORAGE_TYPE_TASK,
         'serialization_format': self.serialization_format}
-    metadata_key = self._GenerateRedisKey('metadata')
+    metadata_key = self._GetRedisHashName('metadata')
 
     for key, value in metadata.items():
       self._redis_client.hset(metadata_key, key, value)
@@ -186,12 +218,10 @@ class RedisStore(interface.BaseStore):
       OSError: when the store is closed or if an unsupported identifier is
           provided.
     """
-    container_key = self._GenerateRedisKey(container_type)
-    string_identifier = identifier.CopyToString()
+    redis_hash_name = self._GetRedisHashName(container_type)
+    redis_key = identifier.CopyToString()
 
-    serialized_data = self._redis_client.hget(
-        container_key, string_identifier)
-
+    serialized_data = self._redis_client.hget(redis_hash_name, redis_key)
     if not serialized_data:
       return None
 
@@ -227,15 +257,20 @@ class RedisStore(interface.BaseStore):
     Yields:
       AttributeContainer: attribute container.
     """
-    container_key = self._GenerateRedisKey(container_type)
-    for identifier, serialized_data in self._redis_client.hscan_iter(
-        container_key):
+    redis_hash_name = self._GetRedisHashName(container_type)
+    for redis_key, serialized_data in self._redis_client.hscan_iter(
+        redis_hash_name):
+      redis_key = redis_key.decode('utf-8')
+
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
 
-      identifier_string = identifier.decode('utf-8')
-      redis_identifier = identifiers.RedisKeyIdentifier(identifier_string)
-      attribute_container.SetIdentifier(redis_identifier)
+      _, sequence_number = redis_key.split('.')
+      sequence_number = int(sequence_number, 10)
+      identifier = identifiers.RedisKeyIdentifier(
+          container_type, sequence_number)
+      attribute_container.SetIdentifier(identifier)
+
       yield attribute_container
 
   def GetNumberOfAttributeContainers(self, container_type):
@@ -247,8 +282,8 @@ class RedisStore(interface.BaseStore):
     Returns:
       int: the number of containers of a specified type.
     """
-    container_key = self._GenerateRedisKey(container_type)
-    return self._redis_client.hlen(container_key)
+    redis_hash_name = self._GetRedisHashName(container_type)
+    return self._redis_client.hlen(redis_hash_name)
 
   def GetSerializedAttributeContainers(
       self, container_type, cursor, maximum_number_of_items):
@@ -265,7 +300,7 @@ class RedisStore(interface.BaseStore):
         int: Redis cursor.
         list[bytes]: serialized attribute containers.
     """
-    name = self._GenerateRedisKey(container_type)
+    name = self._GetRedisHashName(container_type)
     # Redis treats None as meaning "no limit", not 0.
     if maximum_number_of_items == 0:
       maximum_number_of_items = None
@@ -287,16 +322,19 @@ class RedisStore(interface.BaseStore):
     Raises:
       RuntimeError: if a time_range argument is specified.
     """
-    event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
+    event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
     if time_range:
       raise RuntimeError('Not supported')
 
-    sorted_event_identifiers = self._redis_client.zscan_iter(event_index_name)
-    for event_identifier, _ in sorted_event_identifiers:
-      identifier_string = event_identifier.decode('utf-8')
-      event_identifier = identifiers.RedisKeyIdentifier(identifier_string)
+    for redis_key, _ in self._redis_client.zscan_iter(event_index_name):
+      redis_key = redis_key.decode('utf-8')
+
+      container_type, sequence_number = redis_key.split('.')
+      sequence_number = int(sequence_number, 10)
+      identifier = identifiers.RedisKeyIdentifier(
+          container_type, sequence_number)
       yield self.GetAttributeContainerByIdentifier(
-          self._CONTAINER_TYPE_EVENT, event_identifier)
+          self._CONTAINER_TYPE_EVENT, identifier)
 
   def HasAttributeContainers(self, container_type):
     """Determines if the store contains a specific type of attribute container.
@@ -308,8 +346,8 @@ class RedisStore(interface.BaseStore):
       bool: True if the store contains the specified type of attribute
           containers.
     """
-    container_key = self._GenerateRedisKey(container_type)
-    number_of_containers = self._redis_client.hlen(container_key)
+    redis_hash_name = self._GetRedisHashName(container_type)
+    number_of_containers = self._redis_client.hlen(redis_hash_name)
     return number_of_containers > 0
 
   @classmethod
@@ -385,10 +423,10 @@ class RedisStore(interface.BaseStore):
     self._session_identifier = session_identifier or str(uuid.uuid4())
     self._task_identifier = task_identifier or str(uuid.uuid4())
 
-    client_name = self._GenerateRedisKey('')
+    client_name = self._GetRedisHashName('')
     self._SetClientName(self._redis_client, client_name)
 
-    metadata_key = self._GenerateRedisKey('metadata')
+    metadata_key = self._GetRedisHashName('metadata')
     if not self._redis_client.exists(metadata_key):
       self._WriteStorageMetadata()
 
@@ -398,14 +436,14 @@ class RedisStore(interface.BaseStore):
         self._session_identifier, self._MERGING_KEY_NAME)
     self._redis_client.hdel(merging_key, self._task_identifier)
 
-    sorted_event_key = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
+    sorted_event_key = self._GetRedisHashName(self._EVENT_INDEX_NAME)
     self._redis_client.delete(sorted_event_key)
 
-    task_completion_key = self._GenerateRedisKey(
+    task_completion_key = self._GetRedisHashName(
         self._CONTAINER_TYPE_TASK_COMPLETION)
     self._redis_client.delete(task_completion_key)
 
-    metadata_key = self._GenerateRedisKey('metadata')
+    metadata_key = self._GetRedisHashName('metadata')
     self._redis_client.delete(metadata_key)
 
   def RemoveAttributeContainer(self, container_type, identifier):
@@ -417,13 +455,13 @@ class RedisStore(interface.BaseStore):
       identifier (AttributeContainerIdentifier): event data identifier.
     """
     self._RaiseIfNotWritable()
-    container_key = self._GenerateRedisKey(container_type)
-    string_identifier = identifier.CopyToString()
+    redis_hash_name = self._GetRedisHashName(container_type)
+    redis_key = identifier.CopyToString()
 
-    self._redis_client.hdel(container_key, string_identifier)
+    self._redis_client.hdel(redis_hash_name, redis_key)
     if container_type == self._CONTAINER_TYPE_EVENT:
-      event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
-      self._redis_client.zrem(event_index_name, string_identifier)
+      event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
+      self._redis_client.zrem(event_index_name, redis_key)
 
   def RemoveAttributeContainers(self, container_type, container_identifiers):
     """Removes multiple attribute containers from the store.
@@ -438,14 +476,16 @@ class RedisStore(interface.BaseStore):
     if not container_identifiers:
       # If there's no list of identifiers, there's no need to delete anything.
       return
-    container_key = self._GenerateRedisKey(container_type)
-    string_identifiers = [
+
+    redis_hash_name = self._GetRedisHashName(container_type)
+    redis_keys = [
         identifier.CopyToString() for identifier in container_identifiers]
 
-    self._redis_client.hdel(container_key, *string_identifiers)
+    self._redis_client.hdel(redis_hash_name, *redis_keys)
+
     if container_type == self._CONTAINER_TYPE_EVENT:
-      event_index_name = self._GenerateRedisKey(self._EVENT_INDEX_NAME)
-      self._redis_client.zrem(event_index_name, *string_identifiers)
+      event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
+      self._redis_client.zrem(event_index_name, *redis_keys)
 
   @classmethod
   def ScanForProcessedTasks(

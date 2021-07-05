@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Storage attribute container identifier objects."""
 
-import uuid
-
 from plaso.containers import interface as containers_interface
 
 
@@ -10,17 +8,17 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
   """Fake attribute container identifier intended for testing.
 
   Attributes:
-    identifier (int): sequence number of the attribute container.
+    squence_number (int): sequence number of the attribute container.
   """
 
-  def __init__(self, identifier):
+  def __init__(self, squence_number):
     """Initializes a fake attribute container identifier.
 
     Args:
-      identifier (int): sequence number of the attribute container.
+      squence_number (int): sequence number of the attribute container.
     """
     super(FakeIdentifier, self).__init__()
-    self.identifier = identifier
+    self.squence_number = squence_number
 
   def CopyToString(self):
     """Copies the identifier to a string representation.
@@ -28,36 +26,30 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
     Returns:
       str: unique identifier or None.
     """
-    if self.identifier is None:
+    if self.squence_number is None:
       return None
 
-    return '{0:d}'.format(self.identifier)
+    return '{0:d}'.format(self.squence_number)
 
 
 class RedisKeyIdentifier(containers_interface.AttributeContainerIdentifier):
   """Redis key attribute container identifier.
 
-  The identifier is used to uniquely identify attribute containers. Where
-  for example an attribute container is stored as a JSON serialized data in
-  a Redis instance.
-
   Attributes:
-    identifier (UUID): unique identifier of a container.
+    name (str): name of the attribute container.
+    squence_number (int): sequence number of the attribute container.
   """
 
-  def __init__(self, identifier=None):
+  def __init__(self, name, squence_number):
     """"Initializes a Redis key identifier.
 
     Args:
-      identifier (Optional[str]): hexadecimal representation of a UUID
-          (version 4). If not specified, a random UUID (version 4) will be
-          generated.
+      name (str): name of the table.
+      squence_number (int): sequence number of the attribute container.
     """
     super(RedisKeyIdentifier, self).__init__()
-    if identifier:
-      self.identifier = uuid.UUID(identifier)
-    else:
-      self.identifier = uuid.uuid4()
+    self.name = name
+    self.squence_number = squence_number
 
   def CopyToString(self):
     """Copies the identifier to a string representation.
@@ -65,10 +57,10 @@ class RedisKeyIdentifier(containers_interface.AttributeContainerIdentifier):
     Returns:
       str: unique identifier or None.
     """
-    if not self.identifier:
-      return None
+    if self.name is not None and self.squence_number is not None:
+      return '{0:s}.{1:d}'.format(self.name, self.squence_number)
 
-    return self.identifier.hex
+    return None
 
 
 class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
@@ -79,7 +71,7 @@ class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
   a SQLite database file.
 
   Attributes:
-    name (str): name of the table.
+    name (str): name of the table (attribute container).
     row_identifier (int): unique identifier of the row in the table.
   """
 
@@ -87,7 +79,7 @@ class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
     """Initializes a SQL table attribute container identifier.
 
     Args:
-      name (str): name of the table.
+      name (str): name of the table (attribute container).
       row_identifier (int): unique identifier of the row in the table.
     """
     super(SQLTableIdentifier, self).__init__()

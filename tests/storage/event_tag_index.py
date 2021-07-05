@@ -44,9 +44,9 @@ class EventTagIndexTest(test_lib.StorageTestCase):
 
     test_event_tags = self._CreateTestEventTags(test_events)
     for event_tag in test_event_tags[:-1]:
-      storage_file.AddEventTag(event_tag)
+      storage_file.AddAttributeContainer(event_tag)
     for event_tag in test_event_tags[-1:]:
-      storage_file.AddEventTag(event_tag)
+      storage_file.AddAttributeContainer(event_tag)
 
     storage_file.Close()
 

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""The storage interface classes."""
+"""The attribute container store interface."""
 
 import abc
+import collections
 
 from plaso.containers import artifacts
 from plaso.containers import event_sources
@@ -15,7 +16,7 @@ from plaso.serializer import json_serializer
 
 
 class BaseStore(object):
-  """Storage interface.
+  """Attribute container store interface.
 
   Attributes:
     format_version (int): storage format version.
@@ -79,6 +80,7 @@ class BaseStore(object):
       storage_type (Optional[str]): storage type.
     """
     super(BaseStore, self).__init__()
+    self._attribute_container_sequence_numbers = collections.Counter()
     self._last_session = 0
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
@@ -124,6 +126,18 @@ class BaseStore(object):
         self._serializers_profiler.StopTiming(container_type)
 
     return attribute_container
+
+  def _GetAttributeContainerNextSequenceNumber(self, container_type):
+    """Retrieves the next sequence number of an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      int: next sequence number.
+    """
+    self._attribute_container_sequence_numbers[container_type] += 1
+    return self._attribute_container_sequence_numbers[container_type]
 
   @abc.abstractmethod
   def _RaiseIfNotReadable(self):
@@ -175,6 +189,17 @@ class BaseStore(object):
 
     return attribute_container_data
 
+  def _SetAttributeContainerNextSequenceNumber(
+      self, container_type, next_sequence_number):
+    """Sets the next sequence number of an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      next_sequence_number (int): next sequence number.
+    """
+    self._attribute_container_sequence_numbers[
+        container_type] = next_sequence_number
+
   @abc.abstractmethod
   def _WriteNewAttributeContainer(self, container):
     """Writes a new attribute container to the store.
@@ -183,7 +208,13 @@ class BaseStore(object):
       container (AttributeContainer): attribute container.
     """
 
-  # TODO: add _WriteExistingAttributeContainer
+  @abc.abstractmethod
+  def _WriteExistingAttributeContainer(self, container):
+    """Writes an existing attribute container to the store.
+
+    Args:
+      container (AttributeContainer): attribute container.
+    """
 
   def AddAttributeContainer(self, container):
     """Adds a new attribute container.
@@ -235,20 +266,20 @@ class BaseStore(object):
       OSError: when the store is closed.
     """
 
-  # @abc.abstractmethod
-  # def GetEventTagByEventIdentifier(self, event_identifier):
-  #   """Retrieves the event tag related to a specific event identifier.
-  #
-  #  Args:
-  #    event_identifier (AttributeContainerIdentifier): event.
-  #
-  #  Returns:
-  #    EventTag: event tag or None if not available.
-  #
-  #  Raises:
-  #    IOError: when the store is closed.
-  #    OSError: when the store is closed.
-  #  """
+  @abc.abstractmethod
+  def GetEventTagByEventIdentifier(self, event_identifier):
+    """Retrieves the event tag related to a specific event identifier.
+
+    Args:
+      event_identifier (AttributeContainerIdentifier): event.
+
+    Returns:
+      EventTag: event tag or None if not available.
+
+    Raises:
+      IOError: when the store is closed.
+      OSError: when the store is closed.
+    """
 
   @abc.abstractmethod
   def GetNumberOfAttributeContainers(self, container_type):
@@ -388,6 +419,19 @@ class BaseStore(object):
       storage_profiler (StorageProfiler): storage profiler.
     """
     self._storage_profiler = storage_profiler
+
+  def UpdateAttributeContainer(self, container):
+    """Updates an existing attribute container.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      OSError: if the store cannot be written to.
+      IOError: if the store cannot be written to.
+    """
+    self._RaiseIfNotWritable()
+    self._WriteExistingAttributeContainer(container)
 
   def WriteSessionCompletion(self, session_completion):
     """Writes session completion information.

@@ -22,20 +22,8 @@ class FakeStore(interface.BaseStore):
     """
     super(FakeStore, self).__init__(storage_type=storage_type)
     self._attribute_containers = {}
-    self._attribute_container_sequence_numbers = collections.Counter()
+    self._event_tag_per_event_identifier = {}
     self._is_open = False
-
-  def _GetAttributeContainerNextSequenceNumber(self, container_type):
-    """Retrieves the next sequence number of an attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      int: next sequence number.
-    """
-    self._attribute_container_sequence_numbers[container_type] += 1
-    return self._attribute_container_sequence_numbers[container_type]
 
   def _RaiseIfNotReadable(self):
     """Raises if the store is not readable.
@@ -56,6 +44,34 @@ class FakeStore(interface.BaseStore):
     """
     if not self._is_open:
       raise IOError('Unable to write to closed storage writer.')
+
+  def _WriteExistingAttributeContainer(self, container):
+    """Writes an existing attribute container to the store.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: if an unsupported identifier is provided or if the attribute
+          container does not exist.
+      OSError: if an unsupported identifier is provided or if the attribute
+          container does not exist.
+    """
+    identifier = container.GetIdentifier()
+    if not isinstance(identifier, identifiers.FakeIdentifier):
+      raise IOError(
+          'Unsupported attribute container identifier type: {0!s}'.format(
+              type(identifier)))
+
+    lookup_key = identifier.CopyToString()
+
+    containers = self._attribute_containers.get(container.CONTAINER_TYPE, None)
+    if containers is None or lookup_key not in containers:
+      raise IOError(
+          'Missing attribute container: {0:s} with identifier: {1:s}'.format(
+              container.CONTAINER_TYPE, lookup_key))
+
+    containers[lookup_key] = container
 
   def _WriteNewAttributeContainer(self, container):
     """Writes a new attribute container to the store.
@@ -80,7 +96,10 @@ class FakeStore(interface.BaseStore):
     container = copy.deepcopy(container)
     containers[lookup_key] = container
 
-    # TODO: maintain a mapping of event identifier to tag.
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+      event_identifier = container.GetEventIdentifier()
+      lookup_key = event_identifier.CopyToString()
+      self._event_tag_per_event_identifier[lookup_key] = container
 
   def Close(self):
     """Closes the store.
@@ -118,7 +137,15 @@ class FakeStore(interface.BaseStore):
 
     Returns:
       AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      IOError: if the attribute container type is not supported.
+      OSError: if the attribute container type is not supported.
     """
+    if container_type not in self._CONTAINER_TYPES:
+      raise IOError('Unsupported attribute container type: {0:s}'.format(
+          container_type))
+
     containers = self._attribute_containers.get(container_type, {})
     number_of_containers = len(containers)
     if index < 0 or index >= number_of_containers:
@@ -138,6 +165,28 @@ class FakeStore(interface.BaseStore):
     """
     containers = self._attribute_containers.get(container_type, {})
     return iter(containers.values())
+
+  def GetEventTagByEventIdentifier(self, event_identifier):
+    """Retrieves the event tag related to a specific event identifier.
+
+    Args:
+      event_identifier (AttributeContainerIdentifier): event.
+
+    Returns:
+      EventTag: event tag or None if not available.
+
+    Raises:
+      IOError: if an unsupported event identifier is provided or if the event
+          tag does not exist.
+      OSError: if an unsupported event identifier is provided or if the event
+          tag does not exist.
+    """
+    if not isinstance(event_identifier, identifiers.FakeIdentifier):
+      raise IOError('Unsupported event identifier type: {0!s}'.format(
+          type(event_identifier)))
+
+    lookup_key = event_identifier.CopyToString()
+    return self._event_tag_per_event_identifier.get(lookup_key, None)
 
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.
