@@ -126,8 +126,6 @@ class StorageReaderTest(test_lib.StorageTestCase):
     finally:
       test_reader._store.Close()
 
-  # TODO: add tests for ReadSystemConfiguration
-
   def testSetSerializersProfiler(self):
     """Tests the SetSerializersProfiler function."""
     test_reader = reader.StorageReader()
