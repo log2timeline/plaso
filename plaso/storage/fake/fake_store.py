@@ -6,9 +6,9 @@ import copy
 import itertools
 
 from plaso.lib import definitions
-from plaso.storage import event_heaps
 from plaso.storage import identifiers
 from plaso.storage import interface
+from plaso.storage.fake import event_heap
 
 
 class FakeStore(interface.BaseStore):
@@ -218,7 +218,7 @@ class FakeStore(interface.BaseStore):
       raise IOError('Unable to read from closed storage writer.')
 
     generator = self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
-    event_heap = event_heaps.EventHeap()
+    sorted_events = event_heap.EventHeap()
 
     for event_index, event in enumerate(generator):
       if (time_range and (
@@ -228,9 +228,9 @@ class FakeStore(interface.BaseStore):
 
       # The event index is used to ensure to sort events with the same date and
       # time and description in the order they were added to the store.
-      event_heap.PushEvent(event, event_index)
+      sorted_events.PushEvent(event, event_index)
 
-    return iter(event_heap.PopEvents())
+    return iter(sorted_events.PopEvents())
 
   def HasAttributeContainers(self, container_type):
     """Determines if a store contains a specific type of attribute container.
