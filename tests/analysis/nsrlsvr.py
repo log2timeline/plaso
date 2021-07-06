@@ -4,15 +4,13 @@
 
 import unittest
 
-try:
-  import mock  # pylint: disable=import-error
-except ImportError:
-  from unittest import mock
+from unittest import mock
 
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import nsrlsvr
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.lib import definitions
 
 from tests.analysis import test_lib
@@ -112,10 +110,11 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
     self.assertEqual(storage_writer.number_of_event_tags, 1)
 
-    report = storage_writer.analysis_reports[0]
+    report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(report)
 
     expected_text = (

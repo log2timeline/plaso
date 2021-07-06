@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.analysis import sessionize
+from plaso.containers import reports
 from plaso.lib import definitions
 
 from tests.analysis import test_lib
@@ -42,10 +43,13 @@ class SessionizeAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
     self.assertEqual(storage_writer.number_of_event_tags, 5)
 
-    report = storage_writer.analysis_reports[0]
+    report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(report)
+
     expected_report_text = (
         'Sessionize plugin identified 2 sessions and applied 5 tags.\n'
         '\tSession 0: 3 events\n'

@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.analysis import browser_search
+from plaso.containers import reports
 from plaso.parsers import sqlite
 
 from tests.analysis import test_lib
@@ -22,9 +23,11 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 71)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
-    analysis_report = storage_writer.analysis_reports[0]
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

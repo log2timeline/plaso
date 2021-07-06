@@ -6,6 +6,7 @@ import unittest
 
 from plaso.analysis import tagging
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.lib import definitions
 
 from tests.analysis import test_lib
@@ -53,10 +54,11 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
     self.assertEqual(storage_writer.number_of_event_tags, 4)
 
-    report = storage_writer.analysis_reports[0]
+    report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(report)
 
     self.assertIsNotNone(report.analysis_counter)
