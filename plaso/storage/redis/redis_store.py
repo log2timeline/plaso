@@ -73,11 +73,11 @@ class RedisStore(interface.BaseStore):
 
     Returns:
       EventTag: event tag or None if not available.
-
-    Raises:
-      RuntimeError: since this method is not supported.
     """
-    raise RuntimeError('Not supported')
+    # Note that the Redis store is only used for storing tasks and does not
+    # support this method. None is returned to have code using this method
+    # add an event tag instead of updating the existing one.
+    return None
 
   def _GetFinalizationKey(self):
     """Generates the finalized key for the store.
@@ -218,6 +218,11 @@ class RedisStore(interface.BaseStore):
       OSError: when the store is closed or if an unsupported identifier is
           provided.
     """
+    if not isinstance(identifier, identifiers.RedisKeyIdentifier):
+      raise IOError(
+          'Unsupported attribute container identifier type: {0!s}'.format(
+              type(identifier)))
+
     redis_hash_name = self._GetRedisHashName(container_type)
     redis_key = identifier.CopyToString()
 
@@ -231,7 +236,6 @@ class RedisStore(interface.BaseStore):
     attribute_container.SetIdentifier(identifier)
     return attribute_container
 
-  # pylint: disable=redundant-returns-doc
   def GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
 
@@ -243,9 +247,27 @@ class RedisStore(interface.BaseStore):
       AttributeContainer: attribute container or None if not available.
 
     Raises:
-      RuntimeError: since this method is not supported.
+      IOError: if the attribute container type is not supported.
+      OSError: if the attribute container type is not supported.
     """
-    raise RuntimeError('Not supported')
+    if container_type not in self._CONTAINER_TYPES:
+      raise IOError('Unsupported attribute container type: {0:s}'.format(
+          container_type))
+
+    sequence_number = index + 1
+    redis_hash_name = self._GetRedisHashName(container_type)
+    redis_key = '{0:s}.{1:d}'.format(container_type, sequence_number)
+
+    serialized_data = self._redis_client.hget(redis_hash_name, redis_key)
+    if not serialized_data:
+      return None
+
+    attribute_container = self._DeserializeAttributeContainer(
+        container_type, serialized_data)
+
+    identifier = identifiers.RedisKeyIdentifier(container_type, sequence_number)
+    attribute_container.SetIdentifier(identifier)
+    return attribute_container
 
   def GetAttributeContainers(self, container_type):
     """Retrieves attribute containers

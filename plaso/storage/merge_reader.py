@@ -88,14 +88,14 @@ class StorageMergeReader(object):
         container.SetEventDataIdentifier(event_data_identifier)
       else:
         identifier = container.GetIdentifier()
-        identifier = identifier.CopyToString()
+        identifier_string = identifier.CopyToString()
 
         # TODO: store this as an extraction warning so this is preserved
         # in the storage file.
         logger.error((
             'Unable to merge event attribute container: {0:s} since '
             'corresponding event data: {1:s} could not be found.').format(
-                identifier, event_data_lookup_key))
+                identifier_string, event_data_lookup_key))
         return
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
@@ -113,23 +113,28 @@ class StorageMergeReader(object):
         container.SetEventDataStreamIdentifier(event_data_stream_identifier)
       elif event_data_stream_lookup_key:
         identifier = container.GetIdentifier()
-        identifier = identifier.CopyToString()
+        identifier_string = identifier.CopyToString()
 
         # TODO: store this as an extraction warning so this is preserved
         # in the storage file.
         logger.error((
             'Unable to merge event data attribute container: {0:s} since '
             'corresponding event data stream: {1:s} could not be '
-            'found.').format(identifier, event_data_stream_lookup_key))
+            'found.').format(identifier_string, event_data_stream_lookup_key))
         return
 
     if container.CONTAINER_TYPE in (
         self._CONTAINER_TYPE_EVENT_DATA,
         self._CONTAINER_TYPE_EVENT_DATA_STREAM):
+      # Preserve the lookup key before adding it to the attribute container
+      # store.
       identifier = container.GetIdentifier()
       lookup_key = identifier.CopyToString()
 
-    self._storage_writer.AddAttributeContainer(container)
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+      self._storage_writer.AddOrUpdateEventTag(container)
+    else:
+      self._storage_writer.AddAttributeContainer(container)
 
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       parser_name = self._event_data_parser_mappings.get(

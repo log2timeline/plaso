@@ -43,36 +43,28 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     return redis_client
 
-  # TODO: add tests for _GetRedisHashName
+  def testGetRedisHashName(self):
+    """Tests the _GetRedisHashName function."""
+    redis_client = self._CreateRedisClient()
 
-  def testGetAttributeContainerByIdentifier(self):
-    """Tests the GetAttributeContainerByIdentifier method."""
-    test_events = []
-    for test_event, _, _ in containers_test_lib.CreateEventsFromValues(
-        self._TEST_EVENTS):
-      test_events.append(test_event)
+    session = sessions.Session()
+    task = tasks.Task(session_identifier=session.identifier)
 
-    test_event_tags = self._CreateTestEventTags(test_events)
-    test_event_tag = test_event_tags[0]
+    event_data_stream = events.EventDataStream()
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
-    test_store.Open(redis_client=redis_client)
+    test_store.Open(
+        redis_client=redis_client, session_identifier=task.session_identifier,
+        task_identifier=task.identifier)
 
-    test_store.AddAttributeContainer(test_event_tag)
+    redis_hash_name = test_store._GetRedisHashName(
+        event_data_stream.CONTAINER_TYPE)
 
-    identifier = test_event_tag.GetIdentifier()
-
-    retrieved_event_tag = test_store.GetAttributeContainerByIdentifier(
-        test_event_tag.CONTAINER_TYPE, identifier)
-
-    test_event_tag_dict = test_event_tag.CopyToDict()
-    retrieved_event_tag_dict = retrieved_event_tag.CopyToDict()
-
-    self.assertEqual(test_event_tag_dict, retrieved_event_tag_dict)
-
-    test_store.Close()
+    expected_redis_hash_name = '{0:s}-{1:s}-{2:s}'.format(
+        task.session_identifier, task.identifier,
+        event_data_stream.CONTAINER_TYPE)
+    self.assertEqual(redis_hash_name, expected_redis_hash_name)
 
   # TODO: add tests for _GetFinalizationKey
   # TODO: add tests for _RaiseIfNotReadable
@@ -81,11 +73,12 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testWriteExistingAttributeContainer(self):
     """Tests the _WriteExistingAttributeContainer function."""
+    redis_client = self._CreateRedisClient()
+
     event_data_stream = events.EventDataStream()
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     number_of_containers = test_store.GetNumberOfAttributeContainers(
@@ -111,11 +104,12 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testWriteNewAttributeContainer(self):
     """Tests the _WriteNewAttributeContainer method."""
+    redis_client = self._CreateRedisClient()
+
     event_data_stream = events.EventDataStream()
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     number_of_containers = test_store.GetNumberOfAttributeContainers(
@@ -132,11 +126,12 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testAddAttributeContainer(self):
     """Tests the AddAttributeContainer method."""
+    redis_client = self._CreateRedisClient()
+
     event_data_stream = events.EventDataStream()
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     number_of_containers = test_store.GetNumberOfAttributeContainers(
@@ -156,11 +151,62 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   # TODO: add tests for _WriteStorageMetadata
 
-  def testGetAttributeContainers(self):
-    """Tests the GetAttributeContainers method."""
+  def testGetAttributeContainerByIdentifier(self):
+    """Tests the GetAttributeContainerByIdentifier method."""
+    redis_client = self._CreateRedisClient()
+
+    event_data_stream = events.EventDataStream()
+
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
+    test_store.Open(redis_client=redis_client)
+
+    test_store.AddAttributeContainer(event_data_stream)
+    identifier = event_data_stream.GetIdentifier()
+
+    container = test_store.GetAttributeContainerByIdentifier(
+        event_data_stream.CONTAINER_TYPE, identifier)
+    self.assertIsNotNone(container)
+
+    identifier.squence_number = 99
+
+    container = test_store.GetAttributeContainerByIdentifier(
+        event_data_stream.CONTAINER_TYPE, identifier)
+    self.assertIsNone(container)
+
+    test_store.Close()
+
+  def testGetAttributeContainerByIndex(self):
+    """Tests the GetAttributeContainerByIndex function."""
     redis_client = self._CreateRedisClient()
+
+    event_data_stream = events.EventDataStream()
+
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
+    test_store.Open(redis_client=redis_client)
+
+    container = test_store.GetAttributeContainerByIndex(
+        event_data_stream.CONTAINER_TYPE, 0)
+    self.assertIsNone(container)
+
+    test_store.AddAttributeContainer(event_data_stream)
+
+    container = test_store.GetAttributeContainerByIndex(
+        event_data_stream.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(container)
+
+    with self.assertRaises(IOError):
+      test_store.GetAttributeContainerByIndex('bogus', 0)
+
+    test_store.Close()
+
+  def testGetAttributeContainers(self):
+    """Tests the GetAttributeContainers method."""
+    redis_client = self._CreateRedisClient()
+
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
     test_store.Open(redis_client=redis_client)
 
     for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
@@ -173,13 +219,57 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     test_store.Close()
 
+  def testGetEventTagByEventIdentifier(self):
+    """Tests the GetEventTagByEventIdentifier function."""
+    redis_client = self._CreateRedisClient()
+
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
+    test_store.Open(redis_client=redis_client)
+
+    index = 0
+    for event, event_data, event_data_stream in (
+        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+      test_store.AddAttributeContainer(event_data_stream)
+
+      event_data.SetEventDataStreamIdentifier(
+          event_data_stream.GetIdentifier())
+      test_store.AddAttributeContainer(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
+      test_store.AddAttributeContainer(event)
+
+      if index == 1:
+        event_tag = events.EventTag()
+        event_tag.AddLabels(['Malware', 'Benign'])
+
+        event_identifier = event.GetIdentifier()
+        event_tag.SetEventIdentifier(event_identifier)
+        test_store.AddAttributeContainer(event_tag)
+
+      index += 1
+
+    test_store.Close()
+
+    test_store = redis_store.RedisStore(
+        storage_type=definitions.STORAGE_TYPE_TASK)
+    test_store.Open(redis_client=redis_client)
+
+    test_event = test_store.GetAttributeContainerByIndex(
+        events.EventObject.CONTAINER_TYPE, 1)
+    # Note that this method is not implemented.
+    self.assertIsNone(test_event)
+
+    test_store.Close()
+
   def testGetNumberOfAttributeContainers(self):
     """Tests the GetNumberOfAttributeContainers function."""
+    redis_client = self._CreateRedisClient()
+
     event_data_stream = events.EventDataStream()
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     number_of_containers = test_store.GetNumberOfAttributeContainers(
@@ -196,9 +286,10 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testGetSerializedAttributeContainers(self):
     """Tests the GetSerializedAttributeContainers method."""
+    redis_client = self._CreateRedisClient()
+
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
@@ -216,9 +307,10 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents method."""
+    redis_client = self._CreateRedisClient()
+
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     for event, _, _ in containers_test_lib.CreateEventsFromValues(
@@ -232,11 +324,12 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testHasAttributeContainers(self):
     """Tests the HasAttributeContainers method."""
+    redis_client = self._CreateRedisClient()
+
     event_data_stream = events.EventDataStream()
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     result = test_store.HasAttributeContainers(event_data_stream.CONTAINER_TYPE)
@@ -254,6 +347,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
   def testMarkTaskAsMerging(self):
     """Tests the MarkTaskAsMerging method"""
     redis_client = self._CreateRedisClient()
+
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
@@ -278,11 +372,12 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testRemoveAttributeContainer(self):
     """Tests the RemoveAttributeContainer method."""
+    redis_client = self._CreateRedisClient()
+
     event_data_stream = events.EventDataStream()
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     test_store.AddAttributeContainer(event_data_stream)
@@ -306,6 +401,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
   def testScanForProcessedTasks(self):
     """Tests the ScanForProcessedTasks method"""
     redis_client = self._CreateRedisClient()
+
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
@@ -330,11 +426,12 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
   def testUpdateAttributeContainer(self):
     """Tests the UpdateAttributeContainer function."""
+    redis_client = self._CreateRedisClient()
+
     event_data_stream = events.EventDataStream()
 
     test_store = redis_store.RedisStore(
         storage_type=definitions.STORAGE_TYPE_TASK)
-    redis_client = self._CreateRedisClient()
     test_store.Open(redis_client=redis_client)
 
     number_of_containers = test_store.GetNumberOfAttributeContainers(
