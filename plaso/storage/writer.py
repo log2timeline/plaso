@@ -138,7 +138,12 @@ class StorageWriter(object):
       self.AddAttributeContainer(event_tag)
 
   def Close(self):
-    """Closes the storage writer."""
+    """Closes the storage writer.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
     self._RaiseIfNotWritable()
 
     self._store.Close()
@@ -153,11 +158,33 @@ class StorageWriter(object):
 
     Returns:
       AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
     return self._store.GetAttributeContainerByIdentifier(
         container_type, identifier)
+
+  def GetAttributeContainerByIndex(self, container_type, index):
+    """Retrieves a specific attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      index (int): attribute container index.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    return self._store.GetAttributeContainerByIndex(container_type, index)
 
   def GetAttributeContainers(self, container_type):
     """Retrieves a specific type of attribute containers.
@@ -167,6 +194,10 @@ class StorageWriter(object):
 
     Returns:
       generator(AttributeContainers): attribute container generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -270,10 +301,10 @@ class StorageWriter(object):
       task (Task): task.
 
     Raises:
-      IOError: if the storage type is not supported or
-          when the storage writer is closed.
-      OSError: if the storage type is not supported or
-          when the storage writer is closed.
+      IOError: when the storage writer is closed or if the storage type is
+          not supported.
+      OSError: when the storage writer is closed or if the storage type is
+          not supported.
     """
     self._RaiseIfNotWritable()
 
@@ -290,10 +321,10 @@ class StorageWriter(object):
       task (Task): task.
 
     Raises:
-      IOError: if the storage type is not supported or
-          when the storage writer is closed.
-      OSError: if the storage type is not supported or
-          when the storage writer is closed.
+      IOError: when the storage writer is closed or if the storage type is
+          not supported.
+      OSError: when the storage writer is closed or if the storage type is
+          not supported.
     """
     self._RaiseIfNotWritable()
 

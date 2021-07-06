@@ -32,14 +32,6 @@ class FakeStorageWriter(writer.StorageWriter):
     self.task_completion = None
     self.task_start = None
 
-  # TODO: remove.
-  @property
-  def analysis_reports(self):
-    """list[AnalysisReport]: analysis reports."""
-    generator = self.GetAttributeContainers(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
-    return list(generator)
-
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 

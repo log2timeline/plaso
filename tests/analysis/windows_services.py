@@ -7,6 +7,7 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
+from plaso.containers import reports
 from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 
@@ -51,9 +52,11 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     plugin = windows_services.WindowsServicesAnalysisPlugin()
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
-    analysis_report = storage_writer.analysis_reports[0]
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
 
     expected_text = (
         'Listing Windows Services\n'
@@ -83,10 +86,11 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._ParseAndAnalyzeFile(['SYSTEM'], parser, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 31438)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
-
-    analysis_report = storage_writer.analysis_reports[0]
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
 
     # We'll check that a few strings are in the report, like they're supposed
     # to be, rather than checking for the exact content of the string,
@@ -113,10 +117,11 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._ParseAndAnalyzeFile(['SYSTEM'], parser, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 31438)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
-
-    analysis_report = storage_writer.analysis_reports[0]
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
 
     # We'll check that a few strings are in the report, like they're supposed
     # to be, rather than checking for the exact content of the string,

@@ -6,6 +6,7 @@ import os
 import unittest
 
 from plaso.analysis import chrome_extension
+from plaso.containers import reports
 from plaso.lib import definitions
 
 from tests import test_lib as shared_test_lib
@@ -116,9 +117,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         self._MACOS_TEST_EVENTS, plugin, knowledge_base_values={
             'users': self._MACOS_USERS})
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
-    analysis_report = storage_writer.analysis_reports[0]
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
@@ -147,9 +150,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         self._WINDOWS_TEST_EVENTS, plugin, knowledge_base_values={
             'users': self._WINDOWS_USERS})
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
-    analysis_report = storage_writer.analysis_reports[0]
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

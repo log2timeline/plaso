@@ -8,6 +8,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.analysis import hash_tagging
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.lib import definitions
 
 from tests.analysis import test_lib
@@ -97,10 +98,11 @@ class HashTaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
     self.assertEqual(storage_writer.number_of_event_tags, 1)
 
-    report = storage_writer.analysis_reports[0]
+    report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(report)
 
     expected_text = (
@@ -123,10 +125,11 @@ class HashTaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
     self.assertEqual(storage_writer.number_of_event_tags, 0)
 
-    report = storage_writer.analysis_reports[0]
+    report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(report)
 
     expected_text = (
