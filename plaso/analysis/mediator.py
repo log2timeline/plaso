@@ -134,15 +134,7 @@ class AnalysisMediator(object):
     Args:
       event_tag (EventTag): event tag.
     """
-    event_identifier = event_tag.GetEventIdentifier()
-    existing_event_tag = self._storage_writer.GetEventTagByEventIdentifier(
-        event_identifier)
-
-    if existing_event_tag:
-      existing_event_tag.AddLabels(event_tag.labels)
-      self._storage_writer.UpdateAttributeContainer(existing_event_tag)
-    else:
-      self._storage_writer.AddAttributeContainer(event_tag)
+    self._storage_writer.AddOrUpdateEventTag(event_tag)
 
     self._session.UpdateEventLabelsSessionCounter(event_tag)
 

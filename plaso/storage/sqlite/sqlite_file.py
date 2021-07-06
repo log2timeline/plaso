@@ -946,8 +946,9 @@ class SQLiteStorageFile(interface.BaseStore):
           provided.
     """
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
-      raise IOError('Unsupported event data identifier type: {0!s}'.format(
-          type(identifier)))
+      raise IOError(
+          'Unsupported attribute container identifier type: {0!s}'.format(
+              type(identifier)))
 
     return self.GetAttributeContainerByIndex(
         container_type, identifier.row_identifier - 1)

@@ -115,6 +115,28 @@ class StorageWriter(object):
 
     self._attribute_containers_counter[container.CONTAINER_TYPE] += 1
 
+  def AddOrUpdateEventTag(self, event_tag):
+    """Adds a new or updates an existing event tag.
+
+    Args:
+      event_tag (EventTag): event tag.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    event_identifier = event_tag.GetEventIdentifier()
+    existing_event_tag = self._store.GetEventTagByEventIdentifier(
+        event_identifier)
+
+    if existing_event_tag:
+      existing_event_tag.AddLabels(event_tag.labels)
+      self._store.UpdateAttributeContainer(existing_event_tag)
+    else:
+      self.AddAttributeContainer(event_tag)
+
   def Close(self):
     """Closes the storage writer."""
     self._RaiseIfNotWritable()
@@ -158,17 +180,6 @@ class StorageWriter(object):
       generator(EventObject): event generator.
     """
     return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
-
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-    """
-    return self._store.GetEventTagByEventIdentifier(event_identifier)
 
   @abc.abstractmethod
   def GetFirstWrittenEventSource(self):
