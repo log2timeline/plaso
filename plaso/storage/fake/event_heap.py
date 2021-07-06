@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Heaps to sort events in chronological order."""
+"""Heap to sort events in chronological order."""
 
 import heapq
 
 
-# TODO: since this is only used by the fake storage implementation
-# move this class into the fake submodule.
 class EventHeap(object):
   """Event heap."""
 
