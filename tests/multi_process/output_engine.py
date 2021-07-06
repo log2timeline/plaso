@@ -272,13 +272,10 @@ class OutputAndFormattingMultiProcessEngineTest(
         path)
 
     for session in storage_reader.GetSessions():
-      if not session.source_configurations:
-        storage_reader.ReadSystemConfiguration(knowledge_base_object)
-      else:
-        for source_configuration in session.source_configurations:
-          knowledge_base_object.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration,
-              session_identifier=session.identifier)
+      for source_configuration in session.source_configurations or []:
+        knowledge_base_object.ReadSystemConfigurationArtifact(
+            source_configuration.system_configuration,
+            session_identifier=session.identifier)
 
   # TODO: add test for _ExportEvent.
 
@@ -304,7 +301,11 @@ class OutputAndFormattingMultiProcessEngineTest(
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      storage_reader.ReadSystemConfiguration(knowledge_base_object)
+      for session in storage_reader.GetSessions():
+        for source_configuration in session.source_configurations or []:
+          knowledge_base_object.ReadSystemConfigurationArtifact(
+              source_configuration.system_configuration,
+              session_identifier=session.identifier)
 
       test_engine._ExportEvents(
           storage_reader, output_module, deduplicate_events=False)
@@ -334,7 +335,11 @@ class OutputAndFormattingMultiProcessEngineTest(
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      storage_reader.ReadSystemConfiguration(knowledge_base_object)
+      for session in storage_reader.GetSessions():
+        for source_configuration in session.source_configurations or []:
+          knowledge_base_object.ReadSystemConfigurationArtifact(
+              source_configuration.system_configuration,
+              session_identifier=session.identifier)
 
       test_engine._ExportEvents(storage_reader, output_module)
 

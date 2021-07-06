@@ -90,7 +90,7 @@ class StorageMergeReader(object):
         identifier = container.GetIdentifier()
         identifier_string = identifier.CopyToString()
 
-        # TODO: store this as an extraction warning so this is preserved
+        # TODO: store this as a merge warning so this is preserved
         # in the storage file.
         logger.error((
             'Unable to merge event attribute container: {0:s} since '
@@ -115,7 +115,7 @@ class StorageMergeReader(object):
         identifier = container.GetIdentifier()
         identifier_string = identifier.CopyToString()
 
-        # TODO: store this as an extraction warning so this is preserved
+        # TODO: store this as a merge warning so this is preserved
         # in the storage file.
         logger.error((
             'Unable to merge event data attribute container: {0:s} since '

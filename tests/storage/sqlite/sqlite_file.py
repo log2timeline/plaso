@@ -449,8 +449,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for Open and Close
 
-  # TODO: add tests for ReadSystemConfiguration
-
   def testUpdateAttributeContainer(self):
     """Tests the UpdateAttributeContainer function."""
     event_data_stream = events.EventDataStream()

@@ -386,24 +386,6 @@ class BaseStore(object):
   def Open(self, **kwargs):
     """Opens the store."""
 
-  # TODO: remove, this method is kept for backwards compatibility reasons.
-  def ReadSystemConfiguration(self, knowledge_base):
-    """Reads system configuration information.
-
-    The system configuration contains information about various system specific
-    configuration data, for example the user accounts.
-
-    Args:
-      knowledge_base (KnowledgeBase): is used to store the system configuration.
-    """
-    # Backwards compatibility for older session storage files that do not
-    # store system configuration as part of the session configuration.
-    if self.HasAttributeContainers(self._CONTAINER_TYPE_SYSTEM_CONFIGURATION):
-      generator = self.GetAttributeContainers(
-          self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
-      for system_configuration in generator:
-        knowledge_base.ReadSystemConfigurationArtifact(system_configuration)
-
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
 
