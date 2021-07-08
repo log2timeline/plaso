@@ -57,7 +57,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
         event_data_stream.CONTAINER_TYPE, identifier)
     self.assertIsNotNone(container)
 
-    identifier.squence_number = 99
+    identifier.sequence_number = 99
 
     container = storage_writer.GetAttributeContainerByIdentifier(
         event_data_stream.CONTAINER_TYPE, identifier)

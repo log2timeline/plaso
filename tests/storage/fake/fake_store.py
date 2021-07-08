@@ -103,7 +103,7 @@ class FakeStoreTest(test_lib.StorageTestCase):
         event_data_stream.CONTAINER_TYPE, identifier)
     self.assertIsNotNone(container)
 
-    identifier.squence_number = 99
+    identifier.sequence_number = 99
 
     container = test_store.GetAttributeContainerByIdentifier(
         event_data_stream.CONTAINER_TYPE, identifier)

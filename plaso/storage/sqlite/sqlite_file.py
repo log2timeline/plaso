@@ -230,17 +230,14 @@ class SQLiteStorageFile(interface.BaseStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
+    column_definitions = ['_identifier INTEGER PRIMARY KEY AUTOINCREMENT']
+
     schema = self._CONTAINER_SCHEMAS.get(container_type, {})
-
     if self._use_schema and schema:
-      data_types = {
-          name: self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS.get(
-              attribute_type, 'TEXT')
-          for name, attribute_type in schema.items()}
-
-      column_definitions = ', '.join([
-          '{0:s} {1:s}'.format(name, data_type)
-          for name, data_type in sorted(data_types.items())])
+      for name, data_type in sorted(schema.items()):
+        data_type = self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS.get(
+              data_type, 'TEXT')
+        column_definitions.append('{0:s} {1:s}'.format(name, data_type))
 
     else:
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
@@ -249,17 +246,13 @@ class SQLiteStorageFile(interface.BaseStore):
         data_column_type = 'TEXT'
 
       if container_type == self._CONTAINER_TYPE_EVENT:
-        column_definitions = (
-            '_timestamp BIGINT, '
-            '_data {0:s}').format(data_column_type)
+        column_definitions.append('_timestamp BIGINT')
 
-      else:
-        column_definitions = '_data {0:s}'.format(data_column_type)
+      column_definitions.append('_data {0:s}'.format(data_column_type))
 
-    query = (
-        'CREATE TABLE {0:s} ('
-        '_identifier INTEGER PRIMARY KEY AUTOINCREMENT, '
-        '{1:s});').format(container_type, column_definitions)
+    column_definitions = ', '.join(column_definitions)
+    query = 'CREATE TABLE {0:s} ({1:s});'.format(
+        container_type, column_definitions)
 
     try:
       self._cursor.execute(query)
@@ -282,24 +275,24 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     schema = self._CONTAINER_SCHEMAS.get(container_type, {})
 
-    if column_names != ['_data']:
+    if self._use_schema and schema:
       container = self._CONTAINERS_MANAGER.CreateAttributeContainer(
           container_type)
 
-      for column_index, column_name in enumerate(column_names):
-        attribute_type = schema[column_name]
+      for column_index, name in enumerate(column_names):
         attribute_value = row[first_column_index + column_index]
+        if attribute_value is None:
+          continue
 
-        if attribute_value is not None:
-          if attribute_type == 'bool':
-            attribute_value = bool(attribute_value)
+        data_type = schema[name]
+        if data_type == 'bool':
+          attribute_value = bool(attribute_value)
 
+        elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
           # TODO: add compression support
-          elif attribute_type not in (
-              self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS):
-            attribute_value = self._serializer.ReadSerialized(attribute_value)
+          attribute_value = self._serializer.ReadSerialized(attribute_value)
 
-        setattr(container, column_name, attribute_value)
+        setattr(container, name, attribute_value)
 
     else:
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
@@ -320,11 +313,13 @@ class SQLiteStorageFile(interface.BaseStore):
     return container
 
   def _GetAttributeContainersWithFilter(
-      self, container_type, filter_expression=None, order_by=None):
+      self, container_type, column_names=None, filter_expression=None,
+      order_by=None):
     """Retrieves a specific type of stored attribute containers.
 
     Args:
       container_type (str): attribute container type.
+      column_names (Optional[list[str]]): names of the columns to retrieve.
       filter_expression (Optional[str]): expression to filter results by.
       order_by (Optional[str]): name of a column to order the results by.
 
@@ -335,13 +330,6 @@ class SQLiteStorageFile(interface.BaseStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
-
-    if self._use_schema and schema:
-      column_names = sorted(schema.keys())
-    else:
-      column_names = ['_data']
-
     query = 'SELECT _identifier, {0:s} FROM {1:s}'.format(
         ', '.join(column_names), container_type)
     if filter_expression:
@@ -528,144 +516,83 @@ class SQLiteStorageFile(interface.BaseStore):
 
     Args:
       container (AttributeContainer): attribute container.
+
+    Raises:
+      ValueError: if an attribute container identifier is missing.
     """
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      self._UpdateEventAfterDeserialize(container)
+      row_identifier = getattr(container, '_event_data_row_identifier', None)
+      if row_identifier is None:
+        raise ValueError('Missing event data row identifier attribute')
+
+      event_data_identifier = identifiers.SQLTableIdentifier(
+          self._CONTAINER_TYPE_EVENT_DATA, row_identifier)
+      container.SetEventDataIdentifier(event_data_identifier)
+
+      delattr(container, '_event_data_row_identifier')
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-      self._UpdateEventDataAfterDeserialize(container)
+      row_identifier = getattr(
+          container, '_event_data_stream_row_identifier', None)
+      if row_identifier is None:
+        return
+
+      event_data_stream_identifier = identifiers.SQLTableIdentifier(
+          self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+      container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+      delattr(container, '_event_data_stream_row_identifier')
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
-      self._UpdateEventTagAfterDeserialize(container)
+      row_identifier = getattr(container, '_event_row_identifier', None)
+      if row_identifier is None:
+        raise ValueError('Missing event row identifier attribute')
+
+      event_identifier = identifiers.SQLTableIdentifier(
+          self._CONTAINER_TYPE_EVENT, row_identifier)
+      container.SetEventIdentifier(event_identifier)
+
+      delattr(container, '_event_row_identifier')
 
   def _UpdateAttributeContainerBeforeSerialize(self, container):
     """Updates an attribute container before serialization.
 
     Args:
       container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: if the attribute container identifier type is not supported.
+      OSError: if the attribute container identifier type is not supported.
     """
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      self._UpdateEventBeforeSerialize(container)
+      event_data_identifier = container.GetEventDataIdentifier()
+      if not isinstance(event_data_identifier, identifiers.SQLTableIdentifier):
+        raise IOError('Unsupported event data identifier type: {0!s}'.format(
+            type(event_data_identifier)))
+
+      setattr(container, '_event_data_row_identifier',
+              event_data_identifier.sequence_number)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-      self._UpdateEventDataBeforeSerialize(container)
+      event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+      if event_data_stream_identifier:
+        if not isinstance(
+            event_data_stream_identifier, identifiers.SQLTableIdentifier):
+          raise IOError(
+              'Unsupported event data stream identifier type: {0!s}'.format(
+                  type(event_data_stream_identifier)))
+
+        setattr(container, '_event_data_stream_row_identifier',
+                event_data_stream_identifier.sequence_number)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
-      self._UpdateEventTagBeforeSerialize(container)
+      event_identifier = container.GetEventIdentifier()
+      if not isinstance(event_identifier, identifiers.SQLTableIdentifier):
+        raise IOError('Unsupported event identifier type: {0!s}'.format(
+            type(event_identifier)))
 
-  def _UpdateEventAfterDeserialize(self, event):
-    """Updates an event after deserialization.
-
-    Args:
-      event (EventObject): event.
-
-    Raises:
-      ValueError: if the event data row identifier attribute is missing.
-    """
-    row_identifier = getattr(event, '_event_data_row_identifier', None)
-    if row_identifier is None:
-      raise ValueError('Missing event data row identifier attribute')
-
-    event_data_identifier = identifiers.SQLTableIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA, row_identifier)
-    event.SetEventDataIdentifier(event_data_identifier)
-
-    delattr(event, '_event_data_row_identifier')
-
-  def _UpdateEventBeforeSerialize(self, event):
-    """Updates an event before serialization.
-
-    Args:
-      event (EventObject): event.
-
-    Raises:
-      IOError: if the event data identifier type is not supported.
-      OSError: if the event data identifier type is not supported.
-    """
-    event_data_identifier = event.GetEventDataIdentifier()
-
-    if not isinstance(event_data_identifier, identifiers.SQLTableIdentifier):
-      raise IOError('Unsupported event data identifier type: {0!s}'.format(
-          type(event_data_identifier)))
-
-    setattr(event, '_event_data_row_identifier',
-            event_data_identifier.row_identifier)
-
-  def _UpdateEventDataAfterDeserialize(self, event_data):
-    """Updates event data after deserialization.
-
-    Args:
-      event_data (EventData): event data.
-    """
-    row_identifier = getattr(
-        event_data, '_event_data_stream_row_identifier', None)
-    if row_identifier is None:
-      return
-
-    event_data_stream_identifier = identifiers.SQLTableIdentifier(
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
-    event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
-
-    delattr(event_data, '_event_data_stream_row_identifier')
-
-  def _UpdateEventDataBeforeSerialize(self, event_data):
-    """Updates event data before serialization.
-
-    Args:
-      event_data (EventData): event data.
-
-    Raises:
-      IOError: if the event data stream identifier type is not supported.
-      OSError: if the event data stream identifier type is not supported.
-    """
-    event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
-    if event_data_stream_identifier is None:
-      return
-
-    if not isinstance(
-        event_data_stream_identifier, identifiers.SQLTableIdentifier):
-      raise IOError(
-          'Unsupported event data stream identifier type: {0!s}'.format(
-              type(event_data_stream_identifier)))
-
-    setattr(event_data, '_event_data_stream_row_identifier',
-            event_data_stream_identifier.row_identifier)
-
-  def _UpdateEventTagAfterDeserialize(self, event_tag):
-    """Updates an event tag after deserialization.
-
-    Args:
-      event_tag (EventTag): event tag.
-
-    Raises:
-      ValueError: if the event row identifier attribute is missing.
-    """
-    row_identifier = getattr(event_tag, '_event_row_identifier', None)
-    if row_identifier is None:
-      raise ValueError('Missing event row identifier attribute')
-
-    event_identifier = identifiers.SQLTableIdentifier(
-        self._CONTAINER_TYPE_EVENT, row_identifier)
-    event_tag.SetEventIdentifier(event_identifier)
-
-    delattr(event_tag, '_event_row_identifier')
-
-  def _UpdateEventTagBeforeSerialize(self, event_tag):
-    """Updates an event tag before serialization.
-
-    Args:
-      event_tag (EventTag): event tag.
-
-    Raises:
-      IOError: if the event identifier type is not supported.
-      OSError: if the event identifier type is not supported.
-    """
-    event_identifier = event_tag.GetEventIdentifier()
-    if not isinstance(event_identifier, identifiers.SQLTableIdentifier):
-      raise IOError('Unsupported event identifier type: {0!s}'.format(
-          type(event_identifier)))
-
-    setattr(event_tag, '_event_row_identifier', event_identifier.row_identifier)
+      setattr(container, '_event_row_identifier',
+              event_identifier.sequence_number)
 
   def _UpdateStorageMetadataFormatVersion(self):
     """Updates the storage metadata format version.
@@ -703,26 +630,24 @@ class SQLiteStorageFile(interface.BaseStore):
           'Unsupported attribute container identifier type: {0!s}'.format(
               type(identifier)))
 
-    self._UpdateAttributeContainerBeforeSerialize(container)
-
     schema = self._CONTAINER_SCHEMAS.get(container.CONTAINER_TYPE, {})
     if not schema:
       raise IOError(
           'Unsupported attribute container type: {0:s}'.format(
               container.CONTAINER_TYPE))
 
+    self._UpdateAttributeContainerBeforeSerialize(container)
+
     column_names = []
     values = []
-    for name, attribute_type in sorted(schema.items()):
+    for name, data_type in sorted(schema.items()):
       attribute_value = getattr(container, name, None)
-
       if attribute_value is not None:
-        if attribute_type == 'bool':
+        if data_type == 'bool':
           attribute_value = int(attribute_value)
 
-        # TODO: add compression support
-        elif attribute_type not in (
-            self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS):
+        elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
+          # TODO: add compression support
           attribute_value = self._serializer.WriteSerialized(attribute_value)
 
       column_names.append('{0:s} = ?'.format(name))
@@ -730,7 +655,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
     query = 'UPDATE {0:s} SET {1:s} WHERE _identifier = {2:d}'.format(
         container.CONTAINER_TYPE, ', '.join(column_names),
-        identifier.row_identifier)
+        identifier.sequence_number)
 
     if self._storage_profiler:
       self._storage_profiler.StartTiming('write_existing')
@@ -801,23 +726,21 @@ class SQLiteStorageFile(interface.BaseStore):
         container.CONTAINER_TYPE, next_sequence_number)
     container.SetIdentifier(identifier)
 
-    self._UpdateAttributeContainerBeforeSerialize(container)
-
     schema = self._CONTAINER_SCHEMAS.get(container.CONTAINER_TYPE, {})
+
+    self._UpdateAttributeContainerBeforeSerialize(container)
 
     if self._use_schema and schema:
       column_names = []
       values = []
-      for name, attribute_type in sorted(schema.items()):
+      for name, data_type in sorted(schema.items()):
         attribute_value = getattr(container, name, None)
-
         if attribute_value is not None:
-          if attribute_type == 'bool':
+          if data_type == 'bool':
             attribute_value = int(attribute_value)
 
-          # TODO: add compression support
-          elif attribute_type not in (
-              self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS):
+          elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
+            # TODO: add compression support
             attribute_value = self._serializer.WriteSerialized(attribute_value)
 
         column_names.append(name)
@@ -951,7 +874,7 @@ class SQLiteStorageFile(interface.BaseStore):
               type(identifier)))
 
     return self.GetAttributeContainerByIndex(
-        container_type, identifier.row_identifier - 1)
+        container_type, identifier.sequence_number - 1)
 
   def GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
@@ -980,9 +903,9 @@ class SQLiteStorageFile(interface.BaseStore):
     else:
       column_names = ['_data']
 
-    sequence_number = index + 1
+    row_number = index + 1
     query = 'SELECT {0:s} FROM {1:s} WHERE rowid = {2:d}'.format(
-        ', '.join(column_names), container_type, sequence_number)
+        ', '.join(column_names), container_type, row_number)
 
     try:
       self._cursor.execute(query)
@@ -1006,8 +929,7 @@ class SQLiteStorageFile(interface.BaseStore):
     container = self._CreatetAttributeContainerFromRow(
         container_type, column_names, row, 0)
 
-    identifier = identifiers.SQLTableIdentifier(
-        container_type, sequence_number)
+    identifier = identifiers.SQLTableIdentifier(container_type, row_number)
     container.SetIdentifier(identifier)
 
     self._UpdateAttributeContainerAfterDeserialize(container)
@@ -1028,7 +950,15 @@ class SQLiteStorageFile(interface.BaseStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    return self._GetAttributeContainersWithFilter(container_type)
+    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+
+    if self._use_schema and schema:
+      column_names = sorted(schema.keys())
+    else:
+      column_names = ['_data']
+
+    return self._GetAttributeContainersWithFilter(
+        container_type, column_names=column_names)
 
   def GetEventTagByEventIdentifier(self, event_identifier):
     """Retrieves the event tag related to a specific event identifier.
@@ -1049,11 +979,14 @@ class SQLiteStorageFile(interface.BaseStore):
     if not self._use_schema or not schema:
       return None
 
+    column_names = sorted(schema.keys())
+
     filter_expression = '_event_row_identifier = {0:d}'.format(
-        event_identifier.row_identifier)
+        event_identifier.sequence_number)
 
     generator = self._GetAttributeContainersWithFilter(
-        self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression)
+        self._CONTAINER_TYPE_EVENT_TAG, column_names=column_names,
+        filter_expression=filter_expression)
 
     existing_event_tags = list(generator)
     if len(existing_event_tags) != 1:
@@ -1111,27 +1044,29 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     schema = self._CONTAINER_SCHEMAS.get(self._CONTAINER_TYPE_EVENT, {})
     if self._use_schema and schema:
-      column_name = 'timestamp'
+      filter_column_name = 'timestamp'
+      column_names = sorted(schema.keys())
     else:
-      column_name = '_timestamp'
+      filter_column_name = '_timestamp'
+      column_names = ['_data']
 
     filter_expression = None
     if time_range:
       filter_expression = []
 
       if time_range.start_timestamp:
-        filter_expression.append(
-            '{0:s} >= {1:d}'.format(column_name, time_range.start_timestamp))
+        filter_expression.append('{0:s} >= {1:d}'.format(
+            filter_column_name, time_range.start_timestamp))
 
       if time_range.end_timestamp:
-        filter_expression.append(
-            '{0:s} <= {1:d}'.format(column_name, time_range.end_timestamp))
+        filter_expression.append('{0:s} <= {1:d}'.format(
+            filter_column_name, time_range.end_timestamp))
 
       filter_expression = ' AND '.join(filter_expression)
 
     return self._GetAttributeContainersWithFilter(
-        self._CONTAINER_TYPE_EVENT, filter_expression=filter_expression,
-        order_by=column_name)
+        self._CONTAINER_TYPE_EVENT, column_names=column_names,
+        filter_expression=filter_expression, order_by=filter_column_name)
 
   def HasAttributeContainers(self, container_type):
     """Determines if store contains a specific type of attribute containers.
