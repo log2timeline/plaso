@@ -66,8 +66,8 @@ class EventData(interface.AttributeContainer):
   def GetEventDataStreamIdentifier(self):
     """Retrieves the identifier of the associated event data stream.
 
-    The event data stream identifier is a storage specific value that should not
-    be serialized.
+    The event data stream identifier is a storage specific value that requires
+    special handling during serialization.
 
     Returns:
       AttributeContainerIdentifier: event data stream or None when not set.
@@ -77,8 +77,8 @@ class EventData(interface.AttributeContainer):
   def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
     """Sets the identifier of the associated event data stream.
 
-    The event data stream identifier is a storage specific value that should not
-    be serialized.
+    The event data stream identifier is a storage specific value that requires
+    special handling during serialization.
 
     Args:
       event_data_stream_identifier (AttributeContainerIdentifier): event data
@@ -161,8 +161,8 @@ class EventObject(interface.AttributeContainer):
   def GetEventDataIdentifier(self):
     """Retrieves the identifier of the associated event data.
 
-    The event data identifier is a storage specific value that should not
-    be serialized.
+    The event data identifier is a storage specific value that requires special
+    handling during serialization.
 
     Returns:
       AttributeContainerIdentifier: event data identifier or None when not set.
@@ -172,8 +172,8 @@ class EventObject(interface.AttributeContainer):
   def SetEventDataIdentifier(self, event_data_identifier):
     """Sets the identifier of the associated event data.
 
-    The event data identifier is a storage specific value that should not
-    be serialized.
+    The event data identifier is a storage specific value that requires special
+    handling during serialization.
 
     Args:
       event_data_identifier (AttributeContainerIdentifier): event data
@@ -272,8 +272,8 @@ class EventTag(interface.AttributeContainer):
   def GetEventIdentifier(self):
     """Retrieves the identifier of the associated event.
 
-    The event identifier is a storage specific value that should not
-    be serialized.
+    The event identifier is a storage specific value that requires special
+    handling during serialization.
 
     Returns:
       AttributeContainerIdentifier: event identifier or None when not set.
@@ -283,8 +283,8 @@ class EventTag(interface.AttributeContainer):
   def SetEventIdentifier(self, event_identifier):
     """Sets the identifier of the associated event.
 
-    The event identifier is a storage specific value that should not
-    be serialized.
+    The event identifier is a storage specific value that requires special
+    handling during serialization.
 
     Args:
       event_identifier (AttributeContainerIdentifier): event identifier.
