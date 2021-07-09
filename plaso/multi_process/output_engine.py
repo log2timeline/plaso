@@ -465,8 +465,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     self._status_update_callback = status_update_callback
 
     total_number_of_events = 0
-    for session in storage_reader.GetSessions():
-      total_number_of_events += session.parsers_counter['total']
+    for stored_session in storage_reader.GetSessions():
+      total_number_of_events += stored_session.parsers_counter['total']
 
     self._events_status.total_number_of_events = total_number_of_events
 

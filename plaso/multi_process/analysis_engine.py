@@ -535,6 +535,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
 
+    total_number_of_events = 0
+    for stored_session in storage_writer.GetSessions():
+      total_number_of_events += stored_session.parsers_counter['total']
+
+    self._events_status.total_number_of_events = total_number_of_events
+
     # Set up the storage writer before the analysis processes.
     self._StartTaskStorage(definitions.STORAGE_FORMAT_SQLITE)
 

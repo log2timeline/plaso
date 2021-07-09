@@ -231,6 +231,14 @@ class StorageWriter(object):
       EventSource: event source or None if there are no newly written ones.
     """
 
+  def GetSessions(self):
+    """Retrieves the sessions.
+
+    Returns:
+      generator(Session): session generator.
+    """
+    return self._store.GetSessions()
+
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
@@ -270,29 +278,65 @@ class StorageWriter(object):
     if self._store:
       self._store.SetStorageProfiler(storage_profiler)
 
-  @abc.abstractmethod
   def WriteSessionCompletion(self, session):
     """Writes session completion information.
 
     Args:
       session (Session): session the storage changes are part of.
-    """
 
-  @abc.abstractmethod
+    Raises:
+      IOError: when the storage writer is closed or if the storage type is
+          not supported.
+      OSError: when the storage writer is closed or if the storage type is
+          not supported.
+    """
+    self._RaiseIfNotWritable()
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    session_completion = session.CreateSessionCompletion()
+    self._store.AddAttributeContainer(session_completion)
+
   def WriteSessionConfiguration(self, session):
     """Writes session configuration information.
 
     Args:
       session (Session): session the storage changes are part of.
-    """
 
-  @abc.abstractmethod
+    Raises:
+      IOError: when the storage writer is closed or if the storage type is
+          not supported.
+      OSError: when the storage writer is closed or if the storage type is
+          not supported.
+    """
+    self._RaiseIfNotWritable()
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    session_configuration = session.CreateSessionConfiguration()
+    self._store.AddAttributeContainer(session_configuration)
+
   def WriteSessionStart(self, session):
     """Writes session start information.
 
     Args:
       session (Session): session the storage changes are part of.
+
+    Raises:
+      IOError: when the storage writer is closed or if the storage type is
+          not supported.
+      OSError: when the storage writer is closed or if the storage type is
+          not supported.
     """
+    self._RaiseIfNotWritable()
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    session_start = session.CreateSessionStart()
+    self._store.AddAttributeContainer(session_start)
 
   def WriteTaskCompletion(self, task):
     """Writes task completion information.
