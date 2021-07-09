@@ -479,27 +479,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       test_store.Close()
 
-  def testWriteSessionStartConfigurationAndCompletion(self):
-    """Tests the WriteSessionStart, Configuration and Completion functions."""
-    session = sessions.Session()
-    session_start = sessions.SessionStart(identifier=session.identifier)
-    session_configuration = sessions.SessionConfiguration(
-        identifier=session.identifier)
-    session_completion = sessions.SessionCompletion(
-        identifier=session.identifier)
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      test_store = sqlite_file.SQLiteStorageFile(
-          storage_type=definitions.STORAGE_TYPE_SESSION)
-      test_store.Open(path=test_path, read_only=False)
-
-      test_store.WriteSessionStart(session_start)
-      test_store.WriteSessionConfiguration(session_configuration)
-      test_store.WriteSessionCompletion(session_completion)
-
-      test_store.Close()
-
   def testWriteTaskStartAndCompletion(self):
     """Tests the WriteTaskStart and WriteTaskCompletion functions."""
     session = sessions.Session()
