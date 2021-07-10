@@ -65,6 +65,7 @@ class BaseStore(object):
   # Container types that only should be used in a session store.
   _SESSION_STORE_ONLY_CONTAINER_TYPES = (
       _CONTAINER_TYPE_SESSION_COMPLETION,
+      _CONTAINER_TYPE_SESSION_CONFIGURATION,
       _CONTAINER_TYPE_SESSION_START,
       _CONTAINER_TYPE_SYSTEM_CONFIGURATION)
 
@@ -292,6 +293,8 @@ class BaseStore(object):
       int: the number of containers of a specified type.
     """
 
+  # TODO: remove the need for seperate SessionStart and SessionCompletion
+  # attribute containers.
   def GetSessions(self):
     """Retrieves the sessions.
 
@@ -414,61 +417,6 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
     self._WriteExistingAttributeContainer(container)
-
-  def WriteSessionCompletion(self, session_completion):
-    """Writes session completion information.
-
-    Args:
-      session_completion (SessionCompletion): session completion information.
-
-    Raises:
-      IOError: if the storage type does not support writing a session
-          completion or if the store cannot be written to.
-      OSError: if the storage type does not support writing a session
-          completion or if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Session completion not supported by storage type.')
-
-    self._WriteNewAttributeContainer(session_completion)
-
-  def WriteSessionConfiguration(self, session_configuration):
-    """Writes session configuration information.
-
-    Args:
-      session_configuration (SessionConfiguration): session configuration
-          information.
-
-     Raises:
-       OSError: if the store cannot be written to.
-       IOError: if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    if not self.HasAttributeContainers(
-        self._CONTAINER_TYPE_SYSTEM_CONFIGURATION):
-      self._WriteNewAttributeContainer(session_configuration)
-
-  def WriteSessionStart(self, session_start):
-    """Writes session start information.
-
-    Args:
-      session_start (SessionStart): session start information.
-
-    Raises:
-      IOError: if the storage type does not support writing a session
-          start or if the store cannot be written to.
-      OSError: if the storage type does not support writing a session
-          start or if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Session start not supported by storage type.')
-
-    self._WriteNewAttributeContainer(session_start)
 
   def WriteTaskCompletion(self, task_completion):
     """Writes task completion information.
