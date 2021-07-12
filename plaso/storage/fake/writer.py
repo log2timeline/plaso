@@ -10,11 +10,6 @@ class FakeStorageWriter(writer.StorageWriter):
   """Fake (in-memory only) storage writer object.
 
   Attributes:
-    session_completion (SessionCompletion): session completion attribute
-        container.
-    session_configuration (SessionConfiguration): session configuration
-        attribute container.
-    session_start (SessionStart): session start attribute container.
     task_completion (TaskCompletion): task completion attribute container.
     task_start (TaskStart): task start attribute container.
   """
@@ -26,9 +21,6 @@ class FakeStorageWriter(writer.StorageWriter):
       storage_type (Optional[str]): storage type.
     """
     super(FakeStorageWriter, self).__init__(storage_type=storage_type)
-    self.session_completion = None
-    self.session_configuration = None
-    self.session_start = None
     self.task_completion = None
     self.task_start = None
 
@@ -88,64 +80,6 @@ class FakeStorageWriter(writer.StorageWriter):
 
     self._first_written_event_source_index = 0
     self._written_event_source_index = 0
-
-  def WriteSessionCompletion(self, session):
-    """Writes session completion information.
-
-
-    Args:
-      session (Session): session the storage changes are part of.
-
-    Raises:
-      IOError: if the storage type does not support writing a session
-          completion or when the storage writer is closed.
-      OSError: if the storage type does not support writing a session
-          completion or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Session start not supported by storage type.')
-
-    self.session_completion = session.CreateSessionCompletion()
-
-  def WriteSessionConfiguration(self, session):
-    """Writes session configuration information.
-
-    Args:
-      session (Session): session the storage changes are part of.
-
-    Raises:
-      IOError: if the storage type does not support writing session
-          configuration information or when the storage writer is closed.
-      OSError: if the storage type does not support writing session
-          configuration information or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Session configuration not supported by storage type.')
-
-    self.session_configuration = session.CreateSessionConfiguration()
-
-  def WriteSessionStart(self, session):
-    """Writes session start information.
-
-    Args:
-      session (Session): session the storage changes are part of.
-
-    Raises:
-      IOError: if the storage type does not support writing a session
-          start or when the storage writer is closed.
-      OSError: if the storage type does not support writing a session
-          start or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Session start not supported by storage type.')
-
-    self.session_start = session.CreateSessionStart()
 
   # TODO: refactor into base writer.
   def WriteTaskCompletion(self, task):

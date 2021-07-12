@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Storage writer for SQLite storage files."""
 
-from plaso.lib import definitions
 from plaso.storage import writer
 from plaso.storage.sqlite import sqlite_file
 
@@ -81,63 +80,3 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
         self._CONTAINER_TYPE_EVENT_SOURCE)
     self._first_written_event_source_index = number_of_event_sources
     self._written_event_source_index = self._first_written_event_source_index
-
-  def WriteSessionCompletion(self, session):
-    """Writes session completion information.
-
-    Args:
-      session (Session): session the storage changes are part of.
-
-    Raises:
-      IOError: if the storage type is not supported or
-          when the storage writer is closed.
-      OSError: if the storage type is not supported or
-          when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    session_completion = session.CreateSessionCompletion()
-    self._store.WriteSessionCompletion(session_completion)
-
-  def WriteSessionConfiguration(self, session):
-    """Writes session configuration information.
-
-    Args:
-      session (Session): session the storage changes are part of.
-
-    Raises:
-      IOError: if the storage type does not support writing session
-          configuration information or when the storage writer is closed.
-      OSError: if the storage type does not support writing session
-          configuration information or when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Session configuration not supported by storage type.')
-
-    session_configuration = session.CreateSessionConfiguration()
-    self._store.WriteSessionConfiguration(session_configuration)
-
-  def WriteSessionStart(self, session):
-    """Writes session start information.
-
-    Args:
-      session (Session): session the storage changes are part of.
-
-    Raises:
-      IOError: if the storage type is not supported or
-          when the storage writer is closed.
-      OSError: if the storage type is not supported or
-          when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    session_start = session.CreateSessionStart()
-    self._store.WriteSessionStart(session_start)
