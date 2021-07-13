@@ -26,7 +26,7 @@ attributes:
 ---
 name: cstring
 type: string
-encoding: ascii
+encoding: utf-8
 element_data_type: uint8
 elements_terminator: "\x00"
 ---
@@ -36,14 +36,12 @@ attributes:
   byte_order: big-endian
 members:
 - name: signature
-  type: sequence
+  type: stream
   element_data_type: uint8
-  number_of_elements: 8
+  elements_data_size: 8
   value: "\x00mlocate"
 - name: conf_size
   data_type: uint32
-- name: value_size
-  data_type: uint8
 - name: version
   data_type: uint8
 - name: check_visibility
@@ -66,6 +64,8 @@ members:
   type: sequence
   element_data_type: uint8
   number_of_elements: 4
+- name: name
+  data_type: cstring
 --- 
 name: directory_entry_types
 type: enumeration
@@ -85,6 +85,7 @@ name: directory_entry
 type: structure
 members:
 - name: type
-  data_type: directory_entry_types
-- name: name
-  data_type: cstring
+  data_type: uint8
+# - name: name
+#   condition: directory_entry.type != 2
+#   data_type: cstring
