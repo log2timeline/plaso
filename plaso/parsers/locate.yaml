@@ -1,0 +1,90 @@
+name: locate_database
+type: format
+description: Locate (updatedb) database.
+urls: ["https://pagure.io/mlocate/blob/master/f/src/db.h"]
+---
+name: uint8
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: cstring
+type: string
+encoding: ascii
+element_data_type: uint8
+elements_terminator: "\x00"
+---
+name: locate_database_header
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: signature
+  type: sequence
+  element_data_type: uint8
+  number_of_elements: 8
+  value: "\x00mlocate"
+- name: conf_size
+  data_type: uint32
+- name: value_size
+  data_type: uint8
+- name: version
+  data_type: uint8
+- name: check_visibility
+  data_type: uint8
+- name: pad
+  type: sequence
+  element_data_type: uint8
+  number_of_elements: 2
+---
+name: directory_header
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: time_sec
+  data_type: uint64
+- name: time_nsec
+  data_type: uint32
+- name: pad
+  type: sequence
+  element_data_type: uint8
+  number_of_elements: 4
+--- 
+name: directory_entry_types
+type: enumeration
+description: Directory Entry types
+values:
+- name: DBE_NORMAL
+  number: 0
+  description: A non-directory file
+- name: DBE_DIRECTORY
+  number: 1
+  description: A directory entry
+- name: DBE_END
+  number: 2
+  description: End of directory contents; contains no name
+---
+name: directory_entry
+type: structure
+members:
+- name: type
+  data_type: directory_entry_types
+- name: name
+  data_type: cstring
