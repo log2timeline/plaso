@@ -22,23 +22,29 @@ class LocateUnitTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
-
-    expected_event_values = {'folder_path': '/home/user/temp'}
+    
+    expected_event_values = {'folder_path': '/home/user/temp',
+      'date_time': '2021-07-09 04:36:19.606373200'}
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/1'}
+    expected_event_values = {'folder_path': '/home/user/temp/1',
+      'date_time': '2021-07-09 04:11:07.438810500'}
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/2'}
+    expected_event_values = {'folder_path': '/home/user/temp/2',
+      'date_time': '2021-07-09 04:10:54.884843500'}
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/3'}
+    expected_event_values = {'folder_path': '/home/user/temp/3',
+      'date_time': '2021-07-09 04:11:25.146217000'}
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/3/3c'}
+    expected_event_values = {'folder_path': '/home/user/temp/3/3c',
+      'date_time': '2021-07-09 04:11:25.146217000'}
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/À'}
+    expected_event_values = {'folder_path': '/home/user/temp/À',
+      'date_time': '2021-07-09 04:36:19.606373200'}
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
 

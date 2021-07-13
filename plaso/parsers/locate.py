@@ -39,7 +39,11 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
   DB_MAGIC = b"\x00mlocate"
 
   def __init__(self):
-    """Initialises a locate database file."""
+    """Initialises a locate database file.
+    
+    Attributes:
+      root_path (str): root path of the database
+    """
     super(LocateDatabaseFile, self).__init__()
     self.root_path = None
     self._file_object = None
@@ -82,6 +86,8 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
       directory_timestamp += directory_header.time_nsec
       posix_timestamp = posix_time.PosixTimeInNanoseconds(
         timestamp=directory_timestamp)
+      print(directory_timestamp)
+      print(posix_timestamp.CopyToDateTimeString())
       yield directory_header.name, posix_timestamp
 
       # skip over file / subdirectory names as they don't have any timestamps
