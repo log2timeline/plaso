@@ -34,13 +34,13 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
   """Locate database file."""
 
   _DEFINITION_FILE = os.path.join(
-    os.path.dirname(__file__), 'locate.yaml')
+      os.path.dirname(__file__), 'locate.yaml')
 
   DB_MAGIC = b"\x00mlocate"
 
   def __init__(self):
     """Initialises a locate database file.
-    
+
     Attributes:
       root_path (str): root path of the database
     """
@@ -73,7 +73,7 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
         break
       try:
         directory_header, directory_header_size = (
-          self._ReadStructureFromFileObject(self._file_object,
+            self._ReadStructureFromFileObject(self._file_object,
             self._file_offset, directory_header_map))
         self._file_offset += directory_header_size
       except (ValueError, errors.ParseError) as exception:
@@ -81,27 +81,25 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
           'Unable to parse locate directory header with error {0!s}'.format(
             exception))
 
-      directory_timestamp = (directory_header.time_sec *
-        definitions.NANOSECONDS_PER_SECOND)
+      directory_timestamp = (
+          directory_header.time_sec*definitions.NANOSECONDS_PER_SECOND)
       directory_timestamp += directory_header.time_nsec
       posix_timestamp = posix_time.PosixTimeInNanoseconds(
-        timestamp=directory_timestamp)
-      print(directory_timestamp)
-      print(posix_timestamp.CopyToDateTimeString())
+          timestamp=directory_timestamp)
       yield directory_header.name, posix_timestamp
 
       # skip over file / subdirectory names as they don't have any timestamps
       while True:
         try:
           directory_entry, directory_entry_size = (
-            self._ReadStructureFromFileObject(self._file_object,
-              self._file_offset, directory_entry_map))
+              self._ReadStructureFromFileObject(
+                  self._file_object, self._file_offset, directory_entry_map))
           self._file_offset += directory_entry_size
           if directory_entry.type == 0x02:
             break
 
           _, data_size = self._ReadStructureFromFileObject(
-            self._file_object, self._file_offset, cstring_map)
+              self._file_object, self._file_offset, cstring_map)
           self._file_offset += data_size
         except (ValueError, errors.ParseError) as exception:
           raise errors.UnableToParseFile(
@@ -130,11 +128,11 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
 
     try:
       locate_database_header, data_size = self._ReadStructureFromFileObject(
-        self._file_object, self._file_offset, locate_database_header_map)
+          self._file_object, self._file_offset, locate_database_header_map)
       self._file_offset += data_size
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
-        'Unable to parse locate database header with error: {0!s}'.format(
+          'Unable to parse locate database header with error: {0!s}'.format(
           exception))
     if locate_database_header.signature != self.DB_MAGIC:
       raise errors.UnableToParseFile('Invalid file magic')
@@ -142,11 +140,11 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
     cstring_map = self._GetDataTypeMap('cstring')
     try:
       self.root_path, data_size = self._ReadStructureFromFileObject(
-        self._file_object, self._file_offset, cstring_map)
+          self._file_object, self._file_offset, cstring_map)
       self._file_offset += data_size
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
-        'Unable to parse root path with error: {0!s}'.format(
+          'Unable to parse root path with error: {0!s}'.format(
           exception))
 
     # skip configuration section for now
@@ -192,7 +190,7 @@ class LocateDatabaseParser(interface.FileObjectParser):
         event_data.folder_path = folder_path
 
         event = time_events.DateTimeValuesEvent(
-          folder_timestamp, definitions.TIME_DESCRIPTION_MODIFICATION)
+            folder_timestamp, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
     except Exception as exception:  # pylint: disable=broad-except
       raise errors.UnableToParseFile(
