@@ -5,6 +5,7 @@ artifacts >= 20210620
 bencode.py
 certifi >= 2016.9.26
 cffi >= 1.9.1
+chardet >= 4.0.0
 cryptography >= 2.0.2
 defusedxml >= 0.5.0
 dfdatetime >= 20210509
