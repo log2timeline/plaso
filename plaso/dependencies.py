@@ -19,7 +19,6 @@ PYTHON_DEPENDENCIES = {
     'artifacts': ('__version__', '20210620', None, True),
     'bencode': ('', '', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
-    'chardet': ('__version__', '2.0.1', None, True),
     'cryptography': ('__version__', '2.0.2', None, True),
     'dateutil': ('__version__', '1.5', None, True),
     'defusedxml': ('__version__', '0.5.0', None, True),
