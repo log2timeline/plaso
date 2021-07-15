@@ -22,7 +22,7 @@ class LocateUnitTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     events = list(storage_writer.GetEvents())
-    
+
     expected_event_values = {'folder_path': '/home/user/temp',
       'date_time': '2021-07-09 04:36:19.606373200'}
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
