@@ -32,7 +32,7 @@ class FishHistoryEventData(events.EventData):
 
 
 class FishHistoryParser(interface.FileObjectParser):
-  """Parses events from Bash history files."""
+  """Parses events from Fish history files."""
 
   NAME = 'fish_history'
   DATA_FORMAT = 'Fish history file'
