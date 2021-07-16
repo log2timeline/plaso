@@ -1,7 +1,7 @@
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for locate database file parser."""
+"""Tests for fish history file parser."""
 
 import unittest
 
@@ -10,11 +10,11 @@ from plaso.parsers import fish_history
 from tests.parsers import test_lib
 
 
-class LocateUnitTest(test_lib.ParserTestCase):
-  """Tests for Locate Database file parser."""
+class FishHistoryTest(test_lib.ParserTestCase):
+  """Tests for Fish History file parser."""
 
   def testParseFile(self):
-    """Test parsing of a Locate Database file."""
+    """Test parsing of a Fish History file."""
     parser = fish_history.FishHistoryParser()
     storage_writer = self._ParseFile(['fish_history'], parser)
 
