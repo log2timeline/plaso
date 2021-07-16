@@ -18,6 +18,7 @@ from plaso.parsers import dpkg
 from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
+from plaso.parsers import fish_history
 from plaso.parsers import fseventsd
 from plaso.parsers import gdrive_synclog
 from plaso.parsers import google_logging
