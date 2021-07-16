@@ -21,7 +21,6 @@ class FishHistoryEventData(events.EventData):
 
   Attributes:
     command (str): command that was executed.
-    # paths ([str]): a list of paths in the executed command
   """
 
   DATA_TYPE = 'fish:history:command'
@@ -91,8 +90,8 @@ class FishHistoryParser(interface.FileObjectParser):
       try:
         last_executed = int(history_entry.get('when'))
       except ValueError as exception:
-        logger.debug('Invalid timestamp {0!s}, skipping record'
-                     .format(exception))
+        logger.debug(
+          'Invalid timestamp {0!s}, skipping record'.format(exception))
         continue
       last_executed_ts = dfdatetime_posix_time.PosixTime(
         timestamp=last_executed)

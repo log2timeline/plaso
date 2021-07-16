@@ -24,45 +24,45 @@ class LocateUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_event_values = {'command': 'll',
-                             'date_time': '2021-04-29 22:53:00'}
+    expected_event_values = {
+      'command': 'll', 'date_time': '2021-04-29 22:53:00'}
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_event_values = {'command': 'la',
-                             'date_time': '2021-04-29 22:53:02'}
+    expected_event_values = {
+      'command': 'la', 'date_time': '2021-04-29 22:53:02'}
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_event_values = {'command': 'mkdir test',
-                             'date_time': '2021-04-29 22:53:24'}
+    expected_event_values = {
+      'command': 'mkdir test', 'date_time': '2021-04-29 22:53:24'}
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_event_values = {'command': 'cp *.txt test',
-                             'date_time': '2021-04-29 22:53:32'}
+    expected_event_values = {
+      'command': 'cp *.txt test', 'date_time': '2021-04-29 22:53:32'}
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    expected_event_values = {'command': 'cd test',
-                             'date_time': '2021-04-29 22:53:37'}
+    expected_event_values = {
+      'command': 'cd test', 'date_time': '2021-04-29 22:53:37'}
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    expected_event_values = {'command': 'rm -rf test',
-                             'date_time': '2021-04-29 22:54:18'}
+    expected_event_values = {
+      'command': 'rm -rf test', 'date_time': '2021-04-29 22:54:18'}
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
-    expected_event_values = {'command': 'clear',
-                             'date_time': '2021-05-03 08:20:14'}
+    expected_event_values = {
+      'command': 'clear', 'date_time': '2021-05-03 08:20:14'}
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
-    expected_event_values = {'command': 'pwd',
-                             'date_time': '2021-05-03 19:08:19'}
+    expected_event_values = {
+      'command': 'pwd', 'date_time': '2021-05-03 19:08:19'}
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
-    expected_event_values = {'command':
-                              'git clone git@github.com:log2timeline/plaso.git',
-                             'date_time': '2021-07-11 02:58:01'}
+    expected_event_values = {
+      'command': 'git clone git@github.com:log2timeline/plaso.git',
+      'date_time': '2021-07-11 02:58:01'}
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
-    expected_event_values = {'command': 'cd plaso',
-                             'date_time': '2021-07-11 02:58:35'}
+    expected_event_values = {
+      'command': 'cd plaso', 'date_time': '2021-07-11 02:58:35'}
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
 if __name__ == '__main__':
