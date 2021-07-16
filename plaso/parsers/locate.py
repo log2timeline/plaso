@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for locate/updatedb database files."""
+"""Parser for locate database (updatedb) files."""
 
 import os
 
@@ -16,7 +16,7 @@ from plaso.parsers import manager
 
 
 class LocateDatabaseEvent(events.EventData):
-  """Linux Locate Database event data.
+  """Linux locate database (updatedb) event data.
 
   Attributes:
     folder_path (str): full folder path.
@@ -31,7 +31,11 @@ class LocateDatabaseEvent(events.EventData):
 
 
 class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
-  """Locate database file."""
+  """Locate database (updatedb) file.
+
+  Attributes:
+    root_path (str): root path of the database
+  """
 
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'locate.yaml')
@@ -39,11 +43,7 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
   DB_MAGIC = b"\x00mlocate"
 
   def __init__(self):
-    """Initialises a locate database file.
-
-    Attributes:
-      root_path (str): root path of the database
-    """
+    """Initialises a locate database (updatedb) file."""
     super(LocateDatabaseFile, self).__init__()
     self.root_path = None
     self._file_object = None
@@ -55,14 +55,14 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
     self._file_offset = 0
 
   def ParsePaths(self):
-    """Retrieves the paths and the last created|modified time
+    """Retrieves the paths and its date and time value.
 
     Yields:
-      tuple[str, PosixTimeInNanoSeconds]: path name and the last
-        created|modified time
+      tuple[str, PosixTimeInNanoSeconds]: path name and the its creation or
+          modification time.
 
     Raises:
-      UnableToParseFile: if the file cannot be parsed
+      UnableToParseFile: if the file cannot be parsed.
     """
     directory_header_map = self._GetDataTypeMap('directory_header')
     directory_entry_map = self._GetDataTypeMap('directory_entry')
@@ -152,17 +152,17 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
 
 
 class LocateDatabaseParser(interface.FileObjectParser):
-  """Parser for locate/updatedb database files"""
+  """Parser for locate database (updatedb) files"""
 
   NAME = 'locate_database'
-  DATA_FORMAT = 'Locate Database file'
+  DATA_FORMAT = 'Locate database file (updatedb)'
 
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification
 
     Returns:
-      FormatSpecification: format specifation.
+      FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(LocateDatabaseFile.DB_MAGIC, offset=0)
@@ -170,7 +170,7 @@ class LocateDatabaseParser(interface.FileObjectParser):
 
   #pylint: disable=unused-argument
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a locate/updatedb database file-like object.
+    """Parses a locate database (updatedb) file-like object.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -178,7 +178,7 @@ class LocateDatabaseParser(interface.FileObjectParser):
 
     Raises:
       UnableToParseFile: when the file cannot be parsed, this will signal
-        the event extractor to apply other parsers.
+          the event extractor to apply other parsers.
     """
     locate_file = LocateDatabaseFile()
 
