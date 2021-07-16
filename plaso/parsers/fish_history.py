@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for bash history files."""
+"""Parser for fish history files."""
 import io
 import re
 
