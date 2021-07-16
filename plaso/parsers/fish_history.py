@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for bash history files."""
+"""Parser for fish history files."""
 import io
 import re
 
@@ -32,7 +32,7 @@ class FishHistoryEventData(events.EventData):
 
 
 class FishHistoryParser(interface.FileObjectParser):
-  """Parses events from Bash history files."""
+  """Parses events from Fish history files."""
 
   NAME = 'fish_history'
   DATA_FORMAT = 'Fish history file'
