@@ -1,7 +1,7 @@
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for fish history file parser."""
+"""Tests for Fish History file parser."""
 
 import unittest
 
