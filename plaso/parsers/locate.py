@@ -45,9 +45,9 @@ class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
   def __init__(self):
     """Initialises a locate database (updatedb) file."""
     super(LocateDatabaseFile, self).__init__()
-    self.root_path = None
     self._file_object = None
     self._file_offset = 0
+    self.root_path = None
 
   def Close(self):
     """Closes the file."""
