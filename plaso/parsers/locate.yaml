@@ -40,32 +40,41 @@ members:
   element_data_type: uint8
   elements_data_size: 8
   value: "\x00mlocate"
-- name: conf_size
+- name: configuration_block_size
   data_type: uint32
-- name: version
+- name: format_version
   data_type: uint8
-- name: check_visibility
+  value: 0
+- name: require_visibility_flag
   data_type: uint8
-- name: pad
+- name: padding
   type: sequence
   element_data_type: uint8
   number_of_elements: 2
+- name: root_path
+  data_type: cstring
 ---
 name: directory_header
 type: structure
 attributes:
   byte_order: big-endian
 members:
-- name: time_sec
+- name: seconds
   data_type: uint64
-- name: time_nsec
+- name: nanoseconds
   data_type: uint32
-- name: pad
+- name: padding
   type: sequence
   element_data_type: uint8
   number_of_elements: 4
-- name: name
+- name: path
   data_type: cstring
+---
+name: directory_entry_header
+type: structure
+members:
+- name: type
+  data_type: uint8
 --- 
 name: directory_entry_types
 type: enumeration
@@ -80,12 +89,3 @@ values:
 - name: DBE_END
   number: 2
   description: End of directory contents; contains no name
----
-name: directory_entry
-type: structure
-members:
-- name: type
-  data_type: uint8
-# - name: name
-#   condition: directory_entry.type != 2
-#   data_type: cstring

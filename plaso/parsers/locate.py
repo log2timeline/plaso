@@ -19,7 +19,7 @@ class LocateDatabaseEvent(events.EventData):
   """Linux locate database (updatedb) event data.
 
   Attributes:
-    folder_path (str): full folder path.
+    paths (list[str]): paths of the locate database (updatedb) entry.
   """
 
   DATA_TYPE = 'linux:locate'
@@ -27,135 +27,18 @@ class LocateDatabaseEvent(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(LocateDatabaseEvent, self).__init__(data_type=self.DATA_TYPE)
-    self.folder_path = None
+    self.paths = None
 
 
-class LocateDatabaseFile(dtfabric_helper.DtFabricHelper):
-  """Locate database (updatedb) file.
-
-  Attributes:
-    root_path (str): root path of the database
-  """
-
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'locate.yaml')
-
-  DB_MAGIC = b"\x00mlocate"
-
-  def __init__(self):
-    """Initialises a locate database (updatedb) file."""
-    super(LocateDatabaseFile, self).__init__()
-    self._file_object = None
-    self._file_offset = 0
-    self.root_path = None
-
-  def Close(self):
-    """Closes the file."""
-    self._file_object = None
-    self._file_offset = 0
-
-  def ParsePaths(self):
-    """Retrieves the paths and its date and time value.
-
-    Yields:
-      tuple[str, PosixTimeInNanoSeconds]: path name and the its creation or
-          modification time.
-
-    Raises:
-      UnableToParseFile: if the file cannot be parsed.
-    """
-    directory_header_map = self._GetDataTypeMap('directory_header')
-    directory_entry_map = self._GetDataTypeMap('directory_entry')
-    cstring_map = self._GetDataTypeMap('cstring')
-
-    while True:
-      if self._file_object.tell() + 16 > self._file_object.get_size():
-        break
-      try:
-        directory_header, directory_header_size = (
-            self._ReadStructureFromFileObject(self._file_object,
-            self._file_offset, directory_header_map))
-        self._file_offset += directory_header_size
-      except (ValueError, errors.ParseError) as exception:
-        raise errors.UnableToParseFile(
-          'Unable to parse locate directory header with error {0!s}'.format(
-            exception))
-
-      directory_timestamp = (
-          directory_header.time_sec*definitions.NANOSECONDS_PER_SECOND)
-      directory_timestamp += directory_header.time_nsec
-      posix_timestamp = posix_time.PosixTimeInNanoseconds(
-          timestamp=directory_timestamp)
-      yield directory_header.name, posix_timestamp
-
-      # skip over file / subdirectory names as they don't have any timestamps
-      while True:
-        try:
-          directory_entry, directory_entry_size = (
-              self._ReadStructureFromFileObject(
-                  self._file_object, self._file_offset, directory_entry_map))
-          self._file_offset += directory_entry_size
-          if directory_entry.type == 0x02:
-            break
-
-          _, data_size = self._ReadStructureFromFileObject(
-              self._file_object, self._file_offset, cstring_map)
-          self._file_offset += data_size
-        except (ValueError, errors.ParseError) as exception:
-          raise errors.UnableToParseFile(
-            'Unable to parse locate directory entry with error {0!s}'.format(
-              exception))
-
-
-  def Open(self, file_object):
-    """Opens a Locate database file.
-
-    Args:
-      file_object (dfvfs.FileIO): file-like object.
-
-    Raises:
-      IOError: if the file-like object cannot be read.
-      OSError: if the file-like object cannot be read.
-      ValueError: if the file-like object is missing.
-      UnableToParseFile: if the file cannot be parsed
-    """
-    if not file_object:
-      raise ValueError('Missing file object.')
-
-    self._file_object = file_object
-
-    locate_database_header_map = self._GetDataTypeMap('locate_database_header')
-
-    try:
-      locate_database_header, data_size = self._ReadStructureFromFileObject(
-          self._file_object, self._file_offset, locate_database_header_map)
-      self._file_offset += data_size
-    except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse locate database header with error: {0!s}'.format(
-          exception))
-    if locate_database_header.signature != self.DB_MAGIC:
-      raise errors.UnableToParseFile('Invalid file magic')
-
-    cstring_map = self._GetDataTypeMap('cstring')
-    try:
-      self.root_path, data_size = self._ReadStructureFromFileObject(
-          self._file_object, self._file_offset, cstring_map)
-      self._file_offset += data_size
-    except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse root path with error: {0!s}'.format(
-          exception))
-
-    # skip configuration section for now
-    self._file_offset += locate_database_header.conf_size
-
-
-class LocateDatabaseParser(interface.FileObjectParser):
+class LocateDatabaseParser(
+    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for locate database (updatedb) files"""
 
   NAME = 'locate_database'
   DATA_FORMAT = 'Locate database file (updatedb)'
+
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'locate.yaml')
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -165,7 +48,7 @@ class LocateDatabaseParser(interface.FileObjectParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(LocateDatabaseFile.DB_MAGIC, offset=0)
+    format_specification.AddNewSignature(b'\x00mlocate', offset=0)
     return format_specification
 
   #pylint: disable=unused-argument
@@ -180,23 +63,74 @@ class LocateDatabaseParser(interface.FileObjectParser):
       UnableToParseFile: when the file cannot be parsed, this will signal
           the event extractor to apply other parsers.
     """
-    locate_file = LocateDatabaseFile()
+    locate_database_header_map = self._GetDataTypeMap('locate_database_header')
 
     try:
-      locate_file.Open(file_object)
-
-      for (folder_path, folder_timestamp) in locate_file.ParsePaths():
-        event_data = LocateDatabaseEvent()
-        event_data.folder_path = folder_path
-
-        event = time_events.DateTimeValuesEvent(
-            folder_timestamp, definitions.TIME_DESCRIPTION_MODIFICATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-    except Exception as exception:  # pylint: disable=broad-except
+      locate_database_header, file_offset = self._ReadStructureFromFileObject(
+          file_object, 0, locate_database_header_map)
+    except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
-        'unable to parse locate database with error: {0!s}'.format(exception))
-    finally:
-      locate_file.Close()
+          'Unable to parse locate database header with error: {0!s}'.format(
+              exception))
+
+    # Skip configuration block for now.
+    file_offset += locate_database_header.configuration_block_size
+
+    directory_header_map = self._GetDataTypeMap('directory_header')
+    directory_entry_header_map = self._GetDataTypeMap('directory_entry_header')
+    cstring_map = self._GetDataTypeMap('cstring')
+
+    file_size = file_object.get_size()
+    while file_offset + 16 < file_size:
+      try:
+        directory_header, data_size = self._ReadStructureFromFileObject(
+            file_object, file_offset, directory_header_map)
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to parse locate directory header at offset: 0x{0:08x} with '
+            'error: {1!s}').format(file_offset, exception))
+        return
+
+      file_offset += data_size
+
+      event_data = LocateDatabaseEvent()
+      event_data.paths = [directory_header.path]
+
+      timestamp = directory_header.nanoseconds + (
+          directory_header.seconds * definitions.NANOSECONDS_PER_SECOND)
+      date_time = posix_time.PosixTimeInNanoseconds(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      # Skip over names of sub file entries as they do not have a timestamp.
+      directory_entry_type = 0
+      while directory_entry_type != 2:
+        try:
+          directory_entry_header, data_size = self._ReadStructureFromFileObject(
+              file_object, file_offset, directory_entry_header_map)
+        except (ValueError, errors.ParseError) as exception:
+          parser_mediator.ProduceExtractionWarning((
+              'unable to parse locate directory entry header at offset: '
+              '0x{0:08x} with error: {1!s}').format(file_offset, exception))
+          return
+
+        file_offset += data_size
+
+        directory_entry_type = directory_entry_header.type
+        if directory_entry_type != 2:
+          try:
+            directory_entry_path, data_size = self._ReadStructureFromFileObject(
+                file_object, file_offset, cstring_map)
+          except (ValueError, errors.ParseError) as exception:
+            parser_mediator.ProduceExtractionWarning((
+                'unable to parse locate directory entry path at offset: '
+                '0x{0:08x} with error: {1!s}').format(file_offset, exception))
+            return
+
+          event_data.paths.append(directory_entry_path)
+
+          file_offset += data_size
 
 
 manager.ParsersManager.RegisterParser(LocateDatabaseParser)

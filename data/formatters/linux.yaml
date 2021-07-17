@@ -19,8 +19,8 @@ short_message:
 ---
 type: 'basic'
 data_type: 'linux:locate'
-message: 'Folder Path: {folder_path}'
-short_message: '{folder_path}'
+message: 'Folder Paths: {paths}'
+short_message: '{paths}'
 ---
 type: 'conditional'
 data_type: 'linux:utmp:event'

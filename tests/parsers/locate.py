@@ -23,28 +23,34 @@ class LocateUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_event_values = {'folder_path': '/home/user/temp',
-      'date_time': '2021-07-09 04:36:19.606373200'}
+    expected_event_values = {
+        'date_time': '2021-07-09 04:36:19.606373200',
+        'paths': ['/home/user/temp']}
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/1',
-      'date_time': '2021-07-09 04:11:07.438810500'}
+    expected_event_values = {
+        'date_time': '2021-07-09 04:11:07.438810500',
+        'paths': ['/home/user/temp/1']}
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/2',
-      'date_time': '2021-07-09 04:10:54.884843500'}
+    expected_event_values = {
+        'date_time': '2021-07-09 04:10:54.884843500',
+        'paths': ['/home/user/temp/2']}
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/3',
-      'date_time': '2021-07-09 04:11:25.146217000'}
+    expected_event_values = {
+        'date_time': '2021-07-09 04:11:25.146217000',
+        'paths': ['/home/user/temp/3']}
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/3/3c',
-      'date_time': '2021-07-09 04:11:25.146217000'}
+    expected_event_values = {
+        'date_time': '2021-07-09 04:11:25.146217000',
+        'paths': ['/home/user/temp/3/3c']}
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
-    expected_event_values = {'folder_path': '/home/user/temp/À',
-      'date_time': '2021-07-09 04:36:19.606373200'}
+    expected_event_values = {
+        'date_time': '2021-07-09 04:36:19.606373200',
+        'paths': ['/home/user/temp/À']}
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
 
