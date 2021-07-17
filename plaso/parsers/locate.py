@@ -103,6 +103,8 @@ class LocateDatabaseParser(
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+      # TODO: determine why "condition: directory_entry.type != 2" in dtFabric
+      # definitions is currently not working and clean up code once fixed.
       directory_entry_type = 0
       while directory_entry_type != 2:
         try:
