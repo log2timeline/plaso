@@ -82,10 +82,10 @@ description: Directory Entry types
 values:
 - name: DBE_NORMAL
   number: 0
-  description: A non-directory file
+  description: Directory entry is a regular file
 - name: DBE_DIRECTORY
   number: 1
-  description: A directory entry
+  description: Directory entry is a sub directory
 - name: DBE_END
   number: 2
-  description: End of directory contents; contains no name
+  description: End of directory marker, has no path

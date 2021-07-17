@@ -32,7 +32,7 @@ class LocateDatabaseEvent(events.EventData):
 
 class LocateDatabaseParser(
     interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
-  """Parser for locate database (updatedb) files"""
+  """Parser for locate database (updatedb) files."""
 
   NAME = 'locate_database'
   DATA_FORMAT = 'Locate database file (updatedb)'
@@ -42,7 +42,7 @@ class LocateDatabaseParser(
 
   @classmethod
   def GetFormatSpecification(cls):
-    """Retrieves the format specification
+    """Retrieves the format specification.
 
     Returns:
       FormatSpecification: format specification.
@@ -103,7 +103,6 @@ class LocateDatabaseParser(
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      # Skip over names of sub file entries as they do not have a timestamp.
       directory_entry_type = 0
       while directory_entry_type != 2:
         try:
