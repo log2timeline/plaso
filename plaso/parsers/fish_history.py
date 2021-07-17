@@ -44,7 +44,7 @@ class FishHistoryParser(interface.FileObjectParser):
   _YAML_FORMAT_RE_2 = re.compile(r'  when: [0-9]{9}')
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a fish history file from a file-like object
+    """Parses a Fish history file from a file-like object
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -52,7 +52,7 @@ class FishHistoryParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      ParseError: if the file is not valid YAML or is a fish history entry
+      ParseError: if the file is not valid YAML or is not a fish history entry
       UnableToParseFile: when the file cannot be parsed.
       ValueError: if the file object is missing
     """
@@ -77,7 +77,7 @@ class FishHistoryParser(interface.FileObjectParser):
       fish_history = yaml.safe_load(file_contents)
     except yaml.YAMLError as exception:
       raise errors.ParseError(
-        'Error while loading/parsing YAML with error {0:s}'
+          'Error while loading/parsing YAML with error {0:s}'
           .format(exception))
 
     for history_entry in fish_history:
@@ -88,15 +88,17 @@ class FishHistoryParser(interface.FileObjectParser):
       event_data.command = history_entry.get('cmd')
 
       try:
-        last_executed = int(history_entry.get('when'))
-      except ValueError as exception:
+        last_executed = history_entry.get('when')
+        if not isinstance(last_executed, int):
+          last_executed = int(last_executed, 10)
+      except (TypeError, ValueError) as exception:
         logger.debug(
-          'Invalid timestamp {0!s}, skipping record'.format(exception))
+            'Invalid timestamp {0!s}, skipping record'.format(exception))
         continue
       last_executed_ts = dfdatetime_posix_time.PosixTime(
-        timestamp=last_executed)
+          timestamp=last_executed)
       event = time_events.DateTimeValuesEvent(
-        last_executed_ts, definitions.TIME_DESCRIPTION_LAST_RUN)
+          last_executed_ts, definitions.TIME_DESCRIPTION_LAST_RUN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
