@@ -23,6 +23,7 @@ from plaso.parsers import gdrive_synclog
 from plaso.parsers import google_logging
 from plaso.parsers import iis
 from plaso.parsers import java_idx
+from plaso.parsers import locate
 from plaso.parsers import mac_appfirewall
 from plaso.parsers import mac_keychain
 from plaso.parsers import mac_securityd
