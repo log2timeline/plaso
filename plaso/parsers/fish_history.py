@@ -73,8 +73,8 @@ class FishHistoryParser(interface.FileObjectParser):
       fish_history = yaml.safe_load(file_contents)
     except yaml.YAMLError as exception:
       raise errors.ParseError(
-          'Error while loading/parsing YAML with error {0:s}'
-          .format(exception))
+          'Error while loading/parsing YAML with error {0:s}'.format(
+              exception))
 
     for history_entry in fish_history:
       if not ('cmd' in history_entry and 'when' in history_entry):
