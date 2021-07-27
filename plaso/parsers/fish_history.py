@@ -91,10 +91,9 @@ class FishHistoryParser(interface.FileObjectParser):
         logger.debug(
             'Invalid timestamp {0!s}, skipping record'.format(exception))
         continue
-      last_executed_ts = dfdatetime_posix_time.PosixTime(
-          timestamp=last_executed)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=last_executed)
       event = time_events.DateTimeValuesEvent(
-          last_executed_ts, definitions.TIME_DESCRIPTION_LAST_RUN)
+          date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
