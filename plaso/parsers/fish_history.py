@@ -54,11 +54,7 @@ class FishHistoryParser(interface.FileObjectParser):
     Raises:
       ParseError: if the file is not valid YAML or is not a fish history entry
       UnableToParseFile: when the file cannot be parsed.
-      ValueError: if the file object is missing
     """
-    if not file_object:
-      raise ValueError('Missing file object.')
-
     filename = parser_mediator.GetFilename()
 
     if filename != self._FILENAME:
