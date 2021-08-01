@@ -68,6 +68,11 @@ short_message:
 - 'Layer ID: {layer_id}'
 ---
 type: 'basic'
+data_type: 'fish:history:command'
+message: 'Command executed: {command}'
+short_message: '{command}'
+---
+type: 'basic'
 data_type: 'fs:mactime:line'
 message: '{filename}'
 short_message: '{filename}'
