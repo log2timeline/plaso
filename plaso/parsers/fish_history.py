@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for fish history files."""
+
 import os
 import re
 
@@ -40,15 +41,16 @@ class FishHistoryParser(interface.FileObjectParser):
 
   _ENCODING = 'utf-8'
 
-  # 50MB is the maximum fish history file that will be parsed
-  _MAXIMUM_FISH_HISTORY_FILE_SIZE = 1024 * 1024 * 50
+  # 50 MiB is the maximum supported fish history file size.
+  _MAXIMUM_FISH_HISTORY_FILE_SIZE = 50 * 1024 * 1024
 
   _FILENAME = 'fish_history'
+  
   _YAML_FORMAT_RE_1 = re.compile(r'^- cmd: \S+')
   _YAML_FORMAT_RE_2 = re.compile(r'  when: [0-9]{9}')
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a Fish history file from a file-like object
+    """Parses a fish history file from a file-like object
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -56,7 +58,6 @@ class FishHistoryParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      ParseError: if the file is not valid YAML or is not a fish history entry
       UnableToParseFile: when the file cannot be parsed.
     """
     filename = parser_mediator.GetFilename()
@@ -70,37 +71,42 @@ class FishHistoryParser(interface.FileObjectParser):
     header_line_2 = text_file_object.readline()
     if (not self._YAML_FORMAT_RE_1.match(header_line_1) or
         not self._YAML_FORMAT_RE_2.match(header_line_2)):
-      raise errors.UnableToParseFile('Not a valid Fish history file.')
+      raise errors.UnableToParseFile('Not a valid fish history file.')
 
     file_size = file_object.get_size()
     if file_size > self._MAXIMUM_FISH_HISTORY_FILE_SIZE:
       parser_mediator.ProduceExtractionWarning(
-          'File size of {0}B exceeds limit for a Fish history file'.format(
-              file_size))
+          'Fish history file size: {0:d} exceeds maxmimum'.format(file_size))
+      return
+
+    file_object.seek(0, os.SEEK_SET)
 
     try:
-      file_object.seek(0, os.SEEK_SET)
       fish_history = yaml.safe_load(file_object)
     except yaml.YAMLError as exception:
-      raise errors.ParseError(
-          'Error while loading/parsing YAML with error {0:s}'.format(
-              exception))
+      parser_mediator.ProduceExtractionWarning(
+          'Error reading YAML with error: {0:s}'.format(exception))
+      return
 
-    for history_entry in fish_history:
+    for entry_index, history_entry in enumerate(fish_history):
       if not ('cmd' in history_entry and 'when' in history_entry):
-        raise errors.ParseError('Invalid yaml structure')
+        parser_mediator.ProduceExtractionWarning(
+            'Unsupported history entry: {0:d}'.format(entry_index))
+        return
 
       event_data = FishHistoryEventData()
       event_data.command = history_entry.get('cmd')
 
-      try:
-        last_executed = history_entry.get('when')
-        if not isinstance(last_executed, int):
+      last_executed = history_entry.get('when')
+      if not isinstance(last_executed, int):
+        try:
           last_executed = int(last_executed, 10)
-      except (TypeError, ValueError) as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'Invalid timestamp {0!s}, skipping record'.format(exception))
-        continue
+        except (TypeError, ValueError) as exception:
+          parser_mediator.ProduceExtractionWarning(
+              'Unsupported timestamp: {0!s} in history entry: {1:s}'.format(
+                  last_executed, entry_index))
+          continue
+        
       date_time = dfdatetime_posix_time.PosixTime(timestamp=last_executed)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
