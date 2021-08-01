@@ -45,7 +45,7 @@ class FishHistoryParser(interface.FileObjectParser):
   _MAXIMUM_FISH_HISTORY_FILE_SIZE = 50 * 1024 * 1024
 
   _FILENAME = 'fish_history'
-  
+
   _YAML_FORMAT_RE_1 = re.compile(r'^- cmd: \S+')
   _YAML_FORMAT_RE_2 = re.compile(r'  when: [0-9]{9}')
 
@@ -106,7 +106,7 @@ class FishHistoryParser(interface.FileObjectParser):
               'Unsupported timestamp: {0!s} in history entry: {1:s}'.format(
                   last_executed, entry_index))
           continue
-        
+
       date_time = dfdatetime_posix_time.PosixTime(timestamp=last_executed)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
