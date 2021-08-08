@@ -15,7 +15,10 @@
 # * Browser history: IE, Firefox and Chrome.
 # * Browser cookie files: IE.
 # * Flash cookies, or LSO/SOL files from the Flash player.
-#
+# * SRUM Database: SRUDB.dat.
+# * Files in Windows Startup Folder.
+# * PowerShell Console History log onsoleHost_history.txt.
+# * Windows Defender log MpCmdRun.log.
 description: File system metadata files.
 type: include
 path_separator: '\'
@@ -117,3 +120,27 @@ paths:
 - '\\Documents And Settings\\.+\\Application Data\\Mozilla\\Firefox\\Profiles\\.+\\.+[.]sqlite'
 - '\\Documents And Settings\\.+\\Local Settings\\Application Data\\Google\\Chrome\\User Data\\.+\\History'
 - '\\Documents And Settings\\.+\\Local Settings\\Application Data\\Google\\Chrome\\.+'
+---
+description: SRUM Database.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\System32\\sru\\.+'
+---
+description: Files in Windows Startup Folder.
+type: include
+path_separator: '\'
+paths:
+- '%ProgramData%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\.+'
+---
+description: PowerShell Console History.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\PowerShell\\PSReadline\\ConsoleHost_history[.]txt'
+---
+description: Windows Defender Log.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\Temp\\MpCmdRun[.]log'
