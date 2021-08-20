@@ -734,3 +734,26 @@ message:
 short_message:
 - '{device_path}'
 - 'Origin: {origin}'
+---
+type: 'conditional'
+data_type: 'windows:diagnosis:eventtranscript'
+message:
+  - 'full_event_name: {full_event_name}'
+  - 'logging_binary_name: {logging_binary_name}'
+  - 'friendly_logging_binary_name: {friendly_logging_binary_name}'
+  - 'tag_name: {tag_name}'
+  - 'ver: {ver}'
+  - 'name: {name}'
+  - 'time: {time}'
+  - 'iKey: {ikey}'
+  - 'ext: {ext}'
+  - 'data: {data}'
+  - 'app_name: {app_name}'
+  - 'app_version: {app_version}'
+  - 'app_root_dir_path: {app_root_dir_path}'
+  - 'app_install_date: {app_install_date}' 
+  - 'app_start_time: {app_start_time}'
+short_message:
+  - 'full_event_name: {full_event_name}'
+  - 'logging_binary_name: {logging_binary_name}'
+  - 'tag_name: {tag_name}'
