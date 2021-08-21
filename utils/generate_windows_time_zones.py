@@ -21,11 +21,11 @@ def Main():
 
   argument_parser.parse_args()
 
-  url_object = urllib_request.urlopen(
-      'https://raw.githubusercontent.com/unicode-org/cldr/master/common/'
-      'supplemental/windowsZones.xml')
+  url = ('https://raw.githubusercontent.com/unicode-org/cldr/master/common/'
+         'supplemental/windowsZones.xml')
+  with urllib_request.urlopen(url) as request_object:
+    windows_time_zones_xml_data = request_object.read()
 
-  windows_time_zones_xml_data = url_object.read()
   windows_time_zones_xml_data = windows_time_zones_xml_data.decode('utf-8')
 
   windows_time_zones_xml = ElementTree.fromstring(windows_time_zones_xml_data)

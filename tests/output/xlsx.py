@@ -53,46 +53,46 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     Raises:
       ValueError: if the sheet cannot be found, or a string cannot be read.
     """
-    zip_file = zipfile.ZipFile(filename)
-
-    # Fail if we can't find the expected first sheet.
-    if self._SHEET1 not in zip_file.namelist():
-      raise ValueError(
-          'Unable to locate expected sheet: {0:s}'.format(self._SHEET1))
-
-    # Generate a reference table of shared strings if available.
-    strings = []
-    if self._SHARED_STRINGS in zip_file.namelist():
-      zip_file_object = zip_file.open(self._SHARED_STRINGS)
-      for _, element in ElementTree.iterparse(zip_file_object):
-        if element.tag.endswith(self._SHARED_STRING_TAG):
-          strings.append(element.text)
-
-    row = []
     rows = []
-    value = ''
-    zip_file_object = zip_file.open(self._SHEET1)
-    for _, element in ElementTree.iterparse(zip_file_object):
-      if (element.tag.endswith(self._VALUE_STRING_TAG) or
-          element.tag.endswith(self._SHARED_STRING_TAG)):
-        value = element.text
+    with zipfile.ZipFile(filename) as zip_file:
+      if self._SHEET1 not in zip_file.namelist():
+        # Fail if we cannot find the expected first sheet.
+        raise ValueError('Unable to locate expected sheet: {0:s}'.format(
+            self._SHEET1))
 
-      if element.tag.endswith(self._COLUMN_TAG):
-        # Grab value from shared string reference table if type shared string.
-        if (strings and element.attrib.get(self._TYPE_ATTRIBUTE) ==
-            self._SHARED_STRING_TYPE):
-          try:
-            value = strings[int(value)]
-          except (IndexError, ValueError):
-            raise ValueError(
-                'Unable to successfully dereference shared string.')
+      # Generate a reference table of shared strings if available.
+      strings = []
+      if self._SHARED_STRINGS in zip_file.namelist():
+        with zip_file.open(self._SHARED_STRINGS) as zip_file_object:
+          for _, element in ElementTree.iterparse(zip_file_object):
+            if element.tag.endswith(self._SHARED_STRING_TAG):
+              strings.append(element.text)
 
-        row.append(value)
+      row = []
+      value = ''
+      with zip_file.open(self._SHEET1) as zip_file_object:
+        for _, element in ElementTree.iterparse(zip_file_object):
+          if (element.tag.endswith(self._VALUE_STRING_TAG) or
+              element.tag.endswith(self._SHARED_STRING_TAG)):
+            value = element.text
 
-      # If we see the end tag of the row, record row in rows and reset.
-      if element.tag.endswith(self._ROW_TAG):
-        rows.append(row)
-        row = []
+          if element.tag.endswith(self._COLUMN_TAG):
+            # Grab value from shared string reference table if type shared
+            # string.
+            if strings and element.attrib.get(
+                self._TYPE_ATTRIBUTE) == self._SHARED_STRING_TYPE:
+              try:
+                value = strings[int(value)]
+              except (IndexError, ValueError):
+                raise ValueError(
+                    'Unable to successfully dereference shared string.')
+
+            row.append(value)
+
+          # If we see the end tag of the row, record row in rows and reset.
+          if element.tag.endswith(self._ROW_TAG):
+            rows.append(row)
+            row = []
 
     return rows
 

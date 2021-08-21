@@ -133,6 +133,7 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
   def version_tuple(self):
     """tuple[int]: version tuple or None if version is not set or invalid."""
     try:
+      # pylint: disable=consider-using-generator
       return tuple([int(digit, 10) for digit in self.version.split('.')])
     except (AttributeError, TypeError, ValueError):
       return None

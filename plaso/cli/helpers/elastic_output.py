@@ -102,9 +102,8 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         default=None, metavar='PATH', help=(
             'Path to a file containing a list of root certificates to trust.'))
 
-  # pylint: disable=arguments-differ
   @classmethod
-  def ParseOptions(cls, options, output_module):
+  def ParseOptions(cls, options, output_module):  # pylint: disable=arguments-renamed
     """Parses and validates options.
 
     Args:

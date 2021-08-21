@@ -419,7 +419,7 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         token_data.data_format, 'UNKNOWN')
 
     if token_data.data_format == 4:
-      data = bytes(bytearray(token_data.data)).split(b'\x00')[0]
+      data = bytes(bytearray(token_data.data)).split(b'\x00', maxsplit=1)[0]
       data = data.decode('utf-8')
     else:
       data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])

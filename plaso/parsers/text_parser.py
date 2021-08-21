@@ -18,15 +18,9 @@ from plaso.parsers import interface
 from plaso.parsers import logger
 
 
-# Pylint complains about some functions not being implemented that shouldn't
-# be since they need to be implemented by children.
-# pylint: disable=abstract-method
-
-
 # TODO: determine if this method should be merged with PyParseIntCast.
 
-# pylint: disable=unused-argument
-def ConvertTokenToInteger(string, location, tokens):
+def ConvertTokenToInteger(string, location, tokens):  # pylint: disable=unused-argument
   """Pyparsing parse action callback to convert a token into an integer value.
 
   Args:
@@ -38,12 +32,14 @@ def ConvertTokenToInteger(string, location, tokens):
     int: integer value or None.
   """
   try:
-    return int(tokens[0], 10)
+    integer = int(tokens[0], 10)
   except ValueError:
-    pass
+    integer = None
+
+  return integer
 
 
-def PyParseIntCast(string, location, tokens):
+def PyParseIntCast(string, location, tokens):  # pylint: disable=unused-argument
   """Return an integer from a string.
 
   This is a pyparsing callback method that converts the matched
@@ -441,7 +437,6 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
                 self._current_offset))
         break
 
-  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -456,7 +451,6 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
 
-  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def VerifyStructure(self, parser_mediator, line):
     """Verify the structure of the file and return boolean based on that check.
@@ -695,7 +689,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         parser_mediator.ProduceExtractionWarning(
             'unable to read lines with error: {0!s}'.format(exception))
 
-  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -713,9 +706,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       EventObject: event or None.
     """
 
-  # pylint: disable=arguments-differ,redundant-returns-doc
   @abc.abstractmethod
-  def VerifyStructure(self, parser_mediator, lines):
+  def VerifyStructure(self, parser_mediator, lines):  # pylint: disable=arguments-renamed
     """Verify the structure of the file and return boolean based on that check.
 
     This function should read enough text from the text file to confirm

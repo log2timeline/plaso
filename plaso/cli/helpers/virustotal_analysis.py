@@ -10,8 +10,6 @@ from plaso.analysis import virustotal
 class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
   """VirusTotal analysis plugin CLI arguments helper."""
 
-  # pylint: disable=arguments-differ
-
   NAME = 'virustotal'
   CATEGORY = 'analysis'
   DESCRIPTION = 'Argument helper for the VirusTotal analysis plugin.'
@@ -52,7 +50,7 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
                 cls._DEFAULT_HASH)))
 
   @classmethod
-  def ParseOptions(cls, options, analysis_plugin):
+  def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
     """Parses and validates options.
 
     Args:

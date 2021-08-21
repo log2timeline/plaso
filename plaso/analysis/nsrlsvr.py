@@ -47,12 +47,15 @@ class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
           a connection cannot be established.
     """
     try:
-      return socket.create_connection(
+      connected_socket = socket.create_connection(
           (self._host, self._port), self._SOCKET_TIMEOUT)
 
     except socket.error as exception:
+      connected_socket = None
       logger.error('Unable to connect to nsrlsvr with error: {0!s}.'.format(
           exception))
+
+    return connected_socket
 
   def _QueryHash(self, nsrl_socket, digest):
     """Queries nsrlsvr for a specific hash.
