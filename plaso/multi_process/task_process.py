@@ -25,10 +25,14 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
       kwargs (dict[str,object]): keyword arguments to pass to
           multiprocessing.Process.
     """
+    processed_task_storage_path = None
+    if processing_configuration.task_storage_path:
+      processed_task_storage_path = os.path.join(
+          processing_configuration.task_storage_path, 'processed')
+
     super(MultiProcessTaskProcess, self).__init__(
         processing_configuration, **kwargs)
-    self._processed_task_storage_path = os.path.join(
-        processing_configuration.task_storage_path, 'processed')
+    self._processed_task_storage_path = processed_task_storage_path
     self._storage_factory = storage_factory.StorageFactory
     self._task_storage_path = processing_configuration.task_storage_path
 
