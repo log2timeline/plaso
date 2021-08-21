@@ -17,7 +17,7 @@
 # * Flash cookies, or LSO/SOL files from the Flash player.
 # * SRUM Database: SRUDB.dat.
 # * Files in Windows Startup Folder.
-# * PowerShell Console History log onsoleHost_history.txt.
+# * PowerShell Console History log ConsoleHost_history.txt.
 # * Windows Defender log MpCmdRun.log.
 description: File system metadata files.
 type: include
