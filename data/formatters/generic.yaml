@@ -434,6 +434,15 @@ short_message:
 - '{dll_name}'
 ---
 type: 'conditional'
+data_type: 'pe:export_table'
+message:
+- 'DLL name: {dll_name}'
+- 'PE Type: {pe_type}'
+- 'Import hash: {imphash}'
+short_message:
+- '{dll_name}'
+---
+type: 'conditional'
 data_type: 'pe:import:import_time'
 message:
 - 'DLL name: {dll_name}'
