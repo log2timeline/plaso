@@ -254,6 +254,14 @@ class StorageWriter(object):
     """
     return self._store.GetSortedEvents(time_range=time_range)
 
+  def GetSystemConfigurationIdentifier(self):
+    """Retrieves the system configuration identifier.
+
+    Returns:
+      AttributeContainerIdentifier: system configuration identifier.
+    """
+    return self._store.GetSystemConfigurationIdentifier()
+
   @abc.abstractmethod
   def Open(self, **kwargs):
     """Opens the storage writer."""

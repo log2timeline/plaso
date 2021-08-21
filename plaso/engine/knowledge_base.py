@@ -273,13 +273,6 @@ class KnowledgeBase(object):
     # the JSON serializer to raise a TypeError.
     system_configuration.user_accounts = list(user_accounts.values())
 
-    windows_eventlog_providers = self._windows_eventlog_providers.get(
-        session_identifier, {})
-    # In Python 3 dict.values() returns a type dict_values, which will cause
-    # the JSON serializer to raise a TypeError.
-    system_configuration.windows_eventlog_providers = list(
-        windows_eventlog_providers.values())
-
     return system_configuration
 
   def GetTextPrepend(self):
@@ -415,10 +408,6 @@ class KnowledgeBase(object):
     self._user_accounts[session_identifier] = {
         user_account.identifier: user_account
         for user_account in system_configuration.user_accounts}
-
-    self._windows_eventlog_providers[session_identifier] = {
-        provider.log_source: provider
-        for provider in system_configuration.windows_eventlog_providers}
 
   def SetActiveSession(self, session_identifier):
     """Sets the active session.

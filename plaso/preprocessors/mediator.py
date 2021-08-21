@@ -61,6 +61,14 @@ class PreprocessMediator(object):
     Raises:
       KeyError: if the Windows Event Log provider already exists.
     """
+    if self._storage_writer:
+      system_configuration_identifier = (
+          self._storage_writer.GetSystemConfigurationIdentifier())
+      windows_eventlog_provider.SetSystemConfigurationIdentifier(
+          system_configuration_identifier)
+
+      self._storage_writer.AddAttributeContainer(windows_eventlog_provider)
+
     self._knowledge_base.AddWindowsEventLogProvider(windows_eventlog_provider)
 
   def ProducePreprocessingWarning(self, plugin_name, message):
