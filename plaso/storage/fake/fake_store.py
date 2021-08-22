@@ -232,6 +232,16 @@ class FakeStore(interface.BaseStore):
 
     return iter(sorted_events.PopEvents())
 
+  def GetSystemConfigurationIdentifier(self):
+    """Retrieves the system configuration identifier.
+
+    Returns:
+      AttributeContainerIdentifier: system configuration identifier.
+    """
+    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+       self._CONTAINER_TYPE_SESSION_CONFIGURATION)
+    return identifiers.FakeIdentifier(next_sequence_number)
+
   def HasAttributeContainers(self, container_type):
     """Determines if a store contains a specific type of attribute container.
 

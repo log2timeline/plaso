@@ -97,6 +97,31 @@ class SQLiteStorageFile(interface.BaseStore):
           'message': 'str',
           'parser_chain': 'str',
           'path_spec': 'dfvfs.PathSpec'},
+
+      'windows_eventlog_provider': {
+          '_system_configuration_row_identifier': (
+              'AttributeContainerIdentifier'),
+          'category_message_files': 'List[str]',
+          'event_message_files': 'List[str]',
+          'log_source': 'str',
+          'log_type': 'str',
+          'parameter_message_files': 'List[str]'},
+  }
+
+  # TODO: automatically generate mappings
+  _CONTAINER_SCHEMA_IDENTIFIER_MAPPINGS = {
+      'event': [(
+          'event_data',
+          '_event_data_identifier',
+          '_event_data_row_identifier')],
+      'event_tag': [(
+          'event',
+          '_event_identifier',
+          '_event_row_identifier')],
+      # 'windows_eventlog_provider': [(
+      #     'system_configuration',
+      #     '_system_configuration_identifier',
+      #     '_system_configuration_row_identifier')],
   }
 
   _CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS = {
@@ -520,39 +545,32 @@ class SQLiteStorageFile(interface.BaseStore):
     Raises:
       ValueError: if an attribute container identifier is missing.
     """
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      row_identifier = getattr(container, '_event_data_row_identifier', None)
-      if row_identifier is None:
-        raise ValueError('Missing event data row identifier attribute')
+    identifier_mappings = self._CONTAINER_SCHEMA_IDENTIFIER_MAPPINGS.get(
+        container.CONTAINER_TYPE, None)
 
-      event_data_identifier = identifiers.SQLTableIdentifier(
-          self._CONTAINER_TYPE_EVENT_DATA, row_identifier)
-      container.SetEventDataIdentifier(event_data_identifier)
+    if identifier_mappings:
+      for (identifier_container_type, attribute_name,
+           serialized_attribute_name) in identifier_mappings:
+        row_identifier = getattr(container, serialized_attribute_name, None)
+        if row_identifier is None:
+          raise ValueError('Missing row identifier attribute: {0:s}'.format(
+              serialized_attribute_name))
 
-      delattr(container, '_event_data_row_identifier')
+        identifier = identifiers.SQLTableIdentifier(
+            identifier_container_type, row_identifier)
+        setattr(container, attribute_name, identifier)
+
+        delattr(container, serialized_attribute_name)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       row_identifier = getattr(
           container, '_event_data_stream_row_identifier', None)
-      if row_identifier is None:
-        return
+      if row_identifier:
+        event_data_stream_identifier = identifiers.SQLTableIdentifier(
+            self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+        container.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
-      event_data_stream_identifier = identifiers.SQLTableIdentifier(
-          self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
-      container.SetEventDataStreamIdentifier(event_data_stream_identifier)
-
-      delattr(container, '_event_data_stream_row_identifier')
-
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
-      row_identifier = getattr(container, '_event_row_identifier', None)
-      if row_identifier is None:
-        raise ValueError('Missing event row identifier attribute')
-
-      event_identifier = identifiers.SQLTableIdentifier(
-          self._CONTAINER_TYPE_EVENT, row_identifier)
-      container.SetEventIdentifier(event_identifier)
-
-      delattr(container, '_event_row_identifier')
+        delattr(container, '_event_data_stream_row_identifier')
 
   def _UpdateAttributeContainerBeforeSerialize(self, container):
     """Updates an attribute container before serialization.
@@ -564,14 +582,20 @@ class SQLiteStorageFile(interface.BaseStore):
       IOError: if the attribute container identifier type is not supported.
       OSError: if the attribute container identifier type is not supported.
     """
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      event_data_identifier = container.GetEventDataIdentifier()
-      if not isinstance(event_data_identifier, identifiers.SQLTableIdentifier):
-        raise IOError('Unsupported event data identifier type: {0!s}'.format(
-            type(event_data_identifier)))
+    identifier_mappings = self._CONTAINER_SCHEMA_IDENTIFIER_MAPPINGS.get(
+         container.CONTAINER_TYPE, None)
 
-      setattr(container, '_event_data_row_identifier',
-              event_data_identifier.sequence_number)
+    if identifier_mappings:
+      for _, attribute_name, serialized_attribute_name in identifier_mappings:
+        identifier = getattr(container, attribute_name, None)
+        if not isinstance(identifier, identifiers.SQLTableIdentifier):
+          raise IOError((
+              'Unsupported attribute container identifier type: {0!s} for: '
+              '{1:s}.{2:s}').format(
+                  type(identifier), container.CONTAINER_TYPE, attribute_name))
+
+        setattr(container, serialized_attribute_name,
+                identifier.sequence_number)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       event_data_stream_identifier = container.GetEventDataStreamIdentifier()
@@ -584,15 +608,6 @@ class SQLiteStorageFile(interface.BaseStore):
 
         setattr(container, '_event_data_stream_row_identifier',
                 event_data_stream_identifier.sequence_number)
-
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
-      event_identifier = container.GetEventIdentifier()
-      if not isinstance(event_identifier, identifiers.SQLTableIdentifier):
-        raise IOError('Unsupported event identifier type: {0!s}'.format(
-            type(event_identifier)))
-
-      setattr(container, '_event_row_identifier',
-              event_identifier.sequence_number)
 
   def _UpdateStorageMetadataFormatVersion(self):
     """Updates the storage metadata format version.
@@ -1067,6 +1082,17 @@ class SQLiteStorageFile(interface.BaseStore):
     return self._GetAttributeContainersWithFilter(
         self._CONTAINER_TYPE_EVENT, column_names=column_names,
         filter_expression=filter_expression, order_by=filter_column_name)
+
+  def GetSystemConfigurationIdentifier(self):
+    """Retrieves the system configuration identifier.
+
+    Returns:
+      AttributeContainerIdentifier: system configuration identifier.
+    """
+    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+       self._CONTAINER_TYPE_SESSION_CONFIGURATION)
+    return identifiers.SQLTableIdentifier(
+        self._CONTAINER_TYPE_SESSION_CONFIGURATION, next_sequence_number)
 
   def HasAttributeContainers(self, container_type):
     """Determines if store contains a specific type of attribute containers.
