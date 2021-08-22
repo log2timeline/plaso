@@ -61,9 +61,8 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
             'Supported options: {1:s}').format(
                 cls._DEFAULT_PROTOCOL, ', '.join(cls._SUPPORTED_PROTOCOLS)))
 
-  # pylint: disable=arguments-differ
   @classmethod
-  def ParseOptions(cls, options, analysis_plugin):
+  def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
     """Parses and validates options.
 
     Args:

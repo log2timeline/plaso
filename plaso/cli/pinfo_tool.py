@@ -1423,7 +1423,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       if os.path.exists(self._output_filename):
         raise errors.BadConfigOption(
             'Output file already exists: {0:s}.'.format(self._output_filename))
-      output_file_object = open(self._output_filename, 'wb')
+      output_file_object = open(self._output_filename, 'wb')  # pylint: disable=consider-using-with
       self._output_writer = tools.FileObjectOutputWriter(output_file_object)
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)

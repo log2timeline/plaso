@@ -140,7 +140,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
-      dfdatetime.interface.DateTimeValue: date and time value.
+      dfdatetime.interface.DateTimeValue: date and time value or None.
     """
     timestamp = row.get('timestamp', None)
     if timestamp is not None:
@@ -154,11 +154,14 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
     # The timestamp is not available; parse the local date and time instead.
     try:
-      return self._ConvertToTimestamp(row['date'], row['time'])
+      date_time = self._ConvertToTimestamp(row['date'], row['time'])
     except ValueError as exception:
+      date_time = None
       parser_mediator.ProduceExtractionWarning((
           'Unable to parse time string: "{0:s} {1:s}" with error: '
           '{2!s}').format(repr(row['date']), repr(row['time']), exception))
+
+    return date_time
 
   def _ConvertToTimestamp(self, date, time):
     """Converts date and time strings into a timestamp.

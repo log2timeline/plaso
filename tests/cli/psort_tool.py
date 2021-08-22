@@ -47,9 +47,8 @@ class TestOutputModuleArgumentHelper(helpers_interface.ArgumentsHelper):
     """Mock the add argument section."""
     return
 
-  # pylint: disable=arguments-differ
   @classmethod
-  def ParseOptions(cls, options, output_module):
+  def ParseOptions(cls, options, output_module):  # pylint: disable=arguments-renamed
     """Provide a test parse options section."""
     if not isinstance(output_module, TestOutputModuleMissingParameters):
       raise errors.BadConfigObject((

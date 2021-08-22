@@ -175,7 +175,7 @@ class TextFileOutputModule(OutputModule):
           'Unable to use an already existing file for output '
           '[{0:s}]').format(path))
 
-    self._file_object = open(path, 'wt', encoding=self._ENCODING)
+    self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
 
   def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
