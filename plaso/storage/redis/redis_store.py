@@ -127,6 +127,69 @@ class RedisStore(interface.BaseStore):
           'Unable to set redis client name: {0:s} with error: {1!s}'.format(
               name, exception))
 
+  def _UpdateAttributeContainerAfterDeserialize(self, container):
+    """Updates an attribute container after deserialization.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      ValueError: if an attribute container identifier is missing.
+    """
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      row_identifier = getattr(
+          container, '_event_data_row_identifier', None)
+      if row_identifier:
+        event_data_identifier = identifiers.RedisKeyIdentifier(
+            self._CONTAINER_TYPE_EVENT_DATA, row_identifier)
+        container.SetEventDataIdentifier(event_data_identifier)
+
+        delattr(container, '_event_data_row_identifier')
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      row_identifier = getattr(
+          container, '_event_data_stream_row_identifier', None)
+      if row_identifier:
+        event_data_stream_identifier = identifiers.RedisKeyIdentifier(
+            self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+        container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+        delattr(container, '_event_data_stream_row_identifier')
+
+  def _UpdateAttributeContainerBeforeSerialize(self, container):
+    """Updates an attribute container before serialization.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: if the attribute container identifier type is not supported.
+      OSError: if the attribute container identifier type is not supported.
+    """
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      event_data_identifier = container.GetEventDataIdentifier()
+      if event_data_identifier:
+        if not isinstance(
+            event_data_identifier, identifiers.RedisKeyIdentifier):
+          raise IOError(
+              'Unsupported event data identifier type: {0!s}'.format(
+                  type(event_data_identifier)))
+
+        setattr(container, '_event_data_row_identifier',
+                event_data_identifier.sequence_number)
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+      if event_data_stream_identifier:
+        if not isinstance(
+            event_data_stream_identifier, identifiers.RedisKeyIdentifier):
+          raise IOError(
+              'Unsupported event data stream identifier type: {0!s}'.format(
+                  type(event_data_stream_identifier)))
+
+        setattr(container, '_event_data_stream_row_identifier',
+                event_data_stream_identifier.sequence_number)
+
   def _WriteExistingAttributeContainer(self, container):
     """Writes an existing attribute container to the store.
 
@@ -149,6 +212,8 @@ class RedisStore(interface.BaseStore):
     redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
     redis_key = identifier.CopyToString()
 
+    self._UpdateAttributeContainerBeforeSerialize(container)
+
     serialized_data = self._SerializeAttributeContainer(container)
     self._redis_client.hset(redis_hash_name, redis_key, serialized_data)
 
@@ -167,6 +232,8 @@ class RedisStore(interface.BaseStore):
 
     redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
     redis_key = identifier.CopyToString()
+
+    self._UpdateAttributeContainerBeforeSerialize(container)
 
     serialized_data = self._SerializeAttributeContainer(container)
     self._redis_client.hsetnx(redis_hash_name, redis_key, serialized_data)
@@ -234,6 +301,9 @@ class RedisStore(interface.BaseStore):
         container_type, serialized_data)
 
     attribute_container.SetIdentifier(identifier)
+
+    self._UpdateAttributeContainerAfterDeserialize(attribute_container)
+
     return attribute_container
 
   def GetAttributeContainerByIndex(self, container_type, index):
@@ -267,6 +337,9 @@ class RedisStore(interface.BaseStore):
 
     identifier = identifiers.RedisKeyIdentifier(container_type, sequence_number)
     attribute_container.SetIdentifier(identifier)
+
+    self._UpdateAttributeContainerAfterDeserialize(attribute_container)
+
     return attribute_container
 
   def GetAttributeContainers(self, container_type):
@@ -292,6 +365,8 @@ class RedisStore(interface.BaseStore):
       identifier = identifiers.RedisKeyIdentifier(
           container_type, sequence_number)
       attribute_container.SetIdentifier(identifier)
+
+      self._UpdateAttributeContainerAfterDeserialize(attribute_container)
 
       yield attribute_container
 
