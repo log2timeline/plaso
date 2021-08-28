@@ -168,8 +168,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         merge_ready = self._CheckTaskReadyForMerge(
             definitions.STORAGE_FORMAT_SQLITE, task)
         if merge_ready:
-          self._PrepareMergeTaskStorage(
-              definitions.STORAGE_FORMAT_SQLITE, self._session.identifier, task)
+          self._PrepareMergeTaskStorage(definitions.STORAGE_FORMAT_SQLITE, task)
           self._status = definitions.STATUS_INDICATOR_MERGING
 
           event_queue = self._event_queues[plugin_name]

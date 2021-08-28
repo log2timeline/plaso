@@ -24,12 +24,7 @@ class RedisStore(interface.BaseStore):
 
   _FORMAT_VERSION = '20181013'
   _EVENT_INDEX_NAME = 'sorted_event_identifier'
-  _FINALIZED_KEY_NAME = 'finalized'
-  _FINALIZED_BYTES = b'finalized'
-  _MERGING_KEY_NAME = 'merging'
-  _MERGING_BYTES = b'merging'
 
-  # DEFAULT_REDIS_URL is public so that it appears in generated documentation.
   DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
@@ -78,15 +73,6 @@ class RedisStore(interface.BaseStore):
     # support this method. None is returned to have code using this method
     # add an event tag instead of updating the existing one.
     return None
-
-  def _GetFinalizationKey(self):
-    """Generates the finalized key for the store.
-
-    Returns:
-      str: Redis key for the the finalization flag.
-    """
-    return '{0:s}-{1:s}'.format(
-        self._session_identifier, self._FINALIZED_KEY_NAME)
 
   def _RaiseIfNotReadable(self):
     """Checks that the store is ready to for reading.
@@ -263,10 +249,6 @@ class RedisStore(interface.BaseStore):
     """
     if not self._redis_client:
       raise IOError('Store already closed.')
-
-    finalized_key = self._GetFinalizationKey()
-    self._redis_client.hset(
-        finalized_key, key=self._task_identifier, value=self._FINALIZED_BYTES)
 
     self._redis_client = None
 
@@ -462,44 +444,6 @@ class RedisStore(interface.BaseStore):
     number_of_containers = self._redis_client.hlen(redis_hash_name)
     return number_of_containers > 0
 
-  @classmethod
-  def MarkTaskAsMerging(
-      cls, session_identifier, task_identifier, redis_client=None, url=None):
-    """Marks a finalized task as pending merge.
-
-    Args:
-      task_identifier (str): identifier of the task.
-      session_identifier (str): identifier of the session.
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
-
-    Raises:
-      IOError: if the task being updated is not finalized.
-      OSError: if the task being updated is not finalized.
-    """
-    if not url:
-      url = cls.DEFAULT_REDIS_URL
-
-    if not redis_client:
-      redis_client = redis.from_url(url=url, socket_timeout=60)
-
-    cls._SetClientName(redis_client, 'merge_mark')
-
-    finalization_key = '{0:s}-{1:s}'.format(
-        session_identifier, cls._FINALIZED_KEY_NAME)
-    number_of_deleted_fields = redis_client.hdel(
-        finalization_key, task_identifier)
-    if number_of_deleted_fields == 0:
-      raise IOError('Task identifier {0:s} not finalized'.format(
-          task_identifier))
-
-    merging_key = '{0:s}-{1:s}'.format(
-        session_identifier, cls._MERGING_KEY_NAME)
-    redis_client.hset(
-        merging_key, key=task_identifier, value=cls._MERGING_BYTES)
-
   # pylint: disable=arguments-differ
   def Open(
       self, redis_client=None, session_identifier=None, task_identifier=None,
@@ -541,93 +485,3 @@ class RedisStore(interface.BaseStore):
     metadata_key = self._GetRedisHashName('metadata')
     if not self._redis_client.exists(metadata_key):
       self._WriteStorageMetadata()
-
-  @classmethod
-  def RemoveSession(cls, session_identifier, redis_client=None, url=None):
-    """Removes all keys and values related to a session.
-
-    Args:
-      session_identifier (str): identifier of the session.
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created based on the URL.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
-    """
-    if not url:
-      url = cls.DEFAULT_REDIS_URL
-
-    if not redis_client:
-      redis_client = redis.from_url(url=url, socket_timeout=60)
-
-    cls._SetClientName(redis_client, 'remove_session')
-
-    redis_hash_pattern = '{0:s}-*'.format(session_identifier)
-
-    for redis_hash_name in redis_client.keys(redis_hash_pattern):
-      redis_client.delete(redis_hash_name)
-
-  @classmethod
-  def RemoveTask(
-      cls, session_identifier, task_identifier, redis_client=None, url=None):
-    """Removes all keys and values related to a task.
-
-    Args:
-      session_identifier (str): identifier of the session.
-      task_identifier (str): identifier of the task.
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created based on the URL.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
-    """
-    if not url:
-      url = cls.DEFAULT_REDIS_URL
-
-    if not redis_client:
-      redis_client = redis.from_url(url=url, socket_timeout=60)
-
-    cls._SetClientName(redis_client, 'remove_task')
-
-    redis_hash_pattern = '{0:s}-{1:s}-*'.format(
-        session_identifier, task_identifier)
-
-    for redis_hash_name in redis_client.keys(redis_hash_pattern):
-      redis_client.delete(redis_hash_name)
-
-  @classmethod
-  def ScanForProcessedTasks(
-      cls, session_identifier, redis_client=None, url=None):
-    """Scans a Redis database for processed tasks.
-
-    Args:
-      session_identifier (str): identifier of the session.
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created based on the URL.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
-
-    Returns:
-      tuple: containing
-          list[str]: identifiers of processed tasks, which may be empty if the
-              connection to Redis times out.
-          Redis: Redis client used for the query.
-    """
-    if not url:
-      url = cls.DEFAULT_REDIS_URL
-
-    if not redis_client:
-      redis_client = redis.from_url(url=url, socket_timeout=60)
-
-    cls._SetClientName(redis_client, 'processed_scan')
-
-    finalization_key = '{0:s}-{1:s}'.format(
-        session_identifier, cls._FINALIZED_KEY_NAME)
-
-    try:
-      task_identifiers = redis_client.hkeys(finalization_key)
-    except redis.exceptions.TimeoutError:
-      # If there is a timeout fetching identifiers, we assume that there are
-      # no processed tasks.
-      return [], redis_client
-
-    task_identifiers = [key.decode('utf-8') for key in task_identifiers]
-    return task_identifiers, redis_client
