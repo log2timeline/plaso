@@ -607,7 +607,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     try:
       self._StopTaskStorage(
-          definitions.STORAGE_FORMAT_SQLITE, abort=self._abort)
+          definitions.STORAGE_FORMAT_SQLITE, self._session.identifier,
+          abort=self._abort)
     except (IOError, OSError) as exception:
       logger.error('Unable to stop task storage with error: {0!s}'.format(
           exception))

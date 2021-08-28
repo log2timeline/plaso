@@ -146,7 +146,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
       task.storage_file_size = 1000
       redis_store.RedisStore.MarkTaskAsMerging(
-          task.identifier, session_identifier)
+          session_identifier, task.identifier)
 
     elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       merge_storage_file_path = self._GetMergeTaskStorageFilePath(
@@ -174,7 +174,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       IOError: if a SQLite task storage file cannot be removed.
       OSError: if a SQLite task storage file cannot be removed.
     """
-    if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
+    if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
+      redis_store.RedisStore.RemoveTask(
+          task.session_identifier, task.identifier,
+          redis_client=self._redis_client)
+
+    elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       merge_storage_file_path = self._GetMergeTaskStorageFilePath(
           task_storage_format, task)
 
@@ -196,7 +201,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       IOError: if a SQLite task storage file cannot be removed.
       OSError: if a SQLite task storage file cannot be removed.
     """
-    if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
+    if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
+      redis_store.RedisStore.RemoveTask(
+          task.session_identifier, task.identifier,
+          redis_client=self._redis_client)
+
+    elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       processed_storage_file_path = self._GetProcessedStorageFilePath(
           task_storage_format, task)
 
@@ -272,16 +282,23 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       self._processing_configuration.task_storage_path = self._task_storage_path
 
-  def _StopTaskStorage(self, task_storage_format, abort=False):
+  def _StopTaskStorage(
+      self, task_storage_format, session_identifier, abort=False):
     """Stops the task storage.
 
     The results of tasks will be lost on abort.
 
     Args:
       task_storage_format (str): storage format used to store task results.
-      abort (bool): True to indicate the stop is issued on abort.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
+      abort (Optional[bool]): True to indicate the stop is issued on abort.
     """
-    if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
+    if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
+      redis_store.RedisStore.RemoveSession(
+          session_identifier, redis_client=self._redis_client)
+
+    elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       if os.path.isdir(self._merge_task_storage_path):
         if abort:
           shutil.rmtree(self._merge_task_storage_path)

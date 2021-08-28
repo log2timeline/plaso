@@ -901,7 +901,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       task_storage_abort = self._abort
 
     try:
-      self._StopTaskStorage(self._task_storage_format, abort=task_storage_abort)
+      self._StopTaskStorage(
+          self._task_storage_format, self._session.identifier,
+          abort=task_storage_abort)
     except (IOError, OSError) as exception:
       logger.error('Unable to stop task storage with error: {0!s}'.format(
           exception))

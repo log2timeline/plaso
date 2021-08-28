@@ -101,9 +101,9 @@ class RedisStore(interface.BaseStore):
   def _RaiseIfNotWritable(self):
     """Checks that the store is ready to for writing.
 
-     Raises:
-       IOError: if the store cannot be written to.
-       OSError: if the store cannot be written to.
+    Raises:
+      IOError: if the store cannot be written to.
+      OSError: if the store cannot be written to.
     """
     if not self._redis_client:
       raise IOError('Unable to write, client not connected.')
@@ -215,7 +215,8 @@ class RedisStore(interface.BaseStore):
     self._UpdateAttributeContainerBeforeSerialize(container)
 
     serialized_data = self._SerializeAttributeContainer(container)
-    self._redis_client.hset(redis_hash_name, redis_key, serialized_data)
+    self._redis_client.hset(
+        redis_hash_name, key=redis_key, value=serialized_data)
 
   def _WriteNewAttributeContainer(self, container):
     """Writes a new attribute container to the store.
@@ -251,7 +252,7 @@ class RedisStore(interface.BaseStore):
     metadata_key = self._GetRedisHashName('metadata')
 
     for key, value in metadata.items():
-      self._redis_client.hset(metadata_key, key, value)
+      self._redis_client.hset(metadata_key, key=key, value=value)
 
   def Close(self):
     """Closes the store.
@@ -265,7 +266,7 @@ class RedisStore(interface.BaseStore):
 
     finalized_key = self._GetFinalizationKey()
     self._redis_client.hset(
-        finalized_key, self._task_identifier, self._FINALIZED_BYTES)
+        finalized_key, key=self._task_identifier, value=self._FINALIZED_BYTES)
 
     self._redis_client = None
 
@@ -463,12 +464,12 @@ class RedisStore(interface.BaseStore):
 
   @classmethod
   def MarkTaskAsMerging(
-      cls, task_identifier, session_identifier, redis_client=None, url=None):
+      cls, session_identifier, task_identifier, redis_client=None, url=None):
     """Marks a finalized task as pending merge.
 
     Args:
       task_identifier (str): identifier of the task.
-      session_identifier (str): session identifier, formatted as a UUID.
+      session_identifier (str): identifier of the session.
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created.
       url (Optional[str]): URL for a Redis database. If not specified,
@@ -496,7 +497,8 @@ class RedisStore(interface.BaseStore):
 
     merging_key = '{0:s}-{1:s}'.format(
         session_identifier, cls._MERGING_KEY_NAME)
-    redis_client.hset(merging_key, task_identifier, cls._MERGING_BYTES)
+    redis_client.hset(
+        merging_key, key=task_identifier, value=cls._MERGING_BYTES)
 
   # pylint: disable=arguments-differ
   def Open(
@@ -508,8 +510,7 @@ class RedisStore(interface.BaseStore):
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created. If no client is specified a new client
           will be opened connected to the Redis instance specified by 'url'.
-      session_identifier (Optional[str]): session identifier, formatted as
-          a UUID.
+      session_identifier (Optional[str]): identifier of the session.
       task_identifier (Optional[str]): unique identifier of the task the store
           will store containers for. If not specified, an identifier will be
           generated.
@@ -520,16 +521,16 @@ class RedisStore(interface.BaseStore):
       IOError: if the store is already connected to a Redis instance.
       OSError: if the store is already connected to a Redis instance.
     """
-    if not url:
-      url = self.DEFAULT_REDIS_URL
-
     if self._redis_client:
       raise IOError('Redis client already connected')
 
-    if redis_client:
-      self._redis_client = redis_client
-    else:
-      self._redis_client = redis.from_url(url=url, socket_timeout=60)
+    if not redis_client:
+      if not url:
+        url = self.DEFAULT_REDIS_URL
+
+      redis_client = redis.from_url(url=url, socket_timeout=60)
+
+    self._redis_client = redis_client
 
     self._session_identifier = session_identifier or str(uuid.uuid4())
     self._task_identifier = task_identifier or str(uuid.uuid4())
@@ -541,62 +542,56 @@ class RedisStore(interface.BaseStore):
     if not self._redis_client.exists(metadata_key):
       self._WriteStorageMetadata()
 
-  def Remove(self):
-    """Removes the contents of the store from Redis."""
-    merging_key = '{0:s}-{1:s}'.format(
-        self._session_identifier, self._MERGING_KEY_NAME)
-    self._redis_client.hdel(merging_key, self._task_identifier)
-
-    sorted_event_key = self._GetRedisHashName(self._EVENT_INDEX_NAME)
-    self._redis_client.delete(sorted_event_key)
-
-    task_completion_key = self._GetRedisHashName(
-        self._CONTAINER_TYPE_TASK_COMPLETION)
-    self._redis_client.delete(task_completion_key)
-
-    metadata_key = self._GetRedisHashName('metadata')
-    self._redis_client.delete(metadata_key)
-
-  def RemoveAttributeContainer(self, container_type, identifier):
-    """Removes an attribute container from the store.
+  @classmethod
+  def RemoveSession(cls, session_identifier, redis_client=None, url=None):
+    """Removes all keys and values related to a session.
 
     Args:
-      container_type (str): container type attribute of the container being
-          removed.
-      identifier (AttributeContainerIdentifier): event data identifier.
+      session_identifier (str): identifier of the session.
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
+          new client will be created based on the URL.
+      url (Optional[str]): URL for a Redis database. If not specified,
+          REDIS_DEFAULT_URL will be used.
     """
-    self._RaiseIfNotWritable()
-    redis_hash_name = self._GetRedisHashName(container_type)
-    redis_key = identifier.CopyToString()
+    if not url:
+      url = cls.DEFAULT_REDIS_URL
 
-    self._redis_client.hdel(redis_hash_name, redis_key)
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
-      self._redis_client.zrem(event_index_name, redis_key)
+    if not redis_client:
+      redis_client = redis.from_url(url=url, socket_timeout=60)
 
-  def RemoveAttributeContainers(self, container_type, container_identifiers):
-    """Removes multiple attribute containers from the store.
+    cls._SetClientName(redis_client, 'remove_session')
+
+    redis_hash_pattern = '{0:s}-*'.format(session_identifier)
+
+    for redis_hash_name in redis_client.keys(redis_hash_pattern):
+      redis_client.delete(redis_hash_name)
+
+  @classmethod
+  def RemoveTask(
+      cls, session_identifier, task_identifier, redis_client=None, url=None):
+    """Removes all keys and values related to a task.
 
     Args:
-      container_type (str): container type attribute of the container being
-          removed.
-      container_identifiers (list[AttributeContainerIdentifier]):
-          event data identifier.
+      session_identifier (str): identifier of the session.
+      task_identifier (str): identifier of the task.
+      redis_client (Optional[Redis]): Redis client to query. If specified, no
+          new client will be created based on the URL.
+      url (Optional[str]): URL for a Redis database. If not specified,
+          REDIS_DEFAULT_URL will be used.
     """
-    self._RaiseIfNotWritable()
-    if not container_identifiers:
-      # If there's no list of identifiers, there's no need to delete anything.
-      return
+    if not url:
+      url = cls.DEFAULT_REDIS_URL
 
-    redis_hash_name = self._GetRedisHashName(container_type)
-    redis_keys = [
-        identifier.CopyToString() for identifier in container_identifiers]
+    if not redis_client:
+      redis_client = redis.from_url(url=url, socket_timeout=60)
 
-    self._redis_client.hdel(redis_hash_name, *redis_keys)
+    cls._SetClientName(redis_client, 'remove_task')
 
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
-      self._redis_client.zrem(event_index_name, *redis_keys)
+    redis_hash_pattern = '{0:s}-{1:s}-*'.format(
+        session_identifier, task_identifier)
+
+    for redis_hash_name in redis_client.keys(redis_hash_pattern):
+      redis_client.delete(redis_hash_name)
 
   @classmethod
   def ScanForProcessedTasks(
@@ -604,10 +599,9 @@ class RedisStore(interface.BaseStore):
     """Scans a Redis database for processed tasks.
 
     Args:
-      session_identifier (str): session identifier, formatted as
-          a UUID.
+      session_identifier (str): identifier of the session.
       redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created.
+          new client will be created based on the URL.
       url (Optional[str]): URL for a Redis database. If not specified,
           REDIS_DEFAULT_URL will be used.
 
@@ -622,15 +616,18 @@ class RedisStore(interface.BaseStore):
 
     if not redis_client:
       redis_client = redis.from_url(url=url, socket_timeout=60)
-      cls._SetClientName(redis_client, 'processed_scan')
+
+    cls._SetClientName(redis_client, 'processed_scan')
 
     finalization_key = '{0:s}-{1:s}'.format(
         session_identifier, cls._FINALIZED_KEY_NAME)
+
     try:
       task_identifiers = redis_client.hkeys(finalization_key)
     except redis.exceptions.TimeoutError:
       # If there is a timeout fetching identifiers, we assume that there are
       # no processed tasks.
       return [], redis_client
+
     task_identifiers = [key.decode('utf-8') for key in task_identifiers]
     return task_identifiers, redis_client

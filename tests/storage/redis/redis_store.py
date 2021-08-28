@@ -354,7 +354,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     # Trying to mark a task as merging without finalizing it raises an error.
     with self.assertRaises(IOError):
       redis_store.RedisStore.MarkTaskAsMerging(
-          task.identifier, session.identifier, redis_client=redis_client)
+          session.identifier, task.identifier, redis_client=redis_client)
 
     # Opening and closing a writer for a task should cause the task to be marked
     # as complete.
@@ -366,37 +366,10 @@ class RedisStoreTest(test_lib.StorageTestCase):
     storage_writer.Close()
 
     redis_store.RedisStore.MarkTaskAsMerging(
-        task.identifier, session.identifier, redis_client=redis_client)
+        session.identifier, task.identifier, redis_client=redis_client)
 
-  # TODO: add tests for Remove
-
-  def testRemoveAttributeContainer(self):
-    """Tests the RemoveAttributeContainer method."""
-    redis_client = self._CreateRedisClient()
-
-    event_data_stream = events.EventDataStream()
-
-    test_store = redis_store.RedisStore(
-        storage_type=definitions.STORAGE_TYPE_TASK)
-    test_store.Open(redis_client=redis_client)
-
-    test_store.AddAttributeContainer(event_data_stream)
-
-    number_of_containers = test_store.GetNumberOfAttributeContainers(
-        event_data_stream.CONTAINER_TYPE)
-    self.assertEqual(number_of_containers, 1)
-
-    identifier = event_data_stream.GetIdentifier()
-    test_store.RemoveAttributeContainer(
-        event_data_stream.CONTAINER_TYPE, identifier)
-
-    number_of_containers = test_store.GetNumberOfAttributeContainers(
-        event_data_stream.CONTAINER_TYPE)
-    self.assertEqual(number_of_containers, 0)
-
-    test_store.Close()
-
-  # TODO: add tests for RemoveAttributeContainers
+  # TODO: add tests for RemoveSession
+  # TODO: add tests for RemoveTask
 
   def testScanForProcessedTasks(self):
     """Tests the ScanForProcessedTasks method"""
