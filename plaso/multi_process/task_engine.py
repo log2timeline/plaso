@@ -5,6 +5,8 @@ import os
 import shutil
 import tempfile
 
+import redis
+
 from plaso.lib import definitions
 from plaso.multi_process import engine
 from plaso.storage import factory as storage_factory
@@ -47,8 +49,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       OSError: if the size of the SQLite task storage file cannot be determined.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      processed_storage_file_path = self._GetProcessedStorageFilePath(
-          task_storage_format, task)
+      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
 
       try:
         stat_info = os.stat(processed_storage_file_path)
@@ -59,6 +60,17 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return True
 
     return False
+
+  def _GetMergeTaskStorageRedisHashName(self, task):
+    """Retrieves the Redis hash name of a task store that should be merged.
+
+    Args:
+      task (Task): task the storage changes are part of.
+
+    Returns:
+      str: Redis hash name of a task store.
+    """
+    return '{0:s}-merge'.format(task.session_identifier)
 
   def _GetMergeTaskStorageFilePath(self, task_storage_format, task):
     """Retrieves the path of a task storage file in the merge directory.
@@ -77,22 +89,29 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     return None
 
-  def _GetProcessedStorageFilePath(self, task_storage_format, task):
+  def _GetProcessedRedisHashName(self, session_identifier):
+    """Retrieves the Redis hash name of a processed task store.
+
+    Args:
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
+
+    Returns:
+      str: Redis hash name of a task store.
+    """
+    return '{0:s}-processed'.format(session_identifier)
+
+  def _GetProcessedStorageFilePath(self, task):
     """Retrieves the path of a task storage file in the processed directory.
 
     Args:
-      task_storage_format (str): storage format used to store task results.
       task (Task): task the storage changes are part of.
 
     Returns:
-      str: path of a task storage file in the processed directory or None if
-          not est.
+      str: path of a task storage file in the processed directory.
     """
-    if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      filename = '{0:s}.plaso'.format(task.identifier)
-      return os.path.join(self._processed_task_storage_path, filename)
-
-    return None
+    filename = '{0:s}.plaso'.format(task.identifier)
+    return os.path.join(self._processed_task_storage_path, filename)
 
   def _GetProcessedTaskIdentifiers(
       self, task_storage_format, session_identifier):
@@ -111,10 +130,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       OSError: if the temporary path for the task storage does not exist.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      task_identifiers, redis_client = (
-          redis_store.RedisStore.ScanForProcessedTasks(
-              session_identifier, redis_client=self._redis_client))
-      self._redis_client = redis_client
+      redis_hash_name = self._GetProcessedRedisHashName(session_identifier)
+
+      try:
+        task_identifiers = self._redis_client.hkeys(redis_hash_name)
+        task_identifiers = [
+            identifier.decode('utf-8') for identifier in task_identifiers]
+      except redis.exceptions.TimeoutError:
+        # If there is a timeout fetching identifiers, we assume that there are
+        # no processed tasks.
+        task_identifiers = []
 
     elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       if not self._processed_task_storage_path:
@@ -126,8 +151,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     return task_identifiers
 
-  def _PrepareMergeTaskStorage(
-      self, task_storage_format, session_identifier, task):
+  def _PrepareMergeTaskStorage(self, task_storage_format, task):
     """Prepares a task storage for merging.
 
     Moves the task storage file from the processed directory to the merge
@@ -135,8 +159,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     Args:
       task_storage_format (str): storage format used to store task results.
-      session_identifier (str): the identifier of the session the tasks are
-          part of.
       task (Task): task the storage changes are part of.
 
     Raises:
@@ -144,15 +166,25 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       OSError: if the SQLite task storage file cannot be renamed.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
+      # TODO: use number of attribute containers instead of file size?
       task.storage_file_size = 1000
-      redis_store.RedisStore.MarkTaskAsMerging(
-          session_identifier, task.identifier)
+
+      redis_hash_name = self._GetProcessedRedisHashName(task.session_identifier)
+      number_of_results = self._redis_client.hdel(
+          redis_hash_name, task.identifier)
+      if number_of_results == 0:
+        raise IOError('Task identifier {0:s} was not processed'.format(
+            task.identifier))
+
+      redis_hash_name = self._GetMergeTaskStorageRedisHashName(task)
+      # TODO: set timestamp as value.
+      self._redis_client.hset(
+          redis_hash_name, key=task.identifier, value=b'true')
 
     elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       merge_storage_file_path = self._GetMergeTaskStorageFilePath(
           task_storage_format, task)
-      processed_storage_file_path = self._GetProcessedStorageFilePath(
-          task_storage_format, task)
+      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
 
       task.storage_file_size = os.path.getsize(processed_storage_file_path)
 
@@ -175,9 +207,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       OSError: if a SQLite task storage file cannot be removed.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      redis_store.RedisStore.RemoveTask(
-          task.session_identifier, task.identifier,
-          redis_client=self._redis_client)
+      redis_hash_pattern = '{0:s}-{1:s}-*'.format(
+          task.session_identifier, task.identifier)
+
+      for redis_hash_name in self._redis_client.keys(redis_hash_pattern):
+        self._redis_client.delete(redis_hash_name)
 
     elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       merge_storage_file_path = self._GetMergeTaskStorageFilePath(
@@ -202,13 +236,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       OSError: if a SQLite task storage file cannot be removed.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      redis_store.RedisStore.RemoveTask(
-          task.session_identifier, task.identifier,
-          redis_client=self._redis_client)
+      redis_hash_pattern = '{0:s}-{1:s}-*'.format(
+          task.session_identifier, task.identifier)
+
+      for redis_hash_name in self._redis_client.keys(redis_hash_pattern):
+        self._redis_client.delete(redis_hash_name)
 
     elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      processed_storage_file_path = self._GetProcessedStorageFilePath(
-          task_storage_format, task)
+      processed_storage_file_path = self._GetProcessedStorageFilePath(task)
 
       try:
         os.remove(processed_storage_file_path)
@@ -265,7 +300,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       IOError: if the temporary path for the SQLite task storage already exists.
       OSError: if the temporary path for the SQLite task storage already exists.
     """
-    if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
+    if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
+      url = redis_store.RedisStore.DEFAULT_REDIS_URL
+      self._redis_client = redis.from_url(url=url, socket_timeout=60)
+      self._redis_client.client_setname('task_engine')
+
+    elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       if self._task_storage_path:
         raise IOError('SQLite task storage path already exists.')
 
@@ -295,8 +335,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       abort (Optional[bool]): True to indicate the stop is issued on abort.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      redis_store.RedisStore.RemoveSession(
-          session_identifier, redis_client=self._redis_client)
+      redis_hash_pattern = '{0:s}-*'.format(session_identifier)
+
+      for redis_hash_name in self._redis_client.keys(redis_hash_pattern):
+        self._redis_client.delete(redis_hash_name)
+
+      self._redis_client = None
 
     elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       if os.path.isdir(self._merge_task_storage_path):

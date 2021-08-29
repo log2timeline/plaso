@@ -278,8 +278,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           self._task_manager.SampleTaskStatus(task, 'removed_processed')
 
         else:
-          self._PrepareMergeTaskStorage(
-              self._task_storage_format, session_identifier, task)
+          self._PrepareMergeTaskStorage(self._task_storage_format, task)
           self._task_manager.UpdateTaskAsPendingMerge(task)
 
       except KeyError as exception:

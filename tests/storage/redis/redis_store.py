@@ -12,7 +12,6 @@ from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage.redis import redis_store
-from plaso.storage.redis import writer
 
 from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
@@ -343,59 +342,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
     test_store.Close()
 
   # TODO: add tests for Open and Close
-
-  def testMarkTaskAsMerging(self):
-    """Tests the MarkTaskAsMerging method"""
-    redis_client = self._CreateRedisClient()
-
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
-
-    # Trying to mark a task as merging without finalizing it raises an error.
-    with self.assertRaises(IOError):
-      redis_store.RedisStore.MarkTaskAsMerging(
-          session.identifier, task.identifier, redis_client=redis_client)
-
-    # Opening and closing a writer for a task should cause the task to be marked
-    # as complete.
-    storage_writer = writer.RedisStorageWriter(
-        storage_type=definitions.STORAGE_TYPE_TASK)
-    storage_writer.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
-    storage_writer.Close()
-
-    redis_store.RedisStore.MarkTaskAsMerging(
-        session.identifier, task.identifier, redis_client=redis_client)
-
-  # TODO: add tests for RemoveSession
-  # TODO: add tests for RemoveTask
-
-  def testScanForProcessedTasks(self):
-    """Tests the ScanForProcessedTasks method"""
-    redis_client = self._CreateRedisClient()
-
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
-
-    # There should be no processed task identifiers initially.
-    task_identifiers, _ = redis_store.RedisStore.ScanForProcessedTasks(
-        session.identifier, redis_client=redis_client)
-    self.assertEqual([], task_identifiers)
-
-    # Opening and closing a writer for a task should cause the task to be marked
-    # as complete.
-    storage_writer = writer.RedisStorageWriter(
-        storage_type=definitions.STORAGE_TYPE_TASK)
-    storage_writer.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
-    storage_writer.Close()
-
-    # The task store is now marked as processed.
-    task_identifiers, _ = redis_store.RedisStore.ScanForProcessedTasks(
-        session.identifier, redis_client=redis_client)
-    self.assertEqual([task.identifier], task_identifiers)
 
   def testUpdateAttributeContainer(self):
     """Tests the UpdateAttributeContainer function."""

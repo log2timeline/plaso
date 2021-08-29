@@ -3,9 +3,12 @@
 
 import os
 
+import redis
+
 from plaso.lib import definitions
 from plaso.multi_process import base_process
 from plaso.storage import factory as storage_factory
+from plaso.storage.redis import redis_store
 
 
 class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
@@ -47,7 +50,15 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
       IOError: if the SQLite task storage file cannot be renamed.
       OSError: if the SQLite task storage file cannot be renamed.
     """
-    if task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
+    if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+      url = redis_store.RedisStore.DEFAULT_REDIS_URL
+      redis_client = redis.from_url(url=url, socket_timeout=60)
+      redis_client.client_setname('task_process')
+
+      redis_hash_name = self._GetProcessedRedisHashName(task.session_identifier)
+      redis_client.hset(redis_hash_name, key=task.identifier, value=b'true')
+
+    elif task.storage_format == definitions.STORAGE_FORMAT_SQLITE:
       storage_file_path = self._GetTaskStorageFilePath(
           task_storage_format, task)
       processed_storage_file_path = self._GetProcessedStorageFilePath(
@@ -59,6 +70,18 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
         raise IOError((
             'Unable to rename task storage file: {0:s} with error: '
             '{1!s}').format(storage_file_path, exception))
+
+  def _GetProcessedRedisHashName(self, session_identifier):
+    """Retrieves the Redis hash name of a processed task store.
+
+    Args:
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
+
+    Returns:
+      str: Redis hash name of a task store.
+    """
+    return '{0:s}-processed'.format(session_identifier)
 
   def _GetProcessedStorageFilePath(self, task_storage_format, task):
     """Retrieves the path of a task storage file in the processed directory.
