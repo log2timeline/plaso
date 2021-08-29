@@ -24,12 +24,7 @@ class RedisStore(interface.BaseStore):
 
   _FORMAT_VERSION = '20181013'
   _EVENT_INDEX_NAME = 'sorted_event_identifier'
-  _FINALIZED_KEY_NAME = 'finalized'
-  _FINALIZED_BYTES = b'finalized'
-  _MERGING_KEY_NAME = 'merging'
-  _MERGING_BYTES = b'merging'
 
-  # DEFAULT_REDIS_URL is public so that it appears in generated documentation.
   DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
@@ -79,15 +74,6 @@ class RedisStore(interface.BaseStore):
     # add an event tag instead of updating the existing one.
     return None
 
-  def _GetFinalizationKey(self):
-    """Generates the finalized key for the store.
-
-    Returns:
-      str: Redis key for the the finalization flag.
-    """
-    return '{0:s}-{1:s}'.format(
-        self._session_identifier, self._FINALIZED_KEY_NAME)
-
   def _RaiseIfNotReadable(self):
     """Checks that the store is ready to for reading.
 
@@ -101,9 +87,9 @@ class RedisStore(interface.BaseStore):
   def _RaiseIfNotWritable(self):
     """Checks that the store is ready to for writing.
 
-     Raises:
-       IOError: if the store cannot be written to.
-       OSError: if the store cannot be written to.
+    Raises:
+      IOError: if the store cannot be written to.
+      OSError: if the store cannot be written to.
     """
     if not self._redis_client:
       raise IOError('Unable to write, client not connected.')
@@ -127,6 +113,69 @@ class RedisStore(interface.BaseStore):
           'Unable to set redis client name: {0:s} with error: {1!s}'.format(
               name, exception))
 
+  def _UpdateAttributeContainerAfterDeserialize(self, container):
+    """Updates an attribute container after deserialization.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      ValueError: if an attribute container identifier is missing.
+    """
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      row_identifier = getattr(
+          container, '_event_data_row_identifier', None)
+      if row_identifier:
+        event_data_identifier = identifiers.RedisKeyIdentifier(
+            self._CONTAINER_TYPE_EVENT_DATA, row_identifier)
+        container.SetEventDataIdentifier(event_data_identifier)
+
+        delattr(container, '_event_data_row_identifier')
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      row_identifier = getattr(
+          container, '_event_data_stream_row_identifier', None)
+      if row_identifier:
+        event_data_stream_identifier = identifiers.RedisKeyIdentifier(
+            self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+        container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+        delattr(container, '_event_data_stream_row_identifier')
+
+  def _UpdateAttributeContainerBeforeSerialize(self, container):
+    """Updates an attribute container before serialization.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: if the attribute container identifier type is not supported.
+      OSError: if the attribute container identifier type is not supported.
+    """
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      event_data_identifier = container.GetEventDataIdentifier()
+      if event_data_identifier:
+        if not isinstance(
+            event_data_identifier, identifiers.RedisKeyIdentifier):
+          raise IOError(
+              'Unsupported event data identifier type: {0!s}'.format(
+                  type(event_data_identifier)))
+
+        setattr(container, '_event_data_row_identifier',
+                event_data_identifier.sequence_number)
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+      if event_data_stream_identifier:
+        if not isinstance(
+            event_data_stream_identifier, identifiers.RedisKeyIdentifier):
+          raise IOError(
+              'Unsupported event data stream identifier type: {0!s}'.format(
+                  type(event_data_stream_identifier)))
+
+        setattr(container, '_event_data_stream_row_identifier',
+                event_data_stream_identifier.sequence_number)
+
   def _WriteExistingAttributeContainer(self, container):
     """Writes an existing attribute container to the store.
 
@@ -149,8 +198,11 @@ class RedisStore(interface.BaseStore):
     redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
     redis_key = identifier.CopyToString()
 
+    self._UpdateAttributeContainerBeforeSerialize(container)
+
     serialized_data = self._SerializeAttributeContainer(container)
-    self._redis_client.hset(redis_hash_name, redis_key, serialized_data)
+    self._redis_client.hset(
+        redis_hash_name, key=redis_key, value=serialized_data)
 
   def _WriteNewAttributeContainer(self, container):
     """Writes a new attribute container to the store.
@@ -168,6 +220,8 @@ class RedisStore(interface.BaseStore):
     redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
     redis_key = identifier.CopyToString()
 
+    self._UpdateAttributeContainerBeforeSerialize(container)
+
     serialized_data = self._SerializeAttributeContainer(container)
     self._redis_client.hsetnx(redis_hash_name, redis_key, serialized_data)
 
@@ -184,7 +238,7 @@ class RedisStore(interface.BaseStore):
     metadata_key = self._GetRedisHashName('metadata')
 
     for key, value in metadata.items():
-      self._redis_client.hset(metadata_key, key, value)
+      self._redis_client.hset(metadata_key, key=key, value=value)
 
   def Close(self):
     """Closes the store.
@@ -195,10 +249,6 @@ class RedisStore(interface.BaseStore):
     """
     if not self._redis_client:
       raise IOError('Store already closed.')
-
-    finalized_key = self._GetFinalizationKey()
-    self._redis_client.hset(
-        finalized_key, self._task_identifier, self._FINALIZED_BYTES)
 
     self._redis_client = None
 
@@ -234,6 +284,9 @@ class RedisStore(interface.BaseStore):
         container_type, serialized_data)
 
     attribute_container.SetIdentifier(identifier)
+
+    self._UpdateAttributeContainerAfterDeserialize(attribute_container)
+
     return attribute_container
 
   def GetAttributeContainerByIndex(self, container_type, index):
@@ -267,6 +320,9 @@ class RedisStore(interface.BaseStore):
 
     identifier = identifiers.RedisKeyIdentifier(container_type, sequence_number)
     attribute_container.SetIdentifier(identifier)
+
+    self._UpdateAttributeContainerAfterDeserialize(attribute_container)
+
     return attribute_container
 
   def GetAttributeContainers(self, container_type):
@@ -292,6 +348,8 @@ class RedisStore(interface.BaseStore):
       identifier = identifiers.RedisKeyIdentifier(
           container_type, sequence_number)
       attribute_container.SetIdentifier(identifier)
+
+      self._UpdateAttributeContainerAfterDeserialize(attribute_container)
 
       yield attribute_container
 
@@ -358,6 +416,20 @@ class RedisStore(interface.BaseStore):
       yield self.GetAttributeContainerByIdentifier(
           self._CONTAINER_TYPE_EVENT, identifier)
 
+  def GetSystemConfigurationIdentifier(self):
+    """Retrieves the system configuration identifier.
+
+    Returns:
+      AttributeContainerIdentifier: system configuration identifier.
+
+    Raises:
+      IOError: always, as the Redis store does not support writing a system
+          configuration.
+      OSError: always, as the Redis store does not support writing a system
+          configuration.
+    """
+    raise IOError('System configuration is not supported by the redis store.')
+
   def HasAttributeContainers(self, container_type):
     """Determines if the store contains a specific type of attribute container.
 
@@ -372,43 +444,6 @@ class RedisStore(interface.BaseStore):
     number_of_containers = self._redis_client.hlen(redis_hash_name)
     return number_of_containers > 0
 
-  @classmethod
-  def MarkTaskAsMerging(
-      cls, task_identifier, session_identifier, redis_client=None, url=None):
-    """Marks a finalized task as pending merge.
-
-    Args:
-      task_identifier (str): identifier of the task.
-      session_identifier (str): session identifier, formatted as a UUID.
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
-
-    Raises:
-      IOError: if the task being updated is not finalized.
-      OSError: if the task being updated is not finalized.
-    """
-    if not url:
-      url = cls.DEFAULT_REDIS_URL
-
-    if not redis_client:
-      redis_client = redis.from_url(url=url, socket_timeout=60)
-
-    cls._SetClientName(redis_client, 'merge_mark')
-
-    finalization_key = '{0:s}-{1:s}'.format(
-        session_identifier, cls._FINALIZED_KEY_NAME)
-    number_of_deleted_fields = redis_client.hdel(
-        finalization_key, task_identifier)
-    if number_of_deleted_fields == 0:
-      raise IOError('Task identifier {0:s} not finalized'.format(
-          task_identifier))
-
-    merging_key = '{0:s}-{1:s}'.format(
-        session_identifier, cls._MERGING_KEY_NAME)
-    redis_client.hset(merging_key, task_identifier, cls._MERGING_BYTES)
-
   # pylint: disable=arguments-differ
   def Open(
       self, redis_client=None, session_identifier=None, task_identifier=None,
@@ -419,8 +454,7 @@ class RedisStore(interface.BaseStore):
       redis_client (Optional[Redis]): Redis client to query. If specified, no
           new client will be created. If no client is specified a new client
           will be opened connected to the Redis instance specified by 'url'.
-      session_identifier (Optional[str]): session identifier, formatted as
-          a UUID.
+      session_identifier (Optional[str]): identifier of the session.
       task_identifier (Optional[str]): unique identifier of the task the store
           will store containers for. If not specified, an identifier will be
           generated.
@@ -431,16 +465,16 @@ class RedisStore(interface.BaseStore):
       IOError: if the store is already connected to a Redis instance.
       OSError: if the store is already connected to a Redis instance.
     """
-    if not url:
-      url = self.DEFAULT_REDIS_URL
-
     if self._redis_client:
       raise IOError('Redis client already connected')
 
-    if redis_client:
-      self._redis_client = redis_client
-    else:
-      self._redis_client = redis.from_url(url=url, socket_timeout=60)
+    if not redis_client:
+      if not url:
+        url = self.DEFAULT_REDIS_URL
+
+      redis_client = redis.from_url(url=url, socket_timeout=60)
+
+    self._redis_client = redis_client
 
     self._session_identifier = session_identifier or str(uuid.uuid4())
     self._task_identifier = task_identifier or str(uuid.uuid4())
@@ -451,97 +485,3 @@ class RedisStore(interface.BaseStore):
     metadata_key = self._GetRedisHashName('metadata')
     if not self._redis_client.exists(metadata_key):
       self._WriteStorageMetadata()
-
-  def Remove(self):
-    """Removes the contents of the store from Redis."""
-    merging_key = '{0:s}-{1:s}'.format(
-        self._session_identifier, self._MERGING_KEY_NAME)
-    self._redis_client.hdel(merging_key, self._task_identifier)
-
-    sorted_event_key = self._GetRedisHashName(self._EVENT_INDEX_NAME)
-    self._redis_client.delete(sorted_event_key)
-
-    task_completion_key = self._GetRedisHashName(
-        self._CONTAINER_TYPE_TASK_COMPLETION)
-    self._redis_client.delete(task_completion_key)
-
-    metadata_key = self._GetRedisHashName('metadata')
-    self._redis_client.delete(metadata_key)
-
-  def RemoveAttributeContainer(self, container_type, identifier):
-    """Removes an attribute container from the store.
-
-    Args:
-      container_type (str): container type attribute of the container being
-          removed.
-      identifier (AttributeContainerIdentifier): event data identifier.
-    """
-    self._RaiseIfNotWritable()
-    redis_hash_name = self._GetRedisHashName(container_type)
-    redis_key = identifier.CopyToString()
-
-    self._redis_client.hdel(redis_hash_name, redis_key)
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
-      self._redis_client.zrem(event_index_name, redis_key)
-
-  def RemoveAttributeContainers(self, container_type, container_identifiers):
-    """Removes multiple attribute containers from the store.
-
-    Args:
-      container_type (str): container type attribute of the container being
-          removed.
-      container_identifiers (list[AttributeContainerIdentifier]):
-          event data identifier.
-    """
-    self._RaiseIfNotWritable()
-    if not container_identifiers:
-      # If there's no list of identifiers, there's no need to delete anything.
-      return
-
-    redis_hash_name = self._GetRedisHashName(container_type)
-    redis_keys = [
-        identifier.CopyToString() for identifier in container_identifiers]
-
-    self._redis_client.hdel(redis_hash_name, *redis_keys)
-
-    if container_type == self._CONTAINER_TYPE_EVENT:
-      event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
-      self._redis_client.zrem(event_index_name, *redis_keys)
-
-  @classmethod
-  def ScanForProcessedTasks(
-      cls, session_identifier, redis_client=None, url=None):
-    """Scans a Redis database for processed tasks.
-
-    Args:
-      session_identifier (str): session identifier, formatted as
-          a UUID.
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created.
-      url (Optional[str]): URL for a Redis database. If not specified,
-          REDIS_DEFAULT_URL will be used.
-
-    Returns:
-      tuple: containing
-          list[str]: identifiers of processed tasks, which may be empty if the
-              connection to Redis times out.
-          Redis: Redis client used for the query.
-    """
-    if not url:
-      url = cls.DEFAULT_REDIS_URL
-
-    if not redis_client:
-      redis_client = redis.from_url(url=url, socket_timeout=60)
-      cls._SetClientName(redis_client, 'processed_scan')
-
-    finalization_key = '{0:s}-{1:s}'.format(
-        session_identifier, cls._FINALIZED_KEY_NAME)
-    try:
-      task_identifiers = redis_client.hkeys(finalization_key)
-    except redis.exceptions.TimeoutError:
-      # If there is a timeout fetching identifiers, we assume that there are
-      # no processed tasks.
-      return [], redis_client
-    task_identifiers = [key.decode('utf-8') for key in task_identifiers]
-    return task_identifiers, redis_client

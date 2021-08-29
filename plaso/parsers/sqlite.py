@@ -219,35 +219,29 @@ class SQLiteDatabase(object):
     # http://apidoc.apsw.googlecode.com/hg/example.html#example-vfs
     # Until then, just copy the file into a tempfile and parse it.
 
-    temporary_file = tempfile.NamedTemporaryFile(
-        delete=False, dir=self._temporary_directory)
+    with tempfile.NamedTemporaryFile(
+        delete=False, dir=self._temporary_directory) as temporary_file:
+      try:
+        self._CopyFileObjectToTemporaryFile(file_object, temporary_file)
+        self._temp_db_file_path = temporary_file.name
 
-    try:
-      self._CopyFileObjectToTemporaryFile(file_object, temporary_file)
-      self._temp_db_file_path = temporary_file.name
-
-    except IOError:
-      os.remove(temporary_file.name)
-      raise
-
-    finally:
-      temporary_file.close()
+      except IOError:
+        os.remove(temporary_file.name)
+        raise
 
     if wal_file_object:
       # Create WAL file using same filename so it is available for
       # sqlite3.connect()
       temporary_filename = '{0:s}-wal'.format(self._temp_db_file_path)
-      temporary_file = open(temporary_filename, 'wb')
-      try:
-        self._CopyFileObjectToTemporaryFile(wal_file_object, temporary_file)
-        self._temp_wal_file_path = temporary_filename
 
-      except IOError:
-        os.remove(temporary_filename)
-        raise
+      with open(temporary_filename, 'wb') as temporary_file:
+        try:
+          self._CopyFileObjectToTemporaryFile(wal_file_object, temporary_file)
+          self._temp_wal_file_path = temporary_filename
 
-      finally:
-        temporary_file.close()
+        except IOError:
+          os.remove(temporary_filename)
+          raise
 
     self._database = sqlite3.connect(self._temp_db_file_path)
     try:

@@ -86,9 +86,9 @@ class TestCase(object):
       command.insert(0, sys.executable)
     command_string = ' '.join(command)
     logging.info('Running: {0:s}'.format(command_string))
-    child = subprocess.Popen(command, stdout=stdout, stderr=stderr)
-    child.communicate()
-    exit_code = child.returncode
+    with subprocess.Popen(command, stdout=stdout, stderr=stderr) as child:
+      child.communicate()
+      exit_code = child.returncode
 
     if exit_code != 0:
       logging.error('Running: "{0:s}" failed (exit code {1:d}).'.format(

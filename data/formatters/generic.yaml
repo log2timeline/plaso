@@ -68,6 +68,11 @@ short_message:
 - 'Layer ID: {layer_id}'
 ---
 type: 'basic'
+data_type: 'fish:history:command'
+message: 'Command executed: {command}'
+short_message: '{command}'
+---
+type: 'basic'
 data_type: 'fs:mactime:line'
 message: '{filename}'
 short_message: '{filename}'
@@ -421,6 +426,15 @@ short_message:
 ---
 type: 'conditional'
 data_type: 'pe:delay_import:import_time'
+message:
+- 'DLL name: {dll_name}'
+- 'PE Type: {pe_type}'
+- 'Import hash: {imphash}'
+short_message:
+- '{dll_name}'
+---
+type: 'conditional'
+data_type: 'pe:export_table'
 message:
 - 'DLL name: {dll_name}'
 - 'PE Type: {pe_type}'

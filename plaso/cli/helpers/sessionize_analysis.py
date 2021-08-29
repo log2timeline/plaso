@@ -31,9 +31,8 @@ class SessionizeAnalysisArgumentsHelper(interface.ArgumentsHelper):
             'Specify the maximum delay in minutes between events in the '
             'session.'))
 
-  # pylint: disable=arguments-differ
   @classmethod
-  def ParseOptions(cls, options, analysis_plugin):
+  def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
     """Parses and validates options.
 
     Args:

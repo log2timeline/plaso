@@ -40,15 +40,10 @@ class CompoundZIPPluginTestCase(test_lib.ParserTestCase):
 
     file_object = file_entry.GetFileObject()
 
-    zip_file = zipfile.ZipFile(file_object, 'r', allowZip64=True)
-
-    try:
+    with zipfile.ZipFile(file_object, 'r', allowZip64=True) as zip_file:
       required_paths_exist = plugin.CheckRequiredPaths(zip_file)
       self.assertTrue(required_paths_exist)
 
       plugin.Process(parser_mediator, zip_file=zip_file)
-
-    finally:
-      zip_file.close()
 
     return storage_writer

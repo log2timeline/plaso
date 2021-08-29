@@ -10,6 +10,40 @@ class ArtifactAttributeContainer(interface.AttributeContainer):
   """Base class to represent an artifact attribute container."""
 
 
+class SystemSubConfigurationArtifactAttributeContainer(
+    ArtifactAttributeContainer):
+  """System sub configuration artifact attribute container."""
+
+  def __init__(self):
+    """Initializes a system sub configuration artifact attribute container."""
+    super(SystemSubConfigurationArtifactAttributeContainer, self).__init__()
+    self._system_configuration_identifier = None
+
+  def GetSystemConfigurationIdentifier(self):
+    """Retrieves the identifier of the associated system configuration.
+
+    The system configuration identifier is a storage specific value that
+    requires special handling during serialization.
+
+    Returns:
+      AttributeContainerIdentifier: system configuration identifier or None
+          when not set.
+    """
+    return self._system_configuration_identifier
+
+  def SetSystemConfigurationIdentifier(self, system_configuration_identifier):
+    """Sets the identifier of the associated system configuration.
+
+    The system configuration identifier is a storage specific value that
+    requires special handling during serialization.
+
+    Args:
+      system_configuration_identifier (AttributeContainerIdentifier): system
+          configuration identifier.
+    """
+    self._system_configuration_identifier = system_configuration_identifier
+
+
 class EnvironmentVariableArtifact(ArtifactAttributeContainer):
   """Environment variable artifact attribute container.
 
@@ -133,6 +167,7 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
   def version_tuple(self):
     """tuple[int]: version tuple or None if version is not set or invalid."""
     try:
+      # pylint: disable=consider-using-generator
       return tuple([int(digit, 10) for digit in self.version.split('.')])
     except (AttributeError, TypeError, ValueError):
       return None
@@ -435,8 +470,6 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
         "10.9.2" or "8.1".
     time_zone (str): system time zone.
     user_accounts (list[UserAccountArtifact]): user accounts.
-    windows_eventlog_providers (list[WindowsEventLogProviderArtifact]): Windows
-        Event Log providers.
   """
   CONTAINER_TYPE = 'system_configuration'
 
@@ -457,7 +490,6 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     self.operating_system_version = None
     self.time_zone = time_zone
     self.user_accounts = []
-    self.windows_eventlog_providers = []
 
 
 class TimeZoneArtifact(ArtifactAttributeContainer):
@@ -545,7 +577,8 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     return self.user_directory.split(self._path_separator)
 
 
-class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
+class WindowsEventLogProviderArtifact(
+    SystemSubConfigurationArtifactAttributeContainer):
   """Windows Event Log provider artifact attribute container.
 
   Attributes:

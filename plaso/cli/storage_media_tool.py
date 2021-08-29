@@ -618,7 +618,8 @@ class StorageMediaTool(tools.CLITool):
     else:
       options.partitions = self._partitions
 
-    if not self._process_vss or not self._vss_stores:
+    if not self._process_vss or (
+        self._unattended_mode and not self._vss_stores):
       options.snapshots = ['none']
     elif self._vss_stores == 'all':
       options.snapshots = ['all']

@@ -40,7 +40,7 @@ class CompoundZIPParser(interface.FileObjectParser):
               self.NAME, display_name, 'Not a Zip file.'))
 
     try:
-      zip_file = zipfile.ZipFile(file_object, 'r', allowZip64=True)
+      zip_file = zipfile.ZipFile(file_object, 'r', allowZip64=True)  # pylint: disable=consider-using-with
 
     # Some non-ZIP files return true for is_zipfile but will fail with another
     # error like a negative seek (IOError). Note that this function can raise

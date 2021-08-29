@@ -58,9 +58,8 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
             'Port number of the nsrlsvr instance to query, the default is: '
             '{0:d}.').format(cls._DEFAULT_PORT))
 
-  # pylint: disable=arguments-differ
   @classmethod
-  def ParseOptions(cls, options, analysis_plugin):
+  def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
     """Parses and validates options.
 
     Args:

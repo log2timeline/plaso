@@ -117,7 +117,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         'storage_file_legacy', metavar='PATH', nargs='?', type=str,
         default=None, help='Path to a storage file.')
 
-  def AddStorageOptions(self, argument_group):
+  def AddStorageOptions(self, argument_group):  # pylint: disable=arguments-renamed
     """Adds the storage options to the argument group.
 
     Args:

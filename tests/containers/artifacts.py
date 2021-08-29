@@ -169,8 +169,7 @@ class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         'available_time_zones', 'code_page', 'hostname', 'keyboard_layout',
         'operating_system', 'operating_system_product',
-        'operating_system_version', 'time_zone', 'user_accounts',
-        'windows_eventlog_providers']
+        'operating_system_version', 'time_zone', 'user_accounts']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
     self.assertEqual(attribute_names, expected_attribute_names)

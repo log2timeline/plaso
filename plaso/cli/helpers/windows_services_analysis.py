@@ -34,9 +34,8 @@ class WindowsServicesAnalysisArgumentsHelper(interface.ArgumentsHelper):
             'Specify how the results should be displayed. Options are text '
             'and yaml.'))
 
-  # pylint: disable=arguments-differ
   @classmethod
-  def ParseOptions(cls, options, analysis_plugin):
+  def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
     """Parses and validates options.
 
     Args:

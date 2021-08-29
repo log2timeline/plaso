@@ -59,28 +59,18 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     Returns:
       str: path segment separator.
     """
-    if path.startswith('\\') or path[1:].startswith(':\\'):
+    if path[0] in ('\\', '/'):
+      return path[0]
+
+    if path[1:].startswith(':\\'):
       return '\\'
 
-    if path.startswith('/'):
-      return '/'
-
-    if '/' and '\\' in path:
-      # Let's count slashes and guess which one is the right one.
-      forward_count = len(path.split('/'))
-      backward_count = len(path.split('\\'))
-
-      if forward_count > backward_count:
-        return '/'
-
+    backward_slash_count = path.count('\\')
+    forward_slash_count = path.count('/')
+    if backward_slash_count > forward_slash_count:
       return '\\'
 
-    # Now we are sure there is only one type of separators yet
-    # the path does not start with one.
-    if '/' in path:
-      return '/'
-
-    return '\\'
+    return '/'
 
   def _GetTitleFromChromeWebStore(self, extension_identifier):
     """Retrieves the name of the extension from the Chrome store website.

@@ -145,7 +145,7 @@ class PstealTool(
 
       table_view.Write(self._output_writer)
 
-  def AddStorageOptions(self, argument_group):
+  def AddStorageOptions(self, argument_group):  # pylint: disable=arguments-renamed
     """Adds the storage options to the argument group.
 
     Args:

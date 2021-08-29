@@ -38,9 +38,8 @@ class ElasticTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
         metavar='IDENTIFIER', help=(
              'The identifier of the timeline in Timesketch.'))
 
-  # pylint: disable=arguments-differ
   @classmethod
-  def ParseOptions(cls, options, output_module):
+  def ParseOptions(cls, options, output_module):  # pylint: disable=arguments-renamed
     """Parses and validates options.
 
     Args:
