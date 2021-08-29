@@ -223,5 +223,53 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
       self._ParseFile(path_segments, parser)
 
 
+  def testParseVersion3Entry(self):
+    """Test Firefox version 3 cache2 file parsing."""
+    parser = firefox_cache.FirefoxCache2Parser()
+    path_segments = [
+        'firefox_cache', 'cache2', '9E599395B8E39ED759C56FC9CD6BBD80FBB426DC']
+
+    storage_writer = self._ParseFile(path_segments, parser)
+
+    events = list(storage_writer.GetEvents())
+
+    expected_event_values = {
+        'url': '~predictor-origin,:http://github.com/',
+        'data_type': 'firefox:cache:record',
+        'date_time': '2021-07-18 02:52:12'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
+    expected_event_values = {
+        'url': '~predictor-origin,:http://github.com/',
+        'data_type': 'firefox:cache:record',
+        'date_time': '2021-07-18 02:52:12'}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+
+  def testParseVersion3Entry2(self):
+    """Test Firefox version 3 cache2 file parsing."""
+    parser = firefox_cache.FirefoxCache2Parser()
+    path_segments = [
+        'firefox_cache', 'cache2', '0EDDF8C091E2FED62E44BEDDDC1723F5BF38FE4F']
+
+    storage_writer = self._ParseFile(path_segments, parser)
+
+    events = list(storage_writer.GetEvents())
+
+    expected_event_values = {
+        'url': '~predictor-origin,:https://www.mozilla.org/',
+        'data_type': 'firefox:cache:record',
+        'date_time': '2021-08-07 22:42:42'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
+    expected_event_values = {
+        'url': '~predictor-origin,:https://www.mozilla.org/',
+        'data_type': 'firefox:cache:record',
+        'date_time': '2021-08-07 22:42:44'}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+
 if __name__ == '__main__':
   unittest.main()
