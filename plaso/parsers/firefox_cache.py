@@ -433,7 +433,7 @@ class FirefoxCache2Parser(
     return (
         cache_file_metadata_header.key_size > 0 and
         cache_file_metadata_header.key_size < self._MAXIMUM_URL_LENGTH and
-        cache_file_metadata_header.format_version in {1, 2, 3} and
+        cache_file_metadata_header.format_version in (1, 2, 3) and
         cache_file_metadata_header.last_fetched_time > 0 and
         cache_file_metadata_header.fetch_count > 0)
 
@@ -476,7 +476,7 @@ class FirefoxCache2Parser(
       raise errors.UnableToParseFile('Not a valid Firefox cache2 record.')
 
     if file_metadata_header.format_version >= 2:
-      flags = file_object.read(4)  # pylint: disable=unused-variable
+      file_object.seek(4, os.SEEK_CUR)
     url = file_object.read(file_metadata_header.key_size)
 
     header_data = file_object.read()

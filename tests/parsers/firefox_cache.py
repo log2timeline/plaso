@@ -222,7 +222,6 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
     with self.assertRaises(errors.UnableToParseFile):
       self._ParseFile(path_segments, parser)
 
-
   def testParseVersion3Entry(self):
     """Test Firefox version 3 cache2 file parsing."""
     parser = firefox_cache.FirefoxCache2Parser()
@@ -270,6 +269,7 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
         'date_time': '2021-08-07 22:42:44'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()
