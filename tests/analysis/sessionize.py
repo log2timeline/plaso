@@ -46,15 +46,12 @@ class SessionizeAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(storage_writer.number_of_analysis_reports, 1)
     self.assertEqual(storage_writer.number_of_event_tags, 5)
 
-    report = storage_writer.GetAttributeContainerByIndex(
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)
-    self.assertIsNotNone(report)
 
-    expected_report_text = (
-        'Sessionize plugin identified 2 sessions and applied 5 tags.\n'
-        '\tSession 0: 3 events\n'
-        '\tSession 1: 2 events')
-    self.assertEqual(report.text, expected_report_text)
+    self.assertIsNotNone(analysis_report)
+    self.assertEqual(analysis_report.analysis_counter['session_0'], 3)
+    self.assertEqual(analysis_report.analysis_counter['session_1'], 2)
 
 
 if __name__ == '__main__':
