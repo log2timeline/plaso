@@ -16,9 +16,8 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
   def __init__(self):
     """Initializes a sessionize analysis plugin."""
     super(SessionizeAnalysisPlugin, self).__init__()
+    self._current_session_number = 0
     self._maximum_pause_microseconds = self._DEFAULT_MAXIMUM_PAUSE
-    self._session_counter = 0
-    self._events_per_session = []
     self._number_of_event_tags = 0
     self._session_end_timestamp = None
 
@@ -37,19 +36,15 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
+          analysis plugins and other components, such as storage and dfVFS.
 
     Returns:
       AnalysisReport: analysis report.
     """
     report_text = [
-        'Sessionize plugin identified {0:d} sessions and '
-        'applied {1:d} tags.'.format(
-            len(self._events_per_session), self._number_of_event_tags)]
-    for session, event_count in enumerate(self._events_per_session):
-      report_text.append('\tSession {0:d}: {1:d} events'.format(
-          session, event_count))
-    report_text = '\n'.join(report_text)
+        'Sessionize plugin identified {0:d} sessions and created '
+        '{1:d} event tags.'.format(
+            self._current_session_number + 1, self._number_of_event_tags)]
 
     analysis_report = super(SessionizeAnalysisPlugin, self).CompileReport(
         mediator)
@@ -62,29 +57,24 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
+          plugins and other components, such as storage and dfVFS.
       event (EventObject): event to examine.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
     """
-    if self._session_end_timestamp is None:
-      self._session_end_timestamp = (
-          event.timestamp + self._maximum_pause_microseconds)
-      self._events_per_session.append(0)
-
-    if event.timestamp > self._session_end_timestamp:
-      self._session_counter += 1
-      self._events_per_session.append(0)
+    if (self._session_end_timestamp is not None and
+        event.timestamp > self._session_end_timestamp):
+      self._current_session_number += 1
 
     self._session_end_timestamp = (
         event.timestamp + self._maximum_pause_microseconds)
-    # The counter for the current session is the always the last item in
-    # the list.
-    self._events_per_session[-1] += 1
 
-    label = 'session_{0:d}'.format(self._session_counter)
+    label = 'session_{0:d}'.format(self._current_session_number)
+
     event_tag = self._CreateEventTag(event, [label])
     mediator.ProduceEventTag(event_tag)
+
+    self._analysis_counter[label] += 1
     self._number_of_event_tags += 1
 
 
