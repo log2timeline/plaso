@@ -131,11 +131,17 @@ class StorageWriter(object):
     existing_event_tag = self._store.GetEventTagByEventIdentifier(
         event_identifier)
 
-    if existing_event_tag:
-      existing_event_tag.AddLabels(event_tag.labels)
-      self._store.UpdateAttributeContainer(existing_event_tag)
-    else:
+    if not existing_event_tag:
       self.AddAttributeContainer(event_tag)
+
+    else:
+      if not set(existing_event_tag.labels).issubset(event_tag.labels):
+        # No need to update the storage if all the labels are already set.
+        existing_event_tag.AddLabels(event_tag.labels)
+        self._store.UpdateAttributeContainer(existing_event_tag)
+
+      if self._storage_type == definitions.STORAGE_TYPE_TASK:
+        self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT] += 1
 
   def Close(self):
     """Closes the storage writer.

@@ -285,6 +285,16 @@ class SQLiteStorageFile(interface.BaseStore):
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
+    if container_type == self._CONTAINER_TYPE_EVENT_TAG:
+      query = (
+          'CREATE INDEX event_tag_per_event '
+          'ON event_tag (_event_row_identifier)')
+      try:
+        self._cursor.execute(query)
+      except sqlite3.OperationalError as exception:
+        raise IOError('Unable to query storage file with error: {0!s}'.format(
+            exception))
+
   def _CreatetAttributeContainerFromRow(
       self, container_type, column_names, row, first_column_index):
     """Creates an attribute container of a row in the database.
