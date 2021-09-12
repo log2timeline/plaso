@@ -1147,6 +1147,17 @@ class SQLiteStorageFile(interface.BaseStore):
     else:
       connection = sqlite3.connect(path, detect_types=detect_types)
 
+    try:
+      # Use in-memory journaling mode to reduce IO.
+      connection.execute('PRAGMA journal_mode=MEMORY')
+
+      # Turn off insert transaction integrity since we want to do bulk insert.
+      connection.execute('PRAGMA synchronous=OFF')
+
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
+
     cursor = connection.cursor()
     if not cursor:
       return
@@ -1159,15 +1170,6 @@ class SQLiteStorageFile(interface.BaseStore):
     if read_only:
       self._ReadAndCheckStorageMetadata(check_readable_only=True)
     else:
-      # self._cursor.execute('PRAGMA journal_mode=MEMORY')
-
-      try:
-        # Turn off insert transaction integrity since we want to do bulk insert.
-        self._cursor.execute('PRAGMA synchronous=OFF')
-      except sqlite3.OperationalError as exception:
-        raise IOError('Unable to query storage file with error: {0!s}'.format(
-            exception))
-
       if not self._HasTable('metadata'):
         self._WriteMetadata()
       else:
