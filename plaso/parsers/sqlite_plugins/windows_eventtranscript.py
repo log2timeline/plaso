@@ -91,66 +91,65 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
   EventTranscript.db
   """
 
-  NAME = 'windows:diagnosis:eventtranscript'
+  NAME = 'windows_eventtranscript'
   DATA_FORMAT = (
       'Windows diagnosis EventTranscript SQLite database (EventTranscript.db)'
       ' file')
 
   REQUIRED_STRUCTURE = {
       'events_persisted': frozenset([
-        'sid',
-        'timestamp',
-        'payload',
-        'full_event_name',
-        'full_event_name_hash',
-        'event_keywords',
-        'is_core',
-        'provider_group_id',
-        'logging_binary_name',
-        'friendly_logging_binary_name',
-        'compressed_payload_size',
-        'producer_id'
-      ])}
+          'sid',
+          'timestamp',
+          'payload',
+          'full_event_name',
+          'full_event_name_hash',
+          'event_keywords',
+          'is_core',
+          'provider_group_id',
+          'logging_binary_name',
+          'friendly_logging_binary_name',
+          'compressed_payload_size',
+          'producer_id'])}
 
   QUERIES = [
       (('SELECT events_persisted.sid,'
-      'events_persisted.timestamp,'
-      'events_persisted.payload,'
-      'events_persisted.full_event_name,'
-      'events_persisted.full_event_name_hash,'
-      'events_persisted.event_keywords,'
-      'events_persisted.is_core,'
-      'events_persisted.provider_group_id,'
-      'events_persisted.logging_binary_name,'
-      'events_persisted.friendly_logging_binary_name,'
-      'events_persisted.compressed_payload_size,'
-      'events_persisted.producer_id '
-      'from events_persisted'),
-      'ParseEventTranscriptRow')]
+        'events_persisted.timestamp,'
+        'events_persisted.payload,'
+        'events_persisted.full_event_name,'
+        'events_persisted.full_event_name_hash,'
+        'events_persisted.event_keywords,'
+        'events_persisted.is_core,'
+        'events_persisted.provider_group_id,'
+        'events_persisted.logging_binary_name,'
+        'events_persisted.friendly_logging_binary_name,'
+        'events_persisted.compressed_payload_size,'
+        'events_persisted.producer_id '
+        'from events_persisted'),
+        'ParseEventTranscriptRow')]
 
   SCHEMAS = [{
       'events_persisted': (
-        'CREATE TABLE events_persisted ('
-          'sid TEXT,'
-          'timestamp INTEGER,'
-          'payload TEXT,'
-          'full_event_name TEXT,'
-          'full_event_name_hash INTEGER,'
-          'event_keywords INTEGER,'
-          'is_core INTEGER, '
-          'provider_group_id INTEGER,'
-          'logging_binary_name TEXT,'
-          'friendly_logging_binary_name TEXT, '
-          'compressed_payload_size INTEGER,'
-          'producer_id INTEGER,'
-          'extra1 TEXT, '
-          'extra2 TEXT,'
-          'extra3 TEXT,'
-          'FOREIGN KEY(provider_group_id) '
-          'REFERENCES provider_groups(group_id), '
-          'CONSTRAINT fk_producer_id '
-          'FOREIGN KEY(producer_id) '
-          'REFERENCES producers(producer_id) ON DELETE CASCADE)')}]
+          'CREATE TABLE events_persisted ('
+              'sid TEXT,'
+              'timestamp INTEGER,'
+              'payload TEXT,'
+              'full_event_name TEXT,'
+              'full_event_name_hash INTEGER,'
+              'event_keywords INTEGER,'
+              'is_core INTEGER, '
+              'provider_group_id INTEGER,'
+              'logging_binary_name TEXT,'
+              'friendly_logging_binary_name TEXT, '
+              'compressed_payload_size INTEGER,'
+              'producer_id INTEGER,'
+              'extra1 TEXT, '
+              'extra2 TEXT,'
+              'extra3 TEXT,'
+              'FOREIGN KEY(provider_group_id) '
+              'REFERENCES provider_groups(group_id), '
+              'CONSTRAINT fk_producer_id '
+              'FOREIGN KEY(producer_id) '
+              'REFERENCES producers(producer_id) ON DELETE CASCADE)')}]
 
   def ParseEventTranscriptRow(
       self, parser_mediator, query, row, **unused_kwargs):
@@ -189,33 +188,34 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
         query_hash, row, 'producer_id')
 
     # Parse raw_payload
-    payload = json.loads(self._GetRowValue(
-        query_hash, row, 'payload'))
+    payload = json.loads(self._GetRowValue(query_hash, row, 'payload'))
+    payload_data = payload['data']
+    payload_name = payload['name']
+    
     event_data.ver = payload['ver']
-    event_data.name = payload['name']
+    event_data.name = payload_name
     event_data.time = payload['time']
     event_data.ikey = payload['iKey']
     event_data.ext = json.dumps(payload['ext'], separators=(',',':'))
-    event_data.data = json.dumps(payload['data'], separators=(',',':'))
+    event_data.data = json.dumps(payload_data, separators=(',',':'))
 
     # Parse payload for key fields
+
     # Microsoft.Windows.Inventory.Core.InventoryApplicationAdd
-    if payload['name'] == '''Microsoft.Windows.
-Inventory.Core.InventoryApplicationAdd''':
-      event_data.app_name = payload['data']['Name']
-      event_data.app_version = payload['data']['Version']
-      event_data.app_root_dir_path = payload['data']['RootDirPath']
-      event_data.app_install_date = payload['data']['InstallDate']
+    if payload_name == (
+        'Microsoft.Windows.Inventory.Core.InventoryApplicationAdd'):
+      event_data.app_name = payload_data['Name']
+      event_data.app_version = payload_data['Version']
+      event_data.app_root_dir_path = payload_data['RootDirPath']
+      event_data.app_install_date = payload_data['InstallDate']
 
     # Win32kTraceLogging.AppInteractivitySummary
-    if payload['name'] == 'Win32kTraceLogging.AppInteractivitySummary':
-      event_data.app_version = payload['data']['AppVersion']
+    elif payload_name == 'Win32kTraceLogging.AppInteractivitySummary':
+      event_data.app_version = payload_data['AppVersion']
 
-    timestamp = self._GetRowValue(
-        query_hash, row, 'timestamp')
+    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
     if timestamp:
-      date_time = dfdatetime_filetime.Filetime(
-          timestamp=timestamp)
+      date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
