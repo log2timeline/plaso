@@ -25,15 +25,17 @@ Test argument parser.
 
 {0:s}:
   --artifact_definitions PATH, --artifact-definitions PATH
-                        Path to a directory containing artifact definitions,
-                        which are .yaml files. Artifact definitions can be
-                        used to describe and quickly collect data of interest,
-                        such as specific files or Windows Registry keys.
+                        Path to a directory or file containing artifact
+                        definitions, which are .yaml files. Artifact
+                        definitions can be used to describe and quickly
+                        collect data of interest, such as specific files or
+                        Windows Registry keys.
   --custom_artifact_definitions PATH, --custom-artifact-definitions PATH
-                        Path to a file containing custom artifact definitions,
-                        which are .yaml files. Artifact definitions can be
-                        used to describe and quickly collect data of interest,
-                        such as specific files or Windows Registry keys.
+                        Path to a directory or file containing custom artifact
+                        definitions, which are .yaml files. Artifact
+                        definitions can be used to describe and quickly
+                        collect data of interest, such as specific files or
+                        Windows Registry keys.
 """.format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
