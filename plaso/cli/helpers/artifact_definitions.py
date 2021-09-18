@@ -37,19 +37,19 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
         '--artifact_definitions', '--artifact-definitions',
         dest='artifact_definitions_path', type=str, metavar='PATH',
         action='store', help=(
-            'Path to a directory containing artifact definitions, which are '
-            '.yaml files. Artifact definitions can be used to describe and '
-            'quickly collect data of interest, such as specific files or '
-            'Windows Registry keys.'))
+            'Path to a directory or file containing artifact definitions, '
+            'which are .yaml files. Artifact definitions can be used to '
+            'describe and quickly collect data of interest, such as specific '
+            'files or Windows Registry keys.'))
 
     argument_group.add_argument(
         '--custom_artifact_definitions', '--custom-artifact-definitions',
         dest='custom_artifact_definitions_path', type=str, metavar='PATH',
         action='store', help=(
-            'Path to a file containing custom artifact definitions, which are '
-            '.yaml files. Artifact definitions can be used to describe and '
-            'quickly collect data of interest, such as specific files or '
-            'Windows Registry keys.'))
+            'Path to a directory or file containing custom artifact '
+            'definitions, which are .yaml files. Artifact definitions can be '
+            'used to describe and quickly collect data of interest, such as '
+            'specific files or Windows Registry keys.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -100,45 +100,52 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
     custom_artifacts_path = getattr(
         options, 'custom_artifact_definitions_path', None)
 
-    if custom_artifacts_path and not os.path.isfile(custom_artifacts_path):
-      raise errors.BadConfigOption(
-          'No such artifacts filter file: {0:s}.'.format(custom_artifacts_path))
+    if custom_artifacts_path and not os.path.exists(custom_artifacts_path):
+      raise errors.BadConfigOption((
+          'Unable to determine path to custom artifact definitions: '
+          '{0:s}.').format(custom_artifacts_path))
 
     if custom_artifacts_path:
-      logger.info(
-          'Custom artifact filter file: {0:s}'.format(custom_artifacts_path))
+      logger.info('Custom artifact definitions path: {0:s}'.format(
+          custom_artifacts_path))
 
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
-    logger.info(
-        'Determined artifact definitions path: {0:s}'.format(artifacts_path))
+    logger.info('Determined artifact definitions path: {0:s}'.format(
+        artifacts_path))
 
     try:
-      registry.ReadFromDirectory(reader, artifacts_path)
+      if os.path.isdir(artifacts_path):
+        registry.ReadFromDirectory(reader, artifacts_path)
+      else:
+        registry.ReadFromFile(reader, artifacts_path)
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((
           'Unable to read artifact definitions from: {0:s} with error: '
           '{1!s}').format(artifacts_path, exception))
 
+    if custom_artifacts_path:
+      try:
+        if os.path.isdir(custom_artifacts_path):
+          registry.ReadFromDirectory(reader, custom_artifacts_path)
+        else:
+          registry.ReadFromFile(reader, custom_artifacts_path)
+
+      except (KeyError, artifacts_errors.FormatError) as exception:
+        raise errors.BadConfigOption((
+            'Unable to read custorm artifact definitions from: {0:s} with '
+            'error: {1!s}').format(custom_artifacts_path, exception))
+
     for name in preprocessors_manager.PreprocessPluginsManager.GetNames():
       if not registry.GetDefinitionByName(name):
         raise errors.BadConfigOption(
             'Missing required artifact definition: {0:s}'.format(name))
 
-    if custom_artifacts_path:
-      try:
-        registry.ReadFromFile(reader, custom_artifacts_path)
-
-      except (KeyError, artifacts_errors.FormatError) as exception:
-        raise errors.BadConfigOption((
-            'Unable to read artifact definitions from: {0:s} with error: '
-            '{1!s}').format(custom_artifacts_path, exception))
-
     setattr(configuration_object, '_artifact_definitions_path', artifacts_path)
-    setattr(
-        configuration_object, '_custom_artifacts_path', custom_artifacts_path)
+    setattr(configuration_object, '_custom_artifacts_path',
+            custom_artifacts_path)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ArtifactDefinitionsArgumentsHelper)

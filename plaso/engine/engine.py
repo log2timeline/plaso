@@ -374,8 +374,10 @@ class BaseEngine(object):
     """Build Find Specs from artifacts or filter file if available.
 
     Args:
-       artifact_definitions_path (str): path to artifact definitions file.
-       custom_artifacts_path (str): path to custom artifact definitions file.
+       artifact_definitions_path (str): path to artifact definitions directory
+           or file.
+       custom_artifacts_path (str): path to custom artifact definitions
+           directory or file.
 
     Returns:
       artifacts.ArtifactDefinitionsRegistry: artifact definitions registry.
@@ -383,21 +385,19 @@ class BaseEngine(object):
     Raises:
       BadConfigOption: if artifact definitions cannot be read.
     """
-    if artifact_definitions_path and not os.path.isdir(
-        artifact_definitions_path):
+    if not artifact_definitions_path:
       raise errors.BadConfigOption(
-          'No such artifacts filter file: {0:s}.'.format(
+          'No such artifact definitions: {0:s}.'.format(
               artifact_definitions_path))
-
-    if custom_artifacts_path and not os.path.isfile(custom_artifacts_path):
-      raise errors.BadConfigOption(
-          'No such artifacts filter file: {0:s}.'.format(custom_artifacts_path))
 
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
     try:
-      registry.ReadFromDirectory(reader, artifact_definitions_path)
+      if os.path.isdir(artifact_definitions_path):
+        registry.ReadFromDirectory(reader, artifact_definitions_path)
+      else:
+        registry.ReadFromFile(reader, artifact_definitions_path)
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((
@@ -406,11 +406,14 @@ class BaseEngine(object):
 
     if custom_artifacts_path:
       try:
-        registry.ReadFromFile(reader, custom_artifacts_path)
+        if os.path.isdir(custom_artifacts_path):
+          registry.ReadFromDirectory(reader, custom_artifacts_path)
+        else:
+          registry.ReadFromFile(reader, custom_artifacts_path)
 
       except (KeyError, artifacts_errors.FormatError) as exception:
         raise errors.BadConfigOption((
-            'Unable to read artifact definitions from: {0:s} with error: '
-            '{1!s}').format(custom_artifacts_path, exception))
+            'Unable to read custom artifact definitions from: {0:s} with '
+            'error: {1!s}').format(custom_artifacts_path, exception))
 
     return registry
