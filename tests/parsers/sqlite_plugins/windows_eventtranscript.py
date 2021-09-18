@@ -69,8 +69,7 @@ class EventTranscriptPluginTest(test_lib.SQLitePluginTestCase):
         'app_name': None,
         'app_version': None,
         'app_root_dir_path': None,
-        'app_install_date': None,
-        }
+        'app_install_date': None}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
