@@ -191,7 +191,7 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
     payload = json.loads(self._GetRowValue(query_hash, row, 'payload'))
     payload_data = payload['data']
     payload_name = payload['name']
-    
+
     event_data.ver = payload['ver']
     event_data.name = payload_name
     event_data.time = payload['time']
