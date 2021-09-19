@@ -5,11 +5,11 @@ import threading
 
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import tasks
-from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.multi_process import task_process
 from plaso.multi_process import logger
+from plaso.multi_process import plaso_queue
+from plaso.multi_process import task_process
 
 
 class AnalysisProcess(task_process.MultiProcessTaskProcess):

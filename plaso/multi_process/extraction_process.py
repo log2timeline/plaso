@@ -6,12 +6,12 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver
 
-from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.multi_process import task_process
 from plaso.multi_process import logger
+from plaso.multi_process import plaso_queue
+from plaso.multi_process import task_process
 from plaso.parsers import mediator as parsers_mediator
 
 

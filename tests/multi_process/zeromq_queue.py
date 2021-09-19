@@ -4,8 +4,8 @@
 
 import unittest
 
-from plaso.engine import zeromq_queue
 from plaso.lib import errors
+from plaso.multi_process import zeromq_queue
 
 from tests import test_lib as shared_test_lib
 
