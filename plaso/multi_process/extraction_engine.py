@@ -15,15 +15,15 @@ from dfvfs.resolver import context
 from plaso.containers import event_sources
 from plaso.containers import warnings
 from plaso.engine import extractors
-from plaso.engine import plaso_queue
-from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_process import extraction_process
 from plaso.multi_process import logger
+from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import task_manager
+from plaso.multi_process import zeromq_queue
 
 
 class _EventSourceHeap(object):

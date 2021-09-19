@@ -9,9 +9,9 @@ import unittest
 from plaso.analysis import interface as analysis_interface
 from plaso.containers import sessions
 from plaso.engine import configurations
-from plaso.engine import plaso_queue
-from plaso.engine import zeromq_queue
 from plaso.multi_process import analysis_process
+from plaso.multi_process import plaso_queue
+from plaso.multi_process import zeromq_queue
 
 from tests import test_lib as shared_test_lib
 from tests.multi_process import test_lib

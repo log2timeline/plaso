@@ -15,8 +15,8 @@ except ImportError:
 import zmq
 
 from plaso.engine import logger
-from plaso.engine import plaso_queue
 from plaso.lib import errors
+from plaso.multi_process import plaso_queue
 
 
 # pylint: disable=no-member
