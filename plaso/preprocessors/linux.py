@@ -34,12 +34,11 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
     """
     text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
 
-    if not mediator.knowledge_base.GetHostname():
-      hostname = text_file_object.readline()
-      hostname = hostname.strip()
-      if hostname:
-        hostname_artifact = artifacts.HostnameArtifact(name=hostname)
-        mediator.knowledge_base.SetHostname(hostname_artifact)
+    hostname = text_file_object.readline()
+    hostname = hostname.strip()
+    if hostname:
+      hostname_artifact = artifacts.HostnameArtifact(name=hostname)
+      mediator.AddHostname(hostname_artifact)
 
 
 class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
@@ -217,10 +216,9 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
             self.ARTIFACT_DEFINITION_NAME,
             'Unable to read time zone information file.')
 
-    # TODO: check if time zone is set in knowledge base.
     if time_zone:
       try:
-        mediator.knowledge_base.SetTimeZone(time_zone)
+        mediator.SetTimeZone(time_zone)
       except ValueError:
         mediator.ProducePreprocessingWarning(
             self.ARTIFACT_DEFINITION_NAME,
