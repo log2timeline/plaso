@@ -46,7 +46,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
   _HASH_CHOICES = ('md5', 'sha1', 'sha256')
 
   _REPORTS = {
-      'file_hashes': 'Report file hashes calculated during processing.'}
+      'file_hashes': 'Report file hashes calculated during processing.',
+      'winevt_providers': (
+          'Report Windows EventLog providers extracted during processing.')}
 
   _DEFAULT_REPORT_TYPE = 'none'
   _REPORT_CHOICES = sorted(list(_REPORTS.keys()) + ['list', 'none'])
@@ -371,6 +373,55 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       elif self._output_format == 'text':
         self._output_writer.Write('{0:s}\t{1:s}\n'.format(
             hash_value, display_name))
+
+    if self._output_format == 'json':
+      self._output_writer.Write('\n]}\n')
+
+  def _GenerateWindowsEventLogProvidersReport(self, storage_reader):
+    """Generates a Windows EventLog providers report.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write('{"winevt_providers": [\n')
+
+    elif self._output_format == 'markdown':
+      self._output_writer.Write('Log source | Log type | Event message files\n')
+      self._output_writer.Write('--- | --- | ---\n')
+
+    elif self._output_format == 'text':
+      self._output_writer.Write('Log source\tLog type\tEvent message files\n')
+
+    generator = storage_reader.GetAttributeContainers(
+        'windows_eventlog_provider')
+
+    for eventlog_provider_index, eventlog_provider in enumerate(generator):
+      log_source = eventlog_provider.log_source
+      log_type = eventlog_provider.log_type
+
+      event_message_files = eventlog_provider.event_message_files
+      if event_message_files:
+        event_message_files = ', '.join(event_message_files)
+      else:
+        event_message_files = 'N/A'
+
+      if self._output_format == 'json':
+        if eventlog_provider_index > 0:
+          self._output_writer.Write(',\n')
+        event_message_files = event_message_files.replace('\\', '\\\\')
+        self._output_writer.Write((
+            '{{"log_source": "{0:s}", "log_type": "{1:s}", '
+            '"event_message_files": "{2:s}"}}').format(
+                log_source, log_type, event_message_files))
+
+      elif self._output_format == 'markdown':
+        self._output_writer.Write('{0:s} | {1:s} | {2:s}\n'.format(
+            log_source, log_type, event_message_files))
+
+      elif self._output_format == 'text':
+        self._output_writer.Write('{0:s}\t{1:s}\t{2:s}\n'.format(
+            log_source, log_type, event_message_files))
 
     if self._output_format == 'json':
       self._output_writer.Write('\n]}\n')
@@ -1247,6 +1298,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     try:
       if self._report_type == 'file_hashes':
         self._GenerateFileHashesReport(storage_reader)
+      elif self._report_type == 'winevt_providers':
+        self._GenerateWindowsEventLogProvidersReport(storage_reader)
     finally:
       storage_reader.Close()
 
