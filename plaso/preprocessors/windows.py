@@ -479,8 +479,7 @@ class WindowsSystemProductPlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    if not mediator.knowledge_base.GetValue('operating_system_product'):
-      mediator.knowledge_base.SetValue('operating_system_product', value_data)
+    mediator.SetValue('operating_system_product', value_data)
 
 
 class WindowsSystemRootEnvironmentVariablePlugin(
@@ -515,8 +514,7 @@ class WindowsSystemVersionPlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    if not mediator.knowledge_base.GetValue('operating_system_version'):
-      mediator.knowledge_base.SetValue('operating_system_version', value_data)
+    mediator.SetValue('operating_system_version', value_data)
 
 
 class WindowsTimeZonePlugin(

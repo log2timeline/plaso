@@ -63,10 +63,8 @@ class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
     system_product = text_file_object.readline()
     system_product = system_product.strip()
 
-    if not mediator.knowledge_base.GetValue('operating_system_product'):
-      if system_product:
-        mediator.knowledge_base.SetValue(
-            'operating_system_product', system_product)
+    if system_product:
+      mediator.SetValue('operating_system_product', system_product)
 
 
 class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
@@ -98,10 +96,8 @@ class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
     else:
       system_product = None
 
-    if not mediator.knowledge_base.GetValue('operating_system_product'):
-      if system_product:
-        mediator.knowledge_base.SetValue(
-            'operating_system_product', system_product)
+    if system_product:
+      mediator.SetValue('operating_system_product', system_product)
 
 
 class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
@@ -133,11 +129,9 @@ class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
       value = value.strip().strip('"')
       product_values[key] = value
 
-    if not mediator.knowledge_base.GetValue('operating_system_product'):
-      system_product = product_values.get('DISTRIB_DESCRIPTION', None)
-      if system_product:
-        mediator.knowledge_base.SetValue(
-            'operating_system_product', system_product)
+    system_product = product_values.get('DISTRIB_DESCRIPTION', None)
+    if system_product:
+      mediator.SetValue('operating_system_product', system_product)
 
 
 class LinuxSystemdOperatingSystemPlugin(
@@ -173,11 +167,9 @@ class LinuxSystemdOperatingSystemPlugin(
       value = value.strip('"')
       product_values[key] = value
 
-    if not mediator.knowledge_base.GetValue('operating_system_product'):
-      system_product = product_values.get('PRETTY_NAME', None)
-      if system_product:
-        mediator.knowledge_base.SetValue(
-            'operating_system_product', system_product)
+    system_product = product_values.get('PRETTY_NAME', None)
+    if system_product:
+      mediator.SetValue('operating_system_product', system_product)
 
 
 class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
