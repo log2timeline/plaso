@@ -29,6 +29,31 @@ class PreprocessMediator(object):
     """KnowledgeBase: knowledge base."""
     return self._knowledge_base
 
+  def AddEnvironmentVariable(self, environment_variable_artifact):
+    """Adds an environment variable.
+
+    Args:
+      environment_variable_artifact (EnvironmentVariableArtifact): environment
+          variable artifact.
+
+    Raises:
+      KeyError: if the environment variable already exists.
+    """
+    logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
+        environment_variable_artifact.name,
+        environment_variable_artifact.value))
+    self._knowledge_base.AddEnvironmentVariable(environment_variable_artifact)
+
+  def AddHostname(self, hostname_artifact):
+    """Adds a hostname.
+
+    Args:
+      hostname_artifact (HostnameArtifact): hostname artifact.
+    """
+    # TODO: change storage and knowledge base to handle more than 1 hostname.
+    if not self._knowledge_base.GetHostname():
+      self._knowledge_base.SetHostname(hostname_artifact)
+
   def AddTimeZoneInformation(self, time_zone_artifact):
     """Adds a time zone defined by the operating system.
 
@@ -71,6 +96,18 @@ class PreprocessMediator(object):
 
     self._knowledge_base.AddWindowsEventLogProvider(windows_eventlog_provider)
 
+  def GetEnvironmentVariable(self, name):
+    """Retrieves an environment variable.
+
+    Args:
+      name (str): name of the environment variable.
+
+    Returns:
+      EnvironmentVariableArtifact: environment variable artifact or None
+          if there was no value set for the given name.
+    """
+    return self._knowledge_base.GetEnvironmentVariable(name)
+
   def ProducePreprocessingWarning(self, plugin_name, message):
     """Produces a preprocessing warning.
 
@@ -89,6 +126,18 @@ class PreprocessMediator(object):
 
     logger.debug('[{0:s}] {1:s}'.format(plugin_name, message))
 
+  def SetCodepage(self, codepage):
+    """Sets the codepage.
+
+    Args:
+      codepage (str): codepage.
+
+    Raises:
+      ValueError: if the codepage is not supported.
+    """
+    if not self._knowledge_base.codepage:
+      self._knowledge_base.SetCodepage(codepage)
+
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.
 
@@ -96,3 +145,15 @@ class PreprocessMediator(object):
       file_entry (dfvfs.FileEntry): file entry.
     """
     self._file_entry = file_entry
+
+  def SetTimeZone(self, time_zone):
+    """Sets the time zone.
+
+    Args:
+      time_zone (str): time zone.
+
+    Raises:
+      ValueError: if the time zone is not supported.
+    """
+    # TODO: check if time zone is set in knowledge base.
+    self._knowledge_base.SetTimeZone(time_zone)

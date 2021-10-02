@@ -119,10 +119,9 @@ class MacOSHostnamePlugin(PlistFileArtifactPreprocessorPlugin):
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if not mediator.knowledge_base.GetHostname():
-      if name in self._PLIST_KEYS:
-        hostname_artifact = artifacts.HostnameArtifact(name=value)
-        mediator.knowledge_base.SetHostname(hostname_artifact)
+    if name in self._PLIST_KEYS:
+      hostname_artifact = artifacts.HostnameArtifact(name=value)
+      mediator.AddHostname(hostname_artifact)
 
 
 class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
@@ -195,10 +194,9 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
               self.ARTIFACT_DEFINITION_NAME))
 
     _, _, time_zone = file_entry.link.partition('zoneinfo/')
-    # TODO: check if time zone is set in knowledge base.
     if time_zone:
       try:
-        mediator.knowledge_base.SetTimeZone(time_zone)
+        mediator.SetTimeZone(time_zone)
       except ValueError:
         mediator.ProducePreprocessingWarning(
             self.ARTIFACT_DEFINITION_NAME,

@@ -7,7 +7,6 @@ from plaso.containers import artifacts
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.preprocessors import interface
-from plaso.preprocessors import logger
 from plaso.preprocessors import manager
 
 
@@ -38,9 +37,7 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
         case_sensitive=False, name=self._NAME, value=value_data)
 
     try:
-      logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
-          self._NAME, value_data))
-      mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+      mediator.AddEnvironmentVariable(environment_variable)
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
@@ -87,9 +84,7 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
         case_sensitive=False, name=self._NAME, value=relative_path)
 
     try:
-      logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
-          self._NAME, relative_path))
-      mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+      mediator.AddEnvironmentVariable(environment_variable)
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
@@ -115,13 +110,11 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
-    environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
-        'programdata')
+    environment_variable = mediator.GetEnvironmentVariable('programdata')
     allusersappdata = getattr(environment_variable, 'value', None)
 
     if not allusersappdata:
-      environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
-          'allusersprofile')
+      environment_variable = mediator.GetEnvironmentVariable('allusersprofile')
       allusersdata = getattr(environment_variable, 'value', None)
 
       if allusersdata:
@@ -132,9 +125,7 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
           case_sensitive=False, name='allusersappdata', value=allusersappdata)
 
       try:
-        logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
-            'allusersappdata', allusersappdata))
-        mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+        mediator.AddEnvironmentVariable(environment_variable)
       except KeyError:
         mediator.ProducePreprocessingWarning(
             self.__class__.__name__,
@@ -172,13 +163,11 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
-    environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
-        'allusersprofile')
+    environment_variable = mediator.GetEnvironmentVariable('allusersprofile')
     allusersprofile = getattr(environment_variable, 'value', None)
 
     if not allusersprofile:
-      environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
-          'programdata')
+      environment_variable = mediator.GetEnvironmentVariable('programdata')
       allusersprofile = getattr(environment_variable, 'value', None)
 
       if allusersprofile:
@@ -186,9 +175,7 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
             case_sensitive=False, name='allusersprofile', value=allusersprofile)
 
         try:
-          logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
-              'allusersprofile', allusersprofile))
-          mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+          mediator.AddEnvironmentVariable(environment_variable)
         except KeyError:
           mediator.ProducePreprocessingWarning(
               self.__class__.__name__,
@@ -308,13 +295,12 @@ class WindowsCodepagePlugin(
     # Map the Windows code page name to a Python equivalent name.
     codepage = 'cp{0:s}'.format(value_data)
 
-    if not mediator.knowledge_base.codepage:
-      try:
-        mediator.knowledge_base.SetCodepage(codepage)
-      except ValueError:
-        mediator.ProducePreprocessingWarning(
-            self.ARTIFACT_DEFINITION_NAME,
-            'Unable to set codepage in knowledge base.')
+    try:
+      mediator.SetCodepage(codepage)
+    except ValueError:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to set codepage in knowledge base.')
 
 
 class WindowsEventLogProvidersPlugin(
@@ -398,9 +384,8 @@ class WindowsHostnamePlugin(
       # If the value data is a multi string only use the first string.
       value_data = value_data[0]
 
-    if not mediator.knowledge_base.GetHostname():
-      hostname_artifact = artifacts.HostnameArtifact(name=value_data)
-      mediator.knowledge_base.SetHostname(hostname_artifact)
+    hostname_artifact = artifacts.HostnameArtifact(name=value_data)
+    mediator.AddHostname(hostname_artifact)
 
 
 class WindowsProgramDataEnvironmentVariablePlugin(
@@ -433,13 +418,11 @@ class WindowsProgramDataKnowledgeBasePlugin(
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
-    environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
-        'programdata')
+    environment_variable = mediator.GetEnvironmentVariable('programdata')
     allusersprofile = getattr(environment_variable, 'value', None)
 
     if not allusersprofile:
-      environment_variable = mediator.knowledge_base.GetEnvironmentVariable(
-          'allusersprofile')
+      environment_variable = mediator.GetEnvironmentVariable('allusersprofile')
       allusersprofile = getattr(environment_variable, 'value', None)
 
       if allusersprofile:
@@ -447,9 +430,7 @@ class WindowsProgramDataKnowledgeBasePlugin(
             case_sensitive=False, name='programdata', value=allusersprofile)
 
         try:
-          logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
-              'programdata', allusersprofile))
-          mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+          mediator.AddEnvironmentVariable(environment_variable)
         except KeyError:
           mediator.ProducePreprocessingWarning(
               self.__class__.__name__,
@@ -561,9 +542,8 @@ class WindowsTimeZonePlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    # TODO: check if time zone is set in knowledge base.
     try:
-      mediator.knowledge_base.SetTimeZone(value_data)
+      mediator.SetTimeZone(value_data)
     except ValueError as execption:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
