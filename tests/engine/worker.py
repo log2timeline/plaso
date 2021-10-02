@@ -99,9 +99,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
-    mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object,
-        resolver_context=resolver_context)
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base_object, resolver_context=resolver_context)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     if not extraction_worker:
       configuration = configurations.ExtractionConfiguration()
@@ -115,10 +115,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     try:
       storage_writer.WriteSessionStart(session)
 
-      extraction_worker.ProcessPathSpec(mediator, path_spec)
+      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
       event_source = storage_writer.GetFirstWrittenEventSource()
       while event_source:
-        extraction_worker.ProcessPathSpec(mediator, event_source.path_spec)
+        extraction_worker.ProcessPathSpec(
+            parser_mediator, event_source.path_spec)
         event_source = storage_writer.GetNextWrittenEventSource()
 
       storage_writer.WriteSessionCompletion(session)
@@ -171,9 +172,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
-    mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object, preferred_year=2016,
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base_object, preferred_year=2016,
         resolver_context=resolver_context)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -186,9 +188,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.WriteSessionStart(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
-    mediator.SetFileEntry(file_entry)
+    parser_mediator.SetFileEntry(file_entry)
 
-    display_name = mediator.GetDisplayName()
+    display_name = parser_mediator.GetDisplayName()
     event_data_stream = events.EventDataStream()
 
     extraction_worker._AnalyzeDataStream(
@@ -215,9 +217,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
-    mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object, preferred_year=2016,
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base_object, preferred_year=2016,
         resolver_context=resolver_context)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -230,10 +233,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.WriteSessionStart(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
-    mediator.SetFileEntry(file_entry)
+    parser_mediator.SetFileEntry(file_entry)
 
     file_object = file_entry.GetFileObject()
-    display_name = mediator.GetDisplayName()
+    display_name = parser_mediator.GetDisplayName()
     event_data_stream = events.EventDataStream()
 
     extraction_worker._AnalyzeFileObject(
@@ -278,9 +281,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
-    mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object, preferred_year=2016,
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base_object, preferred_year=2016,
         resolver_context=resolver_context)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -293,10 +297,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.WriteSessionStart(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
-    mediator.SetFileEntry(file_entry)
+    parser_mediator.SetFileEntry(file_entry)
 
     extraction_worker._ExtractContentFromDataStream(
-        mediator, file_entry, '')
+        parser_mediator, file_entry, '')
 
     storage_writer.WriteSessionCompletion(session)
     storage_writer.Close()
@@ -316,9 +320,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
-    mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object, preferred_year=2016,
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base_object, preferred_year=2016,
         resolver_context=resolver_context)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -331,10 +336,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.WriteSessionStart(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
-    mediator.SetFileEntry(file_entry)
+    parser_mediator.SetFileEntry(file_entry)
 
     extraction_worker._ExtractMetadataFromFileEntry(
-        mediator, file_entry, '')
+        parser_mediator, file_entry, '')
 
     storage_writer.WriteSessionCompletion(session)
     storage_writer.Close()
@@ -354,9 +359,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
-    mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object, preferred_year=2016,
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base_object, preferred_year=2016,
         resolver_context=resolver_context)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -372,7 +378,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     path_spec = self._GetTestFilePathSpec(['syslog.tar'])
 
-    type_indicators = extraction_worker._GetArchiveTypes(mediator, path_spec)
+    type_indicators = extraction_worker._GetArchiveTypes(
+        parser_mediator, path_spec)
     self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_TAR])
 
     storage_writer.WriteSessionCompletion(session)
@@ -391,9 +398,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
-    mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object, preferred_year=2016,
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base_object, preferred_year=2016,
         resolver_context=resolver_context)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -410,7 +418,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     path_spec = self._GetTestFilePathSpec(['syslog.tgz'])
 
     type_indicators = extraction_worker._GetCompressedStreamTypes(
-        mediator, path_spec)
+        parser_mediator, path_spec)
     self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
     storage_writer.WriteSessionCompletion(session)

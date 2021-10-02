@@ -46,7 +46,8 @@ class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
       ParserMediator: parser mediator.
     """
     parser_mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object)
+        session, knowledge_base_object)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     if file_entry:
       parser_mediator.SetFileEntry(file_entry)

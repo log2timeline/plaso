@@ -54,8 +54,9 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
     knowledge_base_object.SetTimeZone(timezone)
 
     parser_mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object,
+        session, knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     if file_entry:
       parser_mediator.SetFileEntry(file_entry)

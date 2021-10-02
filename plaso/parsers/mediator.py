@@ -31,14 +31,12 @@ class ParserMediator(object):
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
-      self, session, storage_writer, knowledge_base,
-      collection_filters_helper=None, preferred_year=None,
-      resolver_context=None, temporary_directory=None):
+      self, session, knowledge_base, collection_filters_helper=None,
+      preferred_year=None, resolver_context=None, temporary_directory=None):
     """Initializes a parser mediator.
 
     Args:
       session (Session): session the parsing is part of.
-      storage_writer (StorageWriter): storage writer.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for parsing.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
@@ -67,7 +65,7 @@ class ParserMediator(object):
     self._process_information = None
     self._resolver_context = resolver_context
     self._session = session
-    self._storage_writer = storage_writer
+    self._storage_writer = None
     self._temporary_directory = temporary_directory
 
     self.collection_filters_helper = collection_filters_helper

@@ -272,11 +272,12 @@ class SingleProcessEngine(engine.BaseEngine):
     self._session = session
 
     parser_mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, self.knowledge_base,
+        session, self.knowledge_base,
         collection_filters_helper=self.collection_filters_helper,
         preferred_year=processing_configuration.preferred_year,
         resolver_context=resolver_context,
         temporary_directory=processing_configuration.temporary_directory)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     self._extraction_worker = worker.EventExtractionWorker(
         force_parser=force_parser, parser_filter_expression=(

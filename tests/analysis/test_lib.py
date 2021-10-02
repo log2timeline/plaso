@@ -126,11 +126,12 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
           the test should be skipped.
     """
     session = sessions.Session()
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base_object)
+
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
-
-    parser_mediator = parsers_mediator.ParserMediator(
-        session, storage_writer, knowledge_base_object)
+    parser_mediator.SetStorageWriter(storage_writer)
 
     file_entry = self._GetTestFileEntry(path_segments)
     parser_mediator.SetFileEntry(file_entry)
