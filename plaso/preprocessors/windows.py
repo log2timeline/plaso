@@ -414,12 +414,12 @@ class WindowsLanguagePlugin(
 
     try:
       lcid = int(value_data, 16)
-      language = language_ids.LANGUAGE_TAG_PER_LCID.get(lcid, None)
+      language_tag = language_ids.LANGUAGE_TAG_PER_LCID.get(lcid, None)
     except ValueError:
-      language = None
+      language_tag = None
 
-    if language:
-      mediator.SetLanguage(language)
+    if language_tag:
+      mediator.SetLanguage(language_tag)
     else:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,

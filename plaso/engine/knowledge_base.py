@@ -76,6 +76,57 @@ class KnowledgeBase(object):
     """int: year of the current session."""
     return self.GetValue('year', default_value=0)
 
+  def _GetSystemConfigurationArtifact(self, session_identifier=None):
+    """Retrieves the knowledge base as a system configuration artifact.
+
+    Args:
+      session_identifier (Optional[str])): session identifier, where
+          None represents the active session.
+
+    Returns:
+      SystemConfigurationArtifact: system configuration artifact.
+    """
+    session_identifier = session_identifier or self._active_session
+
+    system_configuration = artifacts.SystemConfigurationArtifact()
+
+    system_configuration.code_page = self.GetValue(
+        'codepage', default_value=self._codepage)
+
+    system_configuration.hostname = self._hostnames.get(
+        session_identifier, None)
+
+    system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
+
+    system_configuration.language = self.GetValue(
+        'language', default_value=self._language)
+
+    system_configuration.operating_system = self.GetValue('operating_system')
+    system_configuration.operating_system_product = self.GetValue(
+        'operating_system_product')
+    system_configuration.operating_system_version = self.GetValue(
+        'operating_system_version')
+
+    time_zone = self._time_zone.zone
+    if isinstance(time_zone, bytes):
+      time_zone = time_zone.decode('ascii')
+
+    system_configuration.time_zone = time_zone
+
+    available_time_zones = self._available_time_zones.get(
+        session_identifier, {})
+    # In Python 3 dict.values() returns a type dict_values, which will cause
+    # the JSON serializer to raise a TypeError.
+    system_configuration.available_time_zones = list(
+        available_time_zones.values())
+
+    user_accounts = self._user_accounts.get(session_identifier, {})
+    # In Python 3 dict.values() returns a type dict_values, which will cause
+    # the JSON serializer to raise a TypeError.
+    system_configuration.user_accounts = list(user_accounts.values())
+
+    return system_configuration
+
   def AddAvailableTimeZone(self, time_zone, session_identifier=None):
     """Adds an available time zone.
 
@@ -138,32 +189,23 @@ class KnowledgeBase(object):
 
     user_accounts[user_account.identifier] = user_account
 
-  def AddWindowsEventLogProvider(
-      self, windows_eventlog_provider, session_identifier=None):
+  def AddWindowsEventLogProvider(self, windows_eventlog_provider):
     """Adds a Windows Event Log provider.
 
     Args:
       windows_eventlog_provider (WindowsEventLogProviderArtifact): Windows
           Event Log provider.
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
 
     Raises:
       KeyError: if the Windows Event Log provider already exists.
     """
-    session_identifier = session_identifier or self._active_session
-
-    if session_identifier not in self._windows_eventlog_providers:
-      self._windows_eventlog_providers[session_identifier] = {}
-
-    windows_eventlog_providers = self._windows_eventlog_providers[
-        session_identifier]
-    if windows_eventlog_provider.log_source in windows_eventlog_providers:
+    log_source = windows_eventlog_provider.log_source
+    if log_source in self._windows_eventlog_providers:
       raise KeyError('Windows Event Log provider: {0:s} already exists.'.format(
-          windows_eventlog_provider.log_source))
+          log_source))
 
-    windows_eventlog_providers[windows_eventlog_provider.log_source] = (
-        windows_eventlog_provider)
+    # TODO: store on a per-volume basis?
+    self._windows_eventlog_providers[log_source] = windows_eventlog_provider
 
   def GetEnvironmentVariable(self, name):
     """Retrieves an environment variable.
@@ -233,57 +275,6 @@ class KnowledgeBase(object):
             session_identifier=session_identifier))
 
     return [source_configuration]
-
-  def _GetSystemConfigurationArtifact(self, session_identifier=None):
-    """Retrieves the knowledge base as a system configuration artifact.
-
-    Args:
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
-
-    Returns:
-      SystemConfigurationArtifact: system configuration artifact.
-    """
-    session_identifier = session_identifier or self._active_session
-
-    system_configuration = artifacts.SystemConfigurationArtifact()
-
-    system_configuration.code_page = self.GetValue(
-        'codepage', default_value=self._codepage)
-
-    system_configuration.hostname = self._hostnames.get(
-        session_identifier, None)
-
-    system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
-
-    system_configuration.language = self.GetValue(
-        'language', default_value=self._language)
-
-    system_configuration.operating_system = self.GetValue('operating_system')
-    system_configuration.operating_system_product = self.GetValue(
-        'operating_system_product')
-    system_configuration.operating_system_version = self.GetValue(
-        'operating_system_version')
-
-    time_zone = self._time_zone.zone
-    if isinstance(time_zone, bytes):
-      time_zone = time_zone.decode('ascii')
-
-    system_configuration.time_zone = time_zone
-
-    available_time_zones = self._available_time_zones.get(
-        session_identifier, {})
-    # In Python 3 dict.values() returns a type dict_values, which will cause
-    # the JSON serializer to raise a TypeError.
-    system_configuration.available_time_zones = list(
-        available_time_zones.values())
-
-    user_accounts = self._user_accounts.get(session_identifier, {})
-    # In Python 3 dict.values() returns a type dict_values, which will cause
-    # the JSON serializer to raise a TypeError.
-    system_configuration.user_accounts = list(user_accounts.values())
-
-    return system_configuration
 
   def GetTextPrepend(self):
     """Retrieves the text to prepend to the display name.
@@ -358,6 +349,15 @@ class KnowledgeBase(object):
 
     identifier = identifier.lower()
     return self._values.get(identifier, default_value)
+
+  def GetWindowsEventLogProviders(self):
+    """Retrieves the Windows EventLog providers.
+
+    Returns:
+      list[WindowsEventLogProviderArtifact]: Windows EventLog provider
+          artifacts.
+    """
+    return self._windows_eventlog_providers.values()
 
   def HasUserAccounts(self):
     """Determines if the knowledge base contains user accounts.

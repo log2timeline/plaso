@@ -580,15 +580,87 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     return self.user_directory.split(self._path_separator)
 
 
+class WindowsEventLogMessageFileArtifact(ArtifactAttributeContainer):
+  """Windows EventLog message file attribute container.
+
+  Attributes:
+    path (str): path.
+  """
+  CONTAINER_TYPE = 'windows_eventlog_message_file'
+
+  SCHEMA = {
+      'path': 'str'}
+
+  def __init__(self, path=None):
+    """Initializes a Windows EventLog message file artifact.
+
+    Args:
+      path (Optional[str]): path.
+    """
+    super(WindowsEventLogMessageFileArtifact, self).__init__()
+    self.path = path
+
+
+class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
+  """Windows EventLog message string attribute container.
+
+  Attributes:
+    language_identifier (str): language identifier.
+    message_identifier (int): message identifier.
+    string (str): string.
+  """
+  CONTAINER_TYPE = 'windows_eventlog_message_string'
+
+  SCHEMA = {
+      '_message_file_row_identifier': 'AttributeContainerIdentifier',
+      'language_identifier': 'int',
+      'message_identifier': 'int',
+      'string': 'str'}
+
+  def __init__(
+      self, language_identifier=None, message_identifier=None, string=None):
+    """Initializes a Windows EventLog message string artifact.
+
+    Args:
+      language_identifier (Optional[str]): language identifier.
+      message_identifier (Optional[int]): message identifier.
+      string (Optional[str]): string.
+    """
+    super(WindowsEventLogMessageStringArtifact, self).__init__()
+    self._message_file_identifier = None
+    self._message_file_row_identifier = None
+    self.language_identifier = language_identifier
+    self.message_identifier = message_identifier
+    self.string = string
+
+  def GetMessageFileIdentifier(self):
+    """Retrieves the identifier of the associated message file.
+
+    Returns:
+      AttributeContainerIdentifier: message file identifier or None when
+          not set.
+    """
+    return self._message_file_identifier
+
+  def SetMessageFileIdentifier(self, message_file_identifier):
+    """Sets the identifier of the associated message file.
+
+    Args:
+      message_file_identifier (AttributeContainerIdentifier): message file
+          identifier.
+    """
+    self._message_file_identifier = message_file_identifier
+
+
 class WindowsEventLogProviderArtifact(
     SystemSubConfigurationArtifactAttributeContainer):
-  """Windows Event Log provider artifact attribute container.
+  """Windows EventLog provider artifact attribute container.
 
   Attributes:
     category_message_files (list[str]): filenames of the category message files.
     event_message_files (list[str]): filenames of the event message files.
-    log_source (str): Windows Event Log source.
-    log_type (str): Windows Event Log type.
+    log_source (str): Windows EventLog source.
+    log_type (str): Windows EventLog type.
     parameter_message_files (list[str]): filenames of the parameter message
         files.
   """
@@ -605,15 +677,15 @@ class WindowsEventLogProviderArtifact(
   def __init__(
       self, category_message_files=None, event_message_files=None,
       log_source=None, log_type=None, parameter_message_files=None):
-    """Initializes a Windows Even tLog provider artifact.
+    """Initializes a Windows EventLog provider artifact.
 
     Args:
       category_message_files (Optional[list[str]]): filenames of the category
           message files.
       event_message_files (Optional[list[str]]): filenames of the event message
           files.
-      log_source (Optional[str]): Windows Event Log source.
-      log_type (Optional[str]): Windows Event Log type.
+      log_source (Optional[str]): Windows EventLog source.
+      log_type (Optional[str]): Windows EventLog type.
       parameter_message_files (Optional[list[str]]): filenames of the parameter
           message files.
     """
@@ -628,4 +700,5 @@ class WindowsEventLogProviderArtifact(
 manager.AttributeContainersManager.RegisterAttributeContainers([
     EnvironmentVariableArtifact, HostnameArtifact, OperatingSystemArtifact,
     PathArtifact, SourceConfigurationArtifact, SystemConfigurationArtifact,
-    TimeZoneArtifact, UserAccountArtifact, WindowsEventLogProviderArtifact])
+    TimeZoneArtifact, UserAccountArtifact, WindowsEventLogMessageFileArtifact,
+    WindowsEventLogMessageStringArtifact, WindowsEventLogProviderArtifact])

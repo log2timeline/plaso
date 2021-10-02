@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The path helper."""
 
+import os
 import re
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -394,3 +395,22 @@ class PathHelper(object):
       location = location[len(mount_path):]
 
     return location
+
+  @classmethod
+  def GetPathSegmentSeparator(cls, path_spec):
+    """Retrieves the path segment separator of path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: path segment separator.
+    """
+    if path_spec:
+      if path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_NTFS:
+        return '\\'
+
+      if path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
+        return os.path.sep
+
+    return '/'

@@ -43,7 +43,9 @@ class StorageMergeReader(object):
       _CONTAINER_TYPE_EXTRACTION_WARNING,
       _CONTAINER_TYPE_RECOVERY_WARNING,
       _CONTAINER_TYPE_ANALYSIS_REPORT,
-      _CONTAINER_TYPE_ANALYSIS_WARNING)
+      _CONTAINER_TYPE_ANALYSIS_WARNING,
+      'windows_eventlog_message_file',
+      'windows_eventlog_message_string')
 
   def __init__(
       self, session, storage_writer, task_storage_reader, task_identifier):
@@ -62,6 +64,7 @@ class StorageMergeReader(object):
     self._event_data_identifier_mappings = {}
     self._event_data_parser_mappings = {}
     self._event_data_stream_identifier_mappings = {}
+    self._message_file_identifier_mappings = {}
     self._session = session
     self._storage_writer = storage_writer
     self._task_identifier = task_identifier
@@ -126,9 +129,32 @@ class StorageMergeReader(object):
             'found.').format(identifier_string, event_data_stream_lookup_key))
         return
 
+    elif container.CONTAINER_TYPE == 'windows_eventlog_message_string':
+      message_file_identifier = container.GetMessageFileIdentifier()
+      message_file_lookup_key = message_file_identifier.CopyToString()
+
+      message_file_identifier = self._message_file_identifier_mappings.get(
+          message_file_lookup_key, None)
+
+      if message_file_identifier:
+        container.SetMessageFileIdentifier(message_file_identifier)
+      else:
+        identifier = container.GetIdentifier()
+        identifier_string = identifier.CopyToString()
+
+        # TODO: store this as a merge warning so this is preserved
+        # in the storage file.
+        logger.error((
+            'Unable to merge Windows EventLog message string attribute '
+            'container: {0:s} since corresponding Windows EventLog message '
+            'file: {1:s} could not be found.').format(
+                identifier_string, message_file_lookup_key))
+        return
+
     if container.CONTAINER_TYPE in (
         self._CONTAINER_TYPE_EVENT_DATA,
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM):
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM,
+        'windows_eventlog_message_file'):
       # Preserve the lookup key before adding it to the attribute container
       # store.
       identifier = container.GetIdentifier()
@@ -155,6 +181,10 @@ class StorageMergeReader(object):
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA_STREAM:
       identifier = container.GetIdentifier()
       self._event_data_stream_identifier_mappings[lookup_key] = identifier
+
+    elif container.CONTAINER_TYPE == 'windows_eventlog_message_file':
+      identifier = container.GetIdentifier()
+      self._message_file_identifier_mappings[lookup_key] = identifier
 
   def MergeAttributeContainers(self, maximum_number_of_containers=0):
     """Reads attribute containers from a task store into the writer.
