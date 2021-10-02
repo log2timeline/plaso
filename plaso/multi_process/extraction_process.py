@@ -158,7 +158,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           credential_configuration.credential_data)
 
     self._parser_mediator = parsers_mediator.ParserMediator(
-        self._session, None, self._knowledge_base,
+        self._session, self._knowledge_base,
         collection_filters_helper=self._collection_filters_helper,
         preferred_year=self._processing_configuration.preferred_year,
         resolver_context=self._resolver_context,
