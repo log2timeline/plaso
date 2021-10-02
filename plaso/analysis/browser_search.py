@@ -265,14 +265,14 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     Returns:
       AnalysisReport: analysis report.
     """
-    results = {}
+    queries_per_engine = {}
     for key, number_of_queries in self._search_queries_counter.items():
       search_engine, _, search_term = key.partition(':')
-      results.setdefault(search_engine, {})
-      results[search_engine][search_term] = number_of_queries
+      queries_per_engine.setdefault(search_engine, {})
+      queries_per_engine[search_engine][search_term] = number_of_queries
 
     lines_of_text = []
-    for search_engine, terms in sorted(results.items()):
+    for search_engine, terms in sorted(queries_per_engine.items()):
       lines_of_text.append(' == ENGINE: {0:s} =='.format(search_engine))
 
       for search_term, number_of_queries in sorted(
@@ -288,7 +288,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
     analysis_report = super(BrowserSearchPlugin, self).CompileReport(mediator)
     analysis_report.text = report_text
-    analysis_report.report_dict = results
+    analysis_report.report_dict = queries_per_engine
     return analysis_report
 
   def ExamineEvent(self, mediator, event, event_data, event_data_stream):

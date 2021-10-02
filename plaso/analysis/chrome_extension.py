@@ -27,7 +27,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     # Saved list of already looked up extensions.
     self._extensions = {}
-    self._results = {}
+    self._extensions_per_user = {}
 
   def _GetChromeWebStorePage(self, extension_identifier):
     """Retrieves the page for the extension from the Chrome store website.
@@ -120,7 +120,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       AnalysisReport: analysis report.
     """
     lines_of_text = []
-    for user, extensions in sorted(self._results.items()):
+    for user, extensions in sorted(self._extensions_per_user.items()):
       lines_of_text.append(' == USER: {0:s} =='.format(user))
       for extension, extension_identifier in sorted(extensions):
         lines_of_text.append('  {0:s} [{1:s}]'.format(
@@ -132,7 +132,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     analysis_report = super(ChromeExtensionPlugin, self).CompileReport(mediator)
     analysis_report.text = report_text
-    analysis_report.report_dict = self._results
+    analysis_report.report_dict = self._extensions_per_user
     return analysis_report
 
   # pylint: disable=unused-argument
@@ -182,9 +182,10 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     if not extension_string:
       extension_string = extension_identifier
 
-    self._results.setdefault(user, [])
-    if (extension_string, extension_identifier) not in self._results[user]:
-      self._results[user].append((extension_string, extension_identifier))
+    self._extensions_per_user.setdefault(user, [])
+    extension_tuple = (extension_string, extension_identifier)
+    if extension_tuple not in self._extensions_per_user[user]:
+      self._extensions_per_user[user].append(extension_tuple)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(ChromeExtensionPlugin)

@@ -19,7 +19,6 @@ class AnalysisReportTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         'analysis_counter',
         'event_filter',
-        'filter_string',
         'plugin_name',
         'report_dict',
         'text',

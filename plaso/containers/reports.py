@@ -13,7 +13,6 @@ class AnalysisReport(interface.AttributeContainer):
          example number of events analyzed and tagged.
     event_filter (str): event filter expression that was used when the analysis
         plugin was run.
-    filter_string (str): deprecated variant of event_filter.
     plugin_name (str): name of the analysis plugin that generated the report.
     report_dict (dict[str]): ???
     text (str): report text.
@@ -32,8 +31,6 @@ class AnalysisReport(interface.AttributeContainer):
     super(AnalysisReport, self).__init__()
     self.analysis_counter = None
     self.event_filter = None
-    # TODO: filter_string is deprecated remove at some point.
-    self.filter_string = None
     self.plugin_name = plugin_name
     self.report_dict = None
     # TODO: rename text to body?
