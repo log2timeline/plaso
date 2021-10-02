@@ -50,6 +50,7 @@ pyparsing >= 2.3.0,< 3.0.0
 python-dateutil >= 1.5
 pytsk3 >= 20160721
 pytz
+pyxattr >= 0.7.2
 pyzmq >= 2.1.11
 redis >= 3.4
 requests >= 2.18.0
