@@ -157,3 +157,16 @@ class PreprocessMediator(object):
     """
     # TODO: check if time zone is set in knowledge base.
     self._knowledge_base.SetTimeZone(time_zone)
+
+  def SetValue(self, identifier, value):
+    """Sets a value by identifier.
+
+    Args:
+      identifier (str): case insensitive unique identifier for the value.
+      value (object): value.
+
+    Raises:
+      TypeError: if the identifier is not a string type.
+    """
+    if not self._knowledge_base.GetValue(identifier):
+      self._knowledge_base.SetValue(identifier, value)

@@ -140,14 +140,13 @@ class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if not mediator.knowledge_base.GetValue('keyboard_layout'):
-      if name in self._PLIST_KEYS:
-        if isinstance(value, (list, tuple)):
-          value = value[0]
+    if name in self._PLIST_KEYS:
+      if isinstance(value, (list, tuple)):
+        value = value[0]
 
-        _, _, keyboard_layout = value.rpartition('.')
+      _, _, keyboard_layout = value.rpartition('.')
 
-        mediator.knowledge_base.SetValue('keyboard_layout', keyboard_layout)
+      mediator.SetValue('keyboard_layout', keyboard_layout)
 
 
 class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
@@ -166,9 +165,8 @@ class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if not mediator.knowledge_base.GetValue('operating_system_version'):
-      if name in self._PLIST_KEYS:
-        mediator.knowledge_base.SetValue('operating_system_version', value)
+    if name in self._PLIST_KEYS:
+      mediator.SetValue('operating_system_version', value)
 
 
 class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
