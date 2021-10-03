@@ -69,7 +69,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
           task_storage_path)
 
       test_reader = merge_reader.StorageMergeReader(
-          session, storage_writer, task_storage_reader)
+          session, storage_writer, task_storage_reader, 'test_task')
 
       storage_writer.Open(path=task_storage_path)
 
@@ -95,7 +95,7 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
           task_storage_path)
 
       test_reader = merge_reader.StorageMergeReader(
-          session, storage_writer, task_storage_reader)
+          session, storage_writer, task_storage_reader, 'test_task')
 
       storage_writer.Open(path=task_storage_path)
 

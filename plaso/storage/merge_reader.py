@@ -45,23 +45,26 @@ class StorageMergeReader(object):
       _CONTAINER_TYPE_ANALYSIS_REPORT,
       _CONTAINER_TYPE_ANALYSIS_WARNING)
 
-  def __init__(self, session, storage_writer, task_storage_reader):
+  def __init__(
+      self, session, storage_writer, task_storage_reader, task_identifier):
     """Initializes a storage merge reader.
 
     Args:
       session (Session): session the task is part of.
       storage_writer (StorageWriter): storage writer.
       task_storage_reader (StorageReader): task storage reader.
+      task_identifier (str): identifier of the task that is merged.
     """
     super(StorageMergeReader, self).__init__()
     self._active_container_type = None
     self._active_generator = None
-    self._container_types = []
+    self._container_types = list(self._CONTAINER_TYPES)
     self._event_data_identifier_mappings = {}
     self._event_data_parser_mappings = {}
     self._event_data_stream_identifier_mappings = {}
     self._session = session
     self._storage_writer = storage_writer
+    self._task_identifier = task_identifier
     self._task_storage_reader = task_storage_reader
 
     self.number_of_containers = 0
@@ -163,14 +166,12 @@ class StorageMergeReader(object):
     Returns:
       bool: True if the entire task storage file has been merged.
     """
-    if not self._container_types:
-      self._container_types = list(self._CONTAINER_TYPES)
-
     if not self._active_container_type:
-      logger.debug('Starting merge')
+      logger.debug('Starting merge of task: {0:s}'.format(
+          self._task_identifier))
     else:
-      logger.debug('Continuing merge of: {0:s}'.format(
-          self._active_container_type))
+      logger.debug('Continuing merge of: {0:s} of task: {1:s}'.format(
+          self._active_container_type, self._task_identifier))
 
     self.number_of_containers = 0
 
@@ -196,6 +197,7 @@ class StorageMergeReader(object):
 
     merge_completed = not self._active_generator and not self._container_types
 
-    logger.debug('Merged {0:d} containers'.format(self.number_of_containers))
+    logger.debug('Merged {0:d} containers of task: {1:s}'.format(
+        self.number_of_containers, self._task_identifier))
 
     return merge_completed
