@@ -20,6 +20,11 @@ class EventSource(interface.AttributeContainer):
   CONTAINER_TYPE = 'event_source'
   DATA_TYPE = None
 
+  SCHEMA = {
+      'data_type': 'str',
+      'file_entry_type': 'str',
+      'path_spec': 'dfvfs.PathSpec'}
+
   def __init__(self, path_spec=None):
     """Initializes an event source.
 

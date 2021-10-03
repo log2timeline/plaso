@@ -591,6 +591,14 @@ class WindowsEventLogProviderArtifact(
   """
   CONTAINER_TYPE = 'windows_eventlog_provider'
 
+  SCHEMA = {
+      '_system_configuration_row_identifier': 'AttributeContainerIdentifier',
+      'category_message_files': 'List[str]',
+      'event_message_files': 'List[str]',
+      'log_source': 'str',
+      'log_type': 'str',
+      'parameter_message_files': 'List[str]'}
+
   def __init__(
       self, category_message_files=None, event_message_files=None,
       log_source=None, log_type=None, parameter_message_files=None):
