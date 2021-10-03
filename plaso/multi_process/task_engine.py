@@ -288,7 +288,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     task_storage_reader.SetStorageProfiler(self._storage_profiler)
 
     return merge_reader.StorageMergeReader(
-        session, storage_writer, task_storage_reader)
+        session, storage_writer, task_storage_reader, task.identifier)
 
   def _StartTaskStorage(self, task_storage_format):
     """Starts the task storage.
