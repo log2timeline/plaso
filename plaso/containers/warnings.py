@@ -18,6 +18,10 @@ class AnalysisWarning(interface.AttributeContainer):
   """
   CONTAINER_TYPE = 'analysis_warning'
 
+  SCHEMA = {
+      'message': 'str',
+      'plugin_name': 'str'}
+
   def __init__(self, message=None, plugin_name=None):
     """Initializes an analysis warning.
 
@@ -45,6 +49,11 @@ class ExtractionWarning(interface.AttributeContainer):
         the warning applies.
   """
   CONTAINER_TYPE = 'extraction_warning'
+
+  SCHEMA = {
+      'message': 'str',
+      'parser_chain': 'str',
+      'path_spec': 'dfvfs.PathSpec'}
 
   def __init__(self, message=None, parser_chain=None, path_spec=None):
     """Initializes an extraction warning.
@@ -77,6 +86,11 @@ class PreprocessingWarning(interface.AttributeContainer):
   """
   CONTAINER_TYPE = 'preprocessing_warning'
 
+  SCHEMA = {
+      'message': 'str',
+      'path_spec': 'dfvfs.PathSpec',
+      'plugin_name': 'str'}
+
   def __init__(self, message=None, path_spec=None, plugin_name=None):
     """Initializes an extraction warning.
 
@@ -106,6 +120,11 @@ class RecoveryWarning(interface.AttributeContainer):
         the warning applies.
   """
   CONTAINER_TYPE = 'recovery_warning'
+
+  SCHEMA = {
+      'message': 'str',
+      'parser_chain': 'str',
+      'path_spec': 'dfvfs.PathSpec'}
 
   def __init__(self, message=None, parser_chain=None, path_spec=None):
     """Initializes a recovery warning.

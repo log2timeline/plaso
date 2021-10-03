@@ -39,8 +39,8 @@ class AttributeContainersManager(object):
       attribute_container_class (type): attribute container class.
 
     Raises:
-      KeyError: if attribute container class is not set for
-                the corresponding container type.
+      KeyError: if attribute container class is not set for the corresponding
+          container type.
     """
     container_type = attribute_container_class.CONTAINER_TYPE.lower()
     if container_type not in cls._attribute_container_classes:
@@ -49,6 +49,22 @@ class AttributeContainersManager(object):
           '{0:s}.'.format(attribute_container_class.CONTAINER_TYPE))
 
     del cls._attribute_container_classes[container_type]
+
+  @classmethod
+  def GetSchemas(cls):
+    """Retrieves the schemas of the registered attribute containers.
+
+    Returns:
+      dict[str, dict[str, str]]: schemas.
+    """
+    schemas = {}
+    for container_type, container_class in (
+        cls._attribute_container_classes.items()):
+      container_schema = getattr(container_class, 'SCHEMA', None)
+      if container_schema:
+        schemas[container_type] = container_schema
+
+    return schemas
 
   @classmethod
   def RegisterAttributeContainer(cls, attribute_container_class):
@@ -61,8 +77,8 @@ class AttributeContainersManager(object):
       attribute_container_class (type): attribute container class.
 
     Raises:
-      KeyError: if attribute container class is already set for
-                the corresponding container type.
+      KeyError: if attribute container class is already set for the
+          corresponding container type.
     """
     container_type = attribute_container_class.CONTAINER_TYPE.lower()
     if container_type in cls._attribute_container_classes:
@@ -83,8 +99,8 @@ class AttributeContainersManager(object):
       attribute_container_classes (list[type]): attribute container classes.
 
     Raises:
-      KeyError: if attribute container class is already set for
-                the corresponding container type.
+      KeyError: if attribute container class is already set for the
+          corresponding container type.
     """
     for attribute_container_class in attribute_container_classes:
       cls.RegisterAttributeContainer(attribute_container_class)

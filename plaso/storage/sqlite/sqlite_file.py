@@ -53,61 +53,6 @@ class SQLiteStorageFile(interface.BaseStore):
 
   _CONTAINER_SCHEMA_VERSION = 20210621
 
-  # TODO: add support for analysis_report, event_data, session_completion,
-  # session_configuration, session_start, system_configuration
-  _CONTAINER_SCHEMAS = {
-      'analysis_warning': {
-          'message': 'str',
-          'plugin_name': 'str'},
-
-      'event': {
-          '_event_data_row_identifier': 'AttributeContainerIdentifier',
-          'date_time': 'dfdatetime.DateTimeValues',
-          'timestamp': 'int',
-          'timestamp_desc': 'str'},
-
-      'event_data_stream': {
-          'file_entropy': 'str',
-          'md5_hash': 'str',
-          'path_spec': 'dfvfs.PathSpec',
-          'sha1_hash': 'str',
-          'sha256_hash': 'str',
-          'yara_match': 'str'},
-
-      'event_source': {
-          'data_type': 'str',
-          'file_entry_type': 'str',
-          'path_spec': 'dfvfs.PathSpec'},
-
-      'event_tag': {
-          '_event_row_identifier': 'AttributeContainerIdentifier',
-          'labels': 'List[str]'},
-
-      'extraction_warning': {
-          'message': 'str',
-          'parser_chain': 'str',
-          'path_spec': 'dfvfs.PathSpec'},
-
-      'preprocessing_warning': {
-          'message': 'str',
-          'path_spec': 'dfvfs.PathSpec',
-          'plugin_name': 'str'},
-
-      'recovery_warning': {
-          'message': 'str',
-          'parser_chain': 'str',
-          'path_spec': 'dfvfs.PathSpec'},
-
-      'windows_eventlog_provider': {
-          '_system_configuration_row_identifier': (
-              'AttributeContainerIdentifier'),
-          'category_message_files': 'List[str]',
-          'event_message_files': 'List[str]',
-          'log_source': 'str',
-          'log_type': 'str',
-          'parameter_message_files': 'List[str]'},
-  }
-
   # TODO: automatically generate mappings
   _CONTAINER_SCHEMA_IDENTIFIER_MAPPINGS = {
       'event': [(
@@ -158,6 +103,8 @@ class SQLiteStorageFile(interface.BaseStore):
     super(SQLiteStorageFile, self).__init__(storage_type=storage_type)
     self._attribute_container_cache = collections.OrderedDict()
     self._connection = None
+    self._container_schemas = (
+        containers_manager.AttributeContainersManager.GetSchemas())
     self._cursor = None
     self._is_open = False
     self._read_only = True
@@ -257,7 +204,7 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     column_definitions = ['_identifier INTEGER PRIMARY KEY AUTOINCREMENT']
 
-    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+    schema = self._container_schemas.get(container_type, {})
     if self._use_schema and schema:
       for name, data_type in sorted(schema.items()):
         data_type = self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS.get(
@@ -308,7 +255,7 @@ class SQLiteStorageFile(interface.BaseStore):
     Returns:
       AttributeContainer: attribute container.
     """
-    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+    schema = self._container_schemas.get(container_type, {})
 
     if self._use_schema and schema:
       container = self._CONTAINERS_MANAGER.CreateAttributeContainer(
@@ -655,7 +602,7 @@ class SQLiteStorageFile(interface.BaseStore):
           'Unsupported attribute container identifier type: {0!s}'.format(
               type(identifier)))
 
-    schema = self._CONTAINER_SCHEMAS.get(container.CONTAINER_TYPE, {})
+    schema = self._container_schemas.get(container.CONTAINER_TYPE, {})
     if not schema:
       raise IOError(
           'Unsupported attribute container type: {0:s}'.format(
@@ -751,7 +698,7 @@ class SQLiteStorageFile(interface.BaseStore):
         container.CONTAINER_TYPE, next_sequence_number)
     container.SetIdentifier(identifier)
 
-    schema = self._CONTAINER_SCHEMAS.get(container.CONTAINER_TYPE, {})
+    schema = self._container_schemas.get(container.CONTAINER_TYPE, {})
 
     self._UpdateAttributeContainerBeforeSerialize(container)
 
@@ -921,7 +868,7 @@ class SQLiteStorageFile(interface.BaseStore):
     if container:
       return container
 
-    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+    schema = self._container_schemas.get(container_type, {})
 
     if self._use_schema and schema:
       column_names = sorted(schema.keys())
@@ -975,7 +922,7 @@ class SQLiteStorageFile(interface.BaseStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+    schema = self._container_schemas.get(container_type, {})
 
     if self._use_schema and schema:
       column_names = sorted(schema.keys())
@@ -1000,7 +947,7 @@ class SQLiteStorageFile(interface.BaseStore):
       OSError: when the store is closed or when there is an error querying
           the storage file.
     """
-    schema = self._CONTAINER_SCHEMAS.get(self._CONTAINER_TYPE_EVENT_TAG, {})
+    schema = self._container_schemas.get(self._CONTAINER_TYPE_EVENT_TAG, {})
     if not self._use_schema or not schema:
       return None
 
@@ -1067,7 +1014,7 @@ class SQLiteStorageFile(interface.BaseStore):
     Returns:
       generator(EventObject): event generator.
     """
-    schema = self._CONTAINER_SCHEMAS.get(self._CONTAINER_TYPE_EVENT, {})
+    schema = self._container_schemas.get(self._CONTAINER_TYPE_EVENT, {})
     if self._use_schema and schema:
       filter_column_name = 'timestamp'
       column_names = sorted(schema.keys())
@@ -1191,7 +1138,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
       container_types = set(self._CONTAINER_TYPES)
       if self._use_schema:
-        container_types.update(self._CONTAINER_SCHEMAS.keys())
+        container_types.update(self._container_schemas.keys())
 
       for container_type in container_types:
         if (self.storage_type == definitions.STORAGE_TYPE_SESSION and

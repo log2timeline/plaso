@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.containers import events
 from plaso.containers import manager
 
 from tests import test_lib as shared_test_lib
@@ -21,6 +22,12 @@ class AttributeContainersManagerTest(shared_test_lib.BaseTestCase):
 
     with self.assertRaises(ValueError):
       manager.AttributeContainersManager.CreateAttributeContainer('bogus')
+
+  def testGetSchemas(self):
+    """Tests the GetSchemas function."""
+    schemas = manager.AttributeContainersManager.GetSchemas()
+    self.assertIsNotNone(schemas)
+    self.assertEqual(schemas['event'], events.EventObject.SCHEMA)
 
   def testAttributeContainerRegistration(self):
     """Tests the Register and DeregisterAttributeContainer functions."""

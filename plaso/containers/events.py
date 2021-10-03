@@ -104,6 +104,14 @@ class EventDataStream(interface.AttributeContainer):
   """
   CONTAINER_TYPE = 'event_data_stream'
 
+  SCHEMA = {
+      'file_entropy': 'str',
+      'md5_hash': 'str',
+      'path_spec': 'dfvfs.PathSpec',
+      'sha1_hash': 'str',
+      'sha256_hash': 'str',
+      'yara_match': 'str'}
+
   def __init__(self):
     """Initializes an event data attribute container."""
     super(EventDataStream, self).__init__()
@@ -130,6 +138,12 @@ class EventObject(interface.AttributeContainer):
     timestamp_desc (str): description of the meaning of the timestamp.
   """
   CONTAINER_TYPE = 'event'
+
+  SCHEMA = {
+      '_event_data_row_identifier': 'AttributeContainerIdentifier',
+      'date_time': 'dfdatetime.DateTimeValues',
+      'timestamp': 'int',
+      'timestamp_desc': 'str'}
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_row_identifier']
 
@@ -189,6 +203,10 @@ class EventTag(interface.AttributeContainer):
     labels (list[str]): labels, such as "malware", "application_execution".
   """
   CONTAINER_TYPE = 'event_tag'
+
+  SCHEMA = {
+      '_event_row_identifier': 'AttributeContainerIdentifier',
+      'labels': 'List[str]'}
 
   _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
