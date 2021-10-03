@@ -8,7 +8,6 @@ import pathlib
 import sqlite3
 import zlib
 
-from plaso.containers import manager as containers_manager
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import identifiers
@@ -112,8 +111,6 @@ class SQLiteStorageFile(interface.BaseStore):
       interface.BaseStore._CONTAINER_TYPE_EVENT_DATA_STREAM,
       interface.BaseStore._CONTAINER_TYPE_EVENT_SOURCE)
 
-  _CONTAINERS_MANAGER = containers_manager.AttributeContainersManager
-
   _CONTAINER_SCHEMA_VERSION = 20210621
 
   # TODO: automatically generate mappings
@@ -170,8 +167,6 @@ class SQLiteStorageFile(interface.BaseStore):
     super(SQLiteStorageFile, self).__init__(storage_type=storage_type)
     self._attribute_container_cache = collections.OrderedDict()
     self._connection = None
-    self._container_schemas = (
-        containers_manager.AttributeContainersManager.GetSchemas())
     self._cursor = None
     self._is_open = False
     self._read_only = True
@@ -271,7 +266,7 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     column_definitions = ['_identifier INTEGER PRIMARY KEY AUTOINCREMENT']
 
-    schema = self._container_schemas.get(container_type, {})
+    schema = self._GetAttributeContainerSchema(container_type)
     if self._use_schema and schema:
       for name, data_type in sorted(schema.items()):
         data_type = self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS.get(
@@ -322,10 +317,10 @@ class SQLiteStorageFile(interface.BaseStore):
     Returns:
       AttributeContainer: attribute container.
     """
-    schema = self._container_schemas.get(container_type, {})
+    schema = self._GetAttributeContainerSchema(container_type)
 
     if self._use_schema and schema:
-      container = self._CONTAINERS_MANAGER.CreateAttributeContainer(
+      container = self._containers_manager.CreateAttributeContainer(
           container_type)
 
       for column_index, name in enumerate(column_names):
@@ -669,7 +664,7 @@ class SQLiteStorageFile(interface.BaseStore):
           'Unsupported attribute container identifier type: {0!s}'.format(
               type(identifier)))
 
-    schema = self._container_schemas.get(container.CONTAINER_TYPE, {})
+    schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if not schema:
       raise IOError(
           'Unsupported attribute container type: {0:s}'.format(
@@ -765,7 +760,7 @@ class SQLiteStorageFile(interface.BaseStore):
         container.CONTAINER_TYPE, next_sequence_number)
     container.SetIdentifier(identifier)
 
-    schema = self._container_schemas.get(container.CONTAINER_TYPE, {})
+    schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
 
     self._UpdateAttributeContainerBeforeSerialize(container)
 
@@ -935,7 +930,7 @@ class SQLiteStorageFile(interface.BaseStore):
     if container:
       return container
 
-    schema = self._container_schemas.get(container_type, {})
+    schema = self._GetAttributeContainerSchema(container_type)
 
     if self._use_schema and schema:
       column_names = sorted(schema.keys())
@@ -991,7 +986,7 @@ class SQLiteStorageFile(interface.BaseStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    schema = self._container_schemas.get(container_type, {})
+    schema = self._GetAttributeContainerSchema(container_type)
 
     if self._use_schema and schema:
       column_names = sorted(schema.keys())
@@ -1022,7 +1017,7 @@ class SQLiteStorageFile(interface.BaseStore):
       OSError: when the store is closed or when there is an error querying
           the storage file.
     """
-    schema = self._container_schemas.get(self._CONTAINER_TYPE_EVENT_TAG, {})
+    schema = self._GetAttributeContainerSchema(self._CONTAINER_TYPE_EVENT_TAG)
     if not self._use_schema or not schema:
       return None
 
@@ -1084,7 +1079,7 @@ class SQLiteStorageFile(interface.BaseStore):
     Returns:
       generator(EventObject): event generator.
     """
-    schema = self._container_schemas.get(self._CONTAINER_TYPE_EVENT, {})
+    schema = self._GetAttributeContainerSchema(self._CONTAINER_TYPE_EVENT)
     if self._use_schema and schema:
       filter_column_name = 'timestamp'
       column_names = sorted(schema.keys())
@@ -1210,11 +1205,7 @@ class SQLiteStorageFile(interface.BaseStore):
         # new format features that are not backwards compatible.
         self._UpdateStorageMetadataFormatVersion()
 
-      container_types = set(self._CONTAINER_TYPES)
-      if self._use_schema:
-        container_types.update(self._container_schemas.keys())
-
-      for container_type in container_types:
+      for container_type in self._containers_manager.GetContainerTypes():
         if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
             container_type in self._TASK_STORE_ONLY_CONTAINER_TYPES):
           continue

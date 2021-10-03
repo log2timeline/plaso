@@ -23,11 +23,19 @@ class AttributeContainersManagerTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(ValueError):
       manager.AttributeContainersManager.CreateAttributeContainer('bogus')
 
-  def testGetSchemas(self):
-    """Tests the GetSchemas function."""
-    schemas = manager.AttributeContainersManager.GetSchemas()
-    self.assertIsNotNone(schemas)
-    self.assertEqual(schemas['event'], events.EventObject.SCHEMA)
+  def testGetContainerTypes(self):
+    """Tests the GetContainerTypes function."""
+    container_types = manager.AttributeContainersManager.GetContainerTypes()
+    self.assertIn('event', container_types)
+
+  def testGetSchema(self):
+    """Tests the GetSchema function."""
+    schema = manager.AttributeContainersManager.GetSchema('event')
+    self.assertIsNotNone(schema)
+    self.assertEqual(schema, events.EventObject.SCHEMA)
+
+    with self.assertRaises(ValueError):
+      manager.AttributeContainersManager.GetSchema('bogus')
 
   def testAttributeContainerRegistration(self):
     """Tests the Register and DeregisterAttributeContainer functions."""

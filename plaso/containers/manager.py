@@ -51,20 +51,35 @@ class AttributeContainersManager(object):
     del cls._attribute_container_classes[container_type]
 
   @classmethod
-  def GetSchemas(cls):
-    """Retrieves the schemas of the registered attribute containers.
+  def GetContainerTypes(cls):
+    """Retrieves the container types of the registered attribute containers.
 
     Returns:
-      dict[str, dict[str, str]]: schemas.
+      list[str]: container types.
     """
-    schemas = {}
-    for container_type, container_class in (
-        cls._attribute_container_classes.items()):
-      container_schema = getattr(container_class, 'SCHEMA', None)
-      if container_schema:
-        schemas[container_type] = container_schema
+    return list(cls._attribute_container_classes.keys())
 
-    return schemas
+  @classmethod
+  def GetSchema(cls, container_type):
+    """Retrieves the schema of a registered attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      dict[str, str]: attribute container schema or an empty dictionary if
+          no schema available.
+
+    Raises:
+      ValueError: if the container type is not supported.
+    """
+    container_class = cls._attribute_container_classes.get(
+        container_type, None)
+    if not container_class:
+      raise ValueError('Unsupported container type: {0:s}'.format(
+          container_type))
+
+    return getattr(container_class, 'SCHEMA', {})
 
   @classmethod
   def RegisterAttributeContainer(cls, attribute_container_class):

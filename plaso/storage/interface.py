@@ -7,6 +7,7 @@ import collections
 from plaso.containers import artifacts
 from plaso.containers import event_sources
 from plaso.containers import events
+from plaso.containers import manager as containers_manager
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
@@ -44,24 +45,6 @@ class BaseStore(object):
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
-  _CONTAINER_TYPES = (
-      _CONTAINER_TYPE_ANALYSIS_REPORT,
-      _CONTAINER_TYPE_ANALYSIS_WARNING,
-      _CONTAINER_TYPE_EXTRACTION_WARNING,
-      _CONTAINER_TYPE_EVENT,
-      _CONTAINER_TYPE_EVENT_DATA,
-      _CONTAINER_TYPE_EVENT_DATA_STREAM,
-      _CONTAINER_TYPE_EVENT_SOURCE,
-      _CONTAINER_TYPE_EVENT_TAG,
-      _CONTAINER_TYPE_PREPROCESSING_WARNING,
-      _CONTAINER_TYPE_RECOVERY_WARNING,
-      _CONTAINER_TYPE_SESSION_COMPLETION,
-      _CONTAINER_TYPE_SESSION_CONFIGURATION,
-      _CONTAINER_TYPE_SESSION_START,
-      _CONTAINER_TYPE_SYSTEM_CONFIGURATION,
-      _CONTAINER_TYPE_TASK_COMPLETION,
-      _CONTAINER_TYPE_TASK_START)
-
   # Container types that only should be used in a session store.
   _SESSION_STORE_ONLY_CONTAINER_TYPES = (
       _CONTAINER_TYPE_SESSION_COMPLETION,
@@ -82,6 +65,7 @@ class BaseStore(object):
     """
     super(BaseStore, self).__init__()
     self._attribute_container_sequence_numbers = collections.Counter()
+    self._containers_manager = containers_manager.AttributeContainersManager
     self._last_session = 0
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
@@ -139,6 +123,23 @@ class BaseStore(object):
     """
     self._attribute_container_sequence_numbers[container_type] += 1
     return self._attribute_container_sequence_numbers[container_type]
+
+  def _GetAttributeContainerSchema(self, container_type):
+    """Retrieves the schema of an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      dict[str, str]: attribute container schema or an empty dictionary if
+          no schema available.
+    """
+    try:
+      schema = self._containers_manager.GetSchema(container_type)
+    except ValueError:
+      schema = {}
+
+    return schema
 
   @abc.abstractmethod
   def _RaiseIfNotReadable(self):
