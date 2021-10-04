@@ -146,6 +146,17 @@ class PreprocessMediator(object):
     """
     self._file_entry = file_entry
 
+  def SetLanguage(self, language):
+    """Sets the language.
+
+    Args:
+      language (str): language.
+
+    Raises:
+      ValueError: if the language is not supported.
+    """
+    self._knowledge_base.SetLanguage(language)
+
   def SetTimeZone(self, time_zone):
     """Sets the time zone.
 

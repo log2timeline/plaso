@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Windows NT Language identifiers."""
+"""This file maps a language tag to a Windows NT language identifier (LCID).
+
+For a list of language tags see:
+  https://datatracker.ietf.org/doc/html/rfc5646
+"""
 
 
 LANGUAGE_IDENTIFIERS = {
@@ -224,8 +228,7 @@ LANGUAGE_IDENTIFIERS = {
     'mi': [0x0081, 'Maori'],
     'mi-NZ': [0x0481, 'Maori, New Zealand'],
     'mk': [0x002f, 'Macedonian'],
-    'mk-MK': [
-        0x042f, 'Macedonian, The Former Yugoslav Republic of Macedonia'],
+    'mk-MK': [0x042f, 'Macedonian, The Former Yugoslav Republic of Macedonia'],
     'ml': [0x004c, 'Malayalam'],
     'ml-IN': [0x044c, 'Malayalam, India'],
     'mn': [0x0050, 'Mongolian'],
@@ -398,6 +401,9 @@ LANGUAGE_IDENTIFIERS = {
     'zu-ZA': [0x0435, 'Zulu, South Africa'],
 }
 
-# Make sure the language identifiers are lower case.
+# Make sure the language identifiers (tags) are lower case.
 LANGUAGE_IDENTIFIERS = dict(
     (key.lower(), value) for key, value in LANGUAGE_IDENTIFIERS.items())
+
+LANGUAGE_TAG_PER_LCID = dict(
+    (value[0], key) for key, value in LANGUAGE_IDENTIFIERS.items())

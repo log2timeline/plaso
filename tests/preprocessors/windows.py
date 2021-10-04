@@ -257,6 +257,25 @@ class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     plugin._ParseValueData(test_mediator, value_data)
 
 
+class WindowsLanguagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Windows language plugin."""
+
+  def testParseValueData(self):
+    """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = windows.WindowsLanguagePlugin()
+    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+
+    self.assertEqual(test_mediator.knowledge_base.language, 'en-us')
+
+
 class WindowsProgramDataEnvironmentVariablePluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the %ProgramData% environment variable plugin."""

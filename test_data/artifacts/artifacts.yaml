@@ -141,15 +141,15 @@ supported_os: [Windows]
 urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/Time%20zone%20keys.asciidoc']
 ---
 name: WindowsCodePage
-doc: The code page of the system.
+doc: The system code page.
 sources:
 - type: REGISTRY_VALUE
   attributes:
     key_value_pairs:
-    - {key: '%%current_control_set%%\Control\Nls\CodePage', value: 'ACP'}
+    - {key: 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Nls\CodePage', value: 'ACP'}
 provides: [code_page]
 supported_os: [Windows]
-urls: ['https://en.wikipedia.org/wiki/Windows_code_page']
+urls: ['https://winreg-kb.readthedocs.io/en/latest/sources/system-keys/Codepage.html']
 ---
 name: WindowsComputerName
 doc: The name of the system.
@@ -281,6 +281,16 @@ sources:
   attributes: {key_value_pairs: [{key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion', value: 'ProductName'}]}
 supported_os: [Windows]
 urls: ['https://github.com/libyal/winreg-kb/blob/main/documentation/System%20keys.asciidoc']
+---
+name: WindowsLanguage
+doc: The system language.
+sources:
+- type: REGISTRY_VALUE
+  attributes:
+    key_value_pairs:
+    - {key: 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Nls\Language', value: 'Default'}
+supported_os: [Windows]
+urls: ['https://winreg-kb.readthedocs.io/en/latest/sources/system-keys/Language.html']
 ---
 name: WindowsRegistryProfiles
 doc: |

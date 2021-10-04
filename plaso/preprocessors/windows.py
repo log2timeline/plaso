@@ -8,6 +8,7 @@ from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.preprocessors import interface
 from plaso.preprocessors import manager
+from plaso.winnt import language_ids
 
 
 class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
@@ -388,6 +389,44 @@ class WindowsHostnamePlugin(
     mediator.AddHostname(hostname_artifact)
 
 
+class WindowsLanguagePlugin(
+    interface.WindowsRegistryValueArtifactPreprocessorPlugin):
+  """The Windows language plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'WindowsLanguage'
+
+  def _ParseValueData(self, mediator, value_data):
+    """Parses Windows Registry value data for a preprocessing attribute.
+
+    Args:
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
+      value_data (object): Windows Registry value data.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    if not isinstance(value_data, str):
+      raise errors.PreProcessFail(
+          'Unsupported Windows Registry value type: {0!s} for '
+          'artifact: {1:s}.'.format(
+              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+
+    try:
+      lcid = int(value_data, 16)
+      language = language_ids.LANGUAGE_TAG_PER_LCID.get(lcid, None)
+    except ValueError:
+      language = None
+
+    if language:
+      mediator.SetLanguage(language)
+    else:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to determine language tag for LCID: {0:s}.'.format(
+              value_data))
+
+
 class WindowsProgramDataEnvironmentVariablePlugin(
     WindowsEnvironmentVariableArtifactPreprocessorPlugin):
   """The Windows %ProgramData% environment variable plugin."""
@@ -621,7 +660,8 @@ manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsAllUsersAppProfileKnowledgeBasePlugin,
     WindowsAvailableTimeZonesPlugin,
     WindowsCodepagePlugin, WindowsEventLogProvidersPlugin,
-    WindowsHostnamePlugin, WindowsProgramDataEnvironmentVariablePlugin,
+    WindowsHostnamePlugin, WindowsLanguagePlugin,
+    WindowsProgramDataEnvironmentVariablePlugin,
     WindowsProgramDataKnowledgeBasePlugin,
     WindowsProgramFilesEnvironmentVariablePlugin,
     WindowsProgramFilesX86EnvironmentVariablePlugin,
