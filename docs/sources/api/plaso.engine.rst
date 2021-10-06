@@ -84,14 +84,6 @@ plaso.engine.path\_helper module
    :undoc-members:
    :show-inheritance:
 
-plaso.engine.plaso\_queue module
---------------------------------
-
-.. automodule:: plaso.engine.plaso_queue
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.engine.process\_info module
 ---------------------------------
 
@@ -136,14 +128,6 @@ plaso.engine.yaml\_filter\_file module
 --------------------------------------
 
 .. automodule:: plaso.engine.yaml_filter_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.engine.zeromq\_queue module
----------------------------------
-
-.. automodule:: plaso.engine.zeromq_queue
    :members:
    :undoc-members:
    :show-inheritance:

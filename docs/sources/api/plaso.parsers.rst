@@ -141,14 +141,6 @@ plaso.parsers.dsv\_parser module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.dtfabric\_parser module
--------------------------------------
-
-.. automodule:: plaso.parsers.dtfabric_parser
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.esedb module
 --------------------------
 
@@ -169,6 +161,14 @@ plaso.parsers.firefox\_cache module
 -----------------------------------
 
 .. automodule:: plaso.parsers.firefox_cache
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.fish\_history module
+----------------------------------
+
+.. automodule:: plaso.parsers.fish_history
    :members:
    :undoc-members:
    :show-inheritance:
@@ -217,6 +217,14 @@ plaso.parsers.java\_idx module
 ------------------------------
 
 .. automodule:: plaso.parsers.java_idx
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.locate module
+---------------------------
+
+.. automodule:: plaso.parsers.locate
    :members:
    :undoc-members:
    :show-inheritance:

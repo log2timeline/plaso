@@ -28,6 +28,14 @@ plaso.lib.definitions module
    :undoc-members:
    :show-inheritance:
 
+plaso.lib.dtfabric\_helper module
+---------------------------------
+
+.. automodule:: plaso.lib.dtfabric_helper
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.lib.errors module
 -----------------------
 

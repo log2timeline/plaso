@@ -68,6 +68,14 @@ plaso.multi\_process.output\_engine module
    :undoc-members:
    :show-inheritance:
 
+plaso.multi\_process.plaso\_queue module
+----------------------------------------
+
+.. automodule:: plaso.multi_process.plaso_queue
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.multi\_process.plaso\_xmlrpc module
 -----------------------------------------
 
@@ -104,6 +112,14 @@ plaso.multi\_process.task\_process module
 -----------------------------------------
 
 .. automodule:: plaso.multi_process.task_process
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.multi\_process.zeromq\_queue module
+-----------------------------------------
+
+.. automodule:: plaso.multi_process.zeromq_queue
    :members:
    :undoc-members:
    :show-inheritance:
