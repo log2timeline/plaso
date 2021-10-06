@@ -4,14 +4,6 @@ plaso.storage.redis package
 Submodules
 ----------
 
-plaso.storage.redis.merge\_reader module
-----------------------------------------
-
-.. automodule:: plaso.storage.redis.merge_reader
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.storage.redis.reader module
 ---------------------------------
 

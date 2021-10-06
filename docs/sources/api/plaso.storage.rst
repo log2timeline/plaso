@@ -14,14 +14,6 @@ Subpackages
 Submodules
 ----------
 
-plaso.storage.event\_heaps module
----------------------------------
-
-.. automodule:: plaso.storage.event_heaps
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.storage.event\_tag\_index module
 --------------------------------------
 
@@ -34,14 +26,6 @@ plaso.storage.factory module
 ----------------------------
 
 .. automodule:: plaso.storage.factory
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.storage.file\_interface module
-------------------------------------
-
-.. automodule:: plaso.storage.file_interface
    :members:
    :undoc-members:
    :show-inheritance:
@@ -70,10 +54,34 @@ plaso.storage.logger module
    :undoc-members:
    :show-inheritance:
 
+plaso.storage.merge\_reader module
+----------------------------------
+
+.. automodule:: plaso.storage.merge_reader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.storage.reader module
+---------------------------
+
+.. automodule:: plaso.storage.reader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.storage.time\_range module
 --------------------------------
 
 .. automodule:: plaso.storage.time_range
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.storage.writer module
+---------------------------
+
+.. automodule:: plaso.storage.writer
    :members:
    :undoc-members:
    :show-inheritance:

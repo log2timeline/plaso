@@ -4,14 +4,6 @@ plaso.storage.sqlite package
 Submodules
 ----------
 
-plaso.storage.sqlite.merge\_reader module
------------------------------------------
-
-.. automodule:: plaso.storage.sqlite.merge_reader
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.storage.sqlite.reader module
 ----------------------------------
 

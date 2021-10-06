@@ -52,14 +52,6 @@ plaso.parsers.winreg\_plugins.default module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.winreg\_plugins.dtfabric\_plugin module
------------------------------------------------------
-
-.. automodule:: plaso.parsers.winreg_plugins.dtfabric_plugin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.winreg\_plugins.interface module
 ----------------------------------------------
 

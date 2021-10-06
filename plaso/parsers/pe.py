@@ -21,7 +21,7 @@ class PEEventData(events.EventData):
   Attributes:
     dll_name (str): name of an imported DLL.
     imphash (str): "Import Hash" of the pe file the event relates to. Also see:
-        https://www.mandiant.com/blog/tracking-malware-import-hashing
+        https://www.mandiant.com/resources/tracking-malware-import-hashing
     pe_type (str): type of PE file the event relates to.
     section_names (list[str]): names of the PE file's sections.
   """

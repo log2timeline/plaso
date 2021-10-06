@@ -20,14 +20,6 @@ plaso.parsers.olecf\_plugins.default module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.olecf\_plugins.dtfabric\_plugin module
-----------------------------------------------------
-
-.. automodule:: plaso.parsers.olecf_plugins.dtfabric_plugin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.olecf\_plugins.interface module
 ---------------------------------------------
 

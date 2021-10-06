@@ -164,14 +164,6 @@ plaso.cli.helpers.profiling module
    :undoc-members:
    :show-inheritance:
 
-plaso.cli.helpers.server\_config module
----------------------------------------
-
-.. automodule:: plaso.cli.helpers.server_config
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.cli.helpers.sessionize\_analysis module
 ---------------------------------------------
 

@@ -36,14 +36,6 @@ plaso.parsers.plist\_plugins.default module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.plist\_plugins.dtfabric\_plugin module
-----------------------------------------------------
-
-.. automodule:: plaso.parsers.plist_plugins.dtfabric_plugin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.plist\_plugins.install\_history module
 ----------------------------------------------------
 

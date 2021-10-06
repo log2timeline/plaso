@@ -12,6 +12,14 @@ Subpackages
 Submodules
 ----------
 
+plaso.cli.analysis\_tool module
+-------------------------------
+
+.. automodule:: plaso.cli.analysis_tool
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.cli.extraction\_tool module
 ---------------------------------
 
